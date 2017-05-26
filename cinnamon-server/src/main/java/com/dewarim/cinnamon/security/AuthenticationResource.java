@@ -5,7 +5,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 @Path("/authentication")
-public class AuthenticationEndpoint {
+public class AuthenticationResource {
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)

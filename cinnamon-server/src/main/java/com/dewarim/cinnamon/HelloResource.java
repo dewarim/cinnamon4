@@ -11,10 +11,10 @@ import javax.ws.rs.core.SecurityContext;
 import java.security.Principal;
 
 /**
- * Root resource (exposed at "cinnamon" path)
+ * For testing authentication until we got a class implementing more interesting methods.
  */
-@Path("cinnamon")
-public class CinnamonResource {
+@Path("hello")
+public class HelloResource {
 
     @Context
     SecurityContext securityContext;

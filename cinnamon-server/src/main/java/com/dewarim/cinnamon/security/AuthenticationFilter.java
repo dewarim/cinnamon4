@@ -21,16 +21,15 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     public void filter(ContainerRequestContext requestContext) throws IOException {
 
         // Get the HTTP Authorization header from the request
-        String authorizationHeader =
-                requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
+        String authorizationHeader = requestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
 
         // Check if the HTTP Authorization header is present and formatted correctly 
-        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Cinnamon")) {
             throw new NotAuthorizedException("Authorization header must be provided");
         }
 
         // Extract the token from the HTTP Authorization header
-        String token = authorizationHeader.substring("Cinnamon".length()).trim();
+        String token = authorizationHeader.substring("Cinnamon ".length()).trim();
 
         try {
 
@@ -67,8 +66,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
                     return "Cinnamon";
                 }
             });
-            
-            
+
 
         } catch (Exception e) {
             requestContext.abortWith(
@@ -77,7 +75,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     }
 
     private String validateToken(String token) {
-        if(!token.equals("ACME::Token")){
+        if (!token.equals("ACME::Token")) {
             throw new NotAuthorizedException("Failed to valdiate token!");
         }
         return "admin";
