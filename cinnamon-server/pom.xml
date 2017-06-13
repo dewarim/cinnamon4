@@ -12,6 +12,7 @@
     <properties>
         <jetty-version>9.4.5.v20170502</jetty-version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <cucumber.version>1.2.5</cucumber.version>
     </properties>
     
     <dependencies>
@@ -40,12 +41,7 @@
             <version>42.1.1</version>
         </dependency>
   
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.12</version>
-            <scope>test</scope>
-        </dependency>
+
 
         <dependency>
             <groupId>javax.servlet</groupId>
@@ -54,6 +50,21 @@
             <scope>provided</scope>
         </dependency>
         
+        <!-- testing -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.hsqldb</groupId>
+            <artifactId>hsqldb</artifactId>
+            <version>2.4.0</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
 

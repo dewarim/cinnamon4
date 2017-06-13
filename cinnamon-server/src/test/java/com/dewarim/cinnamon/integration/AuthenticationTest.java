@@ -1,4 +1,4 @@
-package com.dewarim.cinnamon;
+package com.dewarim.cinnamon.integration;
 
 import org.junit.Test;
 
@@ -6,10 +6,14 @@ import org.junit.Test;
 
 /**
  */
-public class AuthenticationTest {
+public class AuthenticationTest extends CinnamonIntegrationTest{
 
     @Test
     public void testAuthentication() {
+        
+                
+        
+        
 //        String noAuthRequired = target("/hello/hello").request().get(String.class);
 //        assertEquals("Hello", noAuthRequired);
 //

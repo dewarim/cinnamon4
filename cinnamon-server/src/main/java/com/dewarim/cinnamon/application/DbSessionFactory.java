@@ -14,10 +14,14 @@ import java.util.Properties;
 public class DbSessionFactory {
 
     private SqlSessionFactory sqlSessionFactory;
-
-    public DbSessionFactory() {
+    
+    public static final String DEFAULT_PROPERTIES_FILENAME = "sql/mybatis.properties.xml";
+    
+    public DbSessionFactory(String propertiesFilename) {
         String resource = "sql/mybatis-config.xml";
-        String propertiesFilename = "sql/mybatis.properties.xml";
+        if(propertiesFilename == null) {
+            propertiesFilename = DEFAULT_PROPERTIES_FILENAME;
+        }
         try {
             InputStream mybatisConfigStream = Resources.getResourceAsStream(resource);
             InputStream propertyStream = Resources.getResourceAsStream(propertiesFilename);
