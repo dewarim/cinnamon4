@@ -1,6 +1,7 @@
 package com.dewarim.cinnamon.application;
 
 import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.TransactionIsolationLevel;
 
 /**
  */
@@ -11,7 +12,7 @@ public class ThreadLocalSqlSession {
     private static final ThreadLocal<SqlSession> localSqlSession = new ThreadLocal<SqlSession>(){
         @Override
         protected SqlSession initialValue() {
-            return dbSessionFactory.getSqlSessionFactory().openSession(true);
+            return dbSessionFactory.getSqlSessionFactory().openSession(TransactionIsolationLevel.SERIALIZABLE);
         }
     };
     
