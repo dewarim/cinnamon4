@@ -33,7 +33,7 @@ public class DbSessionFilter implements Filter {
         finally {
             SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession(); 
             if(ThreadLocalSqlSession.getTransactionStatus() == TransactionStatus.OK){
-                log.debug("commit changes");
+                log.debug("commit changes (if any)");
                 sqlSession.commit();
             }
             else{
@@ -41,6 +41,7 @@ public class DbSessionFilter implements Filter {
                 sqlSession.rollback();
             }
             sqlSession.close();
+            ThreadLocalSqlSession.refreshSession();
         }
         
     }
