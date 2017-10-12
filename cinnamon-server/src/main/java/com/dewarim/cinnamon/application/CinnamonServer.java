@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.application;
 
+import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.filter.DbSessionFilter;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletHandler;
@@ -40,12 +41,12 @@ public class CinnamonServer {
         // initialize mybatis:
         if(dbSessionFactory == null){
             dbSessionFactory = new DbSessionFactory(null);
-            ThreadLocalSqlSession.dbSessionFactory = dbSessionFactory;
         }
+        ThreadLocalSqlSession.dbSessionFactory = dbSessionFactory;
         server.setAttribute(DEFAULT_DATABASE_SESSION_FACTORY, dbSessionFactory);
         
         // add DAOs
-//        server.setAttribute(DAO_USER_ACCOUNT, new UserAccountDao());
+        server.setAttribute(DAO_USER_ACCOUNT, new UserAccountDao());
         
     }
     
