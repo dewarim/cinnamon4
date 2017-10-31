@@ -1,9 +1,13 @@
 package com.dewarim.cinnamon.application;
 
+import com.dewarim.cinnamon.model.UserAccount;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.TransactionIsolationLevel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  */
@@ -46,6 +50,22 @@ public class ThreadLocalSqlSession {
     
     public static void setTransactionStatus(TransactionStatus status){
         transactionStatus.set(status);
+    }
+    
+    // UserAccount of the currently connected user.
+    private static final ThreadLocal<UserAccount> currentUser = new ThreadLocal<UserAccount>(){
+        @Override
+        protected UserAccount initialValue() {
+            return null;
+        }
+    };
+    
+    public static UserAccount getCurrentUser(){
+        return currentUser.get();
+    }
+    
+    public static void setCurrentUser(UserAccount user){
+        currentUser.set(user);
     }
 
 }

@@ -8,6 +8,7 @@ public class UserAccount implements Principal {
     
     private Long id;
     private String name;
+    private Long objVersion;
     
     @Override
     public String getName() {

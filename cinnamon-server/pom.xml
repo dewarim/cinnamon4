@@ -48,6 +48,31 @@
             <!--<scope>provided</scope>-->
         </dependency>
 
+        <!--<dependency>-->
+            <!--<groupId>com.google.guava</groupId>-->
+            <!--<artifactId>guava</artifactId>-->
+            <!--<version>23.0</version>-->
+        <!--</dependency>        -->
+
+        <!-- xml handling -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-xml</artifactId>
+            <version>2.9.2</version>
+        </dependency>
+
+        <!-- http client for testing (and later on: pre/post request triggers -->
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.5.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>fluent-hc</artifactId>
+            <version>4.5.3</version>
+        </dependency>
+        
         <!--logging  -->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>

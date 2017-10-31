@@ -16,5 +16,6 @@
     </environments>
     <mappers>
         <mapper resource="com/dewarim/cinnamon/UserAccountMapper.xml"/>
+        <mapper resource="com/dewarim/cinnamon/SessionMapper.xml"/>
     </mappers>
 </configuration>

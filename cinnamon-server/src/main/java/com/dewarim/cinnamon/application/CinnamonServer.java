@@ -1,6 +1,7 @@
 package com.dewarim.cinnamon.application;
 
 import com.dewarim.cinnamon.dao.UserAccountDao;
+import com.dewarim.cinnamon.filter.AuthenticationFilter;
 import com.dewarim.cinnamon.filter.DbSessionFilter;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletHandler;
@@ -52,11 +53,12 @@ public class CinnamonServer {
     
     private void addFilters(ServletHandler handler){
         handler.addFilterWithMapping(DbSessionFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
+        handler.addFilterWithMapping(AuthenticationFilter.class, "/api/*", EnumSet.of(DispatcherType.REQUEST));
     }
     
     private void addServlets(ServletHandler handler){
-        handler.addServletWithMapping(CinnamonServlet.class, "/cinnamon");
-        handler.addServletWithMapping(UserServlet.class, "/user");
+        handler.addServletWithMapping(CinnamonServlet.class,"/cinnamon/*");
+        handler.addServletWithMapping(UserServlet.class, "/api/user");
     }
 
     public static void main(String[] args) throws Exception {

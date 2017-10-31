@@ -6,7 +6,15 @@
 <mapper namespace="com.dewarim.cinnamon.UserAccountMapper">
 
     <select id="getUserAccountByName" parameterType="String" resultType="com.dewarim.cinnamon.model.UserAccount">
-        SELECT * FROM users WHERE name = #{name}
+        SELECT *
+        FROM users
+        WHERE name = #{name}
     </select>
-    
+
+    <select id="getUserAccountById" parameterType="Long" resultType="com.dewarim.cinnamon.model.UserAccount">
+        SELECT *
+        FROM users
+        WHERE id = #{id}
+    </select>
+
 </mapper>

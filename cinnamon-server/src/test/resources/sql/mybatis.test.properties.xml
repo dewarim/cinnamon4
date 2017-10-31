@@ -3,5 +3,5 @@
 <properties>
     <entry key="username">sa</entry>
     <entry key="driver">org.hsqldb.jdbcDriver</entry>
-    <entry key="url">jdbc:hsqldb:mem:cinnamon</entry>
+    <entry key="url">jdbc:hsqldb:mem:cinnamon;sql.syntax_pgs=true</entry>
 </properties>

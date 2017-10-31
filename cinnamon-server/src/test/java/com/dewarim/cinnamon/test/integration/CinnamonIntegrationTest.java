@@ -1,4 +1,4 @@
-package com.dewarim.cinnamon.integration;
+package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.application.DbSessionFactory;
@@ -13,6 +13,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.io.PrintWriter;
 import java.io.Reader;
 import java.sql.Connection;
 
@@ -22,31 +23,35 @@ import static com.dewarim.cinnamon.Constants.DAO_USER_ACCOUNT;
 /**
  */
 public class CinnamonIntegrationTest {
-
+    
+    static int cinnamonTestPort = 9999;
     static CinnamonServer cinnamonServer;
     
     @BeforeClass
     public static void setUpServer() throws Exception{
-        cinnamonServer = new CinnamonServer(9999);
+        if(cinnamonServer == null) {
+            cinnamonServer = new CinnamonServer(cinnamonTestPort);
 
-        DbSessionFactory dbSessionFactory = new DbSessionFactory("sql/mybatis.test.properties.xml");
+            DbSessionFactory dbSessionFactory = new DbSessionFactory("sql/mybatis.test.properties.xml");
 
-        SqlSession session = dbSessionFactory.getSqlSessionFactory().openSession();
-        Connection conn = session.getConnection();
-        Reader reader = Resources.getResourceAsReader("sql/CreateTestDB.sql");
-        ScriptRunner runner = new ScriptRunner(conn);
-        runner.setErrorLogWriter(null);
-        runner.runScript(reader);
-        reader.close();
-        session.close();
-        
-        cinnamonServer.setDbSessionFactory(dbSessionFactory);
-        cinnamonServer.start();   
+            SqlSession session = dbSessionFactory.getSqlSessionFactory().openSession();
+            Connection conn = session.getConnection();
+            Reader reader = Resources.getResourceAsReader("sql/CreateTestDB.sql");
+            ScriptRunner runner = new ScriptRunner(conn);
+            PrintWriter errorPrintWriter = new PrintWriter(System.out);
+            runner.setErrorLogWriter(errorPrintWriter);
+            runner.runScript(reader);
+            reader.close();
+            session.close();
+
+            cinnamonServer.setDbSessionFactory(dbSessionFactory);
+            cinnamonServer.start();
+        }
     }
     
     @AfterClass
     public static void shutDownServer() throws Exception{
-        cinnamonServer.getServer().stop();
+//        cinnamonServer.getServer().stop();
     }
 
     /**

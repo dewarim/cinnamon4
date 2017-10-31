@@ -1,17 +1,31 @@
-package com.dewarim.cinnamon.integration;
+package com.dewarim.cinnamon.test.integration;
 
+import org.apache.http.client.fluent.Form;
+import org.apache.http.client.fluent.Request;
+import org.eclipse.jetty.http.HttpStatus;
 import org.junit.Test;
 
+import javax.xml.ws.Response;
+
+import java.io.IOException;
+
+import static org.junit.Assert.assertEquals;
 
 
 /**
  */
-public class AuthenticationTest extends CinnamonIntegrationTest{
+public class AuthenticationFilterIntegrationTest extends CinnamonIntegrationTest{
 
     @Test
-    public void testAuthentication() {
+    public void testAuthentication() throws IOException {
         
-                
+        // connect to get token
+
+        String tokenRequestResult = Request.Post("http://localhost:"+cinnamonTestPort+"/cinnamon/connect")
+                .bodyForm(Form.form().add("user",  "admin").add("pwd",  "admin").build())
+                .execute().returnContent().asString();
+        System.out.println(tokenRequestResult);
+        // call api function: 
         
         
 //        String noAuthRequired = target("/hello/hello").request().get(String.class);

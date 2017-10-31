@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dewarim.cinnamon.SessionMapper">
+
+    <select id="getSessionByTicket" parameterType="String" resultType="com.dewarim.cinnamon.model.Session">
+        SELECT *
+        FROM sessions
+        WHERE ticket = #{ticket}
+    </select>
+
+    <insert id="insertSession" parameterType="com.dewarim.cinnamon.model.Session" flushCache="true"
+    >
+        <selectKey keyProperty="id" resultType="long" order="BEFORE">
+            select nextval('seq_session_id')
+        </selectKey>
+
+        INSERT INTO sessions (id, ticket, expires, ui_language_id, user_id)
+        VALUES (#{id},#{ticket}, #{expires}, #{uiLanguageId}, #{userId})
+    </insert>
+
+</mapper>
