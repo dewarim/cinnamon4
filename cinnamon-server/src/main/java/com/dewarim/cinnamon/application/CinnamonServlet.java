@@ -4,6 +4,10 @@ import com.dewarim.cinnamon.dao.SessionDao;
 import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.model.Session;
 import com.dewarim.cinnamon.model.UserAccount;
+import com.dewarim.cinnamon.model.response.Connection;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -23,6 +27,7 @@ import static com.dewarim.cinnamon.Constants.CONTENT_TYPE_XML;
 public class CinnamonServlet extends HttpServlet {
     
     private static final Logger log = LogManager.getLogger(CinnamonServlet.class);
+    private ObjectMapper xmlMapper = new XmlMapper();   
     private final UserAccountDao userAccountDao = new UserAccountDao();
     // TODO: move to constants or use http core?
 
@@ -71,11 +76,12 @@ public class CinnamonServlet extends HttpServlet {
             if (authenticate(user, password)) {
                 // TODO: get optional uiLanguageParam.
                 Session session = new SessionDao().save(new Session(user.getId(), null));
-                String ticket = session.getTicket();
+                Connection connection = new Connection(session.getTicket());
                 
                 // Return the token on the response
                 response.setContentType(CONTENT_TYPE_XML);
-                response.getWriter().write(String.format("<connection><ticket>%s</ticket></connection>",ticket));
+                xmlMapper.writeValue(response.getWriter(), connection);
+//                response.getWriter().write(String.format("<connection><ticket>%s</ticket></connection>",session.getTicket()));
             }
             else {
                 // render error

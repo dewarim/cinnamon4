@@ -1,15 +1,16 @@
 package com.dewarim.cinnamon.test.integration;
 
+import com.dewarim.cinnamon.model.response.Connection;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import org.apache.http.client.fluent.Form;
 import org.apache.http.client.fluent.Request;
-import org.eclipse.jetty.http.HttpStatus;
 import org.junit.Test;
-
-import javax.xml.ws.Response;
 
 import java.io.IOException;
 
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.junit.Assert.assertThat;
 
 
 /**
@@ -20,11 +21,18 @@ public class AuthenticationFilterIntegrationTest extends CinnamonIntegrationTest
     public void testAuthentication() throws IOException {
         
         // connect to get token
-
         String tokenRequestResult = Request.Post("http://localhost:"+cinnamonTestPort+"/cinnamon/connect")
                 .bodyForm(Form.form().add("user",  "admin").add("pwd",  "admin").build())
                 .execute().returnContent().asString();
+
+        XmlMapper mapper = new XmlMapper();
+        
+        Connection connection = mapper.readValue(tokenRequestResult, Connection.class);
+        assertThat(connection.getTicket(), is(notNullValue()));
+        assertThat(connection.getTicket().matches("(?:[a-z0-9]+-){4}[a-z0-9]+"),is(true ));
+        
         System.out.println(tokenRequestResult);
+        
         // call api function: 
         
         
