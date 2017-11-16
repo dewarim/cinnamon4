@@ -28,6 +28,7 @@ public class DbSessionFilter implements Filter {
             log.debug("DbSessionFilter: after");
         }
         catch (Throwable t) {
+            // TODO: configure logging
             ThreadLocalSqlSession.setTransactionStatus(TransactionStatus.ROLLBACK);
         }
         finally {

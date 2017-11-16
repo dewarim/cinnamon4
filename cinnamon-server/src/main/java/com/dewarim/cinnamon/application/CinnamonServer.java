@@ -58,7 +58,7 @@ public class CinnamonServer {
     
     private void addServlets(ServletHandler handler){
         handler.addServletWithMapping(CinnamonServlet.class,"/cinnamon/*");
-        handler.addServletWithMapping(UserServlet.class, "/api/user");
+        handler.addServletWithMapping(UserServlet.class, "/api/user/*");
     }
 
     public static void main(String[] args) throws Exception {

@@ -41,7 +41,7 @@ public class AuthenticationFilter implements Filter {
                 failAuthentication(response);
                 return;
             }
-            if (cinnamonSession.getExpires().getTime() > new Date().getTime()) {
+            if (cinnamonSession.getExpires().getTime() < new Date().getTime()) {
                 // TODO: include reason?
                 failAuthentication(response);
                 return;

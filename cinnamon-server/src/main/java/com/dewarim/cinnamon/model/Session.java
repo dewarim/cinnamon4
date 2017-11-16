@@ -16,6 +16,9 @@ public class Session {
 
     public Session(Long userId, Long uiLanguageId) {
         ticket = UUID.randomUUID().toString();
+        Date now = new Date();
+        // TODO: make expiration configurable
+        expires = new Date(now.getTime()+3600_000);
         this.userId = userId;
         this.uiLanguageId = uiLanguageId;
     }
