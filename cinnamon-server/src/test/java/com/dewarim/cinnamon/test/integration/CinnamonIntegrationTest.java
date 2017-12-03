@@ -24,7 +24,7 @@ import static com.dewarim.cinnamon.Constants.DAO_USER_ACCOUNT;
  */
 public class CinnamonIntegrationTest {
     
-    static int cinnamonTestPort = 9999;
+    static int cinnamonTestPort = 19999;
     static CinnamonServer cinnamonServer;
     
     @BeforeClass

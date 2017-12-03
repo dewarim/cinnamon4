@@ -56,11 +56,11 @@ public class AuthenticationFilterIntegrationTest extends CinnamonIntegrationTest
         CinnamonError error = mapper.readValue(errorResponse.getEntity().getContent(), CinnamonError.class);
         assertThat(error.getCode(), equalTo("error.userInfoRequest.missing.id.or.name"));
 
-        // call an API method with token:
-        String valudUserInfoRequest = mapper.writeValueAsString(new UserInfoRequest(null,"admin"));
+        // call an API method with token and valid request:
+        String validUserInfoRequest = mapper.writeValueAsString(new UserInfoRequest(null,"admin"));
         HttpResponse userInfoResponse = Request.Post("http://localhost:" + cinnamonTestPort + "/api/user/userInfo")
                 .addHeader("ticket", connection.getTicket())
-                .bodyString(valudUserInfoRequest, ContentType.APPLICATION_XML)
+                .bodyString(validUserInfoRequest, ContentType.APPLICATION_XML)
                 .execute().returnResponse();
         assertThat(userInfoResponse.getStatusLine().getStatusCode(), equalTo(HttpServletResponse.SC_OK));
         // TODO: always return objects wrapped in the list parent (for example: <users><user/><user/></users>)
