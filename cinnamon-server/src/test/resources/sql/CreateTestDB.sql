@@ -1,11 +1,14 @@
 CREATE TABLE users (
   id BIGINT PRIMARY KEY,
-  name VARCHAR(255) NOT NULL ,
-  pwd VARCHAR(255) NOT NULL 
+  name VARCHAR(255) NOT NULL,
+  pwd VARCHAR(255) NOT NULL,
+  obj_version int NOT NULL DEFAULT 0,
+  login_type VARCHAR(64) NOT NULL DEFAULT 'CINNAMON'
 );
 
-create SEQUENCE seq_user_id start with 0;
-INSERT INTO users VALUES ( nextval('seq_user_id'),'admin','admin');
+create SEQUENCE seq_user_id start with 1;
+
+INSERT INTO users(id,name,pwd) VALUES ( nextval('seq_user_id'),'admin','admin');
 
 create table sessions
 (

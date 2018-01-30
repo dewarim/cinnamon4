@@ -1,13 +1,11 @@
 package com.dewarim.cinnamon.application;
 
-import com.dewarim.cinnamon.Constants;
 import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.request.UserInfoRequest;
 import com.dewarim.cinnamon.model.response.UserInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import org.apache.ibatis.session.SqlSession;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -54,7 +52,7 @@ public class UserServlet extends HttpServlet {
             ErrorResponseGenerator.generateErrorMessage(response, HttpServletResponse.SC_BAD_REQUEST, "error.userInfoRequest.missing.id.or.name", "Request needs id or username to be set.");
             return;
         }
-        UserInfo userInfo = new UserInfo(user.getId(), user.getName());
+        UserInfo userInfo = new UserInfo(user.getId(), user.getName(), user.getLoginType());
         response.setContentType(CONTENT_TYPE_XML);
         response.setStatus(HttpServletResponse.SC_OK);
         xmlMapper.writeValue(response.getWriter(), userInfo);

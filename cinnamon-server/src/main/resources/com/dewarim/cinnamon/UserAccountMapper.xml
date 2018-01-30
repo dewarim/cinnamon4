@@ -5,13 +5,20 @@
 
 <mapper namespace="com.dewarim.cinnamon.UserAccountMapper">
 
-    <select id="getUserAccountByName" parameterType="String" resultType="com.dewarim.cinnamon.model.UserAccount">
+    <resultMap id="userAccountMap" type="com.dewarim.cinnamon.model.UserAccount">
+        <id property="id" column="id" />
+        <result property="name" column="name"/>
+        <result property="objVersion" column="obj_version"/>
+        <result property="loginType" typeHandler="org.apache.ibatis.type.EnumTypeHandler" column="login_type"/>
+    </resultMap>
+    
+    <select id="getUserAccountByName" parameterType="String" resultMap="userAccountMap">
         SELECT *
         FROM users
         WHERE name = #{name}
     </select>
 
-    <select id="getUserAccountById" parameterType="Long" resultType="com.dewarim.cinnamon.model.UserAccount">
+    <select id="getUserAccountById" parameterType="Long" resultMap="userAccountMap">
         SELECT *
         FROM users
         WHERE id = #{id}
