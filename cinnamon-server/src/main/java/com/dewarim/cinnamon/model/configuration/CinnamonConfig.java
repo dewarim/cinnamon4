@@ -2,50 +2,16 @@ package com.dewarim.cinnamon.model.configuration;
 
 public class CinnamonConfig {
     
-    private int passwordRounds = 10;
-    private String systemRoot = "/opt/cinnamon/cinnamon-system";
-    private String dataRoot = "/opt/cinnamon/cinnamon-data";
-    private String luceneIndexPath = "/opt/cinnamon/cinnamon-data/index";
+    private ServerConfig serverConfig = new ServerConfig();
+
     private String logbackLoggingConfigPath = "/opt/cinnamon/logback.xml";
         
     private String systemAdministratorEmail;
-    private MailConfig mailConfig;
+    private MailConfig mailConfig = new MailConfig();
 
-    private SecurityConfig securityConfig;
+    private SecurityConfig securityConfig = new SecurityConfig();
 
-    private DatabaseConfig databaseConfig;
-
-    public int getPasswordRounds() {
-        return passwordRounds;
-    }
-
-    public void setPasswordRounds(int passwordRounds) {
-        this.passwordRounds = passwordRounds;
-    }
-
-    public String getSystemRoot() {
-        return systemRoot;
-    }
-
-    public void setSystemRoot(String systemRoot) {
-        this.systemRoot = systemRoot;
-    }
-
-    public String getDataRoot() {
-        return dataRoot;
-    }
-
-    public void setDataRoot(String dataRoot) {
-        this.dataRoot = dataRoot;
-    }
-
-    public String getLuceneIndexPath() {
-        return luceneIndexPath;
-    }
-
-    public void setLuceneIndexPath(String luceneIndexPath) {
-        this.luceneIndexPath = luceneIndexPath;
-    }
+    private DatabaseConfig databaseConfig = new DatabaseConfig();
 
     public String getLogbackLoggingConfigPath() {
         return logbackLoggingConfigPath;
@@ -85,5 +51,13 @@ public class CinnamonConfig {
 
     public void setDatabaseConfig(DatabaseConfig databaseConfig) {
         this.databaseConfig = databaseConfig;
+    }
+
+    public ServerConfig getServerConfig() {
+        return serverConfig;
+    }
+
+    public void setServerConfig(ServerConfig serverConfig) {
+        this.serverConfig = serverConfig;
     }
 }

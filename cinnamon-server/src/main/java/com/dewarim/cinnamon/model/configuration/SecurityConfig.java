@@ -2,6 +2,7 @@ package com.dewarim.cinnamon.model.configuration;
 
 public class SecurityConfig {
 
+    private int passwordRounds = 10;
     private Boolean transferAssetsAllowed = true;
     private Boolean deleteUserAllowed = true;
 
@@ -19,5 +20,13 @@ public class SecurityConfig {
 
     public void setDeleteUserAllowed(Boolean deleteUserAllowed) {
         this.deleteUserAllowed = deleteUserAllowed;
+    }
+
+    public int getPasswordRounds() {
+        return passwordRounds;
+    }
+
+    public void setPasswordRounds(int passwordRounds) {
+        this.passwordRounds = passwordRounds;
     }
 }
