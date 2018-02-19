@@ -57,7 +57,7 @@ public class CinnamonIntegrationTest {
     /**
      * Simple test to lookup the admin user of the test database - if this works, setup is probably okay.
      */
-    @Test
+//    @Test
     public void testAdminUserExists() throws Exception {
         Server server = cinnamonServer.getServer();
         UserAccountDao userAccountDao = (UserAccountDao) server.getAttribute(DAO_USER_ACCOUNT);

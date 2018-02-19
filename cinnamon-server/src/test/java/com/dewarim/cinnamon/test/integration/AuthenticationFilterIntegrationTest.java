@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.test.integration;
 
+import com.dewarim.cinnamon.application.UrlMapping;
 import com.dewarim.cinnamon.model.request.UserInfoRequest;
 import com.dewarim.cinnamon.model.response.CinnamonError;
 import com.dewarim.cinnamon.model.response.Connection;
@@ -24,10 +25,19 @@ import static org.junit.Assert.assertThat;
  */
 public class AuthenticationFilterIntegrationTest extends CinnamonIntegrationTest {
 
+    public static String getAdminTicket() throws IOException{
+        String tokenRequestResult = Request.Post("http://localhost:" + cinnamonTestPort + "/cinnamon/connect")
+                .bodyForm(Form.form().add("user", "admin").add("pwd", "admin").build())
+                .execute().returnContent().asString();
+        XmlMapper mapper = new XmlMapper();
+        Connection connection = mapper.readValue(tokenRequestResult, Connection.class);
+        return connection.getTicket();
+    }
+    
     @Test
     public void testAuthentication() throws IOException {
 
-        // connect to get token
+        // connect to get ticket
         String tokenRequestResult = Request.Post("http://localhost:" + cinnamonTestPort + "/cinnamon/connect")
                 .bodyForm(Form.form().add("user", "admin").add("pwd", "admin").build())
                 .execute().returnContent().asString();
@@ -39,16 +49,17 @@ public class AuthenticationFilterIntegrationTest extends CinnamonIntegrationTest
         assertThat(connection.getTicket().matches("(?:[a-z0-9]+-){4}[a-z0-9]+"), is(true));
 
         System.out.println(tokenRequestResult);
-
-        // call an API method without token:
+        String userPath = UrlMapping.USER__USER_INFO.getPath();
+        
+        // call an API method without ticket:
         String userInfoRequest = mapper.writeValueAsString(new UserInfoRequest(null, null));
-        HttpResponse response = Request.Post("http://localhost:" + cinnamonTestPort + "/api/user/userInfo")
+        HttpResponse response = Request.Post("http://localhost:" + cinnamonTestPort + userPath)
                 .bodyString(userInfoRequest, ContentType.APPLICATION_XML)
                 .execute().returnResponse();
         assertThat(response.getStatusLine().getStatusCode(), equalTo(HttpServletResponse.SC_FORBIDDEN));
 
         // call with broken request (TODO: move to UserServletIntegrationTest etc)
-        HttpResponse errorResponse = Request.Post("http://localhost:" + cinnamonTestPort + "/api/user/userInfo")
+        HttpResponse errorResponse = Request.Post("http://localhost:" + cinnamonTestPort + userPath)
                 .addHeader("ticket", connection.getTicket())
                 .bodyString(userInfoRequest, ContentType.APPLICATION_XML)
                 .execute().returnResponse();
@@ -56,9 +67,9 @@ public class AuthenticationFilterIntegrationTest extends CinnamonIntegrationTest
         CinnamonError error = mapper.readValue(errorResponse.getEntity().getContent(), CinnamonError.class);
         assertThat(error.getCode(), equalTo("error.userInfoRequest.missing.id.or.name"));
 
-        // call an API method with token and valid request:
+        // call an API method with ticket and valid request:
         String validUserInfoRequest = mapper.writeValueAsString(new UserInfoRequest(null,"admin"));
-        HttpResponse userInfoResponse = Request.Post("http://localhost:" + cinnamonTestPort + "/api/user/userInfo")
+        HttpResponse userInfoResponse = Request.Post("http://localhost:" + cinnamonTestPort + userPath)
                 .addHeader("ticket", connection.getTicket())
                 .bodyString(validUserInfoRequest, ContentType.APPLICATION_XML)
                 .execute().returnResponse();

@@ -6,6 +6,7 @@ import com.dewarim.cinnamon.model.request.UserInfoRequest;
 import com.dewarim.cinnamon.model.response.UserInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import org.apache.http.HttpResponse;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -49,7 +50,11 @@ public class UserServlet extends HttpServlet {
             user = userAccountDao.getUserAccountByName(userInfoRequest.getUsername());
         }
         else {
-            ErrorResponseGenerator.generateErrorMessage(response, HttpServletResponse.SC_BAD_REQUEST, "error.userInfoRequest.missing.id.or.name", "Request needs id or username to be set.");
+            ErrorResponseGenerator.generateErrorMessage(response, HttpServletResponse.SC_BAD_REQUEST, ErrorCode.USER_INFO_REQUEST_WITHOUT_NAME_OR_ID, "Request needs id or username to be set.");
+            return;
+        }
+        if(user == null){
+            ErrorResponseGenerator.generateErrorMessage(response, HttpServletResponse.SC_BAD_REQUEST, ErrorCode.USER_ACCOUNT_NOT_FOUND, "Could not find user.");
             return;
         }
         UserInfo userInfo = new UserInfo(user.getId(), user.getName(), user.getLoginType());
