@@ -72,9 +72,11 @@ public class CinnamonServer {
 
     public static void main(String[] args) throws Exception {
        if(Arrays.asList(args).contains("--write-config")){
+           // TODO: accept file parameter for --write-config
            writeConfig();
            return;
-       }        
+       }  
+       // TODO: read cinnamon config from supplied args
         CinnamonServer server = new CinnamonServer(9090);
         server.start();
         server.getServer().join();
