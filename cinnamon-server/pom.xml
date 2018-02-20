@@ -49,9 +49,9 @@
         </dependency>
 
         <!--<dependency>-->
-            <!--<groupId>com.google.guava</groupId>-->
-            <!--<artifactId>guava</artifactId>-->
-            <!--<version>23.0</version>-->
+        <!--<groupId>com.google.guava</groupId>-->
+        <!--<artifactId>guava</artifactId>-->
+        <!--<version>23.0</version>-->
         <!--</dependency>        -->
 
         <!-- xml handling -->
@@ -78,7 +78,7 @@
             <artifactId>fluent-hc</artifactId>
             <version>4.5.3</version>
         </dependency>
-        
+
         <!--logging  -->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
@@ -98,7 +98,7 @@
             <artifactId>unboundid-ldapsdk</artifactId>
             <version>4.0.4</version>
         </dependency>
-        
+
         <!-- testing -->
         <dependency>
             <groupId>junit</groupId>
@@ -112,6 +112,14 @@
             <artifactId>hsqldb</artifactId>
             <version>2.4.0</version>
             <scope>test</scope>
+        </dependency>
+
+        <!-- security -->
+        <!-- see: http://www.mindrot.org/projects/jBCrypt/ -->
+        <dependency>
+            <groupId>org.mindrot</groupId>
+            <artifactId>jbcrypt</artifactId>
+            <version>0.4</version>
         </dependency>
 
     </dependencies>

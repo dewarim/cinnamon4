@@ -10,6 +10,7 @@ public class UserAccount implements Principal {
     private String name;
     private Long objVersion;
     private LoginType loginType;
+    private String password;
     
     @Override
     public String getName() {
@@ -44,6 +45,14 @@ public class UserAccount implements Principal {
         this.loginType = loginType;
     }
 
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
     @Override
     public String toString() {
         return "UserAccount{" +
@@ -70,4 +79,5 @@ public class UserAccount implements Principal {
     public int hashCode() {
         return id.hashCode();
     }
+    
 }

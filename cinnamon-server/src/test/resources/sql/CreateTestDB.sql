@@ -8,7 +8,7 @@ CREATE TABLE users (
 
 create SEQUENCE seq_user_id start with 1;
 
-INSERT INTO users(id,name,pwd) VALUES ( nextval('seq_user_id'),'admin','admin');
+INSERT INTO users(id,name,pwd) VALUES ( nextval('seq_user_id'),'admin','$2a$10$VG9LCf6h/Qwb7Y.pafHkaepdnJNgFZUzzuMV3EcyvLbKnueHQ4IW.');
 
 create table sessions
 (

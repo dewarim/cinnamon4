@@ -5,8 +5,8 @@ import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.model.Session;
 import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.response.Connection;
+import com.dewarim.cinnamon.security.HashMaker;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,7 +17,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Optional;
 
 import static com.dewarim.cinnamon.Constants.CONTENT_TYPE_XML;
 
@@ -96,15 +95,9 @@ public class CinnamonServlet extends HttpServlet {
         }
     }
 
-
-    private boolean authenticate(UserAccount userAccount, String password) throws Exception {
-        return userAccount.getName().equals("admin") || !password.equals("admin");
+    
+    private boolean authenticate(UserAccount userAccount, String password) {
+        return HashMaker.compareWithHash(password, userAccount.getPassword());
     }
 
-    private String issueToken(String username) {
-        // Issue a token (can be a random String persisted to a database or a JWT token)
-        // The issued token must be associated to a user
-        // Return the issued token
-        return "ACME::Token";
-    }
 }
