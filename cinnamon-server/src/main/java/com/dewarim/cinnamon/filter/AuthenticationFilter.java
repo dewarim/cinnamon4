@@ -1,5 +1,7 @@
 package com.dewarim.cinnamon.filter;
 
+import com.dewarim.cinnamon.application.ErrorCode;
+import com.dewarim.cinnamon.application.ErrorResponseGenerator;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.dao.SessionDao;
 import com.dewarim.cinnamon.dao.UserAccountDao;
@@ -13,7 +15,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Date;
-import java.util.Optional;
 
 public class AuthenticationFilter implements Filter {
     private static final Logger log = LogManager.getLogger(AuthenticationFilter.class);
@@ -28,35 +29,33 @@ public class AuthenticationFilter implements Filter {
         try {
             log.debug("AuthenticationFilter: before");
             HttpServletRequest servletRequest = (HttpServletRequest) request;
+            HttpServletResponse servletResponse = (HttpServletResponse) response;
             String ticket = servletRequest.getHeader("ticket");
-            // TODO: check for empty / malformed ticket
-            if (ticket == null) {
-                failAuthentication(response);
+            if (ticket == null || ticket.trim().isEmpty()) {
+                failAuthentication(servletResponse, ErrorCode.AUTHENTICATION_FAIL_NO_TICKET_GIVEN);
                 return;
             }
 
             Session cinnamonSession = new SessionDao().getSessionByTicket(ticket);
             if (cinnamonSession == null) {
-                // TODO: include reason?
-                failAuthentication(response);
+                failAuthentication(servletResponse, ErrorCode.AUTHENTICATION_FAIL_NO_SESSION_FOUND);
                 return;
             }
-            if (cinnamonSession.getExpires().getTime() < new Date().getTime()) {
-                // TODO: include reason?
-                failAuthentication(response);
-                return;
-            }
-            UserAccount userAccount = new UserAccountDao().getUserAccountById(cinnamonSession.getUserId());
-            // TODO: check user exists / is active?
-            // probably okay to assume the user exists, as we have their ticket. But the account could have been invalidated.
 
+            if (cinnamonSession.getExpires().getTime() < new Date().getTime()) {
+                failAuthentication(servletResponse, ErrorCode.AUTHENTICATION_FAIL_SESSION_EXPIRED);
+                return;
+            }
+
+            UserAccount userAccount = new UserAccountDao().getUserAccountById(cinnamonSession.getUserId());
+            if (userAccount == null || !userAccount.isActivated()) {
+                failAuthentication(servletResponse, ErrorCode.AUTHENTICATION_FAIL_USER_NOT_FOUND);
+                return;
+            }
+            
             ThreadLocalSqlSession.setCurrentUser(userAccount);
             chain.doFilter(request, response);
-        }
-//        catch (Throwable t) {
-//            
-//        }
-        finally {
+        } finally {
             log.debug("AuthenticationFilter: after");
         }
 
@@ -67,10 +66,9 @@ public class AuthenticationFilter implements Filter {
 
     }
 
-    private void failAuthentication(ServletResponse servletResponse) {
-        HttpServletResponse response = (HttpServletResponse) servletResponse;
-        response.reset();
-        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+    private void failAuthentication(HttpServletResponse servletResponse, ErrorCode errorCode) {
+        ErrorResponseGenerator.generateErrorMessage(servletResponse,
+                HttpServletResponse.SC_FORBIDDEN, errorCode, "authentication failed");
     }
 
 

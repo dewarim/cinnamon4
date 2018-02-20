@@ -24,5 +24,11 @@
         FROM users
         WHERE id = #{id}
     </select>
+    
+    <update id="changeUserActivationStatus" parameterType="com.dewarim.cinnamon.model.UserAccount">
+        UPDATE users
+        SET activated = #{activated}
+        WHERE id = #{id} 
+    </update>
 
 </mapper>

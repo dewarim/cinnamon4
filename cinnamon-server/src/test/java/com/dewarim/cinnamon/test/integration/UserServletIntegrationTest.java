@@ -5,12 +5,10 @@ import com.dewarim.cinnamon.application.UrlMapping;
 import com.dewarim.cinnamon.model.request.UserInfoRequest;
 import com.dewarim.cinnamon.model.response.CinnamonError;
 import com.dewarim.cinnamon.model.response.UserInfo;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.entity.ContentType;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -20,16 +18,9 @@ import static org.junit.Assert.assertThat;
 
 public class UserServletIntegrationTest extends CinnamonIntegrationTest {
 
-    static String ticket;
-    XmlMapper mapper = new XmlMapper();
-
-    @BeforeClass
-    public static void setup() throws IOException {
-        ticket = AuthenticationFilterIntegrationTest.getAdminTicket();
-    }
 
     @Test
-    public void requestShouldHaveUserIdorUsername() throws IOException {
+    public void requestShouldHaveUserIdOrUsername() throws IOException {
 
         String userInfoRequest = mapper.writeValueAsString(new UserInfoRequest(null, null));
         HttpResponse userInfoResponse = Request.Post("http://localhost:" + cinnamonTestPort + UrlMapping.USER__USER_INFO.getPath())

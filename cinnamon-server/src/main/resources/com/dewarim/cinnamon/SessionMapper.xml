@@ -5,7 +5,15 @@
 
 <mapper namespace="com.dewarim.cinnamon.SessionMapper">
 
-    <select id="getSessionByTicket" parameterType="String" resultType="com.dewarim.cinnamon.model.Session">
+    <resultMap id="sessionMap" type="com.dewarim.cinnamon.model.Session">
+        <id property="id" column="id" />
+        <result property="ticket" column="ticket"/>
+        <result property="expires" column="expires"/>
+        <result property="uiLanguageId" column="ui_language_id"/>
+        <result property="userId" column="user_id"/>
+    </resultMap>
+    
+    <select id="getSessionByTicket" parameterType="String" resultMap="sessionMap">
         SELECT *
         FROM sessions
         WHERE ticket = #{ticket}
@@ -20,5 +28,12 @@
         INSERT INTO sessions (id, ticket, expires, ui_language_id, user_id)
         VALUES (#{id},#{ticket}, #{expires}, #{uiLanguageId}, #{userId})
     </insert>
-
+    
+    <!-- Only field that should be updated is the expiration time when a session is renewed before it expires -->
+    <update id="updateSession" parameterType="com.dewarim.cinnamon.model.Session" flushCache="true">
+        UPDATE sessions set 
+            expires = #{expires}
+        where id = #{id}
+    </update>
+    
 </mapper>

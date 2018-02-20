@@ -18,4 +18,9 @@ public class UserAccountDao {
         return sqlSession.selectOne("com.dewarim.cinnamon.UserAccountMapper.getUserAccountById", id);
     }
 
+    public void changeUserActivationStatus(UserAccount user){
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        sqlSession.update("com.dewarim.cinnamon.UserAccountMapper.changeUserActivationStatus", user);
+    }
+    
 }

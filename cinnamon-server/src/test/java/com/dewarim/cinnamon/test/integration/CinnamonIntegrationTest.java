@@ -2,8 +2,12 @@ package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.application.DbSessionFactory;
+import com.dewarim.cinnamon.application.UrlMapping;
 import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.model.UserAccount;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import org.apache.http.client.fluent.Form;
+import org.apache.http.client.fluent.Request;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.jdbc.ScriptRunner;
 import org.apache.ibatis.session.SqlSession;
@@ -13,6 +17,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Reader;
 import java.sql.Connection;
@@ -26,6 +31,9 @@ public class CinnamonIntegrationTest {
     
     static int cinnamonTestPort = 19999;
     static CinnamonServer cinnamonServer;
+    static String ticket;
+
+    XmlMapper mapper = new XmlMapper();
     
     @BeforeClass
     public static void setUpServer() throws Exception{
@@ -47,6 +55,7 @@ public class CinnamonIntegrationTest {
             cinnamonServer.setDbSessionFactory(dbSessionFactory);
             cinnamonServer.start();
         }
+        ticket = getAdminTicket();
     }
     
     @AfterClass
@@ -54,15 +63,13 @@ public class CinnamonIntegrationTest {
 //        cinnamonServer.getServer().stop();
     }
 
-    /**
-     * Simple test to lookup the admin user of the test database - if this works, setup is probably okay.
-     */
-//    @Test
-    public void testAdminUserExists() throws Exception {
-        Server server = cinnamonServer.getServer();
-        UserAccountDao userAccountDao = (UserAccountDao) server.getAttribute(DAO_USER_ACCOUNT);
-        UserAccount admin = userAccountDao.getUserAccountByName(ADMIN_USER_NAME);
-        Assert.assertEquals(ADMIN_USER_NAME, admin.getName());
-        Assert.assertEquals(1L,admin.getId().longValue());
+    private static String getAdminTicket() throws IOException {
+        String url = "http://localhost:" + cinnamonTestPort + UrlMapping.CINNAMON_CONNECT.getPath();
+        String tokenRequestResult = Request.Post(url)
+                .bodyForm(Form.form().add("user", "admin").add("pwd", "admin").build())
+                .execute().returnContent().asString();
+        XmlMapper mapper = new XmlMapper();
+        com.dewarim.cinnamon.model.response.Connection connection = mapper.readValue(tokenRequestResult, com.dewarim.cinnamon.model.response.Connection.class);
+        return connection.getTicket();
     }
 }

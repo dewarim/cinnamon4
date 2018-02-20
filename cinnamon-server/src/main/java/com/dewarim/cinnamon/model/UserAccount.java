@@ -1,6 +1,7 @@
 package com.dewarim.cinnamon.model;
 
 import java.security.Principal;
+import java.util.Objects;
 
 /**
  */
@@ -11,6 +12,7 @@ public class UserAccount implements Principal {
     private Long objVersion;
     private LoginType loginType;
     private String password;
+    private boolean activated;
     
     @Override
     public String getName() {
@@ -53,6 +55,14 @@ public class UserAccount implements Principal {
         this.password = password;
     }
 
+    public boolean isActivated() {
+        return activated;
+    }
+
+    public void setActivated(boolean activated) {
+        this.activated = activated;
+    }
+
     @Override
     public String toString() {
         return "UserAccount{" +
@@ -60,6 +70,8 @@ public class UserAccount implements Principal {
                 ", name='" + name + '\'' +
                 ", objVersion=" + objVersion +
                 ", loginType=" + loginType +
+                ", password='" + "*** filtered ***" + '\'' +
+                ", activated=" + activated +
                 '}';
     }
 
@@ -67,12 +79,11 @@ public class UserAccount implements Principal {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-
         UserAccount that = (UserAccount) o;
-
-        if (!id.equals(that.id)) return false;
-        if (!name.equals(that.name)) return false;
-        return loginType == that.loginType;
+        return activated == that.activated &&
+                Objects.equals(name, that.name) &&
+                loginType == that.loginType &&
+                Objects.equals(password, that.password);
     }
 
     @Override
