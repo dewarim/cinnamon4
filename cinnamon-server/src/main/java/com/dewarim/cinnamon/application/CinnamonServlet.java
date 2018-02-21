@@ -4,7 +4,7 @@ import com.dewarim.cinnamon.dao.SessionDao;
 import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.model.Session;
 import com.dewarim.cinnamon.model.UserAccount;
-import com.dewarim.cinnamon.model.response.Connection;
+import com.dewarim.cinnamon.model.response.CinnamonConnection;
 import com.dewarim.cinnamon.security.HashMaker;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -24,9 +24,9 @@ import static com.dewarim.cinnamon.Constants.CONTENT_TYPE_XML;
  */
 @WebServlet(name = "Cinnamon", urlPatterns = {"/*"})
 public class CinnamonServlet extends HttpServlet {
-    
+
     private static final Logger log = LogManager.getLogger(CinnamonServlet.class);
-    private ObjectMapper xmlMapper = new XmlMapper();   
+    private ObjectMapper xmlMapper = new XmlMapper();
     private final UserAccountDao userAccountDao = new UserAccountDao();
     // TODO: move to constants or use http core?
 
@@ -40,6 +40,7 @@ public class CinnamonServlet extends HttpServlet {
         }
 
     }
+
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
         String pathInfo = request.getPathInfo();
@@ -66,20 +67,21 @@ public class CinnamonServlet extends HttpServlet {
             String username = request.getParameter("user");
             String password = request.getParameter("pwd");
             UserAccount user = userAccountDao.getUserAccountByName(username);
-            if(user == null){
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                // TODO: render XML error message.
+            if (user == null) {
+                ErrorResponseGenerator.generateErrorMessage(response, HttpServletResponse.SC_UNAUTHORIZED,
+                        ErrorCode.CONNECTION_FAIL_INVALID_USERNAME, "valid username required"
+                );
                 return;
             }
-            
+
             if (authenticate(user, password)) {
                 // TODO: get optional uiLanguageParam.
                 Session session = new SessionDao().save(new Session(user.getId(), null));
-                Connection connection = new Connection(session.getTicket());
-                
+                CinnamonConnection cinnamonConnection = new CinnamonConnection(session.getTicket());
+
                 // Return the token on the response
                 response.setContentType(CONTENT_TYPE_XML);
-                xmlMapper.writeValue(response.getWriter(), connection);
+                xmlMapper.writeValue(response.getWriter(), cinnamonConnection);
 //                response.getWriter().write(String.format("<connection><ticket>%s</ticket></connection>",session.getTicket()));
             }
             else {
@@ -95,7 +97,7 @@ public class CinnamonServlet extends HttpServlet {
         }
     }
 
-    
+
     private boolean authenticate(UserAccount userAccount, String password) {
         return HashMaker.compareWithHash(password, userAccount.getPassword());
     }
