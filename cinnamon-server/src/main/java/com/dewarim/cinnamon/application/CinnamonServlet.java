@@ -82,18 +82,18 @@ public class CinnamonServlet extends HttpServlet {
                 // Return the token on the response
                 response.setContentType(CONTENT_TYPE_XML);
                 xmlMapper.writeValue(response.getWriter(), cinnamonConnection);
-//                response.getWriter().write(String.format("<connection><ticket>%s</ticket></connection>",session.getTicket()));
             }
             else {
-                // render error
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                // TODO: render XML error message.
+                ErrorResponseGenerator.generateErrorMessage(response, HttpServletResponse.SC_UNAUTHORIZED,
+                        ErrorCode.CONNECTION_FAIL_WRONG_PASSWORD, "wrong password"
+                );
             }
-
         } catch (Exception e) {
-            log.debug(e);
+            // TODO: test with unit test & mocked requst which throws exception etc
+            log.debug("connect failed for unknown reason:",e);
+            ErrorResponseGenerator.generateErrorMessage(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    ErrorCode.INTERNAL_SERVER_ERROR_TRY_AGAIN_LATER, e.getMessage());
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            // TODO: render XML error message.
         }
     }
 

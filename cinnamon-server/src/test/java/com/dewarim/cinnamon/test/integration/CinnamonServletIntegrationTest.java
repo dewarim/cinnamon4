@@ -12,6 +12,7 @@ import org.junit.Test;
 import java.io.IOException;
 
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 public class CinnamonServletIntegrationTest extends CinnamonIntegrationTest{
@@ -26,6 +27,28 @@ public class CinnamonServletIntegrationTest extends CinnamonIntegrationTest{
         
         CinnamonError error  = mapper.readValue(response.getEntity().getContent(), CinnamonError.class);
         assertThat(error.getCode(),equalTo(ErrorCode.CONNECTION_FAIL_INVALID_USERNAME.getCode()));
+    }
+
+    @Test
+    public void connectFailsWithWrongPassword() throws IOException{
+        String url = "http://localhost:" + cinnamonTestPort + UrlMapping.CINNAMON_CONNECT.getPath();
+        HttpResponse response = Request.Post(url)
+                .bodyForm(Form.form().add("user", "admin").add("pwd", "invalid").build())
+                .execute().returnResponse();
+        assertThat(response.getStatusLine().getStatusCode(), equalTo(HttpStatus.SC_UNAUTHORIZED));
+
+        CinnamonError error  = mapper.readValue(response.getEntity().getContent(), CinnamonError.class);
+        assertThat(error.getCode(),equalTo(ErrorCode.CONNECTION_FAIL_WRONG_PASSWORD.getCode()));
+    }
+    
+    
+    /**
+     * When base class starts the test server, connect() is called automatically to
+     * provide a ticket for all other API test classes.
+     */
+    @Test
+    public void connectSucceedsWithvalidUsernameAndPassword(){
+        assertThat(ticket,notNullValue());
     }
     
 }
