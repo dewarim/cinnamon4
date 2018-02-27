@@ -12,6 +12,8 @@ public class CinnamonConfig {
     private SecurityConfig securityConfig = new SecurityConfig();
 
     private DatabaseConfig databaseConfig = new DatabaseConfig();
+    
+    private LdapConfig ldapConfig = new LdapConfig();
 
     public String getLogbackLoggingConfigPath() {
         return logbackLoggingConfigPath;
@@ -59,5 +61,13 @@ public class CinnamonConfig {
 
     public void setServerConfig(ServerConfig serverConfig) {
         this.serverConfig = serverConfig;
+    }
+
+    public LdapConfig getLdapConfig() {
+        return ldapConfig;
+    }
+
+    public void setLdapConfig(LdapConfig ldapConfig) {
+        this.ldapConfig = ldapConfig;
     }
 }
