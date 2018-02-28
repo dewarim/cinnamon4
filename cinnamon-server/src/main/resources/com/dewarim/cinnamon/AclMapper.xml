@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dewarim.cinnamon.model.Acl">
+
+    <resultMap id="aclMap" type="com.dewarim.cinnamon.model.Acl">
+        <id property="id" column="id" />
+        <result property="name" column="name"/>
+    </resultMap>
+    
+    <select id="getAclByName" parameterType="String" resultMap="aclMap">
+        SELECT *
+        FROM acls
+        WHERE name = #{name}
+    </select>
+
+    <select id="getAclById" parameterType="Long" resultMap="aclMap">
+        SELECT *
+        FROM acls
+        WHERE id = #{id}
+    </select>
+    
+    <update id="changeAclName" parameterType="com.dewarim.cinnamon.model.Acl">
+        UPDATE acls
+        SET name = #{name}
+        WHERE id = #{id} 
+    </update>
+
+    <insert id="insertAcl" parameterType="com.dewarim.cinnamon.model.Acl">
+        INSERT INTO acls (name) VALUES (#{name})
+    </insert>
+    
+    <delete id="deleteAcl" parameterType="com.dewarim.cinnamon.model.Acl">
+        DELETE FROM acls WHERE id = #{id}
+    </delete>
+    
+</mapper>
