@@ -16,7 +16,7 @@
         WHERE name = #{name}
     </select>
 
-    <select id="getAclById" parameterType="Long" resultMap="aclMap">
+    <select id="getAclById" parameterType="long" resultMap="aclMap">
         SELECT *
         FROM acls
         WHERE id = #{id}
@@ -32,7 +32,7 @@
         INSERT INTO acls (name) VALUES (#{name})
     </insert>
     
-    <delete id="deleteAcl" parameterType="com.dewarim.cinnamon.model.Acl">
+    <delete id="deleteAcl" parameterType="long">
         DELETE FROM acls WHERE id = #{id}
     </delete>
     
