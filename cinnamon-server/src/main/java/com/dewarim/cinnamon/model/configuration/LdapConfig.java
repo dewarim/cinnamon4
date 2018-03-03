@@ -1,33 +1,40 @@
 package com.dewarim.cinnamon.model.configuration;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class LdapConfig {
 
     /**
-     * The LDAP server host's address. 
+     * The LDAP server host's address.
      */
     private String host;
-    
+
     /**
      * Port on which to reach the LDAP server. The default (for testing) is 10389,
      * production port is usually 389.
      */
     private int port = 10389;
-    
+
     /**
      * internal String.format string for bindDN.
-     * Example: 
+     * Example:
      * cn=%s,cn=Users,dc=cinnamon,dc=dewarim,dc=com
-     * 
+     * <p>
      * %s will be replaced by the user name.
      */
-    private String bindDnFormatstring = "cn=%s,cn=Users,dc=localhost";
+    private String bindDnFormatString = "cn=%s,cn=Users,dc=localhost";
 
     /**
      * Search query.
      * Example:
-     * cn=retrieval-users,cn=Users,dc=cinnamon,dc=dewarim,dc=coom
+     * cn=Users,dc=cinnamon,dc=dewarim,dc=coom
+     * 
+     * The query will be pre-pended with cn=$ldapGroup from groupMappings.
+     * Example:
+     * cn=retrieval-users,cn=Users,dc=localhost
      */
-    private String searchBaseDn = "cn=retrieval-users,cn=Users,dc=localhost";
+    private String searchBaseDnFormatString = "cn=retrieval-users,cn=Users,dc=localhost";
 
     /**
      * Search filter to fetch the list of users allowed to login to the Cinnamon server.
@@ -37,9 +44,13 @@ public class LdapConfig {
     /**
      * Name of the attribute which contains the user list.
      * Note: the expectation is currently that the returned searchResultEntry contains a list of
-     * attribute "member" which is a String starting with CN=$username, for example: "CN=John Doe" 
+     * attribute "member" which is a String starting with CN=$username, for example: "CN=John Doe"
      */
     private String searchAttribute = "member";
+
+
+    private List<GroupMapping> groupMappings = new ArrayList<>();
+
 
     public String getHost() {
         return host;
@@ -57,20 +68,20 @@ public class LdapConfig {
         this.port = port;
     }
 
-    public String getBindDnFormatstring() {
-        return bindDnFormatstring;
+    public String getBindDnFormatString() {
+        return bindDnFormatString;
     }
 
-    public void setBindDnFormatstring(String bindDnFormatstring) {
-        this.bindDnFormatstring = bindDnFormatstring;
+    public void setBindDnFormatString(String bindDnFormatString) {
+        this.bindDnFormatString = bindDnFormatString;
     }
 
-    public String getSearchBaseDn() {
-        return searchBaseDn;
+    public String getSearchBaseDnFormatString() {
+        return searchBaseDnFormatString;
     }
 
-    public void setSearchBaseDn(String searchBaseDn) {
-        this.searchBaseDn = searchBaseDn;
+    public void setSearchBaseDnFormatString(String searchBaseDnFormatString) {
+        this.searchBaseDnFormatString = searchBaseDnFormatString;
     }
 
     public String getSearchFilter() {
@@ -87,5 +98,35 @@ public class LdapConfig {
 
     public void setSearchAttribute(String searchAttribute) {
         this.searchAttribute = searchAttribute;
+    }
+
+    public List<GroupMapping> getGroupMappings() {
+        return groupMappings;
+    }
+
+    public void setGroupMappings(List<GroupMapping> groupMappings) {
+        this.groupMappings = groupMappings;
+    }
+
+    public static class GroupMapping {
+
+        private String ldapGroup;
+        private String cinnamonGroup;
+
+        public String getLdapGroup() {
+            return ldapGroup;
+        }
+
+        public void setLdapGroup(String ldapGroup) {
+            this.ldapGroup = ldapGroup;
+        }
+
+        public String getCinnamonGroup() {
+            return cinnamonGroup;
+        }
+
+        public void setCinnamonGroup(String cinnamonGroup) {
+            this.cinnamonGroup = cinnamonGroup;
+        }
     }
 }
