@@ -1,4 +1,4 @@
-package com.dewarim.cinnamon.model.configuration;
+package com.dewarim.cinnamon.configuration;
 
 public class CinnamonConfig {
     
@@ -13,8 +13,6 @@ public class CinnamonConfig {
 
     private DatabaseConfig databaseConfig = new DatabaseConfig();
     
-    private LdapConfig ldapConfig = new LdapConfig();
-
     public String getLogbackLoggingConfigPath() {
         return logbackLoggingConfigPath;
     }
@@ -62,12 +60,5 @@ public class CinnamonConfig {
     public void setServerConfig(ServerConfig serverConfig) {
         this.serverConfig = serverConfig;
     }
-
-    public LdapConfig getLdapConfig() {
-        return ldapConfig;
-    }
-
-    public void setLdapConfig(LdapConfig ldapConfig) {
-        this.ldapConfig = ldapConfig;
-    }
+    
 }
