@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.dewarim.cinnamon.model.Acl">
+<mapper namespace="com.dewarim.cinnamon.AclMapper">
 
     <resultMap id="aclMap" type="com.dewarim.cinnamon.model.Acl">
         <id property="id" column="id" />
@@ -35,5 +35,9 @@
     <delete id="deleteAcl" parameterType="long">
         DELETE FROM acls WHERE id = #{id}
     </delete>
+    
+    <select id="listAcls" resultMap="aclMap">
+        SELECT * FROM acls
+    </select>
     
 </mapper>

@@ -11,5 +11,5 @@ public class Constants {
 
     public static final String CONTENT_TYPE_XML = "application/xml";
 
-
+    public static final String ACL_DEFAULT = "_default_acl";
 }

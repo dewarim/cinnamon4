@@ -29,6 +29,7 @@ public class DbSessionFilter implements Filter {
         }
         catch (Throwable t) {
             // TODO: configure logging
+            log.debug("exception: ",t);
             ThreadLocalSqlSession.setTransactionStatus(TransactionStatus.ROLLBACK);
         }
         finally {

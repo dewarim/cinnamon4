@@ -23,3 +23,12 @@ create table sessions
 ;
 
 create SEQUENCE seq_session_id start with 1;
+
+create table acls(
+  id bigint PRIMARY KEY, 
+  name varchar(255)
+);
+
+create SEQUENCE seq_acls start with 1;
+insert into acls(id,name) values(nextval('seq_acls'),'_default_acl');
+insert into acls(id,name) values(nextval('seq_acls'),'reviewers.acl');

@@ -4,6 +4,8 @@ import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.model.Acl;
 import org.apache.ibatis.session.SqlSession;
 
+import java.util.List;
+
 public class AclDao {
 
     public Acl getAclById(long id) {
@@ -30,6 +32,11 @@ public class AclDao {
     public void deleteAcl(long id) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
         sqlSession.delete("com.dewarim.cinnamon.AclMapper.deleteAcl", id);
+    }
+    
+    public List<Acl> list(){
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        return sqlSession.selectList("com.dewarim.cinnamon.AclMapper.listAcls");
     }
 
 }
