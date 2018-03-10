@@ -1,5 +1,8 @@
 package com.dewarim.cinnamon.configuration;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class CinnamonConfig {
     
     private ServerConfig serverConfig = new ServerConfig();
@@ -12,6 +15,8 @@ public class CinnamonConfig {
     private SecurityConfig securityConfig = new SecurityConfig();
 
     private DatabaseConfig databaseConfig = new DatabaseConfig();
+    
+    private List<LoginProviderConfig> loginProviders = new ArrayList<>();
     
     public String getLogbackLoggingConfigPath() {
         return logbackLoggingConfigPath;
@@ -60,5 +65,12 @@ public class CinnamonConfig {
     public void setServerConfig(ServerConfig serverConfig) {
         this.serverConfig = serverConfig;
     }
-    
+
+    public List<LoginProviderConfig> getLoginProviders() {
+        return loginProviders;
+    }
+
+    public void setLoginProviders(List<LoginProviderConfig> loginProviders) {
+        this.loginProviders = loginProviders;
+    }
 }

@@ -18,6 +18,12 @@
     <dependencies>
 
         <dependency>
+            <groupId>com.dewarim.cinnamon</groupId>
+            <artifactId>cinnamon-api</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        
+        <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-server</artifactId>
             <version>${jetty-version}</version>
@@ -89,14 +95,6 @@
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
             <version>2.8.2</version>
-        </dependency>
-
-        <!-- ldap connectivity -->
-        <!-- see: https://www.ldap.com/unboundid-ldap-sdk-for-java -->
-        <dependency>
-            <groupId>com.unboundid</groupId>
-            <artifactId>unboundid-ldapsdk</artifactId>
-            <version>4.0.4</version>
         </dependency>
 
         <!-- testing -->

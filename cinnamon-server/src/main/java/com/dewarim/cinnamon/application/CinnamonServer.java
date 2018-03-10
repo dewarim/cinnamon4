@@ -3,7 +3,7 @@ package com.dewarim.cinnamon.application;
 import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.filter.AuthenticationFilter;
 import com.dewarim.cinnamon.filter.DbSessionFilter;
-import com.dewarim.cinnamon.model.configuration.CinnamonConfig;
+import com.dewarim.cinnamon.configuration.CinnamonConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
