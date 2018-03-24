@@ -26,9 +26,29 @@ create SEQUENCE seq_session_id start with 1;
 
 create table acls(
   id bigint PRIMARY KEY, 
-  name varchar(255)
+  name varchar(255) UNIQUE 
 );
 
-create SEQUENCE seq_acls start with 1;
-insert into acls(id,name) values(nextval('seq_acls'),'_default_acl');
-insert into acls(id,name) values(nextval('seq_acls'),'reviewers.acl');
+create SEQUENCE seq_acl_id start with 1;
+insert into acls(id,name) values(nextval('seq_acl_id'),'_default_acl');
+insert into acls(id,name) values(nextval('seq_acl_id'),'reviewers.acl');
+
+create table groups(
+  id bigint PRIMARY KEY,
+  name varchar(255) UNIQUE
+);
+create SEQUENCE seq_groups start with 1;
+insert into groups(id,name) VALUES(nextval('seq_groups'),'_superusers');
+
+
+create table group_users(
+  user_id BIGINT NOT NULL ,
+  group_id BIGINT NOT NULL 
+);
+
+create UNIQUE INDEX  group_users_user_group
+  on group_users(user_id,group_id)
+  ;
+
+-- admin is member of superuser group:
+insert into group_users VALUES(1,1);

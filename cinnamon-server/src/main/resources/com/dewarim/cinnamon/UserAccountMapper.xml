@@ -26,6 +26,16 @@
         WHERE id = #{id}
     </select>
     
+    <parameterMap id="statusMap" type="map">
+        <parameter property="userId" javaType="long" jdbcType="BIGINT"/>
+        <parameter property="superuserGroupName" javaType="string" jdbcType="VARCHAR"/>
+    </parameterMap>
+    <select id="getSuperuserStatus" parameterMap="statusMap" resultType="long">
+        select u.id from users u JOIN group_users gu ON u.id = gu.user_id
+        where u.id = #{userId}
+        and gu.group_id in (select g.id from groups g where g.name = #{superuserGroupName})            
+    </select>
+    
     <update id="changeUserActivationStatus" parameterType="com.dewarim.cinnamon.model.UserAccount">
         UPDATE users
         SET activated = #{activated}

@@ -2,10 +2,12 @@ package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.application.UrlMapping;
 import com.dewarim.cinnamon.model.Acl;
+import com.dewarim.cinnamon.model.request.CreateAclRequest;
 import com.dewarim.cinnamon.model.response.AclWrapper;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.fluent.Request;
+import org.apache.http.entity.ContentType;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -37,4 +39,21 @@ public class AclServletIntegrationTest extends CinnamonIntegrationTest{
 
     }
     
+    @Test
+    public void createAclTest() throws IOException {
+        String aclName ="test_acl_"+Math.random();
+        String createAclRequest = mapper.writeValueAsString(new CreateAclRequest(aclName));
+        HttpResponse aclListResponse = Request.Post("http://localhost:" + cinnamonTestPort + UrlMapping.ACL_CREATE_ACL.getPath())
+                .addHeader("ticket", ticket)
+                .bodyString(createAclRequest, ContentType.APPLICATION_XML)
+                .execute().returnResponse();
+        aclListResponse.getEntity().writeTo(System.out);
+        assertThat(aclListResponse.getStatusLine().getStatusCode(),equalTo(HttpStatus.SC_OK));
+        AclWrapper aclWrapper = mapper.readValue(aclListResponse.getEntity().getContent(),AclWrapper.class);
+        List<Acl> acls = aclWrapper.getAcls();
+        assertFalse(acls.isEmpty());
+        Optional<Acl> defaultAcl = acls.stream().filter(acl -> acl.getName().equals(aclName)).findFirst();
+        assertTrue(defaultAcl.isPresent());
+
+    }
 }

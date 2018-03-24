@@ -9,7 +9,8 @@ public enum UrlMapping {
 
     CINNAMON_CONNECT("cinnamon", "connect", ""),
     USER__USER_INFO("user", "userInfo", "/api"), 
-    ACL_GET_ACLS("acl","getAcls" ,"/api" );
+    ACL_GET_ACLS("acl","getAcls" ,"/api" ),
+    ACL_CREATE_ACL("acl","createAcl","/api");
 
     private String servlet;
     private String action;
