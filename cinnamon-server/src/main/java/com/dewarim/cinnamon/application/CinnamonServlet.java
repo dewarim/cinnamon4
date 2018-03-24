@@ -1,11 +1,13 @@
 package com.dewarim.cinnamon.application;
 
+import com.dewarim.cinnamon.api.login.LoginResult;
 import com.dewarim.cinnamon.dao.SessionDao;
 import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.model.Session;
 import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.response.CinnamonConnection;
 import com.dewarim.cinnamon.security.HashMaker;
+import com.dewarim.cinnamon.security.LoginProviderService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import org.apache.logging.log4j.LogManager;
@@ -28,6 +30,7 @@ public class CinnamonServlet extends HttpServlet {
     private static final Logger log = LogManager.getLogger(CinnamonServlet.class);
     private ObjectMapper xmlMapper = new XmlMapper();
     private final UserAccountDao userAccountDao = new UserAccountDao();
+    private LoginProviderService loginProviderService = LoginProviderService.getInstance();
     // TODO: move to constants or use http core?
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -99,7 +102,8 @@ public class CinnamonServlet extends HttpServlet {
 
 
     private boolean authenticate(UserAccount userAccount, String password) {
-        return HashMaker.compareWithHash(password, userAccount.getPassword());
+        LoginResult loginResult = loginProviderService.connect(userAccount, password);
+        return loginResult.isValidUser();
     }
 
 }

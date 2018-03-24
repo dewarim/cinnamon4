@@ -10,7 +10,8 @@ public enum ErrorCode {
     CONNECTION_FAIL_WRONG_PASSWORD("error.wrong.password"),
     INTERNAL_SERVER_ERROR_TRY_AGAIN_LATER("error.internal.server.error.please.retry.later"),
     USER_INFO_REQUEST_WITHOUT_NAME_OR_ID("error.userInfoRequest.missing.id.or.name"),
-    USER_ACCOUNT_NOT_FOUND("error.userInfoRequest.invalid.id.or.name");
+    USER_ACCOUNT_NOT_FOUND("error.userInfoRequest.invalid.id.or.name"),
+    LOGIN_FAILED("error.login.failed");
     
     String code;
 

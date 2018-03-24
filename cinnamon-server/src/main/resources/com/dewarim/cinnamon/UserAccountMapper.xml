@@ -9,7 +9,8 @@
         <id property="id" column="id" />
         <result property="name" column="name"/>
         <result property="objVersion" column="obj_version"/>
-        <result property="loginType" typeHandler="org.apache.ibatis.type.EnumTypeHandler" column="login_type"/>
+        <!--<result property="loginType" typeHandler="org.apache.ibatis.type.EnumTypeHandler" column="login_type"/>-->
+        <result property="loginType" column="login_type"/>
         <result property="password" column="pwd"/>
     </resultMap>
     

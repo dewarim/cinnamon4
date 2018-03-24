@@ -1,16 +1,18 @@
 package com.dewarim.cinnamon.model;
 
+import com.dewarim.cinnamon.api.login.LoginUser;
+
 import java.security.Principal;
 import java.util.Objects;
 
 /**
  */
-public class UserAccount implements Principal {
+public class UserAccount implements Principal, LoginUser {
     
     private Long id;
     private String name;
     private Long objVersion;
-    private LoginType loginType;
+    private String loginType;
     private String password;
     private boolean activated;
     
@@ -39,11 +41,11 @@ public class UserAccount implements Principal {
         this.objVersion = objVersion;
     }
 
-    public LoginType getLoginType() {
+    public String getLoginType() {
         return loginType;
     }
 
-    public void setLoginType(LoginType loginType) {
+    public void setLoginType(String loginType) {
         this.loginType = loginType;
     }
 
@@ -54,13 +56,23 @@ public class UserAccount implements Principal {
     public void setPassword(String password) {
         this.password = password;
     }
-
+    
     public boolean isActivated() {
         return activated;
     }
 
     public void setActivated(boolean activated) {
         this.activated = activated;
+    }
+
+    @Override
+    public String getUsername() {
+        return name;
+    }
+
+    @Override
+    public String getPasswordHash() {
+        return password;
     }
 
     @Override

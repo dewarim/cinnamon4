@@ -1,11 +1,9 @@
 package com.dewarim.cinnamon.configuration;
 
-import com.dewarim.cinnamon.model.LoginType;
-
 public class LoginProviderConfig {
     
     private String className;
-    private LoginType loginType;
+    private String loginType;
     private boolean autoCreateCinnamonUser;
     
 }
