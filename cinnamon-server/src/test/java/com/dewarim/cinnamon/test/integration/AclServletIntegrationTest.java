@@ -31,9 +31,6 @@ public class AclServletIntegrationTest extends CinnamonIntegrationTest{
         assertFalse(acls.isEmpty());
         Optional<Acl> defaultAcl = acls.stream().filter(acl -> acl.getName().equals(ACL_DEFAULT)).findFirst();
         assertTrue(defaultAcl.isPresent());
-        Optional<Acl> reviewers = acls.stream().filter(acl -> acl.getName().equals("reviewers.acl")).findFirst();
-        assertTrue(reviewers.isPresent());
-
 
     }
     
