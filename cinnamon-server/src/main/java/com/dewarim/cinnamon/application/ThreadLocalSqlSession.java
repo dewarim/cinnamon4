@@ -6,9 +6,6 @@ import org.apache.ibatis.session.TransactionIsolationLevel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  */
 public class ThreadLocalSqlSession {
@@ -18,19 +15,14 @@ public class ThreadLocalSqlSession {
     static DbSessionFactory dbSessionFactory;
     static TransactionIsolationLevel transactionIsolationLevel = TransactionIsolationLevel.SERIALIZABLE;
     
-    private static final ThreadLocal<SqlSession> localSqlSession = new ThreadLocal<SqlSession>(){
+    private static final ThreadLocal<SqlSession> localSqlSession = new ThreadLocal<>() {
         @Override
         protected SqlSession initialValue() {
             return dbSessionFactory.getSqlSessionFactory().openSession(transactionIsolationLevel);
         }
     };
     
-    private static final ThreadLocal<TransactionStatus> transactionStatus = new ThreadLocal<TransactionStatus>(){
-        @Override
-        protected TransactionStatus initialValue() {
-            return TransactionStatus.OK;
-        }
-    };
+    private static final ThreadLocal<TransactionStatus> transactionStatus = ThreadLocal.withInitial(() -> TransactionStatus.OK);
     
     public static SqlSession getSqlSession(){
         return localSqlSession.get();
@@ -53,12 +45,7 @@ public class ThreadLocalSqlSession {
     }
     
     // UserAccount of the currently connected user.
-    private static final ThreadLocal<UserAccount> currentUser = new ThreadLocal<UserAccount>(){
-        @Override
-        protected UserAccount initialValue() {
-            return null;
-        }
-    };
+    private static final ThreadLocal<UserAccount> currentUser = ThreadLocal.withInitial(() -> null);
     
     public static UserAccount getCurrentUser(){
         return currentUser.get();

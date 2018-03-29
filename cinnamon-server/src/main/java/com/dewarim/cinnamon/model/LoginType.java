@@ -6,7 +6,7 @@ package com.dewarim.cinnamon.model;
  */
 public enum LoginType {
 
-    CINNAMON, LDAP;
+    CINNAMON, LDAP
 
 
 }

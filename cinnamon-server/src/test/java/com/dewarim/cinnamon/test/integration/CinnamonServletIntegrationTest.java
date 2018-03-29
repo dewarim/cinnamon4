@@ -47,7 +47,7 @@ public class CinnamonServletIntegrationTest extends CinnamonIntegrationTest{
      * provide a ticket for all other API test classes.
      */
     @Test
-    public void connectSucceedsWithvalidUsernameAndPassword(){
+    public void connectSucceedsWithValidUsernameAndPassword(){
         assertThat(ticket,notNullValue());
     }
     

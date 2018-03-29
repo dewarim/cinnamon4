@@ -94,7 +94,7 @@ public class UserAccount implements Principal, LoginUser {
         UserAccount that = (UserAccount) o;
         return activated == that.activated &&
                 Objects.equals(name, that.name) &&
-                loginType == that.loginType &&
+                loginType.equals(that.loginType) &&
                 Objects.equals(password, that.password);
     }
 

@@ -87,7 +87,7 @@ public class AuthenticationFilterIntegrationTest extends CinnamonIntegrationTest
     }
     
     @Test
-    public void callApiWithNonexistingSessionTicket() throws IOException{
+    public void callApiWithNonExistingSessionTicket() throws IOException{
         String userInfoRequest = mapper.writeValueAsString(new UserInfoRequest(null, "admin"));
         HttpResponse response = Request.Post("http://localhost:" + cinnamonTestPort + UrlMapping.USER__USER_INFO.getPath())
                 .addHeader("ticket", " ")

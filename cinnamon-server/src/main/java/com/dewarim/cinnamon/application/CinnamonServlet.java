@@ -6,7 +6,6 @@ import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.model.Session;
 import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.response.CinnamonConnection;
-import com.dewarim.cinnamon.security.HashMaker;
 import com.dewarim.cinnamon.security.LoginProviderService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -92,7 +91,7 @@ public class CinnamonServlet extends HttpServlet {
                 );
             }
         } catch (Exception e) {
-            // TODO: test with unit test & mocked requst which throws exception etc
+            // TODO: test with unit test & mocked request which throws exception etc
             log.debug("connect failed for unknown reason:",e);
             ErrorResponseGenerator.generateErrorMessage(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
                     ErrorCode.INTERNAL_SERVER_ERROR_TRY_AGAIN_LATER, e.getMessage());

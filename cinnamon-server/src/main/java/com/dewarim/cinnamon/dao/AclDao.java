@@ -10,12 +10,12 @@ public class AclDao {
 
     public Acl getAclById(long id) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        return sqlSession.selectOne("com.dewarim.cinnamon.AclMaper.getAclById", id);
+        return sqlSession.selectOne("com.dewarim.cinnamon.AclMapper.getAclById", id);
     }
 
     public Acl getAclByName(String name) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        return sqlSession.selectOne("com.dewarim.cinnamon.AclMaper.getAclByName", name);
+        return sqlSession.selectOne("com.dewarim.cinnamon.AclMapper.getAclByName", name);
     }
 
     public Acl save(Acl acl) {
