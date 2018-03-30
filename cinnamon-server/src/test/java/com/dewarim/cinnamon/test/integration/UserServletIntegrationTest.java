@@ -3,17 +3,19 @@ package com.dewarim.cinnamon.test.integration;
 import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.application.UrlMapping;
 import com.dewarim.cinnamon.model.request.UserInfoRequest;
-import com.dewarim.cinnamon.model.response.CinnamonError;
 import com.dewarim.cinnamon.model.response.UserInfo;
+import com.dewarim.cinnamon.model.response.UserWrapper;
 import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.entity.ContentType;
+import org.hamcrest.MatcherAssert;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.List;
 
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
 public class UserServletIntegrationTest extends CinnamonIntegrationTest {
@@ -27,10 +29,7 @@ public class UserServletIntegrationTest extends CinnamonIntegrationTest {
                 .addHeader("ticket", ticket)
                 .bodyString(userInfoRequest, ContentType.APPLICATION_XML)
                 .execute().returnResponse();
-        assertThat(userInfoResponse.getStatusLine().getStatusCode(), equalTo(HttpStatus.SC_BAD_REQUEST));
-        CinnamonError cinnamonError = mapper.readValue(userInfoResponse.getEntity().getContent(), CinnamonError.class);
-
-        assertThat(cinnamonError.getCode(), equalTo(ErrorCode.USER_INFO_REQUEST_WITHOUT_NAME_OR_ID.getCode()));
+        assertCinnamonError(userInfoResponse,ErrorCode.USER_INFO_REQUEST_WITHOUT_NAME_OR_ID);
     }
 
     @Test
@@ -40,9 +39,8 @@ public class UserServletIntegrationTest extends CinnamonIntegrationTest {
                 .addHeader("ticket", ticket)
                 .bodyString(userInfoRequest, ContentType.APPLICATION_XML)
                 .execute().returnResponse();
-        assertResponseOkay(userInfoResponse);
-        UserInfo info = mapper.readValue(userInfoResponse.getEntity().getContent(), UserInfo.class);
-        assertThat(info.getName(), equalTo("admin"));
+        UserInfo admin = unwrapUsers(userInfoResponse,1).get(0);
+        assertThat(admin.getName(), equalTo("admin"));
     }
 
     @Test
@@ -52,9 +50,8 @@ public class UserServletIntegrationTest extends CinnamonIntegrationTest {
                 .addHeader("ticket", ticket)
                 .bodyString(userInfoRequest, ContentType.APPLICATION_XML)
                 .execute().returnResponse();
-        assertResponseOkay(userInfoResponse);
-        UserInfo info = mapper.readValue(userInfoResponse.getEntity().getContent(), UserInfo.class);
-        assertThat(info.getId(), equalTo(1L));
+        UserInfo admin = unwrapUsers(userInfoResponse,1).get(0);
+        assertThat(admin.getId(), equalTo(1L));
 
     }
 
@@ -65,10 +62,16 @@ public class UserServletIntegrationTest extends CinnamonIntegrationTest {
                 .addHeader("ticket", ticket)
                 .bodyString(userInfoRequest, ContentType.APPLICATION_XML)
                 .execute().returnResponse();
-        assertThat(userInfoResponse.getStatusLine().getStatusCode(), equalTo(HttpStatus.SC_BAD_REQUEST));
-        CinnamonError cinnamonError = mapper.readValue(userInfoResponse.getEntity().getContent(), CinnamonError.class);
-
-        assertThat(cinnamonError.getCode(), equalTo(ErrorCode.USER_ACCOUNT_NOT_FOUND.getCode()));
+        assertCinnamonError(userInfoResponse,ErrorCode.USER_ACCOUNT_NOT_FOUND);
     }
-
+    
+    private List<UserInfo> unwrapUsers(HttpResponse response, Integer expectedSize) throws IOException {
+        assertResponseOkay(response);
+        List<UserInfo> users = mapper.readValue(response.getEntity().getContent(),UserWrapper.class).getUsers();
+        if (expectedSize != null) {
+            assertFalse(users.isEmpty());
+            MatcherAssert.assertThat(users.size(), equalTo(1));
+        }
+        return users;
+    }
 }

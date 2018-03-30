@@ -10,6 +10,7 @@ import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.request.UserInfoRequest;
 import com.dewarim.cinnamon.model.response.CinnamonError;
 import com.dewarim.cinnamon.model.response.UserInfo;
+import com.dewarim.cinnamon.model.response.UserWrapper;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.entity.ContentType;
@@ -36,7 +37,7 @@ public class AuthenticationFilterIntegrationTest extends CinnamonIntegrationTest
 
         assertThat(ticket, is(notNullValue()));
         assertThat(ticket.matches("(?:[a-z0-9]+-){4}[a-z0-9]+"), is(true));
-        
+
         String userPath = UrlMapping.USER__USER_INFO.getPath();
 
         // call an API method with ticket and valid request:
@@ -46,23 +47,22 @@ public class AuthenticationFilterIntegrationTest extends CinnamonIntegrationTest
                 .bodyString(validUserInfoRequest, ContentType.APPLICATION_XML)
                 .execute().returnResponse();
         assertThat(userInfoResponse.getStatusLine().getStatusCode(), equalTo(HttpServletResponse.SC_OK));
-        // TODO: always return objects wrapped in the list parent (for example: <users><user/><user/></users>)
-        UserInfo info = mapper.readValue(userInfoResponse.getEntity().getContent(), UserInfo.class);
+        UserInfo info = mapper.readValue(userInfoResponse.getEntity().getContent(), UserWrapper.class).getUsers().get(0);
         assertThat(info.getName(), equalTo("admin"));
 
     }
-    
+
     @Test
-    public void callingApiWithoutTicketIsForbidden() throws IOException{
+    public void callingApiWithoutTicketIsForbidden() throws IOException {
         String userInfoRequest = mapper.writeValueAsString(new UserInfoRequest(null, "admin"));
         HttpResponse response = Request.Post("http://localhost:" + cinnamonTestPort + UrlMapping.USER__USER_INFO.getPath())
                 .bodyString(userInfoRequest, ContentType.APPLICATION_XML)
                 .execute().returnResponse();
         assertThat(response.getStatusLine().getStatusCode(), equalTo(HttpServletResponse.SC_FORBIDDEN));
     }
-    
+
     @Test
-    public void callApiWithExpiredSession() throws IOException{
+    public void callApiWithExpiredSession() throws IOException {
         SessionDao dao = new SessionDao();
         Session cinnamonSession = dao.getSessionByTicket(ticket);
         cinnamonSession.setExpires(new Date(1000000));
@@ -78,13 +78,13 @@ public class AuthenticationFilterIntegrationTest extends CinnamonIntegrationTest
         assertThat(response.getStatusLine().getStatusCode(), equalTo(HttpServletResponse.SC_FORBIDDEN));
         CinnamonError error = mapper.readValue(response.getEntity().getContent(), CinnamonError.class);
         assertThat(error.getCode(), equalTo(ErrorCode.AUTHENTICATION_FAIL_SESSION_EXPIRED.getCode()));
-        
+
         // create new, not expired ticket for other tests
         ticket = getAdminTicket();
     }
-    
+
     @Test
-    public void callApiWithNonExistingSessionTicket() throws IOException{
+    public void callApiWithNonExistingSessionTicket() throws IOException {
         String userInfoRequest = mapper.writeValueAsString(new UserInfoRequest(null, "admin"));
         HttpResponse response = Request.Post("http://localhost:" + cinnamonTestPort + UrlMapping.USER__USER_INFO.getPath())
                 .addHeader("ticket", " ")
@@ -94,9 +94,9 @@ public class AuthenticationFilterIntegrationTest extends CinnamonIntegrationTest
         CinnamonError error = mapper.readValue(response.getEntity().getContent(), CinnamonError.class);
         assertThat(error.getCode(), equalTo(ErrorCode.AUTHENTICATION_FAIL_NO_TICKET_GIVEN.getCode()));
     }
-    
+
     @Test
-    public void callApiWithTicketOfInvalidUser() throws IOException{
+    public void callApiWithTicketOfInvalidUser() throws IOException {
         // user has been deleted or is inactive
         UserAccountDao userDao = new UserAccountDao();
         UserAccount admin = userDao.getUserAccountByName("admin");
@@ -113,11 +113,11 @@ public class AuthenticationFilterIntegrationTest extends CinnamonIntegrationTest
         assertThat(response.getStatusLine().getStatusCode(), equalTo(HttpServletResponse.SC_FORBIDDEN));
         CinnamonError error = mapper.readValue(response.getEntity().getContent(), CinnamonError.class);
         assertThat(error.getCode(), equalTo(ErrorCode.AUTHENTICATION_FAIL_USER_NOT_FOUND.getCode()));
-        
+
         // restore active status for admin for further tests:
         admin.setActivated(true);
         userDao.changeUserActivationStatus(admin);
         sqlSession.commit();
-        
+
     }
 }

@@ -4,6 +4,7 @@ import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.request.UserInfoRequest;
 import com.dewarim.cinnamon.model.response.UserInfo;
+import com.dewarim.cinnamon.model.response.UserWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
@@ -13,6 +14,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Collections;
 
 import static com.dewarim.cinnamon.Constants.CONTENT_TYPE_XML;
 
@@ -57,8 +59,10 @@ public class UserServlet extends HttpServlet {
             return;
         }
         UserInfo userInfo = new UserInfo(user.getId(), user.getName(), user.getLoginType());
+        UserWrapper wrapper = new UserWrapper();
+        wrapper.setUsers(Collections.singletonList(userInfo));
         response.setContentType(CONTENT_TYPE_XML);
         response.setStatus(HttpServletResponse.SC_OK);
-        xmlMapper.writeValue(response.getWriter(), userInfo);
+        xmlMapper.writeValue(response.getWriter(), wrapper);
     }
 }
