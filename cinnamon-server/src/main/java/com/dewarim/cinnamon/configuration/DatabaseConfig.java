@@ -4,6 +4,7 @@ public class DatabaseConfig {
 
     private String driver = "org.postgresql.Driver";
     private String host = "127.0.0.1";
+    private String port = "5432";
     private String database = "demo";
     private String user = "cinnamon";
     private String password = "cinnamon";
@@ -46,5 +47,17 @@ public class DatabaseConfig {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getPort() {
+        return port;
+    }
+
+    public void setPort(String port) {
+        this.port = port;
+    }
+
+    public String getDatabaseUrl(){
+        return String.format("jdbc:postgresql://%s:%s/%s",host,port,database);
     }
 }

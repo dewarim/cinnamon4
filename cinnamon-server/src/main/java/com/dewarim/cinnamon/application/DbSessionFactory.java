@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.application;
 
+import com.dewarim.cinnamon.configuration.DatabaseConfig;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
@@ -19,14 +20,20 @@ public class DbSessionFactory {
     
     public DbSessionFactory(String propertiesFilename) {
         String resource = "sql/mybatis-config.xml";
-        if(propertiesFilename == null) {
-            propertiesFilename = DEFAULT_PROPERTIES_FILENAME;
-        }
         try {
             InputStream mybatisConfigStream = Resources.getResourceAsStream(resource);
-            InputStream propertyStream = Resources.getResourceAsStream(propertiesFilename);
             Properties properties = new Properties();
-            properties.loadFromXML(propertyStream);
+            if (propertiesFilename == null) {
+                DatabaseConfig databaseConfig = CinnamonServer.config.getDatabaseConfig();
+                properties.put("username",databaseConfig.getUser());
+                properties.put("password",databaseConfig.getPassword());
+                properties.put("driver",databaseConfig.getDriver());
+                properties.put("url",databaseConfig.getDatabaseUrl());
+            }
+            else {
+                InputStream propertyStream = Resources.getResourceAsStream(DEFAULT_PROPERTIES_FILENAME);
+                properties.loadFromXML(propertyStream);
+            }
             sqlSessionFactory = new SqlSessionFactoryBuilder().build(mybatisConfigStream, properties);
         }
         catch (IOException e){

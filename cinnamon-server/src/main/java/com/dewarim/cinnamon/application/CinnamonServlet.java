@@ -35,7 +35,10 @@ public class CinnamonServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
         String pathInfo = request.getPathInfo();
-
+        if(pathInfo == null){
+            // prevent NPE
+            pathInfo = "/";
+        }
         switch (pathInfo) {
             default:
                 hello(response);

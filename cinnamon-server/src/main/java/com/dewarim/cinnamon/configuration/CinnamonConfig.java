@@ -7,6 +7,7 @@ public class CinnamonConfig {
     
     private ServerConfig serverConfig = new ServerConfig();
 
+    @Deprecated(forRemoval = true)
     private String logbackLoggingConfigPath = "/opt/cinnamon/logback.xml";
         
     private String systemAdministratorEmail;
