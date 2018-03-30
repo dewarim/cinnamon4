@@ -28,6 +28,7 @@ public class DbSessionFilter implements Filter {
             log.debug("DbSessionFilter: after");
         }
         catch (Throwable t) {
+            // TODO: wrap uncaught exceptions into proper CinnamonError response.
             // TODO: configure logging
             log.debug("exception: ",t);
             ThreadLocalSqlSession.setTransactionStatus(TransactionStatus.ROLLBACK);

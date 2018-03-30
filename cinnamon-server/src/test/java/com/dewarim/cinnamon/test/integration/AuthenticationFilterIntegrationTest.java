@@ -65,7 +65,6 @@ public class AuthenticationFilterIntegrationTest extends CinnamonIntegrationTest
     public void callApiWithExpiredSession() throws IOException{
         SessionDao dao = new SessionDao();
         Session cinnamonSession = dao.getSessionByTicket(ticket);
-        Date currentExpiration = cinnamonSession.getExpires();
         cinnamonSession.setExpires(new Date(1000000));
         dao.update(cinnamonSession);
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
@@ -80,10 +79,8 @@ public class AuthenticationFilterIntegrationTest extends CinnamonIntegrationTest
         CinnamonError error = mapper.readValue(response.getEntity().getContent(), CinnamonError.class);
         assertThat(error.getCode(), equalTo(ErrorCode.AUTHENTICATION_FAIL_SESSION_EXPIRED.getCode()));
         
-        // restore old expiration date for other tests
-        cinnamonSession.setExpires(currentExpiration);
-        dao.update(cinnamonSession);
-        sqlSession.commit();
+        // create new, not expired ticket for other tests
+        ticket = getAdminTicket();
     }
     
     @Test

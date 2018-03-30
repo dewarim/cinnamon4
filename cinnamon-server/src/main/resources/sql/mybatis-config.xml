@@ -19,5 +19,6 @@
         <mapper resource="com/dewarim/cinnamon/UserAccountMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/SessionMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/AclMapper.xml"/>
+        <mapper resource="com/dewarim/cinnamon/LinkMapper.xml"/>
     </mappers>
 </configuration>

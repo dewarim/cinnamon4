@@ -13,7 +13,10 @@ public enum ErrorCode {
     USER_ACCOUNT_NOT_FOUND("error.userInfoRequest.invalid.id.or.name"),
     LOGIN_FAILED("error.login.failed"), 
     REQUIRES_SUPERUSER_STATUS("error.action.requires.superuser.status"), 
-    NAME_PARAM_IS_INVALID("error.name.param.is.invalid");
+    NAME_PARAM_IS_INVALID("error.name.param.is.invalid"), 
+    INFO_REQUEST_WITHOUT_NAME_OR_ID("error.request.needs.id.or.name.parameter"),
+    DELETE_REQUEST_WITHOUT_ID("error.delete.request.needs.id.parameter"),
+    DB_UPDATE_FAILED("error.db.update.failed");
     
     String code;
 

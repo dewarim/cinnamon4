@@ -20,6 +20,10 @@ public class ErrorResponseGenerator {
         catch (IOException e){
             throw new RuntimeException(e);
         }
+    }    
+    public static void superuserRequired(HttpServletResponse response){
+        generateErrorMessage(response, HttpServletResponse.SC_FORBIDDEN,
+                ErrorCode.REQUIRES_SUPERUSER_STATUS, ""); 
     }
     
 }

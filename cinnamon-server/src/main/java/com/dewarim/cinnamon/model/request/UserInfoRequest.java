@@ -2,8 +2,8 @@ package com.dewarim.cinnamon.model.request;
 
 public class UserInfoRequest {
     
-    Long userId;
-    String username;
+    private Long userId;
+    private String username;
 
     public UserInfoRequest() {
     }

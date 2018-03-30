@@ -2,7 +2,7 @@ package com.dewarim.cinnamon.model.request;
 
 public class CreateAclRequest {
     
-    String name;
+    private String name;
 
     public CreateAclRequest() {
     }

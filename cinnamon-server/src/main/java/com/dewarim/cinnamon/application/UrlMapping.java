@@ -8,9 +8,12 @@ package com.dewarim.cinnamon.application;
 public enum UrlMapping {
 
     CINNAMON_CONNECT("cinnamon", "connect", ""),
-    USER__USER_INFO("user", "userInfo", "/api"), 
-    ACL_GET_ACLS("acl","getAcls" ,"/api" ),
-    ACL_CREATE_ACL("acl","createAcl","/api");
+    USER__USER_INFO("user", "userInfo", "/api"),
+    ACL__GET_ACLS("acl", "getAcls", "/api"),
+    ACL__CREATE_ACL("acl", "createAcl", "/api"),
+    ACL__ACL_INFO("acl", "aclInfo", "/api"),
+    ACL__DELETE_ACL("acl", "deleteAcl", "/api"),
+    ACL__UPDATE_ACL("acl", "updateAcl", "/api");
 
     private String servlet;
     private String action;

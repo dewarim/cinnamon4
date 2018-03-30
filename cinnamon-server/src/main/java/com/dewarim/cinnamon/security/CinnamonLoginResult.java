@@ -25,8 +25,8 @@ public class CinnamonLoginResult implements LoginResult {
         }
     }
     
-    public static CinnamonLoginResult createLoginResult(boolean isvalid){
-        if(isvalid){
+    public static CinnamonLoginResult createLoginResult(boolean isValid){
+        if(isValid){
             return validResult;
         }
         return invalidResult;

@@ -18,5 +18,9 @@ public class Constants {
     public static final String GROUP_USERS = "_users";
     public static final String ALIAS_EVERYONE = "_everyone";
     public static final String ALIAS_OWNER = "_owner";
-    
+
+    public static final String FOLDER_TYPE_DEFAULT = "_default_folder_type";
+    public static final String OBJTYPE_DEFAULT = "_default_objtype";
+
+
 }

@@ -40,7 +40,7 @@ public class UserServletIntegrationTest extends CinnamonIntegrationTest {
                 .addHeader("ticket", ticket)
                 .bodyString(userInfoRequest, ContentType.APPLICATION_XML)
                 .execute().returnResponse();
-        assertThat(userInfoResponse.getStatusLine().getStatusCode(), equalTo(HttpStatus.SC_OK));
+        assertResponseOkay(userInfoResponse);
         UserInfo info = mapper.readValue(userInfoResponse.getEntity().getContent(), UserInfo.class);
         assertThat(info.getName(), equalTo("admin"));
     }
@@ -52,7 +52,7 @@ public class UserServletIntegrationTest extends CinnamonIntegrationTest {
                 .addHeader("ticket", ticket)
                 .bodyString(userInfoRequest, ContentType.APPLICATION_XML)
                 .execute().returnResponse();
-        assertThat(userInfoResponse.getStatusLine().getStatusCode(), equalTo(HttpStatus.SC_OK));
+        assertResponseOkay(userInfoResponse);
         UserInfo info = mapper.readValue(userInfoResponse.getEntity().getContent(), UserInfo.class);
         assertThat(info.getId(), equalTo(1L));
 
@@ -67,7 +67,7 @@ public class UserServletIntegrationTest extends CinnamonIntegrationTest {
                 .execute().returnResponse();
         assertThat(userInfoResponse.getStatusLine().getStatusCode(), equalTo(HttpStatus.SC_BAD_REQUEST));
         CinnamonError cinnamonError = mapper.readValue(userInfoResponse.getEntity().getContent(), CinnamonError.class);
-        
+
         assertThat(cinnamonError.getCode(), equalTo(ErrorCode.USER_ACCOUNT_NOT_FOUND.getCode()));
     }
 

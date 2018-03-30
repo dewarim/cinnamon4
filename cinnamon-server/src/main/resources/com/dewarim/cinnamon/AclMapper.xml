@@ -6,10 +6,10 @@
 <mapper namespace="com.dewarim.cinnamon.AclMapper">
 
     <resultMap id="aclMap" type="com.dewarim.cinnamon.model.Acl">
-        <id property="id" column="id" />
+        <id property="id" column="id"/>
         <result property="name" column="name"/>
     </resultMap>
-    
+
     <select id="getAclByName" parameterType="String" resultMap="aclMap">
         SELECT *
         FROM acls
@@ -21,11 +21,11 @@
         FROM acls
         WHERE id = #{id}
     </select>
-    
+
     <update id="changeAclName" parameterType="com.dewarim.cinnamon.model.Acl">
         UPDATE acls
         SET name = #{name}
-        WHERE id = #{id} 
+        WHERE id = #{id}
     </update>
 
     <insert id="insertAcl" parameterType="com.dewarim.cinnamon.model.Acl">
@@ -34,13 +34,23 @@
         </selectKey>
         INSERT INTO acls (id,name) VALUES (#{id}, #{name})
     </insert>
-    
+
     <delete id="deleteAcl" parameterType="long">
-        DELETE FROM acls WHERE id = #{id}
+        DELETE FROM acls
+        WHERE id = #{id}
+              AND id NOT IN (select acl_id
+                             from links)
+              AND id NOT IN (select acl_id
+                             from folders)
+              AND id NOT IN (select acl_id
+                             from objects)
+              AND id NOT IN (select acl_id
+                             from aclentries)
     </delete>
-    
+
     <select id="listAcls" resultMap="aclMap">
-        SELECT * FROM acls
+        SELECT *
+        FROM acls
     </select>
-    
+
 </mapper>

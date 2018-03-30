@@ -24,14 +24,14 @@ public class AclDao {
         return acl;
     }
 
-    public void changeAclName(Acl acl) {
+    public int changeAclName(Acl acl) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        sqlSession.update("com.dewarim.cinnamon.AclMapper.changeAclName", acl);
+        return sqlSession.update("com.dewarim.cinnamon.AclMapper.changeAclName", acl);
     }
 
-    public void deleteAcl(long id) {
+    public int deleteAcl(long id) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        sqlSession.delete("com.dewarim.cinnamon.AclMapper.deleteAcl", id);
+        return sqlSession.delete("com.dewarim.cinnamon.AclMapper.deleteAcl", id);
     }
     
     public List<Acl> list(){
