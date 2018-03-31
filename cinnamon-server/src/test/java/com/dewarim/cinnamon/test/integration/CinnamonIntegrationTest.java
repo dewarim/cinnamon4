@@ -11,6 +11,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.fluent.Form;
 import org.apache.http.client.fluent.Request;
+import org.apache.http.entity.ContentType;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.jdbc.ScriptRunner;
 import org.apache.ibatis.session.SqlSession;
@@ -82,5 +83,13 @@ public class CinnamonIntegrationTest {
         Assert.assertThat(response.getStatusLine().getStatusCode(), equalTo(HttpStatus.SC_BAD_REQUEST));
         CinnamonError cinnamonError = mapper.readValue(response.getEntity().getContent(), CinnamonError.class);
         Assert.assertThat(cinnamonError.getCode(), equalTo(errorCode.getCode()));  
+    }
+
+    protected HttpResponse sendRequest(UrlMapping urlMapping, Object request) throws IOException {
+        String requestStr = mapper.writeValueAsString(request);
+        return Request.Post("http://localhost:" + cinnamonTestPort + urlMapping.getPath())
+                .addHeader("ticket", ticket)
+                .bodyString(requestStr, ContentType.APPLICATION_XML)
+                .execute().returnResponse();
     }
 }

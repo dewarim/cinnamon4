@@ -3,10 +3,7 @@ package com.dewarim.cinnamon.application;
 import com.dewarim.cinnamon.dao.AclDao;
 import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.model.Acl;
-import com.dewarim.cinnamon.model.request.AclInfoRequest;
-import com.dewarim.cinnamon.model.request.AclUpdateRequest;
-import com.dewarim.cinnamon.model.request.CreateAclRequest;
-import com.dewarim.cinnamon.model.request.DeleteByIdRequest;
+import com.dewarim.cinnamon.model.request.*;
 import com.dewarim.cinnamon.model.response.AclWrapper;
 import com.dewarim.cinnamon.model.response.DeletionResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -42,14 +39,18 @@ public class AclServlet extends HttpServlet {
             case "/aclInfo":
                 getAclByNameOrId(request, response);
                 break;
-            case "/getAcls":
-                listAcls(response);
-                break;
             case "/deleteAcl":
                 deleteById(request, response);
                 break;
+            case "/getAcls":
+                listAcls(response);
+                break;
+            case "/getUserAcls":
+                getUserAcls(request, response);
+                break;
             case "/updateAcl":
                 updateAcl(request,response);
+                break;
             default:
                 response.setStatus(HttpServletResponse.SC_NO_CONTENT);
         }
@@ -122,7 +123,7 @@ public class AclServlet extends HttpServlet {
                     ErrorCode.INFO_REQUEST_WITHOUT_NAME_OR_ID, "Request needs id or name to be set.");
             return;
         }
-        sendWrappedAcls(response,Collections.singletonList(acl));
+        sendWrappedAcls(response, Collections.singletonList(acl));
     }
 
     private void deleteById(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -155,9 +156,22 @@ public class AclServlet extends HttpServlet {
         xmlMapper.writeValue(response.getWriter(), deletionResponse);
     }
 
+    private void getUserAcls(HttpServletRequest request, HttpServletResponse response) throws IOException{
+        IdRequest idRequest = xmlMapper.readValue(request.getInputStream(), IdRequest.class);
+        Long userId = idRequest.getId(); 
+        if(userId == null || userId < 1 ){
+            ErrorResponseGenerator.generateErrorMessage(response,SC_BAD_REQUEST,ErrorCode.ID_PARAM_IS_INVALID,"");
+            return;
+        }
+        AclDao aclDao = new AclDao();
+        List<Acl> userAcls = aclDao.getUserAcls(userId);
+        sendWrappedAcls(response,userAcls);
+    }
+    
     private void sendWrappedAcls(HttpServletResponse response, List<Acl> acls) throws IOException{
         AclWrapper aclWrapper = new AclWrapper();
         aclWrapper.getAcls().addAll(acls);
+        aclWrapper.getAcls().removeAll(Collections.singleton(null));
         response.setContentType(CONTENT_TYPE_XML);
         response.setStatus(HttpServletResponse.SC_OK);
         xmlMapper.writeValue(response.getWriter(), aclWrapper);

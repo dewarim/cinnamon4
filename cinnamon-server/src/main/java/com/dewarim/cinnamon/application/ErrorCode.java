@@ -16,7 +16,8 @@ public enum ErrorCode {
     NAME_PARAM_IS_INVALID("error.name.param.is.invalid"), 
     INFO_REQUEST_WITHOUT_NAME_OR_ID("error.request.needs.id.or.name.parameter"),
     DELETE_REQUEST_WITHOUT_ID("error.delete.request.needs.id.parameter"),
-    DB_UPDATE_FAILED("error.db.update.failed");
+    DB_UPDATE_FAILED("error.db.update.failed"), 
+    ID_PARAM_IS_INVALID("error.id.param.is.missing.or.invalid");
     
     String code;
 

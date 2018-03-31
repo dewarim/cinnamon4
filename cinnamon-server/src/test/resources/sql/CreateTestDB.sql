@@ -283,11 +283,14 @@ create sequence seq_links_id start with 1;
 -- groups --
 create table groups(
   id bigint PRIMARY KEY,
-  name varchar(255) UNIQUE
+  name varchar(255) UNIQUE,
+  group_of_one boolean default false not null,
+  parent_id bigint constraint fk_group_parent_id references groups
 );
 create SEQUENCE seq_groups start with 1;
 insert into groups(id,name) VALUES(nextval('seq_groups'),'_superusers');
-
+insert into groups(id,name,group_of_one) VALUES(nextval('seq_groups'),'_1_admin',true);
+insert into groups(id,name,parent_id) VALUES(nextval('seq_groups'),'admin_child_group',2);
 
 -- aclentries --
 
@@ -296,7 +299,7 @@ create table aclentries
   id bigint not null
     constraint aclentries_pkey
     primary key,
-  obj_version bigint,
+  obj_version bigint default 0,
   acl_id bigint not null
     constraint fk5a6c3cc63e44742f
     references acls,
@@ -308,6 +311,12 @@ create table aclentries
 );
 
 create sequence seq_acl_entries_id start with 1;
+-- link superusers group to default acl:
+insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),1,1);
+-- admin's group is connected to reviewers acl:
+insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),2,2);
+-- admin's child group is connected to rename.me.acl:
+insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),4,3);
 
 
 -- group_users --
@@ -322,3 +331,5 @@ create UNIQUE INDEX  group_users_user_group
 
 -- admin is member of superuser group:
 insert into group_users VALUES(1,1);
+-- admin is member of admin group:
+insert into group_users VALUES(1,2);

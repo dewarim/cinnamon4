@@ -4,10 +4,7 @@ import com.dewarim.cinnamon.Constants;
 import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.application.UrlMapping;
 import com.dewarim.cinnamon.model.Acl;
-import com.dewarim.cinnamon.model.request.AclInfoRequest;
-import com.dewarim.cinnamon.model.request.AclUpdateRequest;
-import com.dewarim.cinnamon.model.request.CreateAclRequest;
-import com.dewarim.cinnamon.model.request.DeleteByIdRequest;
+import com.dewarim.cinnamon.model.request.*;
 import com.dewarim.cinnamon.model.response.AclWrapper;
 import com.dewarim.cinnamon.model.response.DeletionResponse;
 import org.apache.http.HttpResponse;
@@ -22,8 +19,7 @@ import java.util.Optional;
 import static com.dewarim.cinnamon.Constants.ACL_DEFAULT;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class AclServletIntegrationTest extends CinnamonIntegrationTest {
 
@@ -137,7 +133,7 @@ public class AclServletIntegrationTest extends CinnamonIntegrationTest {
                 .addHeader("ticket", ticket)
                 .bodyString(aclInfoRequest, ContentType.APPLICATION_XML)
                 .execute().returnResponse();
-        unwrapAcls(aclListResponse, 0);
+        assertNull(unwrapAcls(aclListResponse, null));
     }
 
     @Test
@@ -170,14 +166,29 @@ public class AclServletIntegrationTest extends CinnamonIntegrationTest {
         assertThat(deletionResponse.isSuccess(), equalTo(true));
     }
 
+    @Test
+    public void getUserAcls() throws IOException {
+        // admin should be connected to reviewer.acl and default acl.
+        HttpResponse response = sendRequest(UrlMapping.ACL__GET_USER_ACLS, new IdRequest(1L));
+        unwrapAcls(response, 2);
+    }
+
+    @Test
+    public void getUserAclsShouldFailWithoutValidId() throws IOException {
+        HttpResponse response = sendRequest(UrlMapping.ACL__GET_USER_ACLS, new IdRequest(-1L));
+        assertCinnamonError(response,ErrorCode.ID_PARAM_IS_INVALID);
+    }
+
     private List<Acl> unwrapAcls(HttpResponse response, Integer expectedSize) throws IOException {
         assertResponseOkay(response);
 //      response.getEntity().writeTo(System.out)
         List<Acl> acls = mapper.readValue(response.getEntity().getContent(), AclWrapper.class).getAcls();
         if (expectedSize != null) {
+            assertNotNull(acls);
             assertFalse(acls.isEmpty());
-            assertThat(acls.size(), equalTo(1));
+            assertThat(acls.size(), equalTo(expectedSize));
         }
         return acls;
     }
+
 }

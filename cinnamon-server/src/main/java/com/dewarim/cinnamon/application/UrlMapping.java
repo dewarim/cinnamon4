@@ -13,7 +13,8 @@ public enum UrlMapping {
     ACL__CREATE_ACL("acl", "createAcl", "/api"),
     ACL__ACL_INFO("acl", "aclInfo", "/api"),
     ACL__DELETE_ACL("acl", "deleteAcl", "/api"),
-    ACL__UPDATE_ACL("acl", "updateAcl", "/api");
+    ACL__UPDATE_ACL("acl", "updateAcl", "/api"),
+    ACL__GET_USER_ACLS("acl", "getUserAcls", "/api");
 
     private String servlet;
     private String action;
