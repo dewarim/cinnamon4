@@ -31,7 +31,7 @@ public class DbSessionFactory {
                 properties.put("url",databaseConfig.getDatabaseUrl());
             }
             else {
-                InputStream propertyStream = Resources.getResourceAsStream(DEFAULT_PROPERTIES_FILENAME);
+                InputStream propertyStream = Resources.getResourceAsStream(propertiesFilename);
                 properties.loadFromXML(propertyStream);
             }
             sqlSessionFactory = new SqlSessionFactoryBuilder().build(mybatisConfigStream, properties);
