@@ -6,8 +6,6 @@ import com.dewarim.cinnamon.model.request.UserInfoRequest;
 import com.dewarim.cinnamon.model.response.UserInfo;
 import com.dewarim.cinnamon.model.response.UserWrapper;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.fluent.Request;
-import org.apache.http.entity.ContentType;
 import org.hamcrest.MatcherAssert;
 import org.junit.Test;
 
@@ -24,33 +22,23 @@ public class UserServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void requestShouldHaveUserIdOrUsername() throws IOException {
-
-        String userInfoRequest = mapper.writeValueAsString(new UserInfoRequest(null, null));
-        HttpResponse userInfoResponse = Request.Post("http://localhost:" + cinnamonTestPort + UrlMapping.USER__USER_INFO.getPath())
-                .addHeader("ticket", ticket)
-                .bodyString(userInfoRequest, ContentType.APPLICATION_XML)
-                .execute().returnResponse();
+        UserInfoRequest userInfoRequest = new UserInfoRequest(null, null);
+        HttpResponse userInfoResponse = sendRequest(UrlMapping.USER__USER_INFO,userInfoRequest);
         assertCinnamonError(userInfoResponse,ErrorCode.USER_INFO_REQUEST_WITHOUT_NAME_OR_ID);
     }
 
     @Test
     public void validRequestByUsername() throws IOException {
-        String userInfoRequest = mapper.writeValueAsString(new UserInfoRequest(null, "admin"));
-        HttpResponse userInfoResponse = Request.Post("http://localhost:" + cinnamonTestPort + UrlMapping.USER__USER_INFO.getPath())
-                .addHeader("ticket", ticket)
-                .bodyString(userInfoRequest, ContentType.APPLICATION_XML)
-                .execute().returnResponse();
+        UserInfoRequest userInfoRequest = new UserInfoRequest(null, "admin");
+        HttpResponse userInfoResponse = sendRequest(UrlMapping.USER__USER_INFO,userInfoRequest);
         UserInfo admin = unwrapUsers(userInfoResponse,1).get(0);
         assertThat(admin.getName(), equalTo("admin"));
     }
 
     @Test
     public void requestByUserId() throws IOException {
-        String userInfoRequest = mapper.writeValueAsString(new UserInfoRequest(1L, null));
-        HttpResponse userInfoResponse = Request.Post("http://localhost:" + cinnamonTestPort + UrlMapping.USER__USER_INFO.getPath())
-                .addHeader("ticket", ticket)
-                .bodyString(userInfoRequest, ContentType.APPLICATION_XML)
-                .execute().returnResponse();
+        UserInfoRequest userInfoRequest = new UserInfoRequest(1L, null);
+        HttpResponse userInfoResponse = sendRequest(UrlMapping.USER__USER_INFO,userInfoRequest);
         UserInfo admin = unwrapUsers(userInfoResponse,1).get(0);
         assertThat(admin.getId(), equalTo(1L));
 
@@ -58,11 +46,8 @@ public class UserServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void requestForNonExistentUser() throws IOException {
-        String userInfoRequest = mapper.writeValueAsString(new UserInfoRequest(123L, null));
-        HttpResponse userInfoResponse = Request.Post("http://localhost:" + cinnamonTestPort + UrlMapping.USER__USER_INFO.getPath())
-                .addHeader("ticket", ticket)
-                .bodyString(userInfoRequest, ContentType.APPLICATION_XML)
-                .execute().returnResponse();
+        UserInfoRequest userInfoRequest = new UserInfoRequest(123L, null);
+        HttpResponse userInfoResponse =sendRequest(UrlMapping.USER__USER_INFO,userInfoRequest);
         assertCinnamonError(userInfoResponse,ErrorCode.USER_ACCOUNT_NOT_FOUND);
     }
     

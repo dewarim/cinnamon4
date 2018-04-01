@@ -38,14 +38,9 @@ public class AuthenticationFilterIntegrationTest extends CinnamonIntegrationTest
         assertThat(ticket, is(notNullValue()));
         assertThat(ticket.matches("(?:[a-z0-9]+-){4}[a-z0-9]+"), is(true));
 
-        String userPath = UrlMapping.USER__USER_INFO.getPath();
-
         // call an API method with ticket and valid request:
-        String validUserInfoRequest = mapper.writeValueAsString(new UserInfoRequest(null, "admin"));
-        HttpResponse userInfoResponse = Request.Post("http://localhost:" + cinnamonTestPort + userPath)
-                .addHeader("ticket", ticket)
-                .bodyString(validUserInfoRequest, ContentType.APPLICATION_XML)
-                .execute().returnResponse();
+        UserInfoRequest userInfoRequest = new UserInfoRequest(null, "admin");
+        HttpResponse userInfoResponse = sendRequest(UrlMapping.USER__USER_INFO, userInfoRequest);
         assertThat(userInfoResponse.getStatusLine().getStatusCode(), equalTo(HttpServletResponse.SC_OK));
         UserInfo info = mapper.readValue(userInfoResponse.getEntity().getContent(), UserWrapper.class).getUsers().get(0);
         assertThat(info.getName(), equalTo("admin"));
@@ -70,11 +65,8 @@ public class AuthenticationFilterIntegrationTest extends CinnamonIntegrationTest
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
         sqlSession.commit();
 
-        String userInfoRequest = mapper.writeValueAsString(new UserInfoRequest(null, "admin"));
-        HttpResponse response = Request.Post("http://localhost:" + cinnamonTestPort + UrlMapping.USER__USER_INFO.getPath())
-                .addHeader("ticket", ticket)
-                .bodyString(userInfoRequest, ContentType.APPLICATION_XML)
-                .execute().returnResponse();
+        UserInfoRequest userInfoRequest = new UserInfoRequest(null, "admin");
+        HttpResponse response = sendRequest(UrlMapping.USER__USER_INFO, userInfoRequest);
         assertThat(response.getStatusLine().getStatusCode(), equalTo(HttpServletResponse.SC_FORBIDDEN));
         CinnamonError error = mapper.readValue(response.getEntity().getContent(), CinnamonError.class);
         assertThat(error.getCode(), equalTo(ErrorCode.AUTHENTICATION_FAIL_SESSION_EXPIRED.getCode()));
@@ -105,11 +97,8 @@ public class AuthenticationFilterIntegrationTest extends CinnamonIntegrationTest
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
         sqlSession.commit();
 
-        String userInfoRequest = mapper.writeValueAsString(new UserInfoRequest(null, "admin"));
-        HttpResponse response = Request.Post("http://localhost:" + cinnamonTestPort + UrlMapping.USER__USER_INFO.getPath())
-                .addHeader("ticket", ticket)
-                .bodyString(userInfoRequest, ContentType.APPLICATION_XML)
-                .execute().returnResponse();
+        UserInfoRequest userInfoRequest = new UserInfoRequest(null, "admin");
+        HttpResponse response = sendRequest(UrlMapping.USER__USER_INFO, userInfoRequest);
         assertThat(response.getStatusLine().getStatusCode(), equalTo(HttpServletResponse.SC_FORBIDDEN));
         CinnamonError error = mapper.readValue(response.getEntity().getContent(), CinnamonError.class);
         assertThat(error.getCode(), equalTo(ErrorCode.AUTHENTICATION_FAIL_USER_NOT_FOUND.getCode()));
