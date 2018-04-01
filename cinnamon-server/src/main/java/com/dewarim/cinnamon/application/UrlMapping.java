@@ -14,7 +14,9 @@ public enum UrlMapping {
     ACL__ACL_INFO("acl", "aclInfo", "/api"),
     ACL__DELETE_ACL("acl", "deleteAcl", "/api"),
     ACL__UPDATE_ACL("acl", "updateAcl", "/api"),
-    ACL__GET_USER_ACLS("acl", "getUserAcls", "/api");
+    ACL__GET_USER_ACLS("acl", "getUserAcls", "/api"),
+    PERMISSION__LIST_PERMISSIONS("permission", "listPermissions", "/api"),
+    PERMISSION__GET_USER_PERMISSIONS("permission", "getUserPermissions", "/api");
 
     private String servlet;
     private String action;

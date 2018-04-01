@@ -71,4 +71,16 @@ public class CmnGroup {
 
         return Objects.hash(id);
     }
+
+    @Override
+    public String 
+    toString() {
+        return "CmnGroup{" +
+                "id=" + id +
+                ", groupOfOne=" + groupOfOne +
+                ", name='" + name + '\'' +
+                ", objVersion=" + objVersion +
+                ", parentId=" + parentId +
+                '}';
+    }
 }

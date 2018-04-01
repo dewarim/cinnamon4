@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dewarim.cinnamon.PermissionMapper">
+
+    <resultMap id="permissionMap" type="com.dewarim.cinnamon.model.Permission">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+    </resultMap>
+
+    <select id="listPermissions" resultMap="permissionMap">
+        SELECT *
+        FROM permissions
+    </select>
+
+    <select id="getUserPermissionsForAclEntries" resultMap="permissionMap">
+        SELECT p.*
+        FROM permissions p
+        JOIN aclentry_permissions a on p.id = a.permission_id
+        WHERE a.aclentry_id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item.id}
+        </foreach>
+    </select>
+
+</mapper>

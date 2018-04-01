@@ -60,11 +60,6 @@ public class CinnamonIntegrationTest {
         ticket = getAdminTicket();
     }
     
-    @AfterClass
-    public static void shutDownServer() throws Exception{
-//        cinnamonServer.getServer().stop();
-    }
-
     protected static String getAdminTicket() throws IOException {
         String url = "http://localhost:" + cinnamonTestPort + UrlMapping.CINNAMON_CONNECT.getPath();
         String tokenRequestResult = Request.Post(url)
@@ -85,11 +80,25 @@ public class CinnamonIntegrationTest {
         Assert.assertThat(cinnamonError.getCode(), equalTo(errorCode.getCode()));  
     }
 
+    /**
+     * Send a POST request to the Cinnamon server. The request object will be serialized and put into the
+     * request body.
+     * @param urlMapping defines the API method you want to call
+     * @param request request object to be sent to the server as XML string.
+     * @return the server's response.
+     * @throws IOException if connection to server fails for some reason
+     */
     protected HttpResponse sendRequest(UrlMapping urlMapping, Object request) throws IOException {
         String requestStr = mapper.writeValueAsString(request);
         return Request.Post("http://localhost:" + cinnamonTestPort + urlMapping.getPath())
                 .addHeader("ticket", ticket)
                 .bodyString(requestStr, ContentType.APPLICATION_XML)
+                .execute().returnResponse();
+    }
+    
+    protected HttpResponse sendRequest(UrlMapping urlMapping) throws IOException {
+        return Request.Post("http://localhost:" + cinnamonTestPort + urlMapping.getPath())
+                .addHeader("ticket", ticket)
                 .execute().returnResponse();
     }
 }

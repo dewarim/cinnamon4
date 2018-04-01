@@ -71,6 +71,7 @@ public class CinnamonServer {
         handler.addServletWithMapping(CinnamonServlet.class, "/cinnamon/*");
         handler.addServletWithMapping(UserServlet.class, "/api/user/*");
         handler.addServletWithMapping(AclServlet.class, "/api/acl/*");
+        handler.addServletWithMapping(PermissionServlet.class, "/api/permission/*");
     }
 
     public static void main(String[] args) throws Exception {

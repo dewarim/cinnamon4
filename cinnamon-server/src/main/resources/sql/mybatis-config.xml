@@ -3,6 +3,9 @@
         PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-config.dtd">
 <configuration>
+    <settings>
+        <setting name="logImpl" value="LOG4J2"/>
+    </settings>
     <environments default="development">
         <environment id="development">
             <transactionManager type="JDBC"/>
@@ -16,10 +19,12 @@
         </environment>
     </environments>
     <mappers>
-        <mapper resource="com/dewarim/cinnamon/UserAccountMapper.xml"/>
-        <mapper resource="com/dewarim/cinnamon/SessionMapper.xml"/>
+        <mapper resource="com/dewarim/cinnamon/AclEntryMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/AclMapper.xml"/>
-        <mapper resource="com/dewarim/cinnamon/LinkMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/CmnGroupMapper.xml"/>
+        <mapper resource="com/dewarim/cinnamon/LinkMapper.xml"/>
+        <mapper resource="com/dewarim/cinnamon/PermissionMapper.xml"/>
+        <mapper resource="com/dewarim/cinnamon/SessionMapper.xml"/>
+        <mapper resource="com/dewarim/cinnamon/UserAccountMapper.xml"/>
     </mappers>
 </configuration>

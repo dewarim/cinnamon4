@@ -54,7 +54,7 @@
     </select>
 
     <select id="getUserAcls" resultMap="aclMap" parameterType="list">
-        SELECT * FROM acls join aclentries ae on acls.id = ae.acl_id WHERE ae.group_id IN
+        SELECT a.* FROM acls a join aclentries ae on a.id = ae.acl_id WHERE ae.group_id IN
         <foreach item="item" index="index" collection="list"
                  open="(" separator="," close=")">
             #{item}

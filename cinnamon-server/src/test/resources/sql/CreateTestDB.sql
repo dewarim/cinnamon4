@@ -1,3 +1,7 @@
+-------------------------
+--- table definitions ---
+-------------------------
+
 -- users --
 CREATE TABLE users (
   id BIGINT PRIMARY KEY,
@@ -9,8 +13,6 @@ CREATE TABLE users (
 );
 
 create SEQUENCE seq_user_id start with 1;
-
-INSERT INTO users(id,name,pwd,activated) VALUES ( nextval('seq_user_id'),'admin','$2a$10$VG9LCf6h/Qwb7Y.pafHkaepdnJNgFZUzzuMV3EcyvLbKnueHQ4IW.',true);
 
 -- sessions --
 create table sessions
@@ -32,10 +34,6 @@ create table acls(
 );
 
 create SEQUENCE seq_acl_id start with 1;
-insert into acls(id,name) values(nextval('seq_acl_id'),'_default_acl');
-insert into acls(id,name) values(nextval('seq_acl_id'),'reviewers.acl');
-insert into acls(id,name) values(nextval('seq_acl_id'),'delete.me.acl');
-insert into acls(id,name) values(nextval('seq_acl_id'),'rename.me.acl');
 
 -- folder types --
 create table folder_types
@@ -51,7 +49,6 @@ create table folder_types
 );
 
 create sequence seq_folder_type_id start with 1;
-insert into folder_types(id,name) values(nextval('seq_folder_type_id'),'_default_folder_type');
 
 -- folders --
 create table folders
@@ -83,7 +80,6 @@ create table folders
 
 create sequence seq_folder_id start with 1;
 
-insert into folders values(nextval('seq_folder_id'),null,null,'root',0,1,1,null,1,false,'<summary/>');
 
 -- objtypes --
 create table objtypes
@@ -98,8 +94,6 @@ create table objtypes
 );
 
 create sequence seq_obj_type_id start with 1;
-
-insert into objtypes(id,name) values(nextval('seq_obj_type_id'),'_default_objtype');
 
 -- formats --
 create table formats
@@ -288,9 +282,6 @@ create table groups(
   parent_id bigint constraint fk_group_parent_id references groups
 );
 create SEQUENCE seq_groups start with 1;
-insert into groups(id,name) VALUES(nextval('seq_groups'),'_superusers');
-insert into groups(id,name,group_of_one) VALUES(nextval('seq_groups'),'_1_admin',true);
-insert into groups(id,name,parent_id) VALUES(nextval('seq_groups'),'admin_child_group',2);
 
 -- aclentries --
 
@@ -299,7 +290,6 @@ create table aclentries
   id bigint not null
     constraint aclentries_pkey
     primary key,
-  obj_version bigint default 0,
   acl_id bigint not null
     constraint fk5a6c3cc63e44742f
     references acls,
@@ -311,12 +301,6 @@ create table aclentries
 );
 
 create sequence seq_acl_entries_id start with 1;
--- link superusers group to default acl:
-insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),1,1);
--- admin's group is connected to reviewers acl:
-insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),2,2);
--- admin's child group is connected to rename.me.acl:
-insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),4,3);
 
 
 -- group_users --
@@ -329,7 +313,103 @@ create UNIQUE INDEX  group_users_user_group
   on group_users(user_id,group_id)
   ;
 
--- admin is member of superuser group:
+-- permissions --
+create table permissions
+(
+  id bigint not null
+    constraint permissions_pkey
+    primary key,
+  name varchar(128) not null
+    constraint permissions_name_key
+    unique
+);
+create sequence seq_permission_id start with 1;
+
+-- aclentry_permissions --
+create table aclentry_permissions
+(
+  id bigint not null
+    constraint aclentry_permissions_pkey
+    primary key,
+  aclentry_id bigint not null
+    constraint fk2110acedec2a9305
+    references aclentries,
+  permission_id bigint not null
+    constraint fk2110aceda5501f05
+    references permissions,
+  constraint unique_aclentry_id
+  unique (permission_id, aclentry_id)
+);
+
+create sequence seq_aclentry_permission_id start with 1;
+
+--------------------------
+--- insert test data:  ---
+-- -----------------------
+
+INSERT INTO users(id,name,pwd,activated) VALUES ( nextval('seq_user_id'),'admin','$2a$10$VG9LCf6h/Qwb7Y.pafHkaepdnJNgFZUzzuMV3EcyvLbKnueHQ4IW.',true);
+INSERT INTO users(id,name,pwd,activated) VALUES ( nextval('seq_user_id'),'doe','$2a$10$VG9LCf6h/Qwb7Y.pafHkaepdnJNgFZUzzuMV3EcyvLbKnueHQ4IW.',true);
+
+insert into acls(id,name) values(nextval('seq_acl_id'),'_default_acl');
+insert into acls(id,name) values(nextval('seq_acl_id'),'reviewers.acl');
+insert into acls(id,name) values(nextval('seq_acl_id'),'delete.me.acl');
+insert into acls(id,name) values(nextval('seq_acl_id'),'rename.me.acl');
+
+insert into folder_types(id,name) values(nextval('seq_folder_type_id'),'_default_folder_type');
+
+insert into folders values(nextval('seq_folder_id'),null,null,'root',0,1,1,null,1,false,'<summary/>');
+
+insert into objtypes(id,name) values(nextval('seq_obj_type_id'),'_default_objtype');
+
+insert into groups(id,name) VALUES(nextval('seq_groups'),'_superusers'); -- #1
+insert into groups(id,name,group_of_one) VALUES(nextval('seq_groups'),'_1_admin',true); -- #2
+insert into groups(id,name,parent_id) VALUES(nextval('seq_groups'),'admin_child_group',2); -- #3
+insert into groups(id,name,group_of_one) VALUES(nextval('seq_groups'),'_2_doe',true); -- #4
+insert into groups(id,name) values (nextval('seq_groups'),'reviewers'); -- #5
+
+-- #1 admin is member of superuser group:
 insert into group_users VALUES(1,1);
--- admin is member of admin group:
+-- #2 admin is member of admin group:
 insert into group_users VALUES(1,2);
+-- #3 doe is member of his own group:
+insert into group_users VALUES (2,4);
+-- #4 doe is member of reviewers:
+insert into group_users values (2,5);
+
+-- #1 link superusers group to default acl:
+insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),1,1);
+-- #2 admin's group is connected to reviewers acl:
+insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),2,2);
+-- #3 doe's group is connected to reviewers.acl
+insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),2,4);
+-- #4 admin's child group is connected to rename.me.acl:
+insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),4,3);
+-- #5 reviewers are connected to reviewers acl:
+insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),2,5);
+-- #6 doe's group is connected to default acl
+insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),1,4);
+
+insert into permissions values (nextval('seq_permission_id'),'_browse');
+insert into permissions values (nextval('seq_permission_id'),'_browse_folder');
+insert into permissions values (nextval('seq_permission_id'),'_create_folder');
+insert into permissions values (nextval('seq_permission_id'),'_create_inside_folder');
+insert into permissions values (nextval('seq_permission_id'),'_delete_folder');
+insert into permissions values (nextval('seq_permission_id'),'_delete_object');
+insert into permissions values (nextval('seq_permission_id'),'_edit_folder');
+insert into permissions values (nextval('seq_permission_id'),'_lock');
+insert into permissions values (nextval('seq_permission_id'),'_move');
+insert into permissions values (nextval('seq_permission_id'),'_read_object_content');
+insert into permissions values (nextval('seq_permission_id'),'_read_object_custom_metadata');
+insert into permissions values (nextval('seq_permission_id'),'_read_object_metadata');
+insert into permissions values (nextval('seq_permission_id'),'_set_acl');
+insert into permissions values (nextval('seq_permission_id'),'_version');
+insert into permissions values (nextval('seq_permission_id'),'_write_object_content');
+insert into permissions values (nextval('seq_permission_id'),'_write_object_custom_metadata');
+insert into permissions values (nextval('seq_permission_id'),'_write_object_sysmeta');
+
+-- browse permission for doe's group + default_acl:
+insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),6,1);
+-- browse_folder permission for doe's group + default_acl:: 
+insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),6,2);
+-- create folder permission for reviewers group + reviewers acl:
+insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),5,3);

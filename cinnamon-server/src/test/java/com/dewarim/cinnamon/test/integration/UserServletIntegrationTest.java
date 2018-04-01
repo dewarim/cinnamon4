@@ -16,6 +16,7 @@ import java.util.List;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
 public class UserServletIntegrationTest extends CinnamonIntegrationTest {
@@ -69,8 +70,9 @@ public class UserServletIntegrationTest extends CinnamonIntegrationTest {
         assertResponseOkay(response);
         List<UserInfo> users = mapper.readValue(response.getEntity().getContent(),UserWrapper.class).getUsers();
         if (expectedSize != null) {
+            assertNotNull(users);
             assertFalse(users.isEmpty());
-            MatcherAssert.assertThat(users.size(), equalTo(1));
+            MatcherAssert.assertThat(users.size(), equalTo(expectedSize));
         }
         return users;
     }
