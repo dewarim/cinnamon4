@@ -56,8 +56,6 @@ create table folders
   id bigint not null
     constraint folders_pkey
     primary key,
-  index_ok boolean,
-  indexed timestamp,
   name varchar(128) not null,
   obj_version bigint,
   acl_id bigint not null
@@ -180,14 +178,11 @@ create table objects
   content_path varchar(255),
   content_size bigint,
   created timestamp not null,
-  index_ok boolean,
-  indexed timestamp,
   latest_branch boolean not null,
   latest_head boolean not null,
   modified timestamp not null,
   name varchar(128) not null,
-  version bigint,
-  procstate varchar(128),
+  version bigint default 0,
   cmn_version varchar(128) default '1' not null,
   acl_id bigint not null
     constraint fk9d13c5143e44742f
@@ -357,7 +352,7 @@ insert into acls(id,name) values(nextval('seq_acl_id'),'rename.me.acl');
 
 insert into folder_types(id,name) values(nextval('seq_folder_type_id'),'_default_folder_type');
 
-insert into folders values(nextval('seq_folder_id'),null,null,'root',0,1,1,null,1,false,'<summary/>');
+insert into folders values(nextval('seq_folder_id'),'root',0,1,1,null,1,false,'<summary/>');
 
 insert into objtypes(id,name) values(nextval('seq_obj_type_id'),'_default_objtype');
 
@@ -413,3 +408,16 @@ insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),6
 insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),6,2);
 -- create folder permission for reviewers group + reviewers acl:
 insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),5,3);
+
+insert into languages values (nextval('seq_language_id'),'DE',0,'<meta/>');
+
+insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+                     parent_id, type_id,acl_id)
+values (nextval('seq_objects_id'), now(), true, true, now(), 'test-1', 1, 1, 1, 1, 1,1);
+insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+                     parent_id, type_id,acl_id)
+values (nextval('seq_objects_id'), now(), true, true, now(), 'test-2', 1, 1, 1, 1, 1,1);
+insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+                     parent_id, type_id,acl_id)
+values (nextval('seq_objects_id'), now(), true, true, now(), 'test-3', 1, 1, 1, 1, 1,1);
+  
