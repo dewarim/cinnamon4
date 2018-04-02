@@ -14,7 +14,7 @@
         <result property="parentId" column="parent_id"/>
         <result property="folderId" column="folder_id"/>
         <result property="objectId" column="object_id"/>
-        <result property="version" column="verson"/>
+        <result property="version" column="version"/>
     </resultMap>
 
     <select id="getLinkById" parameterType="long" resultMap="linkMap">
