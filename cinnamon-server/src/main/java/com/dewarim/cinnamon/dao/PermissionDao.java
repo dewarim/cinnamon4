@@ -30,5 +30,10 @@ public class PermissionDao {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
         return sqlSession.selectList("com.dewarim.cinnamon.PermissionMapper.listPermissions");
     }
+    
+    public Permission getPermissionByName(String name){
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        return sqlSession.selectOne("com.dewarim.cinnamon.PermissionMapper.getPermissionByName",name);
+    }
 
 }

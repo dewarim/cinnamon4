@@ -15,6 +15,12 @@
         FROM permissions
     </select>
 
+    <select id="getPermissionByName" resultMap="permissionMap">
+        SELECT *
+        FROM permissions
+        WHERE name = #{name}
+    </select>
+
     <select id="getUserPermissionsForAclEntries" resultMap="permissionMap">
         SELECT p.*
         FROM permissions p
