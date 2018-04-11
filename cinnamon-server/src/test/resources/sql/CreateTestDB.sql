@@ -345,10 +345,11 @@ create sequence seq_aclentry_permission_id start with 1;
 INSERT INTO users(id,name,pwd,activated) VALUES ( nextval('seq_user_id'),'admin','$2a$10$VG9LCf6h/Qwb7Y.pafHkaepdnJNgFZUzzuMV3EcyvLbKnueHQ4IW.',true);
 INSERT INTO users(id,name,pwd,activated) VALUES ( nextval('seq_user_id'),'doe','$2a$10$VG9LCf6h/Qwb7Y.pafHkaepdnJNgFZUzzuMV3EcyvLbKnueHQ4IW.',true);
 
-insert into acls(id,name) values(nextval('seq_acl_id'),'_default_acl');
-insert into acls(id,name) values(nextval('seq_acl_id'),'reviewers.acl');
-insert into acls(id,name) values(nextval('seq_acl_id'),'delete.me.acl');
-insert into acls(id,name) values(nextval('seq_acl_id'),'rename.me.acl');
+insert into acls(id,name) values(nextval('seq_acl_id'),'_default_acl'); -- 1
+insert into acls(id,name) values(nextval('seq_acl_id'),'reviewers.acl'); -- 2
+insert into acls(id,name) values(nextval('seq_acl_id'),'delete.me.acl'); -- 3
+insert into acls(id,name) values(nextval('seq_acl_id'),'rename.me.acl'); -- 4
+insert into acls(id,name) values(nextval('seq_acl_id'),'no-permissions.acl'); -- 5
 
 insert into folder_types(id,name) values(nextval('seq_folder_type_id'),'_default_folder_type');
 
@@ -383,6 +384,8 @@ insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id')
 insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),2,5);
 -- #6 doe's group is connected to default acl
 insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),1,4);
+-- #7 reviewers also have the no-permissions acl
+insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),1,5);
 
 insert into permissions values (nextval('seq_permission_id'),'_browse');
 insert into permissions values (nextval('seq_permission_id'),'_browse_folder');
@@ -402,11 +405,11 @@ insert into permissions values (nextval('seq_permission_id'),'_write_object_cont
 insert into permissions values (nextval('seq_permission_id'),'_write_object_custom_metadata');
 insert into permissions values (nextval('seq_permission_id'),'_write_object_sysmeta');
 
--- browse permission for doe's group + default_acl:
+-- #1 browse permission for doe's group + default_acl:
 insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),6,1);
--- browse_folder permission for doe's group + default_acl:: 
+-- #2 browse_folder permission for doe's group + default_acl:: 
 insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),6,2);
--- create folder permission for reviewers group + reviewers acl:
+-- #3 create folder permission for reviewers group + reviewers acl:
 insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),5,3);
 
 insert into languages values (nextval('seq_language_id'),'DE',0,'<meta/>');
@@ -420,4 +423,8 @@ values (nextval('seq_objects_id'), now(), true, true, now(), 'test-2', 1, 1, 1, 
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      parent_id, type_id,acl_id)
 values (nextval('seq_objects_id'), now(), true, true, now(), 'test-3', 1, 1, 1, 1, 1,1);
+  
+insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+                     parent_id, type_id,acl_id)
+values (nextval('seq_objects_id'), now(), true, true, now(), 'unbrowsable-test', 1, 1, 1, 1, 1,5);
   
