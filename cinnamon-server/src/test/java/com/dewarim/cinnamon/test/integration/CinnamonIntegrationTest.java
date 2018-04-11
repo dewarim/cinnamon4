@@ -59,11 +59,29 @@ public class CinnamonIntegrationTest {
         }
         ticket = getAdminTicket();
     }
-    
+
+    /**
+     * 
+     * @return a ticket for the Cinnamon administrator
+     */
     protected static String getAdminTicket() throws IOException {
         String url = "http://localhost:" + cinnamonTestPort + UrlMapping.CINNAMON_CONNECT.getPath();
         String tokenRequestResult = Request.Post(url)
                 .bodyForm(Form.form().add("user", "admin").add("pwd", "admin").build())
+                .execute().returnContent().asString();
+        XmlMapper mapper = new XmlMapper();
+        CinnamonConnection cinnamonConnection = mapper.readValue(tokenRequestResult, CinnamonConnection.class);
+        return cinnamonConnection.getTicket();
+    }
+
+    /**
+     * 
+     * @return a ticket for a normal user.
+     */
+    protected static String getDoesTicket() throws IOException {
+        String url = "http://localhost:" + cinnamonTestPort + UrlMapping.CINNAMON_CONNECT.getPath();
+        String tokenRequestResult = Request.Post(url)
+                .bodyForm(Form.form().add("user", "doe").add("pwd", "admin").build())
                 .execute().returnContent().asString();
         XmlMapper mapper = new XmlMapper();
         CinnamonConnection cinnamonConnection = mapper.readValue(tokenRequestResult, CinnamonConnection.class);
