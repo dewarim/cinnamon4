@@ -8,7 +8,7 @@
 
     <servlet>
         <servlet-name>Cinnamon</servlet-name>
-        <servlet-class>com.dewarim.cinnamon.application.CinnamonServlet</servlet-class>
+        <servlet-class>com.dewarim.cinnamon.application.servlet.CinnamonServlet</servlet-class>
     </servlet>
     <servlet-mapping>
         <servlet-name>Cinnamon</servlet-name>

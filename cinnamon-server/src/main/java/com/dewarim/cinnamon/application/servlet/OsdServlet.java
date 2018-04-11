@@ -1,4 +1,4 @@
-package com.dewarim.cinnamon.application;
+package com.dewarim.cinnamon.application.servlet;
 
 import com.dewarim.cinnamon.dao.OsdDao;
 import com.dewarim.cinnamon.model.ObjectSystemData;
