@@ -349,7 +349,8 @@ insert into acls(id,name) values(nextval('seq_acl_id'),'_default_acl'); -- 1
 insert into acls(id,name) values(nextval('seq_acl_id'),'reviewers.acl'); -- 2
 insert into acls(id,name) values(nextval('seq_acl_id'),'delete.me.acl'); -- 3
 insert into acls(id,name) values(nextval('seq_acl_id'),'rename.me.acl'); -- 4
-insert into acls(id,name) values(nextval('seq_acl_id'),'no-permissions.acl'); -- 5
+insert into acls(id,name) values(nextval('seq_acl_id'),'no-permissions-except-owner.acl'); -- 5
+insert into acls(id,name) values(nextval('seq_acl_id'),'no-permissions-except-everyone.acl'); -- 6
 
 insert into folder_types(id,name) values(nextval('seq_folder_type_id'),'_default_folder_type');
 
@@ -362,6 +363,8 @@ insert into groups(id,name,group_of_one) VALUES(nextval('seq_groups'),'_1_admin'
 insert into groups(id,name,parent_id) VALUES(nextval('seq_groups'),'admin_child_group',2); -- #3
 insert into groups(id,name,group_of_one) VALUES(nextval('seq_groups'),'_2_doe',true); -- #4
 insert into groups(id,name) values (nextval('seq_groups'),'reviewers'); -- #5
+insert into groups(id,name) values (nextval('seq_groups'),'_everyone'); -- #6
+insert into groups(id,name) values (nextval('seq_groups'),'_owner'); -- #7
 
 -- #1 admin is member of superuser group:
 insert into group_users VALUES(1,1);
@@ -386,6 +389,10 @@ insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id')
 insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),1,4);
 -- #7 reviewers also have the no-permissions acl
 insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),1,5);
+-- #8 _owner is connected to the no-permission-except-owner.acl
+insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),5,7);
+-- #9 _everyone is connected to no-permission-except-everyone.acl
+insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),6,6);
 
 insert into permissions values (nextval('seq_permission_id'),'_browse');
 insert into permissions values (nextval('seq_permission_id'),'_browse_folder');
@@ -411,20 +418,33 @@ insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),6
 insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),6,2);
 -- #3 create folder permission for reviewers group + reviewers acl:
 insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),5,3);
+-- #4 add browse permission for _owner to view the objects with no-permission-except-owner acl:  
+insert into aclentry_permissions(id,aclentry_id,permission_id) values (nextval('seq_aclentry_permission_id'),8,1);
+-- #5 add browse permission for _everyone to view the objects with no-permission-except-everyone acl
+insert into aclentry_permissions(id, aclentry_id,permission_id) values (nextval('seq_aclentry_permission_id'),9,1);
 
 insert into languages values (nextval('seq_language_id'),'DE',0,'<meta/>');
 
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
-                     parent_id, type_id,acl_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'test-1', 1, 1, 1, 1, 1,1);
+                     owner_id, parent_id, type_id, acl_id)
+values (nextval('seq_objects_id'), now(), true, true, now(), 'test-1', 1, 1, 1, 1, 1, 1, 1);
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
-                     parent_id, type_id,acl_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'test-2', 1, 1, 1, 1, 1,1);
+                     owner_id, parent_id, type_id, acl_id)
+values (nextval('seq_objects_id'), now(), true, true, now(), 'test-2', 1, 1, 1, 1, 1, 1, 1);
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
-                     parent_id, type_id,acl_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'test-3', 1, 1, 1, 1, 1,1);
-  
+                     owner_id, parent_id, type_id, acl_id)
+values (nextval('seq_objects_id'), now(), true, true, now(), 'test-3', 1, 1, 1, 1, 1, 1, 1);
+
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
-                     parent_id, type_id,acl_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'unbrowsable-test', 1, 1, 1, 1, 1,5);
-  
+                     owner_id, parent_id, type_id, acl_id)
+values (nextval('seq_objects_id'), now(), true, true, now(), 'unbrowsable-test', 1, 1, 1, 1, 1, 1, 5);
+
+-- acl #5 has no permission for user Doe, but allows owners to view the item, so Doe should see it anyway.
+insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+                     owner_id, parent_id, type_id, acl_id)
+values (nextval('seq_objects_id'), now(), true, true, now(), 'owned-by-doe', 1, 1, 1, 2, 1, 1, 5);
+
+-- acl #6 has no permission for user Doe, but allows "_everyone" to view the item, so Doe should see it anyway.
+insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+                     owner_id, parent_id, type_id, acl_id)
+values (nextval('seq_objects_id'), now(), true, true, now(), 'acl-for-everyone', 1, 1, 1, 1, 1, 1, 6);

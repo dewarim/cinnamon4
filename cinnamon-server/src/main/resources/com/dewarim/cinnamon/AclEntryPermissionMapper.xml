@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dewarim.cinnamon.AclEntryPermissionMapper">
+
+    <resultMap id="aepMap" type="com.dewarim.cinnamon.model.AclEntryPermission">
+        <id property="id" column="id"/>
+        <result property="aclEntryId" column="aclentry_id"/>
+        <result property="permissionId" column="permission_id"/>
+    </resultMap>
+
+    <select id="getAclEntryPermissionForAclEntriesAndPermission" parameterType="map" resultMap="aepMap">
+        SELECT *
+        FROM aclentry_permissions
+        WHERE aclentry_id IN
+        <foreach item="item" index="index" collection="aclEntries"
+                 open="(" separator="," close=")">
+            #{item.id}
+        </foreach>
+        AND permission_id = #{permissionId}
+    </select>
+
+
+</mapper>

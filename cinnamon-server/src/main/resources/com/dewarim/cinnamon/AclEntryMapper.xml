@@ -20,5 +20,25 @@
         </foreach>
         AND acl_id = #{aclId}
     </select>
+
+    <select id="getAclEntriesByAcl" parameterType="long" resultMap="aclEntryMap">
+        SELECT *
+        FROM aclentries
+        WHERE acl_id = #{aclId}
+    </select>
     
+    <select id="getAclEntriesByGroup" parameterType="long" resultMap="aclEntryMap">
+        SELECT *
+        FROM aclentries
+        WHERE group_id = #{groupId}
+    </select>
+    
+    <select id="getAclEntryByAclAndGroupName" parameterType="map" resultMap="aclEntryMap">
+        SELECT ae.*
+        FROM aclentries ae JOIN groups g on ae.group_id = g.id
+        WHERE ae.acl_id = #{aclId} AND g.name = #{groupName}
+        
+    </select>
+
+
 </mapper>

@@ -14,29 +14,43 @@ import java.util.List;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getObjectsById() throws IOException {
         try {
-            // TODO: user=admin should receive all objects. Others only filtered list.
             ticket = CinnamonIntegrationTest.getDoesTicket();
             OsdRequest osdRequest = new OsdRequest();
-            osdRequest.setIds(List.of(1L, 2L, 3L, 4L));
+            osdRequest.setIds(List.of(1L, 2L, 3L, 4L, 5L, 6L));
             HttpResponse response = sendRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
-            List<ObjectSystemData> dataList = unwrapOsds(response, 3);
+            List<ObjectSystemData> dataList = unwrapOsds(response, 5);
             assertFalse(dataList.stream().anyMatch(osd -> osd.getName().equals("unbrowsable-test")));
             
-            // test for owner 
-            
-            // test for everyone
+            // test for dynamic groups:
+            assertTrue(dataList.stream().anyMatch(osd -> osd.getName().equals("owned-by-doe")));
+            assertTrue(dataList.stream().anyMatch(osd -> osd.getName().equals("acl-for-everyone")));
             
         } finally {
             // restore admin ticket for later tests.
             ticket = CinnamonIntegrationTest.getAdminTicket();
         }
 
+    }
+    
+    @Test
+    public void getObjectsByIdForAdmin() throws IOException {
+            OsdRequest osdRequest = new OsdRequest();
+            osdRequest.setIds(List.of(1L, 2L, 3L, 4L, 5L, 6L));
+            HttpResponse response = sendRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
+            List<ObjectSystemData> dataList = unwrapOsds(response, 6);
+            // admin is exempt from permission checks, should get everything:
+            assertTrue(dataList.stream().anyMatch(osd -> osd.getName().equals("unbrowsable-test")));
+           
+            // test for dynamic groups:
+            assertTrue(dataList.stream().anyMatch(osd -> osd.getName().equals("owned-by-doe")));
+            assertTrue(dataList.stream().anyMatch(osd -> osd.getName().equals("acl-for-everyone")));
     }
 
     private List<ObjectSystemData> unwrapOsds(HttpResponse response, Integer expectedSize) throws IOException {

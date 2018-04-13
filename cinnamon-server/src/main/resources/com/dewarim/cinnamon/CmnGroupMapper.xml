@@ -18,6 +18,11 @@
         FROM groups
         WHERE id = #{id}
     </select>
+    <select id="getCmnGroupByName" parameterType="string" resultMap="cmnGroupMap">
+        SELECT *
+        FROM groups
+        WHERE name = #{name}
+    </select>
     
     <select id="getCmnGroupsOfUserById" parameterType="long" resultMap="cmnGroupMap">
         SELECT * 
