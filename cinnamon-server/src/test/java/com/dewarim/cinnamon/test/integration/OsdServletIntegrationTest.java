@@ -51,6 +51,25 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
             // test for dynamic groups:
             assertTrue(dataList.stream().anyMatch(osd -> osd.getName().equals("owned-by-doe")));
             assertTrue(dataList.stream().anyMatch(osd -> osd.getName().equals("acl-for-everyone")));
+    }   
+    
+    @Test
+    public void getObjectsByIdWithoutSummary() throws IOException {
+            OsdRequest osdRequest = new OsdRequest();
+            osdRequest.setIds(List.of(1L));
+            osdRequest.setIncludeSummary(false);
+            HttpResponse response = sendRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
+            List<ObjectSystemData> dataList = unwrapOsds(response, 1);
+            assertTrue(dataList.stream().anyMatch(osd -> osd.getSummary() == null));
+    }    
+    @Test
+    public void getObjectsByIdIncludingSummary() throws IOException {
+            OsdRequest osdRequest = new OsdRequest();
+            osdRequest.setIds(List.of(1L));
+            osdRequest.setIncludeSummary(true);
+            HttpResponse response = sendRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
+            List<ObjectSystemData> dataList = unwrapOsds(response, 1);
+            assertTrue(dataList.stream().anyMatch(osd -> osd.getSummary().equals("<summary>sum of sum</summary>")));
     }
 
     private List<ObjectSystemData> unwrapOsds(HttpResponse response, Integer expectedSize) throws IOException {

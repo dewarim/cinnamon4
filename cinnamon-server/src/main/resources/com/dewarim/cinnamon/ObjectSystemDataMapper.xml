@@ -20,7 +20,7 @@
         <result property="aclId" column="acl_id"/>
         <result property="creatorId" column="creator_id"/>
         <result property="formatId" column="format_id"/>
-        <result property="languageId" column="languageId"/>
+        <result property="languageId" column="language_id"/>
         <result property="lockerId" column="locker_id"/>
         <result property="modifierId" column="modifier_id"/>
         <result property="ownerId" column="owner_id"/>
@@ -34,11 +34,38 @@
         <result property="summary" column="summary"/>
     </resultMap>
 
-    <select id="getOsdsById" parameterType="list" resultMap="osdMap">
-        SELECT *
+    <select id="getOsdsById" parameterType="map" resultMap="osdMap">
+        SELECT
+        id,
+        appname,
+        content_path,
+        content_size,
+        created,
+        latest_branch,
+        latest_head,
+        modified,
+        name,
+        version,
+        cmn_version,
+        acl_id,
+        creator_id,
+        format_id,
+        language_id,
+        locker_id,
+        modifier_id,
+        owner_id,
+        parent_id,
+        predecessor_id,
+        root_id,
+        type_id,
+        state_id,
+        content_changed,
+        metadata_changed,
+        CASE WHEN #{includeSummary} THEN summary ELSE null END AS summary
+
         FROM objects
-        WHERE id IN 
-        <foreach item="item" index="index" collection="list"
+        WHERE id IN
+        <foreach item="item" index="index" collection="idList"
                  open="(" separator="," close=")">
             #{item}
         </foreach>

@@ -426,8 +426,8 @@ insert into aclentry_permissions(id, aclentry_id,permission_id) values (nextval(
 insert into languages values (nextval('seq_language_id'),'DE',0,'<meta/>');
 
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
-                     owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'test-1', 1, 1, 1, 1, 1, 1, 1);
+                     owner_id, parent_id, type_id, acl_id, summary)
+values (nextval('seq_objects_id'), now(), true, true, now(), 'test-1', 1, 1, 1, 1, 1, 1, 1, '<summary>sum of sum</summary>');
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
 values (nextval('seq_objects_id'), now(), true, true, now(), 'test-2', 1, 1, 1, 1, 1, 1, 1);

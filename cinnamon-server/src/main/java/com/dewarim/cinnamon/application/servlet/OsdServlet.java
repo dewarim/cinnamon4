@@ -46,7 +46,7 @@ public class OsdServlet extends HttpServlet {
         OsdRequest osdRequest = xmlMapper.readValue(request.getInputStream(), OsdRequest.class);
         OsdDao osdDao = new OsdDao();
         UserAccount user = ThreadLocalSqlSession.getCurrentUser();
-        List<ObjectSystemData> osds = osdDao.getObjectsById(osdRequest.getIds());
+        List<ObjectSystemData> osds = osdDao.getObjectsById(osdRequest.getIds(), osdRequest.isIncludeSummary());
         List<ObjectSystemData> filteredOsds = authorizationService.filterObjectsByBrowsePermission(osds, user);
 
         OsdWrapper wrapper = new OsdWrapper();

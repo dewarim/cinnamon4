@@ -36,7 +36,7 @@ public class ObjectSystemData implements ContentMetadata {
     private boolean metadataChanged = false;
     private String cmnVersion = "1";
     private Long lifecycleStateId;
-    private String summary = "<summary/>";
+    private String summary;
     
     private Long objVersion;
     private String contentHash;
