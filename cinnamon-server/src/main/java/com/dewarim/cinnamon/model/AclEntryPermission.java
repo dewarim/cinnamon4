@@ -43,7 +43,7 @@ public class AclEntryPermission {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id);
+        return Objects.hash(aclEntryId,permissionId);
     }
 
     @Override

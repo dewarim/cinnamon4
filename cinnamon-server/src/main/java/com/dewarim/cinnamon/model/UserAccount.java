@@ -100,7 +100,7 @@ public class UserAccount implements Principal, LoginUser {
 
     @Override
     public int hashCode() {
-        return id.hashCode();
+        return name.hashCode();
     }
     
 }
