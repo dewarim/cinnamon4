@@ -18,7 +18,9 @@ public enum ErrorCode {
     DELETE_REQUEST_WITHOUT_ID("error.delete.request.needs.id.parameter"),
     DB_UPDATE_FAILED("error.db.update.failed"), 
     ID_PARAM_IS_INVALID("error.id.param.is.missing.or.invalid"),
-    PERMISSIONS_NOT_FOUND("error.no.permissions.found.for.user.and.acl");
+    OBJECT_NOT_FOUND("error.object.not.found"),
+    PERMISSIONS_NOT_FOUND("error.no.permissions.found.for.user.and.acl"),
+    UNAUTHORIZED("error.access.not.allowed");
     
     String code;
 

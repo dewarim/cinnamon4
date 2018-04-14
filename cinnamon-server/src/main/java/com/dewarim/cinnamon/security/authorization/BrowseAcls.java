@@ -9,7 +9,6 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -21,12 +20,15 @@ public class BrowseAcls {
 
     private static List<Acl> acls;
     private static Permission browsePermission;
+    private static Permission folderBrowsePermission;
     private static CmnGroup ownerGroup;
-    
+
     private Set<Long> objectAclsWithBrowsePermissions;
     private Set<Long> ownerAclsWithBrowsePermissions;
+    private Set<Long> folderAclsWithBrowsePermissions;
     private long userId;
     private static final Map<Long, Set<Long>> userAclsWithBrowsePermissionCache = new ConcurrentHashMap<>();
+    private static final Map<Long, Set<Long>> userAclsWithFolderBrowsePermissionCache = new ConcurrentHashMap<>();
     private static final Map<Long, Set<Long>> ownerAclsWithBrowsePermissionCache = new ConcurrentHashMap<>();
 
     private static Object INITIALIZING = new Object();
@@ -36,6 +38,7 @@ public class BrowseAcls {
         userId = user.getId();
         objectAclsWithBrowsePermissions = getUserAclsWithBrowsePermissions(user);
         ownerAclsWithBrowsePermissions = getOwnerAclsWithBrowsePermissions(user);
+        folderAclsWithBrowsePermissions = getFolderAclsWithBrowsePermissions(user);
     }
 
     public static BrowseAcls getInstance(UserAccount user) {
@@ -56,7 +59,11 @@ public class BrowseAcls {
     public boolean hasOwnerBrowsePermission(Long aclId) {
         return ownerAclsWithBrowsePermissions.contains(aclId);
     }
-
+    
+    public boolean hasFolderBrowsePermission(Long aclId){
+        return folderAclsWithBrowsePermissions.contains(aclId);
+    }
+    
     public boolean hasBrowsePermissionForOsd(ObjectSystemData osd) {
         long aclId = osd.getAclId();
         return hasUserBrowsePermission(aclId) || (osd.getOwnerId().equals(userId) && hasOwnerBrowsePermission(aclId));
@@ -69,18 +76,16 @@ public class BrowseAcls {
     }
 
     public static void reloadUser(UserAccount user) {
-        synchronized (userAclsWithBrowsePermissionCache) {
-            userAclsWithBrowsePermissionCache.remove(user.getId());
-        }
-        synchronized (ownerAclsWithBrowsePermissionCache) {
-            ownerAclsWithBrowsePermissionCache.remove(user.getId());
-        }
+        userAclsWithBrowsePermissionCache.remove(user.getId());
+        ownerAclsWithBrowsePermissionCache.remove(user.getId());
+        userAclsWithFolderBrowsePermissionCache.remove(user.getId());
     }
 
     private static void initialize() {
         synchronized (INITIALIZING) {
             PermissionDao permissionDao = new PermissionDao();
             browsePermission = permissionDao.getPermissionByName(DefaultPermissions.BROWSE_OBJECT.getName());
+            folderBrowsePermission = permissionDao.getPermissionByName(DefaultPermissions.BROWSE_FOLDER.getName());
             AclDao aclDao = new AclDao();
             acls = aclDao.list();
             ownerGroup = new CmnGroupDao().getOwnerGroup();
@@ -91,33 +96,41 @@ public class BrowseAcls {
     private static Set<Long> getUserAclsWithBrowsePermissions(UserAccount user) {
         Long userId = user.getId();
         if (!userAclsWithBrowsePermissionCache.containsKey(userId)) {
-            synchronized (userAclsWithBrowsePermissionCache) {
-                long startTime = System.currentTimeMillis();
-                log.info("Generating object acls list with browse permissions for user " + user);
-                userAclsWithBrowsePermissionCache.put(userId, generateObjectAclSet(user));
-                long endTime = System.currentTimeMillis();
-                log.info("object acl list generated in " + (endTime - startTime) + " ms");
-            }
+            long startTime = System.currentTimeMillis();
+            log.info("Generating object acls list with browse permissions for user " + user);
+            userAclsWithBrowsePermissionCache.put(userId, generateObjectAclSet(browsePermission, user));
+            long endTime = System.currentTimeMillis();
+            log.info("object acl list generated in " + (endTime - startTime) + " ms");
         }
         return userAclsWithBrowsePermissionCache.get(userId);
+    }
+
+    private static Set<Long> getFolderAclsWithBrowsePermissions(UserAccount user) {
+        Long userId = user.getId();
+        if (!userAclsWithFolderBrowsePermissionCache.containsKey(userId)) {
+            long startTime = System.currentTimeMillis();
+            log.info("Generating object acls list with folder browse permissions for user " + user);
+            userAclsWithFolderBrowsePermissionCache.put(userId, generateObjectAclSet(folderBrowsePermission, user));
+            long endTime = System.currentTimeMillis();
+            log.info("folder acl list generated in " + (endTime - startTime) + " ms");
+        }
+        return userAclsWithFolderBrowsePermissionCache.get(userId);
     }
 
     private static Set<Long> getOwnerAclsWithBrowsePermissions(UserAccount user) {
         Long userId = user.getId();
         if (!ownerAclsWithBrowsePermissionCache.containsKey(userId)) {
-            synchronized (ownerAclsWithBrowsePermissionCache) {
-                long startTime = System.currentTimeMillis();
-                log.info("Generating owner acls list with browse permissions for user " + user);
-                ownerAclsWithBrowsePermissionCache.put(userId, generateOwnerAclIdSet(browsePermission, user));
-                long endTime = System.currentTimeMillis();
-                log.info("owner acl list generated in " + (endTime - startTime) + " ms");
+            long startTime = System.currentTimeMillis();
+            log.info("Generating owner acls list with browse permissions for user " + user);
+            ownerAclsWithBrowsePermissionCache.put(userId, generateOwnerAclIdSet(browsePermission, user));
+            long endTime = System.currentTimeMillis();
+            log.info("owner acl list generated in " + (endTime - startTime) + " ms");
 
-            }
         }
         return ownerAclsWithBrowsePermissionCache.get(userId);
     }
 
-    private static Set<Long> generateObjectAclSet(UserAccount user) {
+    private static synchronized Set<Long> generateObjectAclSet(Permission permission, UserAccount user) {
         UserAccountDao userDao = new UserAccountDao();
         if (userDao.isSuperuser(user)) {
             // Superusers are exempt from permission checking, so they automatically have BrowsePermission on all objects.
@@ -127,7 +140,7 @@ public class BrowseAcls {
 
         for (Acl acl : acls) {
             // compute browse permissions for acls
-            boolean checkAclResult = checkObjectAclEntries(acl, browsePermission, user);
+            boolean checkAclResult = checkAclEntries(acl, permission, user);
             if (checkAclResult) {
                 aclIds.add(acl.getId());
             }
@@ -136,7 +149,7 @@ public class BrowseAcls {
         return aclIds;
     }
 
-    private static boolean checkObjectAclEntries(Acl acl, Permission permission, UserAccount user) {
+    private static boolean checkAclEntries(Acl acl, Permission permission, UserAccount user) {
         // create Union of Sets: user.groups and acl.groups => iterate over each group for permitlevel.
 
         Set<CmnGroup> userGroups = new CmnGroupDao().getGroupsWithAncestorsOfUserById(user.getId());
@@ -158,7 +171,7 @@ public class BrowseAcls {
             return acls.stream().map(Acl::getId).collect(Collectors.toSet());
         }
 
-        List<AclEntry> ownerAclEntries =  new AclEntryDao().getAclEntriesByGroup(ownerGroup);
+        List<AclEntry> ownerAclEntries = new AclEntryDao().getAclEntriesByGroup(ownerGroup);
         return new AclEntryPermissionDao()
                 .filterAclEntriesWithoutThisPermission(ownerAclEntries, permission)
                 .stream()

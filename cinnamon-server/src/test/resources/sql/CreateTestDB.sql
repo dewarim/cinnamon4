@@ -58,6 +58,7 @@ create table folders
     primary key,
   name varchar(128) not null,
   obj_version bigint,
+  created timestamp not null default now(),
   acl_id bigint not null
     constraint fkd74671c53e44742f
     references acls,
@@ -354,7 +355,12 @@ insert into acls(id,name) values(nextval('seq_acl_id'),'no-permissions-except-ev
 
 insert into folder_types(id,name) values(nextval('seq_folder_type_id'),'_default_folder_type');
 
-insert into folders values(nextval('seq_folder_id'),'root',0,1,1,null,1,false,'<summary/>');
+-- #1 root folder
+insert into folders(id,name,obj_version,acl_id,owner_id,parent_id,type_id)
+values(nextval('seq_folder_id'),'root',0,1,1,null,1);
+-- #2 home folder inside root folder
+insert into folders(id,name,obj_version,acl_id,owner_id,parent_id,type_id, summary) 
+values(nextval('seq_folder_id'),'home',0,1,1,1,1, '<summary>stuff</summary>');
 
 insert into objtypes(id,name) values(nextval('seq_obj_type_id'),'_default_objtype');
 
@@ -425,6 +431,7 @@ insert into aclentry_permissions(id, aclentry_id,permission_id) values (nextval(
 
 insert into languages values (nextval('seq_language_id'),'DE',0,'<meta/>');
 
+-- #1 test object with summary, default acl in root folder
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id, summary)
 values (nextval('seq_objects_id'), now(), true, true, now(), 'test-1', 1, 1, 1, 1, 1, 1, 1, '<summary>sum of sum</summary>');
@@ -448,3 +455,10 @@ values (nextval('seq_objects_id'), now(), true, true, now(), 'owned-by-doe', 1, 
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
 values (nextval('seq_objects_id'), now(), true, true, now(), 'acl-for-everyone', 1, 1, 1, 1, 1, 1, 6);
+
+-- #1 link to osd #1 with default acl (#1)
+insert into links(id, type,resolver,owner_id,acl_id,parent_id,osd_id) 
+values (nextval('seq_links_id'), 'OBJECT', 'FIXED', 1,1,1,1);
+-- #2 link to folder #2 with default acl (#1)
+insert into links(id, type,resolver,owner_id,acl_id,parent_id,folder_id) 
+values (nextval('seq_links_id'), 'FOLDER', 'FIXED', 1,1,1,2);

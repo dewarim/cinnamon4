@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.model;
 
+import java.util.Date;
 import java.util.Objects;
 
 public class Folder {
@@ -13,6 +14,7 @@ public class Folder {
     private Long typeId;
     private Boolean metadataChanged;
     private String summary;
+    private Date created;
 
     public Long getId() {
         return id;
@@ -86,6 +88,14 @@ public class Folder {
         this.parentId = parentId;
     }
 
+    public Date getCreated() {
+        return created;
+    }
+
+    public void setCreated(Date created) {
+        this.created = created;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -95,6 +105,7 @@ public class Folder {
                 Objects.equals(objVersion, folder.objVersion) &&
                 Objects.equals(aclId, folder.aclId) &&
                 Objects.equals(ownerId, folder.ownerId) &&
+                Objects.equals(created, folder.created) &&
                 Objects.equals(parentId, folder.parentId) &&
                 Objects.equals(typeId, folder.typeId) &&
                 Objects.equals(metadataChanged, folder.metadataChanged) &&

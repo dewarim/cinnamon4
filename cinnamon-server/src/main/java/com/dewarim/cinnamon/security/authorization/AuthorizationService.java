@@ -1,8 +1,7 @@
-package com.dewarim.cinnamon.application;
+package com.dewarim.cinnamon.security.authorization;
 
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.UserAccount;
-import com.dewarim.cinnamon.security.authorization.BrowseAcls;
 
 import java.util.*;
 import java.util.stream.Collectors;

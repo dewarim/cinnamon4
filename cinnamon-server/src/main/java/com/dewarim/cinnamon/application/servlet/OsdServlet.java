@@ -1,6 +1,6 @@
 package com.dewarim.cinnamon.application.servlet;
 
-import com.dewarim.cinnamon.application.AuthorizationService;
+import com.dewarim.cinnamon.security.authorization.AuthorizationService;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.dao.OsdDao;
 import com.dewarim.cinnamon.model.ObjectSystemData;

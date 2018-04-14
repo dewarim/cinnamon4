@@ -4,6 +4,7 @@ import com.dewarim.cinnamon.api.content.ContentMetadata;
 import com.dewarim.cinnamon.provider.DefaultContentProvider;
 
 import java.util.Date;
+import java.util.Objects;
 
 /**
  * Core Cinnamon object, contains the system's data of an object (document, media file, other resource).
@@ -265,5 +266,42 @@ public class ObjectSystemData implements ContentMetadata {
 
     public void setContentProvider(String contentProvider) {
         this.contentProvider = contentProvider;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ObjectSystemData that = (ObjectSystemData) o;
+        return latestHead == that.latestHead &&
+                latestBranch == that.latestBranch &&
+                Objects.equals(name, that.name) &&
+                Objects.equals(applicationName, that.applicationName) &&
+                Objects.equals(contentSize, that.contentSize) &&
+                Objects.equals(predecessorId, that.predecessorId) &&
+                Objects.equals(rootId, that.rootId) &&
+                Objects.equals(creatorId, that.creatorId) &&
+                Objects.equals(modifierId, that.modifierId) &&
+                Objects.equals(ownerId, that.ownerId) &&
+                Objects.equals(lockerId, that.lockerId) &&
+                Objects.equals(created, that.created) &&
+                Objects.equals(modified, that.modified) &&
+                Objects.equals(languageId, that.languageId) &&
+                Objects.equals(aclId, that.aclId) &&
+                Objects.equals(parentId, that.parentId) &&
+                Objects.equals(formatId, that.formatId) &&
+                Objects.equals(typeId, that.typeId) &&
+                Objects.equals(cmnVersion, that.cmnVersion) &&
+                Objects.equals(lifecycleStateId, that.lifecycleStateId) &&
+                Objects.equals(summary, that.summary) &&
+                Objects.equals(objVersion, that.objVersion) &&
+                Objects.equals(contentHash, that.contentHash) &&
+                Objects.equals(contentProvider, that.contentProvider);
+    }
+
+    @Override
+    public int hashCode() {
+
+        return Objects.hash(name, ownerId, created, parentId, cmnVersion);
     }
 }

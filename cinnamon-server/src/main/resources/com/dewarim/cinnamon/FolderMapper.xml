@@ -22,7 +22,7 @@
         SELECT
         id,
         name,
-        version,
+        obj_version,
         acl_id,
         owner_id,
         parent_id,

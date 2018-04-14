@@ -17,7 +17,8 @@ public enum UrlMapping {
     ACL__GET_USER_ACLS("acl", "getUserAcls", "/api"),
     PERMISSION__LIST_PERMISSIONS("permission", "listPermissions", "/api"),
     PERMISSION__GET_USER_PERMISSIONS("permission", "getUserPermissions", "/api"), 
-    OSD__GET_OBJECTS_BY_ID("osd","getObjectsById" ,"/api" );
+    OSD__GET_OBJECTS_BY_ID("osd","getObjectsById" ,"/api" ), 
+    LINK__GET_LINK_BY_ID("link","getLinkById" ,"/api" );
 
     private String servlet;
     private String action;
