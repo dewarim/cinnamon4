@@ -462,3 +462,6 @@ values (nextval('seq_links_id'), 'OBJECT', 'FIXED', 1,1,1,1);
 -- #2 link to folder #2 with default acl (#1)
 insert into links(id, type,resolver,owner_id,acl_id,parent_id,folder_id) 
 values (nextval('seq_links_id'), 'FOLDER', 'FIXED', 1,1,1,2);
+-- #3 link to osd #1 with no permission except owner acl (#1)
+insert into links(id, type,resolver,owner_id,acl_id,parent_id,osd_id)
+values (nextval('seq_links_id'), 'OBJECT', 'FIXED', 1,5,1,1);

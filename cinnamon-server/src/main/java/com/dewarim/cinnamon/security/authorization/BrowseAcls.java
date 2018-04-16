@@ -67,6 +67,11 @@ public class BrowseAcls {
     public boolean hasBrowsePermissionForOsd(ObjectSystemData osd) {
         long aclId = osd.getAclId();
         return hasUserBrowsePermission(aclId) || (osd.getOwnerId().equals(userId) && hasOwnerBrowsePermission(aclId));
+    }    
+    
+    public boolean hasBrowsePermissionForLink(Link link) {
+        long aclId = link.getAclId();
+        return hasUserBrowsePermission(aclId) || (link.getOwnerId().equals(userId) && hasOwnerBrowsePermission(aclId));
     }
 
     public static void reload() {

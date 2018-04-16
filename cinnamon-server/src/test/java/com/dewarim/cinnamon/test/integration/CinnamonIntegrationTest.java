@@ -19,6 +19,7 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Reader;
@@ -94,6 +95,12 @@ public class CinnamonIntegrationTest {
     
     protected void assertCinnamonError(HttpResponse response, ErrorCode errorCode) throws IOException{
         Assert.assertThat(response.getStatusLine().getStatusCode(), equalTo(HttpStatus.SC_BAD_REQUEST));
+        CinnamonError cinnamonError = mapper.readValue(response.getEntity().getContent(), CinnamonError.class);
+        Assert.assertThat(cinnamonError.getCode(), equalTo(errorCode.getCode()));  
+    }  
+    
+    protected void assertCinnamonError(HttpResponse response, ErrorCode errorCode, int statusCode ) throws IOException{
+        Assert.assertThat(response.getStatusLine().getStatusCode(), equalTo(statusCode));
         CinnamonError cinnamonError = mapper.readValue(response.getEntity().getContent(), CinnamonError.class);
         Assert.assertThat(cinnamonError.getCode(), equalTo(errorCode.getCode()));  
     }

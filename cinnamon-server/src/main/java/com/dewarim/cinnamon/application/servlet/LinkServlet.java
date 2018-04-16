@@ -68,6 +68,14 @@ public class LinkServlet extends HttpServlet {
 
         boolean includeSummary = linkRequest.isIncludeSummary();
         Link link = linkOptional.get();
+        
+        // check the Link's ACL:
+        UserAccount user = ThreadLocalSqlSession.getCurrentUser();
+        List<Link> filteredLink = authorizationService.filterLinksByBrowsePermission(Collections.singletonList(link), user);
+        if(filteredLink.isEmpty()){
+            ErrorResponseGenerator.generateErrorMessage(response, SC_UNAUTHORIZED, ErrorCode.UNAUTHORIZED, "");
+            return;
+        }
 
         Optional<LinkResponse> linkResponse;
         switch (link.getType()) {

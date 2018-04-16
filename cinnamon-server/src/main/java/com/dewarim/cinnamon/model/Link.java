@@ -2,13 +2,15 @@ package com.dewarim.cinnamon.model;
 
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
+import java.util.Objects;
+
 @JacksonXmlRootElement(localName = "link")
 public class Link {
     
     private Long id;
     private LinkType type;
     private LinkResolver resolver;
-    private Long userId;
+    private Long ownerId;
     private Long aclId;
     private Long parentId;
     private Long folderId;
@@ -39,12 +41,12 @@ public class Link {
         this.resolver = resolver;
     }
 
-    public Long getUserId() {
-        return userId;
+    public Long getOwnerId() {
+        return ownerId;
     }
 
-    public void setUserId(Long userId) {
-        this.userId = userId;
+    public void setOwnerId(Long ownerId) {
+        this.ownerId = ownerId;
     }
 
     public Long getAclId() {
@@ -85,5 +87,40 @@ public class Link {
 
     public void setObjVersion(Long objVersion) {
         this.objVersion = objVersion;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Link link = (Link) o;
+        return type == link.type &&
+                resolver == link.resolver &&
+                Objects.equals(ownerId, link.ownerId) &&
+                Objects.equals(aclId, link.aclId) &&
+                Objects.equals(parentId, link.parentId) &&
+                Objects.equals(folderId, link.folderId) &&
+                Objects.equals(objectId, link.objectId);
+    }
+
+    @Override
+    public int hashCode() {
+
+        return Objects.hash(type, resolver, ownerId, aclId, parentId, folderId, objectId);
+    }
+
+    @Override
+    public String toString() {
+        return "Link{" +
+                "id=" + id +
+                ", type=" + type +
+                ", resolver=" + resolver +
+                ", ownerId=" + ownerId +
+                ", aclId=" + aclId +
+                ", parentId=" + parentId +
+                ", folderId=" + folderId +
+                ", objectId=" + objectId +
+                ", objVersion=" + objVersion +
+                '}';
     }
 }

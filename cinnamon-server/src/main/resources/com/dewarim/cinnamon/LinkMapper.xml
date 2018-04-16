@@ -9,7 +9,7 @@
         <id property="id" column="id"/>
         <result property="type" typeHandler="org.apache.ibatis.type.EnumTypeHandler" column="type"/>
         <result property="resolver" typeHandler="org.apache.ibatis.type.EnumTypeHandler" column="resolver"/>
-        <result property="userId" column="user_id"/>
+        <result property="ownerId" column="owner_id"/>
         <result property="aclId" column="acl_id"/>
         <result property="parentId" column="parent_id"/>
         <result property="folderId" column="folder_id"/>
