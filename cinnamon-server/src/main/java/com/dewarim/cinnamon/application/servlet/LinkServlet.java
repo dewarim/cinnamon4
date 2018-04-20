@@ -125,8 +125,18 @@ public class LinkServlet extends HttpServlet {
             return Optional.empty();
         }
         OsdDao osdDao = new OsdDao();
-        List<ObjectSystemData> osds = osdDao.getObjectsById(Collections.singletonList(link.getObjectId()), includeSummary);
-        ObjectSystemData osd = osds.get(0);
+        ObjectSystemData osd;
+        switch(link.getResolver()){
+            case LATEST_HEAD:
+                osd = osdDao.getLatestHead(link.getObjectId());
+                break;
+            case FIXED: // fall through to default - fixed is standard case.
+            default:
+                List<ObjectSystemData> osds = osdDao.getObjectsById(Collections.singletonList(link.getObjectId()), includeSummary);
+                osd = osds.get(0);
+                break;
+        }
+        
         if (browseAcls.hasUserBrowsePermission(osd.getAclId())) {
             LinkResponse linkResponse = new LinkResponse();
             linkResponse.setLinkType(LinkType.OBJECT);

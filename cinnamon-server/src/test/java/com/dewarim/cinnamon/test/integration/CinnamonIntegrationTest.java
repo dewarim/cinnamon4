@@ -35,6 +35,7 @@ public class CinnamonIntegrationTest {
     static int cinnamonTestPort = 19999;
     static CinnamonServer cinnamonServer;
     static String ticket;
+    static String ticketForDoe;
 
     XmlMapper mapper = new XmlMapper();
     
@@ -79,14 +80,20 @@ public class CinnamonIntegrationTest {
      * 
      * @return a ticket for a normal user.
      */
-    protected static String getDoesTicket() throws IOException {
-        String url = "http://localhost:" + cinnamonTestPort + UrlMapping.CINNAMON_CONNECT.getPath();
-        String tokenRequestResult = Request.Post(url)
-                .bodyForm(Form.form().add("user", "doe").add("pwd", "admin").build())
-                .execute().returnContent().asString();
-        XmlMapper mapper = new XmlMapper();
-        CinnamonConnection cinnamonConnection = mapper.readValue(tokenRequestResult, CinnamonConnection.class);
-        return cinnamonConnection.getTicket();
+    protected static String getDoesTicket(boolean newTicket) throws IOException {
+        if(ticketForDoe == null || newTicket) {
+            String url = "http://localhost:" + cinnamonTestPort + UrlMapping.CINNAMON_CONNECT.getPath();
+            String tokenRequestResult = Request.Post(url)
+                    .bodyForm(Form.form().add("user", "doe").add("pwd", "admin").build())
+                    .execute().returnContent().asString();
+            XmlMapper mapper = new XmlMapper();
+            CinnamonConnection cinnamonConnection = mapper.readValue(tokenRequestResult, CinnamonConnection.class);
+            ticketForDoe = cinnamonConnection.getTicket();
+            return ticketForDoe;
+        }
+        else {
+            return ticketForDoe;
+        }
     }
     
     protected void assertResponseOkay(HttpResponse response){

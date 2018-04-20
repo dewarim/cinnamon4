@@ -70,5 +70,9 @@
             #{item}
         </foreach>
     </select>
+    
+    <select id="com.dewarim.cinnamon.ObjectSystemDataMapper.getLatestHead" parameterType="long" resultMap="osdMap">
+        select * from objects where root_id = #{id} and latest_head=true
+    </select>
 
 </mapper>

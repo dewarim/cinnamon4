@@ -20,8 +20,9 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getObjectsById() throws IOException {
+        String adminTicket = ticket;
         try {
-            ticket = CinnamonIntegrationTest.getDoesTicket();
+            ticket = CinnamonIntegrationTest.getDoesTicket(false);
             OsdRequest osdRequest = new OsdRequest();
             osdRequest.setIds(List.of(1L, 2L, 3L, 4L, 5L, 6L));
             HttpResponse response = sendRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
@@ -34,7 +35,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
             
         } finally {
             // restore admin ticket for later tests.
-            ticket = CinnamonIntegrationTest.getAdminTicket();
+            ticket = adminTicket;
         }
 
     }

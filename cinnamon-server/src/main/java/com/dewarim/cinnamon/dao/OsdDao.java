@@ -36,4 +36,8 @@ public class OsdDao {
         return results;
     }
 
+    public ObjectSystemData getLatestHead(long id){
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        return sqlSession.selectOne("com.dewarim.cinnamon.ObjectSystemDataMapper.getLatestHead",id);
+    }
 }

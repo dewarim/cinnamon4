@@ -355,15 +355,21 @@ insert into acls(id,name) values(nextval('seq_acl_id'),'delete.me.acl'); -- 3
 insert into acls(id,name) values(nextval('seq_acl_id'),'rename.me.acl'); -- 4
 insert into acls(id,name) values(nextval('seq_acl_id'),'no-permissions-except-owner.acl'); -- 5
 insert into acls(id,name) values(nextval('seq_acl_id'),'no-permissions-except-everyone.acl'); -- 6
+insert into acls(id,name) values(nextval('seq_acl_id'),'no-permissions.acl'); -- 7
 
 insert into folder_types(id,name) values(nextval('seq_folder_type_id'),'_default_folder_type');
 
 -- #1 root folder
 insert into folders(id,name,obj_version,acl_id,owner_id,parent_id,type_id)
 values(nextval('seq_folder_id'),'root',0,1,1,null,1);
+
 -- #2 home folder inside root folder
 insert into folders(id,name,obj_version,acl_id,owner_id,parent_id,type_id, summary) 
 values(nextval('seq_folder_id'),'home',0,1,1,1,1, '<summary>stuff</summary>');
+
+-- #3 unseen folder inside home folder with acl #7 (no-permissions.acl)
+insert into folders(id,name,obj_version,acl_id,owner_id,parent_id,type_id) 
+values(nextval('seq_folder_id'),'unseen',0,7,1,2,1);
 
 insert into objtypes(id,name) values(nextval('seq_obj_type_id'),'_default_objtype');
 
@@ -438,33 +444,65 @@ insert into languages values (nextval('seq_language_id'),'DE',0,'<meta/>');
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id, summary)
 values (nextval('seq_objects_id'), now(), true, true, now(), 'test-1', 1, 1, 1, 1, 1, 1, 1, '<summary>sum of sum</summary>');
+-- #2
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
 values (nextval('seq_objects_id'), now(), true, true, now(), 'test-2', 1, 1, 1, 1, 1, 1, 1);
+-- #3
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
 values (nextval('seq_objects_id'), now(), true, true, now(), 'test-3', 1, 1, 1, 1, 1, 1, 1);
 
+-- #4
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
 values (nextval('seq_objects_id'), now(), true, true, now(), 'unbrowsable-test', 1, 1, 1, 1, 1, 1, 5);
 
--- acl #5 has no permission for user Doe, but allows owners to view the item, so Doe should see it anyway.
+-- #5 - acl #5 has no permission for user Doe, but allows owners to view the item, so Doe should see it anyway.
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
 values (nextval('seq_objects_id'), now(), true, true, now(), 'owned-by-doe', 1, 1, 1, 2, 1, 1, 5);
 
--- acl #6 has no permission for user Doe, but allows "_everyone" to view the item, so Doe should see it anyway.
+-- #6 - acl #6 has no permission for user Doe, but allows "_everyone" to view the item, so Doe should see it anyway.
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
 values (nextval('seq_objects_id'), now(), true, true, now(), 'acl-for-everyone', 1, 1, 1, 1, 1, 1, 6);
 
+-- #7 - acl #7 has no permission anyone.
+insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+                     owner_id, parent_id, type_id, acl_id)
+values (nextval('seq_objects_id'), now(), true, true, now(), 'see-me-not', 1, 1, 1, 1, 1, 1, 7);
+
+-- #8 parent for #9  default acl in root folder
+insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+                     owner_id, parent_id, type_id, acl_id)
+values (nextval('seq_objects_id'), now(), false, false, now(), 'test-parent', 1, 1, 1, 1, 1, 1, 1);
+-- #9 child object for #8
+insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+                     owner_id, parent_id, type_id, acl_id, root_id)
+values (nextval('seq_objects_id'), now(), true, true, now(), 'test-child', 1, 1, 1, 1, 1, 1, 1, 8);
+
+
 -- #1 link to osd #1 with default acl (#1)
 insert into links(id, type,resolver,owner_id,acl_id,parent_id,osd_id) 
 values (nextval('seq_links_id'), 'OBJECT', 'FIXED', 1,1,1,1);
+
 -- #2 link to folder #2 with default acl (#1)
 insert into links(id, type,resolver,owner_id,acl_id,parent_id,folder_id) 
 values (nextval('seq_links_id'), 'FOLDER', 'FIXED', 1,1,1,2);
+
 -- #3 link to osd #1 with no permission except owner acl (#1)
 insert into links(id, type,resolver,owner_id,acl_id,parent_id,osd_id)
 values (nextval('seq_links_id'), 'OBJECT', 'FIXED', 1,5,1,1);
+
+-- #4 link to osd #7 with no-permission.acl (#7)
+insert into links(id, type,resolver,owner_id,acl_id,parent_id,osd_id)    
+values (nextval('seq_links_id'), 'OBJECT', 'FIXED', 1,1,1,7);
+
+-- #5 link to folder #3 with no-permission. acl (#7)
+insert into links(id, type,resolver,owner_id,acl_id,parent_id,folder_id)
+values (nextval('seq_links_id'), 'FOLDER', 'FIXED', 1,1,1,3);
+
+-- #6 link to osd #8 with latest_head resolver - should return osd#9 when link is queried.
+insert into links(id, type,resolver,owner_id,acl_id,parent_id,osd_id)
+values (nextval('seq_links_id'), 'OBJECT', 'LATEST_HEAD', 1,1,1,8);
