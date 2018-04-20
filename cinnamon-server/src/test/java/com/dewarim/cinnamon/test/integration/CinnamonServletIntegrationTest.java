@@ -40,6 +40,28 @@ public class CinnamonServletIntegrationTest extends CinnamonIntegrationTest{
         CinnamonError error  = mapper.readValue(response.getEntity().getContent(), CinnamonError.class);
         assertThat(error.getCode(),equalTo(ErrorCode.CONNECTION_FAIL_WRONG_PASSWORD.getCode()));
     }
+    @Test
+    public void connectFailsWithLockedUser() throws IOException{
+        String url = "http://localhost:" + cinnamonTestPort + UrlMapping.CINNAMON_CONNECT.getPath();
+        HttpResponse response = Request.Post(url)
+                .bodyForm(Form.form().add("user", "locked user").add("pwd", "admin").build())
+                .execute().returnResponse();
+        assertThat(response.getStatusLine().getStatusCode(), equalTo(HttpStatus.SC_UNAUTHORIZED));
+
+        CinnamonError error  = mapper.readValue(response.getEntity().getContent(), CinnamonError.class);
+        assertThat(error.getCode(),equalTo(ErrorCode.CONNECTION_FAIL_ACCOUNT_LOCKED.getCode()));
+    }
+    @Test
+    public void connectFailsWithInactiveUser() throws IOException{
+        String url = "http://localhost:" + cinnamonTestPort + UrlMapping.CINNAMON_CONNECT.getPath();
+        HttpResponse response = Request.Post(url)
+                .bodyForm(Form.form().add("user", "deactivated user").add("pwd", "admin").build())
+                .execute().returnResponse();
+        assertThat(response.getStatusLine().getStatusCode(), equalTo(HttpStatus.SC_UNAUTHORIZED));
+
+        CinnamonError error  = mapper.readValue(response.getEntity().getContent(), CinnamonError.class);
+        assertThat(error.getCode(),equalTo(ErrorCode.CONNECTION_FAIL_ACCOUNT_INACTIVE.getCode()));
+    }
     
     
     /**

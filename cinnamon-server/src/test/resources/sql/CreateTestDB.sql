@@ -9,7 +9,8 @@ CREATE TABLE users (
   pwd VARCHAR(255) NOT NULL,
   obj_version int NOT NULL DEFAULT 0,
   login_type VARCHAR(64) NOT NULL DEFAULT 'CINNAMON',
-  activated BOOLEAN NOT NULL DEFAULT TRUE 
+  activated BOOLEAN NOT NULL DEFAULT TRUE, 
+  locked BOOLEAN NOT NULL DEFAULT FALSE 
 );
 
 create SEQUENCE seq_user_id start with 1;
@@ -345,6 +346,8 @@ create sequence seq_aclentry_permission_id start with 1;
 
 INSERT INTO users(id,name,pwd,activated) VALUES ( nextval('seq_user_id'),'admin','$2a$10$VG9LCf6h/Qwb7Y.pafHkaepdnJNgFZUzzuMV3EcyvLbKnueHQ4IW.',true);
 INSERT INTO users(id,name,pwd,activated) VALUES ( nextval('seq_user_id'),'doe','$2a$10$VG9LCf6h/Qwb7Y.pafHkaepdnJNgFZUzzuMV3EcyvLbKnueHQ4IW.',true);
+INSERT INTO users(id,name,pwd,activated) VALUES ( nextval('seq_user_id'),'deactivated user','$2a$10$VG9LCf6h/Qwb7Y.pafHkaepdnJNgFZUzzuMV3EcyvLbKnueHQ4IW.',false);
+INSERT INTO users(id,name,pwd,activated, locked) VALUES ( nextval('seq_user_id'),'locked user','$2a$10$VG9LCf6h/Qwb7Y.pafHkaepdnJNgFZUzzuMV3EcyvLbKnueHQ4IW.',true,true);
 
 insert into acls(id,name) values(nextval('seq_acl_id'),'_default_acl'); -- 1
 insert into acls(id,name) values(nextval('seq_acl_id'),'reviewers.acl'); -- 2

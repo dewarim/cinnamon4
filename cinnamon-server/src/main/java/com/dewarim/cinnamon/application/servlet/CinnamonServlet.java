@@ -81,6 +81,19 @@ public class CinnamonServlet extends HttpServlet {
                 return;
             }
 
+            if(!user.isActivated()){
+                ErrorResponseGenerator.generateErrorMessage(response, HttpServletResponse.SC_UNAUTHORIZED,
+                        ErrorCode.CONNECTION_FAIL_ACCOUNT_INACTIVE, "user account is not active"
+                );
+                return;
+            }
+            if(user.isLocked()){
+                ErrorResponseGenerator.generateErrorMessage(response, HttpServletResponse.SC_UNAUTHORIZED,
+                        ErrorCode.CONNECTION_FAIL_ACCOUNT_LOCKED, "user account is locked"
+                );
+                return;
+            }
+            
             if (authenticate(user, password)) {
                 // TODO: get optional uiLanguageParam.
                 Session session = new SessionDao().save(new Session(user.getId(), null));

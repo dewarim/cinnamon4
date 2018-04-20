@@ -15,7 +15,8 @@ public class UserAccount implements Principal, LoginUser {
     private String loginType;
     private String password;
     private boolean activated;
-    
+    private boolean locked;
+        
     @Override
     public String getName() {
         return name;
@@ -65,6 +66,14 @@ public class UserAccount implements Principal, LoginUser {
         this.activated = activated;
     }
 
+    public boolean isLocked() {
+        return locked;
+    }
+
+    public void setLocked(boolean locked) {
+        this.locked = locked;
+    }
+
     @Override
     public String getUsername() {
         return name;
@@ -81,9 +90,10 @@ public class UserAccount implements Principal, LoginUser {
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", objVersion=" + objVersion +
-                ", loginType=" + loginType +
-                ", password='" + "*** filtered ***" + '\'' +
+                ", loginType='" + loginType + '\'' +
+                ", password='" + password + '\'' +
                 ", activated=" + activated +
+                ", locked=" + locked +
                 '}';
     }
 
@@ -93,6 +103,7 @@ public class UserAccount implements Principal, LoginUser {
         if (o == null || getClass() != o.getClass()) return false;
         UserAccount that = (UserAccount) o;
         return activated == that.activated &&
+                locked == that.locked &&
                 Objects.equals(name, that.name) &&
                 loginType.equals(that.loginType) &&
                 Objects.equals(password, that.password);
