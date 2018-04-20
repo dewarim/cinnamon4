@@ -4,6 +4,9 @@ import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.model.Link;
 import org.apache.ibatis.session.SqlSession;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class LinkDao {
@@ -15,4 +18,8 @@ public class LinkDao {
     }
 
 
+    public List<Link> getLinksByFolderId(Long folderId) {
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        return sqlSession.selectList("com.dewarim.cinnamon.LinkMapper.getLinkByFolderId", folderId);
+    }
 }

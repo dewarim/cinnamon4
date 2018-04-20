@@ -371,6 +371,10 @@ values(nextval('seq_folder_id'),'home',0,1,1,1,1, '<summary>stuff</summary>');
 insert into folders(id,name,obj_version,acl_id,owner_id,parent_id,type_id) 
 values(nextval('seq_folder_id'),'unseen',0,7,1,2,1);
 
+-- #4 archive folder with some objects to test getObjectsByFolderId
+insert into folders(id,name,obj_version,acl_id,owner_id,parent_id,type_id)
+values(nextval('seq_folder_id'),'archive',0,1,1,2,1);
+
 insert into objtypes(id,name) values(nextval('seq_obj_type_id'),'_default_objtype');
 
 insert into groups(id,name) VALUES(nextval('seq_groups'),'_superusers'); -- #1
@@ -483,6 +487,16 @@ insert into objects (id, created, latest_branch, latest_head, modified, name, cr
 values (nextval('seq_objects_id'), now(), true, true, now(), 'test-child', 1, 1, 1, 1, 1, 1, 1, 8);
 
 
+-- #10 parent for osd#11 in archive folder#4
+insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+                     owner_id, parent_id, type_id, acl_id)
+values (nextval('seq_objects_id'), now(), false, false, now(), 'test-parent', 1, 1, 1, 1, 4, 1, 1);
+-- #11 child object for #10, also in archive folder#4
+insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+                     owner_id, parent_id, type_id, acl_id, root_id, summary)
+values (nextval('seq_objects_id'), now(), true, true, now(), 'test-child', 1, 1, 1, 1, 4, 1, 1, 10,'<summary>child@archive</summary>');
+
+
 -- #1 link to osd #1 with default acl (#1)
 insert into links(id, type,resolver,owner_id,acl_id,parent_id,osd_id) 
 values (nextval('seq_links_id'), 'OBJECT', 'FIXED', 1,1,1,1);
@@ -506,3 +520,13 @@ values (nextval('seq_links_id'), 'FOLDER', 'FIXED', 1,1,1,3);
 -- #6 link to osd #8 with latest_head resolver - should return osd#9 when link is queried.
 insert into links(id, type,resolver,owner_id,acl_id,parent_id,osd_id)
 values (nextval('seq_links_id'), 'OBJECT', 'LATEST_HEAD', 1,1,1,8);
+
+-- #7 link to osd #10 with latest_head resolver, in folder 'archive' #7 - should return osd#11 when link is queried.
+-- used in getObjectsByFolderId
+insert into links(id, type,resolver,owner_id,acl_id,parent_id,osd_id)
+values (nextval('seq_links_id'), 'OBJECT', 'LATEST_HEAD', 1,1,4,10);
+
+-- #8 link to osd #11 with fixed resolver - should return osd#11 when link is queried.
+-- used in getObjectsByFolderId, but with no_permission.acl #7, should not be seen by normal user.
+insert into links(id, type,resolver,owner_id,acl_id,parent_id,osd_id)
+values (nextval('seq_links_id'), 'OBJECT', 'FIXED', 1,7,4,11);

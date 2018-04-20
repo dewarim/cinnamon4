@@ -21,23 +21,31 @@ public class OsdDao {
         List<ObjectSystemData> results = new ArrayList<>(ids.size());
         int requestSize = ids.size();
         int rowCount = 0;
-        Map<String,Object> params = new HashMap<>();
+        Map<String, Object> params = new HashMap<>();
         params.put("includeSummary", includeSummary);
         while (rowCount < requestSize) {
             int lastIndex = rowCount + BATCH_SIZE;
-            if(lastIndex > requestSize){
+            if (lastIndex > requestSize) {
                 lastIndex = requestSize;
             }
             List<Long> partialList = ids.subList(rowCount, lastIndex);
-            params.put("idList",partialList);
+            params.put("idList", partialList);
             results.addAll(sqlSession.selectList("com.dewarim.cinnamon.ObjectSystemDataMapper.getOsdsById", params));
             rowCount += BATCH_SIZE;
         }
         return results;
     }
 
-    public ObjectSystemData getLatestHead(long id){
+    public ObjectSystemData getLatestHead(long id) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        return sqlSession.selectOne("com.dewarim.cinnamon.ObjectSystemDataMapper.getLatestHead",id);
+        return sqlSession.selectOne("com.dewarim.cinnamon.ObjectSystemDataMapper.getLatestHead", id);
+    }
+
+    public List<ObjectSystemData> getObjectsByFolderId(long folderId, boolean includeSummary) {
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        Map<String, Object> params = new HashMap<>();
+        params.put("includeSummary", includeSummary);
+        params.put("folderId", folderId);
+        return new ArrayList<>(sqlSession.selectList("com.dewarim.cinnamon.ObjectSystemDataMapper.getOsdsByFolderId", params));
     }
 }

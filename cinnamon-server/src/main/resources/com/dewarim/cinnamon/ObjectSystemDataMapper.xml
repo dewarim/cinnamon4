@@ -71,6 +71,39 @@
         </foreach>
     </select>
     
+    <select id="getOsdsByFolderId" parameterType="map" resultMap="osdMap">
+        SELECT
+        id,
+        appname,
+        content_path,
+        content_size,
+        created,
+        latest_branch,
+        latest_head,
+        modified,
+        name,
+        version,
+        cmn_version,
+        acl_id,
+        creator_id,
+        format_id,
+        language_id,
+        locker_id,
+        modifier_id,
+        owner_id,
+        parent_id,
+        predecessor_id,
+        root_id,
+        type_id,
+        state_id,
+        content_changed,
+        metadata_changed,
+        CASE WHEN #{includeSummary} THEN summary ELSE null END AS summary
+        
+        FROM objects
+        WHERE parent_id = #{folderId} 
+    </select>
+    
     <select id="com.dewarim.cinnamon.ObjectSystemDataMapper.getLatestHead" parameterType="long" resultMap="osdMap">
         select * from objects where root_id = #{id} and latest_head=true
     </select>

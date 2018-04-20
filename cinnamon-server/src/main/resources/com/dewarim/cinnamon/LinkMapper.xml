@@ -22,5 +22,11 @@
         FROM links
         WHERE id = #{id}
     </select>
+    
+    <select id="getLinkByFolderId" parameterType="long" resultMap="linkMap">
+        SELECT *
+        FROM links
+        WHERE parent_id = #{folderId}        
+    </select>
         
 </mapper>
