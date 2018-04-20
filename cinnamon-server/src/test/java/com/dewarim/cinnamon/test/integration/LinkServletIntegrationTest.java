@@ -3,8 +3,10 @@ package com.dewarim.cinnamon.test.integration;
 import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.application.UrlMapping;
 import com.dewarim.cinnamon.model.Folder;
+import com.dewarim.cinnamon.model.LinkResolver;
 import com.dewarim.cinnamon.model.LinkType;
 import com.dewarim.cinnamon.model.ObjectSystemData;
+import com.dewarim.cinnamon.model.request.CreateLinkRequest;
 import com.dewarim.cinnamon.model.request.DeleteByIdRequest;
 import com.dewarim.cinnamon.model.request.LinkRequest;
 import com.dewarim.cinnamon.model.response.DeletionResponse;
@@ -184,7 +186,6 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest{
         }
     }
 
-
     @Test
     public void deleteLinkWithInvalidId() throws IOException {
         String adminTicket = ticket;
@@ -309,6 +310,24 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest{
         }
     }
 
+    @Test
+    public void createLinkHappyPath() throws IOException{
+        String adminTicket = ticket;
+        try{
+            ticket = getDoesTicket(false);
+            // link to object in creation folder#6
+            CreateLinkRequest createLinkRequest = new CreateLinkRequest(13L,6L,LinkResolver.FIXED,LinkType.OBJECT,1);
+            HttpResponse response = sendRequest(UrlMapping.LINK__CREATE_LINK, createLinkRequest);
+            LinkWrapper linkWrapper = parseResponse(response);
+            ObjectSystemData osd = linkWrapper.getLinks().get(0).getOsd();
+            assertNotNull(osd);
+        }
+        finally {
+            // restore admin ticket for later tests.
+            ticket = adminTicket;
+        }
+    }
+    
     private LinkWrapper parseResponse(HttpResponse response) throws IOException{
         assertResponseOkay(response);
         return mapper.readValue(response.getEntity().getContent(), LinkWrapper.class);

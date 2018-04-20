@@ -1,6 +1,5 @@
 package com.dewarim.cinnamon.security.authorization;
 
-import com.dewarim.cinnamon.DefaultPermissions;
 import com.dewarim.cinnamon.model.Link;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.UserAccount;

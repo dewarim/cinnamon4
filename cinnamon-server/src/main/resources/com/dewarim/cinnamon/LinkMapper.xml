@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.dewarim.cinnamon.LinkMapper">
-    
+
     <resultMap id="linkMap" type="com.dewarim.cinnamon.model.Link">
         <id property="id" column="id"/>
         <result property="type" typeHandler="org.apache.ibatis.type.EnumTypeHandler" column="type"/>
@@ -22,15 +22,24 @@
         FROM links
         WHERE id = #{id}
     </select>
-    
+
     <select id="getLinkByFolderId" parameterType="long" resultMap="linkMap">
         SELECT *
         FROM links
-        WHERE parent_id = #{folderId}        
+        WHERE parent_id = #{folderId}
     </select>
-        
+
     <delete id="deleteLink" parameterType="long">
-        DELETE FROM links WHERE id = #{id}
+        DELETE FROM links
+        WHERE id = #{id}
     </delete>
-    
+
+    <insert id="insertLink" parameterType="com.dewarim.cinnamon.model.Link">
+        <selectKey keyProperty="id" resultType="long" order="BEFORE">
+            select nextval('seq_links_id')
+        </selectKey>
+        INSERT INTO links (id,type,resolver,owner_id,acl_id,parent_id,folder_id,osd_id,version) VALUES
+        (#{id},#{type},#{resolver}, #{ownerId}, #{aclId},#{parentId},#{folderId},#{objectId},0)
+    </insert>
+
 </mapper>

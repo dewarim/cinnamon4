@@ -66,7 +66,10 @@ public class BrowseAcls {
     public boolean hasFolderBrowsePermission(Long aclId){
         return folderAclsWithBrowsePermissions.contains(aclId);
     }
-    
+
+    /**
+     * Check if the user has browse permission for a given OSD, either through the object's acl or as owner.
+     */
     public boolean hasBrowsePermissionForOsd(ObjectSystemData osd) {
         long aclId = osd.getAclId();
         return hasUserBrowsePermission(aclId) || (osd.getOwnerId().equals(user.getId()) && hasOwnerBrowsePermission(aclId));

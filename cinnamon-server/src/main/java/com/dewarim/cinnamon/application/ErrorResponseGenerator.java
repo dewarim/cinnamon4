@@ -21,6 +21,12 @@ public class ErrorResponseGenerator {
             throw new RuntimeException(e);
         }
     }    
+        
+    public static void generateErrorMessage(HttpServletResponse response, int statusCode, ErrorCode errorCode){
+        generateErrorMessage(response,statusCode,errorCode,null);
+    }    
+    
+    
     public static void superuserRequired(HttpServletResponse response){
         generateErrorMessage(response, HttpServletResponse.SC_FORBIDDEN,
                 ErrorCode.REQUIRES_SUPERUSER_STATUS, ""); 

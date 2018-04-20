@@ -4,10 +4,7 @@ import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import org.apache.ibatis.session.SqlSession;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class OsdDao {
 
@@ -47,5 +44,9 @@ public class OsdDao {
         params.put("includeSummary", includeSummary);
         params.put("folderId", folderId);
         return new ArrayList<>(sqlSession.selectList("com.dewarim.cinnamon.ObjectSystemDataMapper.getOsdsByFolderId", params));
+    }
+
+    public ObjectSystemData getObjectById(long id) {
+        return getObjectsById(Collections.singletonList(id),false).get(0);
     }
 }

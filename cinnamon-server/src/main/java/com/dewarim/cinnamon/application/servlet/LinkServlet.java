@@ -1,6 +1,8 @@
 package com.dewarim.cinnamon.application.servlet;
 
 import com.dewarim.cinnamon.DefaultPermissions;
+import com.dewarim.cinnamon.dao.AclDao;
+import com.dewarim.cinnamon.model.request.CreateLinkRequest;
 import com.dewarim.cinnamon.model.request.DeleteByIdRequest;
 import com.dewarim.cinnamon.model.response.DeletionResponse;
 import com.dewarim.cinnamon.model.response.LinkWrapper;
@@ -46,6 +48,9 @@ public class LinkServlet extends HttpServlet {
             pathInfo = "";
         }
         switch (pathInfo) {
+            case "/createLink":
+                createLink(request, response);
+                break;
             case "/deleteLink":
                 deleteLink(request, response);
                 break;
@@ -56,6 +61,68 @@ public class LinkServlet extends HttpServlet {
                 response.setStatus(HttpServletResponse.SC_NO_CONTENT);
         }
 
+    }
+
+    private void createLink(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        CreateLinkRequest linkRequest = xmlMapper.readValue(request.getInputStream(), CreateLinkRequest.class);
+        if (!linkRequest.validated()) {
+            ErrorResponseGenerator.generateErrorMessage(response, SC_BAD_REQUEST, ErrorCode.INVALID_REQUEST);
+            return;
+        }
+        UserAccount user = ThreadLocalSqlSession.getCurrentUser();
+        FolderDao folderDao = new FolderDao();
+        List<Folder> parentFolders = folderDao.getFoldersById(Collections.singletonList(linkRequest.getParentId()), false);
+        if (parentFolders.isEmpty()) {
+            ErrorResponseGenerator.generateErrorMessage(response, SC_BAD_REQUEST, ErrorCode.PARENT_FOLDER_NOT_FOUND);
+            return;
+        }
+        Folder parentFolder = parentFolders.get(0);
+        BrowseAcls browseAcls = BrowseAcls.getInstance(user);
+        boolean browsePermission = browseAcls.hasFolderBrowsePermission(parentFolder.getAclId());
+        if (!browsePermission) {
+            ErrorResponseGenerator.generateErrorMessage(response, SC_UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
+            return;
+        }
+        AclDao aclDao = new AclDao();
+        Acl acl = aclDao.getAclById(linkRequest.getAclId());
+        if(acl == null){
+            ErrorResponseGenerator.generateErrorMessage(response, SC_BAD_REQUEST, ErrorCode.ACL_NOT_FOUND);
+            return;
+        }
+
+        Folder folder = null;
+        ObjectSystemData osd = null;
+        OsdDao osdDao = new OsdDao();
+        boolean hasBrowsePermission;
+        switch (linkRequest.getLinkType()) {
+            case FOLDER:
+                folder = folderDao.getFolderById(linkRequest.getId());
+                hasBrowsePermission = browseAcls.hasFolderBrowsePermission(folder.getAclId());
+                break;
+            case OBJECT:
+                osd = osdDao.getObjectById(linkRequest.getId());
+                hasBrowsePermission = browseAcls.hasBrowsePermissionForOsd(osd);
+                break;
+            default:
+                throw new IllegalStateException("invalid link type: " + linkRequest.getLinkType());
+        }
+
+        if (!hasBrowsePermission) {
+            ErrorResponseGenerator.generateErrorMessage(response, SC_UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
+            return;
+        }
+
+        LinkDao linkDao = new LinkDao();
+        Link link = linkDao.createLink(linkRequest);
+        LinkResponse linkResponse = new LinkResponse();
+        linkResponse.setLinkType(link.getType());
+        linkResponse.setOsd(osd);
+        linkResponse.setFolder(folder);
+        LinkWrapper linkWrapper = new LinkWrapper();
+        linkWrapper.getLinks().add(linkResponse);
+        response.setContentType(CONTENT_TYPE_XML);
+        response.setStatus(HttpServletResponse.SC_OK);
+        xmlMapper.writeValue(response.getWriter(), linkWrapper);
     }
 
 

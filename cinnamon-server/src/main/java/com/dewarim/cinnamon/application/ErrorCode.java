@@ -22,7 +22,10 @@ public enum ErrorCode {
     ID_PARAM_IS_INVALID("error.id.param.is.missing.or.invalid"),
     OBJECT_NOT_FOUND("error.object.not.found"),
     PERMISSIONS_NOT_FOUND("error.no.permissions.found.for.user.and.acl"),
-    UNAUTHORIZED("error.access.not.allowed");
+    UNAUTHORIZED("error.access.not.allowed"), 
+    INVALID_REQUEST("error.request.is.invalid.check.parameters"),
+    PARENT_FOLDER_NOT_FOUND("error.parent.folder.not.found"), 
+    ACL_NOT_FOUND("error.acl.not.found");
     
     String code;
 

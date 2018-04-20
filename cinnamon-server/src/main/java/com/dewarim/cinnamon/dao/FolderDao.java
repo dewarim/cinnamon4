@@ -34,5 +34,9 @@ public class FolderDao {
         return results;
     }
 
+    
+    public Folder getFolderById(long id){
+        return getFoldersById(Collections.singletonList(id),false).get(0);
+    }
 
 }

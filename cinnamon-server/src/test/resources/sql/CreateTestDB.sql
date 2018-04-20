@@ -356,6 +356,7 @@ insert into acls(id,name) values(nextval('seq_acl_id'),'rename.me.acl'); -- 4
 insert into acls(id,name) values(nextval('seq_acl_id'),'no-permissions-except-owner.acl'); -- 5
 insert into acls(id,name) values(nextval('seq_acl_id'),'no-permissions-except-everyone.acl'); -- 6
 insert into acls(id,name) values(nextval('seq_acl_id'),'no-permissions.acl'); -- 7
+insert into acls(id,name) values(nextval('seq_acl_id'),'creators.acl'); -- 8
 
 insert into folder_types(id,name) values(nextval('seq_folder_type_id'),'_default_folder_type');
 
@@ -378,6 +379,10 @@ values(nextval('seq_folder_id'),'archive',0,1,1,2,1);
 -- #5 deletion folder with some objects to test deletion of links/objects
 insert into folders(id,name,obj_version,acl_id,owner_id,parent_id,type_id)
 values(nextval('seq_folder_id'),'deletion',0,1,1,2,1);
+
+-- #6 creation folder to test creation of links/objects
+insert into folders(id,name,obj_version,acl_id,owner_id,parent_id,type_id)
+values(nextval('seq_folder_id'),'creation',0,8,1,2,1);
 
 insert into objtypes(id,name) values(nextval('seq_obj_type_id'),'_default_objtype');
 
@@ -416,6 +421,9 @@ insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id')
 insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),5,7);
 -- #9 _everyone is connected to no-permission-except-everyone.acl
 insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),6,6);
+-- #10 doe's group linked to creation acl#8 
+insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),8,4);
+
 
 insert into permissions values (nextval('seq_permission_id'),'_browse'); -- #1
 insert into permissions values (nextval('seq_permission_id'),'_browse_folder'); -- #2
@@ -449,6 +457,10 @@ insert into aclentry_permissions(id, aclentry_id,permission_id) values (nextval(
 insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),6,6);
 -- #7 delete folder permission for doe's group + default_acl:
 insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),6,5);
+-- #8 browse permission for doe's group + creation.acl#8:
+insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),10,1);
+-- #9 browse_folder permission for doe's group + creation.acl#8: 
+insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),10,2);
 
 
 insert into languages values (nextval('seq_language_id'),'DE',0,'<meta/>');
@@ -509,6 +521,11 @@ values (nextval('seq_objects_id'), now(), true, true, now(), 'test-child', 1, 1,
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
 values (nextval('seq_objects_id'), now(), true, true, now(), 'linked-to-me', 1, 1, 1, 1, 5, 1, 1);
+
+-- #13 test object for create link,  default acl in creation folder#6 
+insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+                     owner_id, parent_id, type_id, acl_id)
+values (nextval('seq_objects_id'), now(), true, true, now(), 'linked-to-me-2', 1, 1, 1, 1, 6, 1, 1);
 
 
 -- #1 link to osd #1 with default acl (#1)
