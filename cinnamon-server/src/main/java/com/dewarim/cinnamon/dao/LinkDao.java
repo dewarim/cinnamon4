@@ -22,4 +22,9 @@ public class LinkDao {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
         return sqlSession.selectList("com.dewarim.cinnamon.LinkMapper.getLinkByFolderId", folderId);
     }
+
+    public int deleteLink(Long id) {
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        return sqlSession.delete("com.dewarim.cinnamon.LinkMapper.deleteLink",id);
+    }
 }

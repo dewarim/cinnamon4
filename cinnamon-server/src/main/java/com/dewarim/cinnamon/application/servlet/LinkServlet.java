@@ -1,5 +1,8 @@
 package com.dewarim.cinnamon.application.servlet;
 
+import com.dewarim.cinnamon.DefaultPermissions;
+import com.dewarim.cinnamon.model.request.DeleteByIdRequest;
+import com.dewarim.cinnamon.model.response.DeletionResponse;
 import com.dewarim.cinnamon.model.response.LinkWrapper;
 import com.dewarim.cinnamon.security.authorization.AuthorizationService;
 import com.dewarim.cinnamon.application.ErrorCode;
@@ -43,6 +46,9 @@ public class LinkServlet extends HttpServlet {
             pathInfo = "";
         }
         switch (pathInfo) {
+            case "/deleteLink":
+                deleteLink(request, response);
+                break;
             case "/getLinkById":
                 getLinkById(request, response);
                 break;
@@ -50,6 +56,52 @@ public class LinkServlet extends HttpServlet {
                 response.setStatus(HttpServletResponse.SC_NO_CONTENT);
         }
 
+    }
+
+
+    private void deleteLink(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        DeleteByIdRequest deleteRequest = xmlMapper.readValue(request.getInputStream(), DeleteByIdRequest.class);
+        if (!deleteRequest.validated()) {
+            ErrorResponseGenerator.generateErrorMessage(response, SC_BAD_REQUEST,
+                    ErrorCode.ID_PARAM_IS_INVALID, "Id must be a positive integer value.");
+            return;
+        }
+        LinkDao linkDao = new LinkDao();
+        Optional<Link> linkOptional = linkDao.getLinkById(deleteRequest.getId());
+        DeletionResponse deletionResponse = new DeletionResponse();
+        if (linkOptional.isPresent()) {
+            Link link = linkOptional.get();
+            UserAccount user = ThreadLocalSqlSession.getCurrentUser();
+            List<Link> filteredLink = authorizationService.filterLinksByBrowsePermission(Collections.singletonList(link), user);
+            if (filteredLink.isEmpty()) {
+                ErrorResponseGenerator.generateErrorMessage(response, SC_UNAUTHORIZED, ErrorCode.UNAUTHORIZED, "");
+                return;
+            }
+
+            boolean deleteOkay;
+            switch (link.getType()) {
+                case FOLDER:
+                    deleteOkay = authorizationService.userHasPermission(link.getAclId(), DefaultPermissions.DELETE_FOLDER.getName(), user);
+                    break;
+                case OBJECT:
+                    deleteOkay = authorizationService.userHasPermission(link.getAclId(), DefaultPermissions.DELETE_OBJECT.getName(), user);
+                    break;
+                default:
+                    throw new IllegalStateException("unknown link type");
+            }
+            if (!deleteOkay) {
+                ErrorResponseGenerator.generateErrorMessage(response, SC_UNAUTHORIZED, ErrorCode.UNAUTHORIZED, "");
+                return;
+            }
+            int deletedRows = linkDao.deleteLink(link.getId());
+            deletionResponse.setSuccess(deletedRows == 1);
+        }
+        else {
+            deletionResponse.setNotFound(true);
+        }
+        response.setContentType(CONTENT_TYPE_XML);
+        response.setStatus(HttpServletResponse.SC_OK);
+        xmlMapper.writeValue(response.getWriter(), deletionResponse);
     }
 
     private void getLinkById(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -68,11 +120,11 @@ public class LinkServlet extends HttpServlet {
 
         boolean includeSummary = linkRequest.isIncludeSummary();
         Link link = linkOptional.get();
-        
+
         // check the Link's ACL:
         UserAccount user = ThreadLocalSqlSession.getCurrentUser();
         List<Link> filteredLink = authorizationService.filterLinksByBrowsePermission(Collections.singletonList(link), user);
-        if(filteredLink.isEmpty()){
+        if (filteredLink.isEmpty()) {
             ErrorResponseGenerator.generateErrorMessage(response, SC_UNAUTHORIZED, ErrorCode.UNAUTHORIZED, "");
             return;
         }
@@ -126,7 +178,7 @@ public class LinkServlet extends HttpServlet {
         }
         OsdDao osdDao = new OsdDao();
         ObjectSystemData osd;
-        switch(link.getResolver()){
+        switch (link.getResolver()) {
             case LATEST_HEAD:
                 osd = osdDao.getLatestHead(link.getObjectId());
                 break;
@@ -136,7 +188,7 @@ public class LinkServlet extends HttpServlet {
                 osd = osds.get(0);
                 break;
         }
-        
+
         if (browseAcls.hasUserBrowsePermission(osd.getAclId())) {
             LinkResponse linkResponse = new LinkResponse();
             linkResponse.setLinkType(LinkType.OBJECT);

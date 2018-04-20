@@ -29,10 +29,11 @@ public class PermissionServletIntegrationTest extends CinnamonIntegrationTest {
     
     @Test
     public void getUsersPermissions() throws IOException{
-        // user doe @ default acl: should have browse and browse_folder permission
+        // user doe @ default acl: should have browse and browse_folder as well as 
+        // delete_object and delete_folder permission
         UserPermissionRequest permissionRequest = new UserPermissionRequest(2L,1L);
         HttpResponse response = sendRequest(UrlMapping.PERMISSION__GET_USER_PERMISSIONS, permissionRequest);
-        List<Permission> permissions = unwrapPermissions(response, 2);
+        List<Permission> permissions = unwrapPermissions(response, 4);
         Optional<Permission> browse = permissions.stream().filter(s -> s.getName().equals("_browse")).findFirst();
         assertTrue(browse.isPresent());  
         Optional<Permission> browseFolder = permissions.stream().filter(s -> s.getName().equals("_browse_folder")).findFirst();

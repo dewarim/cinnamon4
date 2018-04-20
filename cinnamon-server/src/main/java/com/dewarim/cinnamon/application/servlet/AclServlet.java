@@ -150,7 +150,7 @@ public class AclServlet extends HttpServlet {
         }
         else {
             int deletedRows = aclDao.deleteAcl(deletionRequest.getId());
-            deletionResponse.setSuccess(deletedRows > 0);
+            deletionResponse.setSuccess(deletedRows == 1);
         }
         
         response.setContentType(CONTENT_TYPE_XML);

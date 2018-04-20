@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.security.authorization;
 
+import com.dewarim.cinnamon.DefaultPermissions;
 import com.dewarim.cinnamon.model.Link;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.UserAccount;
@@ -13,10 +14,14 @@ public class AuthorizationService {
         BrowseAcls browseAcls = BrowseAcls.getInstance(user);
         return osds.stream().filter(browseAcls::hasBrowsePermissionForOsd).collect(Collectors.toList());
     }
-    
+
     public List<Link> filterLinksByBrowsePermission(List<Link> links, UserAccount user) {
         BrowseAcls browseAcls = BrowseAcls.getInstance(user);
         return links.stream().filter(browseAcls::hasBrowsePermissionForLink).collect(Collectors.toList());
     }
 
+    public boolean userHasPermission(Long aclId, String permissionName, UserAccount user) {
+        BrowseAcls browseAcls = BrowseAcls.getInstance(user);
+        return browseAcls.hasPermission(aclId, permissionName);
+    }
 }

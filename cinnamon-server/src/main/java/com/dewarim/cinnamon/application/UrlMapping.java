@@ -16,10 +16,11 @@ public enum UrlMapping {
     ACL__UPDATE_ACL("acl", "updateAcl", "/api"),
     ACL__GET_USER_ACLS("acl", "getUserAcls", "/api"),
     PERMISSION__LIST_PERMISSIONS("permission", "listPermissions", "/api"),
-    PERMISSION__GET_USER_PERMISSIONS("permission", "getUserPermissions", "/api"), 
-    OSD__GET_OBJECTS_BY_ID("osd","getObjectsById" ,"/api" ), 
-    OSD__GET_OBJECTS_BY_FOLDER_ID("osd","getObjectsByFolderId" ,"/api" ), 
-    LINK__GET_LINK_BY_ID("link","getLinkById" ,"/api" );
+    PERMISSION__GET_USER_PERMISSIONS("permission", "getUserPermissions", "/api"),
+    OSD__GET_OBJECTS_BY_ID("osd", "getObjectsById", "/api"),
+    OSD__GET_OBJECTS_BY_FOLDER_ID("osd", "getObjectsByFolderId", "/api"),
+    LINK__GET_LINK_BY_ID("link", "getLinkById", "/api"),
+    LINK__DELETE_LINK("link", "deleteLink", "/api");
 
     private String servlet;
     private String action;

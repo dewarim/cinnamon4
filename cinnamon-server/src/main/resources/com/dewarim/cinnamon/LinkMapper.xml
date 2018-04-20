@@ -29,4 +29,8 @@
         WHERE parent_id = #{folderId}        
     </select>
         
+    <delete id="deleteLink" parameterType="long">
+        DELETE FROM links WHERE id = #{id}
+    </delete>
+    
 </mapper>

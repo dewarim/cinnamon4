@@ -18,4 +18,8 @@ public class DeleteByIdRequest {
     public void setId(Long id) {
         this.id = id;
     }
+    
+    public boolean validated(){
+        return id != null && id > 0;
+    }
 }
