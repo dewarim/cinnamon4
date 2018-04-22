@@ -40,7 +40,7 @@ public class AuthenticationFilterIntegrationTest extends CinnamonIntegrationTest
 
         // call an API method with ticket and valid request:
         UserInfoRequest userInfoRequest = new UserInfoRequest(null, "admin");
-        HttpResponse userInfoResponse = sendRequest(UrlMapping.USER__USER_INFO, userInfoRequest);
+        HttpResponse userInfoResponse = sendAdminRequest(UrlMapping.USER__USER_INFO, userInfoRequest);
         assertThat(userInfoResponse.getStatusLine().getStatusCode(), equalTo(HttpServletResponse.SC_OK));
         UserInfo info = mapper.readValue(userInfoResponse.getEntity().getContent(), UserWrapper.class).getUsers().get(0);
         assertThat(info.getName(), equalTo("admin"));
@@ -66,7 +66,7 @@ public class AuthenticationFilterIntegrationTest extends CinnamonIntegrationTest
         sqlSession.commit();
 
         UserInfoRequest userInfoRequest = new UserInfoRequest(null, "admin");
-        HttpResponse response = sendRequest(UrlMapping.USER__USER_INFO, userInfoRequest);
+        HttpResponse response = sendAdminRequest(UrlMapping.USER__USER_INFO, userInfoRequest);
         assertThat(response.getStatusLine().getStatusCode(), equalTo(HttpServletResponse.SC_FORBIDDEN));
         CinnamonError error = mapper.readValue(response.getEntity().getContent(), CinnamonError.class);
         assertThat(error.getCode(), equalTo(ErrorCode.AUTHENTICATION_FAIL_SESSION_EXPIRED.getCode()));
@@ -98,7 +98,7 @@ public class AuthenticationFilterIntegrationTest extends CinnamonIntegrationTest
         sqlSession.commit();
 
         UserInfoRequest userInfoRequest = new UserInfoRequest(null, "admin");
-        HttpResponse response = sendRequest(UrlMapping.USER__USER_INFO, userInfoRequest);
+        HttpResponse response = sendAdminRequest(UrlMapping.USER__USER_INFO, userInfoRequest);
         assertThat(response.getStatusLine().getStatusCode(), equalTo(HttpServletResponse.SC_FORBIDDEN));
         CinnamonError error = mapper.readValue(response.getEntity().getContent(), CinnamonError.class);
         assertThat(error.getCode(), equalTo(ErrorCode.AUTHENTICATION_FAIL_USER_NOT_FOUND.getCode()));

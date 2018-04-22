@@ -21,7 +21,7 @@ public class PermissionServletIntegrationTest extends CinnamonIntegrationTest {
     
     @Test
     public void listPermissions() throws IOException {
-        HttpResponse response = sendRequest(UrlMapping.PERMISSION__LIST_PERMISSIONS);
+        HttpResponse response = sendAdminRequest(UrlMapping.PERMISSION__LIST_PERMISSIONS);
         assertResponseOkay(response);
         PermissionWrapper wrapper = mapper.readValue(response.getEntity().getContent(),PermissionWrapper.class);
         assertThat(wrapper.getPermissions().size(), equalTo(17));
@@ -32,7 +32,7 @@ public class PermissionServletIntegrationTest extends CinnamonIntegrationTest {
         // user doe @ default acl: should have browse and browse_folder as well as 
         // delete_object and delete_folder permission
         UserPermissionRequest permissionRequest = new UserPermissionRequest(2L,1L);
-        HttpResponse response = sendRequest(UrlMapping.PERMISSION__GET_USER_PERMISSIONS, permissionRequest);
+        HttpResponse response = sendAdminRequest(UrlMapping.PERMISSION__GET_USER_PERMISSIONS, permissionRequest);
         List<Permission> permissions = unwrapPermissions(response, 4);
         Optional<Permission> browse = permissions.stream().filter(s -> s.getName().equals("_browse")).findFirst();
         assertTrue(browse.isPresent());  
@@ -41,7 +41,7 @@ public class PermissionServletIntegrationTest extends CinnamonIntegrationTest {
 
         // user doe @ reviewers acl: should have create folder permission
         UserPermissionRequest reviewerPermissionRequest = new UserPermissionRequest(2L,2L);
-        HttpResponse reviewerResponse = sendRequest(UrlMapping.PERMISSION__GET_USER_PERMISSIONS, reviewerPermissionRequest);
+        HttpResponse reviewerResponse = sendAdminRequest(UrlMapping.PERMISSION__GET_USER_PERMISSIONS, reviewerPermissionRequest);
         unwrapPermissions(reviewerResponse,1);
     }    
     
@@ -49,7 +49,7 @@ public class PermissionServletIntegrationTest extends CinnamonIntegrationTest {
     public void getUsersPermissionsForMissingAcl() throws IOException{
         // user doe @ rename.me.acl: should have no permissions
         UserPermissionRequest permissionRequest = new UserPermissionRequest(2L,4L);
-        HttpResponse response = sendRequest(UrlMapping.PERMISSION__GET_USER_PERMISSIONS, permissionRequest);
+        HttpResponse response = sendAdminRequest(UrlMapping.PERMISSION__GET_USER_PERMISSIONS, permissionRequest);
         List<Permission> permissions = unwrapPermissions(response, null);
         assertNull(permissions);
     }

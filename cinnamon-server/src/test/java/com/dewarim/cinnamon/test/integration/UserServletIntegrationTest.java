@@ -23,14 +23,14 @@ public class UserServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void requestShouldHaveUserIdOrUsername() throws IOException {
         UserInfoRequest userInfoRequest = new UserInfoRequest(null, null);
-        HttpResponse userInfoResponse = sendRequest(UrlMapping.USER__USER_INFO,userInfoRequest);
+        HttpResponse userInfoResponse = sendAdminRequest(UrlMapping.USER__USER_INFO,userInfoRequest);
         assertCinnamonError(userInfoResponse,ErrorCode.USER_INFO_REQUEST_WITHOUT_NAME_OR_ID);
     }
 
     @Test
     public void validRequestByUsername() throws IOException {
         UserInfoRequest userInfoRequest = new UserInfoRequest(null, "admin");
-        HttpResponse userInfoResponse = sendRequest(UrlMapping.USER__USER_INFO,userInfoRequest);
+        HttpResponse userInfoResponse = sendAdminRequest(UrlMapping.USER__USER_INFO,userInfoRequest);
         UserInfo admin = unwrapUsers(userInfoResponse,1).get(0);
         assertThat(admin.getName(), equalTo("admin"));
     }
@@ -38,7 +38,7 @@ public class UserServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void requestByUserId() throws IOException {
         UserInfoRequest userInfoRequest = new UserInfoRequest(1L, null);
-        HttpResponse userInfoResponse = sendRequest(UrlMapping.USER__USER_INFO,userInfoRequest);
+        HttpResponse userInfoResponse = sendAdminRequest(UrlMapping.USER__USER_INFO,userInfoRequest);
         UserInfo admin = unwrapUsers(userInfoResponse,1).get(0);
         assertThat(admin.getId(), equalTo(1L));
 
@@ -47,7 +47,7 @@ public class UserServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void requestForNonExistentUser() throws IOException {
         UserInfoRequest userInfoRequest = new UserInfoRequest(123L, null);
-        HttpResponse userInfoResponse =sendRequest(UrlMapping.USER__USER_INFO,userInfoRequest);
+        HttpResponse userInfoResponse = sendAdminRequest(UrlMapping.USER__USER_INFO,userInfoRequest);
         assertCinnamonError(userInfoResponse,ErrorCode.USER_ACCOUNT_NOT_FOUND);
     }
     

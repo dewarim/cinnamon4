@@ -22,12 +22,9 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getObjectsById() throws IOException {
-        String adminTicket = ticket;
-        try {
-            ticket = CinnamonIntegrationTest.getDoesTicket(false);
             OsdRequest osdRequest = new OsdRequest();
             osdRequest.setIds(List.of(1L, 2L, 3L, 4L, 5L, 6L));
-            HttpResponse response = sendRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
+            HttpResponse response = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
             List<ObjectSystemData> dataList = unwrapOsds(response, 5);
             assertFalse(dataList.stream().anyMatch(osd -> osd.getName().equals("unbrowsable-test")));
 
@@ -35,18 +32,13 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
             assertTrue(dataList.stream().anyMatch(osd -> osd.getName().equals("owned-by-doe")));
             assertTrue(dataList.stream().anyMatch(osd -> osd.getName().equals("acl-for-everyone")));
 
-        } finally {
-            // restore admin ticket for later tests.
-            ticket = adminTicket;
-        }
-
     }
 
     @Test
     public void getObjectsByIdForAdmin() throws IOException {
         OsdRequest osdRequest = new OsdRequest();
         osdRequest.setIds(List.of(1L, 2L, 3L, 4L, 5L, 6L));
-        HttpResponse response = sendRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
+        HttpResponse response = sendAdminRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
         List<ObjectSystemData> dataList = unwrapOsds(response, 6);
         // admin is exempt from permission checks, should get everything:
         assertTrue(dataList.stream().anyMatch(osd -> osd.getName().equals("unbrowsable-test")));
@@ -61,7 +53,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         OsdRequest osdRequest = new OsdRequest();
         osdRequest.setIds(List.of(1L));
         osdRequest.setIncludeSummary(false);
-        HttpResponse response = sendRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
+        HttpResponse response = sendAdminRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
         List<ObjectSystemData> dataList = unwrapOsds(response, 1);
         assertTrue(dataList.stream().anyMatch(osd -> osd.getSummary() == null));
     }
@@ -71,27 +63,20 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         OsdRequest osdRequest = new OsdRequest();
         osdRequest.setIds(List.of(1L));
         osdRequest.setIncludeSummary(true);
-        HttpResponse response = sendRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
+        HttpResponse response = sendAdminRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
         List<ObjectSystemData> dataList = unwrapOsds(response, 1);
         assertTrue(dataList.stream().anyMatch(osd -> osd.getSummary().equals("<summary>sum of sum</summary>")));
     }
 
     @Test
     public void getObjectsByFolderId() throws IOException {
-        String adminTicket = ticket;
-        try {
-            ticket = getDoesTicket(false);
             OsdByFolderRequest osdRequest = new OsdByFolderRequest(4L, true);
-            HttpResponse response = sendRequest(UrlMapping.OSD__GET_OBJECTS_BY_FOLDER_ID, osdRequest);
+            HttpResponse response = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_FOLDER_ID, osdRequest);
             List<ObjectSystemData> dataList = unwrapOsds(response, 2);
             List<Link> links = unwrapLinks(response, 1);
             assertTrue(dataList.stream().anyMatch(osd -> osd.getSummary().equals("<summary>child@archive</summary>")));
             // link.objectId is #10, because it's yet unresolved (latest_head would be osd#11).
             assertThat(links.get(0).getObjectId(), equalTo(10L));
-        }
-        finally {
-            ticket = adminTicket;
-        }
     }
 
     private List<ObjectSystemData> unwrapOsds(HttpResponse response, Integer expectedSize) throws IOException {
