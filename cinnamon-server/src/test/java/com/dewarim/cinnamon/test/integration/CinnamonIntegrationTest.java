@@ -15,11 +15,9 @@ import org.apache.http.entity.ContentType;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.jdbc.ScriptRunner;
 import org.apache.ibatis.session.SqlSession;
-import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Reader;
@@ -67,7 +65,7 @@ public class CinnamonIntegrationTest {
      * @return a ticket for the Cinnamon administrator
      */
     protected static String getAdminTicket() throws IOException {
-        String url = "http://localhost:" + cinnamonTestPort + UrlMapping.CINNAMON_CONNECT.getPath();
+        String url = "http://localhost:" + cinnamonTestPort + UrlMapping.CINNAMON__CONNECT.getPath();
         String tokenRequestResult = Request.Post(url)
                 .bodyForm(Form.form().add("user", "admin").add("pwd", "admin").build())
                 .execute().returnContent().asString();
@@ -82,7 +80,7 @@ public class CinnamonIntegrationTest {
      */
     protected static String getDoesTicket(boolean newTicket) throws IOException {
         if(ticketForDoe == null || newTicket) {
-            String url = "http://localhost:" + cinnamonTestPort + UrlMapping.CINNAMON_CONNECT.getPath();
+            String url = "http://localhost:" + cinnamonTestPort + UrlMapping.CINNAMON__CONNECT.getPath();
             String tokenRequestResult = Request.Post(url)
                     .bodyForm(Form.form().add("user", "doe").add("pwd", "admin").build())
                     .execute().returnContent().asString();

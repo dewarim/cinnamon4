@@ -8,6 +8,7 @@ import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.model.Session;
 import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.response.CinnamonConnection;
+import com.dewarim.cinnamon.model.response.DisconnectResponse;
 import com.dewarim.cinnamon.security.LoginProviderService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -37,7 +38,7 @@ public class CinnamonServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
         String pathInfo = request.getPathInfo();
-        if(pathInfo == null){
+        if (pathInfo == null) {
             // prevent NPE
             pathInfo = "/";
         }
@@ -56,6 +57,9 @@ public class CinnamonServlet extends HttpServlet {
             case "/connect":
                 connect(request, response);
                 break;
+            case "/disconnect":
+                disconnect(request, response);
+                break;
             default:
                 hello(response);
         }
@@ -65,7 +69,7 @@ public class CinnamonServlet extends HttpServlet {
     private void hello(HttpServletResponse response) throws IOException {
         response.setContentType("text/html");
         response.setStatus(HttpServletResponse.SC_OK);
-        response.getWriter().println("<h1>Hello Servlet</h1>");
+        response.getWriter().println("<h1>Cinnamon 4 Server</h1>");
     }
 
     private void connect(HttpServletRequest request, HttpServletResponse response) {
@@ -81,19 +85,20 @@ public class CinnamonServlet extends HttpServlet {
                 return;
             }
 
-            if(!user.isActivated()){
+            if (!user.isActivated()) {
                 ErrorResponseGenerator.generateErrorMessage(response, HttpServletResponse.SC_UNAUTHORIZED,
                         ErrorCode.CONNECTION_FAIL_ACCOUNT_INACTIVE, "user account is not active"
                 );
                 return;
             }
-            if(user.isLocked()){
+
+            if (user.isLocked()) {
                 ErrorResponseGenerator.generateErrorMessage(response, HttpServletResponse.SC_UNAUTHORIZED,
                         ErrorCode.CONNECTION_FAIL_ACCOUNT_LOCKED, "user account is locked"
                 );
                 return;
             }
-            
+
             if (authenticate(user, password)) {
                 // TODO: get optional uiLanguageParam.
                 Session session = new SessionDao().save(new Session(user.getId(), null));
@@ -101,22 +106,38 @@ public class CinnamonServlet extends HttpServlet {
 
                 // Return the token on the response
                 response.setContentType(CONTENT_TYPE_XML);
+                response.setStatus(HttpServletResponse.SC_OK);
                 xmlMapper.writeValue(response.getWriter(), cinnamonConnection);
             }
             else {
                 ErrorResponseGenerator.generateErrorMessage(response, HttpServletResponse.SC_UNAUTHORIZED,
-                        ErrorCode.CONNECTION_FAIL_WRONG_PASSWORD, "wrong password"
-                );
+                        ErrorCode.CONNECTION_FAIL_WRONG_PASSWORD, "wrong password");
             }
         } catch (Exception e) {
             // TODO: test with unit test & mocked request which throws exception etc
-            log.debug("connect failed for unknown reason:",e);
+            log.debug("connect failed for unknown reason:", e);
             ErrorResponseGenerator.generateErrorMessage(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
                     ErrorCode.INTERNAL_SERVER_ERROR_TRY_AGAIN_LATER, e.getMessage());
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         }
     }
 
+    private void disconnect(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String ticket = request.getHeader("ticket");
+        SessionDao sessionDao = new SessionDao();
+        Session session = sessionDao.getSessionByTicket(ticket);
+        if (session != null) {
+            sessionDao.delete(session.getId());
+        }
+        else {
+            ErrorResponseGenerator.generateErrorMessage(response, HttpServletResponse.SC_NOT_FOUND, ErrorCode.SESSION_NOT_FOUND);
+            return;
+        }
+        DisconnectResponse disconnectResponse = new DisconnectResponse(true);
+        response.setContentType(CONTENT_TYPE_XML);
+        response.setStatus(HttpServletResponse.SC_OK);
+        xmlMapper.writeValue(response.getWriter(), disconnectResponse);
+    }
 
     private boolean authenticate(UserAccount userAccount, String password) {
         LoginResult loginResult = loginProviderService.connect(userAccount, password);

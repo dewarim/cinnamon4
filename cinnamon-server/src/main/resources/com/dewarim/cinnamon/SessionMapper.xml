@@ -36,4 +36,8 @@
         WHERE id = #{id}
     </update>
 
+    <delete id="deleteSession" parameterType="long" flushCache="true">
+        DELETE FROM sessions WHERE id = #{id}
+    </delete>
+    
 </mapper>

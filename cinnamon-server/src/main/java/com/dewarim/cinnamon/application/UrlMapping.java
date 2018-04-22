@@ -7,7 +7,7 @@ package com.dewarim.cinnamon.application;
  */
 public enum UrlMapping {
 
-    CINNAMON_CONNECT("cinnamon", "connect", ""),
+    CINNAMON__CONNECT("cinnamon", "connect", ""),
     USER__USER_INFO("user", "userInfo", "/api"),
     ACL__GET_ACLS("acl", "getAcls", "/api"),
     ACL__CREATE_ACL("acl", "createAcl", "/api"),
@@ -21,7 +21,8 @@ public enum UrlMapping {
     OSD__GET_OBJECTS_BY_FOLDER_ID("osd", "getObjectsByFolderId", "/api"),
     LINK__GET_LINK_BY_ID("link", "getLinkById", "/api"),
     LINK__DELETE_LINK("link", "deleteLink", "/api"),
-    LINK__CREATE_LINK("link","createLink" ,"/api" );
+    LINK__CREATE_LINK("link","createLink" ,"/api" ), 
+    CINNAMON__DISCONNECT("cinnamon","disconnect" , "");
 
     private String servlet;
     private String action;

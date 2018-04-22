@@ -23,4 +23,9 @@ public class SessionDao {
         sqlSession.update("com.dewarim.cinnamon.SessionMapper.updateSession", session);
     }
 
+    public void delete(long id) {
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        sqlSession.delete("com.dewarim.cinnamon.SessionMapper.deleteSession", id);
+
+    }
 }

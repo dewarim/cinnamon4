@@ -25,7 +25,8 @@ public enum ErrorCode {
     UNAUTHORIZED("error.access.not.allowed"), 
     INVALID_REQUEST("error.request.is.invalid.check.parameters"),
     PARENT_FOLDER_NOT_FOUND("error.parent.folder.not.found"), 
-    ACL_NOT_FOUND("error.acl.not.found");
+    ACL_NOT_FOUND("error.acl.not.found"),
+    SESSION_NOT_FOUND("error.session.not.found");
     
     String code;
 
