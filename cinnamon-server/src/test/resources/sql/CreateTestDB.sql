@@ -357,6 +357,8 @@ insert into acls(id,name) values(nextval('seq_acl_id'),'no-permissions-except-ow
 insert into acls(id,name) values(nextval('seq_acl_id'),'no-permissions-except-everyone.acl'); -- 6
 insert into acls(id,name) values(nextval('seq_acl_id'),'no-permissions.acl'); -- 7
 insert into acls(id,name) values(nextval('seq_acl_id'),'creators.acl'); -- 8
+insert into acls(id,name) values(nextval('seq_acl_id'),'browse.but.no.create.acl'); -- 9
+insert into acls(id,name) values(nextval('seq_acl_id'),'create.but.no.browse.acl'); -- 10
 
 insert into folder_types(id,name) values(nextval('seq_folder_type_id'),'_default_folder_type');
 
@@ -383,6 +385,14 @@ values(nextval('seq_folder_id'),'deletion',0,1,1,2,1);
 -- #6 creation folder to test creation of links/objects
 insert into folders(id,name,obj_version,acl_id,owner_id,parent_id,type_id)
 values(nextval('seq_folder_id'),'creation',0,8,1,2,1);
+
+-- #7 folder in creation folder#6, acl#10 to test lack of browse permission for links
+insert into folders(id,name,obj_version,acl_id,owner_id,parent_id,type_id)
+values(nextval('seq_folder_id'),'u-no-browse',0,10,1,6,1);
+
+-- #8 folder in creation folder#6, acl#9 to test lack of create object permission for links
+insert into folders(id,name,obj_version,acl_id,owner_id,parent_id,type_id)
+values(nextval('seq_folder_id'),'u-no-create',0,9,1,6,1);
 
 insert into objtypes(id,name) values(nextval('seq_obj_type_id'),'_default_objtype');
 
@@ -423,6 +433,10 @@ insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id')
 insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),6,6);
 -- #10 doe's group linked to creation acl#8 
 insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),8,4);
+-- #11 doe's group linked to no-browse.acl#9 
+insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),9,4);
+-- #12 doe's group linked to no-create.acl#10 
+insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),10,4);
 
 
 insert into permissions values (nextval('seq_permission_id'),'_browse'); -- #1
@@ -461,7 +475,12 @@ insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),6
 insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),10,1);
 -- #9 browse_folder permission for doe's group + creation.acl#8: 
 insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),10,2);
-
+-- #10 create object permission for doe's group + creation.acl#8: 
+insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),10,4);
+-- #11 browse but no create permission for doe's group + no-creation.acl#9: (testing create link) 
+insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),11,2);
+-- #12 create but no browse permission for doe's group + no-creation.acl#10:  (testing create link)
+insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),12,4);
 
 insert into languages values (nextval('seq_language_id'),'DE',0,'<meta/>');
 
@@ -478,7 +497,7 @@ insert into objects (id, created, latest_branch, latest_head, modified, name, cr
                      owner_id, parent_id, type_id, acl_id)
 values (nextval('seq_objects_id'), now(), true, true, now(), 'test-3', 1, 1, 1, 1, 1, 1, 1);
 
--- #4
+-- #4 object with no permissions, used in getObjectsById tests and createLink test
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
 values (nextval('seq_objects_id'), now(), true, true, now(), 'unbrowsable-test', 1, 1, 1, 1, 1, 1, 5);
@@ -526,6 +545,11 @@ values (nextval('seq_objects_id'), now(), true, true, now(), 'linked-to-me', 1, 
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
 values (nextval('seq_objects_id'), now(), true, true, now(), 'linked-to-me-2', 1, 1, 1, 1, 6, 1, 1);
+
+-- #14 test object for create link in folder#7 (where doe has no browse permission)  
+insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+                     owner_id, parent_id, type_id, acl_id)
+values (nextval('seq_objects_id'), now(), true, true, now(), 'linked-to-me-2', 1, 1, 1, 1, 7, 1, 1);
 
 
 -- #1 link to osd #1 with default acl (#1)

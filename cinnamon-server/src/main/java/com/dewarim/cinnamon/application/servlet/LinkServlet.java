@@ -79,13 +79,14 @@ public class LinkServlet extends HttpServlet {
         Folder parentFolder = parentFolders.get(0);
         BrowseAcls browseAcls = BrowseAcls.getInstance(user);
         boolean browsePermission = browseAcls.hasFolderBrowsePermission(parentFolder.getAclId());
-        if (!browsePermission) {
+        boolean writePermission = browseAcls.hasPermission(parentFolder.getAclId(), DefaultPermissions.CREATE_OBJECT.getName());
+        if (!(browsePermission && writePermission)) {
             ErrorResponseGenerator.generateErrorMessage(response, SC_UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
             return;
         }
         AclDao aclDao = new AclDao();
         Acl acl = aclDao.getAclById(linkRequest.getAclId());
-        if(acl == null){
+        if (acl == null) {
             ErrorResponseGenerator.generateErrorMessage(response, SC_BAD_REQUEST, ErrorCode.ACL_NOT_FOUND);
             return;
         }

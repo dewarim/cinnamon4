@@ -198,6 +198,77 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
         assertNotNull(osd);
     }
 
+    @Test
+    public void createLinkWithInvalidRequest() throws IOException {
+        // invalid target id
+        CreateLinkRequest crlId = new CreateLinkRequest(0L, 6L, LinkResolver.FIXED, LinkType.OBJECT, 1);
+        HttpResponse response = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, crlId);
+        assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
+
+        // invalid parent folder id
+        CreateLinkRequest crlParentId = new CreateLinkRequest(13L, 0L, LinkResolver.FIXED, LinkType.OBJECT, 1);
+        HttpResponse responseParentId = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, crlParentId);
+        assertCinnamonError(responseParentId, ErrorCode.INVALID_REQUEST);
+
+        // invalid resolver
+        CreateLinkRequest crlResolver = new CreateLinkRequest(13L, 6L, null, LinkType.OBJECT, 1);
+        HttpResponse responseResolver = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, crlParentId);
+        assertCinnamonError(responseResolver, ErrorCode.INVALID_REQUEST);
+
+        // invalid link type
+        CreateLinkRequest crlLinkType = new CreateLinkRequest(13L, 6L, LinkResolver.FIXED, null, 1);
+        HttpResponse responseLinkType = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, crlParentId);
+        assertCinnamonError(responseLinkType, ErrorCode.INVALID_REQUEST);
+
+        // invalid link type
+        CreateLinkRequest crlAcl = new CreateLinkRequest(13L, 6L, LinkResolver.FIXED, LinkType.OBJECT, 0);
+        HttpResponse responseAcl = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, crlParentId);
+        assertCinnamonError(responseAcl, ErrorCode.INVALID_REQUEST);
+    }
+
+    @Test
+    public void createLinkWithUnknownParentFolder() throws IOException {
+        CreateLinkRequest crlId = new CreateLinkRequest(13L, Long.MAX_VALUE, LinkResolver.FIXED, LinkType.OBJECT, 1);
+        HttpResponse response = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, crlId);
+        assertCinnamonError(response, ErrorCode.PARENT_FOLDER_NOT_FOUND);
+    }
+    
+    @Test
+    public void createLinkWithUnknownAcl() throws IOException {
+        CreateLinkRequest crlId = new CreateLinkRequest(13L, 6L, LinkResolver.FIXED, LinkType.OBJECT, Long.MAX_VALUE);
+        HttpResponse response = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, crlId);
+        assertCinnamonError(response, ErrorCode.ACL_NOT_FOUND);
+    }
+
+    @Test
+    public void createLinkWithinParentFolderWithoutBrowsePermission() throws IOException {
+        CreateLinkRequest crlId = new CreateLinkRequest(13L, 7, LinkResolver.FIXED, LinkType.OBJECT, 1);
+        HttpResponse response = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, crlId);
+        assertCinnamonError(response, ErrorCode.UNAUTHORIZED, SC_UNAUTHORIZED);
+    }
+
+    @Test
+    public void createLinkWithinParentFolderWithoutCreatePermission() throws IOException {
+        CreateLinkRequest crlId = new CreateLinkRequest(13L, 8, LinkResolver.FIXED, LinkType.OBJECT, 1);
+        HttpResponse response = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, crlId);
+        assertCinnamonError(response, ErrorCode.UNAUTHORIZED, SC_UNAUTHORIZED);
+    }
+
+    @Test
+    public void createLinkToFolderWithoutBrowsePermission() throws IOException {
+        CreateLinkRequest crlId = new CreateLinkRequest(7, 6, LinkResolver.FIXED, LinkType.FOLDER, 1);
+        HttpResponse response = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, crlId);
+        assertCinnamonError(response, ErrorCode.UNAUTHORIZED, SC_UNAUTHORIZED);
+    }
+    
+    @Test
+    public void createLinkToObjectWithoutBrowsePermission() throws IOException {
+        CreateLinkRequest crlId = new CreateLinkRequest(4, 6, LinkResolver.FIXED, LinkType.OBJECT, 1);
+        HttpResponse response = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, crlId);
+        assertCinnamonError(response, ErrorCode.UNAUTHORIZED, SC_UNAUTHORIZED);
+    }
+
+
     private LinkWrapper parseResponse(HttpResponse response) throws IOException {
         assertResponseOkay(response);
         return mapper.readValue(response.getEntity().getContent(), LinkWrapper.class);
