@@ -12,11 +12,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
- * A utility class to filter OSDs from search results for whom the user does not have browse permissions.
+ * A utility class to filter objects if the user does not have the required permissions.
  */
-public class BrowseAcls {
+public class AccessFilter {
 
-    static Logger log = LogManager.getLogger(BrowseAcls.class);
+    static Logger log = LogManager.getLogger(AccessFilter.class);
 
     private static List<Acl> acls;
     private static Permission browsePermission;
@@ -37,14 +37,14 @@ public class BrowseAcls {
     private static Object INITIALIZING = new Object();
     private static Boolean initialized = false;
 
-    private BrowseAcls(UserAccount user) {
+    private AccessFilter(UserAccount user) {
         this.user = user;
         objectAclsWithBrowsePermissions = getUserAclsWithBrowsePermissions(user);
         ownerAclsWithBrowsePermissions = getOwnerAclsWithBrowsePermissions(user);
         folderAclsWithBrowsePermissions = getFolderAclsWithBrowsePermissions(user);
     }
 
-    public static BrowseAcls getInstance(UserAccount user) {
+    public static AccessFilter getInstance(UserAccount user) {
         if (!initialized) {
             synchronized (INITIALIZING) {
                 if (!initialized) {
@@ -52,7 +52,7 @@ public class BrowseAcls {
                 }
             }
         }
-        return new BrowseAcls(user);
+        return new AccessFilter(user);
     }
 
     public boolean hasUserBrowsePermission(Long aclId) {

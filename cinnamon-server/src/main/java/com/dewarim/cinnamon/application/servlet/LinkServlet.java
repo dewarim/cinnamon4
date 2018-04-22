@@ -6,6 +6,7 @@ import com.dewarim.cinnamon.model.request.CreateLinkRequest;
 import com.dewarim.cinnamon.model.request.DeleteByIdRequest;
 import com.dewarim.cinnamon.model.response.DeletionResponse;
 import com.dewarim.cinnamon.model.response.LinkWrapper;
+import com.dewarim.cinnamon.security.authorization.AccessFilter;
 import com.dewarim.cinnamon.security.authorization.AuthorizationService;
 import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.application.ErrorResponseGenerator;
@@ -16,7 +17,6 @@ import com.dewarim.cinnamon.dao.OsdDao;
 import com.dewarim.cinnamon.model.*;
 import com.dewarim.cinnamon.model.request.LinkRequest;
 import com.dewarim.cinnamon.model.response.LinkResponse;
-import com.dewarim.cinnamon.security.authorization.BrowseAcls;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
@@ -77,9 +77,9 @@ public class LinkServlet extends HttpServlet {
             return;
         }
         Folder parentFolder = parentFolders.get(0);
-        BrowseAcls browseAcls = BrowseAcls.getInstance(user);
-        boolean browsePermission = browseAcls.hasFolderBrowsePermission(parentFolder.getAclId());
-        boolean writePermission = browseAcls.hasPermission(parentFolder.getAclId(), DefaultPermissions.CREATE_OBJECT.getName());
+        AccessFilter accessFilter = AccessFilter.getInstance(user);
+        boolean browsePermission = accessFilter.hasFolderBrowsePermission(parentFolder.getAclId());
+        boolean writePermission = accessFilter.hasPermission(parentFolder.getAclId(), DefaultPermissions.CREATE_OBJECT.getName());
         if (!(browsePermission && writePermission)) {
             ErrorResponseGenerator.generateErrorMessage(response, SC_UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
             return;
@@ -98,11 +98,11 @@ public class LinkServlet extends HttpServlet {
         switch (linkRequest.getLinkType()) {
             case FOLDER:
                 folder = folderDao.getFolderById(linkRequest.getId());
-                hasBrowsePermission = browseAcls.hasFolderBrowsePermission(folder.getAclId());
+                hasBrowsePermission = accessFilter.hasFolderBrowsePermission(folder.getAclId());
                 break;
             case OBJECT:
                 osd = osdDao.getObjectById(linkRequest.getId());
-                hasBrowsePermission = browseAcls.hasBrowsePermissionForOsd(osd);
+                hasBrowsePermission = accessFilter.hasBrowsePermissionForOsd(osd);
                 break;
             default:
                 throw new IllegalStateException("invalid link type: " + linkRequest.getLinkType());
@@ -219,8 +219,8 @@ public class LinkServlet extends HttpServlet {
     }
 
     private Optional<LinkResponse> handleFolderLink(HttpServletResponse response, Link link, boolean includeSummary) {
-        BrowseAcls browseAcls = BrowseAcls.getInstance(ThreadLocalSqlSession.getCurrentUser());
-        if (!browseAcls.hasFolderBrowsePermission(link.getAclId())) {
+        AccessFilter accessFilter = AccessFilter.getInstance(ThreadLocalSqlSession.getCurrentUser());
+        if (!accessFilter.hasFolderBrowsePermission(link.getAclId())) {
             ErrorResponseGenerator.generateErrorMessage(response, SC_UNAUTHORIZED, ErrorCode.UNAUTHORIZED, "");
             return Optional.empty();
         }
@@ -228,7 +228,7 @@ public class LinkServlet extends HttpServlet {
         List<Folder> folders = folderDao.getFoldersById(Collections.singletonList(link.getFolderId()), includeSummary);
         // existence of folder should be guaranteed by foreign key constraing in DB.
         Folder folder = folders.get(0);
-        if (browseAcls.hasFolderBrowsePermission(folder.getAclId())) {
+        if (accessFilter.hasFolderBrowsePermission(folder.getAclId())) {
             LinkResponse linkResponse = new LinkResponse();
             linkResponse.setLinkType(LinkType.FOLDER);
             linkResponse.setFolder(folder);
@@ -239,8 +239,8 @@ public class LinkServlet extends HttpServlet {
     }
 
     private Optional<LinkResponse> handleOsdLink(HttpServletResponse response, Link link, boolean includeSummary) {
-        BrowseAcls browseAcls = BrowseAcls.getInstance(ThreadLocalSqlSession.getCurrentUser());
-        if (!browseAcls.hasUserBrowsePermission(link.getAclId())) {
+        AccessFilter accessFilter = AccessFilter.getInstance(ThreadLocalSqlSession.getCurrentUser());
+        if (!accessFilter.hasUserBrowsePermission(link.getAclId())) {
             ErrorResponseGenerator.generateErrorMessage(response, SC_UNAUTHORIZED, ErrorCode.UNAUTHORIZED, "");
             return Optional.empty();
         }
@@ -257,7 +257,7 @@ public class LinkServlet extends HttpServlet {
                 break;
         }
 
-        if (browseAcls.hasUserBrowsePermission(osd.getAclId())) {
+        if (accessFilter.hasUserBrowsePermission(osd.getAclId())) {
             LinkResponse linkResponse = new LinkResponse();
             linkResponse.setLinkType(LinkType.OBJECT);
             linkResponse.setOsd(osd);

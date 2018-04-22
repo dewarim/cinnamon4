@@ -10,17 +10,17 @@ import java.util.stream.Collectors;
 public class AuthorizationService {
 
     public List<ObjectSystemData> filterObjectsByBrowsePermission(List<ObjectSystemData> osds, UserAccount user) {
-        BrowseAcls browseAcls = BrowseAcls.getInstance(user);
-        return osds.stream().filter(browseAcls::hasBrowsePermissionForOsd).collect(Collectors.toList());
+        AccessFilter accessFilter = AccessFilter.getInstance(user);
+        return osds.stream().filter(accessFilter::hasBrowsePermissionForOsd).collect(Collectors.toList());
     }
 
     public List<Link> filterLinksByBrowsePermission(List<Link> links, UserAccount user) {
-        BrowseAcls browseAcls = BrowseAcls.getInstance(user);
-        return links.stream().filter(browseAcls::hasBrowsePermissionForLink).collect(Collectors.toList());
+        AccessFilter accessFilter = AccessFilter.getInstance(user);
+        return links.stream().filter(accessFilter::hasBrowsePermissionForLink).collect(Collectors.toList());
     }
 
     public boolean userHasPermission(Long aclId, String permissionName, UserAccount user) {
-        BrowseAcls browseAcls = BrowseAcls.getInstance(user);
-        return browseAcls.hasPermission(aclId, permissionName);
+        AccessFilter accessFilter = AccessFilter.getInstance(user);
+        return accessFilter.hasPermission(aclId, permissionName);
     }
 }
