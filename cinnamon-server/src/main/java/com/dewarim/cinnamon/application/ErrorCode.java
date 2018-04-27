@@ -26,7 +26,9 @@ public enum ErrorCode {
     INVALID_REQUEST("error.request.is.invalid.check.parameters"),
     PARENT_FOLDER_NOT_FOUND("error.parent.folder.not.found"), 
     ACL_NOT_FOUND("error.acl.not.found"),
-    SESSION_NOT_FOUND("error.session.not.found");
+    SESSION_NOT_FOUND("error.session.not.found"),
+    STATIC__NO_PATH_TRAVERSAL("error.no.path.traversal.allowed"),
+    OWNER_NOT_FOUND("error.owner.not.found");
     
     String code;
 

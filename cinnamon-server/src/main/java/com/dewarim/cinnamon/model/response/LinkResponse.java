@@ -1,9 +1,6 @@
 package com.dewarim.cinnamon.model.response;
 
-import com.dewarim.cinnamon.model.Acl;
-import com.dewarim.cinnamon.model.Folder;
-import com.dewarim.cinnamon.model.LinkType;
-import com.dewarim.cinnamon.model.ObjectSystemData;
+import com.dewarim.cinnamon.model.*;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
@@ -15,9 +12,13 @@ import java.util.List;
 public class LinkResponse {
 
     private LinkType linkType;
-    private ObjectSystemData osd; 
+    private ObjectSystemData osd;
     private Folder folder;
-
+    private Long ownerId;
+    private Long parentId;
+    private LinkResolver linkResolver;
+    private Long aclId;
+    
     public LinkType getLinkType() {
         return linkType;
     }
@@ -40,5 +41,37 @@ public class LinkResponse {
 
     public void setFolder(Folder folder) {
         this.folder = folder;
+    }
+
+    public Long getOwnerId() {
+        return ownerId;
+    }
+
+    public void setOwnerId(Long ownerId) {
+        this.ownerId = ownerId;
+    }
+
+    public Long getParentId() {
+        return parentId;
+    }
+
+    public void setParentId(Long parentId) {
+        this.parentId = parentId;
+    }
+    
+    public LinkResolver getLinkResolver() {
+        return linkResolver;
+    }
+
+    public void setLinkResolver(LinkResolver linkResolver) {
+        this.linkResolver = linkResolver;
+    }
+
+    public Long getAclId() {
+        return aclId;
+    }
+
+    public void setAclId(Long aclId) {
+        this.aclId = aclId;
     }
 }

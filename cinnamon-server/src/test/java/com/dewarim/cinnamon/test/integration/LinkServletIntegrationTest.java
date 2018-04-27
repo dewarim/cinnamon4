@@ -2,10 +2,7 @@ package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.application.UrlMapping;
-import com.dewarim.cinnamon.model.Folder;
-import com.dewarim.cinnamon.model.LinkResolver;
-import com.dewarim.cinnamon.model.LinkType;
-import com.dewarim.cinnamon.model.ObjectSystemData;
+import com.dewarim.cinnamon.model.*;
 import com.dewarim.cinnamon.model.request.CreateLinkRequest;
 import com.dewarim.cinnamon.model.request.DeleteByIdRequest;
 import com.dewarim.cinnamon.model.request.LinkRequest;
@@ -23,9 +20,7 @@ import static javax.servlet.http.HttpServletResponse.SC_UNAUTHORIZED;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 
 public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
@@ -82,6 +77,18 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
         assertThat(link.getLinkType(), equalTo(LinkType.FOLDER));
         Folder folder = link.getFolder();
         assertThat(folder.getSummary(), nullValue());
+    }
+    
+    @Test
+    public void getLinkWhereOnlyOwnerHasBrowsePermission() throws IOException {
+        // request link #14, which points to the "home" folder with default acl:
+        LinkRequest linkRequest = new LinkRequest(14L, false);
+        HttpResponse response = sendStandardRequest(UrlMapping.LINK__GET_LINK_BY_ID, linkRequest);
+        LinkWrapper linkWrapper = parseResponse(response);
+        LinkResponse link = linkWrapper.getLinks().get(0);
+        assertThat(link.getLinkType(), equalTo(LinkType.OBJECT));
+        ObjectSystemData osd = link.getOsd();
+        assertThat(osd.getSummary(), nullValue());
     }
 
     @Test
@@ -150,6 +157,24 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
         HttpResponse response = sendStandardRequest(UrlMapping.LINK__DELETE_LINK, deleteRequest);
         assertCinnamonError(response, ErrorCode.UNAUTHORIZED, SC_UNAUTHORIZED);
     }
+    
+    @Test
+    public void deleteLinkToObjectWithOwnerPermission() throws IOException {
+        DeleteByIdRequest deleteRequest = new DeleteByIdRequest(15L);
+        HttpResponse response = sendStandardRequest(UrlMapping.LINK__DELETE_LINK, deleteRequest);
+        DeletionResponse deletionResponse = mapper.readValue(response.getEntity().getContent(), DeletionResponse.class);
+        assertFalse(deletionResponse.isNotFound());
+        assertTrue(deletionResponse.isSuccess());
+    }    
+    
+    @Test
+    public void deleteLinkToFolderWithOwnerPermission() throws IOException {
+        DeleteByIdRequest deleteRequest = new DeleteByIdRequest(16L);
+        HttpResponse response = sendStandardRequest(UrlMapping.LINK__DELETE_LINK, deleteRequest);
+        DeletionResponse deletionResponse = mapper.readValue(response.getEntity().getContent(), DeletionResponse.class);
+        assertFalse(deletionResponse.isNotFound());
+        assertTrue(deletionResponse.isSuccess());
+    }
 
     @Test
     public void deleteLinkToFolderWithoutPermission() throws IOException {
@@ -189,81 +214,119 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void createLinkHappyPath() throws IOException {
+    public void createLinToObjectHappyPath() throws IOException {
         // link to object in creation folder#6
-        CreateLinkRequest createLinkRequest = new CreateLinkRequest(13L, 6L, LinkResolver.FIXED, LinkType.OBJECT, 1);
+        CreateLinkRequest createLinkRequest = new CreateLinkRequest(13L, 6L, LinkResolver.FIXED, LinkType.OBJECT, 1, 1);
         HttpResponse response = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, createLinkRequest);
         LinkWrapper linkWrapper = parseResponse(response);
-        ObjectSystemData osd = linkWrapper.getLinks().get(0).getOsd();
+        LinkResponse linkResponse = linkWrapper.getLinks().get(0);
+
+        assertThat(linkResponse.getOwnerId(), equalTo(1L));
+        assertThat(linkResponse.getParentId(), equalTo(6L));
+        assertThat(linkResponse.getLinkResolver(), equalTo(LinkResolver.FIXED));
+        assertThat(linkResponse.getLinkType(), equalTo(LinkType.OBJECT));
+        assertThat(linkResponse.getAclId(), equalTo(1L));
+        
+        ObjectSystemData osd = linkResponse.getOsd();
         assertNotNull(osd);
+    }
+    
+    @Test
+    public void createLinkToFolderHappyPath() throws IOException {
+        // link to folder in creation folder#9
+        CreateLinkRequest createLinkRequest = new CreateLinkRequest(9, 6, LinkResolver.FIXED, LinkType.FOLDER, 1, 1);
+        HttpResponse response = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, createLinkRequest);
+        LinkWrapper linkWrapper = parseResponse(response);
+        LinkResponse linkResponse = linkWrapper.getLinks().get(0);
+
+        assertThat(linkResponse.getOwnerId(), equalTo(1L));
+        assertThat(linkResponse.getParentId(), equalTo(6L));
+        assertThat(linkResponse.getLinkResolver(), equalTo(LinkResolver.FIXED));
+        assertThat(linkResponse.getLinkType(), equalTo(LinkType.FOLDER));
+        assertThat(linkResponse.getAclId(), equalTo(1L));
+        
+        Folder folder = linkResponse.getFolder();
+        assertNotNull(folder);
     }
 
     @Test
     public void createLinkWithInvalidRequest() throws IOException {
         // invalid target id
-        CreateLinkRequest crlId = new CreateLinkRequest(0L, 6L, LinkResolver.FIXED, LinkType.OBJECT, 1);
+        CreateLinkRequest crlId = new CreateLinkRequest(0L, 6L, LinkResolver.FIXED, LinkType.OBJECT, 1, 1);
         HttpResponse response = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, crlId);
         assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
 
         // invalid parent folder id
-        CreateLinkRequest crlParentId = new CreateLinkRequest(13L, 0L, LinkResolver.FIXED, LinkType.OBJECT, 1);
+        CreateLinkRequest crlParentId = new CreateLinkRequest(13L, 0L, LinkResolver.FIXED, LinkType.OBJECT, 1, 1);
         HttpResponse responseParentId = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, crlParentId);
         assertCinnamonError(responseParentId, ErrorCode.INVALID_REQUEST);
 
         // invalid resolver
-        CreateLinkRequest crlResolver = new CreateLinkRequest(13L, 6L, null, LinkType.OBJECT, 1);
+        CreateLinkRequest crlResolver = new CreateLinkRequest(13L, 6L, null, LinkType.OBJECT, 1, 1);
         HttpResponse responseResolver = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, crlParentId);
         assertCinnamonError(responseResolver, ErrorCode.INVALID_REQUEST);
 
         // invalid link type
-        CreateLinkRequest crlLinkType = new CreateLinkRequest(13L, 6L, LinkResolver.FIXED, null, 1);
+        CreateLinkRequest crlLinkType = new CreateLinkRequest(13L, 6L, LinkResolver.FIXED, null, 1, 1);
         HttpResponse responseLinkType = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, crlParentId);
         assertCinnamonError(responseLinkType, ErrorCode.INVALID_REQUEST);
 
         // invalid link type
-        CreateLinkRequest crlAcl = new CreateLinkRequest(13L, 6L, LinkResolver.FIXED, LinkType.OBJECT, 0);
+        CreateLinkRequest crlAcl = new CreateLinkRequest(13L, 6L, LinkResolver.FIXED, LinkType.OBJECT, 0, 1);
         HttpResponse responseAcl = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, crlParentId);
         assertCinnamonError(responseAcl, ErrorCode.INVALID_REQUEST);
+
+        // invalid ownerId
+        CreateLinkRequest crlOwnerId = new CreateLinkRequest(13L, 6L, LinkResolver.FIXED, LinkType.OBJECT, 1, 0);
+        HttpResponse responseOwnerId = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, crlOwnerId);
+        assertCinnamonError(responseOwnerId, ErrorCode.INVALID_REQUEST);
     }
 
     @Test
     public void createLinkWithUnknownParentFolder() throws IOException {
-        CreateLinkRequest crlId = new CreateLinkRequest(13L, Long.MAX_VALUE, LinkResolver.FIXED, LinkType.OBJECT, 1);
+        CreateLinkRequest crlId = new CreateLinkRequest(13L, Long.MAX_VALUE, LinkResolver.FIXED, LinkType.OBJECT, 1, 1);
         HttpResponse response = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, crlId);
         assertCinnamonError(response, ErrorCode.PARENT_FOLDER_NOT_FOUND);
     }
-    
+
     @Test
     public void createLinkWithUnknownAcl() throws IOException {
-        CreateLinkRequest crlId = new CreateLinkRequest(13L, 6L, LinkResolver.FIXED, LinkType.OBJECT, Long.MAX_VALUE);
+        CreateLinkRequest crlId = new CreateLinkRequest(13L, 6L, LinkResolver.FIXED, LinkType.OBJECT, Long.MAX_VALUE, 1);
         HttpResponse response = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, crlId);
         assertCinnamonError(response, ErrorCode.ACL_NOT_FOUND);
+    }
+    
+    @Test
+    public void createLinkWithUnknownOwner() throws IOException {
+        CreateLinkRequest crlId = new CreateLinkRequest(13L, 6L, LinkResolver.FIXED, LinkType.OBJECT, 1, Long.MAX_VALUE);
+        HttpResponse response = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, crlId);
+        assertCinnamonError(response, ErrorCode.OWNER_NOT_FOUND);
     }
 
     @Test
     public void createLinkWithinParentFolderWithoutBrowsePermission() throws IOException {
-        CreateLinkRequest crlId = new CreateLinkRequest(13L, 7, LinkResolver.FIXED, LinkType.OBJECT, 1);
+        CreateLinkRequest crlId = new CreateLinkRequest(13L, 7, LinkResolver.FIXED, LinkType.OBJECT, 1, 1);
         HttpResponse response = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, crlId);
         assertCinnamonError(response, ErrorCode.UNAUTHORIZED, SC_UNAUTHORIZED);
     }
 
     @Test
     public void createLinkWithinParentFolderWithoutCreatePermission() throws IOException {
-        CreateLinkRequest crlId = new CreateLinkRequest(13L, 8, LinkResolver.FIXED, LinkType.OBJECT, 1);
+        CreateLinkRequest crlId = new CreateLinkRequest(13L, 8, LinkResolver.FIXED, LinkType.OBJECT, 1, 1);
         HttpResponse response = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, crlId);
         assertCinnamonError(response, ErrorCode.UNAUTHORIZED, SC_UNAUTHORIZED);
     }
 
     @Test
     public void createLinkToFolderWithoutBrowsePermission() throws IOException {
-        CreateLinkRequest crlId = new CreateLinkRequest(7, 6, LinkResolver.FIXED, LinkType.FOLDER, 1);
+        CreateLinkRequest crlId = new CreateLinkRequest(7, 6, LinkResolver.FIXED, LinkType.FOLDER, 1, 1);
         HttpResponse response = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, crlId);
         assertCinnamonError(response, ErrorCode.UNAUTHORIZED, SC_UNAUTHORIZED);
     }
-    
+
     @Test
     public void createLinkToObjectWithoutBrowsePermission() throws IOException {
-        CreateLinkRequest crlId = new CreateLinkRequest(4, 6, LinkResolver.FIXED, LinkType.OBJECT, 1);
+        CreateLinkRequest crlId = new CreateLinkRequest(4, 6, LinkResolver.FIXED, LinkType.OBJECT, 1, 1);
         HttpResponse response = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, crlId);
         assertCinnamonError(response, ErrorCode.UNAUTHORIZED, SC_UNAUTHORIZED);
     }

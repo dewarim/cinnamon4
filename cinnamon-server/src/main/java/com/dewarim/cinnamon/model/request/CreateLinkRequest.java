@@ -10,20 +10,22 @@ public class CreateLinkRequest {
     private LinkResolver linkResolver;
     private LinkType linkType;
     private long aclId;
+    private long ownerId;
 
     public CreateLinkRequest() {
     }
 
-    public CreateLinkRequest(long id, long parentId, LinkResolver linkResolver, LinkType linkType, long aclId) {
+    public CreateLinkRequest(long id, long parentId, LinkResolver linkResolver, LinkType linkType, long aclId, long ownerId) {
         this.id = id;
         this.parentId = parentId;
         this.linkResolver = linkResolver;
         this.linkType = linkType;
         this.aclId = aclId;
+        this.ownerId = ownerId;
     }
 
     public boolean validated() {
-        return id > 0 && parentId > 0 && linkResolver != null && linkType != null && aclId > 0
+        return id > 0 && parentId > 0 && linkResolver != null && linkType != null && aclId > 0 && ownerId > 0
                 // only objects are versioned and may have latest_head resolver
                 && (linkResolver == LinkResolver.FIXED || (linkResolver == LinkResolver.LATEST_HEAD && linkType == LinkType.OBJECT));
     }
@@ -68,6 +70,14 @@ public class CreateLinkRequest {
         this.aclId = aclId;
     }
 
+    public long getOwnerId() {
+        return ownerId;
+    }
+
+    public void setOwnerId(long ownerId) {
+        this.ownerId = ownerId;
+    }
+
     @Override
     public String toString() {
         return "CreateLinkRequest{" +
@@ -76,6 +86,7 @@ public class CreateLinkRequest {
                 ", linkResolver=" + linkResolver +
                 ", linkType=" + linkType +
                 ", aclId=" + aclId +
+                ", ownerId=" + ownerId +
                 '}';
     }
 }

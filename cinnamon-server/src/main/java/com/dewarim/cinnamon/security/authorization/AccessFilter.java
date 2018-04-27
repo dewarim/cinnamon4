@@ -26,14 +26,15 @@ public class AccessFilter {
     private Set<Long> objectAclsWithBrowsePermissions;
     private Set<Long> ownerAclsWithBrowsePermissions;
     private Set<Long> folderAclsWithBrowsePermissions;
+    private Map<AclPermission, Boolean> checkedOwnerPermissions = new ConcurrentHashMap<>();
     private Map<AclPermission, Boolean> checkedPermissions = new ConcurrentHashMap<>();
     private UserAccount user;
     private static final Map<Long, Set<Long>> userAclsWithBrowsePermissionCache = new ConcurrentHashMap<>();
     private static final Map<Long, Set<Long>> userAclsWithFolderBrowsePermissionCache = new ConcurrentHashMap<>();
     private static final Map<Long, Set<Long>> ownerAclsWithBrowsePermissionCache = new ConcurrentHashMap<>();
     private static final Map<String, Permission> nameToPermissionMapping = new ConcurrentHashMap<>();
-    private static Map<Long,Acl> idToAclMapping = new ConcurrentHashMap<>();
-    
+    private static Map<Long, Acl> idToAclMapping = new ConcurrentHashMap<>();
+
     private static Object INITIALIZING = new Object();
     private static Boolean initialized = false;
 
@@ -62,8 +63,8 @@ public class AccessFilter {
     public boolean hasOwnerBrowsePermission(Long aclId) {
         return ownerAclsWithBrowsePermissions.contains(aclId);
     }
-    
-    public boolean hasFolderBrowsePermission(Long aclId){
+
+    public boolean hasFolderBrowsePermission(Long aclId) {
         return folderAclsWithBrowsePermissions.contains(aclId);
     }
 
@@ -73,31 +74,54 @@ public class AccessFilter {
     public boolean hasBrowsePermissionForOsd(ObjectSystemData osd) {
         long aclId = osd.getAclId();
         return hasUserBrowsePermission(aclId) || (osd.getOwnerId().equals(user.getId()) && hasOwnerBrowsePermission(aclId));
-    }    
-    
+    }
+
     public boolean hasBrowsePermissionForLink(Link link) {
         long aclId = link.getAclId();
         return hasUserBrowsePermission(aclId) || (link.getOwnerId().equals(user.getId()) && hasOwnerBrowsePermission(aclId));
     }
 
-    public boolean hasPermission(long aclId, String permissionName){
+    public boolean hasPermission(long aclId, String permissionName) {
+        return hasPermission(aclId, permissionName, false);
+    }
+
+    public boolean hasPermission(long aclId, String permissionName, boolean checkOwnerPermission) {
         Permission permission = nameToPermissionMapping.get(permissionName);
-        if(permission== null){
+        if (permission == null) {
             throw new IllegalStateException("unknown permission name was used.");
         }
         Acl acl = idToAclMapping.get(aclId);
-        if(acl == null){
+        if (acl == null) {
             throw new IllegalStateException("unknown acl id was used.");
         }
-        AclPermission aclPermission = new AclPermission(aclId,permission.getId());
-        if(checkedPermissions.containsKey(aclPermission)){
+
+        AclPermission aclPermission = new AclPermission(aclId, permission.getId(), checkOwnerPermission);
+        if (checkedPermissions.containsKey(aclPermission)) {
             return checkedPermissions.get(aclPermission);
         }
+
+        if (checkOwnerPermission) {
+            // generate all AclPermissions available for this permission.
+            Set<Long> ownerAclIdSet = generateOwnerAclIdSet(permission, user);
+            ownerAclIdSet.forEach(id -> {
+                        AclPermission aclPerm = new AclPermission(aclId, permission.getId(), true);
+                        checkedPermissions.put(aclPerm, true);
+                    }
+            );
+            acls.forEach(myAcl -> {
+                if (!ownerAclIdSet.contains(myAcl.getId())) {
+                    AclPermission aclPerm = new AclPermission(myAcl.getId(), permission.getId(), true);
+                    checkedPermissions.put(aclPerm, false);
+                }
+            });
+            return checkedPermissions.get(new AclPermission(aclId, permission.getId(),true));
+        }
+
         boolean checkResult = checkAclEntries(acl, permission, user);
         checkedPermissions.put(aclPermission, checkResult);
         return checkResult;
     }
-    
+
     public static void reload() {
         synchronized (INITIALIZING) {
             initialized = false;
@@ -120,7 +144,7 @@ public class AccessFilter {
             acls.forEach(acl -> idToAclMapping.put(acl.getId(), acl));
             ownerGroup = new CmnGroupDao().getOwnerGroup();
             List<Permission> permissions = permissionDao.listPermissions();
-            permissions.forEach(permission -> nameToPermissionMapping.put(permission.getName(),permission));
+            permissions.forEach(permission -> nameToPermissionMapping.put(permission.getName(), permission));
         }
 
     }

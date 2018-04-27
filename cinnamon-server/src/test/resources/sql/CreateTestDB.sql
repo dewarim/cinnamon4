@@ -394,6 +394,10 @@ values(nextval('seq_folder_id'),'u-no-browse',0,10,1,6,1);
 insert into folders(id,name,obj_version,acl_id,owner_id,parent_id,type_id)
 values(nextval('seq_folder_id'),'u-no-create',0,9,1,6,1);
 
+-- #9 folder in creation folder#6, acl#1 to test lack of create object permission for links
+insert into folders(id,name,obj_version,acl_id,owner_id,parent_id,type_id)
+values(nextval('seq_folder_id'),'link-this-folder',0,1,1,6,1);
+
 insert into objtypes(id,name) values(nextval('seq_obj_type_id'),'_default_objtype');
 
 insert into groups(id,name) VALUES(nextval('seq_groups'),'_superusers'); -- #1
@@ -481,6 +485,10 @@ insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),1
 insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),11,2);
 -- #12 create but no browse permission for doe's group + no-creation.acl#10:  (testing create link)
 insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),12,4);
+-- #13 add delete_folder permission to no-permission-except-owner acl:
+insert into aclentry_permissions(id,aclentry_id,permission_id) values (nextval('seq_aclentry_permission_id'),8,5);
+-- #14 add delete_object permission to no-permission-except-owner acl:
+insert into aclentry_permissions(id,aclentry_id,permission_id) values (nextval('seq_aclentry_permission_id'),8,6);
 
 insert into languages values (nextval('seq_language_id'),'DE',0,'<meta/>');
 
@@ -549,7 +557,7 @@ values (nextval('seq_objects_id'), now(), true, true, now(), 'linked-to-me-2', 1
 -- #14 test object for create link in folder#7 (where doe has no browse permission)  
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'linked-to-me-2', 1, 1, 1, 1, 7, 1, 1);
+values (nextval('seq_objects_id'), now(), true, true, now(), 'linked-to-me-3', 1, 1, 1, 1, 7, 1, 1);
 
 
 -- #1 link to osd #1 with default acl (#1)
@@ -605,3 +613,15 @@ values (nextval('seq_links_id'), 'OBJECT', 'FIXED', 1,7,1,12);
 -- #13 link to folder#5 for deletion tests: reviewer acl#2, browse_folder allowed, deletion not allowed
 insert into links(id, type,resolver,owner_id,acl_id,parent_id,folder_id)
 values (nextval('seq_links_id'), 'FOLDER', 'FIXED', 1,2,1,5);
+
+-- #14 link to osd#13 for testing owner browse permission: only-owner-acl#5, link owned by doe.
+insert into links(id, type,resolver,owner_id,acl_id,parent_id,osd_id)
+values (nextval('seq_links_id'), 'OBJECT', 'FIXED', 2, 5, 1, 13);
+
+-- #15 link to osd#13 for testing delete link with just owner permission: only-owner-acl#5, link owned by doe.
+insert into links(id, type,resolver,owner_id,acl_id,parent_id,osd_id)
+values (nextval('seq_links_id'), 'OBJECT', 'FIXED', 2, 5, 1, 13);
+
+-- #16 link to folder#5 for testing delete link with just owner permission: only-owner-acl#5, link owned by doe.
+insert into links(id, type,resolver,owner_id,acl_id,parent_id,osd_id)
+values (nextval('seq_links_id'), 'FOLDER', 'FIXED', 2, 5, 1, 5);

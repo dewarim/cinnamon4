@@ -1,7 +1,7 @@
 package com.dewarim.cinnamon.application.servlet;
 
 import com.dewarim.cinnamon.DefaultPermissions;
-import com.dewarim.cinnamon.dao.AclDao;
+import com.dewarim.cinnamon.dao.*;
 import com.dewarim.cinnamon.model.request.CreateLinkRequest;
 import com.dewarim.cinnamon.model.request.DeleteByIdRequest;
 import com.dewarim.cinnamon.model.response.DeletionResponse;
@@ -11,9 +11,6 @@ import com.dewarim.cinnamon.security.authorization.AuthorizationService;
 import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.application.ErrorResponseGenerator;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
-import com.dewarim.cinnamon.dao.FolderDao;
-import com.dewarim.cinnamon.dao.LinkDao;
-import com.dewarim.cinnamon.dao.OsdDao;
 import com.dewarim.cinnamon.model.*;
 import com.dewarim.cinnamon.model.request.LinkRequest;
 import com.dewarim.cinnamon.model.response.LinkResponse;
@@ -69,6 +66,7 @@ public class LinkServlet extends HttpServlet {
             ErrorResponseGenerator.generateErrorMessage(response, SC_BAD_REQUEST, ErrorCode.INVALID_REQUEST);
             return;
         }
+
         UserAccount user = ThreadLocalSqlSession.getCurrentUser();
         FolderDao folderDao = new FolderDao();
         List<Folder> parentFolders = folderDao.getFoldersById(Collections.singletonList(linkRequest.getParentId()), false);
@@ -76,6 +74,7 @@ public class LinkServlet extends HttpServlet {
             ErrorResponseGenerator.generateErrorMessage(response, SC_BAD_REQUEST, ErrorCode.PARENT_FOLDER_NOT_FOUND);
             return;
         }
+
         Folder parentFolder = parentFolders.get(0);
         AccessFilter accessFilter = AccessFilter.getInstance(user);
         boolean browsePermission = accessFilter.hasFolderBrowsePermission(parentFolder.getAclId());
@@ -84,10 +83,18 @@ public class LinkServlet extends HttpServlet {
             ErrorResponseGenerator.generateErrorMessage(response, SC_UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
             return;
         }
+
         AclDao aclDao = new AclDao();
         Acl acl = aclDao.getAclById(linkRequest.getAclId());
         if (acl == null) {
             ErrorResponseGenerator.generateErrorMessage(response, SC_BAD_REQUEST, ErrorCode.ACL_NOT_FOUND);
+            return;
+        }
+
+        UserAccountDao userDao = new UserAccountDao();
+        UserAccount owner = userDao.getUserAccountById(linkRequest.getOwnerId());
+        if (owner == null) {
+            ErrorResponseGenerator.generateErrorMessage(response, SC_BAD_REQUEST, ErrorCode.OWNER_NOT_FOUND);
             return;
         }
 
@@ -119,6 +126,10 @@ public class LinkServlet extends HttpServlet {
         linkResponse.setLinkType(link.getType());
         linkResponse.setOsd(osd);
         linkResponse.setFolder(folder);
+        linkResponse.setOwnerId(link.getOwnerId());
+        linkResponse.setParentId(link.getParentId());
+        linkResponse.setLinkResolver(link.getResolver());
+        linkResponse.setAclId(link.getAclId());
         LinkWrapper linkWrapper = new LinkWrapper();
         linkWrapper.getLinks().add(linkResponse);
         response.setContentType(CONTENT_TYPE_XML);
@@ -147,12 +158,23 @@ public class LinkServlet extends HttpServlet {
             }
 
             boolean deleteOkay;
+            long aclId = link.getAclId();
             switch (link.getType()) {
                 case FOLDER:
-                    deleteOkay = authorizationService.userHasPermission(link.getAclId(), DefaultPermissions.DELETE_FOLDER.getName(), user);
+                    String deleteFolderPerm = DefaultPermissions.DELETE_FOLDER.getName();
+                    deleteOkay = authorizationService.userHasPermission(aclId, deleteFolderPerm, user)
+                            ||
+                            (link.getOwnerId().equals(user.getId())
+                                    && authorizationService.userHasOwnerPermission(aclId, deleteFolderPerm, user))
+                    ;
                     break;
                 case OBJECT:
-                    deleteOkay = authorizationService.userHasPermission(link.getAclId(), DefaultPermissions.DELETE_OBJECT.getName(), user);
+                    String deleteObjectPerm = DefaultPermissions.DELETE_OBJECT.getName();
+                    deleteOkay = authorizationService.userHasPermission(aclId, deleteObjectPerm, user)
+                            ||
+                            (link.getOwnerId().equals(user.getId())
+                                    && authorizationService.userHasOwnerPermission(aclId, deleteObjectPerm, user))
+                    ;
                     break;
                 default:
                     throw new IllegalStateException("unknown link type");
@@ -219,15 +241,11 @@ public class LinkServlet extends HttpServlet {
     }
 
     private Optional<LinkResponse> handleFolderLink(HttpServletResponse response, Link link, boolean includeSummary) {
-        AccessFilter accessFilter = AccessFilter.getInstance(ThreadLocalSqlSession.getCurrentUser());
-        if (!accessFilter.hasFolderBrowsePermission(link.getAclId())) {
-            ErrorResponseGenerator.generateErrorMessage(response, SC_UNAUTHORIZED, ErrorCode.UNAUTHORIZED, "");
-            return Optional.empty();
-        }
         FolderDao folderDao = new FolderDao();
         List<Folder> folders = folderDao.getFoldersById(Collections.singletonList(link.getFolderId()), includeSummary);
         // existence of folder should be guaranteed by foreign key constraing in DB.
         Folder folder = folders.get(0);
+        AccessFilter accessFilter = AccessFilter.getInstance(ThreadLocalSqlSession.getCurrentUser());
         if (accessFilter.hasFolderBrowsePermission(folder.getAclId())) {
             LinkResponse linkResponse = new LinkResponse();
             linkResponse.setLinkType(LinkType.FOLDER);
@@ -239,11 +257,6 @@ public class LinkServlet extends HttpServlet {
     }
 
     private Optional<LinkResponse> handleOsdLink(HttpServletResponse response, Link link, boolean includeSummary) {
-        AccessFilter accessFilter = AccessFilter.getInstance(ThreadLocalSqlSession.getCurrentUser());
-        if (!accessFilter.hasUserBrowsePermission(link.getAclId())) {
-            ErrorResponseGenerator.generateErrorMessage(response, SC_UNAUTHORIZED, ErrorCode.UNAUTHORIZED, "");
-            return Optional.empty();
-        }
         OsdDao osdDao = new OsdDao();
         ObjectSystemData osd;
         switch (link.getResolver()) {
@@ -257,6 +270,7 @@ public class LinkServlet extends HttpServlet {
                 break;
         }
 
+        AccessFilter accessFilter = AccessFilter.getInstance(ThreadLocalSqlSession.getCurrentUser());
         if (accessFilter.hasUserBrowsePermission(osd.getAclId())) {
             LinkResponse linkResponse = new LinkResponse();
             linkResponse.setLinkType(LinkType.OBJECT);

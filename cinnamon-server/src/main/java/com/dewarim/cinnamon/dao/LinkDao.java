@@ -2,6 +2,7 @@ package com.dewarim.cinnamon.dao;
 
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.model.Link;
+import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.request.CreateLinkRequest;
 import org.apache.ibatis.session.SqlSession;
 
@@ -43,7 +44,7 @@ public class LinkDao {
         }
         link.setAclId(linkRequest.getAclId());
         link.setResolver(linkRequest.getLinkResolver());
-        link.setOwnerId(ThreadLocalSqlSession.getCurrentUser().getId());
+        link.setOwnerId(linkRequest.getOwnerId());
         link.setParentId(linkRequest.getParentId());
         int resultRows = sqlSession.insert("com.dewarim.cinnamon.LinkMapper.insertLink", link);
         if(resultRows != 1){
