@@ -28,7 +28,8 @@ public enum ErrorCode {
     ACL_NOT_FOUND("error.acl.not.found"),
     SESSION_NOT_FOUND("error.session.not.found"),
     STATIC__NO_PATH_TRAVERSAL("error.no.path.traversal.allowed"),
-    OWNER_NOT_FOUND("error.owner.not.found");
+    OWNER_NOT_FOUND("error.owner.not.found"),
+    FILE_NOT_FOUND("error.file.not.found");
     
     String code;
 

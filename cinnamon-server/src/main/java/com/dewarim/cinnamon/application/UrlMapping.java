@@ -22,7 +22,8 @@ public enum UrlMapping {
     LINK__GET_LINK_BY_ID("link", "getLinkById", "/api"),
     LINK__DELETE_LINK("link", "deleteLink", "/api"),
     LINK__CREATE_LINK("link","createLink" ,"/api" ), 
-    CINNAMON__DISCONNECT("cinnamon","disconnect" , "");
+    CINNAMON__DISCONNECT("cinnamon","disconnect" , ""),
+    STATIC__ROOT("static","" ,"" );
 
     private String servlet;
     private String action;

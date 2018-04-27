@@ -74,6 +74,7 @@ public class CinnamonServer {
         handler.addServletWithMapping(LinkServlet.class, "/api/link/*");
         handler.addServletWithMapping(OsdServlet.class, "/api/osd/*");
         handler.addServletWithMapping(PermissionServlet.class, "/api/permission/*");
+        handler.addServletWithMapping(StaticServlet.class, "/static/*");
         handler.addServletWithMapping(UserServlet.class, "/api/user/*");
     }
 
