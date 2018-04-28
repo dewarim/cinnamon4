@@ -1,9 +1,11 @@
 package com.dewarim.cinnamon.model;
 
+import com.dewarim.cinnamon.api.Ownable;
+
 import java.util.Date;
 import java.util.Objects;
 
-public class Folder {
+public class Folder implements Ownable {
     
     private Long id;
     private String name;
