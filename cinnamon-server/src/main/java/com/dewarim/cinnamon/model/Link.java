@@ -1,12 +1,13 @@
 package com.dewarim.cinnamon.model;
 
+import com.dewarim.cinnamon.api.Accessible;
 import com.dewarim.cinnamon.api.Ownable;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.Objects;
 
 @JacksonXmlRootElement(localName = "link")
-public class Link implements Ownable {
+public class Link implements Ownable, Accessible {
     
     private Long id;
     private LinkType type;
@@ -16,7 +17,6 @@ public class Link implements Ownable {
     private Long parentId;
     private Long folderId;
     private Long objectId;
-    private Long objVersion;
 
     public Long getId() {
         return id;
@@ -82,14 +82,6 @@ public class Link implements Ownable {
         this.objectId = objectId;
     }
 
-    public Long getObjVersion() {
-        return objVersion;
-    }
-
-    public void setObjVersion(Long objVersion) {
-        this.objVersion = objVersion;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -121,7 +113,6 @@ public class Link implements Ownable {
                 ", parentId=" + parentId +
                 ", folderId=" + folderId +
                 ", objectId=" + objectId +
-                ", objVersion=" + objVersion +
                 '}';
     }
 }
