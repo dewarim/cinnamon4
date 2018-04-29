@@ -44,6 +44,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
         LinkResponse link = linkWrapper.getLinks().get(0);
         assertThat(link.getFolder(), nullValue());
         assertThat(link.getLinkType(), equalTo(LinkType.OBJECT));
+        assertThat(link.getLinkResolver(), equalTo(LinkResolver.FIXED));
         ObjectSystemData osd = link.getOsd();
         assertNotNull(osd);
         assertThat(osd.getSummary(), equalTo("<summary>sum of sum</summary>"));
@@ -70,6 +71,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
         LinkResponse link = linkWrapper.getLinks().get(0);
         assertThat(link.getOsd(), nullValue());
         assertThat(link.getLinkType(), equalTo(LinkType.FOLDER));
+        assertThat(link.getLinkResolver(), equalTo(LinkResolver.FIXED));
         Folder folder = link.getFolder();
         assertNotNull(folder);
         assertThat(folder.getName(), equalTo("home"));
