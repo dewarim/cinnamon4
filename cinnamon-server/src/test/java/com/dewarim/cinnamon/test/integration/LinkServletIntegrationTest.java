@@ -11,11 +11,9 @@ import com.dewarim.cinnamon.model.response.DeletionResponse;
 import com.dewarim.cinnamon.model.response.GenericResponse;
 import com.dewarim.cinnamon.model.response.LinkResponse;
 import com.dewarim.cinnamon.model.response.LinkWrapper;
-import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.junit.Test;
 
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
@@ -340,6 +338,19 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
         CreateLinkRequest crlId = new CreateLinkRequest(4, 6, LinkResolver.FIXED, LinkType.OBJECT, 1, 1);
         HttpResponse response = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, crlId);
         assertCinnamonError(response, ErrorCode.UNAUTHORIZED, SC_UNAUTHORIZED);
+    }
+    
+    @Test
+    public void createLinkWithNonExistentTargetObject() throws IOException{
+        CreateLinkRequest createLinkRequest = new CreateLinkRequest(Long.MAX_VALUE, 6L, LinkResolver.FIXED, LinkType.OBJECT, 1, 1);
+        HttpResponse response = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, createLinkRequest);
+        assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND, SC_NOT_FOUND);
+    }    
+    @Test
+    public void createLinkWithNonExistentTargetFolder() throws IOException{
+        CreateLinkRequest createLinkRequest = new CreateLinkRequest(Long.MAX_VALUE, 6, LinkResolver.FIXED, LinkType.FOLDER, 1, 1);
+        HttpResponse response = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, createLinkRequest);
+        assertCinnamonError(response, ErrorCode.FOLDER_NOT_FOUND, SC_NOT_FOUND);
     }
 
     @Test

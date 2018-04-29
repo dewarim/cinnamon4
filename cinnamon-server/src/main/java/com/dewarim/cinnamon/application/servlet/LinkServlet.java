@@ -121,7 +121,6 @@ public class LinkServlet extends HttpServlet {
                     hasBrowsePermission = accessFilter.hasFolderBrowsePermission(folder.getAclId());
                 }
                 else {
-                    // TODO: test folder not found in create link
                     ErrorResponseGenerator.generateErrorMessage(response, SC_NOT_FOUND, ErrorCode.FOLDER_NOT_FOUND);
                     return;
                 }
@@ -134,7 +133,6 @@ public class LinkServlet extends HttpServlet {
                     hasBrowsePermission = accessFilter.hasBrowsePermissionForOsd(osd);
                 }
                 else {
-                    // TODO: test OSD not found in create link
                     ErrorResponseGenerator.generateErrorMessage(response, SC_NOT_FOUND, ErrorCode.OBJECT_NOT_FOUND);
                     return;
                 }
