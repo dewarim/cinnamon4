@@ -332,12 +332,29 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
         HttpResponse response = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, crlId);
         assertCinnamonError(response, ErrorCode.UNAUTHORIZED, SC_UNAUTHORIZED);
     }
+    @Test
+    public void createLinkToFolderWithBrowsePermissionByOwner() throws IOException {
+        CreateLinkRequest crlId = new CreateLinkRequest(10, 6, LinkResolver.FIXED, LinkType.FOLDER, 5, 2);
+        HttpResponse response = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, crlId);
+        LinkWrapper linkWrapper = parseResponse(response);
+        LinkResponse linkResponse = linkWrapper.getLinks().get(0);
+        assertThat(linkResponse.getFolder().getId(), equalTo(10L));
+    }
 
     @Test
     public void createLinkToObjectWithoutBrowsePermission() throws IOException {
         CreateLinkRequest crlId = new CreateLinkRequest(4, 6, LinkResolver.FIXED, LinkType.OBJECT, 1, 1);
         HttpResponse response = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, crlId);
         assertCinnamonError(response, ErrorCode.UNAUTHORIZED, SC_UNAUTHORIZED);
+    }
+    
+    @Test
+    public void createLinkToObjectWithBrowsePermissionByOwner() throws IOException {
+        CreateLinkRequest crlId = new CreateLinkRequest(5, 6, LinkResolver.FIXED, LinkType.OBJECT, 5, 2);
+        HttpResponse response = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, crlId);
+        LinkWrapper linkWrapper = parseResponse(response);
+        LinkResponse linkResponse = linkWrapper.getLinks().get(0);
+        assertThat(linkResponse.getOsd().getId(), equalTo(5L));
     }
     
     @Test

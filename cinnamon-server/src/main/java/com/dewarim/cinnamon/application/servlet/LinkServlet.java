@@ -118,7 +118,7 @@ public class LinkServlet extends HttpServlet {
                 Optional<Folder> folderOpt = folderDao.getFolderById(linkRequest.getId());
                 if (folderOpt.isPresent()) {
                     folder = folderOpt.get();
-                    hasBrowsePermission = accessFilter.hasFolderBrowsePermission(folder.getAclId());
+                    hasBrowsePermission = accessFilter.hasPermissionOnOwnable(folder,DefaultPermission.BROWSE_FOLDER, folder);
                 }
                 else {
                     ErrorResponseGenerator.generateErrorMessage(response, SC_NOT_FOUND, ErrorCode.FOLDER_NOT_FOUND);
@@ -130,7 +130,7 @@ public class LinkServlet extends HttpServlet {
                 // TODO: check if this isPresent can be replaced with orThrow and response generation upstream.
                 if (osdOpt.isPresent()) {
                     osd = osdOpt.get();
-                    hasBrowsePermission = accessFilter.hasBrowsePermissionForOsd(osd);
+                    hasBrowsePermission = accessFilter.hasPermissionOnOwnable(osd, DefaultPermission.BROWSE_OBJECT, osd);
                 }
                 else {
                     ErrorResponseGenerator.generateErrorMessage(response, SC_NOT_FOUND, ErrorCode.OBJECT_NOT_FOUND);

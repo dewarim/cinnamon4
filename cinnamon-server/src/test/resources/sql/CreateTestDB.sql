@@ -399,6 +399,10 @@ values(nextval('seq_folder_id'),'u-no-create',0,9,1,6,1);
 insert into folders(id,name,obj_version,acl_id,owner_id,parent_id,type_id)
 values(nextval('seq_folder_id'),'link-this-folder',0,1,1,6,1);
 
+-- #10 folder in creaton folder#6, only-owner-acl#5 - for create link to owner-folder test
+insert into folders(id,name,obj_version,acl_id,owner_id,parent_id,type_id)
+values(nextval('seq_folder_id'),'only-owner-links-to-me',0,5,2,6,1);
+
 insert into objtypes(id,name) values(nextval('seq_obj_type_id'),'_default_objtype');
 
 insert into groups(id,name) VALUES(nextval('seq_groups'),'_superusers'); -- #1
@@ -504,6 +508,8 @@ insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),1
 insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),5,1);
 -- #20 add browse_folder permission to set.acl.allowed acl #11 with reviewers group
 insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),13,2);
+-- #21 add browse_folder permission for _owner to view folders with no-permission-except-owner acl:  
+insert into aclentry_permissions(id,aclentry_id,permission_id) values (nextval('seq_aclentry_permission_id'),8,2);
 
 insert into languages values (nextval('seq_language_id'),'DE',0,'<meta/>');
 
@@ -549,7 +555,6 @@ values (nextval('seq_objects_id'), now(), false, false, now(), 'test-parent', 1,
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id, root_id)
 values (nextval('seq_objects_id'), now(), true, true, now(), 'test-child', 1, 1, 1, 1, 1, 1, 1, 8);
-
 
 -- #10 parent for osd#11 in archive folder#4
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
