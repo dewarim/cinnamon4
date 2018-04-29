@@ -21,9 +21,10 @@ public enum UrlMapping {
     OSD__GET_OBJECTS_BY_FOLDER_ID("osd", "getObjectsByFolderId", "/api"),
     LINK__GET_LINK_BY_ID("link", "getLinkById", "/api"),
     LINK__DELETE_LINK("link", "deleteLink", "/api"),
-    LINK__CREATE_LINK("link","createLink" ,"/api" ), 
+    LINK__CREATE_LINK("link","createLink" ,"/api" ),
+    LINK__UPDATE_LINK("link","updateLink" ,"/api" ),
     CINNAMON__DISCONNECT("cinnamon","disconnect" , ""),
-    STATIC__ROOT("static","" ,"" );
+    STATIC__ROOT("static","" ,"" ); 
 
     private String servlet;
     private String action;

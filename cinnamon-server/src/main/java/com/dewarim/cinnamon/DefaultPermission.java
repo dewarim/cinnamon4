@@ -3,7 +3,7 @@ package com.dewarim.cinnamon;
 /**
  *
  */
-public enum DefaultPermissions {
+public enum DefaultPermission {
 
     /**
      * Permission to lock an object. Implies permission to unlock the user's own locks.
@@ -96,7 +96,7 @@ public enum DefaultPermissions {
     
     String name;
 
-    DefaultPermissions(String name) {
+    DefaultPermission(String name) {
         this.name = name;
     }
 

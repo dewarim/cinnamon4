@@ -52,4 +52,10 @@ public class LinkDao {
         }
         return link;
     }
+
+    public int updateLink(Link link) {
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        return sqlSession.update("com.dewarim.cinnamon.LinkMapper.updateLink", link);
+
+    }
 }

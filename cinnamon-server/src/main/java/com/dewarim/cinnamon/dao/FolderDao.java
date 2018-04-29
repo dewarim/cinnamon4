@@ -35,8 +35,12 @@ public class FolderDao {
     }
 
     
-    public Folder getFolderById(long id){
-        return getFoldersById(Collections.singletonList(id),false).get(0);
+    public Optional<Folder> getFolderById(long id){
+        List<Folder> folders = getFoldersById(Collections.singletonList(id), false);
+        if(folders.isEmpty()){
+            return Optional.empty();
+        }
+        return Optional.of(folders.get(0));
     }
 
 }

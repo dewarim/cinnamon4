@@ -1,6 +1,6 @@
 package com.dewarim.cinnamon.security.authorization;
 
-import com.dewarim.cinnamon.DefaultPermissions;
+import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.model.Link;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.UserAccount;
@@ -25,7 +25,7 @@ public class AuthorizationService {
                                     || (link.getOwnerId().equals(user.getId()) && accessFilter.hasOwnerBrowsePermission(link.getAclId()));
                         case OBJECT:
                             return accessFilter.hasBrowsePermissionForLink(link)
-                                    || (link.getOwnerId().equals(user.getId()) && accessFilter.hasPermission(link.getAclId(), DefaultPermissions.BROWSE_FOLDER.getName(), true));
+                                    || (link.getOwnerId().equals(user.getId()) && accessFilter.hasPermission(link.getAclId(), DefaultPermission.BROWSE_FOLDER.getName(), true));
                         default:
                             throw new IllegalStateException("unknown link type");
                     }

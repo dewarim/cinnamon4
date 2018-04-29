@@ -6,6 +6,7 @@ import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.application.UrlMapping;
 import com.dewarim.cinnamon.model.response.CinnamonConnection;
 import com.dewarim.cinnamon.model.response.CinnamonError;
+import com.dewarim.cinnamon.model.response.GenericResponse;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -147,5 +148,10 @@ public class CinnamonIntegrationTest {
         return Request.Post("http://localhost:" + cinnamonTestPort + urlMapping.getPath())
                 .addHeader("ticket", ticket)
                 .execute().returnResponse();
+    }
+
+    protected GenericResponse parseGenericResponse(HttpResponse response) throws IOException{
+        assertResponseOkay(response);
+        return mapper.readValue(response.getEntity().getContent(),GenericResponse.class);
     }
 }

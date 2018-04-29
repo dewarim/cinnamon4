@@ -14,7 +14,6 @@
         <result property="parentId" column="parent_id"/>
         <result property="folderId" column="folder_id"/>
         <result property="objectId" column="osd_id"/>
-        <result property="objVersion" column="version"/>
     </resultMap>
 
     <select id="getLinkById" parameterType="long" resultMap="linkMap">
@@ -41,5 +40,18 @@
         INSERT INTO links (id,type,resolver,owner_id,acl_id,parent_id,folder_id,osd_id,version) VALUES
         (#{id},#{type},#{resolver}, #{ownerId}, #{aclId},#{parentId},#{folderId},#{objectId},0)
     </insert>
+
+    <update id="updateLink" parameterType="com.dewarim.cinnamon.model.Link">
+        UPDATE links
+        SET acl_id    = #{aclId},
+            owner_id  = #{ownerId},
+            parent_id = #{parentId},
+            osd_id    = #{objectId},
+            folder_id = #{folderId},
+            resolver  = #{resolver},
+            type      = #{type}
+        WHERE id = #{id}
+
+    </update>
 
 </mapper>

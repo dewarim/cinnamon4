@@ -6,5 +6,8 @@
     ALTER TABLE users DROP COLUMN account_expired;
     
     -- note: this will set the created date of all existing folders to now()
-    ALTER TABLE folders ADD created TIMESTAMP DEFAULT NOW()
+    ALTER TABLE folders ADD created TIMESTAMP DEFAULT NOW();
     
+    -- links no longer have an internal version - if two people update the same link,
+    -- last one wins.
+    ALTER TABLE links DROP COLUMN version;

@@ -46,7 +46,12 @@ public class OsdDao {
         return new ArrayList<>(sqlSession.selectList("com.dewarim.cinnamon.ObjectSystemDataMapper.getOsdsByFolderId", params));
     }
 
-    public ObjectSystemData getObjectById(long id) {
-        return getObjectsById(Collections.singletonList(id),false).get(0);
+    public Optional<ObjectSystemData> getObjectById(long id) {
+
+        List<ObjectSystemData> objectsById = getObjectsById(Collections.singletonList(id), false);
+        if(objectsById.isEmpty()){
+            return Optional.empty();
+        }
+        return Optional.of(objectsById.get(0));
     }
 }

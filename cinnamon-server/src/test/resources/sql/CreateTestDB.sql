@@ -359,6 +359,7 @@ insert into acls(id,name) values(nextval('seq_acl_id'),'no-permissions.acl'); --
 insert into acls(id,name) values(nextval('seq_acl_id'),'creators.acl'); -- 8
 insert into acls(id,name) values(nextval('seq_acl_id'),'browse.but.no.create.acl'); -- 9
 insert into acls(id,name) values(nextval('seq_acl_id'),'create.but.no.browse.acl'); -- 10
+insert into acls(id,name) values(nextval('seq_acl_id'),'set.acl.allowed'); -- 11
 
 insert into folder_types(id,name) values(nextval('seq_folder_type_id'),'_default_folder_type');
 
@@ -441,6 +442,8 @@ insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id')
 insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),9,4);
 -- #12 doe's group linked to no-create.acl#10 
 insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),10,4);
+-- #13 reviewers connected to set.acl.allowed#
+insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),11,5);
 
 
 insert into permissions values (nextval('seq_permission_id'),'_browse'); -- #1
@@ -449,17 +452,17 @@ insert into permissions values (nextval('seq_permission_id'),'_create_folder'); 
 insert into permissions values (nextval('seq_permission_id'),'_create_inside_folder'); -- #4
 insert into permissions values (nextval('seq_permission_id'),'_delete_folder'); -- #5
 insert into permissions values (nextval('seq_permission_id'),'_delete_object'); -- #6
-insert into permissions values (nextval('seq_permission_id'),'_edit_folder');
-insert into permissions values (nextval('seq_permission_id'),'_lock');
-insert into permissions values (nextval('seq_permission_id'),'_move');
-insert into permissions values (nextval('seq_permission_id'),'_read_object_content');
-insert into permissions values (nextval('seq_permission_id'),'_read_object_custom_metadata');
-insert into permissions values (nextval('seq_permission_id'),'_read_object_metadata');
-insert into permissions values (nextval('seq_permission_id'),'_set_acl');
-insert into permissions values (nextval('seq_permission_id'),'_version');
-insert into permissions values (nextval('seq_permission_id'),'_write_object_content');
-insert into permissions values (nextval('seq_permission_id'),'_write_object_custom_metadata');
-insert into permissions values (nextval('seq_permission_id'),'_write_object_sysmeta');
+insert into permissions values (nextval('seq_permission_id'),'_edit_folder'); -- #7
+insert into permissions values (nextval('seq_permission_id'),'_lock'); -- #8
+insert into permissions values (nextval('seq_permission_id'),'_move'); -- #9
+insert into permissions values (nextval('seq_permission_id'),'_read_object_content'); -- #10
+insert into permissions values (nextval('seq_permission_id'),'_read_object_custom_metadata'); -- #11
+insert into permissions values (nextval('seq_permission_id'),'_read_object_metadata'); -- #12
+insert into permissions values (nextval('seq_permission_id'),'_set_acl'); -- #13
+insert into permissions values (nextval('seq_permission_id'),'_version'); -- #14
+insert into permissions values (nextval('seq_permission_id'),'_write_object_content'); -- #15
+insert into permissions values (nextval('seq_permission_id'),'_write_object_custom_metadata'); -- #16
+insert into permissions values (nextval('seq_permission_id'),'_write_object_sysmeta'); -- #17
 
 -- #1 browse permission for doe's group + default_acl:
 insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),6,1);
@@ -489,6 +492,18 @@ insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),1
 insert into aclentry_permissions(id,aclentry_id,permission_id) values (nextval('seq_aclentry_permission_id'),8,5);
 -- #14 add delete_object permission to no-permission-except-owner acl:
 insert into aclentry_permissions(id,aclentry_id,permission_id) values (nextval('seq_aclentry_permission_id'),8,6);
+-- #15 add write_object_sysmeta permission to reviewers.acl:
+insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),5,17);
+-- #16 add write_object_sysmeta to set.acl.allowed acl #11 with reviewers group
+insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),13,17);
+-- #17 add set_acl to set.acl.allowed acl #11 with reviewers group
+insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),13,13);
+-- #18 add browse permission to set.acl.allowed acl #11 with reviewers group
+insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),13,1);
+-- #19 add browse permission to reviewers.acl with reviewer group:
+insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),5,1);
+-- #20 add browse_folder permission to set.acl.allowed acl #11 with reviewers group
+insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),13,2);
 
 insert into languages values (nextval('seq_language_id'),'DE',0,'<meta/>');
 
@@ -505,7 +520,7 @@ insert into objects (id, created, latest_branch, latest_head, modified, name, cr
                      owner_id, parent_id, type_id, acl_id)
 values (nextval('seq_objects_id'), now(), true, true, now(), 'test-3', 1, 1, 1, 1, 1, 1, 1);
 
--- #4 object with no permissions, used in getObjectsById tests and createLink test
+-- #4 object with no permissions, used in getObjectsById tests and create/update-Link test
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
 values (nextval('seq_objects_id'), now(), true, true, now(), 'unbrowsable-test', 1, 1, 1, 1, 1, 1, 5);
@@ -529,6 +544,7 @@ values (nextval('seq_objects_id'), now(), true, true, now(), 'see-me-not', 1, 1,
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
 values (nextval('seq_objects_id'), now(), false, false, now(), 'test-parent', 1, 1, 1, 1, 1, 1, 1);
+
 -- #9 child object for #8
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id, root_id)
@@ -539,6 +555,7 @@ values (nextval('seq_objects_id'), now(), true, true, now(), 'test-child', 1, 1,
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
 values (nextval('seq_objects_id'), now(), false, false, now(), 'test-parent', 1, 1, 1, 1, 4, 1, 1);
+
 -- #11 child object for #10, also in archive folder#4
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id, root_id, summary)
@@ -558,6 +575,11 @@ values (nextval('seq_objects_id'), now(), true, true, now(), 'linked-to-me-2', 1
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
 values (nextval('seq_objects_id'), now(), true, true, now(), 'linked-to-me-3', 1, 1, 1, 1, 7, 1, 1);
+
+-- #15 test object for update link to object,  default acl in creation folder#6  
+insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+                     owner_id, parent_id, type_id, acl_id)
+values (nextval('seq_objects_id'), now(), true, true, now(), 'linked-to-me-2', 1, 1, 1, 1, 6, 1, 1);
 
 
 -- #1 link to osd #1 with default acl (#1)
@@ -623,5 +645,37 @@ insert into links(id, type,resolver,owner_id,acl_id,parent_id,osd_id)
 values (nextval('seq_links_id'), 'OBJECT', 'FIXED', 2, 5, 1, 13);
 
 -- #16 link to folder#5 for testing delete link with just owner permission: only-owner-acl#5, link owned by doe.
-insert into links(id, type,resolver,owner_id,acl_id,parent_id,osd_id)
+insert into links(id, type,resolver,owner_id,acl_id,parent_id, folder_id)
 values (nextval('seq_links_id'), 'FOLDER', 'FIXED', 2, 5, 1, 5);
+
+-- #17 link to osd#13 with no-permission-acl #7 to test updateLink without browse permission
+insert into links(id, type,resolver,owner_id,acl_id,parent_id,osd_id)
+values (nextval('seq_links_id'), 'OBJECT', 'FIXED', 2, 7, 1, 13);
+
+-- #18 link to osd#13 with reviewer-acl # to test updateLink.setAcl without setAcl permission
+insert into links(id, type,resolver,owner_id,acl_id,parent_id,osd_id)
+values (nextval('seq_links_id'), 'OBJECT', 'FIXED', 1, 2, 1, 13);
+
+-- #19 link to osd#13 with set-acl.allowed-acl #11 to test updateLink.setAcl with setAcl permission
+insert into links(id, type,resolver,owner_id,acl_id,parent_id,osd_id)
+values (nextval('seq_links_id'), 'OBJECT', 'FIXED', 1, 11, 1, 13);
+
+-- #20 link to folder #5, will try to change this link to folder #3 (unseen folder) 
+insert into links(id, type,resolver,owner_id,acl_id,parent_id,folder_id)
+values (nextval('seq_links_id'), 'FOLDER', 'FIXED', 1, 11, 1, 5);
+
+-- #21 link to osd#13 with set-acl.allowed-acl #11 to test non-acl updates
+insert into links(id, type,resolver,owner_id,acl_id,parent_id,osd_id)
+values (nextval('seq_links_id'), 'OBJECT', 'FIXED', 1, 11, 1, 13);
+
+-- #22 link to folder #5, will try to change this link to osd#13 
+insert into links(id, type,resolver,owner_id,acl_id,parent_id,folder_id)
+values (nextval('seq_links_id'), 'FOLDER', 'FIXED', 1, 11, 1, 5);
+
+-- #23 link to osd#13, will try to change this link to folder#6 
+insert into links(id, type,resolver,owner_id,acl_id,parent_id,osd_id)
+values (nextval('seq_links_id'), 'OBJECT', 'LATEST_HEAD', 1, 11, 1, 13);
+
+-- #24 link to osd#13, will try to change this resolver to fixed 
+insert into links(id, type,resolver,owner_id,acl_id,parent_id,osd_id)
+values (nextval('seq_links_id'), 'OBJECT', 'LATEST_HEAD', 1, 11, 1, 13);
