@@ -25,7 +25,8 @@ public enum UrlMapping {
     LINK__UPDATE_LINK("link", "updateLink", "/api"),
     CINNAMON__DISCONNECT("cinnamon", "disconnect", ""),
     STATIC__ROOT("static", "", ""),
-    FORMAT__LIST_FORMATS("format", "listFormats", "/api");
+    FORMAT__LIST_FORMATS("format", "listFormats", "/api"),
+    OBJECT_TYPE__LIST_OBJECT_TYPES("objectType", "listObjectTypes", "/api");
 
     private String servlet;
     private String action;

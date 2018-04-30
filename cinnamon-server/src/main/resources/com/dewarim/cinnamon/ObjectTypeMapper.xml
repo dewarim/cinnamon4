@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dewarim.cinnamon.ObjectTypeMapper">
+
+    <resultMap id="objectTypeMap" type="com.dewarim.cinnamon.model.ObjectType">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+    </resultMap>
+
+    <select id="list" parameterType="map" resultMap="objectTypeMap">
+        SELECT *
+        FROM objtypes
+    </select>
+
+
+</mapper>

@@ -7,6 +7,7 @@ import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.filter.AuthenticationFilter;
 import com.dewarim.cinnamon.filter.DbSessionFilter;
 import com.dewarim.cinnamon.configuration.CinnamonConfig;
+import com.dewarim.cinnamon.model.ObjectType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -73,6 +74,7 @@ public class CinnamonServer {
         handler.addServletWithMapping(CinnamonServlet.class, "/cinnamon/*");
         handler.addServletWithMapping(FormatServlet.class, "/api/format/*");
         handler.addServletWithMapping(LinkServlet.class, "/api/link/*");
+        handler.addServletWithMapping(ObjectTypeServlet.class, "/api/objectType/*");
         handler.addServletWithMapping(OsdServlet.class, "/api/osd/*");
         handler.addServletWithMapping(PermissionServlet.class, "/api/permission/*");
         handler.addServletWithMapping(StaticServlet.class, "/static/*");
