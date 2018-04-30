@@ -340,6 +340,27 @@ create table aclentry_permissions
 
 create sequence seq_aclentry_permission_id start with 1;
 
+create table relationtypes
+(
+  id bigint not null
+    constraint relationtypes_pkey
+    primary key,
+  leftobjectprotected boolean not null,
+  name varchar(128) not null
+    constraint relationtypes_name_key
+    unique,
+  rightobjectprotected boolean not null,
+  clone_on_right_copy boolean default false not null,
+  clone_on_left_copy boolean default false not null,
+  clone_on_left_version boolean default false not null,
+  clone_on_right_version boolean default false not null,
+  left_resolver_name varchar(255) default 'FIXED_RELATION_RESOLVER' not null,
+  right_resolver_name varchar(255) default 'FIXED_RELATION_RESOLVER' not null
+)
+;
+
+create sequence seq_relationtypes_id start with 1;
+
 --------------------------
 --- insert test data:  ---
 -- -----------------------
@@ -692,4 +713,12 @@ VALUES (nextval('seq_format_id'),'application/xml','xml', 'xml', 1);
 
 -- #2 format: text/plain
 insert into formats(id, contenttype, extension, name, default_object_type_id)
-VALUES (nextval('seq_format_id'),'text/plain','txt', 'plaintext', 1); 
+VALUES (nextval('seq_format_id'),'text/plain','txt', 'plaintext', 1);
+
+-- #1 relationType: protect all & clone always
+insert into relationtypes (id, leftobjectprotected, name, rightobjectprotected,
+                           clone_on_right_copy, clone_on_left_copy, clone_on_left_version, clone_on_right_version,
+                           left_resolver_name, right_resolver_name)
+VALUES (nextval('seq_relationtypes_id'), true, 'all-protector', true,
+        true, true, true, true,
+        'FIXED_RELATION_RESOLVER', 'FIXED_RELATION_RESOLVER');    

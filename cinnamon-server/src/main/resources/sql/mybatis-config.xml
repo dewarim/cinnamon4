@@ -29,6 +29,7 @@
         <mapper resource="com/dewarim/cinnamon/ObjectTypeMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/ObjectSystemDataMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/PermissionMapper.xml"/>
+        <mapper resource="com/dewarim/cinnamon/RelationTypeMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/SessionMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/UserAccountMapper.xml"/>
     </mappers>

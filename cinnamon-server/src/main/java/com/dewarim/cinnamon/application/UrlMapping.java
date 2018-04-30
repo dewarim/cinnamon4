@@ -27,7 +27,8 @@ public enum UrlMapping {
     STATIC__ROOT("static", "", ""),
     FORMAT__LIST_FORMATS("format", "listFormats", "/api"),
     OBJECT_TYPE__LIST_OBJECT_TYPES("objectType", "listObjectTypes", "/api"),
-    GROUP__LIST_GROUPS("group", "listGroups", "/api");
+    GROUP__LIST_GROUPS("group", "listGroups", "/api"),
+    RELATION_TYPE__LIST_RELATION_TYPES("relationType","listRelationTypes" ,"/api" );
 
     private String servlet;
     private String action;
