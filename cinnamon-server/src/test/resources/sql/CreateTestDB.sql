@@ -403,6 +403,7 @@ values(nextval('seq_folder_id'),'link-this-folder',0,1,1,6,1);
 insert into folders(id,name,obj_version,acl_id,owner_id,parent_id,type_id)
 values(nextval('seq_folder_id'),'only-owner-links-to-me',0,5,2,6,1);
 
+-- #1
 insert into objtypes(id,name) values(nextval('seq_obj_type_id'),'_default_objtype');
 
 insert into groups(id,name) VALUES(nextval('seq_groups'),'_superusers'); -- #1
@@ -684,3 +685,11 @@ values (nextval('seq_links_id'), 'OBJECT', 'LATEST_HEAD', 1, 11, 1, 13);
 -- #24 link to osd#13, will try to change this resolver to fixed 
 insert into links(id, type,resolver,owner_id,acl_id,parent_id,osd_id)
 values (nextval('seq_links_id'), 'OBJECT', 'LATEST_HEAD', 1, 11, 1, 13);
+
+-- #1 add format: xml
+insert into formats(id, contenttype, extension, name, default_object_type_id) 
+VALUES (nextval('seq_format_id'),'application/xml','xml', 'xml', 1); 
+
+-- #2 format: text/plain
+insert into formats(id, contenttype, extension, name, default_object_type_id)
+VALUES (nextval('seq_format_id'),'text/plain','txt', 'plaintext', 1); 

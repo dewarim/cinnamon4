@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dewarim.cinnamon.FormatMapper">
+
+    <resultMap id="formatMap" type="com.dewarim.cinnamon.model.Format">
+        <id property="id" column="id"/>
+        <result property="contentType" column="contentType"/>
+        <result property="extension" column="extension"/>
+        <result property="name" column="name"/>
+        <result property="defaultObjectTypeId" column="default_object_type_id"/>
+    </resultMap>
+
+    <select id="list" parameterType="map" resultMap="formatMap">
+        SELECT *
+        FROM formats
+    </select>
+
+
+</mapper>
