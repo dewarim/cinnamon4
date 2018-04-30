@@ -223,7 +223,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void createLinToObjectHappyPath() throws IOException {
+    public void createLinkToObjectHappyPath() throws IOException {
         // link to object in creation folder#6
         CreateLinkRequest createLinkRequest = new CreateLinkRequest(13L, 6L, LinkResolver.FIXED, LinkType.OBJECT, 1, 1);
         HttpResponse response = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, createLinkRequest);
