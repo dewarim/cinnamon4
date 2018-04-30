@@ -29,4 +29,9 @@
         FROM groups JOIN group_users gu on groups.id = gu.group_id WHERE gu.user_id= #{id}
     </select>
     
+    <select id="list" resultMap="cmnGroupMap">
+        SELECT *
+        FROM groups
+    </select>
+    
 </mapper>

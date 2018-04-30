@@ -56,4 +56,10 @@ public class CmnGroupDao {
             findAncestors(groups, parent.getParentId());
         }
     }
+    
+    public List<CmnGroup> listGroups(){
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        return sqlSession.selectList("com.dewarim.cinnamon.CmnGroupMapper.list");
+
+    }
 }
