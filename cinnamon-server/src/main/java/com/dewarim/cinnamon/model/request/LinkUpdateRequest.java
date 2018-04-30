@@ -1,9 +1,6 @@
 package com.dewarim.cinnamon.model.request;
 
 import com.dewarim.cinnamon.model.LinkResolver;
-import com.dewarim.cinnamon.model.LinkType;
-
-import java.util.Arrays;
 
 public class LinkUpdateRequest {
 

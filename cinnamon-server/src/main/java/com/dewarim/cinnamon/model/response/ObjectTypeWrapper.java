@@ -1,6 +1,5 @@
 package com.dewarim.cinnamon.model.response;
 
-import com.dewarim.cinnamon.model.Format;
 import com.dewarim.cinnamon.model.ObjectType;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;

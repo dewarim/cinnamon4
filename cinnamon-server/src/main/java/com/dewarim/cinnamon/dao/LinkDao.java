@@ -2,13 +2,10 @@ package com.dewarim.cinnamon.dao;
 
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.model.Link;
-import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.request.CreateLinkRequest;
 import org.apache.ibatis.session.SqlSession;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 public class LinkDao {

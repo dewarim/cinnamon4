@@ -4,7 +4,6 @@ import com.dewarim.cinnamon.Constants;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.model.AclEntry;
 import com.dewarim.cinnamon.model.CmnGroup;
-import com.dewarim.cinnamon.model.Permission;
 import org.apache.ibatis.session.SqlSession;
 
 import java.util.HashMap;

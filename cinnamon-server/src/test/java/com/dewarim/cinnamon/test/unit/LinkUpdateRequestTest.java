@@ -1,7 +1,6 @@
 package com.dewarim.cinnamon.test.unit;
 
 import com.dewarim.cinnamon.model.LinkResolver;
-import com.dewarim.cinnamon.model.LinkType;
 import com.dewarim.cinnamon.model.request.LinkUpdateRequest;
 import org.junit.Test;
 
