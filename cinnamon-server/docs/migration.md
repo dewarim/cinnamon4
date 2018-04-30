@@ -11,3 +11,10 @@
     -- links no longer have an internal version - if two people update the same link,
     -- last one wins.
     ALTER TABLE links DROP COLUMN version;
+    
+    -- transformers are not used anywhere, a legacy idea from Cinnamon 2
+    DROP TABLE transformers;
+    
+    -- customtables are no longer used, should be implemented via microservies
+    DROP TABLE customtables;
+    
