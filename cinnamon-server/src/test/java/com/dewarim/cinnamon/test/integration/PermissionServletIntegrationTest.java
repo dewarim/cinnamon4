@@ -39,10 +39,10 @@ public class PermissionServletIntegrationTest extends CinnamonIntegrationTest {
         Optional<Permission> browseFolder = permissions.stream().filter(s -> s.getName().equals("_browse_folder")).findFirst();
         assertTrue(browseFolder.isPresent());
 
-        // user doe @ reviewers acl: should have create folder permission
+        // user doe @ reviewers acl: should have create folder,write_object_sysmeta and browse permission
         UserPermissionRequest reviewerPermissionRequest = new UserPermissionRequest(2L,2L);
         HttpResponse reviewerResponse = sendAdminRequest(UrlMapping.PERMISSION__GET_USER_PERMISSIONS, reviewerPermissionRequest);
-        unwrapPermissions(reviewerResponse,1);
+        unwrapPermissions(reviewerResponse,3);
     }    
     
     @Test
