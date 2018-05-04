@@ -39,10 +39,10 @@ public class UiLanguageServlet extends HttpServlet {
     private void listUiLanguages(HttpServletRequest request, HttpServletResponse response) throws IOException {
         // ignore listRequest for now, just make sure it's valid xml:
         ListRequest         listRequest = xmlMapper.readValue(request.getInputStream(), ListRequest.class);
-        UiLanguageDao     typeDao     = new UiLanguageDao();
-        List<UiLanguage>  types       = typeDao.listUiLanguages();
+        UiLanguageDao     languageDao     = new UiLanguageDao();
+        List<UiLanguage>  languages       = languageDao.listUiLanguages();
         UiLanguageWrapper wrapper     = new UiLanguageWrapper();
-        wrapper.setUiLanguages(types);
+        wrapper.setUiLanguages(languages);
         response.setContentType(CONTENT_TYPE_XML);
         response.setStatus(HttpServletResponse.SC_OK);
         xmlMapper.writeValue(response.getWriter(), wrapper);

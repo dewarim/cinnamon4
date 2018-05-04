@@ -39,10 +39,10 @@ public class LanguageServlet extends HttpServlet {
     private void listLanguages(HttpServletRequest request, HttpServletResponse response) throws IOException {
         // ignore listRequest for now, just make sure it's valid xml:
         ListRequest         listRequest = xmlMapper.readValue(request.getInputStream(), ListRequest.class);
-        LanguageDao     typeDao     = new LanguageDao();
-        List<Language>  types       = typeDao.listLanguages();
+        LanguageDao     languageDao     = new LanguageDao();
+        List<Language>  languages       = languageDao.listLanguages();
         LanguageWrapper wrapper     = new LanguageWrapper();
-        wrapper.setLanguages(types);
+        wrapper.setLanguages(languages);
         response.setContentType(CONTENT_TYPE_XML);
         response.setStatus(HttpServletResponse.SC_OK);
         xmlMapper.writeValue(response.getWriter(), wrapper);
