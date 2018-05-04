@@ -237,7 +237,6 @@ create table links
     constraint links_pk
     primary key,
   type varchar(127) not null,
-  resolver varchar(127) not null,
   owner_id bigint not null
     constraint links_owner_id_fk
     references users,
@@ -353,9 +352,7 @@ create table relationtypes
   clone_on_right_copy boolean default false not null,
   clone_on_left_copy boolean default false not null,
   clone_on_left_version boolean default false not null,
-  clone_on_right_version boolean default false not null,
-  left_resolver_name varchar(255) default 'FIXED_RELATION_RESOLVER' not null,
-  right_resolver_name varchar(255) default 'FIXED_RELATION_RESOLVER' not null
+  clone_on_right_version boolean default false not null
 )
 ;
 
@@ -610,102 +607,106 @@ values (nextval('seq_objects_id'), now(), true, true, now(), 'linked-to-me-2', 1
 
 
 -- #1 link to osd #1 with default acl (#1)
-insert into links(id, type,resolver,owner_id,acl_id,parent_id,osd_id) 
-values (nextval('seq_links_id'), 'OBJECT', 'FIXED', 1,1,1,1);
+insert into links(id, type,owner_id,acl_id,parent_id,osd_id) 
+values (nextval('seq_links_id'), 'OBJECT',  1,1,1,1);
 
 -- #2 link to folder #2 with default acl (#1)
-insert into links(id, type,resolver,owner_id,acl_id,parent_id,folder_id) 
-values (nextval('seq_links_id'), 'FOLDER', 'FIXED', 1,1,1,2);
+insert into links(id, type,owner_id,acl_id,parent_id,folder_id) 
+values (nextval('seq_links_id'), 'FOLDER',  1,1,1,2);
 
 -- #3 link to osd #1 with no permission except owner acl (#1)
-insert into links(id, type,resolver,owner_id,acl_id,parent_id,osd_id)
-values (nextval('seq_links_id'), 'OBJECT', 'FIXED', 1,5,1,1);
+insert into links(id, type,owner_id,acl_id,parent_id,osd_id)
+values (nextval('seq_links_id'), 'OBJECT',  1,5,1,1);
 
 -- #4 link to osd #7 with no-permission.acl (#7)
-insert into links(id, type,resolver,owner_id,acl_id,parent_id,osd_id)    
-values (nextval('seq_links_id'), 'OBJECT', 'FIXED', 1,1,1,7);
+insert into links(id, type,owner_id,acl_id,parent_id,osd_id)    
+values (nextval('seq_links_id'), 'OBJECT',  1,1,1,7);
 
 -- #5 link to folder #3 with no-permission. acl (#7)
-insert into links(id, type,resolver,owner_id,acl_id,parent_id,folder_id)
-values (nextval('seq_links_id'), 'FOLDER', 'FIXED', 1,1,1,3);
+insert into links(id, type,owner_id,acl_id,parent_id,folder_id)
+values (nextval('seq_links_id'), 'FOLDER',  1,1,1,3);
 
--- #6 link to osd #8 with latest_head resolver - should return osd#9 when link is queried.
-insert into links(id, type,resolver,owner_id,acl_id,parent_id,osd_id)
-values (nextval('seq_links_id'), 'OBJECT', 'LATEST_HEAD', 1,1,1,8);
+-- deprecated (removed resolvers):
+-- -- #6 link to osd #8 with latest_head resolver - should return osd#9 when link is queried.
+insert into links(id, type,owner_id,acl_id,parent_id,osd_id)
+values (nextval('seq_links_id'), 'OBJECT', 1,1,1,8);
 
--- #7 link to osd #10 with latest_head resolver, in folder 'archive' #7 - should return osd#11 when link is queried.
+-- deprecated (removed resolvers):
+-- #7 link to osd #10 with latest_head  in folder 'archive' #7 - should return osd#11 when link is queried.
 -- used in getObjectsByFolderId
-insert into links(id, type,resolver,owner_id,acl_id,parent_id,osd_id)
-values (nextval('seq_links_id'), 'OBJECT', 'LATEST_HEAD', 1,1,4,10);
+insert into links(id, type,owner_id,acl_id,parent_id,osd_id)
+values (nextval('seq_links_id'), 'OBJECT', 1,1,4,10);
 
 -- #8 link to osd #11 with fixed resolver - should return osd#11 when link is queried.
 -- used in getObjectsByFolderId, but with no_permission.acl #7, should not be seen by normal user.
-insert into links(id, type,resolver,owner_id,acl_id,parent_id,osd_id)
-values (nextval('seq_links_id'), 'OBJECT', 'FIXED', 1,7,4,11);
+insert into links(id, type,owner_id,acl_id,parent_id,osd_id)
+values (nextval('seq_links_id'), 'OBJECT',  1,7,4,11);
 
 -- #9 link to osd#12 for deletion tests: default acl, deletion allowed
-insert into links(id, type,resolver,owner_id,acl_id,parent_id,osd_id)
-values (nextval('seq_links_id'), 'OBJECT', 'FIXED', 1,1,1,12);
+insert into links(id, type,owner_id,acl_id,parent_id,osd_id)
+values (nextval('seq_links_id'), 'OBJECT',  1,1,1,12);
 
 -- #10 link to folder#5 for deletion tests: default acl, deletion allowed
-insert into links(id, type,resolver,owner_id,acl_id,parent_id,folder_id)
-values (nextval('seq_links_id'), 'FOLDER', 'FIXED', 1,1,1,5);
+insert into links(id, type,owner_id,acl_id,parent_id,folder_id)
+values (nextval('seq_links_id'), 'FOLDER',  1,1,1,5);
 
 -- #11 link to osd#12 for deletion tests: no_permission-acl, browse not allowed
-insert into links(id, type,resolver,owner_id,acl_id,parent_id,osd_id)
-values (nextval('seq_links_id'), 'OBJECT', 'FIXED', 1,7,1,12);
+insert into links(id, type,owner_id,acl_id,parent_id,osd_id)
+values (nextval('seq_links_id'), 'OBJECT',  1,7,1,12);
 
 -- #12 link to osd#12 for deletion tests: reviewer-acl#2, browse allowed, deletion not allowed
-insert into links(id, type,resolver,owner_id,acl_id,parent_id,osd_id)
-values (nextval('seq_links_id'), 'OBJECT', 'FIXED', 1,7,1,12);
+insert into links(id, type,owner_id,acl_id,parent_id,osd_id)
+values (nextval('seq_links_id'), 'OBJECT',  1,7,1,12);
 
 -- #13 link to folder#5 for deletion tests: reviewer acl#2, browse_folder allowed, deletion not allowed
-insert into links(id, type,resolver,owner_id,acl_id,parent_id,folder_id)
-values (nextval('seq_links_id'), 'FOLDER', 'FIXED', 1,2,1,5);
+insert into links(id, type,owner_id,acl_id,parent_id,folder_id)
+values (nextval('seq_links_id'), 'FOLDER',  1,2,1,5);
 
 -- #14 link to osd#13 for testing owner browse permission: only-owner-acl#5, link owned by doe.
-insert into links(id, type,resolver,owner_id,acl_id,parent_id,osd_id)
-values (nextval('seq_links_id'), 'OBJECT', 'FIXED', 2, 5, 1, 13);
+insert into links(id, type,owner_id,acl_id,parent_id,osd_id)
+values (nextval('seq_links_id'), 'OBJECT',  2, 5, 1, 13);
 
 -- #15 link to osd#13 for testing delete link with just owner permission: only-owner-acl#5, link owned by doe.
-insert into links(id, type,resolver,owner_id,acl_id,parent_id,osd_id)
-values (nextval('seq_links_id'), 'OBJECT', 'FIXED', 2, 5, 1, 13);
+insert into links(id, type,owner_id,acl_id,parent_id,osd_id)
+values (nextval('seq_links_id'), 'OBJECT',  2, 5, 1, 13);
 
 -- #16 link to folder#5 for testing delete link with just owner permission: only-owner-acl#5, link owned by doe.
-insert into links(id, type,resolver,owner_id,acl_id,parent_id, folder_id)
-values (nextval('seq_links_id'), 'FOLDER', 'FIXED', 2, 5, 1, 5);
+insert into links(id, type,owner_id,acl_id,parent_id, folder_id)
+values (nextval('seq_links_id'), 'FOLDER',  2, 5, 1, 5);
 
 -- #17 link to osd#13 with no-permission-acl #7 to test updateLink without browse permission
-insert into links(id, type,resolver,owner_id,acl_id,parent_id,osd_id)
-values (nextval('seq_links_id'), 'OBJECT', 'FIXED', 2, 7, 1, 13);
+insert into links(id, type,owner_id,acl_id,parent_id,osd_id)
+values (nextval('seq_links_id'), 'OBJECT',  2, 7, 1, 13);
 
 -- #18 link to osd#13 with reviewer-acl # to test updateLink.setAcl without setAcl permission
-insert into links(id, type,resolver,owner_id,acl_id,parent_id,osd_id)
-values (nextval('seq_links_id'), 'OBJECT', 'FIXED', 1, 2, 1, 13);
+insert into links(id, type,owner_id,acl_id,parent_id,osd_id)
+values (nextval('seq_links_id'), 'OBJECT',  1, 2, 1, 13);
 
 -- #19 link to osd#13 with set-acl.allowed-acl #11 to test updateLink.setAcl with setAcl permission
-insert into links(id, type,resolver,owner_id,acl_id,parent_id,osd_id)
-values (nextval('seq_links_id'), 'OBJECT', 'FIXED', 1, 11, 1, 13);
+insert into links(id, type,owner_id,acl_id,parent_id,osd_id)
+values (nextval('seq_links_id'), 'OBJECT',  1, 11, 1, 13);
 
 -- #20 link to folder #5, will try to change this link to folder #3 (unseen folder) 
-insert into links(id, type,resolver,owner_id,acl_id,parent_id,folder_id)
-values (nextval('seq_links_id'), 'FOLDER', 'FIXED', 1, 11, 1, 5);
+insert into links(id, type,owner_id,acl_id,parent_id,folder_id)
+values (nextval('seq_links_id'), 'FOLDER',  1, 11, 1, 5);
 
 -- #21 link to osd#13 with set-acl.allowed-acl #11 to test non-acl updates
-insert into links(id, type,resolver,owner_id,acl_id,parent_id,osd_id)
-values (nextval('seq_links_id'), 'OBJECT', 'FIXED', 1, 11, 1, 13);
+insert into links(id, type,owner_id,acl_id,parent_id,osd_id)
+values (nextval('seq_links_id'), 'OBJECT',  1, 11, 1, 13);
 
 -- #22 link to folder #5, will try to change this link to osd#13 
-insert into links(id, type,resolver,owner_id,acl_id,parent_id,folder_id)
-values (nextval('seq_links_id'), 'FOLDER', 'FIXED', 1, 11, 1, 5);
+insert into links(id, type,owner_id,acl_id,parent_id,folder_id)
+values (nextval('seq_links_id'), 'FOLDER',  1, 11, 1, 5);
 
--- #23 link to osd#13, will try to change this link to folder#6 
-insert into links(id, type,resolver,owner_id,acl_id,parent_id,osd_id)
-values (nextval('seq_links_id'), 'OBJECT', 'LATEST_HEAD', 1, 11, 1, 13);
+-- deprecated (removed resolvers):
+-- -- #23 link to osd#13, will try to change this link to folder#6 
+insert into links(id, type,owner_id,acl_id,parent_id,osd_id)
+values (nextval('seq_links_id'), 'OBJECT', 1, 11, 1, 13);
 
+-- deprecated (removed resolvers):
 -- #24 link to osd#13, will try to change this resolver to fixed 
-insert into links(id, type,resolver,owner_id,acl_id,parent_id,osd_id)
-values (nextval('seq_links_id'), 'OBJECT', 'LATEST_HEAD', 1, 11, 1, 13);
+insert into links(id, type,owner_id,acl_id,parent_id,osd_id)
+values (nextval('seq_links_id'), 'OBJECT', 1, 11, 1, 13);
 
 -- #1 add format: xml
 insert into formats(id, contenttype, extension, name, default_object_type_id) 

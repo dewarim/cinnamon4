@@ -19,8 +19,8 @@
     DROP TABLE customtables;
     
     -- update relationtypes:    
-    alter table relationtypes add column left_resolver_name varchar(255) not null default 'FIXED_RELATION_RESOLVER';
-    alter table relationtypes add column right_resolver_name varchar(255) not null default 'FIXED_RELATION_RESOLVER';
     alter table relationtypes drop column left_resolver_id;
     alter table relationtypes drop column right_resolver_id;
     alter table relationtypes drop column obj_version;
+    
+    -- 

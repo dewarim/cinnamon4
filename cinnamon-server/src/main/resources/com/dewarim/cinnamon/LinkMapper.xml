@@ -5,10 +5,9 @@
 
 <mapper namespace="com.dewarim.cinnamon.LinkMapper">
 
-    <resultMap id="linkMap" type="com.dewarim.cinnamon.model.Link">
+    <resultMap id="linkMap" type="com.dewarim.cinnamon.model.links.Link">
         <id property="id" column="id"/>
         <result property="type" typeHandler="org.apache.ibatis.type.EnumTypeHandler" column="type"/>
-        <result property="resolver" typeHandler="org.apache.ibatis.type.EnumTypeHandler" column="resolver"/>
         <result property="ownerId" column="owner_id"/>
         <result property="aclId" column="acl_id"/>
         <result property="parentId" column="parent_id"/>
@@ -33,22 +32,21 @@
         WHERE id = #{id}
     </delete>
 
-    <insert id="insertLink" parameterType="com.dewarim.cinnamon.model.Link">
+    <insert id="insertLink" parameterType="com.dewarim.cinnamon.model.links.Link">
         <selectKey keyProperty="id" resultType="long" order="BEFORE">
             select nextval('seq_links_id')
         </selectKey>
-        INSERT INTO links (id,type,resolver,owner_id,acl_id,parent_id,folder_id,osd_id,version) VALUES
-        (#{id},#{type},#{resolver}, #{ownerId}, #{aclId},#{parentId},#{folderId},#{objectId},0)
+        INSERT INTO links (id,type,owner_id,acl_id,parent_id,folder_id,osd_id,version) VALUES
+        (#{id},#{type}, #{ownerId}, #{aclId},#{parentId},#{folderId},#{objectId},0)
     </insert>
 
-    <update id="updateLink" parameterType="com.dewarim.cinnamon.model.Link">
+    <update id="updateLink" parameterType="com.dewarim.cinnamon.model.links.Link">
         UPDATE links
         SET acl_id    = #{aclId},
             owner_id  = #{ownerId},
             parent_id = #{parentId},
             osd_id    = #{objectId},
             folder_id = #{folderId},
-            resolver  = #{resolver},
             type      = #{type}
         WHERE id = #{id}
 

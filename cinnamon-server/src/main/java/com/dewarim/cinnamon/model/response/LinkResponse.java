@@ -1,6 +1,7 @@
 package com.dewarim.cinnamon.model.response;
 
 import com.dewarim.cinnamon.model.*;
+import com.dewarim.cinnamon.model.links.LinkType;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 @JacksonXmlRootElement(localName = "link")
@@ -11,7 +12,6 @@ public class LinkResponse {
     private Folder folder;
     private Long ownerId;
     private Long parentId;
-    private LinkResolver linkResolver;
     private Long aclId;
     
     public LinkType getLinkType() {
@@ -54,14 +54,6 @@ public class LinkResponse {
         this.parentId = parentId;
     }
     
-    public LinkResolver getLinkResolver() {
-        return linkResolver;
-    }
-
-    public void setLinkResolver(LinkResolver linkResolver) {
-        this.linkResolver = linkResolver;
-    }
-
     public Long getAclId() {
         return aclId;
     }

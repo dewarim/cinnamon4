@@ -1,4 +1,4 @@
-package com.dewarim.cinnamon.model;
+package com.dewarim.cinnamon.model.links;
 
 public enum LinkType {
 

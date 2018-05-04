@@ -6,6 +6,7 @@ import com.dewarim.cinnamon.api.Accessible;
 import com.dewarim.cinnamon.api.Ownable;
 import com.dewarim.cinnamon.dao.*;
 import com.dewarim.cinnamon.model.*;
+import com.dewarim.cinnamon.model.links.Link;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

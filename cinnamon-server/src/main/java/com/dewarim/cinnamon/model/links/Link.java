@@ -1,4 +1,4 @@
-package com.dewarim.cinnamon.model;
+package com.dewarim.cinnamon.model.links;
 
 import com.dewarim.cinnamon.api.Accessible;
 import com.dewarim.cinnamon.api.Ownable;
@@ -11,7 +11,6 @@ public class Link implements Ownable, Accessible {
     
     private Long id;
     private LinkType type;
-    private LinkResolver resolver;
     private Long ownerId;
     private Long aclId;
     private Long parentId;
@@ -32,14 +31,6 @@ public class Link implements Ownable, Accessible {
 
     public void setType(LinkType type) {
         this.type = type;
-    }
-
-    public LinkResolver getResolver() {
-        return resolver;
-    }
-
-    public void setResolver(LinkResolver resolver) {
-        this.resolver = resolver;
     }
 
     public Long getOwnerId() {
@@ -88,7 +79,6 @@ public class Link implements Ownable, Accessible {
         if (o == null || getClass() != o.getClass()) return false;
         Link link = (Link) o;
         return type == link.type &&
-                resolver == link.resolver &&
                 Objects.equals(ownerId, link.ownerId) &&
                 Objects.equals(aclId, link.aclId) &&
                 Objects.equals(parentId, link.parentId) &&
@@ -99,7 +89,7 @@ public class Link implements Ownable, Accessible {
     @Override
     public int hashCode() {
 
-        return Objects.hash(type, resolver, ownerId, aclId, parentId, folderId, objectId);
+        return Objects.hash(type, ownerId, aclId, parentId, folderId, objectId);
     }
 
     @Override
@@ -107,7 +97,6 @@ public class Link implements Ownable, Accessible {
         return "Link{" +
                 "id=" + id +
                 ", type=" + type +
-                ", resolver=" + resolver +
                 ", ownerId=" + ownerId +
                 ", aclId=" + aclId +
                 ", parentId=" + parentId +

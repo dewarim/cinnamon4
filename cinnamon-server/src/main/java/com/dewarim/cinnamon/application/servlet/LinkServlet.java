@@ -3,6 +3,8 @@ package com.dewarim.cinnamon.application.servlet;
 import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.application.exception.UpdateException;
 import com.dewarim.cinnamon.dao.*;
+import com.dewarim.cinnamon.model.links.Link;
+import com.dewarim.cinnamon.model.links.LinkType;
 import com.dewarim.cinnamon.model.request.CreateLinkRequest;
 import com.dewarim.cinnamon.model.request.DeleteByIdRequest;
 import com.dewarim.cinnamon.model.request.LinkUpdateRequest;
@@ -118,7 +120,7 @@ public class LinkServlet extends HttpServlet {
                 Optional<Folder> folderOpt = folderDao.getFolderById(linkRequest.getId());
                 if (folderOpt.isPresent()) {
                     folder = folderOpt.get();
-                    hasBrowsePermission = accessFilter.hasPermissionOnOwnable(folder,DefaultPermission.BROWSE_FOLDER, folder);
+                    hasBrowsePermission = accessFilter.hasPermissionOnOwnable(folder, DefaultPermission.BROWSE_FOLDER, folder);
                 }
                 else {
                     ErrorResponseGenerator.generateErrorMessage(response, SC_NOT_FOUND, ErrorCode.FOLDER_NOT_FOUND);
@@ -154,7 +156,6 @@ public class LinkServlet extends HttpServlet {
         linkResponse.setFolder(folder);
         linkResponse.setOwnerId(link.getOwnerId());
         linkResponse.setParentId(link.getParentId());
-        linkResponse.setLinkResolver(link.getResolver());
         linkResponse.setAclId(link.getAclId());
         LinkWrapper linkWrapper = new LinkWrapper();
         linkWrapper.getLinks().add(linkResponse);
@@ -203,9 +204,6 @@ public class LinkServlet extends HttpServlet {
                 if (updateRequest.getOwnerId() != null) {
                     updateOwner(updateRequest, link, linkDao);
                 }
-                if (updateRequest.getResolver() != null) {
-                    updateResolver(updateRequest, link, linkDao);
-                }
 
                 sendGenericResponse(response, new GenericResponse(true));
                 return;
@@ -228,7 +226,6 @@ public class LinkServlet extends HttpServlet {
             // link can point either to folder OR object.
             link.setObjectId(null);
             link.setType(LinkType.FOLDER);
-            link.setResolver(LinkResolver.FIXED);
         }
         Folder       folder           = new FolderDao().getFolderById(updateRequest.getFolderId()).orElseThrow(() -> FOLDER_NOT_FOUND);
         UserAccount  user             = ThreadLocalSqlSession.getCurrentUser();
@@ -274,17 +271,6 @@ public class LinkServlet extends HttpServlet {
         link.setObjectId(updateRequest.getObjectId());
         if (linkDao.updateLink(link) != UPDATED_ONE_ROW) {
             log.debug("OSD update did not change the link.");
-        }
-    }
-
-    private void updateResolver(LinkUpdateRequest updateRequest, Link link, LinkDao linkDao) {
-        LinkResolver resolver = updateRequest.getResolver();
-        if(link.getFolderId() != null){
-            throw INVALID_LINK_RESOLVER;
-        }
-        link.setResolver(resolver);
-        if (linkDao.updateLink(link) != UPDATED_ONE_ROW) {
-            log.debug("resolver update did not change the link");
         }
     }
 
@@ -436,7 +422,6 @@ public class LinkServlet extends HttpServlet {
         if (accessFilter.hasFolderBrowsePermission(folder.getAclId())) {
             LinkResponse linkResponse = new LinkResponse();
             linkResponse.setLinkType(LinkType.FOLDER);
-            linkResponse.setLinkResolver(link.getResolver());
             linkResponse.setFolder(folder);
             return Optional.of(linkResponse);
         }
@@ -445,25 +430,15 @@ public class LinkServlet extends HttpServlet {
     }
 
     private Optional<LinkResponse> handleOsdLink(HttpServletResponse response, Link link, boolean includeSummary) {
-        OsdDao           osdDao = new OsdDao();
-        ObjectSystemData osd;
-        switch (link.getResolver()) {
-            case LATEST_HEAD:
-                osd = osdDao.getLatestHead(link.getObjectId());
-                break;
-            case FIXED: // fall through to default - fixed is standard case.
-            default:
-                List<ObjectSystemData> osds = osdDao.getObjectsById(Collections.singletonList(link.getObjectId()), includeSummary);
-                osd = osds.get(0);
-                break;
-        }
+        OsdDao                 osdDao = new OsdDao();
+        List<ObjectSystemData> osds   = osdDao.getObjectsById(Collections.singletonList(link.getObjectId()), includeSummary);
+        ObjectSystemData       osd    = osds.get(0);
 
         AccessFilter accessFilter = AccessFilter.getInstance(ThreadLocalSqlSession.getCurrentUser());
         // TODO: check browse permission of owner (#57)
         if (accessFilter.hasUserBrowsePermission(osd.getAclId())) {
             LinkResponse linkResponse = new LinkResponse();
             linkResponse.setLinkType(LinkType.OBJECT);
-            linkResponse.setLinkResolver(link.getResolver());
             linkResponse.setOsd(osd);
             return Optional.of(linkResponse);
 

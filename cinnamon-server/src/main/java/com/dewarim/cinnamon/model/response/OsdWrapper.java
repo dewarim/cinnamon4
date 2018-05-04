@@ -1,6 +1,6 @@
 package com.dewarim.cinnamon.model.response;
 
-import com.dewarim.cinnamon.model.Link;
+import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;

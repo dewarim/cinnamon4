@@ -1,7 +1,7 @@
 package com.dewarim.cinnamon.application.servlet;
 
 import com.dewarim.cinnamon.dao.LinkDao;
-import com.dewarim.cinnamon.model.Link;
+import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.request.OsdByFolderRequest;
 import com.dewarim.cinnamon.security.authorization.AuthorizationService;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;

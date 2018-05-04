@@ -1,7 +1,5 @@
 package com.dewarim.cinnamon.model.request;
 
-import com.dewarim.cinnamon.model.LinkResolver;
-
 public class LinkUpdateRequest {
 
     private long         id;
@@ -9,7 +7,6 @@ public class LinkUpdateRequest {
     private Long         parentId;
     private Long         objectId;
     private Long         folderId;
-    private LinkResolver resolver;
     private Long         ownerId;
 
     public LinkUpdateRequest() {
@@ -19,13 +16,12 @@ public class LinkUpdateRequest {
         this.id = id;
     }
 
-    public LinkUpdateRequest(long id, Long aclId, Long parentId, Long objectId, Long folderId, LinkResolver resolver, Long ownerId) {
+    public LinkUpdateRequest(long id, Long aclId, Long parentId, Long objectId, Long folderId, Long ownerId) {
         this.id = id;
         this.aclId = aclId;
         this.parentId = parentId;
         this.objectId = objectId;
         this.folderId = folderId;
-        this.resolver = resolver;
         this.ownerId = ownerId;
     }
 
@@ -69,14 +65,6 @@ public class LinkUpdateRequest {
         this.folderId = folderId;
     }
 
-    public LinkResolver getResolver() {
-        return resolver;
-    }
-
-    public void setResolver(LinkResolver resolver) {
-        this.resolver = resolver;
-    }
-
     public Long getOwnerId() {
         return ownerId;
     }
@@ -106,10 +94,6 @@ public class LinkUpdateRequest {
             }
         }
 
-        if(resolver != null){
-            atLeastOneFieldIsSet = true;
-        }
-        
         return atLeastOneFieldIsSet;
     }
 
@@ -121,7 +105,6 @@ public class LinkUpdateRequest {
                ", parentId=" + parentId +
                ", objectId=" + objectId +
                ", folderId=" + folderId +
-               ", resolver=" + resolver +
                ", ownerId=" + ownerId +
                '}';
     }

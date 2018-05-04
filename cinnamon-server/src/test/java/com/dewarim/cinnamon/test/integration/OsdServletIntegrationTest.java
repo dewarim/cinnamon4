@@ -1,7 +1,7 @@
 package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.application.UrlMapping;
-import com.dewarim.cinnamon.model.Link;
+import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.request.OsdByFolderRequest;
 import com.dewarim.cinnamon.model.request.OsdRequest;
