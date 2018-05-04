@@ -74,6 +74,7 @@ public class CinnamonServer {
         handler.addServletWithMapping(FormatServlet.class, "/api/format/*");
         handler.addServletWithMapping(FolderTypeServlet.class, "/api/folderType/*");
         handler.addServletWithMapping(GroupServlet.class, "/api/group/*");
+        handler.addServletWithMapping(LanguageServlet.class, "/api/language/*");
         handler.addServletWithMapping(LinkServlet.class, "/api/link/*");
         handler.addServletWithMapping(ObjectTypeServlet.class, "/api/objectType/*");
         handler.addServletWithMapping(OsdServlet.class, "/api/osd/*");

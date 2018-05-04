@@ -19,6 +19,7 @@ public enum UrlMapping {
     PERMISSION__GET_USER_PERMISSIONS("permission", "getUserPermissions", "/api"),
     OSD__GET_OBJECTS_BY_ID("osd", "getObjectsById", "/api"),
     OSD__GET_OBJECTS_BY_FOLDER_ID("osd", "getObjectsByFolderId", "/api"),
+    LANGUAGE__LIST__LANGUAGES("language","listLanguages" ,"/api" ),
     LINK__GET_LINK_BY_ID("link", "getLinkById", "/api"),
     LINK__DELETE_LINK("link", "deleteLink", "/api"),
     LINK__CREATE_LINK("link", "createLink", "/api"),
@@ -28,9 +29,9 @@ public enum UrlMapping {
     FORMAT__LIST_FORMATS("format", "listFormats", "/api"),
     OBJECT_TYPE__LIST_OBJECT_TYPES("objectType", "listObjectTypes", "/api"),
     GROUP__LIST_GROUPS("group", "listGroups", "/api"),
-    RELATION_TYPE__LIST_RELATION_TYPES("relationType","listRelationTypes" ,"/api" ),
-    FOLDER_TYPE__LIST_FOLDER_TYPES("folderType","listFolderTypes" ,"/api" ),
-    UI_LANGUAGE__LIST_UI_LANGUAGES("uiLanguage","listUiLanguages" ,"/api" );
+    RELATION_TYPE__LIST_RELATION_TYPES("relationType", "listRelationTypes", "/api"),
+    FOLDER_TYPE__LIST_FOLDER_TYPES("folderType", "listFolderTypes", "/api"),
+    UI_LANGUAGE__LIST_UI_LANGUAGES("uiLanguage", "listUiLanguages", "/api");
 
     private String servlet;
     private String action;

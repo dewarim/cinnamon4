@@ -42,6 +42,20 @@ create table ui_languages
 create SEQUENCE seq_ui_language_id start with 1;
 
 
+-- languages
+create table languages
+(
+  id bigint not null
+    constraint languages_pkey
+    primary key,
+  iso_code varchar(32) not null
+    constraint languages_iso_code_key
+    unique
+);
+
+create SEQUENCE seq_language_id start with 1;
+
+
 -- acls --
 create table acls(
   id bigint PRIMARY KEY,
@@ -741,3 +755,14 @@ insert into ui_languages (id,iso_code) values (nextval('seq_ui_language_id'), 'D
 
 -- #2 uiLanguage: en
 insert into ui_languages (id,iso_code) values (nextval('seq_ui_language_id'), 'EN');
+
+-- #1 language: de
+insert into languages (id,iso_code) values (nextval('seq_language_id'), 'de_DE');
+-- #2 language: en
+insert into languages (id,iso_code) values (nextval('seq_language_id'), 'en_EN');
+-- #3 language: multiple
+insert into languages (id,iso_code) values (nextval('seq_language_id'), 'mul');
+-- #4 language: undetermined
+insert into languages (id,iso_code) values (nextval('seq_language_id'), 'und');
+-- #5 language: no-language
+insert into languages (id,iso_code) values (nextval('seq_language_id'), 'zxx');

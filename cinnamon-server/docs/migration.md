@@ -30,3 +30,6 @@
     --
     alter table ui_languages drop column obj_version
     
+    --
+    alter table languages drop column obj_version
+    
