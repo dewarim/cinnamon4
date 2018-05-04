@@ -80,6 +80,7 @@ public class CinnamonServer {
         handler.addServletWithMapping(PermissionServlet.class, "/api/permission/*");
         handler.addServletWithMapping(RelationTypeServlet.class, "/api/relationType/*");
         handler.addServletWithMapping(StaticServlet.class, "/static/*");
+        handler.addServletWithMapping(UiLanguageServlet.class, "/api/uiLanguage/*");
         handler.addServletWithMapping(UserServlet.class, "/api/user/*");
     }
 

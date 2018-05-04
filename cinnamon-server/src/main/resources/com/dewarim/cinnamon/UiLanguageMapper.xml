@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dewarim.cinnamon.UiLanguageMapper">
+
+    <resultMap id="uiLanguageMap" type="com.dewarim.cinnamon.model.UiLanguage">
+        <id property="id" column="id"/>
+        <result property="isoCode" column="iso_code"/>
+    </resultMap>
+
+    <select id="list" parameterType="map" resultMap="uiLanguageMap">
+        SELECT *
+        FROM ui_languages
+    </select>
+    
+    <select id="getUiLanguageById" parameterType="Long" resultMap="uiLanguageMap">
+        SELECT *
+        FROM ui_languages
+        WHERE id = #{id}
+    </select>
+
+
+</mapper>

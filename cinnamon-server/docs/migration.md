@@ -26,3 +26,7 @@
     -- 
     alter table folder_types drop column obj_version;
     alter table folder_types drop column config;
+    
+    --
+    alter table ui_languages drop column obj_version
+    

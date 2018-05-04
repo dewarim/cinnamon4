@@ -28,6 +28,20 @@ create table sessions
 
 create SEQUENCE seq_session_id start with 1;
 
+-- ui_languages
+create table ui_languages
+(
+  id bigint not null
+    constraint ui_languages_pkey
+    primary key,
+  iso_code varchar(32) not null
+    constraint ui_languages_iso_code_key
+    unique
+);
+
+create SEQUENCE seq_ui_language_id start with 1;
+
+
 -- acls --
 create table acls(
   id bigint PRIMARY KEY,
@@ -721,3 +735,9 @@ insert into relationtypes (id, leftobjectprotected, name, rightobjectprotected,
                            clone_on_right_copy, clone_on_left_copy, clone_on_left_version, clone_on_right_version                           )
 VALUES (nextval('seq_relationtypes_id'), true, 'all-protector', true,
         true, true, true, true);    
+
+-- #1 uiLanguage: de
+insert into ui_languages (id,iso_code) values (nextval('seq_ui_language_id'), 'DE');
+
+-- #2 uiLanguage: en
+insert into ui_languages (id,iso_code) values (nextval('seq_ui_language_id'), 'EN');

@@ -29,7 +29,8 @@ public enum UrlMapping {
     OBJECT_TYPE__LIST_OBJECT_TYPES("objectType", "listObjectTypes", "/api"),
     GROUP__LIST_GROUPS("group", "listGroups", "/api"),
     RELATION_TYPE__LIST_RELATION_TYPES("relationType","listRelationTypes" ,"/api" ),
-    FOLDER_TYPE__LIST_FOLDER_TYPES("folderType","listFolderTypes" ,"/api" );
+    FOLDER_TYPE__LIST_FOLDER_TYPES("folderType","listFolderTypes" ,"/api" ),
+    UI_LANGUAGE__LIST_UI_LANGUAGES("uiLanguage","listUiLanguages" ,"/api" );
 
     private String servlet;
     private String action;

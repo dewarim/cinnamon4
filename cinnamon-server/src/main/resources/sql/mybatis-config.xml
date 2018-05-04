@@ -32,6 +32,7 @@
         <mapper resource="com/dewarim/cinnamon/PermissionMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/RelationTypeMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/SessionMapper.xml"/>
+        <mapper resource="com/dewarim/cinnamon/UiLanguageMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/UserAccountMapper.xml"/>
     </mappers>
 </configuration>
