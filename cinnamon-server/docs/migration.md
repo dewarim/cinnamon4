@@ -37,4 +37,9 @@
     --
     alter table metaset_types drop column obj_version
     alter table metaset_types drop column config
-        
+    
+    --
+    alter table index_items drop column obj_version
+    alter table index_items drop column systemic
+    alter table index_items drop column index_group_id
+    drop table index_groups        

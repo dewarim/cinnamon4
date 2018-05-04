@@ -32,7 +32,8 @@ public enum UrlMapping {
     RELATION_TYPE__LIST_RELATION_TYPES("relationType", "listRelationTypes", "/api"),
     FOLDER_TYPE__LIST_FOLDER_TYPES("folderType", "listFolderTypes", "/api"),
     UI_LANGUAGE__LIST_UI_LANGUAGES("uiLanguage", "listUiLanguages", "/api"),
-    METASET_TYPE__LIST_METASET_TYPES("metasetType","listMetasetTypes" ,"/api" );
+    METASET_TYPE__LIST_METASET_TYPES("metasetType","listMetasetTypes" ,"/api" ),
+    INDEX_ITEM__LIST_INDEX_ITEMS("indexItem","listIndexItems" ,"/api" );
 
     private String servlet;
     private String action;

@@ -398,6 +398,30 @@ create table metaset_types
 
 create sequence seq_metaset_types_id start with 1;
 
+create table index_items
+(
+  id bigint not null
+    constraint index_items_pkey
+    primary key,
+  fieldname varchar(255) not null,
+  for_content boolean not null,
+  for_metadata boolean not null,
+  for_sys_meta boolean not null,
+  multiple_results boolean not null,
+  name varchar(128) not null
+    constraint index_items_name_key
+    unique,
+  search_string text not null,
+  va_params text not null,
+  index_type_name varchar(255) default '' not null,
+  search_condition text default 'true()' not null,
+  store_field boolean default false not null
+)
+;
+create sequence seq_index_item_id start with 1;
+
+
+
 
 --------------------------
 --- insert test data:  ---
@@ -778,7 +802,13 @@ insert into ui_languages (id,iso_code) values (nextval('seq_ui_language_id'), 'D
 -- #2 uiLanguage: en
 insert into ui_languages (id,iso_code) values (nextval('seq_ui_language_id'), 'EN');
 
-
-
 -- #1 general_metadata
 insert into metaset_types(id,name) values(nextval('seq_metaset_types_id'), 'thumbnail');
+
+
+-- #1 index_item
+insert into index_items(id, fieldname, for_content, for_metadata, for_sys_meta, multiple_results,
+   name, search_string, va_params, search_condition, index_type_name, store_field)
+values (nextval('seq_index_item_id'), 'acl', false,false,true,false,'index.acl',
+  '/sysMeta/object/aclId', '<vaParams type="client.acl.id"/>','true()','DEFAULT_STRING_INDEXER',true 
+);   
