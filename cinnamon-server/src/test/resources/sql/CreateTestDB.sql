@@ -142,21 +142,6 @@ create table formats
 
 create sequence seq_format_id start with 1;
 
--- languages --
-create table languages
-(
-  id bigint not null
-    constraint languages_pkey
-    primary key,
-  iso_code varchar(32) not null
-    constraint languages_iso_code_key
-    unique,
-  obj_version bigint,
-  metadata text default '<meta />' not null
-);
-
-create sequence seq_language_id start with 1;
-
 -- lifecycles --
 create table lifecycles
 (
@@ -166,9 +151,8 @@ create table lifecycles
   name varchar(128) not null
     constraint lifecycles_name_key
     unique,
-  default_state_id bigint,
+  default_state_id bigint
 
-  obj_version bigint default 0
 );
 
 create sequence seq_lifecycle_id start with 1;
@@ -811,4 +795,7 @@ insert into index_items(id, fieldname, for_content, for_metadata, for_sys_meta, 
    name, search_string, va_params, search_condition, index_type_name, store_field)
 values (nextval('seq_index_item_id'), 'acl', false,false,true,false,'index.acl',
   '/sysMeta/object/aclId', '<vaParams type="client.acl.id"/>','true()','DEFAULT_STRING_INDEXER',true 
-);   
+);
+
+-- #1 lifecycle
+insert into lifecycles(id, name, default_state_id) VALUES (nextval('seq_lifecycle_id'), 'review.lc',null);
