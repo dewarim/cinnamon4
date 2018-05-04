@@ -5,6 +5,9 @@ package com.dewarim.cinnamon.api.login;
  */
 public class GroupMapping {
 
+    public GroupMapping() {
+    }
+
     public GroupMapping(String externalGroup, String cinnamonGroup) {
         this.externalGroup = externalGroup;
         this.cinnamonGroup = cinnamonGroup;
