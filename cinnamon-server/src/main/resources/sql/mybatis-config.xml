@@ -28,6 +28,7 @@
         <mapper resource="com/dewarim/cinnamon/FormatMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/LanguageMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/LinkMapper.xml"/>
+        <mapper resource="com/dewarim/cinnamon/MetasetTypeMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/ObjectTypeMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/ObjectSystemDataMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/PermissionMapper.xml"/>

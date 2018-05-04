@@ -32,4 +32,9 @@
     
     --
     alter table languages drop column obj_version
-    
+    alter table languages drop column metadata
+
+    --
+    alter table metaset_types drop column obj_version
+    alter table metaset_types drop column config
+        

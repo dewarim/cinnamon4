@@ -386,6 +386,19 @@ create table relationtypes
 
 create sequence seq_relationtypes_id start with 1;
 
+create table metaset_types
+(
+  id bigint not null
+    constraint metaset_types_pkey
+    primary key,
+  name varchar(128) not null
+    constraint metaset_types_name_key
+    unique
+);
+
+create sequence seq_metaset_types_id start with 1;
+
+
 --------------------------
 --- insert test data:  ---
 -- -----------------------
@@ -558,7 +571,16 @@ insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),1
 -- #21 add browse_folder permission for _owner to view folders with no-permission-except-owner acl:  
 insert into aclentry_permissions(id,aclentry_id,permission_id) values (nextval('seq_aclentry_permission_id'),8,2);
 
-insert into languages values (nextval('seq_language_id'),'DE',0,'<meta/>');
+-- #1 language de
+insert into languages (id,iso_code) values (nextval('seq_language_id'), 'de_DE');
+-- #2 language: en
+insert into languages (id,iso_code) values (nextval('seq_language_id'), 'en_EN');
+-- #3 language: multiple
+insert into languages (id,iso_code) values (nextval('seq_language_id'), 'mul');
+-- #4 language: undetermined
+insert into languages (id,iso_code) values (nextval('seq_language_id'), 'und');
+-- #5 language: no-language
+insert into languages (id,iso_code) values (nextval('seq_language_id'), 'zxx');
 
 -- #1 test object with summary, default acl in root folder
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
@@ -756,13 +778,7 @@ insert into ui_languages (id,iso_code) values (nextval('seq_ui_language_id'), 'D
 -- #2 uiLanguage: en
 insert into ui_languages (id,iso_code) values (nextval('seq_ui_language_id'), 'EN');
 
--- #1 language: de
-insert into languages (id,iso_code) values (nextval('seq_language_id'), 'de_DE');
--- #2 language: en
-insert into languages (id,iso_code) values (nextval('seq_language_id'), 'en_EN');
--- #3 language: multiple
-insert into languages (id,iso_code) values (nextval('seq_language_id'), 'mul');
--- #4 language: undetermined
-insert into languages (id,iso_code) values (nextval('seq_language_id'), 'und');
--- #5 language: no-language
-insert into languages (id,iso_code) values (nextval('seq_language_id'), 'zxx');
+
+
+-- #1 general_metadata
+insert into metaset_types(id,name) values(nextval('seq_metaset_types_id'), 'thumbnail');
