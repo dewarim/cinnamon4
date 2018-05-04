@@ -24,3 +24,5 @@
     alter table relationtypes drop column obj_version;
     
     -- 
+    alter table folder_types drop column obj_version;
+    alter table folder_types drop column config;
