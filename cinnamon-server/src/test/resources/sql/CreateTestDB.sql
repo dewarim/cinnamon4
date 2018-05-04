@@ -717,8 +717,6 @@ VALUES (nextval('seq_format_id'),'text/plain','txt', 'plaintext', 1);
 
 -- #1 relationType: protect all & clone always
 insert into relationtypes (id, leftobjectprotected, name, rightobjectprotected,
-                           clone_on_right_copy, clone_on_left_copy, clone_on_left_version, clone_on_right_version,
-                           left_resolver_name, right_resolver_name)
+                           clone_on_right_copy, clone_on_left_copy, clone_on_left_version, clone_on_right_version                           )
 VALUES (nextval('seq_relationtypes_id'), true, 'all-protector', true,
-        true, true, true, true,
-        'FIXED_RELATION_RESOLVER', 'FIXED_RELATION_RESOLVER');    
+        true, true, true, true);    

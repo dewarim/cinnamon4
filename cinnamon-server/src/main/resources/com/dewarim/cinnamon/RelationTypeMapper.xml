@@ -5,14 +5,12 @@
 
 <mapper namespace="com.dewarim.cinnamon.RelationTypeMapper">
 
-    <resultMap id="relationTypeMap" type="com.dewarim.cinnamon.model.RelationType">
+    <resultMap id="relationTypeMap" type="com.dewarim.cinnamon.model.relations.RelationType">
         <id property="id" column="id"/>
         <result property="name" column="name"/>
         <!-- TODO: rename columns to use snake_case -->
         <result property="rightObjectProtected" column="rightobjectprotected"/>
         <result property="leftObjectProtected" column="leftobjectprotected"/>
-        <result property="leftResolverName" column="left_resolver_name"/>
-        <result property="rightResolverName" column="right_resolver_name"/>
         <result property="cloneOnRightCopy" column="clone_on_right_copy"/>
         <result property="cloneOnLeftCopy" column="clone_on_left_copy"/>
         <result property="cloneOnRightVersion" column="clone_on_right_version"/>

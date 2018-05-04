@@ -1,6 +1,4 @@
-package com.dewarim.cinnamon.model;
-
-import com.dewarim.cinnamon.api.relation.Relation;
+package com.dewarim.cinnamon.model.relations;
 
 import java.util.Objects;
 
@@ -14,8 +12,6 @@ public class RelationType {
     private boolean cloneOnLeftCopy;
     private boolean cloneOnLeftVersion;
     private boolean cloneOnRightVersion;
-    private String leftResolverName;
-    private String rightResolverName;
 
     public RelationType() {
     }
@@ -84,22 +80,6 @@ public class RelationType {
         this.cloneOnRightVersion = cloneOnRightVersion;
     }
 
-    public String getLeftResolverName() {
-        return leftResolverName;
-    }
-
-    public void setLeftResolverName(String leftResolverName) {
-        this.leftResolverName = leftResolverName;
-    }
-
-    public String getRightResolverName() {
-        return rightResolverName;
-    }
-
-    public void setRightResolverName(String rightResolverName) {
-        this.rightResolverName = rightResolverName;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -115,8 +95,6 @@ public class RelationType {
                cloneOnLeftCopy == that.cloneOnLeftCopy &&
                cloneOnLeftVersion == that.cloneOnLeftVersion &&
                cloneOnRightVersion == that.cloneOnRightVersion &&
-               Objects.equals(leftResolverName,that.leftResolverName) &&
-               Objects.equals(rightResolverName,that.rightResolverName) &&
                Objects.equals(name, that.name);
     }
 

@@ -1,7 +1,7 @@
 package com.dewarim.cinnamon.dao;
 
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
-import com.dewarim.cinnamon.model.RelationType;
+import com.dewarim.cinnamon.model.relations.RelationType;
 import org.apache.ibatis.session.SqlSession;
 
 import java.util.List;

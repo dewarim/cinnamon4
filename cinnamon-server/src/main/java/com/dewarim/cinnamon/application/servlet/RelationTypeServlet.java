@@ -1,7 +1,7 @@
 package com.dewarim.cinnamon.application.servlet;
 
 import com.dewarim.cinnamon.dao.RelationTypeDao;
-import com.dewarim.cinnamon.model.RelationType;
+import com.dewarim.cinnamon.model.relations.RelationType;
 import com.dewarim.cinnamon.model.request.ListRequest;
 import com.dewarim.cinnamon.model.response.RelationTypeWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;

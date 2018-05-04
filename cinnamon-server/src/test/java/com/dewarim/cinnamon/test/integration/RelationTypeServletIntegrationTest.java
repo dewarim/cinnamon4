@@ -1,7 +1,7 @@
 package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.application.UrlMapping;
-import com.dewarim.cinnamon.model.RelationType;
+import com.dewarim.cinnamon.model.relations.RelationType;
 import com.dewarim.cinnamon.model.request.ListRequest;
 import com.dewarim.cinnamon.model.response.RelationTypeWrapper;
 import org.apache.http.HttpResponse;
@@ -31,8 +31,6 @@ public class RelationTypeServletIntegrationTest extends CinnamonIntegrationTest 
         assertTrue(typeOpt.isPresent());
         RelationType type = typeOpt.get();
         assertThat(type.getId(), equalTo(1L));
-        assertThat(type.getLeftResolverName(), equalTo("FIXED_RELATION_RESOLVER"));
-        assertThat(type.getRightResolverName(), equalTo("FIXED_RELATION_RESOLVER"));
         assertThat(type.isCloneOnLeftCopy(), equalTo(true));
         assertThat(type.isCloneOnRightCopy(), equalTo(true));
         assertThat(type.isCloneOnLeftVersion(), equalTo(true));
