@@ -16,6 +16,7 @@ public class UserAccount implements Principal, LoginUser {
     private String password;
     private boolean activated;
     private boolean locked;
+    private Long uiLanguageId;
         
     @Override
     public String getName() {
@@ -84,17 +85,26 @@ public class UserAccount implements Principal, LoginUser {
         return password;
     }
 
+    public Long getUiLanguageId() {
+        return uiLanguageId;
+    }
+
+    public void setUiLanguageId(Long uiLanguageId) {
+        this.uiLanguageId = uiLanguageId;
+    }
+
     @Override
     public String toString() {
         return "UserAccount{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", objVersion=" + objVersion +
-                ", loginType='" + loginType + '\'' +
-                ", password='" + password + '\'' +
-                ", activated=" + activated +
-                ", locked=" + locked +
-                '}';
+               "id=" + id +
+               ", name='" + name + '\'' +
+               ", objVersion=" + objVersion +
+               ", loginType='" + loginType + '\'' +
+               ", password='" + password + '\'' +
+               ", activated=" + activated +
+               ", locked=" + locked +
+               ", uiLanguageId=" + uiLanguageId +
+               '}';
     }
 
     @Override
@@ -105,6 +115,7 @@ public class UserAccount implements Principal, LoginUser {
         return activated == that.activated &&
                 locked == that.locked &&
                 Objects.equals(name, that.name) &&
+                Objects.equals(uiLanguageId, that.uiLanguageId) &&
                 loginType.equals(that.loginType) &&
                 Objects.equals(password, that.password);
     }

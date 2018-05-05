@@ -31,7 +31,7 @@ public class UserServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
         String pathInfo = request.getPathInfo();
-        if(pathInfo == null){
+        if (pathInfo == null) {
             pathInfo = "";
         }
         switch (pathInfo) {
@@ -39,20 +39,20 @@ public class UserServlet extends HttpServlet {
                 showUserInfo(xmlMapper.readValue(request.getReader(), UserInfoRequest.class), response);
                 break;
             case "/listUsers":
-                listUsers(request,response);
+                listUsers(request, response);
                 break;
             default:
                 response.setStatus(HttpServletResponse.SC_NO_CONTENT);
         }
 
     }
-    
-    private void listUsers(HttpServletRequest request, HttpServletResponse response) throws IOException{
+
+    private void listUsers(HttpServletRequest request, HttpServletResponse response) throws IOException {
         // ignore listRequest for now, just make sure it's valid xml:
         ListRequest listRequest = xmlMapper.readValue(request.getInputStream(), ListRequest.class);
 
         UserAccountDao userAccountDao = new UserAccountDao();
-        UserWrapper wrapper = new UserWrapper();
+        UserWrapper    wrapper        = new UserWrapper();
         wrapper.setUsers(userAccountDao.listUserAccountsAsUserInfo());
         response.setContentType(CONTENT_TYPE_XML);
         response.setStatus(HttpServletResponse.SC_OK);
@@ -61,7 +61,7 @@ public class UserServlet extends HttpServlet {
 
     private void showUserInfo(UserInfoRequest userInfoRequest, HttpServletResponse response) throws IOException {
         UserAccountDao userAccountDao = new UserAccountDao();
-        UserAccount user;
+        UserAccount    user;
         if (userInfoRequest.byId()) {
             user = userAccountDao.getUserAccountById(userInfoRequest.getUserId());
         }
@@ -72,11 +72,12 @@ public class UserServlet extends HttpServlet {
             ErrorResponseGenerator.generateErrorMessage(response, HttpServletResponse.SC_BAD_REQUEST, ErrorCode.USER_INFO_REQUEST_WITHOUT_NAME_OR_ID, "Request needs id or username to be set.");
             return;
         }
-        if(user == null){
+        if (user == null) {
             ErrorResponseGenerator.generateErrorMessage(response, HttpServletResponse.SC_BAD_REQUEST, ErrorCode.USER_ACCOUNT_NOT_FOUND, "Could not find user.");
             return;
         }
-        UserInfo userInfo = new UserInfo(user.getId(), user.getName(), user.getLoginType());
+        UserInfo userInfo = new UserInfo(user.getId(), user.getName(), user.getLoginType(),
+                user.isActivated(), user.isLocked(), user.getUiLanguageId());
         UserWrapper wrapper = new UserWrapper();
         wrapper.setUsers(Collections.singletonList(userInfo));
         response.setContentType(CONTENT_TYPE_XML);

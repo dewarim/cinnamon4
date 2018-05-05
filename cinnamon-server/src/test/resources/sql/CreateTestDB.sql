@@ -10,7 +10,8 @@ CREATE TABLE users (
   obj_version int NOT NULL DEFAULT 0,
   login_type VARCHAR(64) NOT NULL DEFAULT 'CINNAMON',
   activated BOOLEAN NOT NULL DEFAULT TRUE, 
-  locked BOOLEAN NOT NULL DEFAULT FALSE 
+  locked BOOLEAN NOT NULL DEFAULT FALSE,
+  ui_language_id BIGINT
 );
 
 create SEQUENCE seq_user_id start with 1;
@@ -411,10 +412,18 @@ create sequence seq_index_item_id start with 1;
 --- insert test data:  ---
 -- -----------------------
 
-INSERT INTO users(id,name,pwd,activated) VALUES ( nextval('seq_user_id'),'admin','$2a$10$VG9LCf6h/Qwb7Y.pafHkaepdnJNgFZUzzuMV3EcyvLbKnueHQ4IW.',true);
-INSERT INTO users(id,name,pwd,activated) VALUES ( nextval('seq_user_id'),'doe','$2a$10$VG9LCf6h/Qwb7Y.pafHkaepdnJNgFZUzzuMV3EcyvLbKnueHQ4IW.',true);
-INSERT INTO users(id,name,pwd,activated) VALUES ( nextval('seq_user_id'),'deactivated user','$2a$10$VG9LCf6h/Qwb7Y.pafHkaepdnJNgFZUzzuMV3EcyvLbKnueHQ4IW.',false);
-INSERT INTO users(id,name,pwd,activated, locked) VALUES ( nextval('seq_user_id'),'locked user','$2a$10$VG9LCf6h/Qwb7Y.pafHkaepdnJNgFZUzzuMV3EcyvLbKnueHQ4IW.',true,true);
+-- #1
+INSERT INTO users(id,name,pwd,activated, ui_language_id) 
+VALUES ( nextval('seq_user_id'),'admin','$2a$10$VG9LCf6h/Qwb7Y.pafHkaepdnJNgFZUzzuMV3EcyvLbKnueHQ4IW.',true,1);
+-- #2
+INSERT INTO users(id,name,pwd,activated, ui_language_id)
+VALUES ( nextval('seq_user_id'),'doe','$2a$10$VG9LCf6h/Qwb7Y.pafHkaepdnJNgFZUzzuMV3EcyvLbKnueHQ4IW.',true,1);
+-- #3
+INSERT INTO users(id,name,pwd,activated, ui_language_id) 
+VALUES ( nextval('seq_user_id'),'deactivated user','$2a$10$VG9LCf6h/Qwb7Y.pafHkaepdnJNgFZUzzuMV3EcyvLbKnueHQ4IW.',false,1);
+-- #4
+INSERT INTO users(id,name,pwd,activated, locked, ui_language_id) 
+VALUES ( nextval('seq_user_id'),'locked user','$2a$10$VG9LCf6h/Qwb7Y.pafHkaepdnJNgFZUzzuMV3EcyvLbKnueHQ4IW.',true,true,1);
 
 insert into acls(id,name) values(nextval('seq_acl_id'),'_default_acl'); -- 1
 insert into acls(id,name) values(nextval('seq_acl_id'),'reviewers.acl'); -- 2

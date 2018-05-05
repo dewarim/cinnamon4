@@ -45,19 +45,20 @@ public class UserAccountDao {
     }
 
     public List<UserAccount> listActiveUserAccounts() {
-        SqlSession        sqlSession = ThreadLocalSqlSession.getSqlSession();
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
         return sqlSession.selectList("com.dewarim.cinnamon.UserAccountMapper.listActiveUserAccounts");
     }
-    
+
     public List<UserAccount> listUserAccounts() {
-        SqlSession        sqlSession = ThreadLocalSqlSession.getSqlSession();
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
         return sqlSession.selectList("com.dewarim.cinnamon.UserAccountMapper.listUserAccounts");
     }
-    
-    public List<UserInfo> listUserAccountsAsUserInfo(){
+
+    public List<UserInfo> listUserAccountsAsUserInfo() {
         List<UserAccount> accounts = listUserAccounts();
         return accounts.stream()
-                .map(user -> new UserInfo(user.getId(), user.getName(), user.getLoginType()))
+                .map(user -> new UserInfo(user.getId(), user.getName(), user.getLoginType(), 
+                        user.isActivated(), user.isLocked(), user.getUiLanguageId()))
                 .collect(Collectors.toList());
     }
 }

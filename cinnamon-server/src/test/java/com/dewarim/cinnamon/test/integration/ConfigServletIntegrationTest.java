@@ -34,7 +34,7 @@ public class ConfigServletIntegrationTest extends CinnamonIntegrationTest {
 
         // note: actual configuration items will be tested in their own servlet integration tests.
 
-        // debug output:
+        // debug output: (note: this will cause the complete test suite to stop for unknown reasons.
         // mapper.enable(SerializationFeature.INDENT_OUTPUT);
         // mapper.writeValue(System.out, config);
     }

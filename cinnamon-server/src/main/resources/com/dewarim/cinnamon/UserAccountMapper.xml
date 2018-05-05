@@ -9,11 +9,11 @@
         <id property="id" column="id"/>
         <result property="name" column="name"/>
         <result property="objVersion" column="obj_version"/>
-        <!--<result property="loginType" typeHandler="org.apache.ibatis.type.EnumTypeHandler" column="login_type"/>-->
         <result property="loginType" column="login_type"/>
         <result property="password" column="pwd"/>
         <result property="activated" column="activated"/>
         <result property="locked" column="locked"/>
+        <result property="uiLanguageId" column="ui_language_id"/>
     </resultMap>
 
     <select id="getUserAccountByName" parameterType="String" resultMap="userAccountMap">
