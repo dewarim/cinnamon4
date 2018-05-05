@@ -30,6 +30,7 @@ public class ConfigServletIntegrationTest extends CinnamonIntegrationTest {
         assertFalse(config.getPermissions().isEmpty());
         assertFalse(config.getRelationTypes().isEmpty());
         assertFalse(config.getUiLanguages().isEmpty());
+        assertFalse(config.getUsers().isEmpty());
 
         // note: actual configuration items will be tested in their own servlet integration tests.
 

@@ -2,6 +2,7 @@ package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.application.UrlMapping;
+import com.dewarim.cinnamon.model.request.ListRequest;
 import com.dewarim.cinnamon.model.request.UserInfoRequest;
 import com.dewarim.cinnamon.model.response.UserInfo;
 import com.dewarim.cinnamon.model.response.UserWrapper;
@@ -10,12 +11,11 @@ import org.hamcrest.MatcherAssert;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 public class UserServletIntegrationTest extends CinnamonIntegrationTest {
 
@@ -42,6 +42,13 @@ public class UserServletIntegrationTest extends CinnamonIntegrationTest {
         UserInfo admin = unwrapUsers(userInfoResponse,1).get(0);
         assertThat(admin.getId(), equalTo(1L));
 
+    }
+    @Test
+    public void listUsers() throws IOException {
+        HttpResponse userInfoResponse = sendAdminRequest(UrlMapping.USER__LIST_USERS,new ListRequest());
+        
+        List<String> usernames = Arrays.asList("admin", "doe", "deactivated user", "locked user"); 
+        unwrapUsers(userInfoResponse,4).forEach(user -> assertTrue(usernames.contains(user.getName())));
     }
 
     @Test

@@ -1,11 +1,8 @@
 package com.dewarim.cinnamon.application.servlet;
 
 import com.dewarim.cinnamon.dao.*;
-import com.dewarim.cinnamon.model.Acl;
-import com.dewarim.cinnamon.model.FolderType;
 import com.dewarim.cinnamon.model.request.ListRequest;
 import com.dewarim.cinnamon.model.response.ConfigWrapper;
-import com.dewarim.cinnamon.model.response.FolderTypeWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
@@ -14,7 +11,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.List;
 
 import static com.dewarim.cinnamon.Constants.CONTENT_TYPE_XML;
 
@@ -55,6 +51,7 @@ public class ConfigServlet extends HttpServlet {
         wrapper.setPermissions(new PermissionDao().listPermissions());
         wrapper.setRelationTypes(new RelationTypeDao().listRelationTypes());
         wrapper.setUiLanguages(new UiLanguageDao().listUiLanguages());
+        wrapper.setUsers(new UserAccountDao().listUserAccountsAsUserInfo());
         
         response.setContentType(CONTENT_TYPE_XML);
         response.setStatus(HttpServletResponse.SC_OK);

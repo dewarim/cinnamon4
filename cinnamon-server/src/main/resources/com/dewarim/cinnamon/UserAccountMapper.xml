@@ -6,7 +6,7 @@
 <mapper namespace="com.dewarim.cinnamon.UserAccountMapper">
 
     <resultMap id="userAccountMap" type="com.dewarim.cinnamon.model.UserAccount">
-        <id property="id" column="id" />
+        <id property="id" column="id"/>
         <result property="name" column="name"/>
         <result property="objVersion" column="obj_version"/>
         <!--<result property="loginType" typeHandler="org.apache.ibatis.type.EnumTypeHandler" column="login_type"/>-->
@@ -15,7 +15,7 @@
         <result property="activated" column="activated"/>
         <result property="locked" column="locked"/>
     </resultMap>
-    
+
     <select id="getUserAccountByName" parameterType="String" resultMap="userAccountMap">
         SELECT *
         FROM users
@@ -27,21 +27,36 @@
         FROM users
         WHERE id = #{id}
     </select>
-    
+
     <parameterMap id="statusMap" type="map">
         <parameter property="userId" javaType="long" jdbcType="BIGINT"/>
         <parameter property="superuserGroupName" javaType="string" jdbcType="VARCHAR"/>
     </parameterMap>
     <select id="getSuperuserStatus" parameterMap="statusMap" resultType="long">
-        select u.id from users u JOIN group_users gu ON u.id = gu.user_id
+        select u.id
+        from users u
+            JOIN group_users gu ON u.id = gu.user_id
         where u.id = #{userId}
-        and gu.group_id in (select g.id from groups g where g.name = #{superuserGroupName})            
+              and gu.group_id in (select g.id
+                                  from groups g
+                                  where g.name = #{superuserGroupName})
     </select>
-    
+
     <update id="changeUserActivationStatus" parameterType="com.dewarim.cinnamon.model.UserAccount">
         UPDATE users
         SET activated = #{activated}
-        WHERE id = #{id} 
+        WHERE id = #{id}
     </update>
+
+    <select id="listActiveUserAccounts" resultMap="userAccountMap">
+        SELECT *
+        FROM users
+        WHERE activated = true and account_locked = false
+    </select>
+    
+    <select id="listUserAccounts" resultMap="userAccountMap">
+        SELECT *
+        FROM users
+    </select>
 
 </mapper>

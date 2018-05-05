@@ -35,6 +35,7 @@ public enum UrlMapping {
     RELATION_TYPE__LIST_RELATION_TYPES("relationType", "listRelationTypes", "/api"),
     STATIC__ROOT("static", "", ""),
     UI_LANGUAGE__LIST_UI_LANGUAGES("uiLanguage", "listUiLanguages", "/api"),
+    USER__LIST_USERS("user","listUsers" ,"/api" ),
     USER__USER_INFO("user", "userInfo", "/api");
 
     private String servlet;

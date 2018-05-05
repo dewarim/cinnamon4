@@ -4,6 +4,7 @@ import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.application.ErrorResponseGenerator;
 import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.model.UserAccount;
+import com.dewarim.cinnamon.model.request.ListRequest;
 import com.dewarim.cinnamon.model.request.UserInfoRequest;
 import com.dewarim.cinnamon.model.response.UserInfo;
 import com.dewarim.cinnamon.model.response.UserWrapper;
@@ -27,7 +28,7 @@ public class UserServlet extends HttpServlet {
 
     private ObjectMapper xmlMapper = new XmlMapper();
 
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
         String pathInfo = request.getPathInfo();
         if(pathInfo == null){
@@ -37,10 +38,25 @@ public class UserServlet extends HttpServlet {
             case "/userInfo":
                 showUserInfo(xmlMapper.readValue(request.getReader(), UserInfoRequest.class), response);
                 break;
+            case "/listUsers":
+                listUsers(request,response);
+                break;
             default:
                 response.setStatus(HttpServletResponse.SC_NO_CONTENT);
         }
 
+    }
+    
+    private void listUsers(HttpServletRequest request, HttpServletResponse response) throws IOException{
+        // ignore listRequest for now, just make sure it's valid xml:
+        ListRequest listRequest = xmlMapper.readValue(request.getInputStream(), ListRequest.class);
+
+        UserAccountDao userAccountDao = new UserAccountDao();
+        UserWrapper wrapper = new UserWrapper();
+        wrapper.setUsers(userAccountDao.listUserAccountsAsUserInfo());
+        response.setContentType(CONTENT_TYPE_XML);
+        response.setStatus(HttpServletResponse.SC_OK);
+        xmlMapper.writeValue(response.getWriter(), wrapper);
     }
 
     private void showUserInfo(UserInfoRequest userInfoRequest, HttpServletResponse response) throws IOException {

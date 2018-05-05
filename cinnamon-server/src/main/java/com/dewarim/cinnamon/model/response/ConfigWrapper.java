@@ -60,6 +60,10 @@ public class ConfigWrapper {
     @JacksonXmlProperty(localName = "uiLanguage")
     private List<UiLanguage> uiLanguages = new ArrayList<>();
 
+    @JacksonXmlElementWrapper(localName = "users")
+    @JacksonXmlProperty(localName = "user")
+    List<UserInfo> users = new ArrayList<>();
+    
     public List<Acl> getAcls() {
         return acls;
     }
@@ -154,5 +158,13 @@ public class ConfigWrapper {
 
     public void setUiLanguages(List<UiLanguage> uiLanguages) {
         this.uiLanguages = uiLanguages;
+    }
+
+    public List<UserInfo> getUsers() {
+        return users;
+    }
+
+    public void setUsers(List<UserInfo> users) {
+        this.users = users;
     }
 }
