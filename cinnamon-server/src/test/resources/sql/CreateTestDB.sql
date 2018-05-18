@@ -405,7 +405,20 @@ create table index_items
 ;
 create sequence seq_index_item_id start with 1;
 
+create table config_entries
+(
+  id bigint not null
+    constraint config_entry_pkey
+    primary key,
+  config varchar(2097152) not null,
+  name varchar(128) not null
+    constraint config_entry_name_key
+    unique,
+  public_visibility boolean not null default false
+)
+;
 
+create sequence seq_config_entries_id start with 1;
 
 
 --------------------------

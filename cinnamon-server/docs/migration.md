@@ -42,4 +42,9 @@
     alter table index_items drop column obj_version
     alter table index_items drop column systemic
     alter table index_items drop column index_group_id
-    drop table index_groups        
+    drop table index_groups
+    
+    --   
+    alter table config_entries drop column obj_version;
+    -- note: this one needs manual work to check for config_entries containing <public>true</public> in the config field.
+    alter table config_entries add column public_visibility boolean not null default false;        

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dewarim.cinnamon.ConfigEntryMapper">
+
+    <resultMap id="configEntryMap" type="com.dewarim.cinnamon.model.ConfigEntry">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="content" column="content"/>
+        <result property="publicVisibility" column="public_visibility"/>
+    </resultMap>
+
+    <select id="getConfigEntryByName" parameterType="String" resultMap="configEntryMap">
+        SELECT *
+        FROM config_entries
+        WHERE name = #{name}
+    </select>
+
+    <insert id="insertConfigEntry" parameterType="com.dewarim.cinnamon.model.ConfigEntry">
+        <selectKey keyProperty="id" resultType="long" order="BEFORE">
+            select nextval('seq_config_entries_id')
+        </selectKey>
+        INSERT INTO config_entries (id, name, config, public_visibility) VALUES
+        (#{id}, #{name}, #{config}, #{publicVisibility})
+    </insert>
+
+    <update id="updateConfigEntry" parameterType="com.dewarim.cinnamon.model.ConfigEntry">
+        UPDATE config_entries
+        SET config            = #{config},
+            public_visibility = #{publicVisibility}
+        WHERE name = #{name}
+    </update>
+
+</mapper>

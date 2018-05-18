@@ -22,6 +22,7 @@
         <mapper resource="com/dewarim/cinnamon/AclEntryMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/AclEntryPermissionMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/AclMapper.xml"/>
+        <mapper resource="com/dewarim/cinnamon/ConfigEntryMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/CmnGroupMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/FolderMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/FolderTypeMapper.xml"/>
