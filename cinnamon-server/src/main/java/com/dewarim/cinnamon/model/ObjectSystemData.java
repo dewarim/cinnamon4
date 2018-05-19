@@ -269,7 +269,7 @@ public class ObjectSystemData implements ContentMetadata, Ownable, Accessible {
     public void setContentProvider(String contentProvider) {
         this.contentProvider = contentProvider;
     }
-
+    
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

@@ -37,7 +37,8 @@ public enum ErrorCode {
     FOLDER_NOT_FOUND("folder was not found"), 
     NO_BROWSE_PERMISSION("missing browse permission"), 
     NO_CREATE_PERMISSION("missing permission to create an object inside a folder"),
-    INVALID_LINK_RESOLVER("Links to folders must have LinkResolver.FIXED.");
+    INVALID_LINK_RESOLVER("Links to folders must have LinkResolver.FIXED."),
+    NO_WRITE_SYS_METADATA_PERMISSION("Required permission to write system metadata was not found.");
     
     String code;
 

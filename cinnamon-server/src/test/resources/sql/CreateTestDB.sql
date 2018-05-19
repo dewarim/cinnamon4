@@ -551,7 +551,7 @@ insert into permissions values (nextval('seq_permission_id'),'_lock'); -- #8
 insert into permissions values (nextval('seq_permission_id'),'_move'); -- #9
 insert into permissions values (nextval('seq_permission_id'),'_read_object_content'); -- #10
 insert into permissions values (nextval('seq_permission_id'),'_read_object_custom_metadata'); -- #11
-insert into permissions values (nextval('seq_permission_id'),'_read_object_metadata'); -- #12
+insert into permissions values (nextval('seq_permission_id'),'_read_object_sysmeta'); -- #12
 insert into permissions values (nextval('seq_permission_id'),'_set_acl'); -- #13
 insert into permissions values (nextval('seq_permission_id'),'_version'); -- #14
 insert into permissions values (nextval('seq_permission_id'),'_write_object_content'); -- #15
@@ -600,6 +600,12 @@ insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),5
 insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),13,2);
 -- #21 add browse_folder permission for _owner to view folders with no-permission-except-owner acl:  
 insert into aclentry_permissions(id,aclentry_id,permission_id) values (nextval('seq_aclentry_permission_id'),8,2);
+-- #22 add read_object_metadata permission for _owner to view summary with no-permission-except-owner acl:  
+insert into aclentry_permissions(id,aclentry_id,permission_id) values (nextval('seq_aclentry_permission_id'),8,12);
+-- #23 add write_object_metadata permission for _owner to view summary with no-permission-except-owner acl:  
+insert into aclentry_permissions(id,aclentry_id,permission_id) values (nextval('seq_aclentry_permission_id'),8,17);
+-- #24 add read_object_sysmeta permission to reviewers.acl:
+insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),5,12);
 
 -- #1 language de
 insert into languages (id,iso_code) values (nextval('seq_language_id'), 'de_DE');
@@ -684,6 +690,21 @@ values (nextval('seq_objects_id'), now(), true, true, now(), 'linked-to-me-3', 1
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
 values (nextval('seq_objects_id'), now(), true, true, now(), 'linked-to-me-2', 1, 1, 1, 1, 6, 1, 1);
+
+-- #16 test object for getSummaries,  reviewer acl in creation folder#6  
+insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+                     owner_id, parent_id, type_id, acl_id, summary)
+values (nextval('seq_objects_id'), now(), true, true, now(), '7th-sum-of-a-7th-sum', 1, 1, 1, 1, 6, 1, 5,'<sum>7</sum>');
+
+-- #17 test object for setSummary,  reviewer acl in creation folder#6  
+insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+                     owner_id, parent_id, type_id, acl_id, summary)
+values (nextval('seq_objects_id'), now(), true, true, now(), 'summ-summ-summ', 1, 1, 1, 1, 6, 1, 5,'no summary');
+
+-- #18 test object for setSummaryNoPermission,  default acl in creation folder#6  
+insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+                     owner_id, parent_id, type_id, acl_id, summary)
+values (nextval('seq_objects_id'), now(), true, true, now(), 'no-perm-summary', 1, 1, 1, 1, 6, 1, 1,'no summary');
 
 
 -- #1 link to osd #1 with default acl (#1)

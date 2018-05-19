@@ -54,4 +54,9 @@ public class OsdDao {
         }
         return Optional.of(objectsById.get(0));
     }
+    
+    public void updateOsd(ObjectSystemData osd){
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        sqlSession.update("com.dewarim.cinnamon.ObjectSystemDataMapper.updateOsd", osd);
+    }
 }
