@@ -694,12 +694,12 @@ values (nextval('seq_objects_id'), now(), true, true, now(), 'linked-to-me-2', 1
 -- #16 test object for getSummaries,  reviewer acl in creation folder#6  
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id, summary)
-values (nextval('seq_objects_id'), now(), true, true, now(), '7th-sum-of-a-7th-sum', 1, 1, 1, 1, 6, 1, 5,'<sum>7</sum>');
+values (nextval('seq_objects_id'), now(), true, true, now(), '7th-sum-of-a-7th-sum', 1, 1, 1, 1, 6, 1, 2,'<sum>7</sum>');
 
 -- #17 test object for setSummary,  reviewer acl in creation folder#6  
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id, summary)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'summ-summ-summ', 1, 1, 1, 1, 6, 1, 5,'no summary');
+values (nextval('seq_objects_id'), now(), true, true, now(), 'summ-summ-summ', 1, 1, 1, 1, 6, 1, 2,'no summary');
 
 -- #18 test object for setSummaryNoPermission,  default acl in creation folder#6  
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
