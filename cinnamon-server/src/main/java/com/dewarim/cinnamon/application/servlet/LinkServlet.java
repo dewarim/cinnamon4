@@ -103,14 +103,15 @@ public class LinkServlet extends HttpServlet {
             ErrorResponseGenerator.generateErrorMessage(response, SC_BAD_REQUEST, ErrorCode.ACL_NOT_FOUND);
             return;
         }
-
+        
+        // check if owner of new link exists:
         UserAccountDao userDao = new UserAccountDao();
-        UserAccount    owner   = userDao.getUserAccountById(linkRequest.getOwnerId());
-        if (owner == null) {
+        Optional<UserAccount>    ownerOpt   = userDao.getUserAccountById(linkRequest.getOwnerId());
+        if (!ownerOpt.isPresent()) {
             ErrorResponseGenerator.generateErrorMessage(response, SC_BAD_REQUEST, ErrorCode.OWNER_NOT_FOUND);
             return;
         }
-
+        
         Folder           folder = null;
         ObjectSystemData osd    = null;
         OsdDao           osdDao = new OsdDao();
@@ -275,11 +276,8 @@ public class LinkServlet extends HttpServlet {
     }
 
     private void updateOwner(LinkUpdateRequest updateRequest, Link link, LinkDao linkDao) {
-        UserAccount owner = new UserAccountDao().getUserAccountById(updateRequest.getOwnerId());
-        if (owner == null) {
-            throw USER_NOT_FOUND;
-        }
-        link.setOwnerId(owner.getId());
+        Optional<UserAccount> ownerOpt = new UserAccountDao().getUserAccountById(updateRequest.getOwnerId());
+        link.setOwnerId(ownerOpt.orElseThrow(() -> USER_NOT_FOUND).getId());
         if (linkDao.updateLink(link) != UPDATED_ONE_ROW) {
             log.debug("update owner did not change link");
         }

@@ -1,13 +1,20 @@
 package com.dewarim.cinnamon.application.servlet;
 
+import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.application.ErrorResponseGenerator;
+import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
+import com.dewarim.cinnamon.configuration.CinnamonConfig;
+import com.dewarim.cinnamon.configuration.SecurityConfig;
 import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.request.ListRequest;
+import com.dewarim.cinnamon.model.request.SetPasswordRequest;
 import com.dewarim.cinnamon.model.request.UserInfoRequest;
+import com.dewarim.cinnamon.model.response.GenericResponse;
 import com.dewarim.cinnamon.model.response.UserInfo;
 import com.dewarim.cinnamon.model.response.UserWrapper;
+import com.dewarim.cinnamon.security.HashMaker;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
@@ -18,8 +25,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Optional;
 
 import static com.dewarim.cinnamon.Constants.CONTENT_TYPE_XML;
+import static com.dewarim.cinnamon.application.ResponseUtil.responseIsOkayAndXml;
+import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
+import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
+import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
 
 /**
  */
@@ -41,10 +54,46 @@ public class UserServlet extends HttpServlet {
             case "/listUsers":
                 listUsers(request, response);
                 break;
+            case "/setPassword":
+                setPassword(request, response);
+                break;
             default:
                 response.setStatus(HttpServletResponse.SC_NO_CONTENT);
         }
 
+    }
+
+    private void setPassword(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        SetPasswordRequest    passwordRequest = xmlMapper.readValue(request.getInputStream(), SetPasswordRequest.class);
+        UserAccountDao        userDao         = new UserAccountDao();
+        UserAccount           currentUser     = ThreadLocalSqlSession.getCurrentUser();
+        SecurityConfig        config          = CinnamonServer.config.getSecurityConfig();
+        Optional<UserAccount> userOpt         = userDao.getUserAccountById(passwordRequest.getUserId());
+
+        if (!passwordRequest.getUserId().equals(currentUser.getId())) {
+
+            if (!userDao.isSuperuser(currentUser)) {
+                ErrorResponseGenerator.generateErrorMessage(response, SC_FORBIDDEN, ErrorCode.FORBIDDEN);
+                return;
+            }
+        }
+
+        if (passwordRequest.getPassword() == null || passwordRequest.getPassword().length() < config.getMinimumPasswordLength()) {
+            ErrorResponseGenerator.generateErrorMessage(response, SC_BAD_REQUEST, ErrorCode.PASSWORD_TOO_SHORT);
+            return;
+        }
+
+        if (!userOpt.isPresent()) {
+            ErrorResponseGenerator.generateErrorMessage(response, SC_NOT_FOUND, ErrorCode.USER_ACCOUNT_NOT_FOUND);
+            return;
+        }
+
+        String      pwdHash = HashMaker.createDigest(passwordRequest.getPassword());
+        UserAccount user    = userOpt.get();
+        user.setPassword(pwdHash);
+        userDao.updateUser(user);
+        responseIsOkayAndXml(response);
+        xmlMapper.writeValue(response.getWriter(), new GenericResponse(true));
     }
 
     private void listUsers(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -60,22 +109,24 @@ public class UserServlet extends HttpServlet {
     }
 
     private void showUserInfo(UserInfoRequest userInfoRequest, HttpServletResponse response) throws IOException {
-        UserAccountDao userAccountDao = new UserAccountDao();
-        UserAccount    user;
+        UserAccountDao        userAccountDao = new UserAccountDao();
+        Optional<UserAccount> userOpt;
         if (userInfoRequest.byId()) {
-            user = userAccountDao.getUserAccountById(userInfoRequest.getUserId());
+            userOpt = userAccountDao.getUserAccountById(userInfoRequest.getUserId());
         }
         else if (userInfoRequest.byName()) {
-            user = userAccountDao.getUserAccountByName(userInfoRequest.getUsername());
+            userOpt = userAccountDao.getUserAccountByName(userInfoRequest.getUsername());
         }
         else {
             ErrorResponseGenerator.generateErrorMessage(response, HttpServletResponse.SC_BAD_REQUEST, ErrorCode.USER_INFO_REQUEST_WITHOUT_NAME_OR_ID, "Request needs id or username to be set.");
             return;
         }
-        if (user == null) {
+        if (!userOpt.isPresent()) {
             ErrorResponseGenerator.generateErrorMessage(response, HttpServletResponse.SC_BAD_REQUEST, ErrorCode.USER_ACCOUNT_NOT_FOUND, "Could not find user.");
             return;
         }
+
+        UserAccount user = userOpt.get();
         UserInfo userInfo = new UserInfo(user.getId(), user.getName(), user.getLoginType(),
                 user.isActivated(), user.isLocked(), user.getUiLanguageId());
         UserWrapper wrapper = new UserWrapper();

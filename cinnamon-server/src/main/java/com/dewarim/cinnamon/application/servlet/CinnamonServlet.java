@@ -21,6 +21,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Optional;
 
 import static com.dewarim.cinnamon.Constants.CONTENT_TYPE_XML;
 
@@ -75,16 +76,18 @@ public class CinnamonServlet extends HttpServlet {
     private void connect(HttpServletRequest request, HttpServletResponse response) {
         try {
             // TODO: initial parameter check (null, non-empty)
-            String username = request.getParameter("user");
-            String password = request.getParameter("pwd");
-            UserAccount user = userAccountDao.getUserAccountByName(username);
-            if (user == null) {
+            String                username = request.getParameter("user");
+            String                password = request.getParameter("pwd");
+            Optional<UserAccount> userOpt     = userAccountDao.getUserAccountByName(username);
+            
+            if (!userOpt.isPresent()) {
                 ErrorResponseGenerator.generateErrorMessage(response, HttpServletResponse.SC_UNAUTHORIZED,
                         ErrorCode.CONNECTION_FAIL_INVALID_USERNAME, "valid username required"
                 );
                 return;
             }
-
+            
+            UserAccount user = userOpt.get();
             if (!user.isActivated()) {
                 ErrorResponseGenerator.generateErrorMessage(response, HttpServletResponse.SC_UNAUTHORIZED,
                         ErrorCode.CONNECTION_FAIL_ACCOUNT_INACTIVE, "user account is not active"

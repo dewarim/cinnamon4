@@ -39,8 +39,8 @@ public class AuthenticationFilterIntegrationTest extends CinnamonIntegrationTest
         assertThat(ticket.matches("(?:[a-z0-9]+-){4}[a-z0-9]+"), is(true));
 
         // call an API method with ticket and valid request:
-        UserInfoRequest userInfoRequest = new UserInfoRequest(null, "admin");
-        HttpResponse userInfoResponse = sendAdminRequest(UrlMapping.USER__USER_INFO, userInfoRequest);
+        UserInfoRequest userInfoRequest  = new UserInfoRequest(null, "admin");
+        HttpResponse    userInfoResponse = sendAdminRequest(UrlMapping.USER__USER_INFO, userInfoRequest);
         assertThat(userInfoResponse.getStatusLine().getStatusCode(), equalTo(HttpServletResponse.SC_OK));
         UserInfo info = mapper.readValue(userInfoResponse.getEntity().getContent(), UserWrapper.class).getUsers().get(0);
         assertThat(info.getName(), equalTo("admin"));
@@ -58,15 +58,15 @@ public class AuthenticationFilterIntegrationTest extends CinnamonIntegrationTest
 
     @Test
     public void callApiWithExpiredSession() throws IOException {
-        SessionDao dao = new SessionDao();
-        Session cinnamonSession = dao.getSessionByTicket(ticket);
+        SessionDao dao             = new SessionDao();
+        Session    cinnamonSession = dao.getSessionByTicket(ticket);
         cinnamonSession.setExpires(new Date(1000000));
         dao.update(cinnamonSession);
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
         sqlSession.commit();
 
         UserInfoRequest userInfoRequest = new UserInfoRequest(null, "admin");
-        HttpResponse response = sendAdminRequest(UrlMapping.USER__USER_INFO, userInfoRequest);
+        HttpResponse    response        = sendAdminRequest(UrlMapping.USER__USER_INFO, userInfoRequest);
         assertThat(response.getStatusLine().getStatusCode(), equalTo(HttpServletResponse.SC_FORBIDDEN));
         CinnamonError error = mapper.readValue(response.getEntity().getContent(), CinnamonError.class);
         assertThat(error.getCode(), equalTo(ErrorCode.AUTHENTICATION_FAIL_SESSION_EXPIRED.getCode()));
@@ -91,14 +91,14 @@ public class AuthenticationFilterIntegrationTest extends CinnamonIntegrationTest
     public void callApiWithTicketOfInvalidUser() throws IOException {
         // user has been deleted or is inactive
         UserAccountDao userDao = new UserAccountDao();
-        UserAccount admin = userDao.getUserAccountByName("admin");
+        UserAccount    admin   = userDao.getUserAccountByName("admin").orElseThrow(() -> new RuntimeException("admin not found"));
         admin.setActivated(false);
         userDao.changeUserActivationStatus(admin);
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
         sqlSession.commit();
 
         UserInfoRequest userInfoRequest = new UserInfoRequest(null, "admin");
-        HttpResponse response = sendAdminRequest(UrlMapping.USER__USER_INFO, userInfoRequest);
+        HttpResponse    response        = sendAdminRequest(UrlMapping.USER__USER_INFO, userInfoRequest);
         assertThat(response.getStatusLine().getStatusCode(), equalTo(HttpServletResponse.SC_FORBIDDEN));
         CinnamonError error = mapper.readValue(response.getEntity().getContent(), CinnamonError.class);
         assertThat(error.getCode(), equalTo(ErrorCode.AUTHENTICATION_FAIL_USER_NOT_FOUND.getCode()));

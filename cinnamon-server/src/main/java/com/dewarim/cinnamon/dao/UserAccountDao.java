@@ -9,20 +9,21 @@ import org.apache.ibatis.session.SqlSession;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
  */
 public class UserAccountDao {
 
-    public UserAccount getUserAccountByName(String username) {
+    public Optional<UserAccount> getUserAccountByName(String username) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        return sqlSession.selectOne("com.dewarim.cinnamon.UserAccountMapper.getUserAccountByName", username);
+        return Optional.ofNullable(sqlSession.selectOne("com.dewarim.cinnamon.UserAccountMapper.getUserAccountByName", username));
     }
 
-    public UserAccount getUserAccountById(Long id) {
+    public Optional<UserAccount> getUserAccountById(Long id) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        return sqlSession.selectOne("com.dewarim.cinnamon.UserAccountMapper.getUserAccountById", id);
+        return Optional.ofNullable(sqlSession.selectOne("com.dewarim.cinnamon.UserAccountMapper.getUserAccountById", id));
     }
 
     public void changeUserActivationStatus(UserAccount user) {
@@ -57,8 +58,13 @@ public class UserAccountDao {
     public List<UserInfo> listUserAccountsAsUserInfo() {
         List<UserAccount> accounts = listUserAccounts();
         return accounts.stream()
-                .map(user -> new UserInfo(user.getId(), user.getName(), user.getLoginType(), 
+                .map(user -> new UserInfo(user.getId(), user.getName(), user.getLoginType(),
                         user.isActivated(), user.isLocked(), user.getUiLanguageId()))
                 .collect(Collectors.toList());
+    }
+
+    public void updateUser(UserAccount user){
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        sqlSession.update("com.dewarim.cinnamon.UserAccountMapper.updateUser", user);
     }
 }

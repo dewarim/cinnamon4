@@ -4,6 +4,9 @@
 
     ALTER TABLE users ADD login_type VARCHAR(64) DEFAULT 'CINNAMON' NOT NULL;
     ALTER TABLE users DROP COLUMN account_expired;
+    ALTER TABLE users DROP COLUMN obj_version;
+    ALTER TABLE users RENAME COLUMN account_locked TO locked;
+    ALTER TABLE users RENAME COLUMN language_id TO ui_language_id;
     
     -- note: this will set the created date of all existing folders to now()
     ALTER TABLE folders ADD created TIMESTAMP DEFAULT NOW();

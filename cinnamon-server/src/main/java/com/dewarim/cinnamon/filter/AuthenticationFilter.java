@@ -15,6 +15,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Date;
+import java.util.Optional;
 
 public class AuthenticationFilter implements Filter {
     private static final Logger log = LogManager.getLogger(AuthenticationFilter.class);
@@ -47,13 +48,13 @@ public class AuthenticationFilter implements Filter {
                 return;
             }
 
-            UserAccount userAccount = new UserAccountDao().getUserAccountById(cinnamonSession.getUserId());
-            if (userAccount == null || !userAccount.isActivated()) {
+            Optional<UserAccount> userAccountOpt = new UserAccountDao().getUserAccountById(cinnamonSession.getUserId());
+            if (!userAccountOpt.isPresent() || !userAccountOpt.get().isActivated()) {
                 failAuthentication(servletResponse, ErrorCode.AUTHENTICATION_FAIL_USER_NOT_FOUND);
                 return;
             }
             
-            ThreadLocalSqlSession.setCurrentUser(userAccount);
+            ThreadLocalSqlSession.setCurrentUser(userAccountOpt.get());
             chain.doFilter(request, response);
         } finally {
             log.debug("AuthenticationFilter: after");

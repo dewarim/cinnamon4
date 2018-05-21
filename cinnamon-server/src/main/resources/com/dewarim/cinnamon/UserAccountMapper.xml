@@ -53,10 +53,23 @@
         FROM users
         WHERE activated = true and account_locked = false
     </select>
-    
+
     <select id="listUserAccounts" resultMap="userAccountMap">
         SELECT *
         FROM users
     </select>
+
+    <update id="updateUser">
+        UPDATE users
+        SET
+            name           = #{name},
+            obj_version    = obj_version + 1,
+            login_type     = #{loginType},
+            pwd            = #{password},
+            activated      = #{activated},
+            locked = #{locked},
+            ui_language_id    = #{uiLanguageId}
+        WHERE id = #{id}
+    </update>
 
 </mapper>
