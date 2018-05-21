@@ -492,6 +492,18 @@ values(nextval('seq_folder_id'),'link-this-folder',0,1,1,6,1);
 insert into folders(id,name,obj_version,acl_id,owner_id,parent_id,type_id)
 values(nextval('seq_folder_id'),'only-owner-links-to-me',0,5,2,6,1);
 
+-- #11 folder for setSummary test in creaton folder#6, reviewer-acl#2 - 
+insert into folders(id,name,obj_version,acl_id,owner_id,parent_id,type_id, summary)
+values(nextval('seq_folder_id'),'set-my-summary',0,2,1,6,1, 'no-sum');
+
+-- #12 folder for get/setSummaryMissingPermission test in creaton folder#6, default-acl#1 
+insert into folders(id,name,obj_version,acl_id,owner_id,parent_id,type_id, summary)
+values(nextval('seq_folder_id'),'cannot set-my-summary',0,1,1,6,1, 'no-sum');
+
+-- #13 folder for getSummary test in creaton folder#6, reviewer-acl#2 
+insert into folders(id,name,obj_version,acl_id,owner_id,parent_id,type_id, summary)
+values(nextval('seq_folder_id'),'get-my-summary',0,2,1,6,1, '<sum>folder</sum>');
+
 -- #1
 insert into objtypes(id,name) values(nextval('seq_obj_type_id'),'_default_objtype');
 

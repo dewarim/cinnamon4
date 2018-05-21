@@ -43,4 +43,8 @@ public class FolderDao {
         return Optional.of(folders.get(0));
     }
 
+    public void updateFolder(Folder folder){
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        sqlSession.update("com.dewarim.cinnamon.FolderMapper.updateFolder", folder);
+    }
 }

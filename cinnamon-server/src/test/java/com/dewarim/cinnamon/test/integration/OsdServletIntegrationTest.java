@@ -133,7 +133,6 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         assertNull(wrapper.getSummaries());
     }
 
-
     private List<ObjectSystemData> unwrapOsds(HttpResponse response, Integer expectedSize) throws IOException {
         assertResponseOkay(response);
         List<ObjectSystemData> osds = mapper.readValue(response.getEntity().getContent(), OsdWrapper.class).getOsds();

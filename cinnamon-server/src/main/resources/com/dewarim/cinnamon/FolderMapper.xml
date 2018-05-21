@@ -30,7 +30,7 @@
         metadata_changed,
         created,
         CASE WHEN #{includeSummary} THEN summary ELSE null END AS summary
-        
+
         FROM folders
         WHERE id IN
         <foreach item="item" index="index" collection="idList"
@@ -38,5 +38,21 @@
             #{item}
         </foreach>
     </select>
-        
+
+    <!-- TODO: perhaps implement safe version (checking for folder.version=version) -->
+    <update id="updateFolder">
+        UPDATE folders
+        SET
+            created          = #{created},
+            name             = #{name},
+            obj_version      = obj_version + 1,
+            acl_id           = #{aclId},
+            owner_id         = #{ownerId},
+            parent_id        = #{parentId},
+            type_id          = #{typeId},
+            metadata_changed = #{metadataChanged},
+            summary          = #{summary}
+        WHERE id = #{id}
+    </update>
+
 </mapper>
