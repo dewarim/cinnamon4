@@ -1,6 +1,6 @@
 package com.dewarim.cinnamon.api;
 
-public interface Ownable {
+public interface Ownable extends Accessible {
     
     Long getOwnerId();
     

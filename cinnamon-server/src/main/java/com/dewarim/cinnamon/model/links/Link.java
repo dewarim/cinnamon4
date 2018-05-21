@@ -1,13 +1,12 @@
 package com.dewarim.cinnamon.model.links;
 
-import com.dewarim.cinnamon.api.Accessible;
 import com.dewarim.cinnamon.api.Ownable;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.Objects;
 
 @JacksonXmlRootElement(localName = "link")
-public class Link implements Ownable, Accessible {
+public class Link implements Ownable {
     
     private Long id;
     private LinkType type;

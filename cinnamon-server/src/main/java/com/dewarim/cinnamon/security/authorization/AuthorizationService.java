@@ -1,6 +1,7 @@
 package com.dewarim.cinnamon.security.authorization;
 
 import com.dewarim.cinnamon.DefaultPermission;
+import com.dewarim.cinnamon.api.Ownable;
 import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.UserAccount;
@@ -22,10 +23,10 @@ public class AuthorizationService {
                     switch (link.getType()) {
                         case FOLDER:
                             return accessFilter.hasFolderBrowsePermission(link.getAclId())
-                                    || (link.getOwnerId().equals(user.getId()) && accessFilter.hasOwnerBrowsePermission(link.getAclId()));
+                                   || (link.getOwnerId().equals(user.getId()) && accessFilter.hasOwnerBrowsePermission(link.getAclId()));
                         case OBJECT:
                             return accessFilter.hasBrowsePermissionForLink(link)
-                                    || (link.getOwnerId().equals(user.getId()) && accessFilter.hasPermission(link.getAclId(), DefaultPermission.BROWSE_FOLDER.getName(), true));
+                                   || (link.getOwnerId().equals(user.getId()) && accessFilter.hasPermission(link.getAclId(), DefaultPermission.BROWSE_FOLDER.getName(), true));
                         default:
                             throw new IllegalStateException("unknown link type");
                     }
@@ -38,9 +39,21 @@ public class AuthorizationService {
         AccessFilter accessFilter = AccessFilter.getInstance(user);
         return accessFilter.hasPermission(aclId, permissionName);
     }
-    
+
     public boolean userHasOwnerPermission(Long aclId, String permissionName, UserAccount user) {
         AccessFilter accessFilter = AccessFilter.getInstance(user);
         return accessFilter.hasPermission(aclId, permissionName, true);
+    }
+
+    public boolean hasUserOrOwnerPermission(Ownable ownable, String permissionName, UserAccount user) {
+        Long aclId = ownable.getAclId();
+        if (userHasPermission(aclId, permissionName, user)) {
+            return true;
+        }
+        if (ownable.getOwnerId().equals(user.getId())) {
+            userHasOwnerPermission(aclId, permissionName, user);
+            return true;
+        }
+        return false;
     }
 }

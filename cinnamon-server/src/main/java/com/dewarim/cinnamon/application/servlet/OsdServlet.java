@@ -70,9 +70,8 @@ public class OsdServlet extends HttpServlet {
         Optional<ObjectSystemData> osdOpt         = osdDao.getObjectById(summaryRequest.getId());
         if (osdOpt.isPresent()) {
             ObjectSystemData osd = osdOpt.get();
-            if (authorizationService.userHasPermission(osd.getAclId(), DefaultPermission.WRITE_OBJECT_SYS_METADATA.getName(), user)
-                || authorizationService.userHasOwnerPermission(osd.getAclId(), DefaultPermission.WRITE_OBJECT_SYS_METADATA.getName(), user)) {
-                
+            if (authorizationService.hasUserOrOwnerPermission(osd, DefaultPermission.WRITE_OBJECT_SYS_METADATA.getName(), user)) {
+
                 osd.setSummary(summaryRequest.getSummary());
                 osdDao.updateOsd(osd);
                 response.setContentType(CONTENT_TYPE_XML);
@@ -95,10 +94,7 @@ public class OsdServlet extends HttpServlet {
         UserAccount            user          = ThreadLocalSqlSession.getCurrentUser();
         List<ObjectSystemData> osds          = osdDao.getObjectsById(idListRequest.getIdList(), true);
         osds.forEach(osd -> {
-            Long aclId = osd.getAclId();
-            if (authorizationService.userHasPermission(aclId, DefaultPermission.READ_OBJECT_SYS_METADATA.getName(), user)
-                || authorizationService.userHasOwnerPermission(aclId, DefaultPermission.READ_OBJECT_SYS_METADATA.getName(), user)
-                    ) {
+            if (authorizationService.hasUserOrOwnerPermission(osd, DefaultPermission.READ_OBJECT_SYS_METADATA.getName(), user)) {
                 wrapper.getSummaries().add(osd.getSummary());
             }
         });
