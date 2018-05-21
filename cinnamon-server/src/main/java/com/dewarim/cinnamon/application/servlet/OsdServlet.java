@@ -3,6 +3,7 @@ package com.dewarim.cinnamon.application.servlet;
 import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.application.ErrorResponseGenerator;
+import com.dewarim.cinnamon.application.ResponseUtil;
 import com.dewarim.cinnamon.dao.LinkDao;
 import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.request.IdListRequest;
@@ -44,18 +45,21 @@ public class OsdServlet extends HttpServlet {
         if (pathInfo == null) {
             pathInfo = "";
         }
+        UserAccount user   = ThreadLocalSqlSession.getCurrentUser();
+        OsdDao      osdDao = new OsdDao();
+
         switch (pathInfo) {
             case "/getObjectsByFolderId":
-                getObjectsByFolderId(request, response);
+                getObjectsByFolderId(request, response, user, osdDao);
                 break;
             case "/getObjectsById":
-                getObjectsById(request, response);
+                getObjectsById(request, response, user, osdDao);
                 break;
             case "/setSummary":
-                setSummary(request, response);
+                setSummary(request, response, user, osdDao);
                 break;
             case "/getSummaries":
-                getSummaries(request, response);
+                getSummaries(request, response, user, osdDao);
                 break;
             default:
                 response.setStatus(HttpServletResponse.SC_NO_CONTENT);
@@ -63,19 +67,15 @@ public class OsdServlet extends HttpServlet {
 
     }
 
-    private void setSummary(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    private void setSummary(HttpServletRequest request, HttpServletResponse response, UserAccount user, OsdDao osdDao) throws IOException {
         SetSummaryRequest          summaryRequest = xmlMapper.readValue(request.getInputStream(), SetSummaryRequest.class);
-        OsdDao                     osdDao         = new OsdDao();
-        UserAccount                user           = ThreadLocalSqlSession.getCurrentUser();
         Optional<ObjectSystemData> osdOpt         = osdDao.getObjectById(summaryRequest.getId());
         if (osdOpt.isPresent()) {
             ObjectSystemData osd = osdOpt.get();
             if (authorizationService.hasUserOrOwnerPermission(osd, DefaultPermission.WRITE_OBJECT_SYS_METADATA.getName(), user)) {
-
                 osd.setSummary(summaryRequest.getSummary());
                 osdDao.updateOsd(osd);
-                response.setContentType(CONTENT_TYPE_XML);
-                response.setStatus(HttpServletResponse.SC_OK);
+                ResponseUtil.responseIsOkayAndXml(response);
                 xmlMapper.writeValue(response.getWriter(), new GenericResponse(true));
                 return;
             }
@@ -87,42 +87,34 @@ public class OsdServlet extends HttpServlet {
         ErrorResponseGenerator.generateErrorMessage(response, HttpServletResponse.SC_NOT_FOUND, ErrorCode.OBJECT_NOT_FOUND);
     }
 
-    private void getSummaries(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    private void getSummaries(HttpServletRequest request, HttpServletResponse response, UserAccount user, OsdDao osdDao) throws IOException {
         IdListRequest          idListRequest = xmlMapper.readValue(request.getInputStream(), IdListRequest.class);
         SummaryWrapper         wrapper       = new SummaryWrapper();
-        OsdDao                 osdDao        = new OsdDao();
-        UserAccount            user          = ThreadLocalSqlSession.getCurrentUser();
         List<ObjectSystemData> osds          = osdDao.getObjectsById(idListRequest.getIdList(), true);
         osds.forEach(osd -> {
             if (authorizationService.hasUserOrOwnerPermission(osd, DefaultPermission.READ_OBJECT_SYS_METADATA.getName(), user)) {
                 wrapper.getSummaries().add(osd.getSummary());
             }
         });
-        response.setContentType(CONTENT_TYPE_XML);
-        response.setStatus(HttpServletResponse.SC_OK);
+        ResponseUtil.responseIsOkayAndXml(response);
         xmlMapper.writeValue(response.getWriter(), wrapper);
     }
 
-    private void getObjectsById(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    private void getObjectsById(HttpServletRequest request, HttpServletResponse response, UserAccount user, OsdDao osdDao) throws IOException {
         OsdRequest             osdRequest   = xmlMapper.readValue(request.getInputStream(), OsdRequest.class);
-        OsdDao                 osdDao       = new OsdDao();
-        UserAccount            user         = ThreadLocalSqlSession.getCurrentUser();
         List<ObjectSystemData> osds         = osdDao.getObjectsById(osdRequest.getIds(), osdRequest.isIncludeSummary());
         List<ObjectSystemData> filteredOsds = authorizationService.filterObjectsByBrowsePermission(osds, user);
 
         OsdWrapper wrapper = new OsdWrapper();
         wrapper.setOsds(filteredOsds);
-        response.setContentType(CONTENT_TYPE_XML);
-        response.setStatus(HttpServletResponse.SC_OK);
+        ResponseUtil.responseIsOkayAndXml(response);
         xmlMapper.writeValue(response.getWriter(), wrapper);
     }
 
-    private void getObjectsByFolderId(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    private void getObjectsByFolderId(HttpServletRequest request, HttpServletResponse response, UserAccount user, OsdDao osdDao) throws IOException {
         OsdByFolderRequest     osdRequest     = xmlMapper.readValue(request.getInputStream(), OsdByFolderRequest.class);
         Long                   folderId       = osdRequest.getFolderId();
         boolean                includeSummary = osdRequest.isIncludeSummary();
-        OsdDao                 osdDao         = new OsdDao();
-        UserAccount            user           = ThreadLocalSqlSession.getCurrentUser();
         List<ObjectSystemData> osds           = osdDao.getObjectsByFolderId(folderId, includeSummary);
         List<ObjectSystemData> filteredOsds   = authorizationService.filterObjectsByBrowsePermission(osds, user);
 
@@ -133,8 +125,7 @@ public class OsdServlet extends HttpServlet {
         OsdWrapper wrapper = new OsdWrapper();
         wrapper.setOsds(filteredOsds);
         wrapper.setLinks(filteredLinks);
-        response.setContentType(CONTENT_TYPE_XML);
-        response.setStatus(HttpServletResponse.SC_OK);
+        ResponseUtil.responseIsOkayAndXml(response);
         xmlMapper.writeValue(response.getWriter(), wrapper);
     }
 
