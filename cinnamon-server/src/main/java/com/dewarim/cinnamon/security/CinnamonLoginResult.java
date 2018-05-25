@@ -56,4 +56,10 @@ public class CinnamonLoginResult implements LoginResult {
     public boolean groupMappingsImplemented() {
         return false;
     }
+
+    @Override
+    public String getUiLanguageCode() {
+        // default is ISO 639-3 code "und" for undetermined language. 
+        return "und";
+    }
 }

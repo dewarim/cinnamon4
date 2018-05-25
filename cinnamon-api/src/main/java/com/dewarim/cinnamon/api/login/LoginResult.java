@@ -39,4 +39,10 @@ public interface LoginResult {
      */
     String getErrorMessage();
 
+    /**
+     * @return the code of a language from the Cinnamon.ui_languages table to use as the user interface
+     * language for new users. Default for plain Cinnamon logins: "und" for undetermined.
+     */
+    String getUiLanguageCode();
+
 }
