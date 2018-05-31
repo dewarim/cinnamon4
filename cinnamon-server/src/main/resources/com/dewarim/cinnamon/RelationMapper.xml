@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dewarim.cinnamon.RelationMapper">
+
+    <resultMap id="relationMap" type="com.dewarim.cinnamon.model.relations.Relation">
+        <id property="id" column="id"/>
+        <result property="leftId" column="left_id"/>
+        <result property="rightId" column="right_id"/>
+        <result property="typeId" column="type_id"/>
+        <result property="metadata" column="metadata"/>
+    </resultMap>
+
+    <select id="getRelationsWithCriteria" parameterType="map" resultMap="relationMap">
+        SELECT
+        r.id,
+        r.left_id,
+        r.right_id,
+        r.type_id,
+
+        CASE WHEN #{includeMetadata} THEN metadata ELSE null END AS metadata
+        FROM relations r join relationtypes rt on r.type_id = rt.id
+        <where>
+            <if test="leftIds != null">
+                r.left_id IN
+                <foreach item="item" index="index" collection="leftIds"
+                         open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="rightIds != null">
+                AND
+                r.right_id IN
+                <foreach item="item" index="index" collection="rightIds"
+                         open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="names != null">
+                AND
+                rt.name IN
+                <foreach item="item" index="index" collection="names"
+                         open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+
+    </select>
+
+</mapper>

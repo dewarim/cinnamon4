@@ -24,7 +24,7 @@ public class RelationTypeServletIntegrationTest extends CinnamonIntegrationTest 
 
         assertNotNull(relationTypes);
         assertFalse(relationTypes.isEmpty());
-        assertEquals(1, relationTypes.size());
+        assertEquals(2, relationTypes.size());
 
         Optional<RelationType> typeOpt = relationTypes.stream().filter(relationType -> relationType.getName().equals("all-protector"))
                 .findFirst();

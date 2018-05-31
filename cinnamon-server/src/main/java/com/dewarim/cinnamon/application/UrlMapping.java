@@ -39,6 +39,7 @@ public enum UrlMapping {
     PERMISSION__GET_USER_PERMISSIONS("permission", "getUserPermissions", "/api"),
     PERMISSION__LIST_PERMISSIONS("permission", "listPermissions", "/api"),
     RELATION_TYPE__LIST_RELATION_TYPES("relationType", "listRelationTypes", "/api"),
+    RELATION__GET_RELATIONS("relation", "getRelations", "/api"),
     STATIC__ROOT("static", "", ""),
     UI_LANGUAGE__LIST_UI_LANGUAGES("uiLanguage", "listUiLanguages", "/api"),
     USER__LIST_USERS("user", "listUsers", "/api"),

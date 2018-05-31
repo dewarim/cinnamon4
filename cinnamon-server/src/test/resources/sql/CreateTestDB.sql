@@ -371,6 +371,28 @@ create table relationtypes
 
 create sequence seq_relationtypes_id start with 1;
 
+create table relations
+(
+  id bigint not null
+    constraint relations_pkey
+    primary key,
+  left_id bigint not null
+    constraint fkff8b45f777be7ff3
+    references objects,
+  right_id bigint not null
+    constraint fkff8b45f714370c8
+    references objects,
+  type_id bigint
+    constraint fkff8b45f78121f481
+    references relationtypes,
+  metadata text default '<meta/>' not null,
+  constraint unique_left_id
+  unique (type_id, right_id, left_id)
+)
+;
+
+create sequence seq_relations_id start with 1;
+
 create table metaset_types
 (
   id bigint not null
@@ -718,6 +740,15 @@ insert into objects (id, created, latest_branch, latest_head, modified, name, cr
                      owner_id, parent_id, type_id, acl_id, summary)
 values (nextval('seq_objects_id'), now(), true, true, now(), 'no-perm-summary', 1, 1, 1, 1, 6, 1, 1,'no summary');
 
+-- #19 test object for relations (as rightId) in creation folder #6
+insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+                     owner_id, parent_id, type_id, acl_id)
+values (nextval('seq_objects_id'), now(), true, true, now(), 'right-related', 1, 1, 1, 1, 6, 1, 1);
+
+-- #20 test object for relations (as leftId) in creation folder #6
+insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+                     owner_id, parent_id, type_id, acl_id)
+values (nextval('seq_objects_id'), now(), true, true, now(), 'left-related', 1, 1, 1, 1, 6, 1, 1);
 
 -- #1 link to osd #1 with default acl (#1)
 insert into links(id, type,owner_id,acl_id,parent_id,osd_id) 
@@ -833,7 +864,13 @@ VALUES (nextval('seq_format_id'),'text/plain','txt', 'plaintext', 1);
 insert into relationtypes (id, leftobjectprotected, name, rightobjectprotected,
                            clone_on_right_copy, clone_on_left_copy, clone_on_left_version, clone_on_right_version                           )
 VALUES (nextval('seq_relationtypes_id'), true, 'all-protector', true,
-        true, true, true, true);    
+        true, true, true, true); 
+
+-- #2 relationType: protect nothing & clone never
+insert into relationtypes (id, leftobjectprotected, name, rightobjectprotected,
+                           clone_on_right_copy, clone_on_left_copy, clone_on_left_version, clone_on_right_version                           )
+VALUES (nextval('seq_relationtypes_id'), true, 'unprotected', true,
+        false, false, false, false);    
 
 -- #1 uiLanguage: de
 insert into ui_languages (id,iso_code) values (nextval('seq_ui_language_id'), 'DE');
@@ -854,3 +891,8 @@ values (nextval('seq_index_item_id'), 'acl', false,false,true,false,'index.acl',
 
 -- #1 lifecycle
 insert into lifecycles(id, name, default_state_id) VALUES (nextval('seq_lifecycle_id'), 'review.lc',null);
+
+-- #1 relation: type 1 relation
+insert into relations(id,left_id, right_id, type_id, metadata) VALUES (nextval('seq_relations_id'),20,19,1,'<meta>important</meta>' );
+-- #2 relation: type 2 relation
+insert into relations(id,left_id, right_id, type_id, metadata) VALUES (nextval('seq_relations_id'),19,20,2,'<meta>ignore</meta>' );
