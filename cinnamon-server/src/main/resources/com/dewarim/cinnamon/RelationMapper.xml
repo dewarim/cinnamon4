@@ -50,4 +50,21 @@
 
     </select>
 
+    <insert id="createRelation" parameterType="com.dewarim.cinnamon.model.relations.Relation">
+        <selectKey keyProperty="id" resultType="long" order="BEFORE">
+            select nextval('seq_relations_id')
+        </selectKey>
+        INSERT INTO relations (id, left_id, right_id, type_id, metadata) values
+        ( #{id},#{leftId},#{rightId},#{typeId},#{metadata} )
+    </insert>
+
+    <delete id="deleteRelation" parameterType="map">
+        DELETE FROM relations
+        WHERE left_id = #{leftId}
+              AND right_id = #{rightId}
+              AND type_id IN (select id
+                              from relationtypes
+                              where name = #{name})
+    </delete>
+
 </mapper>

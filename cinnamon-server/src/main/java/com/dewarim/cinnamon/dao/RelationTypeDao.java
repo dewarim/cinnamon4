@@ -19,6 +19,12 @@ public class RelationTypeDao {
         RelationType relationType = sqlSession.selectOne("com.dewarim.cinnamon.RelationTypeMapper.getRelationTypeById", id);
         return Optional.ofNullable(relationType);
     }
+    
+    public Optional<RelationType> getRelationTypeByName(String name){
+        SqlSession   sqlSession   = ThreadLocalSqlSession.getSqlSession();
+        RelationType relationType = sqlSession.selectOne("com.dewarim.cinnamon.RelationTypeMapper.getRelationTypeByName", name);
+        return Optional.ofNullable(relationType);
+    }
 
 
 }

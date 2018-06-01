@@ -21,11 +21,17 @@
         SELECT *
         FROM relationtypes
     </select>
-    
+
     <select id="getRelationTypeById" parameterType="Long" resultMap="relationTypeMap">
         SELECT *
         FROM relationtypes
         WHERE id = #{id}
+    </select>
+    
+    <select id="getRelationTypeByName" parameterType="String" resultMap="relationTypeMap">
+        SELECT *
+        FROM relationtypes
+        WHERE name = #{name}
     </select>
 
 

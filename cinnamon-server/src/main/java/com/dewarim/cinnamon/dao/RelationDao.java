@@ -12,14 +12,28 @@ import java.util.Map;
 public class RelationDao {
 
     public List<Relation> getRelations(Collection<Long> leftIds, Collection<Long> rightIds, Collection<String> names, boolean includeMetadata) {
-        SqlSession          sqlSession = ThreadLocalSqlSession.getSqlSession();
-        Map<String, Object> params     = new HashMap<>();
+        Map<String, Object> params = new HashMap<>();
         params.put("leftIds", leftIds);
         params.put("rightIds", rightIds);
         params.put("names", names);
         params.put("includeMetadata", includeMetadata);
+        
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
         return sqlSession.selectList("com.dewarim.cinnamon.RelationMapper.getRelationsWithCriteria", params);
     }
 
+    public void createRelation(Relation relation) {
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        sqlSession.insert("com.dewarim.cinnamon.RelationMapper.createRelation", relation);
+    }
+    
+    public int deleteRelation(Long leftId, Long rightId, String name){
+        Map<String, Object> params = new HashMap<>();
+        params.put("leftId", leftId);
+        params.put("rightId", rightId);
+        params.put("name", name);
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        return sqlSession.delete("com.dewarim.cinnamon.RelationMapper.deleteRelation", params);
+    }
 
 }
