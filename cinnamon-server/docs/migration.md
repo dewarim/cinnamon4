@@ -50,4 +50,21 @@
     --   
     alter table config_entries drop column obj_version;
     -- note: this one needs manual work to check for config_entries containing <public>true</public> in the config field.
-    alter table config_entries add column public_visibility boolean not null default false;        
+    alter table config_entries add column public_visibility boolean not null default false;
+    
+    --
+    alter table lifecycle_states drop column obj_version;
+    
+    --
+    create table lifecycle_state_to_copy_state(
+      lifecycle_state_id bigint references lifecycle_states(id) unique,
+      copy_state_id bigint references lifecycle_states(id)
+    ); 
+    insert into lifecycle_state_to_copy_state(
+    select
+       id,life_cycle_state_for_copy_id
+      from lifecycle_states
+    );
+    alter table lifecycle_states drop column life_cycle_state_for_copy_id;
+    
+           

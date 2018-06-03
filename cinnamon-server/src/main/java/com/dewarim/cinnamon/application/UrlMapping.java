@@ -26,6 +26,7 @@ public enum UrlMapping {
     INDEX_ITEM__LIST_INDEX_ITEMS("indexItem", "listIndexItems", "/api"),
     LANGUAGE__LIST__LANGUAGES("language", "listLanguages", "/api"),
     LIFECYCLE__LIST_LIFECYCLES("lifecycle", "listLifecycles", "/api"),
+    LIFECYCLE_STATE__GET_LIFECYCLE_STATE("lifecycleState","getLifecycleState" ,"/api" ),
     LINK__CREATE_LINK("link", "createLink", "/api"),
     LINK__DELETE_LINK("link", "deleteLink", "/api"),
     LINK__GET_LINK_BY_ID("link", "getLinkById", "/api"),

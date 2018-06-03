@@ -30,6 +30,7 @@
         <mapper resource="com/dewarim/cinnamon/IndexItemMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/LanguageMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/LifecycleMapper.xml"/>
+        <mapper resource="com/dewarim/cinnamon/LifecycleStateMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/LinkMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/MetasetTypeMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/ObjectTypeMapper.xml"/>

@@ -171,17 +171,18 @@ create table lifecycle_states
   state_class varchar(128) not null,
   life_cycle_id bigint
     constraint fke3bd9877407f648b
-    references lifecycles,
-  life_cycle_state_for_copy_id bigint
-    constraint lifecycle_state_for_copy_fk
-    references lifecycle_states,
-  obj_version bigint default 0
+    references lifecycles
 );
 
 alter table lifecycles add constraint fk_default_state_id FOREIGN KEY 
   (default_state_id) references lifecycle_states(id);
 
 create sequence seq_lifecycle_states_id start with 1;
+
+create table lifecycle_state_to_copy_state(
+  lifecycle_state_id bigint references lifecycle_states(id) unique,
+  copy_state_id bigint references lifecycle_states(id)
+);
 
 -- objects --
 create table objects
@@ -896,8 +897,15 @@ values (nextval('seq_index_item_id'), 'acl', false,false,true,false,'index.acl',
 
 -- #1 lifecycle
 insert into lifecycles(id, name, default_state_id) VALUES (nextval('seq_lifecycle_id'), 'review.lc',null);
+insert into lifecycles(id, name, default_state_id) VALUES (nextval('seq_lifecycle_id'), 'render.lc',null);
 
 -- #1 relation: type 1 relation
 insert into relations(id,left_id, right_id, type_id, metadata) VALUES (nextval('seq_relations_id'),20,19,1,'<meta>important</meta>' );
 -- #2 relation: type 2 relation
 insert into relations(id,left_id, right_id, type_id, metadata) VALUES (nextval('seq_relations_id'),19,20,2,'<meta>ignore</meta>' );
+
+-- #1 lifecycle_state
+insert into lifecycle_states(id, name, config, state_class, life_cycle_id )
+    values (nextval('seq_lifecycle_states_id'), 'newRenderTask', '<meta>renderserver:x</meta>', 'NopState', 2);
+insert into lifecycle_state_to_copy_state(lifecycle_state_id, copy_state_id)
+  values (currval('seq_lifecycle_states_id'), currval('seq_lifecycle_states_id'));

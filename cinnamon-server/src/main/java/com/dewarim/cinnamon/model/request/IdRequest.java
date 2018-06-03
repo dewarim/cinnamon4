@@ -18,4 +18,8 @@ public class IdRequest {
     public void setId(Long id) {
         this.id = id;
     }
+    
+    public boolean validated(){
+        return id != null && id > 0;
+    }
 }
