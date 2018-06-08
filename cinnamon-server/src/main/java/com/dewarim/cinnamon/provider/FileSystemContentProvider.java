@@ -29,4 +29,9 @@ public class FileSystemContentProvider implements ContentProvider {
     public Long writeContentOutputStream(ContentMetadata metadata, OutputStream outputStream) {
         return null;
     }
+
+    @Override
+    public String getName() {
+        return DefaultContentProvider.FILE_SYSTEM.name();
+    }
 }

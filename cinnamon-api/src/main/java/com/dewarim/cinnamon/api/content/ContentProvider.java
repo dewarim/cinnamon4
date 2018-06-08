@@ -5,7 +5,9 @@ import java.io.OutputStream;
 import java.util.Properties;
 
 public interface ContentProvider {
-    
+
+    String getName();
+
     void initialize(Properties properties);
     
     InputStream getContentInputStream(ContentMetadata metadata);
