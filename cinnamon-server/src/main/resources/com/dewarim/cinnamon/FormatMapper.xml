@@ -18,5 +18,10 @@
         FROM formats
     </select>
 
+    <select id="getFormatById" parameterType="long" resultMap="formatMap">
+        SELECT *
+        FROM formats
+        WHERE id = #{id}
+    </select>
 
 </mapper>
