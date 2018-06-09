@@ -57,6 +57,8 @@ public class OsdDao {
     
     public void updateOsd(ObjectSystemData osd){
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        osd.setModified(new Date());
+        osd.setModifierId(ThreadLocalSqlSession.getCurrentUser().getId());
         sqlSession.update("com.dewarim.cinnamon.ObjectSystemDataMapper.updateOsd", osd);
     }
 }

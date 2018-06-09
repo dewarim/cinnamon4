@@ -10,8 +10,9 @@ import com.dewarim.cinnamon.configuration.CinnamonConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import org.eclipse.jetty.annotations.AnnotationDecorator;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.servlet.ServletHandler;
+import org.eclipse.jetty.webapp.WebAppContext;
 
 import javax.servlet.DispatcherType;
 import java.io.File;
@@ -27,11 +28,11 @@ import static com.dewarim.cinnamon.Constants.DEFAULT_DATABASE_SESSION_FACTORY;
  */
 public class CinnamonServer {
 
-    private int port;
-    private ServletHandler servletHandler = new ServletHandler();
-    private Server server;
-    private DbSessionFactory dbSessionFactory;
-    public static CinnamonConfig config = new CinnamonConfig();
+    private int                  port;
+    private Server               server;
+    private DbSessionFactory     dbSessionFactory;
+    private WebAppContext        webAppContext = new WebAppContext();
+    public static CinnamonConfig config        = new CinnamonConfig();
 
     public CinnamonServer(int port) {
         this.port = port;
@@ -39,11 +40,14 @@ public class CinnamonServer {
 
     public void start() throws Exception {
 
-        addFilters(servletHandler);
-        addServlets(servletHandler);
+        webAppContext.setContextPath("/");
+        webAppContext.setResourceBase(".");
+        webAppContext.getObjectFactory().addDecorator(new AnnotationDecorator(webAppContext));
 
+        addFilters(webAppContext);
+        addServlets(webAppContext);
         server = new Server(port);
-        server.setHandler(servletHandler);
+        server.setHandler(webAppContext);
         server.start();
 
         addSingletons();
@@ -63,34 +67,34 @@ public class CinnamonServer {
 
     }
 
-    private void addFilters(ServletHandler handler) {
-        handler.addFilterWithMapping(DbSessionFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
-        handler.addFilterWithMapping(AuthenticationFilter.class, "/api/*", EnumSet.of(DispatcherType.REQUEST));
+    private void addFilters(WebAppContext handler) {
+        handler.addFilter(DbSessionFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
+        handler.addFilter(AuthenticationFilter.class, "/api/*", EnumSet.of(DispatcherType.REQUEST));
     }
 
-    private void addServlets(ServletHandler handler) {
-        handler.addServletWithMapping(AclServlet.class, "/api/acl/*");
-        handler.addServletWithMapping(CinnamonServlet.class, "/cinnamon/*");
-        handler.addServletWithMapping(ConfigServlet.class, "/api/config/*");
-        handler.addServletWithMapping(ConfigEntryServlet.class, "/api/configEntry/*");
-        handler.addServletWithMapping(FormatServlet.class, "/api/format/*");
-        handler.addServletWithMapping(FolderServlet.class, "/api/folder/*");
-        handler.addServletWithMapping(FolderTypeServlet.class, "/api/folderType/*");
-        handler.addServletWithMapping(GroupServlet.class, "/api/group/*");
-        handler.addServletWithMapping(IndexItemServlet.class, "/api/indexItem/*");
-        handler.addServletWithMapping(LanguageServlet.class, "/api/language/*");
-        handler.addServletWithMapping(LifecycleServlet.class, "/api/lifecycle/*");
-        handler.addServletWithMapping(LifecycleStateServlet.class, "/api/lifecycleState/*");
-        handler.addServletWithMapping(LinkServlet.class, "/api/link/*");
-        handler.addServletWithMapping(MetasetTypeServlet.class, "/api/metasetType/*");
-        handler.addServletWithMapping(ObjectTypeServlet.class, "/api/objectType/*");
-        handler.addServletWithMapping(OsdServlet.class, "/api/osd/*");
-        handler.addServletWithMapping(PermissionServlet.class, "/api/permission/*");
-        handler.addServletWithMapping(RelationServlet.class, "/api/relation/*");
-        handler.addServletWithMapping(RelationTypeServlet.class, "/api/relationType/*");
-        handler.addServletWithMapping(StaticServlet.class, "/static/*");
-        handler.addServletWithMapping(UiLanguageServlet.class, "/api/uiLanguage/*");
-        handler.addServletWithMapping(UserServlet.class, "/api/user/*");
+    private void addServlets(WebAppContext handler) {
+        handler.addServlet(AclServlet.class, "/api/acl/*");
+        handler.addServlet(CinnamonServlet.class, "/cinnamon/*");
+        handler.addServlet(ConfigServlet.class, "/api/config/*");
+        handler.addServlet(ConfigEntryServlet.class, "/api/configEntry/*");
+        handler.addServlet(FormatServlet.class, "/api/format/*");
+        handler.addServlet(FolderServlet.class, "/api/folder/*");
+        handler.addServlet(FolderTypeServlet.class, "/api/folderType/*");
+        handler.addServlet(GroupServlet.class, "/api/group/*");
+        handler.addServlet(IndexItemServlet.class, "/api/indexItem/*");
+        handler.addServlet(LanguageServlet.class, "/api/language/*");
+        handler.addServlet(LifecycleServlet.class, "/api/lifecycle/*");
+        handler.addServlet(LifecycleStateServlet.class, "/api/lifecycleState/*");
+        handler.addServlet(LinkServlet.class, "/api/link/*");
+        handler.addServlet(MetasetTypeServlet.class, "/api/metasetType/*");
+        handler.addServlet(OsdServlet.class, "/api/osd/*");
+        handler.addServlet(ObjectTypeServlet.class, "/api/objectType/*");
+        handler.addServlet(PermissionServlet.class, "/api/permission/*");
+        handler.addServlet(RelationServlet.class, "/api/relation/*");
+        handler.addServlet(RelationTypeServlet.class, "/api/relationType/*");
+        handler.addServlet(StaticServlet.class, "/static/*");
+        handler.addServlet(UiLanguageServlet.class, "/api/uiLanguage/*");
+        handler.addServlet(UserServlet.class, "/api/user/*");
     }
 
     public static void main(String[] args) throws Exception {

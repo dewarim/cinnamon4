@@ -23,10 +23,10 @@ public class AuthorizationService {
                     switch (link.getType()) {
                         case FOLDER:
                             return accessFilter.hasFolderBrowsePermission(link.getAclId())
-                                   || (link.getOwnerId().equals(user.getId()) && accessFilter.hasOwnerBrowsePermission(link.getAclId()));
+                                    || (link.getOwnerId().equals(user.getId()) && accessFilter.hasOwnerBrowsePermission(link.getAclId()));
                         case OBJECT:
                             return accessFilter.hasBrowsePermissionForLink(link)
-                                   || (link.getOwnerId().equals(user.getId()) && accessFilter.hasPermission(link.getAclId(), DefaultPermission.BROWSE_FOLDER.getName(), true));
+                                    || (link.getOwnerId().equals(user.getId()) && accessFilter.hasPermission(link.getAclId(), DefaultPermission.BROWSE_FOLDER.getName(), true));
                         default:
                             throw new IllegalStateException("unknown link type");
                     }
@@ -43,6 +43,10 @@ public class AuthorizationService {
     public boolean userHasOwnerPermission(Long aclId, String permissionName, UserAccount user) {
         AccessFilter accessFilter = AccessFilter.getInstance(user);
         return accessFilter.hasPermission(aclId, permissionName, true);
+    }
+
+    public boolean hasUserOrOwnerPermission(Ownable ownable, DefaultPermission permission, UserAccount user) {
+        return hasUserOrOwnerPermission(ownable, permission.getName(), user);
     }
 
     public boolean hasUserOrOwnerPermission(Ownable ownable, String permissionName, UserAccount user) {

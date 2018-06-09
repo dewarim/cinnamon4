@@ -1,33 +1,69 @@
 package com.dewarim.cinnamon.provider;
 
 import com.dewarim.cinnamon.api.content.ContentMetadata;
+import com.dewarim.cinnamon.api.content.ContentMetadataLight;
 import com.dewarim.cinnamon.api.content.ContentProvider;
+import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.configuration.ServerConfig;
 
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Properties;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.UUID;
 
-import static com.dewarim.cinnamon.Constants.DATA_ROOT_PATH_PROPERTY_NAME;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class FileSystemContentProvider implements ContentProvider {
 
+    private static final Logger log = LogManager.getLogger(FileSystemContentProvider.class);
+
+
+    static final String SEP = File.separator;
+
     private String dataRootPath;
-    
-    @Override
-    public void initialize(Properties properties) {
-        dataRootPath = properties.getProperty(DATA_ROOT_PATH_PROPERTY_NAME, new ServerConfig().getDataRoot());        
+
+    public FileSystemContentProvider() {
+        dataRootPath = CinnamonServer.config.getServerConfig().getDataRoot();
     }
 
     @Override
-    public InputStream getContentInputStream(ContentMetadata metadata) {
-        
-        return null;
+    public InputStream getContentStream(ContentMetadata metadata) throws IOException{
+        String path = dataRootPath + SEP + metadata.getContentPath();
+        return new FileInputStream(new File(path));
     }
 
     @Override
-    public Long writeContentOutputStream(ContentMetadata metadata, OutputStream outputStream) {
-        return null;
+    public ContentMetadata writeContentStream(ContentMetadata metadata, FileInputStream inputStream) throws IOException {
+        String targetName    = UUID.randomUUID().toString();
+        String subfolderName = getSubFolderName(targetName);
+        String subfolderPath = dataRootPath + SEP + subfolderName;
+        File   subfolder     = new File(subfolderPath);
+
+        boolean result = subfolder.mkdirs();
+        log.debug("created subfolder {}: {}", subfolderPath, result);
+        String contentPath  = subfolderPath + SEP + targetName;
+        Path   contentFile  = Paths.get(subfolderPath, targetName);
+        long   bytesWritten = Files.copy(inputStream, contentFile);
+
+        // we could just update the existing metadata, but that's bad style.
+        ContentMetadata lightMeta = new ContentMetadataLight();
+        lightMeta.setContentSize(bytesWritten);
+        lightMeta.setContentPath(subfolderName+SEP+targetName);
+
+        // calculate hash:
+        String sha256Hex = DigestUtils.sha256Hex(new FileInputStream(contentFile.toFile()));
+        lightMeta.setContentHash(sha256Hex);
+
+        log.info("Stored new content @ {}",contentFile.toAbsolutePath());
+
+        return lightMeta;
+    }
+
+    private static String getSubFolderName(String f) {
+        return f.substring(0, 2) + SEP + f.substring(2, 4) + SEP + f.substring(4, 6);
     }
 
     @Override

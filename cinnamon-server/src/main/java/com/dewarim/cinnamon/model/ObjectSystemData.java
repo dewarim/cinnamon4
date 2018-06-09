@@ -38,7 +38,7 @@ public class ObjectSystemData implements ContentMetadata, Ownable {
     private boolean metadataChanged = false;
     private String cmnVersion = "1";
     private Long lifecycleStateId;
-    private String summary;
+    private String summary = "<summary/>";
     
     private Long objVersion;
     private String contentHash;
@@ -261,6 +261,9 @@ public class ObjectSystemData implements ContentMetadata, Ownable {
         this.contentHash = contentHash;
     }
 
+    /**
+     * @return Name of content provider. Default: FILE_SYSTEM
+     */
     public String getContentProvider() {
         return contentProvider;
     }

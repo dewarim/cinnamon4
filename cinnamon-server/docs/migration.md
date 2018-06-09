@@ -67,4 +67,6 @@
     );
     alter table lifecycle_states drop column life_cycle_state_for_copy_id;
     
-           
+
+    --
+    alter table objects add column content_hash varchar(128);           

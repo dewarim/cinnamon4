@@ -22,6 +22,8 @@ import org.junit.BeforeClass;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Reader;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.Connection;
 
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -35,7 +37,7 @@ public class CinnamonIntegrationTest {
     static CinnamonServer cinnamonServer;
     static String ticket;
     static String ticketForDoe;
-
+    static String HOST = "http://localhost:"+cinnamonTestPort;
     XmlMapper mapper = new XmlMapper();
     
     @BeforeClass
@@ -57,6 +59,10 @@ public class CinnamonIntegrationTest {
 
             cinnamonServer.setDbSessionFactory(dbSessionFactory);
             cinnamonServer.start();
+
+            // set data root:
+            Path tempDirectory = Files.createTempDirectory("cinnamon-data-root");
+            CinnamonServer.config.getServerConfig().setDataRoot(tempDirectory.toAbsolutePath().toString());
         }
         ticket = getAdminTicket();
     }

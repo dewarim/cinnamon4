@@ -43,6 +43,8 @@ public enum UrlMapping {
     RELATION__CREATE_RELATION("relation","createRelation" ,"/api" ),
     RELATION__DELETE_RELATION("relation","deleteRelation" ,"/api" ),
     RELATION__GET_RELATIONS("relation", "getRelations", "/api"),
+    OSD__GET_CONTENT("osd","getContent" ,"/api" ),
+    OSD__SET_CONTENT("osd","setContent" ,"/api" ),
     STATIC__ROOT("static", "", ""),
     UI_LANGUAGE__LIST_UI_LANGUAGES("uiLanguage", "listUiLanguages", "/api"),
     USER__LIST_USERS("user", "listUsers", "/api"),

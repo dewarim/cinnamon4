@@ -238,7 +238,8 @@ create table objects
     references lifecycle_states,
   content_changed boolean default false not null,
   metadata_changed boolean default false not null,
-  summary text default '<summary />' not null
+  summary text default '<summary />' not null,
+  content_hash varchar(128)
 );
 
 create sequence seq_objects_id start with 1;
@@ -641,6 +642,8 @@ insert into aclentry_permissions(id,aclentry_id,permission_id) values (nextval('
 insert into aclentry_permissions(id,aclentry_id,permission_id) values (nextval('seq_aclentry_permission_id'),8,17);
 -- #24 add read_object_sysmeta permission to reviewers.acl:
 insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),5,12);
+-- #25 add write_object_content to reviewers.acl
+insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),5,15);
 
 -- #1 language de
 insert into languages (id,iso_code) values (nextval('seq_language_id'), 'de_DE');
@@ -755,6 +758,11 @@ values (nextval('seq_objects_id'), now(), true, true, now(), 'left-related', 1, 
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
 values (nextval('seq_objects_id'), now(), true, true, now(), 'related', 1, 1, 1, 1, 6, 1, 1);
+
+-- #22 test object for setContent/getContent in creation folder #6
+insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+                     owner_id, parent_id, type_id, acl_id)
+values (nextval('seq_objects_id'), now(), true, true, now(), 'content-holder', 1, 1, 1, 1, 6, 1, 2);
 
 -- #1 link to osd #1 with default acl (#1)
 insert into links(id, type,owner_id,acl_id,parent_id,osd_id) 

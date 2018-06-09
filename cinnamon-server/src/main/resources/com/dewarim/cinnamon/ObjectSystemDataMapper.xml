@@ -8,6 +8,7 @@
     <resultMap id="osdMap" type="com.dewarim.cinnamon.model.ObjectSystemData">
         <id property="id" column="id"/>
         <result property="applicationName" column="appname"/>
+        <result property="contentHash" column="content_hash"/>
         <result property="contentPath" column="content_path"/>
         <result property="contentSize" column="content_size"/>
         <result property="created" column="created"/>
@@ -33,11 +34,12 @@
         <result property="metadataChanged" column="metadata_changed"/>
         <result property="summary" column="summary"/>
     </resultMap>
-    
+
     <select id="getOsdsById" parameterType="map" resultMap="osdMap">
         SELECT
         id,
         appname,
+        content_hash,
         content_path,
         content_size,
         created,
@@ -75,6 +77,7 @@
         SELECT
             id,
             appname,
+            content_hash,
             content_path,
             content_size,
             created,
@@ -117,6 +120,8 @@
         UPDATE objects
         SET
             appname          = #{applicationName},
+            content_hash     = #{contentHash},
+            content_size     = #{contentSize},
             content_path     = #{contentPath},
             created          = #{created},
             latest_branch    = #{latestBranch},
