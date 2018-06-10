@@ -51,6 +51,7 @@ public class OsdServlet extends HttpServlet {
     private              ObjectMapper         xmlMapper            = new XmlMapper();
     private              AuthorizationService authorizationService = new AuthorizationService();
     private static final Logger               log                  = LogManager.getLogger(OsdServlet.class);
+    private static final String MULTIPART = "multipart/";
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
@@ -121,6 +122,11 @@ public class OsdServlet extends HttpServlet {
     }
 
     private void setContent(HttpServletRequest request, HttpServletResponse response, UserAccount user, OsdDao osdDao) throws ServletException, IOException {
+        String contentType = request.getContentType();
+        if(contentType == null || !contentType.toLowerCase().startsWith(MULTIPART)){
+            ErrorResponseGenerator.generateErrorMessage(response, SC_BAD_REQUEST, ErrorCode.NOT_MULTIPART_UPLOAD);
+            return;
+        }
         Part contentRequest = request.getPart("setContentRequest");
         if (contentRequest == null) {
             ErrorResponseGenerator.generateErrorMessage(response, SC_BAD_REQUEST, ErrorCode.INVALID_REQUEST);

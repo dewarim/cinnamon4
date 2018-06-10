@@ -34,6 +34,7 @@ public enum ErrorCode {
     NO_CREATE_PERMISSION("missing permission to create an object inside a folder"),
     NO_WRITE_PERMISSION("missing write content permission for current object"),
     NO_WRITE_SYS_METADATA_PERMISSION("Required permission to write system metadata was not found."),
+    NOT_MULTIPART_UPLOAD("the request must have the contentType multipart/form-data"),
     OBJECT_HAS_NO_CONTENT("this object has no content"),
     OBJECT_HAS_VANISHED_DURING_UPDATE("the object the you wanted to change was not found in the database anymore (maybe someone deleted it?)"),
     OBJECT_NOT_FOUND("object not found"),

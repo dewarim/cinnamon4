@@ -38,12 +38,16 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 
+import static org.apache.http.HttpStatus.SC_FORBIDDEN;
+import static org.apache.http.HttpStatus.SC_NOT_FOUND;
 import static org.apache.http.entity.ContentType.APPLICATION_XML;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.*;
 
 public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
+
+    private static final String SET_CONTENT_URL = HOST + UrlMapping.OSD__SET_CONTENT.getPath();
 
     @Test
     public void getObjectsById() throws IOException {
@@ -74,13 +78,13 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void getObjectsByIdWithoutSummary() throws IOException {
+    public void getObjectsByIdWithDefaultSummary() throws IOException {
         OsdRequest osdRequest = new OsdRequest();
         osdRequest.setIds(List.of(1L));
         osdRequest.setIncludeSummary(false);
         HttpResponse           response = sendAdminRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
         List<ObjectSystemData> dataList = unwrapOsds(response, 1);
-        assertTrue(dataList.stream().anyMatch(osd -> osd.getSummary() == null));
+        assertTrue(dataList.stream().anyMatch(osd -> osd.getSummary().equals(new ObjectSystemData().getSummary()) ));
     }
 
     @Test
@@ -128,7 +132,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     public void setSummaryMissingObject() throws IOException {
         SetSummaryRequest summaryRequest = new SetSummaryRequest(Long.MAX_VALUE, "a summary");
         HttpResponse      response       = sendStandardRequest(UrlMapping.OSD__SET_SUMMARY, summaryRequest);
-        assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND, HttpStatus.SC_NOT_FOUND);
+        assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND, SC_NOT_FOUND);
     }
 
     @Test
@@ -156,19 +160,8 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void setContentWithDefaultContentProviderHappyPath() throws IOException {
         SetContentRequest setContentRequest = new SetContentRequest(22L, 1L);
-        File              pomXml            = new File("pom.xml");
-        FileBody          fileBody          = new FileBody(pomXml);
-        StringBody        setContentBody    = new StringBody(mapper.writeValueAsString(setContentRequest), APPLICATION_XML.getMimeType(), Charset.forName("UTF-8"));
-
-        MultipartEntity multipartEntity = new MultipartEntity();
-        multipartEntity.addPart("setContentRequest", setContentBody);
-        multipartEntity.addPart("file", fileBody);
-        String url = HOST + UrlMapping.OSD__SET_CONTENT.getPath();
-        Request request = Request.Post(url)
-                .addHeader("ticket", getDoesTicket(false))
-                .body(multipartEntity);
-
-        HttpResponse response = request.execute().returnResponse();
+        MultipartEntity   multipartEntity   = createMultipartEntity(setContentRequest);
+        HttpResponse      response          = sendStandardMultipartRequest(SET_CONTENT_URL, multipartEntity);
         assertResponseOkay(response);
 
         // check data is in content store:
@@ -184,9 +177,80 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         assertEquals((long) osd.getContentSize(), content.length());
         String sha256Hex = DigestUtils.sha256Hex(new FileInputStream(content));
         assertEquals(osd.getContentHash(), sha256Hex);
-
     }
 
+
+    @Test
+    public void setContentWithWrongContentType() throws IOException {
+        HttpResponse response = sendStandardRequest(UrlMapping.OSD__SET_CONTENT, null);
+        assertCinnamonError(response, ErrorCode.NOT_MULTIPART_UPLOAD);
+    }
+
+    @Test
+    public void setContentWithoutProperRequest() throws IOException {
+        File            pomXml          = new File("pom.xml");
+        FileBody        fileBody        = new FileBody(pomXml);
+        MultipartEntity multipartEntity = new MultipartEntity();
+        multipartEntity.addPart("file", fileBody);
+        HttpResponse response = sendStandardMultipartRequest(SET_CONTENT_URL, multipartEntity);
+        assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
+    }
+
+    @Test
+    public void setContentWithoutFile() throws IOException {
+        SetContentRequest contentRequest  = new SetContentRequest(22L, 1L);
+        StringBody        setContentBody  = new StringBody(mapper.writeValueAsString(contentRequest), APPLICATION_XML.getMimeType(), Charset.forName("UTF-8"));
+        MultipartEntity   multipartEntity = new MultipartEntity();
+        multipartEntity.addPart("setContentRequest", setContentBody);
+        HttpResponse response = sendStandardMultipartRequest(SET_CONTENT_URL, multipartEntity);
+        assertCinnamonError(response, ErrorCode.MISSING_FILE_PARAMETER);
+    }
+
+    @Test
+    public void setContentWithInvalidParameters() throws IOException {
+        SetContentRequest contentRequest = new SetContentRequest(-1L, 0L);
+        HttpResponse      response       = sendStandardMultipartRequest(SET_CONTENT_URL, createMultipartEntity(contentRequest));
+        assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
+    }
+
+    @Test
+    public void setContentWithUnknownOsdId() throws IOException {
+        SetContentRequest contentRequest = new SetContentRequest(Long.MAX_VALUE, 1L);
+        HttpResponse      response       = sendStandardMultipartRequest(SET_CONTENT_URL, createMultipartEntity(contentRequest));
+        assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND, SC_NOT_FOUND);
+    }
+
+    @Test
+    public void setContentWithUnknownFormatId() throws IOException {
+        SetContentRequest contentRequest = new SetContentRequest(22L, Long.MAX_VALUE);
+        HttpResponse      response       = sendStandardMultipartRequest(SET_CONTENT_URL, createMultipartEntity(contentRequest));
+        assertCinnamonError(response, ErrorCode.FORMAT_NOT_FOUND, SC_NOT_FOUND);
+    }
+
+    @Test
+    public void setContentWithoutWritePermission() throws IOException {
+        SetContentRequest contentRequest = new SetContentRequest(23L, 1L);
+        HttpResponse      response       = sendStandardMultipartRequest(SET_CONTENT_URL, createMultipartEntity(contentRequest));
+        assertCinnamonError(response, ErrorCode.NO_WRITE_PERMISSION, SC_FORBIDDEN);
+    }
+
+
+    private HttpResponse sendStandardMultipartRequest(String url, MultipartEntity multipartEntity) throws IOException {
+        return Request.Post(url)
+                .addHeader("ticket", getDoesTicket(false))
+                .body(multipartEntity).execute().returnResponse();
+    }
+
+    private MultipartEntity createMultipartEntity(SetContentRequest contentRequest) throws IOException {
+        File       pomXml         = new File("pom.xml");
+        FileBody   fileBody       = new FileBody(pomXml);
+        StringBody setContentBody = new StringBody(mapper.writeValueAsString(contentRequest), APPLICATION_XML.getMimeType(), Charset.forName("UTF-8"));
+
+        MultipartEntity multipartEntity = new MultipartEntity();
+        multipartEntity.addPart("setContentRequest", setContentBody);
+        multipartEntity.addPart("file", fileBody);
+        return multipartEntity;
+    }
 
     private List<ObjectSystemData> unwrapOsds(HttpResponse response, Integer expectedSize) throws IOException {
         assertResponseOkay(response);
