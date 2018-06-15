@@ -51,7 +51,7 @@ public class OsdServlet extends HttpServlet {
     private              ObjectMapper         xmlMapper            = new XmlMapper();
     private              AuthorizationService authorizationService = new AuthorizationService();
     private static final Logger               log                  = LogManager.getLogger(OsdServlet.class);
-    private static final String MULTIPART = "multipart/";
+    private static final String               MULTIPART            = "multipart/";
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
@@ -92,38 +92,37 @@ public class OsdServlet extends HttpServlet {
         if (idRequest.validated()) {
             Optional<ObjectSystemData> osdOpt = osdDao.getObjectById(idRequest.getId());
             if (!osdOpt.isPresent()) {
-                ErrorResponseGenerator.generateErrorMessage(response, SC_NOT_FOUND, ErrorCode.OBJECT_NOT_FOUND);
+                generateErrorMessage(response, SC_NOT_FOUND, ErrorCode.OBJECT_NOT_FOUND);
                 return;
             }
             ObjectSystemData osd         = osdOpt.get();
             boolean          readAllowed = new AuthorizationService().hasUserOrOwnerPermission(osd, DefaultPermission.READ_OBJECT_CONTENT, user);
             if (!readAllowed) {
-                ErrorResponseGenerator.generateErrorMessage(response, SC_FORBIDDEN, ErrorCode.NO_WRITE_PERMISSION);
+                generateErrorMessage(response, SC_FORBIDDEN, ErrorCode.NO_READ_PERMISSION);
                 return;
             }
             if (osd.getContentSize() == null || osd.getContentSize() == 0) {
-                ErrorResponseGenerator.generateErrorMessage(response, SC_NOT_FOUND, ErrorCode.OBJECT_HAS_NO_CONTENT);
+                generateErrorMessage(response, SC_NOT_FOUND, ErrorCode.OBJECT_HAS_NO_CONTENT);
                 return;
             }
             Optional<Format> formatOpt = new FormatDao().getFormatById(osd.getFormatId());
-            if (!formatOpt.isPresent()) {
-                ErrorResponseGenerator.generateErrorMessage(response, SC_NOT_FOUND, ErrorCode.FORMAT_NOT_FOUND);
-                return;
-            }
-            Format          format          = formatOpt.get();
+            // no regular error response for missing format - this should only be possible if the database is corrupted.
+            Format format = formatOpt.orElseThrow(
+                    () -> new ServletException(String.format("Encountered object #%d with content but non-existing formatId #%d.",
+                            osd.getId(), osd.getFormatId())));
             ContentProvider contentProvider = ContentProviderService.getInstance().getContentProvider(osd.getContentProvider());
             InputStream     contentStream   = contentProvider.getContentStream(osd);
             response.setContentType(format.getContentType());
             response.setStatus(SC_OK);
             contentStream.transferTo(response.getOutputStream());
         } else {
-            ErrorResponseGenerator.generateErrorMessage(response, SC_BAD_REQUEST, ErrorCode.INVALID_REQUEST);
+            generateErrorMessage(response, SC_BAD_REQUEST, ErrorCode.INVALID_REQUEST);
         }
     }
 
     private void setContent(HttpServletRequest request, HttpServletResponse response, UserAccount user, OsdDao osdDao) throws ServletException, IOException {
         String contentType = request.getContentType();
-        if(contentType == null || !contentType.toLowerCase().startsWith(MULTIPART)){
+        if (contentType == null || !contentType.toLowerCase().startsWith(MULTIPART)) {
             ErrorResponseGenerator.generateErrorMessage(response, SC_BAD_REQUEST, ErrorCode.NOT_MULTIPART_UPLOAD);
             return;
         }
@@ -153,7 +152,7 @@ public class OsdServlet extends HttpServlet {
             FormatDao        formatDao = new FormatDao();
             Optional<Format> formatOpt = formatDao.getFormatById(setContentRequest.getFormatId());
             if (!formatOpt.isPresent()) {
-                ErrorResponseGenerator.generateErrorMessage(response, SC_NOT_FOUND, ErrorCode.FORMAT_NOT_FOUND);
+                generateErrorMessage(response, SC_NOT_FOUND, ErrorCode.FORMAT_NOT_FOUND);
                 return;
             }
             // store file in tmp dir:
@@ -238,4 +237,7 @@ public class OsdServlet extends HttpServlet {
         xmlMapper.writeValue(response.getWriter(), wrapper);
     }
 
+    private void generateErrorMessage(HttpServletResponse response, int statusCode, ErrorCode errorCode) {
+        ErrorResponseGenerator.generateErrorMessage(response, statusCode, errorCode);
+    }
 }

@@ -32,6 +32,7 @@ public enum ErrorCode {
     NAME_PARAM_IS_INVALID("name param is invalid"),
     NO_BROWSE_PERMISSION("missing browse permission"),
     NO_CREATE_PERMISSION("missing permission to create an object inside a folder"),
+    NO_READ_PERMISSION("missing read content permission for current object"),
     NO_WRITE_PERMISSION("missing write content permission for current object"),
     NO_WRITE_SYS_METADATA_PERMISSION("Required permission to write system metadata was not found."),
     NOT_MULTIPART_UPLOAD("the request must have the contentType multipart/form-data"),

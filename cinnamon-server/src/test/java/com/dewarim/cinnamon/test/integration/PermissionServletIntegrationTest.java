@@ -43,11 +43,13 @@ public class PermissionServletIntegrationTest extends CinnamonIntegrationTest {
         - create folder,
         - write_object_sysmeta
         - browse permission
-        - read_object_sysmeta        
+        - read_object_sysmeta
+        - read_object_content
+        - write_object_content
          */
         UserPermissionRequest reviewerPermissionRequest = new UserPermissionRequest(2L,2L);
         HttpResponse reviewerResponse = sendAdminRequest(UrlMapping.PERMISSION__GET_USER_PERMISSIONS, reviewerPermissionRequest);
-        unwrapPermissions(reviewerResponse,4);
+        unwrapPermissions(reviewerResponse,6);
     }    
     
     @Test

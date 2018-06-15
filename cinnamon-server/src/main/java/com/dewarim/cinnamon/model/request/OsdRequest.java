@@ -4,10 +4,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class OsdRequest {
-    
-    boolean includeSummary;
-    
-    List<Long> ids = new ArrayList<>();
+
+    private List<Long> ids = new ArrayList<>();
+
+    private boolean includeSummary;
+
+    public OsdRequest() {
+    }
+
+    public OsdRequest(List<Long> ids, boolean includeSummary) {
+        this.includeSummary = includeSummary;
+        this.ids = ids;
+    }
 
     public List<Long> getIds() {
         return ids;

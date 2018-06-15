@@ -56,7 +56,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
         LinkWrapper linkWrapper = parseResponse(response);
         LinkResponse link = linkWrapper.getLinks().get(0);
         ObjectSystemData osd = link.getOsd();
-        assertThat(osd.getSummary(), nullValue());
+        assertThat(osd.getSummary(), equalTo("<summary/>"));
     }
 
     @Test
@@ -96,7 +96,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
         LinkResponse link = linkWrapper.getLinks().get(0);
         assertThat(link.getLinkType(), equalTo(LinkType.OBJECT));
         ObjectSystemData osd = link.getOsd();
-        assertThat(osd.getSummary(), nullValue());
+        assertThat(osd.getSummary(), equalTo("<summary/>"));
     }
 
     @Test

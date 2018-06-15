@@ -10,6 +10,7 @@ import com.dewarim.cinnamon.model.request.*;
 import com.dewarim.cinnamon.model.response.OsdWrapper;
 import com.dewarim.cinnamon.model.response.SummaryWrapper;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -31,6 +32,7 @@ import org.junit.Test;
 import javax.servlet.ServletConfig;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -38,6 +40,7 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 
+import static org.apache.http.HttpHeaders.CONTENT_TYPE;
 import static org.apache.http.HttpStatus.SC_FORBIDDEN;
 import static org.apache.http.HttpStatus.SC_NOT_FOUND;
 import static org.apache.http.entity.ContentType.APPLICATION_XML;
@@ -84,7 +87,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         osdRequest.setIncludeSummary(false);
         HttpResponse           response = sendAdminRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
         List<ObjectSystemData> dataList = unwrapOsds(response, 1);
-        assertTrue(dataList.stream().anyMatch(osd -> osd.getSummary().equals(new ObjectSystemData().getSummary()) ));
+        assertTrue(dataList.stream().anyMatch(osd -> osd.getSummary().equals(new ObjectSystemData().getSummary())));
     }
 
     @Test
@@ -158,11 +161,60 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void setContentWithDefaultContentProviderHappyPath() throws IOException {
-        SetContentRequest setContentRequest = new SetContentRequest(22L, 1L);
-        MultipartEntity   multipartEntity   = createMultipartEntity(setContentRequest);
-        HttpResponse      response          = sendStandardMultipartRequest(SET_CONTENT_URL, multipartEntity);
+    public void getContentHappyPath() throws IOException {
+        createTestContentOnOsd(22L,false);
+
+        IdRequest    idRequest = new IdRequest(22L);
+        HttpResponse response  = sendStandardRequest(UrlMapping.OSD__GET_CONTENT, idRequest);
         assertResponseOkay(response);
+        Header contentType = response.getFirstHeader(CONTENT_TYPE);
+        assertEquals(APPLICATION_XML.getMimeType(), contentType.getValue());
+        File             tempFile = Files.createTempFile("cinnamon-test-get-content-", ".xml").toFile();
+        FileOutputStream fos      = new FileOutputStream(tempFile);
+        response.getEntity().writeTo(fos);
+        fos.close();
+        String sha256Hex = DigestUtils.sha256Hex(new FileInputStream(tempFile));
+
+        OsdRequest             osdRequest       = new OsdRequest(List.of(22L), false);
+        HttpResponse           osdResponse      = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
+        List<ObjectSystemData> objectSystemData = unwrapOsds(osdResponse, 1);
+        ObjectSystemData       osd              = objectSystemData.get(0);
+        assertEquals(osd.getContentHash(), sha256Hex);
+    }
+
+    @Test
+    public void getContentWithoutReadPermission() throws IOException {
+        createTestContentOnOsd(24L,true);
+
+        IdRequest    idRequest = new IdRequest(24L);
+        HttpResponse response  = sendStandardRequest(UrlMapping.OSD__GET_CONTENT, idRequest);
+        assertCinnamonError(response, ErrorCode.NO_READ_PERMISSION, SC_FORBIDDEN);
+    }
+
+    @Test
+    public void getContentWithoutInvalidRequest() throws IOException {
+        IdRequest    idRequest = new IdRequest(0L);
+        HttpResponse response  = sendStandardRequest(UrlMapping.OSD__GET_CONTENT, idRequest);
+        assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
+    }
+
+    @Test
+    public void getContentWithoutValidObject() throws IOException {
+        IdRequest    idRequest = new IdRequest(Long.MAX_VALUE);
+        HttpResponse response  = sendStandardRequest(UrlMapping.OSD__GET_CONTENT, idRequest);
+        assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND, SC_NOT_FOUND);
+    }
+
+    @Test
+    public void getContentWithoutContent() throws IOException {
+        IdRequest    idRequest = new IdRequest(25L);
+        HttpResponse response  = sendStandardRequest(UrlMapping.OSD__GET_CONTENT, idRequest);
+        assertCinnamonError(response, ErrorCode.OBJECT_HAS_NO_CONTENT, SC_NOT_FOUND);
+    }
+
+    @Test
+    public void setContentWithDefaultContentProviderHappyPath() throws IOException {
+        createTestContentOnOsd(22L,false);
 
         // check data is in content store:
         OsdRequest osdRequest = new OsdRequest();
@@ -241,6 +293,12 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
                 .body(multipartEntity).execute().returnResponse();
     }
 
+    private HttpResponse sendAdminMultipartRequest(String url, MultipartEntity multipartEntity) throws IOException {
+        return Request.Post(url)
+                .addHeader("ticket", getAdminTicket())
+                .body(multipartEntity).execute().returnResponse();
+    }
+
     private MultipartEntity createMultipartEntity(SetContentRequest contentRequest) throws IOException {
         File       pomXml         = new File("pom.xml");
         FileBody   fileBody       = new FileBody(pomXml);
@@ -272,6 +330,18 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
             assertThat(links.size(), equalTo(expectedSize));
         }
         return links;
+    }
+
+    private void createTestContentOnOsd(Long osdId, boolean asSuperuser) throws IOException {
+        SetContentRequest setContentRequest  = new SetContentRequest(22L, 1L);
+        MultipartEntity   multipartEntity    = createMultipartEntity(setContentRequest);
+        HttpResponse      setContentResponse = null;
+        if (asSuperuser) {
+            setContentResponse = sendAdminMultipartRequest(SET_CONTENT_URL, multipartEntity);
+        } else {
+            setContentResponse = sendStandardMultipartRequest(SET_CONTENT_URL, multipartEntity);
+        }
+        assertResponseOkay(setContentResponse);
     }
 
 }
