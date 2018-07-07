@@ -104,7 +104,7 @@ public class CinnamonServlet extends HttpServlet {
 
             if (authenticate(user, password)) {
                 // TODO: get optional uiLanguageParam.
-                Session session = new SessionDao().save(new Session(user.getId(), null));
+                Session session = new SessionDao().save(new Session(user.getId()));
                 CinnamonConnection cinnamonConnection = new CinnamonConnection(session.getTicket());
 
                 // Return the token on the response

@@ -70,3 +70,7 @@
 
     --
     alter table objects add column content_hash varchar(128);           
+    
+    --
+    alter table sessions drop column ui_language_id;
+    alter table sessions drop column obj_version;

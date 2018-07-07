@@ -9,7 +9,6 @@
         <id property="id" column="id"/>
         <result property="ticket" column="ticket"/>
         <result property="expires" column="expires"/>
-        <result property="uiLanguageId" column="ui_language_id"/>
         <result property="userId" column="user_id"/>
     </resultMap>
 
@@ -24,8 +23,8 @@
             select nextval('seq_session_id')
         </selectKey>
 
-        INSERT INTO sessions (id, ticket, expires, ui_language_id, user_id)
-        VALUES (#{id},#{ticket}, #{expires}, #{uiLanguageId}, #{userId})
+        INSERT INTO sessions (id, ticket, expires, user_id)
+        VALUES (#{id},#{ticket}, #{expires}, #{userId})
     </insert>
 
     <!-- Only field that should be updated is the expiration time when a session is renewed before it expires -->
