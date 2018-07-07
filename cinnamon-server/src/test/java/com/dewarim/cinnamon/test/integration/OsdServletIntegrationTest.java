@@ -162,7 +162,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getContentHappyPath() throws IOException {
-        createTestContentOnOsd(22L,false);
+        createTestContentOnOsd(22L, false);
 
         IdRequest    idRequest = new IdRequest(22L);
         HttpResponse response  = sendStandardRequest(UrlMapping.OSD__GET_CONTENT, idRequest);
@@ -184,7 +184,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getContentWithoutReadPermission() throws IOException {
-        createTestContentOnOsd(24L,true);
+        createTestContentOnOsd(24L, true);
 
         IdRequest    idRequest = new IdRequest(24L);
         HttpResponse response  = sendStandardRequest(UrlMapping.OSD__GET_CONTENT, idRequest);
@@ -214,7 +214,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void setContentWithDefaultContentProviderHappyPath() throws IOException {
-        createTestContentOnOsd(22L,false);
+        createTestContentOnOsd(22L, false);
 
         // check data is in content store:
         OsdRequest osdRequest = new OsdRequest();
@@ -286,6 +286,113 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         assertCinnamonError(response, ErrorCode.NO_WRITE_PERMISSION, SC_FORBIDDEN);
     }
 
+    @Test
+    public void lockAndUnlockObject() throws IOException {
+        IdRequest    idRequest    = new IdRequest(26L);
+        HttpResponse lockResponse = sendStandardRequest(UrlMapping.OSD__LOCK, idRequest);
+        assertResponseOkay(lockResponse);
+
+        HttpResponse unlockResponse = sendStandardRequest(UrlMapping.OSD__UNLOCK, idRequest);
+        assertResponseOkay(unlockResponse);
+    }
+
+    @Test
+    public void lockTwice() throws IOException {
+        IdRequest    idRequest    = new IdRequest(26L);
+        HttpResponse lockResponse = sendStandardRequest(UrlMapping.OSD__LOCK, idRequest);
+        assertResponseOkay(lockResponse);
+        lockResponse = sendStandardRequest(UrlMapping.OSD__LOCK, idRequest);
+        assertResponseOkay(lockResponse);
+
+        // cleanup
+        HttpResponse unlockResponse = sendStandardRequest(UrlMapping.OSD__UNLOCK, idRequest);
+        assertResponseOkay(unlockResponse);
+    }
+
+    @Test
+    public void unlockTwice() throws IOException {
+        IdRequest    idRequest      = new IdRequest(26L);
+        HttpResponse unlockResponse = sendStandardRequest(UrlMapping.OSD__UNLOCK, idRequest);
+        assertResponseOkay(unlockResponse);
+        unlockResponse = sendStandardRequest(UrlMapping.OSD__UNLOCK, idRequest);
+        assertResponseOkay(unlockResponse);
+    }
+
+    @Test
+    public void overwriteOtherUsersLockShouldFail() throws IOException {
+        // first, make sure it is unlocked:
+        IdRequest    idRequest      = new IdRequest(26L);
+        HttpResponse unlockResponse = sendStandardRequest(UrlMapping.OSD__UNLOCK, idRequest);
+        assertResponseOkay(unlockResponse);
+
+        // lock by admin:
+        HttpResponse lockResponse = sendAdminRequest(UrlMapping.OSD__LOCK, idRequest);
+        assertResponseOkay(lockResponse);
+
+        // try to overwrite admin's lock:
+        lockResponse = sendStandardRequest(UrlMapping.OSD__LOCK, idRequest);
+        assertCinnamonError(lockResponse, ErrorCode.OBJECT_LOCKED_BY_OTHER_USER, SC_FORBIDDEN);
+
+        // cleanup:
+        unlockResponse = sendAdminRequest(UrlMapping.OSD__UNLOCK, idRequest);
+        assertResponseOkay(unlockResponse);
+    }
+
+    @Test
+    public void unlockOtherUsersLockShouldFail() throws IOException {
+        // lock by first user:
+        IdRequest    idRequest      = new IdRequest(26L);
+        HttpResponse lockResponse = sendAdminRequest(UrlMapping.OSD__LOCK, idRequest);
+        assertResponseOkay(lockResponse);
+
+        // try to unlock other user's lock:
+        lockResponse = sendStandardRequest(UrlMapping.OSD__UNLOCK, idRequest);
+        assertCinnamonError(lockResponse, ErrorCode.OBJECT_LOCKED_BY_OTHER_USER, SC_FORBIDDEN);
+
+        // cleanup:
+        HttpResponse unlockResponse = sendAdminRequest(UrlMapping.OSD__UNLOCK, idRequest);
+        assertResponseOkay(unlockResponse);
+    }
+
+    @Test
+    public void lockAndUnlockShouldFailWithInvalidRequest() throws IOException {
+        IdRequest    idRequest    = new IdRequest(0L);
+        HttpResponse lockResponse = sendStandardRequest(UrlMapping.OSD__LOCK, idRequest);
+        assertCinnamonError(lockResponse, ErrorCode.INVALID_REQUEST);
+
+        HttpResponse unlockResponse = sendStandardRequest(UrlMapping.OSD__UNLOCK, idRequest);
+        assertCinnamonError(unlockResponse, ErrorCode.INVALID_REQUEST);
+    }
+
+    @Test
+    public void lockAndUnlockShouldFailWithoutPermission() throws IOException {
+        IdRequest    idRequest    = new IdRequest(27L);
+        HttpResponse lockResponse = sendStandardRequest(UrlMapping.OSD__LOCK, idRequest);
+        assertCinnamonError(lockResponse, ErrorCode.NO_LOCK_PERMISSION, SC_FORBIDDEN);
+
+        HttpResponse unlockResponse = sendStandardRequest(UrlMapping.OSD__UNLOCK, idRequest);
+        assertCinnamonError(unlockResponse, ErrorCode.NO_LOCK_PERMISSION, SC_FORBIDDEN);
+    }
+
+    @Test
+    public void lockAndUnlockShouldFailWithNonExistantObject() throws IOException {
+        IdRequest    idRequest    = new IdRequest(Long.MAX_VALUE);
+        HttpResponse lockResponse = sendStandardRequest(UrlMapping.OSD__LOCK, idRequest);
+        assertCinnamonError(lockResponse, ErrorCode.OBJECT_NOT_FOUND, SC_NOT_FOUND);
+
+        HttpResponse unlockResponse = sendStandardRequest(UrlMapping.OSD__UNLOCK, idRequest);
+        assertCinnamonError(unlockResponse, ErrorCode.OBJECT_NOT_FOUND, SC_NOT_FOUND);
+    }
+
+    @Test
+    public void superuserHasMasterKeyForUnlock() throws IOException{
+        IdRequest    idRequest    = new IdRequest(25L);
+        HttpResponse lockResponse = sendStandardRequest(UrlMapping.OSD__LOCK, idRequest);
+        assertResponseOkay(lockResponse);
+
+        HttpResponse unlockResponse = sendAdminRequest(UrlMapping.OSD__UNLOCK, idRequest);
+        assertResponseOkay(unlockResponse);
+    }
 
     private HttpResponse sendStandardMultipartRequest(String url, MultipartEntity multipartEntity) throws IOException {
         return Request.Post(url)

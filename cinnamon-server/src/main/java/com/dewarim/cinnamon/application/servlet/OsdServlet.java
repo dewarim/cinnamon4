@@ -8,6 +8,7 @@ import com.dewarim.cinnamon.application.ErrorResponseGenerator;
 import com.dewarim.cinnamon.application.ResponseUtil;
 import com.dewarim.cinnamon.dao.FormatDao;
 import com.dewarim.cinnamon.dao.LinkDao;
+import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.model.Format;
 import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.request.*;
@@ -75,16 +76,94 @@ public class OsdServlet extends HttpServlet {
             case "/getSummaries":
                 getSummaries(request, response, user, osdDao);
                 break;
+            case "/lock":
+                lock(request, response, user, osdDao);
+                break;
             case "/setContent":
                 setContent(request, response, user, osdDao);
                 break;
             case "/setSummary":
                 setSummary(request, response, user, osdDao);
                 break;
+            case "/unlock":
+                unlock(request, response, user, osdDao);
             default:
                 response.setStatus(HttpServletResponse.SC_NO_CONTENT);
         }
 
+    }
+
+    private void lock(HttpServletRequest request, HttpServletResponse response, UserAccount user, OsdDao osdDao) throws IOException {
+        IdRequest idRequest = xmlMapper.readValue(request.getInputStream(), IdRequest.class);
+        if (idRequest.validated()) {
+            Optional<ObjectSystemData> osdOpt = osdDao.getObjectById(idRequest.getId());
+            if (!osdOpt.isPresent()) {
+                generateErrorMessage(response, SC_NOT_FOUND, ErrorCode.OBJECT_NOT_FOUND);
+                return;
+            }
+            ObjectSystemData osd         = osdOpt.get();
+            boolean          lockAllowed = new AuthorizationService().hasUserOrOwnerPermission(osd, DefaultPermission.LOCK, user);
+            if (!lockAllowed) {
+                generateErrorMessage(response, SC_FORBIDDEN, ErrorCode.NO_LOCK_PERMISSION);
+                return;
+            }
+            Long lockHolder = osd.getLockerId();
+            if (lockHolder != null) {
+                if (lockHolder.equals(user.getId())) {
+                    // trying to lock your own object: NOP
+                    ResponseUtil.responseIsGenericOkay(response);
+                    return;
+                } else {
+                    generateErrorMessage(response, SC_FORBIDDEN, ErrorCode.OBJECT_LOCKED_BY_OTHER_USER);
+                    return;
+                }
+            }
+            osd.setLockerId(user.getId());
+            osdDao.updateOsd(osd);
+            ResponseUtil.responseIsOkayAndXml(response);
+            xmlMapper.writeValue(response.getWriter(), new GenericResponse(true));
+        } else {
+            generateErrorMessage(response, SC_BAD_REQUEST, ErrorCode.INVALID_REQUEST);
+        }
+    }
+
+
+    private void unlock(HttpServletRequest request, HttpServletResponse response, UserAccount user, OsdDao osdDao) throws ServletException, IOException {
+        IdRequest idRequest = xmlMapper.readValue(request.getInputStream(), IdRequest.class);
+        if (idRequest.validated()) {
+            Optional<ObjectSystemData> osdOpt = osdDao.getObjectById(idRequest.getId());
+            if (!osdOpt.isPresent()) {
+                generateErrorMessage(response, SC_NOT_FOUND, ErrorCode.OBJECT_NOT_FOUND);
+                return;
+            }
+            ObjectSystemData osd           = osdOpt.get();
+            boolean          unlockAllowed = new AuthorizationService().hasUserOrOwnerPermission(osd, DefaultPermission.LOCK, user);
+            if (!unlockAllowed) {
+                generateErrorMessage(response, SC_FORBIDDEN, ErrorCode.NO_LOCK_PERMISSION);
+                return;
+            }
+
+            Long lockHolder = osd.getLockerId();
+            if (lockHolder != null) {
+                UserAccountDao userDao = new UserAccountDao();
+                // superuser may remove locks from other users.
+                if (lockHolder.equals(user.getId()) || userDao.isSuperuser(user)) {
+                    osd.setLockerId(null);
+                    osdDao.updateOsd(osd);
+                    ResponseUtil.responseIsGenericOkay(response);
+                    return;
+                } else {
+                    // trying to unlock another user's lock: nope.
+                    generateErrorMessage(response, SC_FORBIDDEN, ErrorCode.OBJECT_LOCKED_BY_OTHER_USER);
+                    return;
+                }
+            } else {
+                // trying to unlock an unlocked object: NOP
+                ResponseUtil.responseIsGenericOkay(response);
+            }
+        } else {
+            generateErrorMessage(response, SC_BAD_REQUEST, ErrorCode.INVALID_REQUEST);
+        }
     }
 
     private void getContent(HttpServletRequest request, HttpServletResponse response, UserAccount user, OsdDao osdDao) throws ServletException, IOException {
