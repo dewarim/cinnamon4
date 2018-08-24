@@ -74,3 +74,6 @@
     --
     alter table sessions drop column ui_language_id;
     alter table sessions drop column obj_version;
+
+    -- root folder now has null parent instead of itself.
+    update folders set parent_id=null where parent_id=id; 

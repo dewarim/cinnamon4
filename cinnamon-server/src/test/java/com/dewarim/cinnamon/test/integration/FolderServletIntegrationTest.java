@@ -2,22 +2,25 @@ package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.application.UrlMapping;
+import com.dewarim.cinnamon.model.Folder;
+import com.dewarim.cinnamon.model.request.FolderRequest;
 import com.dewarim.cinnamon.model.request.IdListRequest;
 import com.dewarim.cinnamon.model.request.SetSummaryRequest;
+import com.dewarim.cinnamon.model.request.SingleFolderRequest;
+import com.dewarim.cinnamon.model.response.FolderWrapper;
 import com.dewarim.cinnamon.model.response.SummaryWrapper;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
@@ -69,5 +72,34 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         // when all ids are non-readable, return an empty list:
         assertNull(wrapper.getSummaries());
     }
-    
+
+    @Test
+    public void getFolderHappyPath() throws IOException {
+        SingleFolderRequest singleRequest = new SingleFolderRequest(6L, false);
+        HttpResponse        response      = sendStandardRequest(UrlMapping.FOLDER__GET_FOLDER, singleRequest);
+        List<Folder>        folders       = unwrapFolders(response, 3);
+        assertTrue(folders.stream().anyMatch(folder -> folder.getId().equals(6L)));
+        assertTrue(folders.stream().anyMatch(folder -> folder.getId().equals(2L)));
+        assertTrue(folders.stream().anyMatch(folder -> folder.getId().equals(1L)));
+    }
+
+    @Test
+    public void getFoldersHappyPath() throws IOException {
+        FolderRequest folderRequest = new FolderRequest(Arrays.asList(6L, 2L), false);
+        HttpResponse  response      = sendStandardRequest(UrlMapping.FOLDER__GET_FOLDERS, folderRequest);
+        List<Folder>  folders       = unwrapFolders(response, 2);
+        assertTrue(folders.stream().anyMatch(folder -> folder.getId().equals(6L)));
+        assertTrue(folders.stream().anyMatch(folder -> folder.getId().equals(2L)));
+    }
+
+    private List<Folder> unwrapFolders(HttpResponse response, Integer expectedSize) throws IOException {
+        assertResponseOkay(response);
+        List<Folder> folders = mapper.readValue(response.getEntity().getContent(), FolderWrapper.class).getFolders();
+        if (expectedSize != null) {
+            assertNotNull(folders);
+            assertFalse(folders.isEmpty());
+            assertThat(folders.size(), equalTo(expectedSize));
+        }
+        return folders;
+    }
 }
