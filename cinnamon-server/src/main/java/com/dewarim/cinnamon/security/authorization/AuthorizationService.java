@@ -2,6 +2,7 @@ package com.dewarim.cinnamon.security.authorization;
 
 import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.api.Ownable;
+import com.dewarim.cinnamon.model.Folder;
 import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.UserAccount;
@@ -11,9 +12,14 @@ import java.util.stream.Collectors;
 
 public class AuthorizationService {
 
+    public List<Folder> filterFoldersByBrowsePermission(List<Folder> folders, UserAccount user){
+        AccessFilter accessFilter = AccessFilter.getInstance(user);
+        return folders.stream().filter(accessFilter::hasBrowsePermissionForOwnable).collect(Collectors.toList());
+    }
+
     public List<ObjectSystemData> filterObjectsByBrowsePermission(List<ObjectSystemData> osds, UserAccount user) {
         AccessFilter accessFilter = AccessFilter.getInstance(user);
-        return osds.stream().filter(accessFilter::hasBrowsePermissionForOsd).collect(Collectors.toList());
+        return osds.stream().filter(accessFilter::hasBrowsePermissionForOwnable).collect(Collectors.toList());
     }
 
     public List<Link> filterLinksByBrowsePermission(List<Link> links, UserAccount user) {
@@ -25,7 +31,7 @@ public class AuthorizationService {
                             return accessFilter.hasFolderBrowsePermission(link.getAclId())
                                     || (link.getOwnerId().equals(user.getId()) && accessFilter.hasOwnerBrowsePermission(link.getAclId()));
                         case OBJECT:
-                            return accessFilter.hasBrowsePermissionForLink(link)
+                            return accessFilter.hasBrowsePermissionForOwnable(link)
                                     || (link.getOwnerId().equals(user.getId()) && accessFilter.hasPermission(link.getAclId(), DefaultPermission.BROWSE_FOLDER.getName(), true));
                         default:
                             throw new IllegalStateException("unknown link type");

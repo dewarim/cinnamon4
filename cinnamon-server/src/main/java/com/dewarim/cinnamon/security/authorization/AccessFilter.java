@@ -72,17 +72,14 @@ public class AccessFilter {
     }
 
     /**
-     * Check if the user has browse permission for a given OSD, either through the object's acl or as owner.
+     * Check if the user has browse permission for a given thing, either through the object's acl or as owner.
      */
-    public boolean hasBrowsePermissionForOsd(ObjectSystemData osd) {
-        long aclId = osd.getAclId();
-        return hasUserBrowsePermission(aclId) || (osd.getOwnerId().equals(user.getId()) && hasOwnerBrowsePermission(aclId));
+    public boolean hasBrowsePermissionForOwnable(Ownable ownable) {
+        long aclId = ownable.getAclId();
+        return hasUserBrowsePermission(aclId) || (ownable.getOwnerId().equals(user.getId()) && hasOwnerBrowsePermission(aclId));
     }
 
-    public boolean hasBrowsePermissionForLink(Link link) {
-        long aclId = link.getAclId();
-        return hasUserBrowsePermission(aclId) || (link.getOwnerId().equals(user.getId()) && hasOwnerBrowsePermission(aclId));
-    }
+
 
     public boolean hasPermission(long aclId, String permissionName) {
         return hasPermission(aclId, permissionName, false);
