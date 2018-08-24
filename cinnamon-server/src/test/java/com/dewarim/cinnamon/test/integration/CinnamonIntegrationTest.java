@@ -47,7 +47,7 @@ public class CinnamonIntegrationTest {
 
             DbSessionFactory dbSessionFactory = new DbSessionFactory("sql/mybatis.test.properties.xml");
 
-            SqlSession session = dbSessionFactory.getSqlSessionFactory().openSession();
+            SqlSession session = dbSessionFactory.getSqlSessionFactory().openSession(true);
             Connection conn = session.getConnection();
             Reader reader = Resources.getResourceAsReader("sql/CreateTestDB.sql");
             ScriptRunner runner = new ScriptRunner(conn);

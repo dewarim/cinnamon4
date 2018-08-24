@@ -3,6 +3,7 @@
 -------------------------
 
 -- users --
+drop table if exists users cascade;
 CREATE TABLE users (
   id BIGINT PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
@@ -14,9 +15,11 @@ CREATE TABLE users (
   ui_language_id BIGINT
 );
 
+drop sequence if exists seq_user_id;
 create SEQUENCE seq_user_id start with 1;
 
 -- sessions --
+drop table if exists sessions cascade;
 create table sessions
 (
   id bigint PRIMARY KEY,
@@ -27,9 +30,11 @@ create table sessions
   user_id bigint not null
 );
 
+drop sequence if exists seq_session_id;
 create SEQUENCE seq_session_id start with 1;
 
 -- ui_languages
+drop table if exists ui_languages;
 create table ui_languages
 (
   id bigint not null
@@ -39,11 +44,12 @@ create table ui_languages
     constraint ui_languages_iso_code_key
     unique
 );
-
+drop sequence if exists seq_ui_language_id;
 create SEQUENCE seq_ui_language_id start with 1;
 
 
 -- languages
+drop table if exists languages cascade;
 create table languages
 (
   id bigint not null
@@ -53,19 +59,21 @@ create table languages
     constraint languages_iso_code_key
     unique
 );
-
+drop sequence if exists seq_language_id;
 create SEQUENCE seq_language_id start with 1;
 
 
 -- acls --
+drop table if exists acls cascade ;
 create table acls(
   id bigint PRIMARY KEY,
   name varchar(255) UNIQUE
 );
-
+drop sequence if exists seq_acl_id;
 create SEQUENCE seq_acl_id start with 1;
 
 -- folder types --
+drop table if exists folder_types cascade ;
 create table folder_types
 (
   id bigint not null
@@ -77,10 +85,11 @@ create table folder_types
   obj_version bigint,
   config varchar(10241024) default '<config />' not null
 );
-
+drop sequence if exists seq_folder_type_id;
 create sequence seq_folder_type_id start with 1;
 
 -- folders --
+drop table if exists folders cascade ;
 create table folders
 (
   id bigint not null
@@ -106,11 +115,12 @@ create table folders
   constraint folders_name_key
   unique (name, parent_id)
 );
-
+drop sequence if exists seq_folder_id;
 create sequence seq_folder_id start with 1;
 
 
 -- objtypes --
+drop table if exists objtypes cascade ;
 create table objtypes
 (
   id bigint not null
@@ -121,10 +131,11 @@ create table objtypes
     unique,
   config varchar(10241024) default '<meta />' not null
 );
-
+drop sequence if exists seq_obj_type_id;
 create sequence seq_obj_type_id start with 1;
 
 -- formats --
+drop table if exists formats cascade ;
 create table formats
 (
   id bigint not null
@@ -140,10 +151,11 @@ create table formats
     constraint defaultobjecttype
     references objtypes
 );
-
+drop sequence if exists seq_format_id;
 create sequence seq_format_id start with 1;
 
 -- lifecycles --
+drop table if exists lifecycles cascade ;
 create table lifecycles
 (
   id bigint not null
@@ -155,10 +167,11 @@ create table lifecycles
   default_state_id bigint
 
 );
-
+drop sequence if exists seq_lifecycle_id ;
 create sequence seq_lifecycle_id start with 1;
 
 -- lifecycle_state --
+drop table if exists lifecycle_states cascade ;
 create table lifecycle_states
 (
   id bigint not null
@@ -177,14 +190,18 @@ create table lifecycle_states
 alter table lifecycles add constraint fk_default_state_id FOREIGN KEY 
   (default_state_id) references lifecycle_states(id);
 
+drop sequence if exists seq_lifecycle_states_id;
 create sequence seq_lifecycle_states_id start with 1;
 
+-- lifecycle_state_to_copy_state --
+drop table if exists lifecycle_state_to_copy_state cascade ;
 create table lifecycle_state_to_copy_state(
   lifecycle_state_id bigint references lifecycle_states(id) unique,
   copy_state_id bigint references lifecycle_states(id)
 );
 
 -- objects --
+drop table if exists objects cascade ;
 create table objects
 (
   id bigint not null
@@ -241,11 +258,12 @@ create table objects
   summary text default '<summary />' not null,
   content_hash varchar(128)
 );
-
+drop sequence if exists seq_objects_id;
 create sequence seq_objects_id start with 1;
 
 
 -- links --
+drop table if exists links cascade ;
 create table links
 (
   id bigint not null
@@ -282,20 +300,24 @@ create index fki_links_parent_id_fk
   on links (parent_id)
 ;
 
+drop sequence if exists seq_links_id;
 create sequence seq_links_id start with 1;
 
 
 -- groups --
+drop table if exists groups cascade ;
 create table groups(
   id bigint PRIMARY KEY,
   name varchar(255) UNIQUE,
   group_of_one boolean default false not null,
   parent_id bigint constraint fk_group_parent_id references groups
 );
+drop sequence if exists seq_groups;
 create SEQUENCE seq_groups start with 1;
 
 -- aclentries --
 
+drop table if exists aclentries cascade ;
 create table aclentries
 (
   id bigint not null
@@ -310,11 +332,12 @@ create table aclentries
   constraint unique_acl_id
   unique (group_id, acl_id)
 );
-
+drop sequence if exists seq_acl_entries_id;
 create sequence seq_acl_entries_id start with 1;
 
 
 -- group_users --
+drop table if exists group_users cascade ;
 create table group_users(
   user_id BIGINT NOT NULL ,
   group_id BIGINT NOT NULL 
@@ -325,6 +348,7 @@ create UNIQUE INDEX  group_users_user_group
   ;
 
 -- permissions --
+drop table if exists permissions cascade ;
 create table permissions
 (
   id bigint not null
@@ -334,9 +358,11 @@ create table permissions
     constraint permissions_name_key
     unique
 );
+drop sequence if exists seq_permission_id;
 create sequence seq_permission_id start with 1;
 
 -- aclentry_permissions --
+drop table if exists  aclentry_permissions cascade ;
 create table aclentry_permissions
 (
   id bigint not null
@@ -351,9 +377,10 @@ create table aclentry_permissions
   constraint unique_aclentry_id
   unique (permission_id, aclentry_id)
 );
-
+drop sequence if exists seq_aclentry_permission_id;
 create sequence seq_aclentry_permission_id start with 1;
 
+drop table if exists relationtypes cascade ;
 create table relationtypes
 (
   id bigint not null
@@ -370,9 +397,10 @@ create table relationtypes
   clone_on_right_version boolean default false not null
 )
 ;
-
+drop sequence if exists seq_relationtypes_id;
 create sequence seq_relationtypes_id start with 1;
 
+drop table if exists relations cascade ;
 create table relations
 (
   id bigint not null
@@ -392,9 +420,11 @@ create table relations
   unique (type_id, right_id, left_id)
 )
 ;
-
+drop sequence if exists seq_relations_id;
 create sequence seq_relations_id start with 1;
 
+-- metaset_types --
+drop table if exists metaset_types cascade ;
 create table metaset_types
 (
   id bigint not null
@@ -404,9 +434,11 @@ create table metaset_types
     constraint metaset_types_name_key
     unique
 );
-
+drop sequence if exists seq_metaset_types_id;
 create sequence seq_metaset_types_id start with 1;
 
+-- index_items --
+drop table if exists index_items cascade ;
 create table index_items
 (
   id bigint not null
@@ -427,8 +459,10 @@ create table index_items
   store_field boolean default false not null
 )
 ;
+drop sequence if exists seq_index_item_id;
 create sequence seq_index_item_id start with 1;
 
+drop table if exists config_entries cascade ;
 create table config_entries
 (
   id bigint not null
@@ -441,7 +475,7 @@ create table config_entries
   public_visibility boolean not null default false
 )
 ;
-
+drop sequence if exists seq_config_entries_id;
 create sequence seq_config_entries_id start with 1;
 
 
