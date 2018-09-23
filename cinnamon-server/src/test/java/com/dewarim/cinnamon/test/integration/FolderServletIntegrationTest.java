@@ -3,10 +3,7 @@ package com.dewarim.cinnamon.test.integration;
 import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.application.UrlMapping;
 import com.dewarim.cinnamon.model.Folder;
-import com.dewarim.cinnamon.model.request.FolderRequest;
-import com.dewarim.cinnamon.model.request.IdListRequest;
-import com.dewarim.cinnamon.model.request.SetSummaryRequest;
-import com.dewarim.cinnamon.model.request.SingleFolderRequest;
+import com.dewarim.cinnamon.model.request.*;
 import com.dewarim.cinnamon.model.response.FolderWrapper;
 import com.dewarim.cinnamon.model.response.SummaryWrapper;
 import org.apache.http.HttpResponse;
@@ -17,7 +14,9 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
 import static org.apache.http.HttpStatus.SC_NOT_FOUND;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -120,6 +119,45 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         FolderRequest folderRequest = new FolderRequest(Collections.singletonList(Long.MAX_VALUE), false);
         HttpResponse  response      = sendStandardRequest(UrlMapping.FOLDER__GET_FOLDERS, folderRequest);
         assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND, SC_NOT_FOUND);
+    }
+
+    @Test
+    public void getFolderByPathInvalidRequest() throws IOException {
+        FolderPathRequest request  = new FolderPathRequest("", true);
+        HttpResponse      response = sendStandardRequest(UrlMapping.FOLDER__GET_FOLDER_BY_PATH, request);
+        assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
+    }
+
+    @Test
+    public void getFolderByPathBadParameter() throws IOException {
+        // "//" is not allowed
+        FolderPathRequest request  = new FolderPathRequest("http://", true);
+        HttpResponse      response = sendStandardRequest(UrlMapping.FOLDER__GET_FOLDER_BY_PATH, request);
+        assertCinnamonError(response, ErrorCode.INVALID_FOLDER_PATH_STRUCTURE, SC_BAD_REQUEST);
+
+        // trailing "/" is not allowed
+        FolderPathRequest trailingRequest  = new FolderPathRequest("http://", true);
+        HttpResponse      trailingResponse = sendStandardRequest(UrlMapping.FOLDER__GET_FOLDER_BY_PATH, trailingRequest);
+        assertCinnamonError(trailingResponse, ErrorCode.INVALID_FOLDER_PATH_STRUCTURE, SC_BAD_REQUEST);
+    }
+
+    @Test
+    public void getFolderByPathFolderNotFound() throws IOException {
+        FolderPathRequest request  = new FolderPathRequest("/foo/bar", true);
+        HttpResponse      response = sendStandardRequest(UrlMapping.FOLDER__GET_FOLDER_BY_PATH, request);
+        assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND, SC_NOT_FOUND);
+    }
+
+    @Test
+    public void getFolderByPathHappyPath() throws IOException {
+        FolderPathRequest request     = new FolderPathRequest("/home/creation/some-sub-folder", true);
+        HttpResponse      response    = sendStandardRequest(UrlMapping.FOLDER__GET_FOLDER_BY_PATH, request);
+        List<Folder>      folders     = unwrapFolders(response, 4);
+        List<String>      folderNames = folders.stream().map(Folder::getName).collect(Collectors.toList());
+        assertTrue(folderNames.contains("root"));
+        assertTrue(folderNames.contains("home"));
+        assertTrue(folderNames.contains("creation"));
+        assertTrue(folderNames.contains("some-sub-folder"));
     }
 
     private List<Folder> unwrapFolders(HttpResponse response, Integer expectedSize) throws IOException {

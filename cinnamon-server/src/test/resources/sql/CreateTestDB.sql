@@ -562,6 +562,10 @@ values(nextval('seq_folder_id'),'cannot set-my-summary',0,1,1,6,1, 'no-sum');
 insert into folders(id,name,obj_version,acl_id,owner_id,parent_id,type_id, summary)
 values(nextval('seq_folder_id'),'get-my-summary',0,2,1,6,1, '<sum>folder</sum>');
 
+-- #14 folder in creation folder#6 for getFolderByPath
+insert into folders(id,name,obj_version,acl_id,owner_id,parent_id,type_id)
+values(nextval('seq_folder_id'),'some-sub-folder',0,1,1,6,1);
+
 -- #1
 insert into objtypes(id,name) values(nextval('seq_obj_type_id'),'_default_objtype');
 

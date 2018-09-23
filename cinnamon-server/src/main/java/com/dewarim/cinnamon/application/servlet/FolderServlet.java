@@ -4,6 +4,7 @@ import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.application.ResponseUtil;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
+import com.dewarim.cinnamon.application.exception.BadArgumentException;
 import com.dewarim.cinnamon.dao.FolderDao;
 import com.dewarim.cinnamon.model.Folder;
 import com.dewarim.cinnamon.model.UserAccount;
@@ -47,6 +48,9 @@ public class FolderServlet extends HttpServlet {
             case "/getFolder":
                 getFolder(request, response, user, folderDao);
                 break;
+            case "/getFolderByPath":
+                getFolderByPath(request,response,user,folderDao);
+                break;
             case "/getFolders":
                 getFolders(request, response, user, folderDao);
                 break;
@@ -61,6 +65,34 @@ public class FolderServlet extends HttpServlet {
         }
 
     }
+
+    private void getFolderByPath(HttpServletRequest request,HttpServletResponse response, UserAccount user, FolderDao folderDao) throws IOException{
+        FolderPathRequest pathRequest = xmlMapper.readValue(request.getInputStream(), FolderPathRequest.class);
+        if (pathRequest.validated()) {
+
+            List<Folder> rawFolders;
+            try {
+                rawFolders = folderDao.getFolderByPathWithAncestors(pathRequest.getPath(), pathRequest.isIncludeSummary());
+            }
+            catch (BadArgumentException e){
+                generateErrorMessage(response, SC_BAD_REQUEST,e.getErrorCode());
+                return;
+            }
+            List<Folder> folders    = new AuthorizationService().filterFoldersByBrowsePermission(rawFolders, user);
+            if (folders.isEmpty()) {
+                generateErrorMessage(response, SC_NOT_FOUND, ErrorCode.OBJECT_NOT_FOUND);
+                return;
+            }
+
+            ResponseUtil.responseIsOkayAndXml(response);
+            FolderWrapper folderWrapper = new FolderWrapper();
+            folderWrapper.setFolders(folders);
+            xmlMapper.writeValue(response.getWriter(), folderWrapper);
+        } else {
+            generateErrorMessage(response, SC_BAD_REQUEST, ErrorCode.INVALID_REQUEST);
+        }
+    }
+
 
     /**
      * Retrieve a single folder, including ancestors.

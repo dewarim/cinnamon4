@@ -23,6 +23,7 @@ public enum ErrorCode {
     ID_PARAM_IS_INVALID("id param is missing or invalid"),
     INFO_REQUEST_WITHOUT_NAME_OR_ID("request needs id or name parameter"),
     INTERNAL_SERVER_ERROR_TRY_AGAIN_LATER("internal server  please retry later"),
+    INVALID_FOLDER_PATH_STRUCTURE("Invalid folder path structure."),
     INVALID_LINK_RESOLVER("Links to folders must have LinkResolver.FIXED."),
     INVALID_REQUEST("request is invalid check parameters"),
     LOGIN_FAILED("login failed"),

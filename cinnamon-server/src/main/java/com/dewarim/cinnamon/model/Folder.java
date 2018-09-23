@@ -118,4 +118,20 @@ public class Folder implements Ownable {
     public int hashCode() {
         return Objects.hash(name, parentId);
     }
+
+    @Override
+    public String toString() {
+        return "Folder{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", objVersion=" + objVersion +
+                ", aclId=" + aclId +
+                ", ownerId=" + ownerId +
+                ", parentId=" + parentId +
+                ", typeId=" + typeId +
+                ", metadataChanged=" + metadataChanged +
+                ", summary='" + summary + '\'' +
+                ", created=" + created +
+                '}';
+    }
 }

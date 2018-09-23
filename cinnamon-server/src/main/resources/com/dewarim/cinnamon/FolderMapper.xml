@@ -88,6 +88,66 @@
         )
     </select>
 
+    <select id="getRootFolder" parameterType="map" resultMap="folderMap">
+        SELECT
+            id,
+            name,
+            obj_version,
+            acl_id,
+            owner_id,
+            parent_id,
+            type_id,
+            metadata_changed,
+            created,
+            CASE WHEN #{includeSummary}
+                THEN summary
+            ELSE null END AS summary
+
+        FROM folders
+        WHERE name = #{rootFolderName}
+        AND parent_id is NULL
+    </select>
+
+    <select id="getFolderByParentIdAndChildName" parameterType="map" resultMap="folderMap">
+        SELECT
+        id,
+        name,
+        obj_version,
+        acl_id,
+        owner_id,
+        parent_id,
+        type_id,
+        metadata_changed,
+        created,
+        CASE WHEN #{includeSummary}
+        THEN summary
+        ELSE null END AS summary
+
+        FROM folders
+        WHERE name = #{childName}
+        AND parent_id = #{parentId}
+    </select>
+
+    <select id="getChildFolderOfRootByName" parameterType="map" resultMap="folderMap">
+        SELECT
+            id,
+            name,
+            obj_version,
+            acl_id,
+            owner_id,
+            parent_id,
+            type_id,
+            metadata_changed,
+            created,
+            CASE WHEN #{includeSummary}
+                THEN summary
+            ELSE null END AS summary
+
+        FROM folders
+        WHERE name = #{name}
+              AND parent_id = #{id}
+    </select>
+
     <!-- TODO: perhaps implement safe version (checking for folder.version=version) -->
     <update id="updateFolder">
         UPDATE folders

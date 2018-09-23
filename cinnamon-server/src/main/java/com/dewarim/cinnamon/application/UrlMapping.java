@@ -20,6 +20,7 @@ public enum UrlMapping {
     CONFIG__LIST_ALL_CONFIGURATIONS("config", "listAllConfigurations", "/api"),
     FOLDER_TYPE__LIST_FOLDER_TYPES("folderType", "listFolderTypes", "/api"),
     FOLDER__GET_FOLDER("folder", "getFolder", "/api"),
+    FOLDER__GET_FOLDER_BY_PATH("folder", "getFolderByPath", "/api"),
     FOLDER__GET_FOLDERS("folder", "getFolders", "/api"),
     FOLDER__GET_SUMMARIES("folder", "getSummaries", "/api"),
     FOLDER__SET_SUMMARY("folder", "setSummary", "/api"),
