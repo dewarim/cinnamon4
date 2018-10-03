@@ -14,9 +14,15 @@ public class LifecycleDao {
         return sqlSession.selectList("com.dewarim.cinnamon.LifecycleMapper.list");
     }
 
-    public Optional<Lifecycle> getLifecycleById(long id) {
+    public Optional<Lifecycle> getLifecycleById(Long id) {
         SqlSession   sqlSession   = ThreadLocalSqlSession.getSqlSession();
         Lifecycle lifecycle = sqlSession.selectOne("com.dewarim.cinnamon.LifecycleMapper.getLifecycleById", id);
+        return Optional.ofNullable(lifecycle);
+    }
+
+    public Optional<Lifecycle> getLifecycleByName(String name) {
+        SqlSession   sqlSession   = ThreadLocalSqlSession.getSqlSession();
+        Lifecycle lifecycle = sqlSession.selectOne("com.dewarim.cinnamon.LifecycleMapper.getLifecycleByName", name);
         return Optional.ofNullable(lifecycle);
     }
 

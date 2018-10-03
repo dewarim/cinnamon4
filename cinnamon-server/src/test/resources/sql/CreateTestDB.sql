@@ -970,8 +970,9 @@ values (nextval('seq_index_item_id'), 'acl', false,false,true,false,'index.acl',
   '/sysMeta/object/aclId', '<vaParams type="client.acl.id"/>','true()','DEFAULT_STRING_INDEXER',true 
 );
 
--- #1 lifecycle
+-- #1 lifecycle review.lc
 insert into lifecycles(id, name, default_state_id) VALUES (nextval('seq_lifecycle_id'), 'review.lc',null);
+-- #2 lifecycle render.lc
 insert into lifecycles(id, name, default_state_id) VALUES (nextval('seq_lifecycle_id'), 'render.lc',null);
 
 -- #1 relation: type 1 relation
