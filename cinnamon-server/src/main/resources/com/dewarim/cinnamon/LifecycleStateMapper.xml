@@ -26,5 +26,17 @@
         WHERE id = #{id}
     </select>
 
+    <select id="getLifecycleStatesByLifecycleId" parameterType="Long" resultMap="LifecycleStateMap">
+        SELECT
+            l.id,
+            l.name,
+            l.config,
+            l.state_class,
+            l.life_cycle_id,
+            (select c.copy_state_id from lifecycle_state_to_copy_state c where c.lifecycle_state_id = l.id) as lifecycle_state_for_copy_id
+        FROM lifecycle_states l
+        WHERE life_cycle_id = #{id}
+    </select>
+
 
 </mapper>

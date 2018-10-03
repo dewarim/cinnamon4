@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.model;
 
+import java.util.List;
 import java.util.Objects;
 
 public class Lifecycle {
@@ -7,6 +8,7 @@ public class Lifecycle {
     private Long id;
     private String name;
     private Long defaultStateId;
+    private List<LifecycleState> lifecycleStates;
 
     public Lifecycle() {
     }
@@ -40,6 +42,14 @@ public class Lifecycle {
         this.defaultStateId = defaultStateId;
     }
 
+    public List<LifecycleState> getLifecycleStates() {
+        return lifecycleStates;
+    }
+
+    public void setLifecycleStates(List<LifecycleState> lifecycleStates) {
+        this.lifecycleStates = lifecycleStates;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -50,7 +60,8 @@ public class Lifecycle {
         }
         Lifecycle lifecycle = (Lifecycle) o;
         return Objects.equals(name, lifecycle.name) &&
-               Objects.equals(defaultStateId, lifecycle.defaultStateId);
+                Objects.equals(defaultStateId, lifecycle.defaultStateId) &&
+                Objects.equals(lifecycleStates, lifecycle.lifecycleStates);
     }
 
     @Override

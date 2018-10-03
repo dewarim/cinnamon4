@@ -1,9 +1,9 @@
 package com.dewarim.cinnamon.test.integration;
 
-import com.dewarim.cinnamon.Constants;
 import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.application.UrlMapping;
 import com.dewarim.cinnamon.model.Lifecycle;
+import com.dewarim.cinnamon.model.LifecycleState;
 import com.dewarim.cinnamon.model.request.LifecycleRequest;
 import com.dewarim.cinnamon.model.request.ListRequest;
 import com.dewarim.cinnamon.model.response.LifecycleWrapper;
@@ -48,11 +48,17 @@ public class LifecycleServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getLifecycleHappyPathWithName() throws IOException {
-        HttpResponse    response   = sendStandardRequest(UrlMapping.LIFECYCLE__GET_LIFECYCLE, new LifecycleRequest(null, "review.lc"));
+        HttpResponse    response   = sendStandardRequest(UrlMapping.LIFECYCLE__GET_LIFECYCLE, new LifecycleRequest(null, "render.lc"));
         List<Lifecycle> lifecycles = parseResponse(response);
         assertEquals(1, lifecycles.size());
         Lifecycle lifecycle = lifecycles.get(0);
-        assertEquals("review.lc", lifecycle.getName());
+        assertEquals("render.lc", lifecycle.getName());
+        assertEquals(Long.valueOf(2), lifecycle.getId());
+        List<LifecycleState> lifecycleStates = lifecycle.getLifecycleStates();
+        assertEquals(1, lifecycleStates.size());
+        LifecycleState newRenderTaskState = lifecycleStates.get(0);
+        assertEquals("newRenderTask",newRenderTaskState.getName());
+        assertEquals("NopState",newRenderTaskState.getStateClass());
     }
 
     @Test

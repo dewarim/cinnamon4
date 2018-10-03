@@ -3,7 +3,9 @@ package com.dewarim.cinnamon.application.servlet;
 import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.application.ResponseUtil;
 import com.dewarim.cinnamon.dao.LifecycleDao;
+import com.dewarim.cinnamon.dao.LifecycleStateDao;
 import com.dewarim.cinnamon.model.Lifecycle;
+import com.dewarim.cinnamon.model.LifecycleState;
 import com.dewarim.cinnamon.model.request.LifecycleRequest;
 import com.dewarim.cinnamon.model.request.ListRequest;
 import com.dewarim.cinnamon.model.response.LifecycleWrapper;
@@ -58,6 +60,8 @@ public class LifecycleServlet extends HttpServlet {
                 generateErrorMessage(response, SC_NOT_FOUND, ErrorCode.OBJECT_NOT_FOUND);
                 return;
             }
+            List<LifecycleState> lifecycleStates = new LifecycleStateDao().getLifecycleStatesByLifecycleId(lifecycle.getId());
+            lifecycle.setLifecycleStates(lifecycleStates);
             ResponseUtil.responseIsOkayAndXml(response);
             LifecycleWrapper wrapper = new LifecycleWrapper();
             wrapper.setLifecycles(Collections.singletonList(lifecycle));
