@@ -1,12 +1,19 @@
 package com.dewarim.cinnamon.model;
 
+import com.dewarim.cinnamon.api.lifecycle.LifecycleStateConfig;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+
+import java.io.IOException;
 import java.util.Objects;
 
+@JsonIgnoreProperties(value = { "lifecycleStateConfig" })
 public class LifecycleState {
 
     private Long   id;
     private String name;
-    private String config = "<meta />";
+    private String config = "<config />";
     private String stateClass;
     private Long   lifecycleId;
     private Long   lifecycleStateForCopyId;
@@ -20,6 +27,16 @@ public class LifecycleState {
         this.stateClass = stateClass;
         this.lifecycleId = lifecycleId;
         this.lifecycleStateForCopyId = lifecycleStateForCopyId;
+    }
+
+    public LifecycleStateConfig getLifecycleStateConfig() throws IOException {
+        /*
+         * Note: This is probably not optimal: parsing the config to a class from the cinnamon-api module.
+         * On the other hand, the config is currently stored as String object in XML format.
+         * If we had the configs in their own table as objects in their own right, I think I would use configId::config.
+         */
+        ObjectMapper xmlMapper = new XmlMapper();
+        return xmlMapper.readValue(config, LifecycleStateConfig.class);
     }
 
     public Long getId() {

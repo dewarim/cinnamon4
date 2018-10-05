@@ -30,6 +30,7 @@ public enum UrlMapping {
     LANGUAGE__LIST__LANGUAGES("language", "listLanguages", "/api"),
     LIFECYCLE__GET_LIFECYCLE("lifecycle", "getLifecycle", "/api"),
     LIFECYCLE__LIST_LIFECYCLES("lifecycle", "listLifecycles", "/api"),
+    LIFECYCLE_STATE__ATTACH_LIFECYCLE("lifecycleState", "attachLifecycle", "/api"),
     LIFECYCLE_STATE__GET_LIFECYCLE_STATE("lifecycleState", "getLifecycleState", "/api"),
     LINK__CREATE_LINK("link", "createLink", "/api"),
     LINK__DELETE_LINK("link", "deleteLink", "/api"),

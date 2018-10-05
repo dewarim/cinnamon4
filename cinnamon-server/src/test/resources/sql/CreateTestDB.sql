@@ -826,10 +826,15 @@ insert into objects (id, created, latest_branch, latest_head, modified, name, cr
                      owner_id, parent_id, type_id, acl_id)
 values (nextval('seq_objects_id'), now(), true, true, now(), 'lock-me', 1, 1, 1, 1, 6, 1, 2);
 
--- #27 empty test object without permissions for lock/unlock test in creation folder #6
+-- #27 empty test object without permissions for lock/unlock and attachLifecycle tests in creation folder #6
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
 values (nextval('seq_objects_id'), now(), true, true, now(), 'u-no-lock-me', 1, 1, 1, 1, 6, 1, 7);
+
+-- #28 empty test object to test lifecycle state changes (in creation folder #6)
+insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+                     owner_id, parent_id, type_id, acl_id)
+values (nextval('seq_objects_id'), now(), true, true, now(), 'lifecycle-test', 1, 1, 1, 1, 6, 1, 2);
 
 -- #1 link to osd #1 with default acl (#1)
 insert into links(id, type,owner_id,acl_id,parent_id,osd_id) 
@@ -970,18 +975,20 @@ values (nextval('seq_index_item_id'), 'acl', false,false,true,false,'index.acl',
   '/sysMeta/object/aclId', '<vaParams type="client.acl.id"/>','true()','DEFAULT_STRING_INDEXER',true 
 );
 
--- #1 lifecycle review.lc
-insert into lifecycles(id, name, default_state_id) VALUES (nextval('seq_lifecycle_id'), 'review.lc',null);
--- #2 lifecycle render.lc
-insert into lifecycles(id, name, default_state_id) VALUES (nextval('seq_lifecycle_id'), 'render.lc',null);
-
 -- #1 relation: type 1 relation
-insert into relations(id,left_id, right_id, type_id, metadata) VALUES (nextval('seq_relations_id'),20,19,1,'<meta>important</meta>' );
+insert into relations(id,left_id, right_id, type_id, metadata) VALUES (nextval('seq_relations_id'),20,19,1,'<meta>important</meta>' );;
 -- #2 relation: type 2 relation
 insert into relations(id,left_id, right_id, type_id, metadata) VALUES (nextval('seq_relations_id'),19,20,2,'<meta>ignore</meta>' );
 
+
+-- #1 lifecycle review.lc (lifecycle_state #1 will be configured as default state, see below).
+insert into lifecycles(id, name, default_state_id) VALUES (nextval('seq_lifecycle_id'), 'review.lc',null);
+-- #2 lifecycle render.lc (without any states, to test missing default state )
+insert into lifecycles(id, name, default_state_id) VALUES (nextval('seq_lifecycle_id'), 'render.lc',null);
+
 -- #1 lifecycle_state
 insert into lifecycle_states(id, name, config, state_class, life_cycle_id )
-    values (nextval('seq_lifecycle_states_id'), 'newRenderTask', '<meta>renderserver:x</meta>', 'NopState', 2);
+    values (nextval('seq_lifecycle_states_id'), 'newRenderTask', '<config><properties><property><name>render.server.host</name><value>localhost</value></property></properties></config>', 'NopState', 2);
 insert into lifecycle_state_to_copy_state(lifecycle_state_id, copy_state_id)
   values (currval('seq_lifecycle_states_id'), currval('seq_lifecycle_states_id'));
+update lifecycles set default_state_id=1 where id=1;

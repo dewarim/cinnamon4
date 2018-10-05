@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.model;
 
+import com.dewarim.cinnamon.api.CinnamonObject;
 import com.dewarim.cinnamon.api.Ownable;
 import com.dewarim.cinnamon.api.content.ContentMetadata;
 import com.dewarim.cinnamon.provider.DefaultContentProvider;
@@ -11,7 +12,7 @@ import java.util.Objects;
  * Core Cinnamon object, contains the system's data of an object (document, media file, other resource).
  * It's abbreviated to OSD.
  */
-public class ObjectSystemData implements ContentMetadata, Ownable {
+public class ObjectSystemData implements ContentMetadata, CinnamonObject {
     
     private Long id;
     private String name;
@@ -161,7 +162,7 @@ public class ObjectSystemData implements ContentMetadata, Ownable {
         return aclId;
     }
 
-    public void setAclId(Long aclId) {
+    public void setAclId(long aclId) {
         this.aclId = aclId;
     }
 
