@@ -4,22 +4,24 @@ import com.dewarim.cinnamon.api.lifecycle.LifecycleStateConfig;
 import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.application.UrlMapping;
 import com.dewarim.cinnamon.model.LifecycleState;
+import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.request.AttachLifecycleRequest;
 import com.dewarim.cinnamon.model.request.IdRequest;
-import com.dewarim.cinnamon.model.response.GenericResponse;
+import com.dewarim.cinnamon.model.request.OsdRequest;
 import com.dewarim.cinnamon.model.response.LifecycleStateWrapper;
+import com.dewarim.cinnamon.model.response.OsdWrapper;
 import org.apache.http.HttpResponse;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 import static org.apache.http.HttpStatus.SC_FORBIDDEN;
 import static org.apache.http.HttpStatus.SC_NOT_FOUND;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTest {
 
@@ -111,6 +113,14 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
         AttachLifecycleRequest badOsd   = new AttachLifecycleRequest(28L, 1L, null);
         HttpResponse           response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__ATTACH_LIFECYCLE, badOsd);
         parseGenericResponse(response);
+
+        // check if lifecycle state is really attached to OSD:
+        OsdRequest osdRequest = new OsdRequest(Collections.singletonList(28L),false);
+        HttpResponse osdResponse = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID,osdRequest);
+        assertResponseOkay(osdResponse);
+        OsdWrapper osdWrapper = mapper.readValue(osdResponse.getEntity().getContent(), OsdWrapper.class);
+        ObjectSystemData osd = osdWrapper.getOsds().get(0);
+        assertEquals((Long) 1L, osd.getLifecycleStateId());
     }
 
     @Ignore
