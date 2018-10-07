@@ -1,5 +1,7 @@
 package com.dewarim.cinnamon.model.request;
 
+import java.util.Optional;
+
 public class IdRequest {
     
     private Long id;
@@ -18,8 +20,18 @@ public class IdRequest {
     public void setId(Long id) {
         this.id = id;
     }
-    
+
+    // TODO: switch from validated to validateRequest in all places
     public boolean validated(){
         return id != null && id > 0;
+    }
+
+    public Optional<IdRequest> validateRequest(){
+        if(validated()){
+            return Optional.of(this);
+        }
+        else{
+            return Optional.empty();
+        }
     }
 }

@@ -22,6 +22,7 @@ import static org.apache.http.HttpStatus.SC_FORBIDDEN;
 import static org.apache.http.HttpStatus.SC_NOT_FOUND;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTest {
 
@@ -110,16 +111,12 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
 
     @Test
     public void attachLifecycleHappyPathDefaultState() throws IOException {
-        AttachLifecycleRequest badOsd   = new AttachLifecycleRequest(28L, 1L, null);
-        HttpResponse           response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__ATTACH_LIFECYCLE, badOsd);
+        AttachLifecycleRequest attachRequest = new AttachLifecycleRequest(28L, 1L, null);
+        HttpResponse           response      = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__ATTACH_LIFECYCLE, attachRequest);
         parseGenericResponse(response);
 
         // check if lifecycle state is really attached to OSD:
-        OsdRequest osdRequest = new OsdRequest(Collections.singletonList(28L),false);
-        HttpResponse osdResponse = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID,osdRequest);
-        assertResponseOkay(osdResponse);
-        OsdWrapper osdWrapper = mapper.readValue(osdResponse.getEntity().getContent(), OsdWrapper.class);
-        ObjectSystemData osd = osdWrapper.getOsds().get(0);
+        ObjectSystemData osd = new OsdServletIntegrationTest().fetchSingleOsd(28L);
         assertEquals((Long) 1L, osd.getLifecycleStateId());
     }
 
@@ -127,6 +124,37 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
     @Test
     public void attachLifecycleHappyPathWithNonDefaultState() throws IOException {
         // TODO: should use ChangeAclState with two states (for example reviewAcl,publishedAcl) configured
+    }
+
+    @Test
+    public void detachLifecycleInvalidRequest() throws IOException {
+        IdRequest    idRequest      = new IdRequest(0L);
+        HttpResponse detachResponse = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__DETACH_LIFECYCLE, idRequest);
+        assertCinnamonError(detachResponse, ErrorCode.INVALID_REQUEST);
+    }
+
+    @Test
+    public void detachLifecycleNonExistentOsd() throws IOException {
+        IdRequest    idRequest      = new IdRequest(Long.MAX_VALUE);
+        HttpResponse detachResponse = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__DETACH_LIFECYCLE, idRequest);
+        assertCinnamonError(detachResponse, ErrorCode.OBJECT_NOT_FOUND, SC_NOT_FOUND);
+    }
+
+    @Test
+    public void detachLifecycleHappyPath() throws IOException {
+        // attach lifecycle:
+        AttachLifecycleRequest attachRequest = new AttachLifecycleRequest(29L, 1L, null);
+        HttpResponse           response      = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__ATTACH_LIFECYCLE, attachRequest);
+        assertResponseOkay(response);
+
+        // detach lifecycle
+        IdRequest    idRequest      = new IdRequest(29L);
+        HttpResponse detachResponse = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__DETACH_LIFECYCLE, idRequest);
+        assertResponseOkay(detachResponse);
+
+        // check if lifecycle state is really detached from OSD:
+        ObjectSystemData osd = new OsdServletIntegrationTest().fetchSingleOsd(29L);
+        assertNull(osd.getLifecycleStateId());
     }
 
     private List<LifecycleState> parseResponse(HttpResponse response) throws IOException {

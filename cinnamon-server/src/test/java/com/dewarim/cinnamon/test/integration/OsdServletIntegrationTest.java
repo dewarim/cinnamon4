@@ -451,4 +451,11 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         assertResponseOkay(setContentResponse);
     }
 
+    public ObjectSystemData fetchSingleOsd(Long id) throws IOException{
+        OsdRequest   osdRequest  = new OsdRequest(Collections.singletonList(id), true);
+        HttpResponse osdResponse = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
+        assertResponseOkay(osdResponse);
+        return unwrapOsds(osdResponse, 1).get(0);
+    }
+
 }
