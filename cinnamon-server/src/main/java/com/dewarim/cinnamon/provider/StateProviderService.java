@@ -23,11 +23,8 @@ public class StateProviderService {
     }
 
     public StateProvider getStateProvider(String name){
-        StateProvider stateProvider = null;
         try {
-            Iterator<StateProvider> providers = serviceLoader.iterator();
-            while (stateProvider == null && providers.hasNext()) {
-                stateProvider = providers.next();
+            for (StateProvider stateProvider : serviceLoader) {
                 if (stateProvider.getName().equals(name)) {
                     return stateProvider;
                 }

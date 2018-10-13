@@ -23,11 +23,8 @@ public class ContentProviderService {
     }
 
     public ContentProvider getContentProvider(String name){
-        ContentProvider contentProvider = null;
         try {
-            Iterator<ContentProvider> providers = serviceLoader.iterator();
-            while (contentProvider == null && providers.hasNext()) {
-                contentProvider = providers.next();
+            for (ContentProvider contentProvider : serviceLoader) {
                 if (contentProvider.getName().equals(name)) {
                     return contentProvider;
                 }

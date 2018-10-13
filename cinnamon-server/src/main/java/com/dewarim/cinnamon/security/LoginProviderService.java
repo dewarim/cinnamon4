@@ -26,14 +26,11 @@ public class LoginProviderService {
     }
 
     public LoginResult connect(LoginUser loginUser, String password) {
-        LoginProvider loginProvider = null;
         String loginType = loginUser.getLoginType();
         try {
-            Iterator<LoginProvider> providers = serviceLoader.iterator();
-            while (loginProvider == null && providers.hasNext()) {
-                loginProvider = providers.next();
-                if (loginProvider.getName().equals(loginType)) {
-                    return loginProvider.connect(loginUser, password);
+            for (LoginProvider provider : serviceLoader) {
+                if (provider.getName().equals(loginType)) {
+                    return provider.connect(loginUser, password);
                 }
             }
             throw new IllegalStateException("Found no valid login service provider for " + loginType);
