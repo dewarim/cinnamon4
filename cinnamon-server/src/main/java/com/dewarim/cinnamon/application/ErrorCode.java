@@ -8,7 +8,7 @@ import static javax.servlet.http.HttpServletResponse.*;
 
 public enum ErrorCode {
 
-    ACL_NOT_FOUND("acl not found", SC_NOT_FOUND),
+    ACL_NOT_FOUND("error.acl.not_found", SC_NOT_FOUND),
     AUTHENTICATION_FAIL_NO_TICKET_GIVEN("empty or null ticket given",SC_FORBIDDEN),
     AUTHENTICATION_FAIL_NO_SESSION_FOUND("no session found",SC_FORBIDDEN),
     AUTHENTICATION_FAIL_SESSION_EXPIRED("session expired",SC_FORBIDDEN),
@@ -34,7 +34,9 @@ public enum ErrorCode {
     INVALID_REQUEST("request is invalid check parameters", SC_BAD_REQUEST),
     LIFECYCLE_NOT_FOUND("Lifecycle was not found in the database", SC_NOT_FOUND),
     LIFECYCLE_STATE_CHANGE_FAILED("Lifecycle state change failed.", SC_BAD_REQUEST),
+    LIFECYCLE_STATE_EXIT_FAILED("Failed to exit existing lifecycle state.", SC_BAD_REQUEST),
     LIFECYCLE_STATE_NOT_FOUND("Lifecycle state was not found in database", SC_NOT_FOUND),
+    LIFECYCLE_STATE_BY_NAME_NOT_FOUND("Named lifecycle state was not found in database", SC_NOT_FOUND),
     LOGIN_FAILED("login failed", SC_UNAUTHORIZED),
     MISSING_FILE_PARAMETER("parameter 'file' for uploaded content is missing", SC_BAD_REQUEST),
     MISSING_SET_ACL_PERMISSION("missing set_acl permission", SC_UNAUTHORIZED),

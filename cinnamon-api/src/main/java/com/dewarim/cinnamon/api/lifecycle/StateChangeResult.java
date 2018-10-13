@@ -24,6 +24,14 @@ public class StateChangeResult {
         return messages;
     }
 
+    public String getCombinedMessages(){
+        if (messages == null) {
+            return "";
+        } else {
+            return String.join("\n",messages);
+        }
+    }
+
     @Override
     public String toString() {
         return "StateChangeResult{" +

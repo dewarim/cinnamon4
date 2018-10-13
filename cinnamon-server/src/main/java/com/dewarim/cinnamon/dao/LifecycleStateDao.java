@@ -23,4 +23,10 @@ public class LifecycleStateDao {
         return sqlSession.selectList("com.dewarim.cinnamon.LifecycleStateMapper.getLifecycleStatesByLifecycleId", id);
     }
 
+    public Optional<LifecycleState> getLifecycleStateByName(String name) {
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        LifecycleState state = sqlSession.selectOne("com.dewarim.cinnamon.LifecycleStateMapper.getLifecycleStateByName", name);
+        return Optional.ofNullable(state);
+
+    }
 }

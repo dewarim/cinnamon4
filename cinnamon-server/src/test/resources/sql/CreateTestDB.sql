@@ -836,10 +836,35 @@ insert into objects (id, created, latest_branch, latest_head, modified, name, cr
                      owner_id, parent_id, type_id, acl_id)
 values (nextval('seq_objects_id'), now(), true, true, now(), 'lifecycle-test', 1, 1, 1, 1, 6, 1, 2);
 
--- #28 empty test object to test detach lifecycle  (in creation folder #6)
+-- #29 empty test object to test detach lifecycle  (in creation folder #6)
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
 values (nextval('seq_objects_id'), now(), true, true, now(), 'lifecycle-detach-test', 1, 1, 1, 1, 6, 1, 2);
+
+-- #30 empty test object to test attaching ChangeAclState.published in lifecycle  (in creation folder #6)
+insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+                     owner_id, parent_id, type_id, acl_id)
+values (nextval('seq_objects_id'), now(), true, true, now(), 'acl-changing-lifecycle-test', 1, 1, 1, 1, 6, 1, 2);
+
+-- #31 empty test object to test ChangeAclState in lifecycle  (in creation folder #6)
+insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+                     owner_id, parent_id, type_id, acl_id)
+values (nextval('seq_objects_id'), now(), true, true, now(), 'acl-changing-lifecycle-test', 1, 1, 1, 1, 6, 1, 2);
+
+-- #32 empty test object to test change state with FailState in lifecycle  (in creation folder #6)
+insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+                     owner_id, parent_id, type_id, acl_id)
+values (nextval('seq_objects_id'), now(), true, true, now(), 'fail-state-lifecycle-test', 1, 1, 1, 1, 6, 1, 2);
+
+-- #33 empty test object to test attach FailState in lifecycle  (in creation folder #6)
+insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+                     owner_id, parent_id, type_id, acl_id)
+values (nextval('seq_objects_id'), now(), true, true, now(), 'fail-state-attach-test', 1, 1, 1, 1, 6, 1, 2);
+
+-- #34 empty test object to test unhappy path in change lifecycle  state (in creation folder #6)
+insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+                     owner_id, parent_id, type_id, acl_id)
+values (nextval('seq_objects_id'), now(), true, true, now(), 'fail-state-attach-test', 1, 1, 1, 1, 6, 1, 2);
 
 -- #1 link to osd #1 with default acl (#1)
 insert into links(id, type,owner_id,acl_id,parent_id,osd_id) 
@@ -990,6 +1015,10 @@ insert into relations(id,left_id, right_id, type_id, metadata) VALUES (nextval('
 insert into lifecycles(id, name, default_state_id) VALUES (nextval('seq_lifecycle_id'), 'review.lc',null);
 -- #2 lifecycle render.lc (without any states, to test missing default state )
 insert into lifecycles(id, name, default_state_id) VALUES (nextval('seq_lifecycle_id'), 'render.lc',null);
+-- #3 lifecycle acl.lc (to test with ChangeAclState)
+insert into lifecycles(id, name, default_state_id) VALUES (nextval('seq_lifecycle_id'), 'acl.lc',null);
+-- #4 lifecycle fail.lc (to test failed attach / changeState )
+insert into lifecycles(id, name, default_state_id) VALUES (nextval('seq_lifecycle_id'), 'fail.lc',null);
 
 -- #1 lifecycle_state
 insert into lifecycle_states(id, name, config, state_class, life_cycle_id )
@@ -997,3 +1026,25 @@ insert into lifecycle_states(id, name, config, state_class, life_cycle_id )
 insert into lifecycle_state_to_copy_state(lifecycle_state_id, copy_state_id)
   values (currval('seq_lifecycle_states_id'), currval('seq_lifecycle_states_id'));
 update lifecycles set default_state_id=1 where id=1;
+
+-- #2 first lifecycle_state of lc 3 with ChangeAclState
+insert into lifecycle_states(id, name, config, state_class, life_cycle_id )
+    values (nextval('seq_lifecycle_states_id'), 'authoring', '<config><properties><property><name>aclName</name><value>reviewers.acl</value></property></properties></config>', 'ChangeAclState', 2);
+insert into lifecycle_state_to_copy_state(lifecycle_state_id, copy_state_id)
+  values (currval('seq_lifecycle_states_id'), currval('seq_lifecycle_states_id'));
+update lifecycles set default_state_id=1 where id=3;
+update objects set state_id=2 where id=31;
+
+-- #2 second lifecycle_state of lc 3 with ChangeAclState
+insert into lifecycle_states(id, name, config, state_class, life_cycle_id )
+    values (nextval('seq_lifecycle_states_id'), 'published', '<config><properties><property><name>aclName</name><value>_default_acl</value></property></properties></config>', 'ChangeAclState', 2);
+insert into lifecycle_state_to_copy_state(lifecycle_state_id, copy_state_id)
+  values (currval('seq_lifecycle_states_id'), currval('seq_lifecycle_states_id'));
+
+-- #4 failState for lc 4
+insert into lifecycle_states(id, name, config, state_class, life_cycle_id )
+values (nextval('seq_lifecycle_states_id'), 'failed', '<config></config>', 'FailState', 2);
+insert into lifecycle_state_to_copy_state(lifecycle_state_id, copy_state_id)
+values (currval('seq_lifecycle_states_id'), currval('seq_lifecycle_states_id'));
+-- osd#32 with FailState lifecycle state: should fail on state.exit()
+update objects set state_id=4 where id=32;

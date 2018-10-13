@@ -3,6 +3,7 @@ package com.dewarim.cinnamon.lifecycle;
 import com.dewarim.cinnamon.api.CinnamonObject;
 import com.dewarim.cinnamon.api.lifecycle.State;
 import com.dewarim.cinnamon.api.lifecycle.StateChangeResult;
+import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.dao.AclDao;
 import com.dewarim.cinnamon.dao.OsdDao;
 import com.dewarim.cinnamon.model.Acl;
@@ -28,12 +29,6 @@ public class ChangeAclState implements State {
     }
 
     @Override
-    public StateChangeResult checkEnteringObject(CinnamonObject osd, LifecycleStateConfig config) {
-        // currently, you can change to the ACL state from any other state.
-        return new StateChangeResult(true);
-    }
-
-    @Override
     public StateChangeResult enter(CinnamonObject osd, LifecycleStateConfig config) {
         log.debug("osd " + osd.getId() + " entered ChangeAclState.");
         List<String> aclNames = config.getPropertyValues("aclName");
@@ -44,7 +39,7 @@ public class ChangeAclState implements State {
         AclDao aclDao = new AclDao();
         Acl acl = aclDao.getAclByName(aclName);
         if (acl == null) {
-            return new StateChangeResult(false, Arrays.asList("error.acl.not_found", aclName));
+            return new StateChangeResult(false, Arrays.asList(ErrorCode.ACL_NOT_FOUND.getCode(), aclName));
         }
         log.debug("Setting acl from " + osd.getAclId() + " to " + acl.getId());
         OsdDao osdDao = new OsdDao();
@@ -54,12 +49,9 @@ public class ChangeAclState implements State {
     }
 
     @Override
-    public void exit(CinnamonObject osd, State nextState, LifecycleStateConfig config) {
+    public StateChangeResult exit(CinnamonObject osd, State nextState, LifecycleStateConfig config) {
         log.debug("osd " + osd.getId() + " left ChangeAclState.");
+        return new StateChangeResult(true);
     }
 
-    @Override
-    public void setExitStates(List<State> states) {
-        this.states=states;
-    }
 }

@@ -6,6 +6,7 @@ import com.dewarim.cinnamon.application.UrlMapping;
 import com.dewarim.cinnamon.model.LifecycleState;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.request.AttachLifecycleRequest;
+import com.dewarim.cinnamon.model.request.ChangeLifecycleStateRequest;
 import com.dewarim.cinnamon.model.request.IdRequest;
 import com.dewarim.cinnamon.model.request.OsdRequest;
 import com.dewarim.cinnamon.model.response.LifecycleStateWrapper;
@@ -20,6 +21,7 @@ import java.util.List;
 
 import static org.apache.http.HttpStatus.SC_FORBIDDEN;
 import static org.apache.http.HttpStatus.SC_NOT_FOUND;
+import static org.apache.http.HttpStatus.SC_UNAUTHORIZED;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -93,13 +95,24 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
     public void attachLifecycleMissingWritePermission() throws IOException {
         AttachLifecycleRequest badOsd   = new AttachLifecycleRequest(27L, 1L, 1L);
         HttpResponse           response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__ATTACH_LIFECYCLE, badOsd);
-        assertCinnamonError(response, ErrorCode.NO_WRITE_SYS_METADATA_PERMISSION, SC_FORBIDDEN);
+        assertCinnamonError(response, ErrorCode.NO_WRITE_SYS_METADATA_PERMISSION, SC_UNAUTHORIZED);
     }
 
-    @Ignore
+    @Test
+    public void changeStateFailInStateClass() throws IOException {
+        // should fail on oldState.exit
+        ChangeLifecycleStateRequest attachRequest = new ChangeLifecycleStateRequest(32L, null, 4L);
+        HttpResponse                response      = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__CHANGE_STATE, attachRequest);
+        assertCinnamonError(response, ErrorCode.LIFECYCLE_STATE_EXIT_FAILED);
+
+    }
+
     @Test
     public void attachLifecycleStateChangeFailed() throws IOException {
-        // TODO: should use ChangeAclState with invalid ACL configured
+        // should fail on newState.enter
+        ChangeLifecycleStateRequest attachRequest = new ChangeLifecycleStateRequest(33L, null, 4L);
+        HttpResponse                response      = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__CHANGE_STATE, attachRequest);
+        assertCinnamonError(response, ErrorCode.LIFECYCLE_STATE_CHANGE_FAILED);
     }
 
     @Test
@@ -120,10 +133,15 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
         assertEquals((Long) 1L, osd.getLifecycleStateId());
     }
 
-    @Ignore
     @Test
     public void attachLifecycleHappyPathWithNonDefaultState() throws IOException {
-        // TODO: should use ChangeAclState with two states (for example reviewAcl,publishedAcl) configured
+        AttachLifecycleRequest attachRequest = new AttachLifecycleRequest(30L, 3L, 2L);
+        HttpResponse           response      = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__ATTACH_LIFECYCLE, attachRequest);
+        parseGenericResponse(response);
+
+        // check if lifecycle state is really attached to OSD:
+        ObjectSystemData osd = new OsdServletIntegrationTest().fetchSingleOsd(30L);
+        assertEquals((Long) 2L, osd.getLifecycleStateId());
     }
 
     @Test
@@ -156,6 +174,49 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
         ObjectSystemData osd = new OsdServletIntegrationTest().fetchSingleOsd(29L);
         assertNull(osd.getLifecycleStateId());
     }
+
+    @Test
+    public void changeStateInvalidRequest() throws IOException {
+        ChangeLifecycleStateRequest attachRequest = new ChangeLifecycleStateRequest(34L, null, null);
+        HttpResponse                response      = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__CHANGE_STATE, attachRequest);
+        assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
+    }
+
+    @Test
+    public void changeStateMissingObject() throws IOException {
+        ChangeLifecycleStateRequest attachRequest = new ChangeLifecycleStateRequest(Long.MAX_VALUE, "foo", null);
+        HttpResponse                response      = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__CHANGE_STATE, attachRequest);
+        assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND, SC_NOT_FOUND);
+    }
+
+    @Test
+    public void changeStateNamedStateNotFound() throws IOException {
+        ChangeLifecycleStateRequest attachRequest = new ChangeLifecycleStateRequest(34L, "foo", null);
+        HttpResponse                response      = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__CHANGE_STATE, attachRequest);
+        assertCinnamonError(response, ErrorCode.LIFECYCLE_STATE_BY_NAME_NOT_FOUND, SC_NOT_FOUND);
+    }
+
+    @Test
+    public void changeStateWithStateNotFound() throws IOException {
+        ChangeLifecycleStateRequest attachRequest = new ChangeLifecycleStateRequest(34L, null, Long.MAX_VALUE);
+        HttpResponse                response      = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__CHANGE_STATE, attachRequest);
+        assertCinnamonError(response, ErrorCode.LIFECYCLE_STATE_NOT_FOUND, SC_NOT_FOUND);
+    }
+
+    @Test
+    public void changeStateHappyPath() throws IOException {
+        ChangeLifecycleStateRequest attachRequest = new ChangeLifecycleStateRequest(31L, null, 3L);
+        HttpResponse                response      = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__CHANGE_STATE, attachRequest);
+        parseGenericResponse(response);
+
+        // check if lifecycle state is really set on the OSD:
+        ObjectSystemData osd = new OsdServletIntegrationTest().fetchSingleOsd(31L);
+        assertEquals((Long) 3L, osd.getLifecycleStateId());
+
+        // check if ACL has changed:
+        assertEquals((Long) 1L, osd.getAclId());
+    }
+
 
     private List<LifecycleState> parseResponse(HttpResponse response) throws IOException {
         assertResponseOkay(response);
