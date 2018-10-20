@@ -1020,7 +1020,7 @@ insert into lifecycles(id, name, default_state_id) VALUES (nextval('seq_lifecycl
 -- #4 lifecycle fail.lc (to test failed attach / changeState )
 insert into lifecycles(id, name, default_state_id) VALUES (nextval('seq_lifecycle_id'), 'fail.lc',null);
 
--- #1 lifecycle_state
+-- #1 lifecycle_state of lc #1
 insert into lifecycle_states(id, name, config, state_class, life_cycle_id )
     values (nextval('seq_lifecycle_states_id'), 'newRenderTask', '<config><properties><property><name>render.server.host</name><value>localhost</value></property></properties></config>', 'NopState', 2);
 insert into lifecycle_state_to_copy_state(lifecycle_state_id, copy_state_id)
@@ -1029,7 +1029,7 @@ update lifecycles set default_state_id=1 where id=1;
 
 -- #2 first lifecycle_state of lc 3 with ChangeAclState
 insert into lifecycle_states(id, name, config, state_class, life_cycle_id )
-    values (nextval('seq_lifecycle_states_id'), 'authoring', '<config><properties><property><name>aclName</name><value>reviewers.acl</value></property></properties></config>', 'ChangeAclState', 2);
+    values (nextval('seq_lifecycle_states_id'), 'authoring', '<config><properties><property><name>aclName</name><value>reviewers.acl</value></property></properties></config>', 'ChangeAclState', 3);
 insert into lifecycle_state_to_copy_state(lifecycle_state_id, copy_state_id)
   values (currval('seq_lifecycle_states_id'), currval('seq_lifecycle_states_id'));
 update lifecycles set default_state_id=1 where id=3;
@@ -1037,13 +1037,13 @@ update objects set state_id=2 where id=31;
 
 -- #2 second lifecycle_state of lc 3 with ChangeAclState
 insert into lifecycle_states(id, name, config, state_class, life_cycle_id )
-    values (nextval('seq_lifecycle_states_id'), 'published', '<config><properties><property><name>aclName</name><value>_default_acl</value></property></properties></config>', 'ChangeAclState', 2);
+    values (nextval('seq_lifecycle_states_id'), 'published', '<config><properties><property><name>aclName</name><value>_default_acl</value></property></properties></config>', 'ChangeAclState', 3);
 insert into lifecycle_state_to_copy_state(lifecycle_state_id, copy_state_id)
   values (currval('seq_lifecycle_states_id'), currval('seq_lifecycle_states_id'));
 
 -- #4 failState for lc 4
 insert into lifecycle_states(id, name, config, state_class, life_cycle_id )
-values (nextval('seq_lifecycle_states_id'), 'failed', '<config></config>', 'FailState', 2);
+values (nextval('seq_lifecycle_states_id'), 'failed', '<config></config>', 'FailState', 4);
 insert into lifecycle_state_to_copy_state(lifecycle_state_id, copy_state_id)
 values (currval('seq_lifecycle_states_id'), currval('seq_lifecycle_states_id'));
 -- osd#32 with FailState lifecycle state: should fail on state.exit()

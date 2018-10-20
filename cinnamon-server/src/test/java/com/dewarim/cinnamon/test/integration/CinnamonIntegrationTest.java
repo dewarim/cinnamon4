@@ -8,6 +8,7 @@ import com.dewarim.cinnamon.model.response.CinnamonConnection;
 import com.dewarim.cinnamon.model.response.CinnamonError;
 import com.dewarim.cinnamon.model.response.GenericResponse;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import org.apache.commons.codec.Charsets;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.fluent.Form;
@@ -16,23 +17,26 @@ import org.apache.http.entity.ContentType;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.jdbc.ScriptRunner;
 import org.apache.ibatis.session.SqlSession;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.Reader;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.fail;
 
 /**
  */
 public class CinnamonIntegrationTest {
-    
+
+    private final static Logger log = LogManager.getLogger(CinnamonIntegrationTest.class);
+
     static int cinnamonTestPort = 19999;
     static CinnamonServer cinnamonServer;
     static String ticket;
@@ -101,8 +105,14 @@ public class CinnamonIntegrationTest {
         }
     }
     
-    protected void assertResponseOkay(HttpResponse response){
-        assertThat(response.getStatusLine().getStatusCode(),equalTo(HttpStatus.SC_OK));
+    protected void assertResponseOkay(HttpResponse response) throws IOException{
+        Integer statusCode = response.getStatusLine().getStatusCode();
+        if(!statusCode.equals(HttpStatus.SC_OK)){
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            response.getEntity().getContent().transferTo(baos);
+            log.error("Request failed with:\n{}",baos.toString(Charsets.UTF_8.name()));
+            fail("Non-OK status code "+statusCode);
+        };
     }
     
     protected void assertCinnamonError(HttpResponse response, ErrorCode errorCode) throws IOException{

@@ -105,7 +105,18 @@ public class LifecycleState {
 
     @Override
     public int hashCode() {
-
         return Objects.hash(name, config, stateClass, lifecycleId, lifecycleStateForCopyId);
+    }
+
+    @Override
+    public String toString() {
+        return "LifecycleState{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", config='" + config + '\'' +
+                ", stateClass='" + stateClass + '\'' +
+                ", lifecycleId=" + lifecycleId +
+                ", lifecycleStateForCopyId=" + lifecycleStateForCopyId +
+                '}';
     }
 }

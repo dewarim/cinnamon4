@@ -72,7 +72,7 @@ public class LifecycleStateServlet extends HttpServlet {
             }
         } catch (FailedRequestException e) {
             ErrorCode errorCode = e.getErrorCode();
-            ErrorResponseGenerator.generateErrorMessage(response, errorCode.getHttpResponseCode(), errorCode);
+            ErrorResponseGenerator.generateErrorMessage(response, errorCode.getHttpResponseCode(), errorCode, e.getMessage());
         }
     }
 
