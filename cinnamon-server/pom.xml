@@ -10,7 +10,7 @@
     <name>cinnamon-server</name>
 
     <properties>
-        <jetty-version>9.4.5.v20170502</jetty-version>
+        <jetty-version>9.4.11.v20180605</jetty-version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <cucumber.version>1.2.5</cucumber.version>
     </properties>
