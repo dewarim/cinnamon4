@@ -65,7 +65,7 @@ public class AclServlet extends HttpServlet {
             return;
         }
         AclUpdateRequest updateRequest = xmlMapper.readValue(request.getInputStream(),AclUpdateRequest.class);
-        String name = updateRequest.getName();
+        String           name          = updateRequest.getName();
         if (name == null || name.trim().isEmpty()) {
             ErrorResponseGenerator.generateErrorMessage(response, SC_BAD_REQUEST,
                     ErrorCode.NAME_PARAM_IS_INVALID, "");
@@ -97,7 +97,7 @@ public class AclServlet extends HttpServlet {
         }
 
         CreateAclRequest aclRequest = xmlMapper.readValue(request.getInputStream(), CreateAclRequest.class);
-        String name = aclRequest.getName();
+        String           name       = aclRequest.getName();
         if (name == null || name.trim().isEmpty()) {
             ErrorResponseGenerator.generateErrorMessage(response, SC_BAD_REQUEST,
                     ErrorCode.NAME_PARAM_IS_INVALID, "");

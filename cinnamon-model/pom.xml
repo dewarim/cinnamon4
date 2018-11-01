@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.dewarim.cinnamon</groupId>
-    <artifactId>cinnamon-api</artifactId>
+    <artifactId>cinnamon-model</artifactId>
     <version>0.1</version>
 
     <properties>
@@ -13,7 +13,7 @@
     </properties>
 
     <build>
-        <finalName>cinnamon-api</finalName>
+        <finalName>cinnamon-model</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -36,7 +36,15 @@
             </plugin>
         </plugins>
     </build>
+
     <dependencies>
+
+        <dependency>
+            <groupId>com.dewarim.cinnamon</groupId>
+            <artifactId>cinnamon-api</artifactId>
+            <version>0.1</version>
+        </dependency>
+
         <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>
             <artifactId>jackson-dataformat-xml</artifactId>
@@ -44,5 +52,6 @@
             <scope>compile</scope>
         </dependency>
     </dependencies>
+
 
 </project>

@@ -1,7 +1,6 @@
 package com.dewarim.cinnamon.application;
 
 import com.dewarim.cinnamon.model.response.GenericResponse;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
 import javax.servlet.http.HttpServletResponse;

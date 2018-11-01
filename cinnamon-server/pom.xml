@@ -13,6 +13,7 @@
         <jetty-version>9.4.11.v20180605</jetty-version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <cucumber.version>1.2.5</cucumber.version>
+        <maven.compiler.plugin.version>3.8.0</maven.compiler.plugin.version>
     </properties>
 
     <dependencies>
@@ -20,7 +21,13 @@
         <dependency>
             <groupId>com.dewarim.cinnamon</groupId>
             <artifactId>cinnamon-api</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>0.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.dewarim.cinnamon</groupId>
+            <artifactId>cinnamon-model</artifactId>
+            <version>0.1</version>
         </dependency>
         
         <dependency>
@@ -145,7 +152,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.7.0</version>
+                <version>${maven.compiler.plugin.version}</version>
                 <inherited>true</inherited>
                 <configuration>
                     <source>1.9</source>

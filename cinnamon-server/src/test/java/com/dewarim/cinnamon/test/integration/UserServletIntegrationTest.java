@@ -11,7 +11,6 @@ import com.dewarim.cinnamon.model.response.UserWrapper;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Form;
 import org.apache.http.client.fluent.Request;
-import org.apache.http.client.fluent.Response;
 import org.hamcrest.MatcherAssert;
 import org.junit.Test;
 

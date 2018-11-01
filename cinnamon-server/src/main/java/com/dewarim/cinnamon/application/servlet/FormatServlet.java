@@ -2,7 +2,7 @@ package com.dewarim.cinnamon.application.servlet;
 
 import com.dewarim.cinnamon.dao.FormatDao;
 import com.dewarim.cinnamon.model.Format;
-import com.dewarim.cinnamon.model.request.*;
+import com.dewarim.cinnamon.model.request.ListRequest;
 import com.dewarim.cinnamon.model.response.FormatWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -38,10 +38,10 @@ public class FormatServlet extends HttpServlet {
 
     private void listFormats(HttpServletRequest request, HttpServletResponse response) throws IOException {
         // ignore listRequest for now, just make sure it's valid xml:
-        ListRequest listRequest = xmlMapper.readValue(request.getInputStream(), ListRequest.class);
-        FormatDao     formatDao = new FormatDao();
-        List<Format>  formats   = formatDao.listFormats();
-        FormatWrapper wrapper   = new FormatWrapper();
+        ListRequest   listRequest = xmlMapper.readValue(request.getInputStream(), ListRequest.class);
+        FormatDao     formatDao   = new FormatDao();
+        List<Format>  formats     = formatDao.listFormats();
+        FormatWrapper wrapper     = new FormatWrapper();
         wrapper.setFormats(formats);
         response.setContentType(CONTENT_TYPE_XML);
         response.setStatus(HttpServletResponse.SC_OK);
