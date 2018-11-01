@@ -6,6 +6,9 @@ import com.dewarim.cinnamon.dao.AclDao;
 import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.request.*;
+import com.dewarim.cinnamon.model.request.acl.AclInfoRequest;
+import com.dewarim.cinnamon.model.request.acl.AclUpdateRequest;
+import com.dewarim.cinnamon.model.request.acl.CreateAclRequest;
 import com.dewarim.cinnamon.model.response.AclWrapper;
 import com.dewarim.cinnamon.model.response.DeletionResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -112,8 +115,8 @@ public class AclServlet extends HttpServlet {
 
     private void getAclByNameOrId(HttpServletRequest request, HttpServletResponse response) throws IOException {
         AclInfoRequest aclInfoRequest = xmlMapper.readValue(request.getInputStream(), AclInfoRequest.class);
-        AclDao aclDao = new AclDao();
-        Acl acl;
+        AclDao         aclDao         = new AclDao();
+        Acl            acl;
         if (aclInfoRequest.byId()) {
             acl = aclDao.getAclById(aclInfoRequest.getAclId());
         }

@@ -6,7 +6,7 @@ import com.dewarim.cinnamon.dao.AclDao;
 import com.dewarim.cinnamon.dao.PermissionDao;
 import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.Permission;
-import com.dewarim.cinnamon.model.request.UserPermissionRequest;
+import com.dewarim.cinnamon.model.request.user.UserPermissionRequest;
 import com.dewarim.cinnamon.model.response.PermissionWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;

@@ -2,7 +2,7 @@ package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.application.UrlMapping;
 import com.dewarim.cinnamon.model.Permission;
-import com.dewarim.cinnamon.model.request.UserPermissionRequest;
+import com.dewarim.cinnamon.model.request.user.UserPermissionRequest;
 import com.dewarim.cinnamon.model.response.PermissionWrapper;
 import org.apache.http.HttpResponse;
 import org.hamcrest.MatcherAssert;

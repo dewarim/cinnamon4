@@ -5,6 +5,9 @@ import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.application.UrlMapping;
 import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.request.*;
+import com.dewarim.cinnamon.model.request.acl.AclInfoRequest;
+import com.dewarim.cinnamon.model.request.acl.AclUpdateRequest;
+import com.dewarim.cinnamon.model.request.acl.CreateAclRequest;
 import com.dewarim.cinnamon.model.response.AclWrapper;
 import com.dewarim.cinnamon.model.response.DeletionResponse;
 import org.apache.http.HttpResponse;
@@ -73,10 +76,10 @@ public class AclServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void validRequestByAclName() throws IOException {
-        AclInfoRequest aclInfoRequest = new AclInfoRequest(null, Constants.ACL_DEFAULT);
-        HttpResponse aclListResponse = sendAdminRequest(UrlMapping.ACL__ACL_INFO, aclInfoRequest);
-        List<Acl> acls = unwrapAcls(aclListResponse, 1);
-        Optional<Acl> defaultAcl = acls.stream().filter(acl -> acl.getName().equals(Constants.ACL_DEFAULT)).findFirst();
+        AclInfoRequest aclInfoRequest  = new AclInfoRequest(null, Constants.ACL_DEFAULT);
+        HttpResponse   aclListResponse = sendAdminRequest(UrlMapping.ACL__ACL_INFO, aclInfoRequest);
+        List<Acl>      acls            = unwrapAcls(aclListResponse, 1);
+        Optional<Acl>  defaultAcl      = acls.stream().filter(acl -> acl.getName().equals(Constants.ACL_DEFAULT)).findFirst();
         assertTrue(defaultAcl.isPresent());
     }
 
