@@ -6,6 +6,16 @@ import java.util.Optional;
 
 public class UpdateUserAccountRequest extends UserInfo {
 
+    private String password;
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
     private boolean validated(){
         boolean hasValue = getName() != null ||
                 getLoginType() != null ||
