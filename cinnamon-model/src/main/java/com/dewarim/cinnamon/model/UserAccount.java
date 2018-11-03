@@ -17,6 +17,9 @@ public class UserAccount implements Principal, LoginUser {
     private boolean activated;
     private boolean locked;
     private Long uiLanguageId;
+    private String fullname;
+    private String email;
+    private boolean changeTracking = true;
         
     @Override
     public String getName() {
@@ -93,31 +96,66 @@ public class UserAccount implements Principal, LoginUser {
         this.uiLanguageId = uiLanguageId;
     }
 
+    public String getFullname() {
+        return fullname;
+    }
+
+    public void setFullname(String fullname) {
+        this.fullname = fullname;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public boolean isChangeTracking() {
+        return changeTracking;
+    }
+
+    public void setChangeTracking(boolean changeTracking) {
+        this.changeTracking = changeTracking;
+    }
+
     @Override
     public String toString() {
         return "UserAccount{" +
-               "id=" + id +
-               ", name='" + name + '\'' +
-               ", objVersion=" + objVersion +
-               ", loginType='" + loginType + '\'' +
-               ", password='" + password + '\'' +
-               ", activated=" + activated +
-               ", locked=" + locked +
-               ", uiLanguageId=" + uiLanguageId +
-               '}';
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", objVersion=" + objVersion +
+                ", loginType='" + loginType + '\'' +
+                ", password='" + password + '\'' +
+                ", activated=" + activated +
+                ", locked=" + locked +
+                ", uiLanguageId=" + uiLanguageId +
+                ", fullname='" + fullname + '\'' +
+                ", email='" + email + '\'' +
+                ", changeTracking=" + changeTracking +
+                '}';
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         UserAccount that = (UserAccount) o;
         return activated == that.activated &&
                 locked == that.locked &&
+                changeTracking == that.changeTracking &&
                 Objects.equals(name, that.name) &&
+                Objects.equals(objVersion, that.objVersion) &&
+                Objects.equals(loginType, that.loginType) &&
+                Objects.equals(password, that.password) &&
                 Objects.equals(uiLanguageId, that.uiLanguageId) &&
-                loginType.equals(that.loginType) &&
-                Objects.equals(password, that.password);
+                Objects.equals(fullname, that.fullname) &&
+                Objects.equals(email, that.email);
     }
 
     @Override

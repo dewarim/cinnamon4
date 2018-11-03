@@ -12,7 +12,18 @@ public class UserWrapper {
 
     @JacksonXmlElementWrapper(localName = "users")
     @JacksonXmlProperty(localName = "user")
-    List<UserInfo> users = new ArrayList<>();
+    private List<UserInfo> users = new ArrayList<>();
+
+    public UserWrapper() {
+    }
+
+    public UserWrapper(List<UserInfo> users) {
+        this.users = users;
+    }
+
+    public UserWrapper(UserInfo user){
+        this.users.add(user);
+    }
 
     public List<UserInfo> getUsers() {
         return users;

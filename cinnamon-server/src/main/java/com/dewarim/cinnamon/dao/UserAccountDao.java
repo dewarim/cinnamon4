@@ -59,7 +59,7 @@ public class UserAccountDao {
         List<UserAccount> accounts = listUserAccounts();
         return accounts.stream()
                 .map(user -> new UserInfo(user.getId(), user.getName(), user.getLoginType(),
-                        user.isActivated(), user.isLocked(), user.getUiLanguageId()))
+                        user.isActivated(), user.isLocked(), user.getUiLanguageId(), user.getEmail(), user.getFullname(), user.isChangeTracking()))
                 .collect(Collectors.toList());
     }
 

@@ -13,17 +13,24 @@ public class UserInfo {
     private boolean activated;
     private boolean locked;
     private Long uiLanguageId;
+    private String fullname;
+    private String email;
+    private boolean changeTracking = true;
 
     public UserInfo() {
     }
 
-    public UserInfo(Long id, String name, String loginType, boolean activated, boolean locked, Long uiLanguageId) {
+    public UserInfo(Long id, String name, String loginType, boolean activated, boolean locked, Long uiLanguageId, String email, String fullname,
+                    boolean changeTracking) {
         this.id = id;
         this.name = name;
         this.loginType = loginType;
         this.activated = activated;
         this.locked = locked;
         this.uiLanguageId = uiLanguageId;
+        this.email = email;
+        this.fullname = fullname;
+        this.changeTracking = changeTracking;
     }
 
     public Long getId() {
@@ -74,6 +81,30 @@ public class UserInfo {
         this.uiLanguageId = uiLanguageId;
     }
 
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getFullname() {
+        return fullname;
+    }
+
+    public void setFullname(String fullname) {
+        this.fullname = fullname;
+    }
+
+    public boolean isChangeTracking() {
+        return changeTracking;
+    }
+
+    public void setChangeTracking(boolean changeTracking) {
+        this.changeTracking = changeTracking;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -84,10 +115,13 @@ public class UserInfo {
         }
         UserInfo userInfo = (UserInfo) o;
         return activated == userInfo.activated &&
-               locked == userInfo.locked &&
-               Objects.equals(name, userInfo.name) &&
-               Objects.equals(loginType, userInfo.loginType) &&
-               Objects.equals(uiLanguageId, userInfo.uiLanguageId);
+                locked == userInfo.locked &&
+                changeTracking == userInfo.changeTracking &&
+                Objects.equals(name, userInfo.name) &&
+                Objects.equals(fullname, userInfo.fullname) &&
+                Objects.equals(loginType, userInfo.loginType) &&
+                Objects.equals(uiLanguageId, userInfo.uiLanguageId) &&
+                Objects.equals(email, userInfo.email);
     }
 
     @Override
@@ -99,12 +133,15 @@ public class UserInfo {
     @Override
     public String toString() {
         return "UserInfo{" +
-               "id=" + id +
-               ", name='" + name + '\'' +
-               ", loginType='" + loginType + '\'' +
-               ", activated=" + activated +
-               ", locked=" + locked +
-               ", uiLanguageId=" + uiLanguageId +
-               '}';
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", fullname='" + fullname + '\'' +
+                ", loginType='" + loginType + '\'' +
+                ", activated=" + activated +
+                ", locked=" + locked +
+                ", uiLanguageId=" + uiLanguageId +
+                ", email='" + email + '\'' +
+                ", changeTracking=" + changeTracking +
+                '}';
     }
 }

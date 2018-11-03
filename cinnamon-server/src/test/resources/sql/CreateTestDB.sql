@@ -12,7 +12,10 @@ CREATE TABLE users (
   login_type VARCHAR(64) NOT NULL DEFAULT 'CINNAMON',
   activated BOOLEAN NOT NULL DEFAULT TRUE, 
   locked BOOLEAN NOT NULL DEFAULT FALSE,
-  ui_language_id BIGINT
+  ui_language_id BIGINT,
+  fullname varchar(255) NOT NULL,
+  email varchar(255),
+  change_tracking BOOLEAN NOT NULL DEFAULT TRUE
 );
 
 drop sequence if exists seq_user_id;
@@ -484,17 +487,17 @@ create sequence seq_config_entries_id start with 1;
 -- -----------------------
 
 -- #1
-INSERT INTO users(id,name,pwd,activated, ui_language_id) 
-VALUES ( nextval('seq_user_id'),'admin','$2a$10$VG9LCf6h/Qwb7Y.pafHkaepdnJNgFZUzzuMV3EcyvLbKnueHQ4IW.',true,1);
+INSERT INTO users(id,name,pwd,activated, ui_language_id, fullname)
+VALUES ( nextval('seq_user_id'),'admin','$2a$10$VG9LCf6h/Qwb7Y.pafHkaepdnJNgFZUzzuMV3EcyvLbKnueHQ4IW.',true,1,'The Admin');
 -- #2
-INSERT INTO users(id,name,pwd,activated, ui_language_id)
-VALUES ( nextval('seq_user_id'),'doe','$2a$10$VG9LCf6h/Qwb7Y.pafHkaepdnJNgFZUzzuMV3EcyvLbKnueHQ4IW.',true,1);
+INSERT INTO users(id,name,pwd,activated, ui_language_id, fullname)
+VALUES ( nextval('seq_user_id'),'doe','$2a$10$VG9LCf6h/Qwb7Y.pafHkaepdnJNgFZUzzuMV3EcyvLbKnueHQ4IW.',true,1,'Jane Doe');
 -- #3
-INSERT INTO users(id,name,pwd,activated, ui_language_id) 
-VALUES ( nextval('seq_user_id'),'deactivated user','$2a$10$VG9LCf6h/Qwb7Y.pafHkaepdnJNgFZUzzuMV3EcyvLbKnueHQ4IW.',false,1);
+INSERT INTO users(id,name,pwd,activated, ui_language_id, fullname)
+VALUES ( nextval('seq_user_id'),'deactivated user','$2a$10$VG9LCf6h/Qwb7Y.pafHkaepdnJNgFZUzzuMV3EcyvLbKnueHQ4IW.',false,1, 'inactive');
 -- #4
-INSERT INTO users(id,name,pwd,activated, locked, ui_language_id) 
-VALUES ( nextval('seq_user_id'),'locked user','$2a$10$VG9LCf6h/Qwb7Y.pafHkaepdnJNgFZUzzuMV3EcyvLbKnueHQ4IW.',true,true,1);
+INSERT INTO users(id,name,pwd,activated, locked, ui_language_id, fullname)
+VALUES ( nextval('seq_user_id'),'locked user','$2a$10$VG9LCf6h/Qwb7Y.pafHkaepdnJNgFZUzzuMV3EcyvLbKnueHQ4IW.',true,true,1, 'locked');
 
 insert into acls(id,name) values(nextval('seq_acl_id'),'_default_acl'); -- 1
 insert into acls(id,name) values(nextval('seq_acl_id'),'reviewers.acl'); -- 2

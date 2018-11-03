@@ -14,6 +14,9 @@
         <result property="activated" column="activated"/>
         <result property="locked" column="locked"/>
         <result property="uiLanguageId" column="ui_language_id"/>
+        <result property="fullname" column="fullname"/>
+        <result property="email" column="email"/>
+        <result property="changeTracking" column="change_tracking"/>
     </resultMap>
 
     <select id="getUserAccountByName" parameterType="String" resultMap="userAccountMap">
@@ -68,7 +71,10 @@
             pwd            = #{password},
             activated      = #{activated},
             locked = #{locked},
-            ui_language_id    = #{uiLanguageId}
+            ui_language_id    = #{uiLanguageId},
+            fullname = #{fullname},
+            email = #{email},
+            change_tracking = #{changeTracking}
         WHERE id = #{id}
     </update>
 

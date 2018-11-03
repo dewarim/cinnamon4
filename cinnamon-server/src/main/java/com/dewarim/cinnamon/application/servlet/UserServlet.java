@@ -125,7 +125,7 @@ public class UserServlet extends HttpServlet {
 
         UserAccount user = userOpt.get();
         UserInfo userInfo = new UserInfo(user.getId(), user.getName(), user.getLoginType(),
-                user.isActivated(), user.isLocked(), user.getUiLanguageId());
+                user.isActivated(), user.isLocked(), user.getUiLanguageId(), user.getEmail(), user.getFullname(), user.isChangeTracking());
         UserWrapper wrapper = new UserWrapper();
         wrapper.setUsers(Collections.singletonList(userInfo));
         response.setContentType(CONTENT_TYPE_XML);
