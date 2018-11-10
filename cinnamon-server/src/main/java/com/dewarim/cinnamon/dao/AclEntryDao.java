@@ -21,14 +21,17 @@ public class AclEntryDao {
         return sqlSession.selectList("com.dewarim.cinnamon.AclEntryMapper.getAclEntriesByGroupIdsAndAcl", params);
     }
 
-    public List<AclEntry> getAclEntriesByAcl(long aclId) {
+    public List<AclEntry> getAclEntriesByAclId(long aclId) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        return sqlSession.selectList("com.dewarim.cinnamon.AclEntryMapper.getAclEntriesByAcl", aclId);
+        return sqlSession.selectList("com.dewarim.cinnamon.AclEntryMapper.getAclEntriesByAclId", aclId);
+    }
+    public List<AclEntry> getAclEntriesByGroupId(long groupId) {
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        return sqlSession.selectList("com.dewarim.cinnamon.AclEntryMapper.getAclEntriesByGroupId", groupId);
     }
     
     public List<AclEntry> getAclEntriesByGroup(CmnGroup group) {
-        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        return sqlSession.selectList("com.dewarim.cinnamon.AclEntryMapper.getAclEntriesByGroup", group.getId());
+        return getAclEntriesByGroupId(group.getId());
     }
     
     public Optional<AclEntry> getAclEntryForEveryoneGroup(long aclId) {

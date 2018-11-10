@@ -601,7 +601,7 @@ insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id')
 insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),2,5);
 -- #6 doe's group is connected to default acl
 insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),1,4);
--- #7 reviewers also have the no-permissions acl
+-- #7 reviewers also have the default acl
 insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),1,5);
 -- #8 _owner is connected to the no-permission-except-owner.acl
 insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),5,7);

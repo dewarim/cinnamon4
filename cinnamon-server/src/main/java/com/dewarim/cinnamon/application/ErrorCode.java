@@ -9,18 +9,18 @@ import static javax.servlet.http.HttpServletResponse.*;
 public enum ErrorCode {
 
     ACL_NOT_FOUND("error.acl.not_found", SC_NOT_FOUND),
-    AUTHENTICATION_FAIL_NO_TICKET_GIVEN("empty or null ticket given",SC_FORBIDDEN),
-    AUTHENTICATION_FAIL_NO_SESSION_FOUND("no session found",SC_FORBIDDEN),
-    AUTHENTICATION_FAIL_SESSION_EXPIRED("session expired",SC_FORBIDDEN),
-    AUTHENTICATION_FAIL_USER_NOT_FOUND("user not found or inactive",SC_FORBIDDEN),
-    CONNECTION_FAIL_ACCOUNT_INACTIVE("account inactive",SC_UNAUTHORIZED),
-    CONNECTION_FAIL_INVALID_USERNAME("invalid username",SC_UNAUTHORIZED),
-    CONNECTION_FAIL_ACCOUNT_LOCKED("account locked",SC_UNAUTHORIZED),
-    CONNECTION_FAIL_WRONG_PASSWORD("wrong password",SC_UNAUTHORIZED),
-//    DB_UPDATE_CHANGED_NOTHING("The update succeeded, but did not change anything. This may happen when you save the same value again."),
+    AUTHENTICATION_FAIL_NO_TICKET_GIVEN("empty or null ticket given", SC_FORBIDDEN),
+    AUTHENTICATION_FAIL_NO_SESSION_FOUND("no session found", SC_FORBIDDEN),
+    AUTHENTICATION_FAIL_SESSION_EXPIRED("session expired", SC_FORBIDDEN),
+    AUTHENTICATION_FAIL_USER_NOT_FOUND("user not found or inactive", SC_FORBIDDEN),
+    CONNECTION_FAIL_ACCOUNT_INACTIVE("account inactive", SC_UNAUTHORIZED),
+    CONNECTION_FAIL_INVALID_USERNAME("invalid username", SC_UNAUTHORIZED),
+    CONNECTION_FAIL_ACCOUNT_LOCKED("account locked", SC_UNAUTHORIZED),
+    CONNECTION_FAIL_WRONG_PASSWORD("wrong password", SC_UNAUTHORIZED),
+    //    DB_UPDATE_CHANGED_NOTHING("The update succeeded, but did not change anything. This may happen when you save the same value again."),
     DB_UPDATE_FAILED("db update failed", SC_INTERNAL_SERVER_ERROR),
     // From the "this cannot happen" department:
-    DELETE_AFFECTED_MULTIPLE_ROWS("Delete succeeded, but seems to have deleted more than the expected single row. Contact your administrator.",SC_INTERNAL_SERVER_ERROR),
+    DELETE_AFFECTED_MULTIPLE_ROWS("Delete succeeded, but seems to have deleted more than the expected single row. Contact your administrator.", SC_INTERNAL_SERVER_ERROR),
     DELETE_REQUEST_WITHOUT_ID("delete request needs id parameter", SC_BAD_REQUEST),
     FILE_NOT_FOUND("file not found", SC_NOT_FOUND),
     FOLDER_NOT_FOUND("folder was not found", SC_NOT_FOUND),
@@ -31,6 +31,7 @@ public enum ErrorCode {
     INTERNAL_SERVER_ERROR_TRY_AGAIN_LATER("internal server  please retry later", SC_INTERNAL_SERVER_ERROR),
     INVALID_FOLDER_PATH_STRUCTURE("Invalid folder path structure.", SC_BAD_REQUEST),
     INVALID_LINK_RESOLVER("Links to folders must have LinkResolver.FIXED.", SC_BAD_REQUEST),
+    INVALID_ID_TYPE("Invalid id type in request object", SC_BAD_REQUEST),
     INVALID_REQUEST("request is invalid check parameters", SC_BAD_REQUEST),
     LIFECYCLE_NOT_FOUND("Lifecycle was not found in the database", SC_NOT_FOUND),
     LIFECYCLE_STATE_CHANGE_FAILED("Lifecycle state change failed.", SC_BAD_REQUEST),
@@ -66,14 +67,14 @@ public enum ErrorCode {
     USER_INFO_REQUEST_WITHOUT_NAME_OR_ID("userInfoRequest missing id or name", SC_BAD_REQUEST),
     USER_ACCOUNT_NOT_FOUND("userInfoRequest invalid id or name", SC_NOT_FOUND);
 
-    String code;
-    int httpResponseCode;
+    String                           code;
+    int                              httpResponseCode;
     Supplier<FailedRequestException> exceptionSupplier;
 
     ErrorCode(String code, int httpResponseCode) {
         this.code = code;
         this.httpResponseCode = httpResponseCode;
-        this.exceptionSupplier = ()-> new FailedRequestException(this);
+        this.exceptionSupplier = () -> new FailedRequestException(this);
     }
 
     public String getCode() {

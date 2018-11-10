@@ -1,9 +1,8 @@
-# Cinnamon X
+# Cinnamon 4
 
-An experimental (hence the X) implementation of the Cinnamon 3 CMS server in Java.
+A new implementation of the Cinnamon 3 CMS server in Java.
 
-This may or may not result in Cinnamon 4.
-
+Current status: pre-alpha.
 
 ## Goal
 
@@ -20,7 +19,7 @@ Try to implement the core features of the Cinnamon CMS in Java,
 
 ## License
 
-None - yes, it's open source, but it is not finished and I have not chosen a license, so you cannot use it yet.
+None - yes, it's open source, but it is not finished and I have not chosen a license yet.
 
 ## Author
 

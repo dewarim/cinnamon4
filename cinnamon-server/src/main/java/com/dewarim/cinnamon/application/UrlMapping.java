@@ -13,6 +13,7 @@ public enum UrlMapping {
     ACL__GET_ACLS("acl", "getAcls", "/api"),
     ACL__GET_USER_ACLS("acl", "getUserAcls", "/api"),
     ACL__UPDATE_ACL("acl", "updateAcl", "/api"),
+    ACL_ENTRY__LIST_ACL_ENTRIES("aclEntry","listAclEntries", "/api"),
     CINNAMON__CONNECT("cinnamon", "connect", ""),
     CINNAMON__DISCONNECT("cinnamon", "disconnect", ""),
     CONFIG_ENTRY__GET_CONFIG_ENTRY("configEntry", "getConfigEntry", "/api"),
