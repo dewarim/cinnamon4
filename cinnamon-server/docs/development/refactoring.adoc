@@ -1,0 +1,29 @@
+# Design and Refactoring Notes
+
+## LifecycleStateConfig
+
+LifecycleStateConfig is currently stored as an XML string in the lifecycle_states table.
+It is de-serialized to an object via LifecycleState.getLifecycleStateConfig().
+
+Format is
+
+[source,xml]
+---
+ <config>
+   <properties><property><name>aclName</name><value>reviewers.acl</value></property></properties>
+   <nextStates><stateName>published</stateName></nextStates>
+ </config>
+---
+
+Options for refactoring are:
+
+* move properties into their own table
+** advantage: easier for CRUD operation / configure via GUI
+** disadvantages: one more table, needs DAO
+* move nextStates into a table.
+** advantage: easier for CRUD, ensure referential integrity (cannot configure non-existant states)
+** disadvantage: -
+
+It could be interesting to have dynamically calculated nextStates,
+but a viable alternative would be to have exitState/enterState to check if the given nextState is
+really valid and present an error message if not.

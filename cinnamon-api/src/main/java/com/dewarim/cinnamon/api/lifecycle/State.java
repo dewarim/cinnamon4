@@ -6,7 +6,7 @@ import java.util.List;
 
 public interface State {
 
-    List<State> getExitStates(CinnamonObject osd);
+    List<State> getNextStates(CinnamonObject osd, LifecycleStateConfig config);
 
     StateChangeResult enter(CinnamonObject osd, LifecycleStateConfig config);
 

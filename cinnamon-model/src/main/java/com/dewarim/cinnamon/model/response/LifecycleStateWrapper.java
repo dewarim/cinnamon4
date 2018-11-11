@@ -16,6 +16,13 @@ public class LifecycleStateWrapper {
     @JacksonXmlProperty(localName = "lifecycleState")
     List<LifecycleState> lifecycleStates = new ArrayList<>();
 
+    public LifecycleStateWrapper() {
+    }
+
+    public LifecycleStateWrapper(List<LifecycleState> lifecycleStates) {
+        this.lifecycleStates = lifecycleStates;
+    }
+
     public List<LifecycleState> getLifecycleStates() {
         return lifecycleStates;
     }

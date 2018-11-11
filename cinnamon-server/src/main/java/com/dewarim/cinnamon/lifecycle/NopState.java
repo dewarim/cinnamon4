@@ -31,7 +31,7 @@ public class NopState implements State {
     }
 
     @Override
-    public List<State> getExitStates(CinnamonObject osd) {
+    public List<State> getNextStates(CinnamonObject osd, LifecycleStateConfig config) {
         return Collections.emptyList();
     }
 

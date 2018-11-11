@@ -17,9 +17,7 @@ import java.util.List;
 
 import static org.apache.http.HttpStatus.SC_NOT_FOUND;
 import static org.apache.http.HttpStatus.SC_UNAUTHORIZED;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTest {
 
@@ -50,7 +48,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
         assertEquals(2L, (long) state.getLifecycleId());
         assertEquals(1L, (long) state.getLifecycleStateForCopyId());
 
-        assertEquals("<config><properties><property><name>render.server.host</name><value>localhost</value></property></properties></config>", state.getConfig());
+        assertEquals("<config><properties><property><name>render.server.host</name><value>localhost</value></property></properties><nextStates/></config>", state.getConfig());
         LifecycleStateConfig lifecycleStateConfig = state.getLifecycleStateConfig();
         assertNotNull(lifecycleStateConfig);
         assertEquals("localhost", lifecycleStateConfig.getPropertyValues("render.server.host").get(0));
@@ -212,6 +210,37 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
         assertEquals((Long) 1L, osd.getAclId());
     }
 
+    @Test
+    public void getNextStatesInvalidRequest() throws IOException {
+        IdRequest    request  = new IdRequest();
+        HttpResponse response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__GET_NEXT_STATES, request);
+        assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
+    }
+
+    @Test
+    public void getNextStatesOsdNotFound() throws IOException {
+        IdRequest    request  = new IdRequest(Long.MAX_VALUE);
+        HttpResponse response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__GET_NEXT_STATES, request);
+        assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND, SC_NOT_FOUND);
+    }
+
+    @Test
+    public void getNextStatesLifecycleStateNotFound() throws IOException {
+        // osd#34 also used in changeStateWithStateNotFound
+        IdRequest    request  = new IdRequest(34L);
+        HttpResponse response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__GET_NEXT_STATES, request);
+        assertCinnamonError(response, ErrorCode.LIFECYCLE_STATE_NOT_FOUND, SC_NOT_FOUND);
+    }
+
+    @Test
+    public void getNextStatesHappyPath() throws IOException {
+        IdRequest            request         = new IdRequest(35L);
+        HttpResponse         response        = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__GET_NEXT_STATES, request);
+        List<LifecycleState> lifecycleStates = parseResponse(response);
+        assertTrue(lifecycleStates.size() > 0);
+        LifecycleState state = lifecycleStates.get(0);
+        assertEquals("published", state.getName());
+    }
 
     private List<LifecycleState> parseResponse(HttpResponse response) throws IOException {
         assertResponseOkay(response);

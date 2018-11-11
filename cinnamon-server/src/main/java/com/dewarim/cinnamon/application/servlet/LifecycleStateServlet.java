@@ -30,6 +30,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import static com.dewarim.cinnamon.Constants.CONTENT_TYPE_XML;
@@ -65,6 +66,7 @@ public class LifecycleStateServlet extends HttpServlet {
                     getLifecycleState(request, response);
                     break;
                 case "/getNextStates":
+                    getNextStates(request, response, osdDao, stateDao);
                     break;
                 default:
                     response.setStatus(HttpServletResponse.SC_NO_CONTENT);
@@ -73,6 +75,18 @@ public class LifecycleStateServlet extends HttpServlet {
             ErrorCode errorCode = e.getErrorCode();
             ErrorResponseGenerator.generateErrorMessage(response, errorCode.getHttpResponseCode(), errorCode, e.getMessage());
         }
+    }
+
+    private void getNextStates(HttpServletRequest request, HttpServletResponse response, OsdDao osdDao, LifecycleStateDao stateDao) throws IOException {
+        IdRequest idRequest = xmlMapper.readValue(request.getInputStream(), IdRequest.class)
+                .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
+        Long                 osdId         = idRequest.getId();
+        ObjectSystemData     osd           = osdDao.getObjectById(osdId).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
+        LifecycleState       state         = stateDao.getLifecycleStateById(osd.getLifecycleStateId()).orElseThrow(ErrorCode.LIFECYCLE_STATE_NOT_FOUND.getException());
+        List<LifecycleState> nextStates = new LifecycleStateDao().getLifecycleStatesByNameList(state.getLifecycleStateConfig().getNextStates());
+        LifecycleStateWrapper wrapper = new LifecycleStateWrapper(nextStates);
+        ResponseUtil.responseIsOkayAndXml(response);
+        xmlMapper.writeValue(response.getOutputStream(), wrapper);
     }
 
     private void changeState(HttpServletRequest request, HttpServletResponse response, OsdDao osdDao, LifecycleStateDao stateDao) throws IOException {

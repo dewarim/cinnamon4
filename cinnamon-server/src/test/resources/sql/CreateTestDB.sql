@@ -869,6 +869,11 @@ insert into objects (id, created, latest_branch, latest_head, modified, name, cr
                      owner_id, parent_id, type_id, acl_id)
 values (nextval('seq_objects_id'), now(), true, true, now(), 'fail-state-attach-test', 1, 1, 1, 1, 6, 1, 2);
 
+-- #35 empty test object to test getNextState lifecycle  state (in creation folder #6)
+insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+                     owner_id, parent_id, type_id, acl_id)
+values (nextval('seq_objects_id'), now(), true, true, now(), 'has-lifecycle-state-authoring', 1, 1, 1, 1, 6, 1, 2);
+
 -- #1 link to osd #1 with default acl (#1)
 insert into links(id, type,owner_id,acl_id,parent_id,osd_id) 
 values (nextval('seq_links_id'), 'OBJECT',  1,1,1,1);
@@ -1024,23 +1029,33 @@ insert into lifecycles(id, name, default_state_id) VALUES (nextval('seq_lifecycl
 insert into lifecycles(id, name, default_state_id) VALUES (nextval('seq_lifecycle_id'), 'fail.lc',null);
 
 -- #1 lifecycle_state of lc #1
-insert into lifecycle_states(id, name, config, state_class, life_cycle_id )
-    values (nextval('seq_lifecycle_states_id'), 'newRenderTask', '<config><properties><property><name>render.server.host</name><value>localhost</value></property></properties></config>', 'NopState', 2);
+insert into lifecycle_states (id, name, config, state_class, life_cycle_id)
+values (nextval('seq_lifecycle_states_id'), 'newRenderTask', '<config>' ||
+                                                             '<properties><property><name>render.server.host</name><value>localhost</value></property></properties>' ||
+                                                             '<nextStates/>' ||
+                                                             '</config>', 'NopState', 2);
 insert into lifecycle_state_to_copy_state(lifecycle_state_id, copy_state_id)
   values (currval('seq_lifecycle_states_id'), currval('seq_lifecycle_states_id'));
 update lifecycles set default_state_id=1 where id=1;
 
 -- #2 first lifecycle_state of lc 3 with ChangeAclState
 insert into lifecycle_states(id, name, config, state_class, life_cycle_id )
-    values (nextval('seq_lifecycle_states_id'), 'authoring', '<config><properties><property><name>aclName</name><value>reviewers.acl</value></property></properties></config>', 'ChangeAclState', 3);
+    values (nextval('seq_lifecycle_states_id'), 'authoring', '<config>' ||
+                                                             '<properties><property><name>aclName</name><value>reviewers.acl</value></property></properties>' ||
+                                                             '<nextStates><name>published</name></nextStates>' ||
+                                                             '</config>', 'ChangeAclState', 3);
 insert into lifecycle_state_to_copy_state(lifecycle_state_id, copy_state_id)
   values (currval('seq_lifecycle_states_id'), currval('seq_lifecycle_states_id'));
 update lifecycles set default_state_id=1 where id=3;
 update objects set state_id=2 where id=31;
+update objects set state_id=2 where id=35;
 
--- #2 second lifecycle_state of lc 3 with ChangeAclState
+-- #3 second lifecycle_state of lc 3 with ChangeAclState
 insert into lifecycle_states(id, name, config, state_class, life_cycle_id )
-    values (nextval('seq_lifecycle_states_id'), 'published', '<config><properties><property><name>aclName</name><value>_default_acl</value></property></properties></config>', 'ChangeAclState', 3);
+    values (nextval('seq_lifecycle_states_id'), 'published', '<config>' ||
+                                                             '<properties><property><name>aclName</name><value>_default_acl</value></property></properties>' ||
+                                                             '<nextStates><name>authoring</name></nextStates>' ||
+                                                             '</config>', 'ChangeAclState', 3);
 insert into lifecycle_state_to_copy_state(lifecycle_state_id, copy_state_id)
   values (currval('seq_lifecycle_states_id'), currval('seq_lifecycle_states_id'));
 

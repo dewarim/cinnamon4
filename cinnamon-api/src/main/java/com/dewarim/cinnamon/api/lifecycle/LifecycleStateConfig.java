@@ -15,11 +15,24 @@ public class LifecycleStateConfig {
     @JacksonXmlProperty(localName = "property")
     private List<NameValue> properties = new ArrayList<>();
 
+
+    @JacksonXmlElementWrapper(localName = "nextStates")
+    @JacksonXmlProperty(localName = "name")
+    private List<String> nextStates = new ArrayList<>();
+
     public List<String> getPropertyValues(String propertyName){
         return properties.stream()
                 .filter(nameValue -> nameValue.getName().equals(propertyName))
                 .map(NameValue::getValue)
                 .collect(Collectors.toList());
+    }
+
+    public List<String> getNextStates() {
+        return nextStates;
+    }
+
+    public void setNextStates(List<String> nextStates) {
+        this.nextStates = nextStates;
     }
 
     public List<NameValue> getProperties() {

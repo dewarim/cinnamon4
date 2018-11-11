@@ -30,11 +30,6 @@ public class LifecycleState {
     }
 
     public LifecycleStateConfig getLifecycleStateConfig() throws IOException {
-        /*
-         * Note: This is probably not optimal: parsing the config to a class from the cinnamon-api module.
-         * On the other hand, the config is currently stored as String object in XML format.
-         * If we had the configs in their own table as objects in their own right, I think I would use configId::config.
-         */
         ObjectMapper xmlMapper = new XmlMapper();
         return xmlMapper.readValue(config, LifecycleStateConfig.class);
     }
