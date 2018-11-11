@@ -829,7 +829,7 @@ insert into objects (id, created, latest_branch, latest_head, modified, name, cr
                      owner_id, parent_id, type_id, acl_id)
 values (nextval('seq_objects_id'), now(), true, true, now(), 'lock-me', 1, 1, 1, 1, 6, 1, 2);
 
--- #27 empty test object without permissions for lock/unlock and attachLifecycle tests in creation folder #6
+-- #27 empty test object without permissions for lock/unlock and attachLifecycle/getNextStates tests in creation folder #6
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
 values (nextval('seq_objects_id'), now(), true, true, now(), 'u-no-lock-me', 1, 1, 1, 1, 6, 1, 7);

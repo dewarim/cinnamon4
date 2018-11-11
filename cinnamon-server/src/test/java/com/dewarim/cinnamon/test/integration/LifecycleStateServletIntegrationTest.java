@@ -233,6 +233,13 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
     }
 
     @Test
+    public void getNextStatesRequiresReadPermission() throws IOException{
+        IdRequest    request  = new IdRequest(27L);
+        HttpResponse response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__GET_NEXT_STATES, request);
+        assertCinnamonError(response, ErrorCode.NO_READ_OBJECT_SYS_METADATA_PERMISSION, SC_UNAUTHORIZED);
+    }
+
+    @Test
     public void getNextStatesHappyPath() throws IOException {
         IdRequest            request         = new IdRequest(35L);
         HttpResponse         response        = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__GET_NEXT_STATES, request);

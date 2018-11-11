@@ -47,6 +47,7 @@ public enum ErrorCode {
     NO_CREATE_PERMISSION("missing permission to create an object inside a folder", SC_UNAUTHORIZED),
     NO_LOCK_PERMISSION("missing permission to (un)lock this object", SC_UNAUTHORIZED),
     NO_READ_PERMISSION("missing read content permission for current object", SC_UNAUTHORIZED),
+    NO_READ_OBJECT_SYS_METADATA_PERMISSION("missing permission to read system metadata", SC_UNAUTHORIZED),
     NO_WRITE_PERMISSION("missing write content permission for current object", SC_UNAUTHORIZED),
     NO_WRITE_SYS_METADATA_PERMISSION("Required permission to write system metadata was not found.", SC_UNAUTHORIZED),
     NOT_MULTIPART_UPLOAD("the request must have the contentType multipart/form-data", SC_BAD_REQUEST),

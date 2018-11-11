@@ -80,11 +80,13 @@ public class LifecycleStateServlet extends HttpServlet {
     private void getNextStates(HttpServletRequest request, HttpServletResponse response, OsdDao osdDao, LifecycleStateDao stateDao) throws IOException {
         IdRequest idRequest = xmlMapper.readValue(request.getInputStream(), IdRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
-        Long                 osdId         = idRequest.getId();
-        ObjectSystemData     osd           = osdDao.getObjectById(osdId).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
-        LifecycleState       state         = stateDao.getLifecycleStateById(osd.getLifecycleStateId()).orElseThrow(ErrorCode.LIFECYCLE_STATE_NOT_FOUND.getException());
-        List<LifecycleState> nextStates = new LifecycleStateDao().getLifecycleStatesByNameList(state.getLifecycleStateConfig().getNextStates());
-        LifecycleStateWrapper wrapper = new LifecycleStateWrapper(nextStates);
+        Long             osdId = idRequest.getId();
+        ObjectSystemData osd   = osdDao.getObjectById(osdId).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
+        throwUnlessSysMetadataIsReadable(osd);
+
+        LifecycleState        state      = stateDao.getLifecycleStateById(osd.getLifecycleStateId()).orElseThrow(ErrorCode.LIFECYCLE_STATE_NOT_FOUND.getException());
+        List<LifecycleState>  nextStates = new LifecycleStateDao().getLifecycleStatesByNameList(state.getLifecycleStateConfig().getNextStates());
+        LifecycleStateWrapper wrapper    = new LifecycleStateWrapper(nextStates);
         ResponseUtil.responseIsOkayAndXml(response);
         xmlMapper.writeValue(response.getOutputStream(), wrapper);
     }
@@ -138,6 +140,14 @@ public class LifecycleStateServlet extends HttpServlet {
         }
     }
 
+    private void throwUnlessSysMetadataIsReadable(ObjectSystemData osd) {
+        UserAccount user        = ThreadLocalSqlSession.getCurrentUser();
+        boolean     readAllowed = new AuthorizationService().hasUserOrOwnerPermission(osd, DefaultPermission.READ_OBJECT_SYS_METADATA, user);
+        if (!readAllowed) {
+            throw ErrorCode.NO_READ_OBJECT_SYS_METADATA_PERMISSION.getException().get();
+        }
+    }
+
     private void detachLifecycleState(HttpServletRequest request, HttpServletResponse response, OsdDao osdDao) throws IOException {
         IdRequest detachReq = xmlMapper.readValue(request.getInputStream(), IdRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
@@ -178,7 +188,6 @@ public class LifecycleStateServlet extends HttpServlet {
     }
 
     private void getLifecycleState(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        // ignore listRequest for now, just make sure it's valid xml:
         IdRequest         stateRequest = xmlMapper.readValue(request.getInputStream(), IdRequest.class);
         LifecycleStateDao stateDao     = new LifecycleStateDao();
         if (stateRequest.validated()) {
