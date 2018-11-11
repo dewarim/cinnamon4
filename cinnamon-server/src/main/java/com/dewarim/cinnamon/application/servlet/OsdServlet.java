@@ -87,6 +87,7 @@ public class OsdServlet extends HttpServlet {
                 break;
             case "/unlock":
                 unlock(request, response, user, osdDao);
+                break;
             default:
                 response.setStatus(HttpServletResponse.SC_NO_CONTENT);
         }
