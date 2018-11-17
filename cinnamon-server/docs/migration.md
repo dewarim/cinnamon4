@@ -77,4 +77,50 @@
     alter table sessions drop column obj_version;
 
     -- root folder now has null parent instead of itself.
-    update folders set parent_id=null where parent_id=id; 
+    update folders set parent_id=null where parent_id=id;
+    
+    -- metaset_types table:
+    alter table drop column obj_version; 
+    
+    -- create tables: osd_meta and folder_meta
+    
+    create table osd_meta(
+    id bigint not null
+    constraint osd_meta_pkey
+    primary key,
+    content text not null,
+    type_id int not null
+    constraint fke5345bd6abf96b0c
+    references metaset_types
+    );
+    drop sequence if exists seq_osd_meta_id;
+    create sequence seq_osd_meta_id;
+
+    create table folder_meta(
+    id bigint not null
+    constraint folder_meta_pkey
+    primary key,
+    content text not null,
+    type_id int not null
+    constraint fke5345bd6abf96b0c
+    references metaset_types
+    ):
+    drop sequence if exists seq_folder_meta_id;
+    create sequence seq_folder_meta_id;
+
+    -- migrate metasets
+    insert into osd_meta (id, osd_id, content, type_id)
+    select m.id, o.osd_id, m.content, m.type_id
+    from metasets m
+           join osd_metasets o on o.metaset_id = m.id;
+    
+    insert into folder_meta (id, folder_id, content, type_id)
+    select m.id, f.folder_id, m.content, m.type_id
+    from metasets m
+           join folder_metasets f on f.metaset_id = m.id;
+    
+    -- (optional: remove obsolete tables)
+    drop table osd_metasets;
+    drop table folder_metasets;
+    drop table metasets;         
+    

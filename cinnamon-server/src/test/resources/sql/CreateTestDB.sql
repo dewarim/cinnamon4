@@ -481,6 +481,40 @@ create table config_entries
 drop sequence if exists seq_config_entries_id;
 create sequence seq_config_entries_id start with 1;
 
+create table osd_meta
+(
+  id bigint not null
+    constraint osd_meta_pkey
+    primary key,
+  osd_id bigint not null
+    constraint fk_osd_meta_osd
+    references objects,
+  content text not null,
+  type_id int not null
+    constraint fke5345bd6abf96b0c
+    references metaset_types
+)
+;
+drop sequence if exists seq_osd_meta_id;
+create sequence seq_osd_meta_id;
+
+create table folder_meta
+(
+  id bigint not null
+    constraint folder_meta_pkey
+    primary key,
+  folder_id bigint not null
+    constraint fk_folder_meta_folder
+    references folders,
+  content text not null,
+  type_id int not null
+    constraint fke5345bd6abf96b0c
+    references metaset_types
+)
+;
+drop sequence if exists seq_folder_meta_id;
+create sequence seq_folder_meta_id;
+
 
 --------------------------
 --- insert test data:  ---
