@@ -38,7 +38,7 @@ import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
 import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
 
 @WebServlet(name = "LifecycleState", urlPatterns = "/")
-public class LifecycleStateServlet extends HttpServlet {
+public class LifecycleStateServlet extends BaseServlet {
 
     private ObjectMapper xmlMapper = new XmlMapper();
 
@@ -132,21 +132,7 @@ public class LifecycleStateServlet extends HttpServlet {
         }
     }
 
-    private void throwUnlessSysMetadataIsWritable(ObjectSystemData osd) {
-        UserAccount user         = ThreadLocalSqlSession.getCurrentUser();
-        boolean     writeAllowed = new AuthorizationService().hasUserOrOwnerPermission(osd, DefaultPermission.WRITE_OBJECT_SYS_METADATA, user);
-        if (!writeAllowed) {
-            throw ErrorCode.NO_WRITE_SYS_METADATA_PERMISSION.getException().get();
-        }
-    }
 
-    private void throwUnlessSysMetadataIsReadable(ObjectSystemData osd) {
-        UserAccount user        = ThreadLocalSqlSession.getCurrentUser();
-        boolean     readAllowed = new AuthorizationService().hasUserOrOwnerPermission(osd, DefaultPermission.READ_OBJECT_SYS_METADATA, user);
-        if (!readAllowed) {
-            throw ErrorCode.NO_READ_OBJECT_SYS_METADATA_PERMISSION.getException().get();
-        }
-    }
 
     private void detachLifecycleState(HttpServletRequest request, HttpServletResponse response, OsdDao osdDao) throws IOException {
         IdRequest detachReq = xmlMapper.readValue(request.getInputStream(), IdRequest.class)
