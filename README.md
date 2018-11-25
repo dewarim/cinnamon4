@@ -19,7 +19,7 @@ Try to implement the core features of the Cinnamon CMS in Java,
 
 ## License
 
-None - yes, it's open source, but it is not finished and I have not chosen a license yet.
+[Apache 2.0](LICENSE.txt)
 
 ## Author
 
