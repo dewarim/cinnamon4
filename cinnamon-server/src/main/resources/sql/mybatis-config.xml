@@ -25,6 +25,7 @@
         <mapper resource="com/dewarim/cinnamon/ConfigEntryMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/CmnGroupMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/FolderMapper.xml"/>
+        <mapper resource="com/dewarim/cinnamon/FolderMetaMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/FolderTypeMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/FormatMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/IndexItemMapper.xml"/>

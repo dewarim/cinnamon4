@@ -6,11 +6,16 @@ import com.dewarim.cinnamon.model.Folder;
 import com.dewarim.cinnamon.model.request.*;
 import com.dewarim.cinnamon.model.response.FolderWrapper;
 import com.dewarim.cinnamon.model.response.SummaryWrapper;
+import nu.xom.Builder;
+import nu.xom.Document;
+import nu.xom.Node;
+import nu.xom.ParsingException;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -18,6 +23,7 @@ import java.util.stream.Collectors;
 
 import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
 import static org.apache.http.HttpStatus.SC_NOT_FOUND;
+import static org.apache.http.HttpStatus.SC_UNAUTHORIZED;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.*;
@@ -158,6 +164,41 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         assertTrue(folderNames.contains("home"));
         assertTrue(folderNames.contains("creation"));
         assertTrue(folderNames.contains("some-sub-folder"));
+    }
+
+    /*
+     * Note: other Meta requests are tested in OsdServletIntegrationTest.
+     */
+    @Test
+    public void getMetaInvalidRequest() throws IOException{
+        MetaRequest  request      = new MetaRequest();
+        HttpResponse metaResponse = sendStandardRequest(UrlMapping.FOLDER__GET_META, request);
+        assertCinnamonError(metaResponse, ErrorCode.INVALID_REQUEST);
+    }
+
+    @Test
+    public void getMetaObjectNotFound() throws IOException{
+        MetaRequest  request      = new MetaRequest(Long.MAX_VALUE, null);
+        HttpResponse metaResponse = sendStandardRequest(UrlMapping.FOLDER__GET_META, request);
+        assertCinnamonError(metaResponse, ErrorCode.OBJECT_NOT_FOUND, SC_NOT_FOUND);
+    }
+
+    @Test
+    public void getMetaWithoutReadPermission() throws IOException{
+        MetaRequest  request      = new MetaRequest(15L, null);
+        HttpResponse metaResponse = sendStandardRequest(UrlMapping.FOLDER__GET_META, request);
+        assertCinnamonError(metaResponse, ErrorCode.NO_READ_CUSTOM_METADATA_PERMISSION, SC_UNAUTHORIZED);
+    }
+
+    @Test
+    public void getMetaHappyPath() throws IOException, ParsingException {
+        MetaRequest  request      = new MetaRequest(16L, null);
+        HttpResponse metaResponse = sendStandardRequest(UrlMapping.FOLDER__GET_META, request);
+        assertResponseOkay(metaResponse);
+        String   content = new String(metaResponse.getEntity().getContent().readAllBytes(), Charset.forName("UTF-8"));
+        Document metaDoc = new Builder().build(content, null);
+        Node     comment = metaDoc.query("//metasets/metaset[typeId/text()='1']/content").get(0);
+        assertEquals("<metaset><p>Good Folder Meta Test</p></metaset>",comment.getValue());
     }
 
     private List<Folder> unwrapFolders(HttpResponse response, Integer expectedSize) throws IOException {

@@ -2,14 +2,14 @@ package com.dewarim.cinnamon.model;
 
 import java.util.Objects;
 
-public class OsdMeta {
+public class Meta {
 
-    private Long id;
-    private Long osdId;
-    private Long typeId;
+    private Long   id;
+    private Long   objectId;
+    private Long   typeId;
     private String content;
 
-    public OsdMeta() {
+    public Meta() {
     }
 
     public Long getId() {
@@ -20,12 +20,12 @@ public class OsdMeta {
         this.id = id;
     }
 
-    public Long getOsdId() {
-        return osdId;
+    public Long getObjectId() {
+        return objectId;
     }
 
-    public void setOsdId(Long osdId) {
-        this.osdId = osdId;
+    public void setObjectId(Long objectId) {
+        this.objectId = objectId;
     }
 
     public Long getTypeId() {
@@ -52,22 +52,22 @@ public class OsdMeta {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        OsdMeta osdMeta = (OsdMeta) o;
-        return Objects.equals(osdId, osdMeta.osdId) &&
+        Meta osdMeta = (Meta) o;
+        return Objects.equals(objectId, osdMeta.objectId) &&
                 Objects.equals(typeId, osdMeta.typeId) &&
                 Objects.equals(content, osdMeta.content);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(osdId, typeId, content);
+        return Objects.hash(objectId, typeId, content);
     }
 
     @Override
     public String toString() {
-        return "OsdMeta{" +
+        return "Meta{" +
                 "id=" + id +
-                ", osdId=" + osdId +
+                ", objectId=" + objectId +
                 ", typeId=" + typeId +
                 ", content='" + content + '\'' +
                 '}';

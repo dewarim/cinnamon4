@@ -3,25 +3,25 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.dewarim.cinnamon.OsdMetaMapper">
+<mapper namespace="com.dewarim.cinnamon.FolderMetaMapper">
 
-    <resultMap id="osdMetaMap" type="com.dewarim.cinnamon.model.Meta">
+    <resultMap id="folderMetaMap" type="com.dewarim.cinnamon.model.Meta">
         <id property="id" column="id"/>
-        <result property="id" column="osd_id"/>
+        <result property="id" column="folder_id"/>
         <result property="typeId" column="type_id"/>
         <result property="content" column="content"/>
     </resultMap>
 
-    <select id="listByOsd" parameterType="long" resultMap="osdMetaMap">
+    <select id="listByFolderId" parameterType="long" resultMap="folderMetaMap">
         SELECT *
-        FROM osd_meta
-        WHERE osd_id = #{id}
+        FROM folder_meta
+        WHERE folder_id = #{id}
     </select>
 
-    <select id="getMetasetsByNameAndOsd" parameterType="map" resultMap="osdMetaMap">
+    <select id="getMetasetsByNameAndFolderId" parameterType="map" resultMap="folderMetaMap">
         SELECT *
-        FROM osd_meta
-        WHERE osd_id = #{id}
+        FROM folder_meta
+        WHERE folder_id = #{id}
         AND type_id IN (select id from metaset_types where name in
         <foreach item="item" index="index" collection="typeNames"
                  open="(" separator="," close=")">

@@ -12,7 +12,7 @@ import com.dewarim.cinnamon.model.*;
 import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.request.*;
 import com.dewarim.cinnamon.model.response.GenericResponse;
-import com.dewarim.cinnamon.model.response.OsdMetaWrapper;
+import com.dewarim.cinnamon.model.response.MetaWrapper;
 import com.dewarim.cinnamon.model.response.SummaryWrapper;
 import com.dewarim.cinnamon.provider.ContentProviderService;
 import com.dewarim.cinnamon.security.authorization.AuthorizationService;
@@ -27,7 +27,6 @@ import org.apache.logging.log4j.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
@@ -108,59 +107,21 @@ public class OsdServlet extends BaseServlet {
      * want to see with large metasets.
      */
     private void getMeta(HttpServletRequest request, HttpServletResponse response, UserAccount user, OsdDao osdDao) throws IOException {
-        OsdMetaRequest metaRequest = xmlMapper.readValue(request.getInputStream(), OsdMetaRequest.class)
+        MetaRequest metaRequest = xmlMapper.readValue(request.getInputStream(), MetaRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
-        Long             osdId = metaRequest.getOsdId();
+        Long             osdId = metaRequest.getId();
         ObjectSystemData osd   = osdDao.getObjectById(osdId).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
         throwUnlessCustomMetaIsReadable(osd);
 
-        OsdMetaDao    metaDao = new OsdMetaDao();
-        List<OsdMeta> metaList;
+        List<Meta> metaList;
         if (metaRequest.getTypeNames() != null) {
-            metaList = metaDao.getMetaByNamesAndOsd(metaRequest.getTypeNames(), osdId);
+            metaList = new OsdMetaDao().getMetaByNamesAndOsd(metaRequest.getTypeNames(), osdId);
         } else {
-            metaList = metaDao.listByOsd(osdId);
+            metaList = new OsdMetaDao().listByOsd(osdId);
         }
 
-        if (metaRequest.isVersion3CompatibilityRequired()) {
-            // render traditional metaset
-            Map<Long, MetasetType> metasetTypes = new MetasetTypeDao().listMetasetTypes().stream().collect(Collectors.toMap(MetasetType::getId, m -> m));
-
-            Element  root     = new Element("meta");
-            Document document = new Document(root);
-            metaList.forEach(meta -> {
-                Attribute metasetId = new Attribute("id", meta.getId().toString());
-                Attribute type = new Attribute("type", metasetTypes.get(meta.getTypeId()).getName());
-                Element metaset = new Element("metaset");
-                metaset.addAttribute(metasetId);
-                metaset.addAttribute(type);
-                Document content = parseXml(meta.getContent());
-                Elements childElements = content.getRootElement().getChildElements();
-                for(int x = 0; x<childElements.size();x++){
-                    Element element = childElements.get(x);
-                    element.detach();
-                    metaset.appendChild(element);
-                }
-                root.appendChild(metaset);
-            });
-            response.getWriter().print(document.toXML());
-        } else {
-            OsdMetaWrapper wrapper = new OsdMetaWrapper();
-            wrapper.setMetasets(metaList);
-            xmlMapper.writeValue(response.getOutputStream(), wrapper);
-        }
-        ResponseUtil.responseIsOkayAndXml(response);
-    }
-
-    private Document parseXml(String content){
-        try {
-            Builder parser = new Builder();
-            return parser.build(content, null);
-        }
-        catch (IOException|ParsingException e) {
-            throw new RuntimeException(e);
-        }
+        createMetaResponse(metaRequest, response, metaList, xmlMapper);
     }
 
     private void lock(HttpServletRequest request, HttpServletResponse response, UserAccount user, OsdDao osdDao) throws IOException {

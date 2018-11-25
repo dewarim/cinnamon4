@@ -385,28 +385,28 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getMetaInvalidRequest() throws IOException{
-        OsdMetaRequest request = new OsdMetaRequest();
+        MetaRequest  request      = new MetaRequest();
         HttpResponse metaResponse = sendStandardRequest(UrlMapping.OSD__GET_META, request);
         assertCinnamonError(metaResponse, ErrorCode.INVALID_REQUEST);
     }
 
     @Test
     public void getMetaObjectNotFound() throws IOException{
-        OsdMetaRequest request = new OsdMetaRequest(Long.MAX_VALUE, null);
+        MetaRequest  request      = new MetaRequest(Long.MAX_VALUE, null);
         HttpResponse metaResponse = sendStandardRequest(UrlMapping.OSD__GET_META, request);
         assertCinnamonError(metaResponse, ErrorCode.OBJECT_NOT_FOUND, SC_NOT_FOUND);
     }
 
     @Test
     public void getMetaWithoutReadPermission() throws IOException{
-        OsdMetaRequest request = new OsdMetaRequest(37L, null);
+        MetaRequest  request      = new MetaRequest(37L, null);
         HttpResponse metaResponse = sendStandardRequest(UrlMapping.OSD__GET_META, request);
         assertCinnamonError(metaResponse, ErrorCode.NO_READ_CUSTOM_METADATA_PERMISSION, SC_UNAUTHORIZED);
     }
 
     @Test
     public void getMetaCompatibilityMode() throws IOException, ParsingException {
-        OsdMetaRequest request = new OsdMetaRequest(36L, null);
+        MetaRequest request = new MetaRequest(36L, null);
         request.setVersion3CompatibilityRequired(true);
         HttpResponse metaResponse = sendStandardRequest(UrlMapping.OSD__GET_META, request);
         assertResponseOkay(metaResponse);
@@ -419,7 +419,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getMetaHappyPathAllMeta() throws IOException, ParsingException{
-        OsdMetaRequest request = new OsdMetaRequest(36L, null);
+        MetaRequest  request      = new MetaRequest(36L, null);
         HttpResponse metaResponse = sendStandardRequest(UrlMapping.OSD__GET_META, request);
         assertResponseOkay(metaResponse);
         String content = new String(metaResponse.getEntity().getContent().readAllBytes(), Charset.forName("UTF-8"));
@@ -432,7 +432,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getMetaHappyPathSingleMeta() throws IOException, ParsingException{
-        OsdMetaRequest request = new OsdMetaRequest(36L, Collections.singletonList("license"));
+        MetaRequest  request      = new MetaRequest(36L, Collections.singletonList("license"));
         HttpResponse metaResponse = sendStandardRequest(UrlMapping.OSD__GET_META, request);
         assertResponseOkay(metaResponse);
         String content = new String(metaResponse.getEntity().getContent().readAllBytes(), Charset.forName("UTF-8"));

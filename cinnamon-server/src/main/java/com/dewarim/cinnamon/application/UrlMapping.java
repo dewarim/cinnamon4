@@ -23,6 +23,7 @@ public enum UrlMapping {
     FOLDER__GET_FOLDER("folder", "getFolder", "/api"),
     FOLDER__GET_FOLDER_BY_PATH("folder", "getFolderByPath", "/api"),
     FOLDER__GET_FOLDERS("folder", "getFolders", "/api"),
+    FOLDER__GET_META("folder", "getMeta", "/api"),
     FOLDER__GET_SUMMARIES("folder", "getSummaries", "/api"),
     FOLDER__SET_SUMMARY("folder", "setSummary", "/api"),
     FORMAT__LIST_FORMATS("format", "listFormats", "/api"),

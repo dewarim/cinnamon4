@@ -605,6 +605,15 @@ values(nextval('seq_folder_id'),'get-my-summary',0,2,1,6,1, '<sum>folder</sum>')
 insert into folders(id,name,obj_version,acl_id,owner_id,parent_id,type_id)
 values(nextval('seq_folder_id'),'some-sub-folder',0,1,1,6,1);
 
+-- #15 folder in creation folder#6 for getMeta test without permissions
+insert into folders(id,name,obj_version,acl_id,owner_id,parent_id,type_id)
+values(nextval('seq_folder_id'),'u-no-read-meta',0,7,1,6,1);
+
+-- #16 folder in creation folder#6 for getMetaHappyPath test (other getMeta-Tests: see OsdServletIntegrationTest)
+insert into folders(id,name,obj_version,acl_id,owner_id,parent_id,type_id)
+values(nextval('seq_folder_id'),'have-me-some-meta',0,2,1,6,1);
+
+
 -- #1
 insert into objtypes(id,name) values(nextval('seq_obj_type_id'),'_default_objtype');
 
@@ -1124,3 +1133,6 @@ values (nextval('seq_osd_meta_id'), 36, '<metaset><p>Good Test</p></metaset>', 1
 insert into osd_meta(id, osd_id, content, type_id)
 values (nextval('seq_osd_meta_id'), 36, '<metaset><license>GPL</license></metaset>', 2);
 
+-- #1 folder_meta
+insert into folder_meta(id, folder_id, content, type_id)
+values (nextval('seq_folder_meta_id'), 16, '<metaset><p>Good Folder Meta Test</p></metaset>', 1);

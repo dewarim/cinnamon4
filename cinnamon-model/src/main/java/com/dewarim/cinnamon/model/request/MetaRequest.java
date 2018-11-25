@@ -3,9 +3,9 @@ package com.dewarim.cinnamon.model.request;
 import java.util.List;
 import java.util.Optional;
 
-public class OsdMetaRequest {
+public class MetaRequest {
 
-    private Long         osdId;
+    private Long         id;
     private List<String> typeNames;
     /**
      * Expects the XML content of each metaset to be an XML DOM element in the response XML,
@@ -13,20 +13,20 @@ public class OsdMetaRequest {
      */
     private boolean      version3CompatibilityRequired;
 
-    public OsdMetaRequest() {
+    public MetaRequest() {
     }
 
-    public OsdMetaRequest(Long osdId, List<String> typeNames) {
-        this.osdId = osdId;
+    public MetaRequest(Long id, List<String> typeNames) {
+        this.id = id;
         this.typeNames = typeNames;
     }
 
-    public Long getOsdId() {
-        return osdId;
+    public Long getId() {
+        return id;
     }
 
-    public void setOsdId(Long osdId) {
-        this.osdId = osdId;
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public List<String> getTypeNames() {
@@ -46,10 +46,10 @@ public class OsdMetaRequest {
     }
 
     private boolean validated(){
-        return osdId != null && osdId > 0 && (typeNames == null || typeNames.stream().noneMatch(name -> name == null || name.trim().isEmpty()));
+        return id != null && id > 0 && (typeNames == null || typeNames.stream().noneMatch(name -> name == null || name.trim().isEmpty()));
     }
 
-    public Optional<OsdMetaRequest> validateRequest() {
+    public Optional<MetaRequest> validateRequest() {
         if (validated()) {
             return Optional.of(this);
         } else {
