@@ -24,13 +24,13 @@ public class MetasetTypeServletIntegrationTest extends CinnamonIntegrationTest {
 
         assertNotNull(metasetTypes);
         assertFalse(metasetTypes.isEmpty());
-        assertEquals(1, metasetTypes.size());
+        assertEquals(2, metasetTypes.size());
 
-        Optional<MetasetType> typeOpt = metasetTypes.stream().filter(metasetType -> metasetType.getName().equals("thumbnail"))
+        Optional<MetasetType> typeOpt = metasetTypes.stream().filter(metasetType -> metasetType.getName().equals("license"))
                 .findFirst();
         assertTrue(typeOpt.isPresent());
         MetasetType type = typeOpt.get();
-        assertThat(type.getId(), equalTo(1L));
+        assertThat(type.getId(), equalTo(2L));
     }
 
     private List<MetasetType> parseResponse(HttpResponse response) throws IOException {

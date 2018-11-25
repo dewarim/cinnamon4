@@ -481,6 +481,7 @@ create table config_entries
 drop sequence if exists seq_config_entries_id;
 create sequence seq_config_entries_id start with 1;
 
+drop table if exists osd_meta cascade;
 create table osd_meta
 (
   id bigint not null
@@ -498,6 +499,7 @@ create table osd_meta
 drop sequence if exists seq_osd_meta_id;
 create sequence seq_osd_meta_id;
 
+drop table if exists folder_meta cascade;
 create table folder_meta
 (
   id bigint not null
@@ -723,6 +725,8 @@ insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),5
 insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),5,10);
 -- #27 add lock permission to reviewers.acl
 insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),5,8);
+-- #28 add read_custom_metadata to reviewers.acl
+insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),5,11);
 
 -- #1 language de
 insert into languages (id,iso_code) values (nextval('seq_language_id'), 'de_DE');
@@ -908,6 +912,16 @@ insert into objects (id, created, latest_branch, latest_head, modified, name, cr
                      owner_id, parent_id, type_id, acl_id)
 values (nextval('seq_objects_id'), now(), true, true, now(), 'has-lifecycle-state-authoring', 1, 1, 1, 1, 6, 1, 2);
 
+-- #36 empty test object with osd_meta for getMeta test
+insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+                     owner_id, parent_id, type_id, acl_id)
+values (nextval('seq_objects_id'), now(), true, true, now(), 'has-meta', 1, 1, 1, 1, 6, 1, 2);
+
+-- #37 object with no permissions, used in getMeta test
+insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+                     owner_id, parent_id, type_id, acl_id)
+values (nextval('seq_objects_id'), now(), true, true, now(), 'no-read-custom-meta-permission', 1, 1, 1, 1, 1, 1, 5);
+
 -- #1 link to osd #1 with default acl (#1)
 insert into links(id, type,owner_id,acl_id,parent_id,osd_id) 
 values (nextval('seq_links_id'), 'OBJECT',  1,1,1,1);
@@ -1036,10 +1050,6 @@ insert into ui_languages (id,iso_code) values (nextval('seq_ui_language_id'), 'D
 -- #2 uiLanguage: en
 insert into ui_languages (id,iso_code) values (nextval('seq_ui_language_id'), 'EN');
 
--- #1 general_metadata
-insert into metaset_types(id,name) values(nextval('seq_metaset_types_id'), 'thumbnail');
-
-
 -- #1 index_item
 insert into index_items(id, fieldname, for_content, for_metadata, for_sys_meta, multiple_results,
    name, search_string, va_params, search_condition, index_type_name, store_field)
@@ -1100,3 +1110,17 @@ insert into lifecycle_state_to_copy_state(lifecycle_state_id, copy_state_id)
 values (currval('seq_lifecycle_states_id'), currval('seq_lifecycle_states_id'));
 -- osd#32 with FailState lifecycle state: should fail on state.exit()
 update objects set state_id=4 where id=32;
+
+-- #1 metaset type 'comment'
+insert into metaset_types(id, name) VALUES (nextval('seq_metaset_types_id'), 'comment');
+-- #2 metaset type 'license' (note: in production, this may be a better stored in a relation)
+insert into metaset_types(id, name) VALUES (nextval('seq_metaset_types_id'), 'license');
+
+-- #1 osd_meta with metaset_type#1 comment #1 for osd#36
+insert into osd_meta(id, osd_id, content, type_id)
+values (nextval('seq_osd_meta_id'), 36, '<metaset><p>Good Test</p></metaset>', 1);
+
+-- #2 osd meta with metaset_type#2 license for osd#36
+insert into osd_meta(id, osd_id, content, type_id)
+values (nextval('seq_osd_meta_id'), 36, '<metaset><license>GPL</license></metaset>', 2);
+

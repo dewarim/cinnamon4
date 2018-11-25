@@ -27,4 +27,12 @@ public class BaseServlet extends HttpServlet {
         }
     }
 
+    static void throwUnlessCustomMetaIsReadable(Ownable ownable){
+        UserAccount user = ThreadLocalSqlSession.getCurrentUser();
+        boolean     readAllowed = new AuthorizationService().hasUserOrOwnerPermission(ownable, DefaultPermission.READ_OBJECT_CUSTOM_METADATA, user);
+        if (!readAllowed) {
+            throw ErrorCode.NO_READ_CUSTOM_METADATA_PERMISSION.getException().get();
+        }
+    }
+
 }

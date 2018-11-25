@@ -6,23 +6,21 @@ import com.dewarim.cinnamon.api.content.ContentProvider;
 import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.application.ErrorResponseGenerator;
 import com.dewarim.cinnamon.application.ResponseUtil;
-import com.dewarim.cinnamon.dao.FormatDao;
-import com.dewarim.cinnamon.dao.LinkDao;
-import com.dewarim.cinnamon.dao.UserAccountDao;
-import com.dewarim.cinnamon.model.Format;
+import com.dewarim.cinnamon.application.exception.FailedRequestException;
+import com.dewarim.cinnamon.dao.*;
+import com.dewarim.cinnamon.model.*;
 import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.request.*;
 import com.dewarim.cinnamon.model.response.GenericResponse;
+import com.dewarim.cinnamon.model.response.OsdMetaWrapper;
 import com.dewarim.cinnamon.model.response.SummaryWrapper;
 import com.dewarim.cinnamon.provider.ContentProviderService;
 import com.dewarim.cinnamon.security.authorization.AuthorizationService;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
-import com.dewarim.cinnamon.dao.OsdDao;
-import com.dewarim.cinnamon.model.ObjectSystemData;
-import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.response.OsdWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import nu.xom.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -40,14 +38,16 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static javax.servlet.http.HttpServletResponse.*;
 
 @MultipartConfig
 @WebServlet(name = "Osd", urlPatterns = "/")
-public class OsdServlet extends HttpServlet {
+public class OsdServlet extends BaseServlet {
 
     private              ObjectMapper         xmlMapper            = new XmlMapper();
     private              AuthorizationService authorizationService = new AuthorizationService();
@@ -62,36 +62,105 @@ public class OsdServlet extends HttpServlet {
         }
         UserAccount user   = ThreadLocalSqlSession.getCurrentUser();
         OsdDao      osdDao = new OsdDao();
+        try {
+            switch (pathInfo) {
+                case "/getContent":
+                    getContent(request, response, user, osdDao);
+                    break;
+                case "/getObjectsByFolderId":
+                    getObjectsByFolderId(request, response, user, osdDao);
+                    break;
+                case "/getObjectsById":
+                    getObjectsById(request, response, user, osdDao);
+                    break;
+                case "/getSummaries":
+                    getSummaries(request, response, user, osdDao);
+                    break;
+                case "/lock":
+                    lock(request, response, user, osdDao);
+                    break;
+                case "/getMeta":
+                    getMeta(request, response, user, osdDao);
+                    break;
+                case "/setContent":
+                    setContent(request, response, user, osdDao);
+                    break;
+                case "/setSummary":
+                    setSummary(request, response, user, osdDao);
+                    break;
+                case "/unlock":
+                    unlock(request, response, user, osdDao);
+                    break;
+                default:
+                    response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+            }
+        } catch (FailedRequestException e) {
+            ErrorCode errorCode = e.getErrorCode();
+            ErrorResponseGenerator.generateErrorMessage(response, errorCode.getHttpResponseCode(), errorCode, e.getMessage());
+        }
+    }
 
-        switch (pathInfo) {
-            case "/getContent":
-                getContent(request, response, user, osdDao);
-                break;
-            case "/getObjectsByFolderId":
-                getObjectsByFolderId(request, response, user, osdDao);
-                break;
-            case "/getObjectsById":
-                getObjectsById(request, response, user, osdDao);
-                break;
-            case "/getSummaries":
-                getSummaries(request, response, user, osdDao);
-                break;
-            case "/lock":
-                lock(request, response, user, osdDao);
-                break;
-            case "/setContent":
-                setContent(request, response, user, osdDao);
-                break;
-            case "/setSummary":
-                setSummary(request, response, user, osdDao);
-                break;
-            case "/unlock":
-                unlock(request, response, user, osdDao);
-                break;
-            default:
-                response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+    /**
+     * Note: getMeta allows OsdMetaRequests without metaset name to return all metasets.
+     * This usage is deprecated.
+     * Current Cinnamon 3 clients expect the arbitrary metaset XML to be added to the DOM of the metaset wrapper.
+     * This requires assembling a new DOM tree in memory for each request to getMeta, which is not something you
+     * want to see with large metasets.
+     */
+    private void getMeta(HttpServletRequest request, HttpServletResponse response, UserAccount user, OsdDao osdDao) throws IOException {
+        OsdMetaRequest metaRequest = xmlMapper.readValue(request.getInputStream(), OsdMetaRequest.class)
+                .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
+
+        Long             osdId = metaRequest.getOsdId();
+        ObjectSystemData osd   = osdDao.getObjectById(osdId).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
+        throwUnlessCustomMetaIsReadable(osd);
+
+        OsdMetaDao    metaDao = new OsdMetaDao();
+        List<OsdMeta> metaList;
+        if (metaRequest.getTypeNames() != null) {
+            metaList = metaDao.getMetaByNamesAndOsd(metaRequest.getTypeNames(), osdId);
+        } else {
+            metaList = metaDao.listByOsd(osdId);
         }
 
+        if (metaRequest.isVersion3CompatibilityRequired()) {
+            // render traditional metaset
+            Map<Long, MetasetType> metasetTypes = new MetasetTypeDao().listMetasetTypes().stream().collect(Collectors.toMap(MetasetType::getId, m -> m));
+
+            Element  root     = new Element("meta");
+            Document document = new Document(root);
+            metaList.forEach(meta -> {
+                Attribute metasetId = new Attribute("id", meta.getId().toString());
+                Attribute type = new Attribute("type", metasetTypes.get(meta.getTypeId()).getName());
+                Element metaset = new Element("metaset");
+                metaset.addAttribute(metasetId);
+                metaset.addAttribute(type);
+                Document content = parseXml(meta.getContent());
+                Elements childElements = content.getRootElement().getChildElements();
+                for(int x = 0; x<childElements.size();x++){
+                    Element element = childElements.get(x);
+                    element.detach();
+                    metaset.appendChild(element);
+                }
+                root.appendChild(metaset);
+            });
+            response.getWriter().print(document.toXML());
+        } else {
+            OsdMetaWrapper wrapper = new OsdMetaWrapper();
+            wrapper.setMetasets(metaList);
+            xmlMapper.writeValue(response.getOutputStream(), wrapper);
+        }
+        ResponseUtil.responseIsOkayAndXml(response);
+    }
+
+    private Document parseXml(String content){
+        try {
+            Builder parser = new Builder();
+            return parser.build(content, null);
+        }
+        catch (IOException|ParsingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void lock(HttpServletRequest request, HttpServletResponse response, UserAccount user, OsdDao osdDao) throws IOException {

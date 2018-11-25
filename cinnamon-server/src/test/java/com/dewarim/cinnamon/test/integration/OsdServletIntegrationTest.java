@@ -8,6 +8,7 @@ import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.request.*;
 import com.dewarim.cinnamon.model.response.OsdWrapper;
 import com.dewarim.cinnamon.model.response.SummaryWrapper;
+import nu.xom.*;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
@@ -30,6 +31,7 @@ import java.util.List;
 import static org.apache.http.HttpHeaders.CONTENT_TYPE;
 import static org.apache.http.HttpStatus.SC_FORBIDDEN;
 import static org.apache.http.HttpStatus.SC_NOT_FOUND;
+import static org.apache.http.HttpStatus.SC_UNAUTHORIZED;
 import static org.apache.http.entity.ContentType.APPLICATION_XML;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -379,6 +381,64 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
         HttpResponse unlockResponse = sendAdminRequest(UrlMapping.OSD__UNLOCK, idRequest);
         assertResponseOkay(unlockResponse);
+    }
+
+    @Test
+    public void getMetaInvalidRequest() throws IOException{
+        OsdMetaRequest request = new OsdMetaRequest();
+        HttpResponse metaResponse = sendStandardRequest(UrlMapping.OSD__GET_META, request);
+        assertCinnamonError(metaResponse, ErrorCode.INVALID_REQUEST);
+    }
+
+    @Test
+    public void getMetaObjectNotFound() throws IOException{
+        OsdMetaRequest request = new OsdMetaRequest(Long.MAX_VALUE, null);
+        HttpResponse metaResponse = sendStandardRequest(UrlMapping.OSD__GET_META, request);
+        assertCinnamonError(metaResponse, ErrorCode.OBJECT_NOT_FOUND, SC_NOT_FOUND);
+    }
+
+    @Test
+    public void getMetaWithoutReadPermission() throws IOException{
+        OsdMetaRequest request = new OsdMetaRequest(37L, null);
+        HttpResponse metaResponse = sendStandardRequest(UrlMapping.OSD__GET_META, request);
+        assertCinnamonError(metaResponse, ErrorCode.NO_READ_CUSTOM_METADATA_PERMISSION, SC_UNAUTHORIZED);
+    }
+
+    @Test
+    public void getMetaCompatibilityMode() throws IOException, ParsingException {
+        OsdMetaRequest request = new OsdMetaRequest(36L, null);
+        request.setVersion3CompatibilityRequired(true);
+        HttpResponse metaResponse = sendStandardRequest(UrlMapping.OSD__GET_META, request);
+        assertResponseOkay(metaResponse);
+        String content = new String(metaResponse.getEntity().getContent().readAllBytes(), Charset.forName("UTF-8"));
+        Document metaDoc = new Builder().build(content, null);
+        Nodes nodes = metaDoc.query("/meta/metaset[@type='comment']/p");
+        Node node = nodes.get(0);
+        assertEquals("Good Test",node.getValue());
+    }
+
+    @Test
+    public void getMetaHappyPathAllMeta() throws IOException, ParsingException{
+        OsdMetaRequest request = new OsdMetaRequest(36L, null);
+        HttpResponse metaResponse = sendStandardRequest(UrlMapping.OSD__GET_META, request);
+        assertResponseOkay(metaResponse);
+        String content = new String(metaResponse.getEntity().getContent().readAllBytes(), Charset.forName("UTF-8"));
+        Document metaDoc = new Builder().build(content, null);
+        Node comment = metaDoc.query("//metasets/metaset[typeId/text()='1']/content").get(0);
+        assertEquals("<metaset><p>Good Test</p></metaset>",comment.getValue());
+        Node license  = metaDoc.query("//metasets/metaset[typeId/text()='2']/content").get(0);
+        assertEquals("<metaset><license>GPL</license></metaset>",license.getValue());
+    }
+
+    @Test
+    public void getMetaHappyPathSingleMeta() throws IOException, ParsingException{
+        OsdMetaRequest request = new OsdMetaRequest(36L, Collections.singletonList("license"));
+        HttpResponse metaResponse = sendStandardRequest(UrlMapping.OSD__GET_META, request);
+        assertResponseOkay(metaResponse);
+        String content = new String(metaResponse.getEntity().getContent().readAllBytes(), Charset.forName("UTF-8"));
+        Document metaDoc = new Builder().build(content, null);
+        Nodes metasets = metaDoc.query("//metasets/metaset");
+        assertEquals(1,metasets.size());
     }
 
     private HttpResponse sendStandardMultipartRequest(String url, MultipartEntity multipartEntity) throws IOException {

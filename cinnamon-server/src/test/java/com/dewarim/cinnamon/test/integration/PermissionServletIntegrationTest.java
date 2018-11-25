@@ -47,10 +47,11 @@ public class PermissionServletIntegrationTest extends CinnamonIntegrationTest {
         - read_object_content
         - write_object_content
         - lock
+        - read_object_custom_meta
          */
         UserPermissionRequest reviewerPermissionRequest = new UserPermissionRequest(2L,2L);
         HttpResponse reviewerResponse = sendAdminRequest(UrlMapping.PERMISSION__GET_USER_PERMISSIONS, reviewerPermissionRequest);
-        unwrapPermissions(reviewerResponse,7);
+        unwrapPermissions(reviewerResponse,8);
     }    
     
     @Test
