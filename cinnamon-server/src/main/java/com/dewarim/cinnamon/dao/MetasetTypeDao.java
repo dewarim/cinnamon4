@@ -20,5 +20,11 @@ public class MetasetTypeDao {
         return Optional.ofNullable(metasetType);
     }
 
+    public Optional<MetasetType> getMetasetTypeByName(String name) {
+        SqlSession   sqlSession   = ThreadLocalSqlSession.getSqlSession();
+        MetasetType metasetType = sqlSession.selectOne("com.dewarim.cinnamon.MetasetTypeMapper.getMetasetTypeByName", name);
+        return Optional.ofNullable(metasetType);
+    }
+
 
 }

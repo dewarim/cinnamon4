@@ -30,5 +30,12 @@
         )
     </select>
 
+    <insert id="insertMeta" parameterType="com.dewarim.cinnamon.model.Meta">
+        <selectKey keyProperty="id" resultType="long" order="BEFORE">
+            select nextval('seq_osd_meta_id')
+        </selectKey>
+        INSERT INTO osd_meta (id, osd_id, type_id, content) VALUES
+        (#{id}, #{objectId}, #{typeId}, #{content})
+    </insert>
 
 </mapper>

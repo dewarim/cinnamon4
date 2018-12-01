@@ -22,6 +22,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -45,6 +46,9 @@ public class FolderServlet extends BaseServlet {
         FolderDao   folderDao = new FolderDao();
         try {
             switch (pathInfo) {
+                case "/createMeta":
+                    createMeta(request, response, user, folderDao);
+                    break;
                 case "/getFolder":
                     getFolder(request, response, user, folderDao);
                     break;
@@ -95,6 +99,33 @@ public class FolderServlet extends BaseServlet {
         }
 
         createMetaResponse(metaRequest, response, metaList, xmlMapper);
+    }
+
+    private void createMeta(HttpServletRequest request, HttpServletResponse response, UserAccount user, FolderDao folderDao) throws IOException {
+        CreateMetaRequest metaRequest = xmlMapper.readValue(request.getInputStream(), CreateMetaRequest.class)
+                .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
+
+        Long   folderId = metaRequest.getId();
+        Folder folder      = folderDao.getFolderById(folderId).orElseThrow(ErrorCode.FOLDER_NOT_FOUND.getException());
+        throwUnlessCustomMetaIsWritable(folder, user);
+        MetasetType metaType;
+        if (metaRequest.getTypeId() != null) {
+            metaType = new MetasetTypeDao().getMetasetTypeById(metaRequest.getTypeId())
+                    .orElseThrow(ErrorCode.METASET_TYPE_NOT_FOUND.getException());
+        } else {
+            metaType = new MetasetTypeDao().getMetasetTypeByName(metaRequest.getTypeName())
+                    .orElseThrow(ErrorCode.METASET_TYPE_NOT_FOUND.getException());
+        }
+
+        // does meta already exist and is unique?
+        FolderMetaDao metaDao = new FolderMetaDao();
+        List<Meta> metas   = metaDao.getMetaByNamesAndFolderId(Collections.singletonList(metaType.getName()), folderId);
+        if (metaType.getUnique() && metas.size() > 0) {
+            throw new FailedRequestException(ErrorCode.METASET_IS_UNIQUE_AND_ALREADY_EXISTS);
+        }
+
+        Meta meta = metaDao.createMeta(metaRequest, metaType);
+        createMetaResponse(new MetaRequest(), response, Collections.singletonList(meta), xmlMapper);
     }
 
     private void getFolderByPath(HttpServletRequest request, HttpServletResponse response, UserAccount user, FolderDao folderDao) throws IOException {

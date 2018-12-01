@@ -22,5 +22,11 @@
         WHERE id = #{id}
     </select>
 
+    <select id="getMetasetTypeByName" parameterType="String" resultMap="metasetTypeMap">
+        SELECT *
+        FROM metaset_types
+        WHERE name = #{name}
+    </select>
+
 
 </mapper>

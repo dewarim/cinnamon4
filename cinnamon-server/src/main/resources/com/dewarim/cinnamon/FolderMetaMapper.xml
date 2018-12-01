@@ -30,5 +30,12 @@
         )
     </select>
 
+    <insert id="insertMeta" parameterType="com.dewarim.cinnamon.model.Meta">
+        <selectKey keyProperty="id" resultType="long" order="BEFORE">
+            select nextval('seq_folder_meta_id')
+        </selectKey>
+        INSERT INTO folder_meta (id, folder_id, type_id, content) VALUES
+        (#{id}, #{objectId}, #{typeId}, #{content})
+    </insert>
 
 </mapper>

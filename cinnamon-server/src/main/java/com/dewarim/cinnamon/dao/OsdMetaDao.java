@@ -2,6 +2,8 @@ package com.dewarim.cinnamon.dao;
 
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.model.Meta;
+import com.dewarim.cinnamon.model.MetasetType;
+import com.dewarim.cinnamon.model.request.CreateMetaRequest;
 import org.apache.ibatis.session.SqlSession;
 
 import java.util.HashMap;
@@ -23,4 +25,13 @@ public class OsdMetaDao {
         return sqlSession.selectList("com.dewarim.cinnamon.OsdMetaMapper.getMetasetsByNameAndOsd", params);
     }
 
+    public Meta createMeta(CreateMetaRequest metaRequest, MetasetType metaType) {
+        SqlSession          sqlSession = ThreadLocalSqlSession.getSqlSession();
+        Meta osdMeta = new Meta(metaRequest.getId(), metaType.getId(), metaRequest.getContent());
+        int resultRows = sqlSession.insert("com.dewarim.cinnamon.OsdMetaMapper.insertMeta", osdMeta);
+        if(resultRows != 1){
+            throw new RuntimeException("Create OsdMeta failed.");
+        }
+        return osdMeta;
+    }
 }

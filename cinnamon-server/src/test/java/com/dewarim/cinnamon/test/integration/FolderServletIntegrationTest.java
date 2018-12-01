@@ -3,8 +3,10 @@ package com.dewarim.cinnamon.test.integration;
 import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.application.UrlMapping;
 import com.dewarim.cinnamon.model.Folder;
+import com.dewarim.cinnamon.model.Meta;
 import com.dewarim.cinnamon.model.request.*;
 import com.dewarim.cinnamon.model.response.FolderWrapper;
+import com.dewarim.cinnamon.model.response.MetaWrapper;
 import com.dewarim.cinnamon.model.response.SummaryWrapper;
 import nu.xom.Builder;
 import nu.xom.Document;
@@ -199,6 +201,72 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         Document metaDoc = new Builder().build(content, null);
         Node     comment = metaDoc.query("//metasets/metaset[typeId/text()='1']/content").get(0);
         assertEquals("<metaset><p>Good Folder Meta Test</p></metaset>",comment.getValue());
+    }
+
+    @Test
+    public void createMetaInvalidRequest() throws IOException {
+        CreateMetaRequest request      = new CreateMetaRequest();
+        HttpResponse      metaResponse = sendStandardRequest(UrlMapping.FOLDER__CREATE_META, request);
+        assertCinnamonError(metaResponse, ErrorCode.INVALID_REQUEST);
+    }
+
+    @Test
+    public void createMetaObjectNotFound() throws IOException {
+        CreateMetaRequest request      = new CreateMetaRequest(Long.MAX_VALUE, "foo", 1L);
+        HttpResponse      metaResponse = sendStandardRequest(UrlMapping.FOLDER__CREATE_META, request);
+        assertCinnamonError(metaResponse, ErrorCode.FOLDER_NOT_FOUND, SC_NOT_FOUND);
+    }
+
+    @Test
+    public void createMetaObjectNotWritable() throws IOException {
+        CreateMetaRequest request      = new CreateMetaRequest(15L, "foo", 1L);
+        HttpResponse      metaResponse = sendStandardRequest(UrlMapping.FOLDER__CREATE_META, request);
+        assertCinnamonError(metaResponse, ErrorCode.NO_WRITE_CUSTOM_METADATA_PERMISSION, SC_UNAUTHORIZED);
+    }
+
+    @Test
+    public void createMetaMetasetTypeByIdNotFound() throws IOException {
+        CreateMetaRequest request      = new CreateMetaRequest(17L, "foo", Long.MAX_VALUE);
+        HttpResponse      metaResponse = sendStandardRequest(UrlMapping.FOLDER__CREATE_META, request);
+        assertCinnamonError(metaResponse, ErrorCode.METASET_TYPE_NOT_FOUND, SC_NOT_FOUND);
+    }
+
+    @Test
+    public void createMetaMetasetTypeByNameNotFound() throws IOException {
+        CreateMetaRequest request      = new CreateMetaRequest(17L, "foo", "unknown");
+        HttpResponse      metaResponse = sendStandardRequest(UrlMapping.FOLDER__CREATE_META, request);
+        assertCinnamonError(metaResponse, ErrorCode.METASET_TYPE_NOT_FOUND, SC_NOT_FOUND);
+    }
+
+    @Test
+    public void createMetaMetasetIsUniqueAndExists() throws IOException {
+        CreateMetaRequest request      = new CreateMetaRequest(18L, "duplicate license", "license");
+        HttpResponse      metaResponse = sendStandardRequest(UrlMapping.FOLDER__CREATE_META, request);
+        assertCinnamonError(metaResponse, ErrorCode.METASET_IS_UNIQUE_AND_ALREADY_EXISTS, SC_BAD_REQUEST);
+    }
+
+    @Test
+    public void createMetaMetasetHappyWithExistingMeta() throws IOException {
+        CreateMetaRequest request      = new CreateMetaRequest(19L, "duplicate comment", "comment");
+        HttpResponse      metaResponse = sendStandardRequest(UrlMapping.FOLDER__CREATE_META, request);
+        assertResponseOkay(metaResponse);
+        MetaRequest  metaRequest      = new MetaRequest(19L, Collections.singletonList("comment"));
+        HttpResponse commentResponse = sendStandardRequest(UrlMapping.FOLDER__GET_META, metaRequest);
+        assertResponseOkay(commentResponse);
+        MetaWrapper metaWrapper = mapper.readValue(commentResponse.getEntity().getContent(), MetaWrapper.class);
+        assertEquals(2, metaWrapper.getMetasets().size());
+    }
+
+    @Test
+    public void createMetaMetasetHappyPath() throws IOException {
+        CreateMetaRequest request      = new CreateMetaRequest(17L, "new license meta", "license");
+        HttpResponse      metaResponse = sendStandardRequest(UrlMapping.OSD__CREATE_META, request);
+        assertResponseOkay(metaResponse);
+        MetaWrapper metaWrapper = mapper.readValue(metaResponse.getEntity().getContent(), MetaWrapper.class);
+        assertEquals(1, metaWrapper.getMetasets().size());
+        Meta meta = metaWrapper.getMetasets().get(0);
+        assertEquals("new license meta", meta.getContent());
+        assertEquals(2, meta.getTypeId().longValue());
     }
 
     private List<Folder> unwrapFolders(HttpResponse response, Integer expectedSize) throws IOException {

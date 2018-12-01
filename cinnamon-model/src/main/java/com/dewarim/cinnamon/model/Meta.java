@@ -12,6 +12,12 @@ public class Meta {
     public Meta() {
     }
 
+    public Meta(Long objectId, Long typeId, String content) {
+        this.objectId = objectId;
+        this.typeId = typeId;
+        this.content = content;
+    }
+
     public Long getId() {
         return id;
     }

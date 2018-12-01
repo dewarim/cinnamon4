@@ -12,7 +12,6 @@ import com.dewarim.cinnamon.model.*;
 import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.request.*;
 import com.dewarim.cinnamon.model.response.GenericResponse;
-import com.dewarim.cinnamon.model.response.MetaWrapper;
 import com.dewarim.cinnamon.model.response.SummaryWrapper;
 import com.dewarim.cinnamon.provider.ContentProviderService;
 import com.dewarim.cinnamon.security.authorization.AuthorizationService;
@@ -20,7 +19,6 @@ import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.model.response.OsdWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import nu.xom.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -36,10 +34,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static javax.servlet.http.HttpServletResponse.*;
@@ -63,8 +60,14 @@ public class OsdServlet extends BaseServlet {
         OsdDao      osdDao = new OsdDao();
         try {
             switch (pathInfo) {
+                case "/createMeta":
+                    createMeta(request, response, user, osdDao);
+                    break;
                 case "/getContent":
                     getContent(request, response, user, osdDao);
+                    break;
+                case "/getMeta":
+                    getMeta(request, response, user, osdDao);
                     break;
                 case "/getObjectsByFolderId":
                     getObjectsByFolderId(request, response, user, osdDao);
@@ -77,9 +80,6 @@ public class OsdServlet extends BaseServlet {
                     break;
                 case "/lock":
                     lock(request, response, user, osdDao);
-                    break;
-                case "/getMeta":
-                    getMeta(request, response, user, osdDao);
                     break;
                 case "/setContent":
                     setContent(request, response, user, osdDao);
@@ -122,6 +122,33 @@ public class OsdServlet extends BaseServlet {
         }
 
         createMetaResponse(metaRequest, response, metaList, xmlMapper);
+    }
+
+    private void createMeta(HttpServletRequest request, HttpServletResponse response, UserAccount user, OsdDao osdDao) throws IOException {
+        CreateMetaRequest metaRequest = xmlMapper.readValue(request.getInputStream(), CreateMetaRequest.class)
+                .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
+
+        Long             osdId = metaRequest.getId();
+        ObjectSystemData osd   = osdDao.getObjectById(osdId).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
+        throwUnlessCustomMetaIsWritable(osd, user);
+        MetasetType metaType;
+        if (metaRequest.getTypeId() != null) {
+            metaType = new MetasetTypeDao().getMetasetTypeById(metaRequest.getTypeId())
+                    .orElseThrow(ErrorCode.METASET_TYPE_NOT_FOUND.getException());
+        } else {
+            metaType = new MetasetTypeDao().getMetasetTypeByName(metaRequest.getTypeName())
+                    .orElseThrow(ErrorCode.METASET_TYPE_NOT_FOUND.getException());
+        }
+
+        // does meta already exist and is unique?
+        OsdMetaDao metaDao = new OsdMetaDao();
+        List<Meta> metas   = metaDao.getMetaByNamesAndOsd(Collections.singletonList(metaType.getName()), osdId);
+        if (metaType.getUnique() && metas.size() > 0) {
+            throw new FailedRequestException(ErrorCode.METASET_IS_UNIQUE_AND_ALREADY_EXISTS);
+        }
+
+        Meta meta = metaDao.createMeta(metaRequest, metaType);
+        createMetaResponse(new MetaRequest(), response, Collections.singletonList(meta), xmlMapper);
     }
 
     private void lock(HttpServletRequest request, HttpServletResponse response, UserAccount user, OsdDao osdDao) throws IOException {

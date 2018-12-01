@@ -606,13 +606,25 @@ values(nextval('seq_folder_id'),'get-my-summary',0,2,1,6,1, '<sum>folder</sum>')
 insert into folders(id,name,obj_version,acl_id,owner_id,parent_id,type_id)
 values(nextval('seq_folder_id'),'some-sub-folder',0,1,1,6,1);
 
--- #15 folder in creation folder#6 for getMeta test without permissions
+-- #15 folder in creation folder#6 for getMeta / createMeta test without permissions
 insert into folders(id,name,obj_version,acl_id,owner_id,parent_id,type_id)
 values(nextval('seq_folder_id'),'u-no-read-meta',0,7,1,6,1);
 
 -- #16 folder in creation folder#6 for getMetaHappyPath test (other getMeta-Tests: see OsdServletIntegrationTest)
 insert into folders(id,name,obj_version,acl_id,owner_id,parent_id,type_id)
 values(nextval('seq_folder_id'),'have-me-some-meta',0,2,1,6,1);
+
+-- #17 folder in creation folder#6 for createMeta test
+insert into folders(id,name,obj_version,acl_id,owner_id,parent_id,type_id)
+values(nextval('seq_folder_id'),'create-me-a-meta',0,2,1,6,1);
+
+-- #18 folder in creation folder#6 for createMeta test: has unique meta set
+insert into folders(id,name,obj_version,acl_id,owner_id,parent_id,type_id)
+values(nextval('seq_folder_id'),'has-a-meta-already',0,2,1,6,1);
+
+-- #19 folder in creation folder#6 for createMeta test: has non-unique meta set
+insert into folders(id,name,obj_version,acl_id,owner_id,parent_id,type_id)
+values(nextval('seq_folder_id'),'comment-metaset',0,2,1,6,1);
 
 
 -- #1
@@ -927,10 +939,25 @@ insert into objects (id, created, latest_branch, latest_head, modified, name, cr
                      owner_id, parent_id, type_id, acl_id)
 values (nextval('seq_objects_id'), now(), true, true, now(), 'has-meta', 1, 1, 1, 1, 6, 1, 2);
 
--- #37 object with no permissions, used in getMeta test
+-- #37 object with no permissions, used in getMeta and createMeta test
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
 values (nextval('seq_objects_id'), now(), true, true, now(), 'no-read-custom-meta-permission', 1, 1, 1, 1, 1, 1, 5);
+
+-- #38 empty test object for createMeta
+insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+                     owner_id, parent_id, type_id, acl_id)
+values (nextval('seq_objects_id'), now(), true, true, now(), 'create-me-a-meta', 1, 1, 1, 1, 6, 1, 2);
+
+-- #39 empty test object for createMeta with existing license metaset
+insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+                     owner_id, parent_id, type_id, acl_id)
+values (nextval('seq_objects_id'), now(), true, true, now(), 'has-a-license-meta-already', 1, 1, 1, 1, 6, 1, 2);
+
+-- #40 empty test object for createMeta with existing non-unique comment metaset
+insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+                     owner_id, parent_id, type_id, acl_id)
+values (nextval('seq_objects_id'), now(), true, true, now(), 'has-a-comment-meta-already', 1, 1, 1, 1, 6, 1, 2);
 
 -- #1 link to osd #1 with default acl (#1)
 insert into links(id, type,owner_id,acl_id,parent_id,osd_id) 
@@ -1122,9 +1149,9 @@ values (currval('seq_lifecycle_states_id'), currval('seq_lifecycle_states_id'));
 update objects set state_id=4 where id=32;
 
 -- #1 metaset type 'comment'
-insert into metaset_types(id, name) VALUES (nextval('seq_metaset_types_id'), 'comment');
+insert into metaset_types(id, name, is_unique) VALUES (nextval('seq_metaset_types_id'), 'comment', false );
 -- #2 metaset type 'license' (note: in production, this may be a better stored in a relation)
-insert into metaset_types(id, name) VALUES (nextval('seq_metaset_types_id'), 'license');
+insert into metaset_types(id, name, is_unique) VALUES (nextval('seq_metaset_types_id'), 'license', true);
 
 -- #1 osd_meta with metaset_type#1 comment #1 for osd#36
 insert into osd_meta(id, osd_id, content, type_id)
@@ -1134,6 +1161,24 @@ values (nextval('seq_osd_meta_id'), 36, '<metaset><p>Good Test</p></metaset>', 1
 insert into osd_meta(id, osd_id, content, type_id)
 values (nextval('seq_osd_meta_id'), 36, '<metaset><license>GPL</license></metaset>', 2);
 
+-- #3 osd_meta
+insert into osd_meta(id,osd_id,content,type_id)
+values (nextval('seq_osd_meta_id'), 39, '<metaset><licesne>AGPL</license></metaset>',2);
+
+-- #4 osd_meta
+insert into osd_meta(id,osd_id,content,type_id)
+values (nextval('seq_osd_meta_id'), 40, '<metaset><comment>foo</comment></metaset>',1);
+
+
 -- #1 folder_meta
 insert into folder_meta(id, folder_id, content, type_id)
 values (nextval('seq_folder_meta_id'), 16, '<metaset><p>Good Folder Meta Test</p></metaset>', 1);
+
+-- #2 folder_meta - unique metaset_type
+insert into folder_meta(id, folder_id, content, type_id)
+values (nextval('seq_folder_meta_id'), 18, 'duplicate license meta (forbidden)', 2);
+
+-- #3 folder_meta - non-unique metaset_type
+insert into folder_meta(id, folder_id, content, type_id)
+values (nextval('seq_folder_meta_id'), 19, 'duplicate comment (allowed)', 1);
+

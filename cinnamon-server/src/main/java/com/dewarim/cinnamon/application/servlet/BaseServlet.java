@@ -48,6 +48,13 @@ public class BaseServlet extends HttpServlet {
         }
     }
 
+    static void throwUnlessCustomMetaIsWritable(Ownable ownable, UserAccount user){
+        boolean     readAllowed = new AuthorizationService().hasUserOrOwnerPermission(ownable, DefaultPermission.READ_OBJECT_CUSTOM_METADATA, user);
+        if (!readAllowed) {
+            throw ErrorCode.NO_WRITE_CUSTOM_METADATA_PERMISSION.getException().get();
+        }
+    }
+
     static void createMetaResponse(MetaRequest metaRequest, HttpServletResponse response, List<Meta> metaList, ObjectMapper mapper) throws IOException {
 
         if (metaRequest.isVersion3CompatibilityRequired()) {
