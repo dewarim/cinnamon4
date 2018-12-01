@@ -19,6 +19,7 @@ public enum ErrorCode {
     CONNECTION_FAIL_WRONG_PASSWORD("wrong password", SC_UNAUTHORIZED),
     //    DB_UPDATE_CHANGED_NOTHING("The update succeeded, but did not change anything. This may happen when you save the same value again."),
     DB_UPDATE_FAILED("db update failed", SC_INTERNAL_SERVER_ERROR),
+    DB_DELETE_FAILED("db delete failed", SC_INTERNAL_SERVER_ERROR),
     // From the "this cannot happen" department:
     DELETE_AFFECTED_MULTIPLE_ROWS("Delete succeeded, but seems to have deleted more than the expected single row. Contact your administrator.", SC_INTERNAL_SERVER_ERROR),
     DELETE_REQUEST_WITHOUT_ID("delete request needs id parameter", SC_BAD_REQUEST),
@@ -40,6 +41,7 @@ public enum ErrorCode {
     LIFECYCLE_STATE_BY_NAME_NOT_FOUND("Named lifecycle state was not found in database", SC_NOT_FOUND),
     LOGIN_FAILED("login failed", SC_UNAUTHORIZED),
     METASET_IS_UNIQUE_AND_ALREADY_EXISTS("The metaset is already exists and is unique", SC_BAD_REQUEST),
+    METASET_NOT_FOUND("The Metaset was not found.", SC_NOT_FOUND),
     METASET_TYPE_NOT_FOUND("metaset type was not found", SC_NOT_FOUND),
     MISSING_FILE_PARAMETER("parameter 'file' for uploaded content is missing", SC_BAD_REQUEST),
     MISSING_SET_ACL_PERMISSION("missing set_acl permission", SC_UNAUTHORIZED),

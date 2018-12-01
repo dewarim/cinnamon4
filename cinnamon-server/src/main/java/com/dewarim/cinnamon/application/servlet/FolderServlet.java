@@ -28,6 +28,7 @@ import java.util.Optional;
 
 import static com.dewarim.cinnamon.application.ErrorResponseGenerator.generateErrorMessage;
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
+import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
 import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
 
 @WebServlet(name = "Folder", urlPatterns = "/")
@@ -48,6 +49,9 @@ public class FolderServlet extends BaseServlet {
             switch (pathInfo) {
                 case "/createMeta":
                     createMeta(request, response, user, folderDao);
+                    break;
+                case "/deleteMeta":
+                    deleteMeta(request, response, user, folderDao);
                     break;
                 case "/getFolder":
                     getFolder(request, response, user, folderDao);
@@ -74,6 +78,33 @@ public class FolderServlet extends BaseServlet {
             ErrorCode errorCode = e.getErrorCode();
             ErrorResponseGenerator.generateErrorMessage(response, errorCode.getHttpResponseCode(), errorCode, e.getMessage());
         }
+    }
+
+
+    private void deleteMeta(HttpServletRequest request, HttpServletResponse response, UserAccount user, FolderDao folderDao) throws IOException {
+        DeleteMetaRequest metaRequest = xmlMapper.readValue(request.getInputStream(), DeleteMetaRequest.class)
+                .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
+        Long   folderId = metaRequest.getId();
+        Folder folder   = folderDao.getFolderById(folderId).orElseThrow(ErrorCode.FOLDER_NOT_FOUND.getException());
+        throwUnlessCustomMetaIsWritable(folder, user);
+
+        List<Meta>    metas;
+        FolderMetaDao metaDao = new FolderMetaDao();
+        if (metaRequest.getMetaId() != null) {
+            metas = Collections.singletonList(metaDao.getFolderMetaById(metaRequest.getMetaId()));
+        } else {
+            metas = metaDao.getMetaByNamesAndFolderId(Collections.singletonList(metaRequest.getTypeName()), folderId);
+        }
+        if (metas.isEmpty()) {
+            throw new FailedRequestException(ErrorCode.METASET_NOT_FOUND);
+        }
+        metas.forEach(meta -> {
+            boolean deleteSuccess = metaDao.deleteById(meta.getId()) == 1;
+            if (!deleteSuccess) {
+                generateErrorMessage(response, SC_INTERNAL_SERVER_ERROR, ErrorCode.DB_DELETE_FAILED);
+            }
+        });
+        ResponseUtil.responseIsGenericOkay(response);
     }
 
     /**
@@ -106,7 +137,7 @@ public class FolderServlet extends BaseServlet {
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
         Long   folderId = metaRequest.getId();
-        Folder folder      = folderDao.getFolderById(folderId).orElseThrow(ErrorCode.FOLDER_NOT_FOUND.getException());
+        Folder folder   = folderDao.getFolderById(folderId).orElseThrow(ErrorCode.FOLDER_NOT_FOUND.getException());
         throwUnlessCustomMetaIsWritable(folder, user);
         MetasetType metaType;
         if (metaRequest.getTypeId() != null) {
@@ -119,7 +150,7 @@ public class FolderServlet extends BaseServlet {
 
         // does meta already exist and is unique?
         FolderMetaDao metaDao = new FolderMetaDao();
-        List<Meta> metas   = metaDao.getMetaByNamesAndFolderId(Collections.singletonList(metaType.getName()), folderId);
+        List<Meta>    metas   = metaDao.getMetaByNamesAndFolderId(Collections.singletonList(metaType.getName()), folderId);
         if (metaType.getUnique() && metas.size() > 0) {
             throw new FailedRequestException(ErrorCode.METASET_IS_UNIQUE_AND_ALREADY_EXISTS);
         }

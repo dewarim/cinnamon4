@@ -626,6 +626,13 @@ values(nextval('seq_folder_id'),'has-a-meta-already',0,2,1,6,1);
 insert into folders(id,name,obj_version,acl_id,owner_id,parent_id,type_id)
 values(nextval('seq_folder_id'),'comment-metaset',0,2,1,6,1);
 
+-- #20 folder in creation folder#6 for deleteMeta test: has no permissions
+insert into folders(id,name,obj_version,acl_id,owner_id,parent_id,type_id)
+values(nextval('seq_folder_id'),'delete-my-meta-no-permission',0,7,1,6,1);
+
+-- #21 folder in creation folder#6 for createMeta test: has three metasets (2x comment, 1x license)
+insert into folders(id,name,obj_version,acl_id,owner_id,parent_id,type_id)
+values(nextval('seq_folder_id'),'delete-my-meta',0,2,1,6,1);
 
 -- #1
 insert into objtypes(id,name) values(nextval('seq_obj_type_id'),'_default_objtype');
@@ -959,6 +966,16 @@ insert into objects (id, created, latest_branch, latest_head, modified, name, cr
                      owner_id, parent_id, type_id, acl_id)
 values (nextval('seq_objects_id'), now(), true, true, now(), 'has-a-comment-meta-already', 1, 1, 1, 1, 6, 1, 2);
 
+-- #41 empty test object for deleteMeta with one metaset by name, one by id
+insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+                     owner_id, parent_id, type_id, acl_id)
+values (nextval('seq_objects_id'), now(), true, true, now(), 'has-deletable-meta', 1, 1, 1, 1, 6, 1, 2);
+
+-- #42 empty test object for deleteMeta without permission
+insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+                     owner_id, parent_id, type_id, acl_id)
+values (nextval('seq_objects_id'), now(), true, true, now(), 'has-deletable-meta-but-no-permission', 1, 1, 1, 1, 6, 1, 5);
+
 -- #1 link to osd #1 with default acl (#1)
 insert into links(id, type,owner_id,acl_id,parent_id,osd_id) 
 values (nextval('seq_links_id'), 'OBJECT',  1,1,1,1);
@@ -1169,6 +1186,22 @@ values (nextval('seq_osd_meta_id'), 39, '<metaset><licesne>AGPL</license></metas
 insert into osd_meta(id,osd_id,content,type_id)
 values (nextval('seq_osd_meta_id'), 40, '<metaset><comment>foo</comment></metaset>',1);
 
+-- #5 osd_meta for osd#41, deletion by name (and list)
+insert into osd_meta(id,osd_id,content,type_id)
+values (nextval('seq_osd_meta_id'), 41, '<metaset><comment>bar</comment></metaset>',1);
+
+-- #6 osd_meta for osd#41, deletion by name (and list)
+insert into osd_meta(id,osd_id,content,type_id)
+values (nextval('seq_osd_meta_id'), 41, '<metaset><comment>fuzz</comment></metaset>',1);
+
+-- #7 osd_meta for osd#41, deletion by id
+insert into osd_meta(id,osd_id,content,type_id)
+values (nextval('seq_osd_meta_id'), 41, '<license>MPL</license>>',2);
+
+-- #8 osd_meta for osd#42, deletion without permission
+insert into osd_meta(id,osd_id,content,type_id)
+values (nextval('seq_osd_meta_id'), 42, '<license>LGPL</license>>',2);
+
 
 -- #1 folder_meta
 insert into folder_meta(id, folder_id, content, type_id)
@@ -1181,4 +1214,21 @@ values (nextval('seq_folder_meta_id'), 18, 'duplicate license meta (forbidden)',
 -- #3 folder_meta - non-unique metaset_type
 insert into folder_meta(id, folder_id, content, type_id)
 values (nextval('seq_folder_meta_id'), 19, 'duplicate comment (allowed)', 1);
+
+-- #4 folder_meta - no permission (to delete)
+insert into folder_meta(id, folder_id, content, type_id)
+values (nextval('seq_folder_meta_id'), 20, 'do not delete', 1);
+
+-- #5 folder_meta - comment #1 for deleteMeta
+insert into folder_meta(id, folder_id, content, type_id)
+values (nextval('seq_folder_meta_id'), 21, 'comment #2', 1);
+
+-- #6 folder_meta - comment #2 for deleteMeta
+insert into folder_meta(id, folder_id, content, type_id)
+values (nextval('seq_folder_meta_id'), 21, 'comment #2', 1);
+
+-- #7 folder_meta - license #1 for deleteMeta
+insert into folder_meta(id, folder_id, content, type_id)
+values (nextval('seq_folder_meta_id'), 21, '<license>public domain</license>', 2);
+
 

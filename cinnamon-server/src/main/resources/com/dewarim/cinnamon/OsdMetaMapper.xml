@@ -7,7 +7,7 @@
 
     <resultMap id="osdMetaMap" type="com.dewarim.cinnamon.model.Meta">
         <id property="id" column="id"/>
-        <result property="id" column="osd_id"/>
+        <result property="objectId" column="osd_id"/>
         <result property="typeId" column="type_id"/>
         <result property="content" column="content"/>
     </resultMap>
@@ -17,6 +17,18 @@
         FROM osd_meta
         WHERE osd_id = #{id}
     </select>
+
+    <select id="getMetasetById" parameterType="long" resultMap="osdMetaMap">
+        SELECT *
+        FROM osd_meta
+        WHERE id = #{id}
+    </select>
+
+    <delete id="deleteById" parameterType="long">
+        DELETE
+        FROM osd_meta
+        WHERE id = #{id}
+    </delete>
 
     <select id="getMetasetsByNameAndOsd" parameterType="map" resultMap="osdMetaMap">
         SELECT *

@@ -6,6 +6,7 @@ import com.dewarim.cinnamon.api.content.ContentProvider;
 import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.application.ErrorResponseGenerator;
 import com.dewarim.cinnamon.application.ResponseUtil;
+import com.dewarim.cinnamon.application.exception.CinnamonException;
 import com.dewarim.cinnamon.application.exception.FailedRequestException;
 import com.dewarim.cinnamon.dao.*;
 import com.dewarim.cinnamon.model.*;
@@ -63,6 +64,9 @@ public class OsdServlet extends BaseServlet {
                 case "/createMeta":
                     createMeta(request, response, user, osdDao);
                     break;
+                case "/deleteMeta":
+                    deleteMeta(request, response, user, osdDao);
+                    break;
                 case "/getContent":
                     getContent(request, response, user, osdDao);
                     break;
@@ -97,6 +101,32 @@ public class OsdServlet extends BaseServlet {
             ErrorCode errorCode = e.getErrorCode();
             ErrorResponseGenerator.generateErrorMessage(response, errorCode.getHttpResponseCode(), errorCode, e.getMessage());
         }
+    }
+
+    private void deleteMeta(HttpServletRequest request, HttpServletResponse response, UserAccount user, OsdDao osdDao) throws IOException {
+        DeleteMetaRequest metaRequest = xmlMapper.readValue(request.getInputStream(), DeleteMetaRequest.class)
+                .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
+        Long             osdId = metaRequest.getId();
+        ObjectSystemData osd   = osdDao.getObjectById(osdId).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
+        throwUnlessCustomMetaIsWritable(osd, user);
+
+        List<Meta> metas;
+        OsdMetaDao metaDao = new OsdMetaDao();
+        if (metaRequest.getMetaId() != null) {
+            metas = Collections.singletonList(metaDao.getOsdMetaById(metaRequest.getMetaId()));
+        } else {
+            metas = metaDao.getMetaByNamesAndOsd(Collections.singletonList(metaRequest.getTypeName()), osdId);
+        }
+        if (metas.isEmpty()) {
+            throw new FailedRequestException(ErrorCode.METASET_NOT_FOUND);
+        }
+        metas.forEach(meta -> {
+            boolean deleteSuccess = metaDao.deleteById(meta.getId()) == 1;
+            if (!deleteSuccess) {
+                generateErrorMessage(response, SC_INTERNAL_SERVER_ERROR, ErrorCode.DB_DELETE_FAILED);
+            }
+        });
+        ResponseUtil.responseIsGenericOkay(response);
     }
 
     /**

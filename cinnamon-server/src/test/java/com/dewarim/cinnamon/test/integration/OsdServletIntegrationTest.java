@@ -489,7 +489,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         CreateMetaRequest request      = new CreateMetaRequest(40L, "duplicate comment", "comment");
         HttpResponse      metaResponse = sendStandardRequest(UrlMapping.OSD__CREATE_META, request);
         assertResponseOkay(metaResponse);
-        MetaRequest  metaRequest      = new MetaRequest(40L, Collections.singletonList("comment"));
+        MetaRequest  metaRequest     = new MetaRequest(40L, Collections.singletonList("comment"));
         HttpResponse commentResponse = sendStandardRequest(UrlMapping.OSD__GET_META, metaRequest);
         assertResponseOkay(commentResponse);
         MetaWrapper metaWrapper = mapper.readValue(commentResponse.getEntity().getContent(), MetaWrapper.class);
@@ -501,11 +501,54 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         CreateMetaRequest request      = new CreateMetaRequest(38L, "new license meta", "license");
         HttpResponse      metaResponse = sendStandardRequest(UrlMapping.OSD__CREATE_META, request);
         assertResponseOkay(metaResponse);
-        MetaWrapper metaWrapper = mapper.readValue(metaResponse.getEntity().getContent(), MetaWrapper.class);
-        assertEquals(1, metaWrapper.getMetasets().size());
-        Meta meta = metaWrapper.getMetasets().get(0);
+        List<Meta> metas = unwrapMeta(metaResponse, 1);
+        Meta       meta  = metas.get(0);
         assertEquals("new license meta", meta.getContent());
         assertEquals(2, meta.getTypeId().longValue());
+    }
+
+    @Test
+    public void deleteMetaInvalidRequest() throws IOException {
+        DeleteMetaRequest deleteRequest = new DeleteMetaRequest();
+        HttpResponse      metaResponse  = sendStandardRequest(UrlMapping.OSD__DELEET_META, deleteRequest);
+        assertCinnamonError(metaResponse, ErrorCode.INVALID_REQUEST);
+    }
+
+    @Test
+    public void deleteMetaObjectNotFound() throws IOException {
+        DeleteMetaRequest deleteRequest = new DeleteMetaRequest(Long.MAX_VALUE, 1L);
+        HttpResponse      metaResponse  = sendStandardRequest(UrlMapping.OSD__DELEET_META, deleteRequest);
+        assertCinnamonError(metaResponse, ErrorCode.OBJECT_NOT_FOUND, SC_NOT_FOUND);
+    }
+
+    @Test
+    public void deleteMetaWithoutPermission() throws IOException {
+        DeleteMetaRequest deleteRequest = new DeleteMetaRequest(42L, "license");
+        HttpResponse      metaResponse  = sendStandardRequest(UrlMapping.OSD__DELEET_META, deleteRequest);
+        assertCinnamonError(metaResponse, ErrorCode.NO_WRITE_CUSTOM_METADATA_PERMISSION, SC_UNAUTHORIZED);
+    }
+
+    @Test
+    public void deleteMetaWithMetaNotFound() throws IOException {
+        DeleteMetaRequest deleteRequest = new DeleteMetaRequest(41L, "unknown-type");
+        HttpResponse      metaResponse  = sendStandardRequest(UrlMapping.OSD__DELEET_META, deleteRequest);
+        assertCinnamonError(metaResponse, ErrorCode.METASET_NOT_FOUND, SC_NOT_FOUND);
+    }
+
+    @Test
+    public void deleteMetaHappyPathById() throws IOException {
+        DeleteMetaRequest request  = new DeleteMetaRequest(41L, 7L);
+        HttpResponse      response = sendStandardRequest(UrlMapping.OSD__DELEET_META, request);
+        assertResponseOkay(response);
+        assertTrue(parseGenericResponse(response).isSuccessful());
+    }
+
+    @Test
+    public void deleteMetaHappyPathByName() throws IOException {
+        DeleteMetaRequest request  = new DeleteMetaRequest(41L, "comment");
+        HttpResponse      response = sendStandardRequest(UrlMapping.OSD__DELEET_META, request);
+        assertResponseOkay(response);
+        assertTrue(parseGenericResponse(response).isSuccessful());
     }
 
     private HttpResponse sendStandardMultipartRequest(String url, MultipartEntity multipartEntity) throws IOException {
@@ -551,6 +594,17 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
             assertThat(links.size(), equalTo(expectedSize));
         }
         return links;
+    }
+
+    private List<Meta> unwrapMeta(HttpResponse response, Integer expectedSize) throws IOException {
+        assertResponseOkay(response);
+        List<Meta> metas = mapper.readValue(response.getEntity().getContent(), MetaWrapper.class).getMetasets();
+        if (expectedSize != null) {
+            assertNotNull(metas);
+            assertFalse(metas.isEmpty());
+            assertThat(metas.size(), equalTo(expectedSize));
+        }
+        return metas;
     }
 
     private void createTestContentOnOsd(Long osdId, boolean asSuperuser) throws IOException {

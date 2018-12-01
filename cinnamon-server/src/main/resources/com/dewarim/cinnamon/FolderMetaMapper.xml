@@ -7,7 +7,7 @@
 
     <resultMap id="folderMetaMap" type="com.dewarim.cinnamon.model.Meta">
         <id property="id" column="id"/>
-        <result property="id" column="folder_id"/>
+        <result property="objectId" column="folder_id"/>
         <result property="typeId" column="type_id"/>
         <result property="content" column="content"/>
     </resultMap>
@@ -17,6 +17,18 @@
         FROM folder_meta
         WHERE folder_id = #{id}
     </select>
+
+    <select id="getMetasetById" parameterType="long" resultMap="folderMetaMap">
+        SELECT *
+        FROM folder_meta
+        WHERE id = #{id}
+    </select>
+
+    <delete id="deleteById" parameterType="long">
+        DELETE
+        FROM folder_meta
+        WHERE id = #{id}
+    </delete>
 
     <select id="getMetasetsByNameAndFolderId" parameterType="map" resultMap="folderMetaMap">
         SELECT *

@@ -269,6 +269,53 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         assertEquals(2, meta.getTypeId().longValue());
     }
 
+
+    @Test
+    public void deleteMetaInvalidRequest() throws IOException {
+        DeleteMetaRequest deleteRequest = new DeleteMetaRequest();
+        HttpResponse      metaResponse  = sendStandardRequest(UrlMapping.FOLDER__DELETE_META, deleteRequest);
+        assertCinnamonError(metaResponse, ErrorCode.INVALID_REQUEST);
+    }
+
+    @Test
+    public void deleteMetaObjectNotFound() throws IOException {
+        DeleteMetaRequest deleteRequest = new DeleteMetaRequest(Long.MAX_VALUE, 1L);
+        HttpResponse      metaResponse  = sendStandardRequest(UrlMapping.FOLDER__DELETE_META, deleteRequest);
+        assertCinnamonError(metaResponse, ErrorCode.FOLDER_NOT_FOUND, SC_NOT_FOUND);
+    }
+
+    @Test
+    public void deleteMetaWithoutPermission() throws IOException {
+        DeleteMetaRequest deleteRequest = new DeleteMetaRequest(20L, "comment");
+        HttpResponse      metaResponse  = sendStandardRequest(UrlMapping.FOLDER__DELETE_META, deleteRequest);
+        assertCinnamonError(metaResponse, ErrorCode.NO_WRITE_CUSTOM_METADATA_PERMISSION, SC_UNAUTHORIZED);
+    }
+
+    @Test
+    public void deleteMetaWithMetaNotFound() throws IOException {
+        DeleteMetaRequest deleteRequest = new DeleteMetaRequest(21L, "unknown-type");
+        HttpResponse      metaResponse  = sendStandardRequest(UrlMapping.FOLDER__DELETE_META, deleteRequest);
+        assertCinnamonError(metaResponse, ErrorCode.METASET_NOT_FOUND, SC_NOT_FOUND);
+    }
+
+    @Test
+    public void deleteMetaHappyPathById() throws IOException {
+        // #7 folder_meta = metaset_type license
+        DeleteMetaRequest request  = new DeleteMetaRequest(21L, 7L);
+        HttpResponse      response = sendStandardRequest(UrlMapping.FOLDER__DELETE_META, request);
+        assertResponseOkay(response);
+        assertTrue(parseGenericResponse(response).isSuccessful());
+    }
+
+    @Test
+    public void deleteMetaHappyPathByName() throws IOException {
+        // #5 + #6 folder_meta = metaset_type comment
+        DeleteMetaRequest request  = new DeleteMetaRequest(21L, "comment");
+        HttpResponse      response = sendStandardRequest(UrlMapping.FOLDER__DELETE_META, request);
+        assertResponseOkay(response);
+        assertTrue(parseGenericResponse(response).isSuccessful());
+    }
+
     private List<Folder> unwrapFolders(HttpResponse response, Integer expectedSize) throws IOException {
         assertResponseOkay(response);
         List<Folder> folders = mapper.readValue(response.getEntity().getContent(), FolderWrapper.class).getFolders();

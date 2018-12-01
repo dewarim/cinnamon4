@@ -26,12 +26,22 @@ public class OsdMetaDao {
     }
 
     public Meta createMeta(CreateMetaRequest metaRequest, MetasetType metaType) {
-        SqlSession          sqlSession = ThreadLocalSqlSession.getSqlSession();
-        Meta osdMeta = new Meta(metaRequest.getId(), metaType.getId(), metaRequest.getContent());
-        int resultRows = sqlSession.insert("com.dewarim.cinnamon.OsdMetaMapper.insertMeta", osdMeta);
-        if(resultRows != 1){
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        Meta       osdMeta    = new Meta(metaRequest.getId(), metaType.getId(), metaRequest.getContent());
+        int        resultRows = sqlSession.insert("com.dewarim.cinnamon.OsdMetaMapper.insertMeta", osdMeta);
+        if (resultRows != 1) {
             throw new RuntimeException("Create OsdMeta failed.");
         }
         return osdMeta;
+    }
+
+    public Meta getOsdMetaById(Long metaId) {
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        return sqlSession.selectOne("com.dewarim.cinnamon.OsdMetaMapper.getMetasetById", metaId);
+    }
+
+    public int deleteById(Long metaId) {
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        return sqlSession.delete("com.dewarim.cinnamon.OsdMetaMapper.deleteById",metaId);
     }
 }

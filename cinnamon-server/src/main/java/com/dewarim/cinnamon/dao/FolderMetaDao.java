@@ -34,4 +34,14 @@ public class FolderMetaDao {
         }
         return folderMeta;
     }
+
+    public Meta getFolderMetaById(Long metaId) {
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        return sqlSession.selectOne("com.dewarim.cinnamon.FolderMetaMapper.getMetasetById", metaId);
+    }
+
+    public int deleteById(Long metaId) {
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        return sqlSession.delete("com.dewarim.cinnamon.FolderMetaMapper.deleteById",metaId);
+    }
 }
