@@ -6,7 +6,8 @@ public class MetasetType {
     
     private Long id;
     private String name;
-
+    private Boolean unique;
+    
     public MetasetType() {
     }
 
@@ -31,6 +32,14 @@ public class MetasetType {
         this.name = name;
     }
 
+    public Boolean getUnique() {
+        return unique;
+    }
+
+    public void setUnique(Boolean unique) {
+        this.unique = unique;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -40,7 +49,8 @@ public class MetasetType {
             return false;
         }
         MetasetType that = (MetasetType) o;
-        return Objects.equals(name, that.name);
+        return Objects.equals(name, that.name) &&
+                Objects.equals(unique, that.unique);
     }
 
     @Override
@@ -52,8 +62,9 @@ public class MetasetType {
     @Override
     public String toString() {
         return "MetasetType{" +
-               "id=" + id +
-               ", name='" + name + '\'' +
-               '}';
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", unique=" + unique +
+                '}';
     }
 }

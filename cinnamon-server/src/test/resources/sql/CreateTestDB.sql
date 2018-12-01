@@ -435,7 +435,8 @@ create table metaset_types
     primary key,
   name varchar(128) not null
     constraint metaset_types_name_key
-    unique
+    unique,
+  is_unique boolean not null default true
 );
 drop sequence if exists seq_metaset_types_id;
 create sequence seq_metaset_types_id start with 1;

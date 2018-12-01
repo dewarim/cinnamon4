@@ -8,6 +8,7 @@
     <resultMap id="metasetTypeMap" type="com.dewarim.cinnamon.model.MetasetType">
         <id property="id" column="id"/>
         <result property="name" column="name"/>
+        <result property="unique" column="is_unique"/>
     </resultMap>
 
     <select id="list" parameterType="map" resultMap="metasetTypeMap">

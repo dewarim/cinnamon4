@@ -32,21 +32,22 @@
     alter table folder_types drop column config;
     
     --
-    alter table ui_languages drop column obj_version
+    alter table ui_languages drop column obj_version;
     
     --
-    alter table languages drop column obj_version
-    alter table languages drop column metadata
+    alter table languages drop column obj_version;
+    alter table languages drop column metadata;
 
     --
-    alter table metaset_types drop column obj_version
-    alter table metaset_types drop column config
+    alter table metaset_types drop column obj_version;
+    alter table metaset_types drop column config;
+    alter table metaset_types add column is_unique boolean not null default true;
     
     --
-    alter table index_items drop column obj_version
-    alter table index_items drop column systemic
-    alter table index_items drop column index_group_id
-    drop table index_groups
+    alter table index_items drop column obj_version;
+    alter table index_items drop column systemic;
+    alter table index_items drop column index_group_id;
+    drop table index_groups;
     
     --   
     alter table config_entries drop column obj_version;
