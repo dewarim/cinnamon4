@@ -2,7 +2,8 @@ package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.application.UrlMapping;
-import com.dewarim.cinnamon.model.*;
+import com.dewarim.cinnamon.model.Folder;
+import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.links.LinkType;
 import com.dewarim.cinnamon.model.request.CreateLinkRequest;
 import com.dewarim.cinnamon.model.request.DeleteByIdRequest;
@@ -17,9 +18,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 
-import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
-import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
-import static javax.servlet.http.HttpServletResponse.SC_UNAUTHORIZED;
+import static javax.servlet.http.HttpServletResponse.*;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -378,7 +377,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
         LinkUpdateRequest updateRequest = new LinkUpdateRequest(18L);
         updateRequest.setAclId(1L);
         HttpResponse response = sendStandardRequest(UrlMapping.LINK__UPDATE_LINK, updateRequest);
-        assertCinnamonError(response, ErrorCode.MISSING_SET_ACL_PERMISSION, SC_UNAUTHORIZED);
+        assertCinnamonError(response, ErrorCode.MISSING_SET_ACL_PERMISSION);
     } 
  
     @Test

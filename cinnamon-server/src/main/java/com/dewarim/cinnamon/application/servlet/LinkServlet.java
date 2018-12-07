@@ -1,24 +1,28 @@
 package com.dewarim.cinnamon.application.servlet;
 
 import com.dewarim.cinnamon.DefaultPermission;
+import com.dewarim.cinnamon.application.ErrorCode;
+import com.dewarim.cinnamon.application.ErrorResponseGenerator;
+import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
+import com.dewarim.cinnamon.application.exception.FailedRequestException;
 import com.dewarim.cinnamon.application.exception.UpdateException;
 import com.dewarim.cinnamon.dao.*;
+import com.dewarim.cinnamon.model.Acl;
+import com.dewarim.cinnamon.model.Folder;
+import com.dewarim.cinnamon.model.ObjectSystemData;
+import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.links.LinkType;
 import com.dewarim.cinnamon.model.request.CreateLinkRequest;
 import com.dewarim.cinnamon.model.request.DeleteByIdRequest;
+import com.dewarim.cinnamon.model.request.LinkRequest;
 import com.dewarim.cinnamon.model.request.LinkUpdateRequest;
 import com.dewarim.cinnamon.model.response.DeletionResponse;
 import com.dewarim.cinnamon.model.response.GenericResponse;
+import com.dewarim.cinnamon.model.response.LinkResponse;
 import com.dewarim.cinnamon.model.response.LinkWrapper;
 import com.dewarim.cinnamon.security.authorization.AccessFilter;
 import com.dewarim.cinnamon.security.authorization.AuthorizationService;
-import com.dewarim.cinnamon.application.ErrorCode;
-import com.dewarim.cinnamon.application.ErrorResponseGenerator;
-import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
-import com.dewarim.cinnamon.model.*;
-import com.dewarim.cinnamon.model.request.LinkRequest;
-import com.dewarim.cinnamon.model.response.LinkResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import org.apache.logging.log4j.LogManager;
@@ -35,9 +39,7 @@ import java.util.Optional;
 
 import static com.dewarim.cinnamon.Constants.CONTENT_TYPE_XML;
 import static com.dewarim.cinnamon.application.exception.UpdateException.*;
-import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
-import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
-import static javax.servlet.http.HttpServletResponse.SC_UNAUTHORIZED;
+import static javax.servlet.http.HttpServletResponse.*;
 
 @WebServlet(name = "Link", urlPatterns = "/")
 public class LinkServlet extends HttpServlet {
@@ -54,21 +56,26 @@ public class LinkServlet extends HttpServlet {
         if (pathInfo == null) {
             pathInfo = "";
         }
-        switch (pathInfo) {
-            case "/createLink":
-                createLink(request, response);
-                break;
-            case "/deleteLink":
-                deleteLink(request, response);
-                break;
-            case "/getLinkById":
-                getLinkById(request, response);
-                break;
-            case "/updateLink":
-                updateLink(request, response);
-                break;
-            default:
-                response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+        try {
+            switch (pathInfo) {
+                case "/createLink":
+                    createLink(request, response);
+                    break;
+                case "/deleteLink":
+                    deleteLink(request, response);
+                    break;
+                case "/getLinkById":
+                    getLinkById(request, response);
+                    break;
+                case "/updateLink":
+                    updateLink(request, response);
+                    break;
+                default:
+                    response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+            }
+        } catch (FailedRequestException e) {
+            ErrorCode errorCode = e.getErrorCode();
+            ErrorResponseGenerator.generateErrorMessage(response, errorCode.getHttpResponseCode(), errorCode);
         }
 
     }
@@ -76,7 +83,7 @@ public class LinkServlet extends HttpServlet {
     private void createLink(HttpServletRequest request, HttpServletResponse response) throws IOException {
         CreateLinkRequest linkRequest = xmlMapper.readValue(request.getInputStream(), CreateLinkRequest.class);
         if (!linkRequest.validated()) {
-            ErrorResponseGenerator.generateErrorMessage(response, SC_BAD_REQUEST, ErrorCode.INVALID_REQUEST);
+            ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.INVALID_REQUEST);
             return;
         }
 
@@ -84,7 +91,7 @@ public class LinkServlet extends HttpServlet {
         FolderDao    folderDao     = new FolderDao();
         List<Folder> parentFolders = folderDao.getFoldersById(Collections.singletonList(linkRequest.getParentId()), false);
         if (parentFolders.isEmpty()) {
-            ErrorResponseGenerator.generateErrorMessage(response, SC_BAD_REQUEST, ErrorCode.PARENT_FOLDER_NOT_FOUND);
+            ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.PARENT_FOLDER_NOT_FOUND);
             return;
         }
 
@@ -93,25 +100,25 @@ public class LinkServlet extends HttpServlet {
         boolean      browsePermission = accessFilter.hasPermissionOnOwnable(parentFolder, DefaultPermission.BROWSE_FOLDER, parentFolder);
         boolean      writePermission  = accessFilter.hasPermissionOnOwnable(parentFolder, DefaultPermission.CREATE_OBJECT, parentFolder);
         if (!(browsePermission && writePermission)) {
-            ErrorResponseGenerator.generateErrorMessage(response, SC_UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
+            ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.UNAUTHORIZED);
             return;
         }
 
         AclDao aclDao = new AclDao();
         Acl    acl    = aclDao.getAclById(linkRequest.getAclId());
         if (acl == null) {
-            ErrorResponseGenerator.generateErrorMessage(response, SC_BAD_REQUEST, ErrorCode.ACL_NOT_FOUND);
+            ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.ACL_NOT_FOUND);
             return;
         }
-        
+
         // check if owner of new link exists:
-        UserAccountDao userDao = new UserAccountDao();
-        Optional<UserAccount>    ownerOpt   = userDao.getUserAccountById(linkRequest.getOwnerId());
+        UserAccountDao        userDao  = new UserAccountDao();
+        Optional<UserAccount> ownerOpt = userDao.getUserAccountById(linkRequest.getOwnerId());
         if (!ownerOpt.isPresent()) {
-            ErrorResponseGenerator.generateErrorMessage(response, SC_BAD_REQUEST, ErrorCode.OWNER_NOT_FOUND);
+            ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.OWNER_NOT_FOUND);
             return;
         }
-        
+
         Folder           folder = null;
         ObjectSystemData osd    = null;
         OsdDao           osdDao = new OsdDao();
@@ -122,8 +129,7 @@ public class LinkServlet extends HttpServlet {
                 if (folderOpt.isPresent()) {
                     folder = folderOpt.get();
                     hasBrowsePermission = accessFilter.hasPermissionOnOwnable(folder, DefaultPermission.BROWSE_FOLDER, folder);
-                }
-                else {
+                } else {
                     ErrorResponseGenerator.generateErrorMessage(response, SC_NOT_FOUND, ErrorCode.FOLDER_NOT_FOUND);
                     return;
                 }
@@ -134,8 +140,7 @@ public class LinkServlet extends HttpServlet {
                 if (osdOpt.isPresent()) {
                     osd = osdOpt.get();
                     hasBrowsePermission = accessFilter.hasPermissionOnOwnable(osd, DefaultPermission.BROWSE_OBJECT, osd);
-                }
-                else {
+                } else {
                     ErrorResponseGenerator.generateErrorMessage(response, SC_NOT_FOUND, ErrorCode.OBJECT_NOT_FOUND);
                     return;
                 }
@@ -213,8 +218,7 @@ public class LinkServlet extends HttpServlet {
                 ErrorResponseGenerator.generateErrorMessage(response, updateException.getStatusCode(), updateException.getErrorCode());
                 return;
             }
-        }
-        else {
+        } else {
             ErrorResponseGenerator.generateErrorMessage(response, SC_NOT_FOUND,
                     ErrorCode.OBJECT_NOT_FOUND);
             return;
@@ -286,7 +290,7 @@ public class LinkServlet extends HttpServlet {
     private void updateAcl(LinkUpdateRequest updateRequest, Link link, LinkDao linkDao) {
         Acl acl = new AclDao().getAclById(updateRequest.getAclId());
         if (acl == null) {
-            throw ACL_NOT_FOUND;
+            ErrorCode.ACL_NOT_FOUND.throwUp();
         }
         UserAccount  user         = ThreadLocalSqlSession.getCurrentUser();
         AccessFilter accessFilter = AccessFilter.getInstance(user);
@@ -295,8 +299,7 @@ public class LinkServlet extends HttpServlet {
             if (linkDao.updateLink(link) != 1) {
                 log.debug("acl update on {} did change anything.", link);
             }
-        }
-        else {
+        } else {
             throw MISSING_SET_ACL_PERMISSION;
         }
     }
@@ -333,17 +336,17 @@ public class LinkServlet extends HttpServlet {
                 case FOLDER:
                     String deleteFolderPerm = DefaultPermission.DELETE_FOLDER.getName();
                     deleteOkay = authorizationService.userHasPermission(aclId, deleteFolderPerm, user)
-                                 ||
-                                 (link.getOwnerId().equals(user.getId())
-                                  && authorizationService.userHasOwnerPermission(aclId, deleteFolderPerm, user))
+                            ||
+                            (link.getOwnerId().equals(user.getId())
+                                    && authorizationService.userHasOwnerPermission(aclId, deleteFolderPerm, user))
                     ;
                     break;
                 case OBJECT:
                     String deleteObjectPerm = DefaultPermission.DELETE_OBJECT.getName();
                     deleteOkay = authorizationService.userHasPermission(aclId, deleteObjectPerm, user)
-                                 ||
-                                 (link.getOwnerId().equals(user.getId())
-                                  && authorizationService.userHasOwnerPermission(aclId, deleteObjectPerm, user))
+                            ||
+                            (link.getOwnerId().equals(user.getId())
+                                    && authorizationService.userHasOwnerPermission(aclId, deleteObjectPerm, user))
                     ;
                     break;
                 default:
@@ -355,8 +358,7 @@ public class LinkServlet extends HttpServlet {
             }
             int deletedRows = linkDao.deleteLink(link.getId());
             deletionResponse.setSuccess(deletedRows == 1);
-        }
-        else {
+        } else {
             deletionResponse.setNotFound(true);
         }
         response.setContentType(CONTENT_TYPE_XML);

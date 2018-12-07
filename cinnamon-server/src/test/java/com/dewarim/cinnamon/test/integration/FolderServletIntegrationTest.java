@@ -23,9 +23,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
-import static org.apache.http.HttpStatus.SC_NOT_FOUND;
-import static org.apache.http.HttpStatus.SC_UNAUTHORIZED;
+import static org.apache.http.HttpStatus.*;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.*;
@@ -172,21 +170,21 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
      * Note: other Meta requests are tested in OsdServletIntegrationTest.
      */
     @Test
-    public void getMetaInvalidRequest() throws IOException{
+    public void getMetaInvalidRequest() throws IOException {
         MetaRequest  request      = new MetaRequest();
         HttpResponse metaResponse = sendStandardRequest(UrlMapping.FOLDER__GET_META, request);
         assertCinnamonError(metaResponse, ErrorCode.INVALID_REQUEST);
     }
 
     @Test
-    public void getMetaObjectNotFound() throws IOException{
+    public void getMetaObjectNotFound() throws IOException {
         MetaRequest  request      = new MetaRequest(Long.MAX_VALUE, null);
         HttpResponse metaResponse = sendStandardRequest(UrlMapping.FOLDER__GET_META, request);
         assertCinnamonError(metaResponse, ErrorCode.OBJECT_NOT_FOUND, SC_NOT_FOUND);
     }
 
     @Test
-    public void getMetaWithoutReadPermission() throws IOException{
+    public void getMetaWithoutReadPermission() throws IOException {
         MetaRequest  request      = new MetaRequest(15L, null);
         HttpResponse metaResponse = sendStandardRequest(UrlMapping.FOLDER__GET_META, request);
         assertCinnamonError(metaResponse, ErrorCode.NO_READ_CUSTOM_METADATA_PERMISSION, SC_UNAUTHORIZED);
@@ -200,7 +198,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         String   content = new String(metaResponse.getEntity().getContent().readAllBytes(), Charset.forName("UTF-8"));
         Document metaDoc = new Builder().build(content, null);
         Node     comment = metaDoc.query("//metasets/metaset[typeId/text()='1']/content").get(0);
-        assertEquals("<metaset><p>Good Folder Meta Test</p></metaset>",comment.getValue());
+        assertEquals("<metaset><p>Good Folder Meta Test</p></metaset>", comment.getValue());
     }
 
     @Test
@@ -250,7 +248,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         CreateMetaRequest request      = new CreateMetaRequest(19L, "duplicate comment", "comment");
         HttpResponse      metaResponse = sendStandardRequest(UrlMapping.FOLDER__CREATE_META, request);
         assertResponseOkay(metaResponse);
-        MetaRequest  metaRequest      = new MetaRequest(19L, Collections.singletonList("comment"));
+        MetaRequest  metaRequest     = new MetaRequest(19L, Collections.singletonList("comment"));
         HttpResponse commentResponse = sendStandardRequest(UrlMapping.FOLDER__GET_META, metaRequest);
         assertResponseOkay(commentResponse);
         MetaWrapper metaWrapper = mapper.readValue(commentResponse.getEntity().getContent(), MetaWrapper.class);
@@ -314,6 +312,122 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         HttpResponse      response = sendStandardRequest(UrlMapping.FOLDER__DELETE_META, request);
         assertResponseOkay(response);
         assertTrue(parseGenericResponse(response).isSuccessful());
+    }
+
+    @Test
+    public void updateFolderInvalidRequest() throws IOException {
+        UpdateFolderRequest request  = new UpdateFolderRequest();
+        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__UPDATE_FOLDER, request);
+        assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
+    }
+
+    @Test
+    public void updateFolderFolderNotFound() throws IOException {
+        UpdateFolderRequest request = new UpdateFolderRequest(
+                Long.MAX_VALUE, null, null, null, null, null);
+        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__UPDATE_FOLDER, request);
+        assertCinnamonError(response, ErrorCode.FOLDER_NOT_FOUND);
+    }
+
+    @Test
+    public void updateFolderNoEditPermission() throws IOException {
+        UpdateFolderRequest request = new UpdateFolderRequest(
+                22L, null, null, null, null, null);
+        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__UPDATE_FOLDER, request);
+        assertCinnamonError(response, ErrorCode.NO_EDIT_FOLDER_PERMISSION);
+    }
+
+    @Test
+    public void updateFolderNotWritable() throws IOException {
+        UpdateFolderRequest request = new UpdateFolderRequest(
+                26L, null, null, null, null, null);
+        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__UPDATE_FOLDER, request);
+        assertCinnamonError(response, ErrorCode.NO_WRITE_SYS_METADATA_PERMISSION);
+    }
+
+    @Test
+    public void updateFolderCannotMoveFolderIntoItself() throws IOException {
+        UpdateFolderRequest request = new UpdateFolderRequest(
+                25L, 25L, null, null, null, null);
+        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__UPDATE_FOLDER, request);
+        assertCinnamonError(response, ErrorCode.CANNOT_MOVE_FOLDER_INTO_ITSELF);
+    }
+
+    @Test
+    public void updateFolderNoCreatePermission() throws IOException {
+        UpdateFolderRequest request = new UpdateFolderRequest(
+                25L, 22L, null, null, null, null);
+        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__UPDATE_FOLDER, request);
+        assertCinnamonError(response, ErrorCode.NO_CREATE_PERMISSION);
+    }
+
+    @Test
+    public void updateFolderParentFolderNotFound() throws IOException {
+        UpdateFolderRequest request = new UpdateFolderRequest(
+                25L, Long.MAX_VALUE, null, null, null, null);
+        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__UPDATE_FOLDER, request);
+        assertCinnamonError(response, ErrorCode.PARENT_FOLDER_NOT_FOUND);
+    }
+
+    @Test
+    public void updateFolderNoMovePermission() throws IOException {
+        UpdateFolderRequest request = new UpdateFolderRequest(
+                28L, 27L, null, null, null, null);
+        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__UPDATE_FOLDER, request);
+        assertCinnamonError(response, ErrorCode.NO_MOVE_PERMISSION);
+    }
+
+    @Test
+    public void updateFolderDuplicateFolderName() throws IOException {
+        UpdateFolderRequest request  = new UpdateFolderRequest(
+                25L, null, "move here", null, null, null
+        );
+        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__UPDATE_FOLDER, request);
+        assertCinnamonError(response, ErrorCode.DUPLICATE_FOLDER_NAME_FORBIDDEN);
+    }
+
+    @Test
+    public void updateFolderFolderTypeNotFound() throws IOException {
+        UpdateFolderRequest request  = new UpdateFolderRequest(
+                25L, null,null,null,Long.MAX_VALUE, null
+        );
+        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__UPDATE_FOLDER, request);
+        assertCinnamonError(response, ErrorCode.FOLDER_TYPE_NOT_FOUND);
+    }
+
+    @Test
+    public void updateFolderMissingSetAclPermission() throws IOException {
+        UpdateFolderRequest request  = new UpdateFolderRequest(
+                23L, null,null,null,null, 1L
+        );
+        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__UPDATE_FOLDER, request);
+        assertCinnamonError(response, ErrorCode.MISSING_SET_ACL_PERMISSION);
+    }
+
+    @Test
+    public void updateFolderAclNotFound() throws IOException {
+        UpdateFolderRequest request  = new UpdateFolderRequest(
+                24L, null,null,null,null, Long.MAX_VALUE
+        );
+        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__UPDATE_FOLDER, request);
+        assertCinnamonError(response, ErrorCode.ACL_NOT_FOUND);
+    }
+
+    @Test
+    public void updateFolderUserAccountNotFound() throws IOException {
+        UpdateFolderRequest request  = new UpdateFolderRequest(
+                23L, null,null,Long.MAX_VALUE,null, null
+        );
+        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__UPDATE_FOLDER, request);
+        assertCinnamonError(response, ErrorCode.USER_ACCOUNT_NOT_FOUND);
+    }
+
+    @Test
+    public void updateFolderHappyPath() throws IOException {
+        UpdateFolderRequest request  = new UpdateFolderRequest(
+                25L, 27L, "new-name-for-happy-folder",1L,2L,13L
+        );
+        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__UPDATE_FOLDER, request);
     }
 
     private List<Folder> unwrapFolders(HttpResponse response, Integer expectedSize) throws IOException {

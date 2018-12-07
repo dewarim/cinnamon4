@@ -5,7 +5,8 @@ import com.dewarim.cinnamon.application.ErrorResponseGenerator;
 import com.dewarim.cinnamon.dao.AclDao;
 import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.model.Acl;
-import com.dewarim.cinnamon.model.request.*;
+import com.dewarim.cinnamon.model.request.DeleteByIdRequest;
+import com.dewarim.cinnamon.model.request.IdRequest;
 import com.dewarim.cinnamon.model.request.acl.AclInfoRequest;
 import com.dewarim.cinnamon.model.request.acl.AclUpdateRequest;
 import com.dewarim.cinnamon.model.request.acl.CreateAclRequest;
@@ -54,7 +55,7 @@ public class AclServlet extends HttpServlet {
                 getUserAcls(request, response);
                 break;
             case "/updateAcl":
-                updateAcl(request,response);
+                updateAcl(request, response);
                 break;
             default:
                 response.setStatus(HttpServletResponse.SC_NO_CONTENT);
@@ -67,30 +68,30 @@ public class AclServlet extends HttpServlet {
             ErrorResponseGenerator.superuserRequired(response);
             return;
         }
-        AclUpdateRequest updateRequest = xmlMapper.readValue(request.getInputStream(),AclUpdateRequest.class);
+        AclUpdateRequest updateRequest = xmlMapper.readValue(request.getInputStream(), AclUpdateRequest.class);
         String           name          = updateRequest.getName();
         if (name == null || name.trim().isEmpty()) {
             ErrorResponseGenerator.generateErrorMessage(response, SC_BAD_REQUEST,
                     ErrorCode.NAME_PARAM_IS_INVALID, "");
             return;
         }
-        AclDao aclDao = new AclDao();
-        Acl aclToBeRenamed = aclDao.getAclById(updateRequest.getId());
+        AclDao aclDao         = new AclDao();
+        Acl    aclToBeRenamed = aclDao.getAclById(updateRequest.getId());
         aclToBeRenamed.setName(name);
         try {
             aclDao.changeAclName(aclToBeRenamed);
-        }
-        catch (Exception e){
-            ErrorResponseGenerator.generateErrorMessage(response,SC_BAD_REQUEST,ErrorCode.DB_UPDATE_FAILED,e.getMessage());
+        } catch (Exception e) {
+            ErrorCode dbFail = ErrorCode.DB_UPDATE_FAILED;
+            ErrorResponseGenerator.generateErrorMessage(response, dbFail.getHttpResponseCode(), dbFail, e.getMessage());
             return;
         }
         sendWrappedAcls(response, Collections.singletonList(aclToBeRenamed));
     }
 
     private void listAcls(HttpServletResponse response) throws IOException {
-        AclDao aclDao = new AclDao();
-        List<Acl> acls = aclDao.list();
-        sendWrappedAcls(response,acls);
+        AclDao    aclDao = new AclDao();
+        List<Acl> acls   = aclDao.list();
+        sendWrappedAcls(response, acls);
     }
 
     private void createAcl(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -108,9 +109,9 @@ public class AclServlet extends HttpServlet {
         }
         Acl acl = new Acl();
         acl.setName(name);
-        AclDao aclDao = new AclDao();
-        Acl savedAcl = aclDao.save(acl);
-        sendWrappedAcls(response,Collections.singletonList(savedAcl));
+        AclDao aclDao   = new AclDao();
+        Acl    savedAcl = aclDao.save(acl);
+        sendWrappedAcls(response, Collections.singletonList(savedAcl));
     }
 
     private void getAclByNameOrId(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -119,11 +120,9 @@ public class AclServlet extends HttpServlet {
         Acl            acl;
         if (aclInfoRequest.byId()) {
             acl = aclDao.getAclById(aclInfoRequest.getAclId());
-        }
-        else if (aclInfoRequest.byName()) {
+        } else if (aclInfoRequest.byName()) {
             acl = aclDao.getAclByName(aclInfoRequest.getName());
-        }
-        else {
+        } else {
             ErrorResponseGenerator.generateErrorMessage(response, SC_BAD_REQUEST,
                     ErrorCode.INFO_REQUEST_WITHOUT_NAME_OR_ID, "Request needs id or name to be set.");
             return;
@@ -146,34 +145,33 @@ public class AclServlet extends HttpServlet {
         }
 
         DeletionResponse deletionResponse = new DeletionResponse();
-        AclDao aclDao = new AclDao();
-        Acl acl = aclDao.getAclById(id);
+        AclDao           aclDao           = new AclDao();
+        Acl              acl              = aclDao.getAclById(id);
         if (acl == null) {
             deletionResponse.setNotFound(true);
-        }
-        else {
+        } else {
             int deletedRows = aclDao.deleteAcl(deletionRequest.getId());
             deletionResponse.setSuccess(deletedRows == 1);
         }
-        
+
         response.setContentType(CONTENT_TYPE_XML);
         response.setStatus(HttpServletResponse.SC_OK);
         xmlMapper.writeValue(response.getWriter(), deletionResponse);
     }
 
-    private void getUserAcls(HttpServletRequest request, HttpServletResponse response) throws IOException{
+    private void getUserAcls(HttpServletRequest request, HttpServletResponse response) throws IOException {
         IdRequest idRequest = xmlMapper.readValue(request.getInputStream(), IdRequest.class);
-        Long userId = idRequest.getId(); 
-        if(userId == null || userId < 1 ){
-            ErrorResponseGenerator.generateErrorMessage(response,SC_BAD_REQUEST,ErrorCode.ID_PARAM_IS_INVALID,"");
+        Long      userId    = idRequest.getId();
+        if (userId == null || userId < 1) {
+            ErrorResponseGenerator.generateErrorMessage(response, SC_BAD_REQUEST, ErrorCode.ID_PARAM_IS_INVALID, "");
             return;
         }
-        AclDao aclDao = new AclDao();
+        AclDao    aclDao   = new AclDao();
         List<Acl> userAcls = aclDao.getUserAcls(userId);
-        sendWrappedAcls(response,userAcls);
+        sendWrappedAcls(response, userAcls);
     }
-    
-    private void sendWrappedAcls(HttpServletResponse response, List<Acl> acls) throws IOException{
+
+    private void sendWrappedAcls(HttpServletResponse response, List<Acl> acls) throws IOException {
         AclWrapper aclWrapper = new AclWrapper();
         aclWrapper.getAcls().addAll(acls);
         aclWrapper.getAcls().removeAll(Collections.singleton(null));
@@ -181,5 +179,5 @@ public class AclServlet extends HttpServlet {
         response.setStatus(HttpServletResponse.SC_OK);
         xmlMapper.writeValue(response.getWriter(), aclWrapper);
     }
-    
+
 }

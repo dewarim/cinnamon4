@@ -13,6 +13,7 @@ import com.dewarim.cinnamon.model.request.*;
 import com.dewarim.cinnamon.model.response.FolderWrapper;
 import com.dewarim.cinnamon.model.response.GenericResponse;
 import com.dewarim.cinnamon.model.response.SummaryWrapper;
+import com.dewarim.cinnamon.security.authorization.AccessFilter;
 import com.dewarim.cinnamon.security.authorization.AuthorizationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -27,9 +28,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.dewarim.cinnamon.application.ErrorResponseGenerator.generateErrorMessage;
-import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
-import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
-import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
+import static javax.servlet.http.HttpServletResponse.*;
 
 @WebServlet(name = "Folder", urlPatterns = "/")
 public class FolderServlet extends BaseServlet {
@@ -71,6 +70,9 @@ public class FolderServlet extends BaseServlet {
                 case "/getSummaries":
                     getSummaries(request, response, user, folderDao);
                     break;
+                case "/updateFolder":
+                    updateFolder(request, response, user, folderDao);
+                    break;
                 default:
                     response.setStatus(HttpServletResponse.SC_NO_CONTENT);
             }
@@ -80,6 +82,90 @@ public class FolderServlet extends BaseServlet {
         }
     }
 
+
+    private void updateFolder(HttpServletRequest request, HttpServletResponse response, UserAccount user, FolderDao folderDao) throws IOException {
+        UpdateFolderRequest updateRequest = xmlMapper.readValue(request.getInputStream(), UpdateFolderRequest.class)
+                .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
+
+        Long         folderId     = updateRequest.getId();
+        Folder       folder       = folderDao.getFolderById(folderId, true).orElseThrow(ErrorCode.FOLDER_NOT_FOUND.getException());
+        AccessFilter accessFilter = AccessFilter.getInstance(user);
+
+
+        if (!accessFilter.hasPermissionOnOwnable(folder, DefaultPermission.EDIT_FOLDER, folder)) {
+            ErrorCode.NO_EDIT_FOLDER_PERMISSION.throwUp();
+        }
+
+        throwUnlessSysMetadataIsWritable(folder);
+
+        boolean changed = false;
+        // change parent folder
+        Long parentId =updateRequest.getParentId();
+        if (parentId != null) {
+            if(parentId.equals(folderId)){
+                ErrorCode.CANNOT_MOVE_FOLDER_INTO_ITSELF.throwUp();
+            }
+            Folder parentFolder = folderDao.getFolderById(parentId)
+                    .orElseThrow(ErrorCode.PARENT_FOLDER_NOT_FOUND.getException());
+            if (!accessFilter.hasPermissionOnOwnable(parentFolder, DefaultPermission.CREATE_FOLDER, parentFolder)) {
+                ErrorCode.NO_CREATE_PERMISSION.throwUp();
+            }
+            if (!accessFilter.hasPermissionOnOwnable(folder, DefaultPermission.MOVE, folder)) {
+                ErrorCode.NO_MOVE_PERMISSION.throwUp();
+            }
+            folder.setParentId(parentFolder.getParentId());
+            changed = true;
+        }
+
+        // change name
+        String name = updateRequest.getName();
+        if (name != null) {
+            Folder parentFolder = folderDao.getFolderById(folder.getParentId())
+                    .orElseThrow(ErrorCode.PARENT_FOLDER_NOT_FOUND.getException());
+            // check if name is valid, otherwise user gets a confusing duplicate field db exception:
+            folderDao.getFolderByParentAndName(parentFolder.getId(), name, false)
+                    .ifPresent(f -> ErrorCode.DUPLICATE_FOLDER_NAME_FORBIDDEN.throwUp());
+            folder.setName(name);
+            changed = true;
+        }
+
+        // change type
+        Long typeId = updateRequest.getTypeId();
+        if (typeId != null) {
+            FolderType type = new FolderTypeDao().getFolderTypeById(typeId)
+                    .orElseThrow(ErrorCode.FOLDER_TYPE_NOT_FOUND.getException());
+            folder.setTypeId(type.getId());
+            changed = true;
+        }
+
+        // change acl
+        Long aclId = updateRequest.getAclId();
+        if (aclId != null) {
+            if (!accessFilter.hasPermissionOnOwnable(folder, DefaultPermission.SET_ACL, folder)) {
+                ErrorCode.MISSING_SET_ACL_PERMISSION.throwUp();
+            }
+            Acl acl = new AclDao().getAclByIdOpt(aclId)
+                    .orElseThrow(ErrorCode.ACL_NOT_FOUND.getException());
+            folder.setAclId(acl.getId());
+            changed = true;
+        }
+
+        // change owner
+        Long ownerId = updateRequest.getOwnerId();
+        if (ownerId != null) {
+            UserAccount owner = new UserAccountDao().getUserAccountById(ownerId)
+                    .orElseThrow(ErrorCode.USER_ACCOUNT_NOT_FOUND.getException());
+            folder.setOwnerId(owner.getId());
+            changed = true;
+        }
+
+        // update folder:
+        if (changed) {
+            folderDao.updateFolder(folder);
+        }
+
+        ResponseUtil.responseIsGenericOkay(response);
+    }
 
     private void deleteMeta(HttpServletRequest request, HttpServletResponse response, UserAccount user, FolderDao folderDao) throws IOException {
         DeleteMetaRequest metaRequest = xmlMapper.readValue(request.getInputStream(), DeleteMetaRequest.class)

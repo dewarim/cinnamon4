@@ -13,18 +13,21 @@ public enum ErrorCode {
     AUTHENTICATION_FAIL_NO_SESSION_FOUND("no session found", SC_FORBIDDEN),
     AUTHENTICATION_FAIL_SESSION_EXPIRED("session expired", SC_FORBIDDEN),
     AUTHENTICATION_FAIL_USER_NOT_FOUND("user not found or inactive", SC_FORBIDDEN),
+    CANNOT_MOVE_FOLDER_INTO_ITSELF("source and parent folder are identical",SC_BAD_REQUEST),
     CONNECTION_FAIL_ACCOUNT_INACTIVE("account inactive", SC_UNAUTHORIZED),
     CONNECTION_FAIL_INVALID_USERNAME("invalid username", SC_UNAUTHORIZED),
     CONNECTION_FAIL_ACCOUNT_LOCKED("account locked", SC_UNAUTHORIZED),
     CONNECTION_FAIL_WRONG_PASSWORD("wrong password", SC_UNAUTHORIZED),
     //    DB_UPDATE_CHANGED_NOTHING("The update succeeded, but did not change anything. This may happen when you save the same value again."),
     DB_UPDATE_FAILED("db update failed", SC_INTERNAL_SERVER_ERROR),
-    DB_DELETE_FAILED("db delete failed", SC_INTERNAL_SERVER_ERROR),
+    DB_DELETE_FAILED("db delete failed", SC_INTERNAL_SERVER_ERROR)
     // From the "this cannot happen" department:
-    DELETE_AFFECTED_MULTIPLE_ROWS("Delete succeeded, but seems to have deleted more than the expected single row. Contact your administrator.", SC_INTERNAL_SERVER_ERROR),
+,    DELETE_AFFECTED_MULTIPLE_ROWS("Delete succeeded, but seems to have deleted more than the expected single row. Contact your administrator.", SC_INTERNAL_SERVER_ERROR),
     DELETE_REQUEST_WITHOUT_ID("delete request needs id parameter", SC_BAD_REQUEST),
     FILE_NOT_FOUND("file not found", SC_NOT_FOUND),
+    DUPLICATE_FOLDER_NAME_FORBIDDEN("You cannot have two folders with the same name with the same parent folder", SC_BAD_REQUEST),
     FOLDER_NOT_FOUND("folder was not found", SC_NOT_FOUND),
+    FOLDER_TYPE_NOT_FOUND("folder type was not found", SC_NOT_FOUND),
     FORBIDDEN("user is authenticated, but access is not allowed", SC_FORBIDDEN),
     FORMAT_NOT_FOUND("format object was not found for given id", SC_NOT_FOUND),
     ID_PARAM_IS_INVALID("id param is missing or invalid", SC_BAD_REQUEST),
@@ -49,7 +52,9 @@ public enum ErrorCode {
     NAME_PARAM_IS_INVALID("name param is invalid", SC_BAD_REQUEST),
     NO_BROWSE_PERMISSION("missing browse permission", SC_UNAUTHORIZED),
     NO_CREATE_PERMISSION("missing permission to create an object inside a folder", SC_UNAUTHORIZED),
+    NO_EDIT_FOLDER_PERMISSION("missing permission to edit the folder", SC_UNAUTHORIZED),
     NO_LOCK_PERMISSION("missing permission to (un)lock this object", SC_UNAUTHORIZED),
+    NO_MOVE_PERMISSION("missing permission to move object", SC_UNAUTHORIZED),
     NO_READ_PERMISSION("missing read content permission for current object", SC_UNAUTHORIZED),
     NO_READ_CUSTOM_METADATA_PERMISSION("missing permission to read custom metadata", SC_UNAUTHORIZED),
     NO_READ_OBJECT_SYS_METADATA_PERMISSION("missing permission to read system metadata", SC_UNAUTHORIZED),
@@ -94,5 +99,9 @@ public enum ErrorCode {
 
     public Supplier<FailedRequestException> getException() {
         return exceptionSupplier;
+    }
+
+    public void throwUp() {
+        throw exceptionSupplier.get();
     }
 }

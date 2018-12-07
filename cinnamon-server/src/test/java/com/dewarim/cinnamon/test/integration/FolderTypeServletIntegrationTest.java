@@ -25,7 +25,7 @@ public class FolderTypeServletIntegrationTest extends CinnamonIntegrationTest {
 
         assertNotNull(folderTypes);
         assertFalse(folderTypes.isEmpty());
-        assertEquals(1, folderTypes.size());
+        assertEquals(2, folderTypes.size());
         
         Optional<FolderType> typeOpt = folderTypes.stream().filter(folderType -> folderType.getName().equals(Constants.FOLDER_TYPE_DEFAULT))
                 .findFirst();

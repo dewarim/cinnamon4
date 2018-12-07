@@ -27,9 +27,7 @@ import java.util.Optional;
 
 import static com.dewarim.cinnamon.Constants.CONTENT_TYPE_XML;
 import static com.dewarim.cinnamon.application.ResponseUtil.responseIsOkayAndXml;
-import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
-import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
-import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
+import static javax.servlet.http.HttpServletResponse.*;
 
 /**
  */
@@ -115,11 +113,11 @@ public class UserServlet extends HttpServlet {
             userOpt = userAccountDao.getUserAccountByName(userInfoRequest.getUsername());
         }
         else {
-            ErrorResponseGenerator.generateErrorMessage(response, HttpServletResponse.SC_BAD_REQUEST, ErrorCode.USER_INFO_REQUEST_WITHOUT_NAME_OR_ID, "Request needs id or username to be set.");
+            ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.USER_INFO_REQUEST_WITHOUT_NAME_OR_ID);
             return;
         }
         if (!userOpt.isPresent()) {
-            ErrorResponseGenerator.generateErrorMessage(response, HttpServletResponse.SC_BAD_REQUEST, ErrorCode.USER_ACCOUNT_NOT_FOUND, "Could not find user.");
+            ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.USER_ACCOUNT_NOT_FOUND);
             return;
         }
 

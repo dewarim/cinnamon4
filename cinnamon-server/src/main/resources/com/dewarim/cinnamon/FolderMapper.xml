@@ -39,6 +39,22 @@
         </foreach>
     </select>
 
+    <select id="getFolderByParentAndName" parameterType="map" resultMap="folderMap">
+        SELECT id,
+               name,
+               obj_version,
+               acl_id,
+               owner_id,
+               parent_id,
+               type_id,
+               metadata_changed,
+               created,
+               CASE WHEN #{includeSummary} THEN summary ELSE null END AS summary
+        FROM folders
+        WHERE parent_id = #{parentId}
+          AND name = #{name}
+    </select>
+
     <select id="getFolderByIdWithAncestors" parameterType="map" resultMap="folderMap">
         SELECT
             id,
@@ -148,7 +164,7 @@
               AND parent_id = #{id}
     </select>
 
-    <!-- TODO: perhaps implement safe version (checking for folder.version=version) -->
+    <!-- TODO: perhaps implement safe version (checking for folder.obj_version = old obj_version) -->
     <update id="updateFolder">
         UPDATE folders
         SET

@@ -33,4 +33,7 @@ public class ErrorResponseGenerator {
                 ErrorCode.REQUIRES_SUPERUSER_STATUS, "");
     }
 
+    public static void generateErrorMessage(HttpServletResponse response, ErrorCode errorCode) {
+        generateErrorMessage(response, errorCode.getHttpResponseCode(), errorCode);
+    }
 }

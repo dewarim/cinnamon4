@@ -55,6 +55,15 @@ public class FolderDao {
         params.put("rootFolderName", ROOT_FOLDER_NAME);
         return sqlSession.selectOne("com.dewarim.cinnamon.FolderMapper.getRootFolder", params);
     }
+    public Optional<Folder> getFolderByParentAndName(Long parentId, String name, boolean includeSummary) {
+        SqlSession          sqlSession = ThreadLocalSqlSession.getSqlSession();
+        Map<String, Object> params     = new HashMap<>();
+        params.put("includeSummary", includeSummary);
+        params.put("name", name);
+        params.put("parentId", parentId);
+        Folder folder = sqlSession.selectOne("com.dewarim.cinnamon.FolderMapper.getFolderByParentAndName", params);
+        return Optional.ofNullable(folder);
+    }
 
     /**
      * @param path           a slash '/'-separated list of folder names, starting with /, not including
@@ -110,6 +119,14 @@ public class FolderDao {
 
     }
 
+
+    public Optional<Folder> getFolderById(long id, boolean includeSummary) {
+        List<Folder> folders = getFoldersById(Collections.singletonList(id), includeSummary);
+        if (folders.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(folders.get(0));
+    }
 
     public Optional<Folder> getFolderById(long id) {
         List<Folder> folders = getFoldersById(Collections.singletonList(id), false);

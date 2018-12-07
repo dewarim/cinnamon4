@@ -5,14 +5,27 @@ import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.CmnGroup;
 import org.apache.ibatis.session.SqlSession;
 
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class AclDao {
 
+    /**
+     *
+     * @deprecated use getAclByIdOpt, which will replace getAclById later
+     */
+    @Deprecated(forRemoval = true)
     public Acl getAclById(long id) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
         return sqlSession.selectOne("com.dewarim.cinnamon.AclMapper.getAclById", id);
+    }
+
+    public Optional<Acl> getAclByIdOpt(long id) {
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        Acl acl = sqlSession.selectOne("com.dewarim.cinnamon.AclMapper.getAclById", id);
+        return Optional.ofNullable(acl);
     }
 
     public Acl getAclByName(String name) {

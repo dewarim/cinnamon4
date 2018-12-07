@@ -28,6 +28,7 @@ public enum UrlMapping {
     FOLDER__GET_META("folder", "getMeta", "/api"),
     FOLDER__GET_SUMMARIES("folder", "getSummaries", "/api"),
     FOLDER__SET_SUMMARY("folder", "setSummary", "/api"),
+    FOLDER__UPDATE_FOLDER("folder","updateFolder" , "/api"),
     FORMAT__LIST_FORMATS("format", "listFormats", "/api"),
     GROUP__LIST_GROUPS("group", "listGroups", "/api"),
     INDEX_ITEM__LIST_INDEX_ITEMS("indexItem", "listIndexItems", "/api"),

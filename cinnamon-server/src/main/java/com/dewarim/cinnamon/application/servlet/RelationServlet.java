@@ -24,8 +24,6 @@ import java.util.List;
 import java.util.Optional;
 
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
-import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
-import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
 
 @WebServlet(name = "Relation", urlPatterns = "/")
 public class RelationServlet extends HttpServlet {
@@ -60,18 +58,18 @@ public class RelationServlet extends HttpServlet {
             int         affectedRows = dao.deleteRelation(deleteRequest.getLeftId(), deleteRequest.getRightId(), deleteRequest.getTypeName());
             switch (affectedRows) {
                 case 0:
-                    ErrorResponseGenerator.generateErrorMessage(response, SC_NOT_FOUND,ErrorCode.OBJECT_NOT_FOUND_OR_GONE );
+                    ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.OBJECT_NOT_FOUND_OR_GONE );
                     break;
                 case 1:
                     ResponseUtil.responseIsOkayAndXml(response);
                     xmlMapper.writeValue(response.getWriter(), new GenericResponse(false));
                     break;
                 default:
-                    ErrorResponseGenerator.generateErrorMessage(response, SC_INTERNAL_SERVER_ERROR, ErrorCode.DELETE_AFFECTED_MULTIPLE_ROWS);
+                    ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.DELETE_AFFECTED_MULTIPLE_ROWS);
             }
             return;
         }
-        ErrorResponseGenerator.generateErrorMessage(response, SC_BAD_REQUEST, ErrorCode.INVALID_REQUEST);
+        ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.INVALID_REQUEST);
     }
 
     private void createRelation(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -87,7 +85,7 @@ public class RelationServlet extends HttpServlet {
                 return;
             }
             else {
-                ErrorResponseGenerator.generateErrorMessage(response, SC_BAD_REQUEST, ErrorCode.RELATION_TYPE_NOT_FOUND);
+                ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.RELATION_TYPE_NOT_FOUND);
             }
             return;
         }

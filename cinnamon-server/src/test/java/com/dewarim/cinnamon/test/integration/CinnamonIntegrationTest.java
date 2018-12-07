@@ -22,13 +22,15 @@ import org.apache.logging.log4j.Logger;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
 
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 
 /**
@@ -37,25 +39,25 @@ public class CinnamonIntegrationTest {
 
     private final static Logger log = LogManager.getLogger(CinnamonIntegrationTest.class);
 
-    static int cinnamonTestPort = 19999;
+    static int            cinnamonTestPort = 19999;
     static CinnamonServer cinnamonServer;
-    static String ticket;
-    static String ticketForDoe;
-    static String HOST = "http://localhost:"+cinnamonTestPort;
+    static String         ticket;
+    static String         ticketForDoe;
+    static String         HOST             = "http://localhost:" + cinnamonTestPort;
     XmlMapper mapper = new XmlMapper();
-    
+
     @BeforeClass
-    public static void setUpServer() throws Exception{
-        if(cinnamonServer == null) {
+    public static void setUpServer() throws Exception {
+        if (cinnamonServer == null) {
             cinnamonServer = new CinnamonServer(cinnamonTestPort);
 
             DbSessionFactory dbSessionFactory = new DbSessionFactory("sql/mybatis.test.properties.xml");
 
-            SqlSession session = dbSessionFactory.getSqlSessionFactory().openSession(true);
-            Connection conn = session.getConnection();
-            Reader reader = Resources.getResourceAsReader("sql/CreateTestDB.sql");
-            ScriptRunner runner = new ScriptRunner(conn);
-            PrintWriter errorPrintWriter = new PrintWriter(System.out);
+            SqlSession   session          = dbSessionFactory.getSqlSessionFactory().openSession(true);
+            Connection   conn             = session.getConnection();
+            Reader       reader           = Resources.getResourceAsReader("sql/CreateTestDB.sql");
+            ScriptRunner runner           = new ScriptRunner(conn);
+            PrintWriter  errorPrintWriter = new PrintWriter(System.out);
             runner.setErrorLogWriter(errorPrintWriter);
             runner.runScript(reader);
             reader.close();
@@ -72,7 +74,6 @@ public class CinnamonIntegrationTest {
     }
 
     /**
-     * 
      * @return a ticket for the Cinnamon administrator
      */
     protected static String getAdminTicket() throws IOException {
@@ -80,59 +81,66 @@ public class CinnamonIntegrationTest {
         String tokenRequestResult = Request.Post(url)
                 .bodyForm(Form.form().add("user", "admin").add("pwd", "admin").build())
                 .execute().returnContent().asString();
-        XmlMapper mapper = new XmlMapper();
+        XmlMapper          mapper             = new XmlMapper();
         CinnamonConnection cinnamonConnection = mapper.readValue(tokenRequestResult, CinnamonConnection.class);
         return cinnamonConnection.getTicket();
     }
 
     /**
-     * 
      * @return a ticket for a normal user.
      */
     protected static String getDoesTicket(boolean newTicket) throws IOException {
-        if(ticketForDoe == null || newTicket) {
+        if (ticketForDoe == null || newTicket) {
             String url = "http://localhost:" + cinnamonTestPort + UrlMapping.CINNAMON__CONNECT.getPath();
             String tokenRequestResult = Request.Post(url)
                     .bodyForm(Form.form().add("user", "doe").add("pwd", "admin").build())
                     .execute().returnContent().asString();
-            XmlMapper mapper = new XmlMapper();
+            XmlMapper          mapper             = new XmlMapper();
             CinnamonConnection cinnamonConnection = mapper.readValue(tokenRequestResult, CinnamonConnection.class);
             ticketForDoe = cinnamonConnection.getTicket();
             return ticketForDoe;
-        }
-        else {
+        } else {
             return ticketForDoe;
         }
     }
-    
-    protected void assertResponseOkay(HttpResponse response) throws IOException{
+
+    protected void assertResponseOkay(HttpResponse response) throws IOException {
         Integer statusCode = response.getStatusLine().getStatusCode();
-        if(!statusCode.equals(HttpStatus.SC_OK)){
+        if (!statusCode.equals(HttpStatus.SC_OK)) {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             response.getEntity().getContent().transferTo(baos);
-            log.error("Request failed with:\n{}",baos.toString(Charsets.UTF_8.name()));
-            fail("Non-OK status code "+statusCode);
-        };
+            log.error("Request failed with:\n{}", baos.toString(Charsets.UTF_8.name()));
+            fail("Non-OK status code " + statusCode);
+        }
+        ;
     }
-    
-    protected void assertCinnamonError(HttpResponse response, ErrorCode errorCode) throws IOException{
-        Assert.assertThat(response.getStatusLine().getStatusCode(), equalTo(HttpStatus.SC_BAD_REQUEST));
+
+    protected void assertCinnamonError(HttpResponse response, ErrorCode errorCode) throws IOException {
+        String responseText = new String(response.getEntity().getContent().readAllBytes());
+        Assert.assertTrue(responseText.contains(errorCode.getCode()));
+        Assert.assertThat(errorCode.getHttpResponseCode(), equalTo(response.getStatusLine().getStatusCode()));
         CinnamonError cinnamonError = mapper.readValue(response.getEntity().getContent(), CinnamonError.class);
-        Assert.assertThat(cinnamonError.getCode(), equalTo(errorCode.getCode()));  
-    }  
-    
-    protected void assertCinnamonError(HttpResponse response, ErrorCode errorCode, int statusCode ) throws IOException{
-        Assert.assertThat(response.getStatusLine().getStatusCode(), equalTo(statusCode));
-        CinnamonError cinnamonError = mapper.readValue(response.getEntity().getContent(), CinnamonError.class);
-        Assert.assertThat(cinnamonError.getCode(), equalTo(errorCode.getCode()));  
+        Assert.assertThat(cinnamonError.getCode(), equalTo(errorCode.getCode()));
     }
 
     /**
-     * Send a POST request with the admin's ticket to the Cinnamon server. 
+     * @deprecated use assertCinnamonError with two parameters version - http response code is stored in ErrorCode
+     * anyway.
+     */
+    @Deprecated(forRemoval = true)
+    protected void assertCinnamonError(HttpResponse response, ErrorCode errorCode, int statusCode) throws IOException {
+        Assert.assertThat(response.getStatusLine().getStatusCode(), equalTo(statusCode));
+        CinnamonError cinnamonError = mapper.readValue(response.getEntity().getContent(), CinnamonError.class);
+        Assert.assertThat(cinnamonError.getCode(), equalTo(errorCode.getCode()));
+    }
+
+    /**
+     * Send a POST request with the admin's ticket to the Cinnamon server.
      * The request object will be serialized and put into the
      * request body.
+     *
      * @param urlMapping defines the API method you want to call
-     * @param request request object to be sent to the server as XML string.
+     * @param request    request object to be sent to the server as XML string.
      * @return the server's response.
      * @throws IOException if connection to server fails for some reason
      */
@@ -143,12 +151,13 @@ public class CinnamonIntegrationTest {
                 .bodyString(requestStr, ContentType.APPLICATION_XML)
                 .execute().returnResponse();
     }
-    
+
     /**
-     * Send a POST request with a normal user's ticket to the Cinnamon server. 
+     * Send a POST request with a normal user's ticket to the Cinnamon server.
      * The request object will be serialized and put into the request body.
+     *
      * @param urlMapping defines the API method you want to call
-     * @param request request object to be sent to the server as XML string.
+     * @param request    request object to be sent to the server as XML string.
      * @return the server's response.
      * @throws IOException if connection to server fails for some reason
      */
@@ -159,15 +168,15 @@ public class CinnamonIntegrationTest {
                 .bodyString(requestStr, ContentType.APPLICATION_XML)
                 .execute().returnResponse();
     }
-    
+
     protected HttpResponse sendAdminRequest(UrlMapping urlMapping) throws IOException {
         return Request.Post("http://localhost:" + cinnamonTestPort + urlMapping.getPath())
                 .addHeader("ticket", ticket)
                 .execute().returnResponse();
     }
 
-    protected GenericResponse parseGenericResponse(HttpResponse response) throws IOException{
+    protected GenericResponse parseGenericResponse(HttpResponse response) throws IOException {
         assertResponseOkay(response);
-        return mapper.readValue(response.getEntity().getContent(),GenericResponse.class);
+        return mapper.readValue(response.getEntity().getContent(), GenericResponse.class);
     }
 }
