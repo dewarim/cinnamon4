@@ -16,6 +16,13 @@ public class FolderWrapper {
     @JacksonXmlProperty(localName = "folders")
     List<Folder> folders = new ArrayList<>();
 
+    public FolderWrapper() {
+    }
+
+    public FolderWrapper(List<Folder> folders) {
+        this.folders = folders;
+    }
+
     public List<Folder> getFolders() {
         return folders;
     }

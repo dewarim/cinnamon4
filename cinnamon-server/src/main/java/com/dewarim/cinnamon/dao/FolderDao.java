@@ -65,6 +65,16 @@ public class FolderDao {
         return Optional.ofNullable(folder);
     }
 
+    public List<Folder> getDirectSubFolders(Long id, boolean includeSummary) {
+        SqlSession          sqlSession = ThreadLocalSqlSession.getSqlSession();
+        Map<String, Object> params     = new HashMap<>();
+        params.put("includeSummary", includeSummary);
+        params.put("id", id);
+        return sqlSession.selectList("com.dewarim.cinnamon.FolderMapper.getDirectSubFolders", params);
+    }
+
+
+
     /**
      * @param path           a slash '/'-separated list of folder names, starting with /, not including
      *                       the root folder.

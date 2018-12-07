@@ -707,6 +707,9 @@ insert into aclentry_permissions(id, aclentry_id, permission_id) values (nextval
 -- #37 browse
 insert into aclentry_permissions(id, aclentry_id, permission_id) values (nextval('seq_aclentry_permission_id'),16,1);
 
+-- #38 move permission for reviewers on reviewer.acl
+insert into aclentry_permissions(id, aclentry_id, permission_id) values (nextval('seq_aclentry_permission_id'),5,9);
+
 
 -- #1 default folder type
 insert into folder_types(id,name) values(nextval('seq_folder_type_id'),'_default_folder_type');

@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static com.dewarim.cinnamon.application.ErrorResponseGenerator.generateErrorMessage;
 import static javax.servlet.http.HttpServletResponse.*;
@@ -64,6 +65,9 @@ public class FolderServlet extends BaseServlet {
                 case "/getMeta":
                     getMeta(request, response, user, folderDao);
                     break;
+                case "/getSubFolders":
+                    getSubFolders(request, response, user, folderDao);
+                    break;
                 case "/setSummary":
                     setSummary(request, response, user, folderDao);
                     break;
@@ -82,6 +86,17 @@ public class FolderServlet extends BaseServlet {
         }
     }
 
+    private void getSubFolders(HttpServletRequest request, HttpServletResponse response, UserAccount user, FolderDao folderDao) throws IOException {
+        SingleFolderRequest folderRequest = xmlMapper.readValue(request.getInputStream(), SingleFolderRequest.class)
+                .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
+        Folder             folder              = folderDao.getFolderById(folderRequest.getId()).orElseThrow(ErrorCode.FOLDER_NOT_FOUND.getException());
+        List<Folder>       subFolders          = folderDao.getDirectSubFolders(folder.getId(), folderRequest.isIncludeSummary());
+        final AccessFilter accessFilter        = AccessFilter.getInstance(user);
+        List<Folder>       browsableSubFolders = subFolders.stream().filter(accessFilter::hasBrowsePermissionForOwnable).collect(Collectors.toList());
+        FolderWrapper      wrapper             = new FolderWrapper(browsableSubFolders);
+        ResponseUtil.responseIsOkayAndXml(response);
+        xmlMapper.writeValue(response.getWriter(), wrapper);
+    }
 
     private void updateFolder(HttpServletRequest request, HttpServletResponse response, UserAccount user, FolderDao folderDao) throws IOException {
         UpdateFolderRequest updateRequest = xmlMapper.readValue(request.getInputStream(), UpdateFolderRequest.class)
@@ -100,9 +115,9 @@ public class FolderServlet extends BaseServlet {
 
         boolean changed = false;
         // change parent folder
-        Long parentId =updateRequest.getParentId();
+        Long parentId = updateRequest.getParentId();
         if (parentId != null) {
-            if(parentId.equals(folderId)){
+            if (parentId.equals(folderId)) {
                 ErrorCode.CANNOT_MOVE_FOLDER_INTO_ITSELF.throwUp();
             }
             Folder parentFolder = folderDao.getFolderById(parentId)
@@ -276,45 +291,40 @@ public class FolderServlet extends BaseServlet {
      * Retrieve a single folder, including ancestors.
      */
     private void getFolder(HttpServletRequest request, HttpServletResponse response, UserAccount user, FolderDao folderDao) throws IOException {
-        SingleFolderRequest folderRequest = xmlMapper.readValue(request.getInputStream(), SingleFolderRequest.class);
-        if (folderRequest.validated()) {
-            List<Folder> rawFolders = folderDao.getFolderByIdWithAncestors(folderRequest.getId(), folderRequest.isIncludeSummary());
-            List<Folder> folders    = new AuthorizationService().filterFoldersByBrowsePermission(rawFolders, user);
-            if (folders.isEmpty()) {
-                generateErrorMessage(response, SC_NOT_FOUND, ErrorCode.OBJECT_NOT_FOUND);
-                return;
-            }
+        SingleFolderRequest folderRequest = xmlMapper.readValue(request.getInputStream(), SingleFolderRequest.class)
+                .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
-            ResponseUtil.responseIsOkayAndXml(response);
-            FolderWrapper folderWrapper = new FolderWrapper();
-            folderWrapper.setFolders(folders);
-            xmlMapper.writeValue(response.getWriter(), folderWrapper);
-        } else {
-            generateErrorMessage(response, SC_BAD_REQUEST, ErrorCode.INVALID_REQUEST);
+        List<Folder> rawFolders = folderDao.getFolderByIdWithAncestors(folderRequest.getId(), folderRequest.isIncludeSummary());
+        List<Folder> folders    = new AuthorizationService().filterFoldersByBrowsePermission(rawFolders, user);
+        if (folders.isEmpty()) {
+            generateErrorMessage(response, SC_NOT_FOUND, ErrorCode.OBJECT_NOT_FOUND);
+            return;
         }
+
+        ResponseUtil.responseIsOkayAndXml(response);
+        FolderWrapper folderWrapper = new FolderWrapper();
+        folderWrapper.setFolders(folders);
+        xmlMapper.writeValue(response.getWriter(), folderWrapper);
     }
 
     /**
      * Retrieve a list of folders, without including their ancestors.
      */
     private void getFolders(HttpServletRequest request, HttpServletResponse response, UserAccount user, FolderDao folderDao) throws IOException {
-        FolderRequest folderRequest = xmlMapper.readValue(request.getInputStream(), FolderRequest.class);
-        if (folderRequest.validated()) {
+        FolderRequest folderRequest = xmlMapper.readValue(request.getInputStream(), FolderRequest.class)
+                .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
-            List<Folder> rawFolders = folderDao.getFoldersById(folderRequest.getIds(), folderRequest.isIncludeSummary());
-            List<Folder> folders    = new AuthorizationService().filterFoldersByBrowsePermission(rawFolders, user);
-            if (folders.isEmpty()) {
-                generateErrorMessage(response, SC_NOT_FOUND, ErrorCode.OBJECT_NOT_FOUND);
-                return;
-            }
-
-            ResponseUtil.responseIsOkayAndXml(response);
-            FolderWrapper folderWrapper = new FolderWrapper();
-            folderWrapper.setFolders(folders);
-            xmlMapper.writeValue(response.getWriter(), folderWrapper);
-        } else {
-            generateErrorMessage(response, SC_BAD_REQUEST, ErrorCode.INVALID_REQUEST);
+        List<Folder> rawFolders = folderDao.getFoldersById(folderRequest.getIds(), folderRequest.isIncludeSummary());
+        List<Folder> folders    = new AuthorizationService().filterFoldersByBrowsePermission(rawFolders, user);
+        if (folders.isEmpty()) {
+            generateErrorMessage(response, SC_NOT_FOUND, ErrorCode.OBJECT_NOT_FOUND);
+            return;
         }
+
+        ResponseUtil.responseIsOkayAndXml(response);
+        FolderWrapper folderWrapper = new FolderWrapper();
+        folderWrapper.setFolders(folders);
+        xmlMapper.writeValue(response.getWriter(), folderWrapper);
     }
 
     private void setSummary(HttpServletRequest request, HttpServletResponse response, UserAccount user, FolderDao folderDao) throws IOException {

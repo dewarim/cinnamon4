@@ -1,6 +1,8 @@
 package com.dewarim.cinnamon.model.request;
 
 
+import java.util.Optional;
+
 /**
  * Request for a single folder and its ancestors.
  */
@@ -36,7 +38,15 @@ public class SingleFolderRequest {
     /**
      * @return true if list of ids is non-empty and contains only positive long integers.
      */
-    public boolean validated() {
+    private boolean validated() {
         return id != null && id > 0;
+    }
+
+    public Optional<SingleFolderRequest> validateRequest() {
+        if (validated()) {
+            return Optional.of(this);
+        } else {
+            return Optional.empty();
+        }
     }
 }

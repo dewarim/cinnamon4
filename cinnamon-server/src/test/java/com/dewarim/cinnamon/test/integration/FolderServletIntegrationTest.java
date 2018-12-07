@@ -428,7 +428,35 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
                 25L, 27L, "new-name-for-happy-folder",1L,2L,13L
         );
         HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__UPDATE_FOLDER, request);
+        parseGenericResponse(response);
     }
+
+    @Test
+    public void getSubFoldersInvalidRequest() throws IOException {
+        SingleFolderRequest request = new SingleFolderRequest();
+        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__GET_SUBFOLDERS, request);
+        assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
+    }
+
+    @Test
+    public void getSubFoldersFolderNotFound() throws IOException {
+        SingleFolderRequest request = new SingleFolderRequest(Long.MAX_VALUE,false);
+        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__GET_SUBFOLDERS, request);
+        assertCinnamonError(response, ErrorCode.FOLDER_NOT_FOUND);
+    }
+
+    @Test
+    public void getSubFoldersHappyPath() throws IOException {
+        // fetch sub folders in home folder #2
+        SingleFolderRequest request = new SingleFolderRequest(2L,false);
+        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__GET_SUBFOLDERS, request);
+        List<Folder>        folders = unwrapFolders(response, 3);
+        assertTrue(folders.stream().map(Folder::getName).anyMatch(n -> n.equals("archive")));
+        assertTrue(folders.stream().map(Folder::getName).anyMatch(n -> n.equals("creation")));
+        assertTrue(folders.stream().map(Folder::getName).anyMatch(n -> n.equals("deletion")));
+
+    }
+
 
     private List<Folder> unwrapFolders(HttpResponse response, Integer expectedSize) throws IOException {
         assertResponseOkay(response);
