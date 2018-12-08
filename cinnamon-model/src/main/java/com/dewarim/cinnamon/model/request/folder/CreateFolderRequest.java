@@ -76,6 +76,7 @@ public class CreateFolderRequest {
                 && parentId != null && parentId > 0
                 && (typeId == null || typeId > 0)
                 && (aclId == null || aclId > 0)
+                && (ownerId == null || ownerId > 0)
                 && summary != null
                 && summary.trim().length() > 0;
     }
