@@ -10,6 +10,10 @@ import com.dewarim.cinnamon.application.exception.FailedRequestException;
 import com.dewarim.cinnamon.dao.*;
 import com.dewarim.cinnamon.model.*;
 import com.dewarim.cinnamon.model.request.*;
+import com.dewarim.cinnamon.model.request.folder.FolderPathRequest;
+import com.dewarim.cinnamon.model.request.folder.FolderRequest;
+import com.dewarim.cinnamon.model.request.folder.SingleFolderRequest;
+import com.dewarim.cinnamon.model.request.folder.UpdateFolderRequest;
 import com.dewarim.cinnamon.model.response.FolderWrapper;
 import com.dewarim.cinnamon.model.response.GenericResponse;
 import com.dewarim.cinnamon.model.response.SummaryWrapper;
@@ -47,6 +51,9 @@ public class FolderServlet extends BaseServlet {
         FolderDao   folderDao = new FolderDao();
         try {
             switch (pathInfo) {
+                case "/createFolder":
+                    createFolder(request,response,user,folderDao);
+                    break;
                 case "/createMeta":
                     createMeta(request, response, user, folderDao);
                     break;
@@ -84,6 +91,10 @@ public class FolderServlet extends BaseServlet {
             ErrorCode errorCode = e.getErrorCode();
             ErrorResponseGenerator.generateErrorMessage(response, errorCode.getHttpResponseCode(), errorCode, e.getMessage());
         }
+    }
+
+    private void createFolder(HttpServletRequest request, HttpServletResponse response, UserAccount user, FolderDao folderDao) throws IOException {
+
     }
 
     private void getSubFolders(HttpServletRequest request, HttpServletResponse response, UserAccount user, FolderDao folderDao) throws IOException {
