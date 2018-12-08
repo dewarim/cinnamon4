@@ -20,5 +20,12 @@ public class FolderTypeDao {
         return Optional.ofNullable(folderType);
     }
 
+    public Optional<FolderType> getFolderTypeByName(String name) {
+        SqlSession   sqlSession   = ThreadLocalSqlSession.getSqlSession();
+        FolderType folderType = sqlSession.selectOne("com.dewarim.cinnamon.FolderTypeMapper.getFolderTypeByName", name);
+        return Optional.ofNullable(folderType);
+    }
+
+
 
 }

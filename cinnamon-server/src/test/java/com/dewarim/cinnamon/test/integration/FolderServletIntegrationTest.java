@@ -5,10 +5,7 @@ import com.dewarim.cinnamon.application.UrlMapping;
 import com.dewarim.cinnamon.model.Folder;
 import com.dewarim.cinnamon.model.Meta;
 import com.dewarim.cinnamon.model.request.*;
-import com.dewarim.cinnamon.model.request.folder.FolderPathRequest;
-import com.dewarim.cinnamon.model.request.folder.FolderRequest;
-import com.dewarim.cinnamon.model.request.folder.SingleFolderRequest;
-import com.dewarim.cinnamon.model.request.folder.UpdateFolderRequest;
+import com.dewarim.cinnamon.model.request.folder.*;
 import com.dewarim.cinnamon.model.response.FolderWrapper;
 import com.dewarim.cinnamon.model.response.MetaWrapper;
 import com.dewarim.cinnamon.model.response.SummaryWrapper;
@@ -383,84 +380,153 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateFolderDuplicateFolderName() throws IOException {
-        UpdateFolderRequest request  = new UpdateFolderRequest(
+        UpdateFolderRequest request = new UpdateFolderRequest(
                 25L, null, "move here", null, null, null
         );
-        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__UPDATE_FOLDER, request);
+        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__UPDATE_FOLDER, request);
         assertCinnamonError(response, ErrorCode.DUPLICATE_FOLDER_NAME_FORBIDDEN);
     }
 
     @Test
     public void updateFolderFolderTypeNotFound() throws IOException {
-        UpdateFolderRequest request  = new UpdateFolderRequest(
-                25L, null,null,null,Long.MAX_VALUE, null
+        UpdateFolderRequest request = new UpdateFolderRequest(
+                25L, null, null, null, Long.MAX_VALUE, null
         );
-        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__UPDATE_FOLDER, request);
+        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__UPDATE_FOLDER, request);
         assertCinnamonError(response, ErrorCode.FOLDER_TYPE_NOT_FOUND);
     }
 
     @Test
     public void updateFolderMissingSetAclPermission() throws IOException {
-        UpdateFolderRequest request  = new UpdateFolderRequest(
-                23L, null,null,null,null, 1L
+        UpdateFolderRequest request = new UpdateFolderRequest(
+                23L, null, null, null, null, 1L
         );
-        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__UPDATE_FOLDER, request);
+        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__UPDATE_FOLDER, request);
         assertCinnamonError(response, ErrorCode.MISSING_SET_ACL_PERMISSION);
     }
 
     @Test
     public void updateFolderAclNotFound() throws IOException {
-        UpdateFolderRequest request  = new UpdateFolderRequest(
-                24L, null,null,null,null, Long.MAX_VALUE
+        UpdateFolderRequest request = new UpdateFolderRequest(
+                24L, null, null, null, null, Long.MAX_VALUE
         );
-        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__UPDATE_FOLDER, request);
+        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__UPDATE_FOLDER, request);
         assertCinnamonError(response, ErrorCode.ACL_NOT_FOUND);
     }
 
     @Test
     public void updateFolderUserAccountNotFound() throws IOException {
-        UpdateFolderRequest request  = new UpdateFolderRequest(
-                23L, null,null,Long.MAX_VALUE,null, null
+        UpdateFolderRequest request = new UpdateFolderRequest(
+                23L, null, null, Long.MAX_VALUE, null, null
         );
-        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__UPDATE_FOLDER, request);
+        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__UPDATE_FOLDER, request);
         assertCinnamonError(response, ErrorCode.USER_ACCOUNT_NOT_FOUND);
     }
 
     @Test
     public void updateFolderHappyPath() throws IOException {
-        UpdateFolderRequest request  = new UpdateFolderRequest(
-                25L, 27L, "new-name-for-happy-folder",1L,2L,13L
+        UpdateFolderRequest request = new UpdateFolderRequest(
+                25L, 27L, "new-name-for-happy-folder", 1L, 2L, 13L
         );
-        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__UPDATE_FOLDER, request);
+        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__UPDATE_FOLDER, request);
         parseGenericResponse(response);
     }
 
     @Test
     public void getSubFoldersInvalidRequest() throws IOException {
-        SingleFolderRequest request = new SingleFolderRequest();
-        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__GET_SUBFOLDERS, request);
+        SingleFolderRequest request  = new SingleFolderRequest();
+        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__GET_SUBFOLDERS, request);
         assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
     }
 
     @Test
     public void getSubFoldersFolderNotFound() throws IOException {
-        SingleFolderRequest request = new SingleFolderRequest(Long.MAX_VALUE,false);
-        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__GET_SUBFOLDERS, request);
+        SingleFolderRequest request  = new SingleFolderRequest(Long.MAX_VALUE, false);
+        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__GET_SUBFOLDERS, request);
         assertCinnamonError(response, ErrorCode.FOLDER_NOT_FOUND);
     }
 
     @Test
     public void getSubFoldersHappyPath() throws IOException {
         // fetch sub folders in home folder #2
-        SingleFolderRequest request = new SingleFolderRequest(2L,false);
-        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__GET_SUBFOLDERS, request);
-        List<Folder>        folders = unwrapFolders(response, 3);
+        SingleFolderRequest request  = new SingleFolderRequest(2L, false);
+        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__GET_SUBFOLDERS, request);
+        List<Folder>        folders  = unwrapFolders(response, 3);
         assertTrue(folders.stream().map(Folder::getName).anyMatch(n -> n.equals("archive")));
         assertTrue(folders.stream().map(Folder::getName).anyMatch(n -> n.equals("creation")));
         assertTrue(folders.stream().map(Folder::getName).anyMatch(n -> n.equals("deletion")));
 
     }
 
+    @Test
+    public void createFolderInvalidRequest() throws IOException {
+        CreateFolderRequest request  = new CreateFolderRequest();
+        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__CREATE_FOLDER, request);
+        assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
+    }
+
+    @Test
+    public void createFolderNoParentFolder() throws IOException {
+        CreateFolderRequest request  = new CreateFolderRequest("foo", Long.MAX_VALUE, "<sum/>", null, null, null);
+        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__CREATE_FOLDER, request);
+        assertCinnamonError(response, ErrorCode.PARENT_FOLDER_NOT_FOUND);
+    }
+
+    @Test
+    public void createFolderWithoutPermission() throws IOException {
+        // trying to create a folder in root folder#1
+        CreateFolderRequest request  = new CreateFolderRequest("foo", 1L, "<sum/>", null, null, null);
+        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__CREATE_FOLDER, request);
+        assertCinnamonError(response, ErrorCode.NO_CREATE_PERMISSION);
+    }
+
+    @Test
+    public void createFolderDuplicateName() throws IOException {
+        CreateFolderRequest request  = new CreateFolderRequest("duplicate name", 6L, "<sum/>", null, null, null);
+        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__CREATE_FOLDER, request);
+        assertCinnamonError(response, ErrorCode.DUPLICATE_FOLDER_NAME_FORBIDDEN);
+    }
+
+    @Test
+    public void createFolderWithTypeNotFound() throws IOException {
+        CreateFolderRequest request  = new CreateFolderRequest("untyped folder", 6L, "<sum/>", null, null, Long.MAX_VALUE);
+        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__CREATE_FOLDER, request);
+        assertCinnamonError(response, ErrorCode.FOLDER_TYPE_NOT_FOUND);
+    }
+
+    @Test
+    public void createFolderWithoutValidUserAccount() throws IOException {
+        CreateFolderRequest request  = new CreateFolderRequest("folder without owner", 6L, "<sum/>", Long.MAX_VALUE, null, null);
+        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__CREATE_FOLDER, request);
+        assertCinnamonError(response, ErrorCode.USER_ACCOUNT_NOT_FOUND);
+    }
+
+    @Test
+    public void createFolderWithoutValidAcl() throws IOException {
+        CreateFolderRequest request  = new CreateFolderRequest("folder without acl", 6L, "<sum/>", null, Long.MAX_VALUE, null);
+        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__CREATE_FOLDER, request);
+        assertCinnamonError(response, ErrorCode.ACL_NOT_FOUND);
+    }
+
+    @Test
+    public void createFolderHappyPathInheriting() throws IOException {
+        CreateFolderRequest request  = new CreateFolderRequest("create happy folder inherit", 6L, "<sum/>", null, null, null);
+        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__CREATE_FOLDER, request);
+        List<Folder>        folders  = unwrapFolders(response, 1);
+        Folder              folder   = folders.get(0);
+        assertEquals("create happy folder inherit", folder.getName());
+        assertThat("new folder must have id", folder.getId() > 0);
+    }
+
+    @Test
+    public void createFolderHappyPath() throws IOException {
+        CreateFolderRequest request  = new CreateFolderRequest("create happy folder", 6L, "<sum/>", 2L, 2L, 2L);
+        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__CREATE_FOLDER, request);
+        List<Folder>        folders  = unwrapFolders(response, 1);
+        Folder              folder   = folders.get(0);
+        assertEquals("create happy folder", folder.getName());
+        assertThat("new folder must have id", folder.getId() > 0);
+    }
 
     private List<Folder> unwrapFolders(HttpResponse response, Integer expectedSize) throws IOException {
         assertResponseOkay(response);

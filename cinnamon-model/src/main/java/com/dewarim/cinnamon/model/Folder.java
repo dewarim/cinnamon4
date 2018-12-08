@@ -18,6 +18,21 @@ public class Folder implements Ownable {
     private String summary;
     private Date created;
 
+    public Folder() {
+    }
+
+    public Folder(String name, Long aclId, Long ownerId, Long parentId, Long typeId, String summary) {
+        this.name = name;
+        this.aclId = aclId;
+        this.ownerId = ownerId;
+        this.parentId = parentId;
+        this.typeId = typeId;
+        this.summary = summary;
+        objVersion = 0L;
+        metadataChanged = false;
+        created = new Date();
+    }
+
     public Long getId() {
         return id;
     }

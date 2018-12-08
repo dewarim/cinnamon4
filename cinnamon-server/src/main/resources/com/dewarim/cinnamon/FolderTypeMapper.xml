@@ -14,11 +14,17 @@
         SELECT *
         FROM folder_types
     </select>
-    
+
     <select id="getFolderTypeById" parameterType="Long" resultMap="folderTypeMap">
         SELECT *
         FROM folder_types
         WHERE id = #{id}
+    </select>
+
+    <select id="getFolderTypeByName" parameterType="String" resultMap="folderTypeMap">
+        SELECT *
+        FROM folder_types
+        WHERE name = #{name}
     </select>
 
 

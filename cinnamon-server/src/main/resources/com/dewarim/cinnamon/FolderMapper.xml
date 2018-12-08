@@ -194,4 +194,14 @@
         WHERE id = #{id}
     </update>
 
+
+    <insert id="insertFolder" parameterType="com.dewarim.cinnamon.model.Folder">
+        <selectKey keyProperty="id" resultType="long" order="BEFORE">
+            select nextval('seq_folder_id')
+        </selectKey>
+        INSERT INTO folders
+        (id, name, obj_version, acl_id, owner_id, parent_id, type_id, metadata_changed, summary, created)
+        VALUES (#{id}, #{name},0,#{aclId},#{ownerId},#{parentId},#{typeId},#{metadataChanged},#{summary},#{created})
+    </insert>
+
 </mapper>

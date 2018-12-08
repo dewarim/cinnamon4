@@ -710,6 +710,9 @@ insert into aclentry_permissions(id, aclentry_id, permission_id) values (nextval
 -- #38 move permission for reviewers on reviewer.acl
 insert into aclentry_permissions(id, aclentry_id, permission_id) values (nextval('seq_aclentry_permission_id'),5,9);
 
+-- #38 create permission for reviewers on create.acl
+insert into aclentry_permissions(id, aclentry_id, permission_id) values (nextval('seq_aclentry_permission_id'),10,3);
+
 
 -- #1 default folder type
 insert into folder_types(id,name) values(nextval('seq_folder_type_id'),'_default_folder_type');
@@ -827,6 +830,10 @@ values(nextval('seq_folder_id'),'move here',0,2,1,6,1);
 -- #28 folder in creation folder6 has no-move-permission
 insert into folders(id,name,obj_version,acl_id,owner_id,parent_id,type_id)
 values(nextval('seq_folder_id'),'unmovable move me',0,13,1,6,1);
+
+-- #29 folder in creation folder6 for duplicate name check
+insert into folders(id,name,obj_version,acl_id,owner_id,parent_id,type_id)
+values(nextval('seq_folder_id'),'duplicate name',0,2,1,6,1);
 
 
 -- #1 language de

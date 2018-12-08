@@ -20,6 +20,7 @@ public enum UrlMapping {
     CONFIG_ENTRY__SET_CONFIG_ENTRY("configEntry", "setConfigEntry", "/api"),
     CONFIG__LIST_ALL_CONFIGURATIONS("config", "listAllConfigurations", "/api"),
     FOLDER_TYPE__LIST_FOLDER_TYPES("folderType", "listFolderTypes", "/api"),
+    FOLDER__CREATE_FOLDER("folder","createFolder" ,"/api" ),
     FOLDER__CREATE_META("folder", "createMeta", "/api"),
     FOLDER__DELETE_META("folder", "deleteMeta", "/api"),
     FOLDER__GET_FOLDER("folder", "getFolder", "/api"),

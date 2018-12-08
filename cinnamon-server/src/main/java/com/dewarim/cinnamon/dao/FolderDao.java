@@ -73,6 +73,14 @@ public class FolderDao {
         return sqlSession.selectList("com.dewarim.cinnamon.FolderMapper.getDirectSubFolders", params);
     }
 
+    public Folder saveFolder(Folder folder){
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        int resultRows =  sqlSession.insert("com.dewarim.cinnamon.FolderMapper.insertFolder", folder);
+        if(resultRows != 1){
+            ErrorCode.DB_INSERT_FAILED.throwUp();
+        }
+        return folder;
+    }
 
 
     /**

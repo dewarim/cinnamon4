@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.application.servlet;
 
+import com.dewarim.cinnamon.Constants;
 import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.application.ErrorResponseGenerator;
@@ -10,10 +11,7 @@ import com.dewarim.cinnamon.application.exception.FailedRequestException;
 import com.dewarim.cinnamon.dao.*;
 import com.dewarim.cinnamon.model.*;
 import com.dewarim.cinnamon.model.request.*;
-import com.dewarim.cinnamon.model.request.folder.FolderPathRequest;
-import com.dewarim.cinnamon.model.request.folder.FolderRequest;
-import com.dewarim.cinnamon.model.request.folder.SingleFolderRequest;
-import com.dewarim.cinnamon.model.request.folder.UpdateFolderRequest;
+import com.dewarim.cinnamon.model.request.folder.*;
 import com.dewarim.cinnamon.model.response.FolderWrapper;
 import com.dewarim.cinnamon.model.response.GenericResponse;
 import com.dewarim.cinnamon.model.response.SummaryWrapper;
@@ -52,7 +50,7 @@ public class FolderServlet extends BaseServlet {
         try {
             switch (pathInfo) {
                 case "/createFolder":
-                    createFolder(request,response,user,folderDao);
+                    createFolder(request, response, user, folderDao);
                     break;
                 case "/createMeta":
                     createMeta(request, response, user, folderDao);
@@ -94,6 +92,52 @@ public class FolderServlet extends BaseServlet {
     }
 
     private void createFolder(HttpServletRequest request, HttpServletResponse response, UserAccount user, FolderDao folderDao) throws IOException {
+        CreateFolderRequest createRequest = xmlMapper.readValue(request.getInputStream(), CreateFolderRequest.class)
+                .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
+        Long parentId = createRequest.getParentId();
+        Folder parentFolder = folderDao.getFolderById(parentId)
+                .orElseThrow(ErrorCode.PARENT_FOLDER_NOT_FOUND.getException());
+
+        AccessFilter accessFilter = AccessFilter.getInstance(user);
+        if (!accessFilter.hasPermissionOnOwnable(parentFolder, DefaultPermission.CREATE_FOLDER, parentFolder)) {
+            ErrorCode.NO_CREATE_PERMISSION.throwUp();
+        }
+        String name = createRequest.getName();
+        folderDao.getFolderByParentAndName(parentFolder.getId(), name, false)
+                .ifPresent(f -> ErrorCode.DUPLICATE_FOLDER_NAME_FORBIDDEN.throwUp());
+
+        FolderTypeDao typeDao = new FolderTypeDao();
+        Long          typeId  = createRequest.getTypeId();
+        if (typeId == null) {
+            typeId = typeDao.getFolderTypeByName(Constants.FOLDER_TYPE_DEFAULT)
+                    .orElseThrow(ErrorCode.FOLDER_TYPE_NOT_FOUND.getException()).getId();
+        } else {
+            typeId = typeDao.getFolderTypeById(typeId)
+                    .orElseThrow(ErrorCode.FOLDER_TYPE_NOT_FOUND.getException()).getId();
+        }
+
+        Long ownerId = createRequest.getOwnerId();
+        if (ownerId == null) {
+            ownerId = parentFolder.getOwnerId();
+        } else {
+            ownerId = new UserAccountDao().getUserAccountById(ownerId)
+                    .orElseThrow(ErrorCode.USER_ACCOUNT_NOT_FOUND.getException()).getId();
+        }
+
+        Long aclId = createRequest.getAclId();
+        if (aclId == null) {
+            aclId = parentFolder.getAclId();
+        } else {
+            aclId = new AclDao().getAclByIdOpt(aclId)
+                    .orElseThrow(ErrorCode.ACL_NOT_FOUND.getException()).getId();
+        }
+
+        Folder folder = new Folder(name, aclId, ownerId, parentId, typeId, createRequest.getSummary());
+        Folder savedFolder = folderDao.saveFolder(folder);
+
+        FolderWrapper wrapper = new FolderWrapper(Collections.singletonList(savedFolder));
+        ResponseUtil.responseIsOkayAndXml(response);
+        xmlMapper.writeValue(response.getWriter(), wrapper);
 
     }
 
