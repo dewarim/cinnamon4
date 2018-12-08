@@ -1,4 +1,4 @@
-package com.dewarim.cinnamon.model.request;
+package com.dewarim.cinnamon.model.request.osd;
 
 public class SetContentRequest {
 
