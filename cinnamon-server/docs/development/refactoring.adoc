@@ -1,4 +1,5 @@
 # Design and Refactoring Notes
+:icons: font
 
 ## LifecycleStateConfig
 

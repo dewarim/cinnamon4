@@ -49,6 +49,7 @@ public enum UrlMapping {
     METASET_TYPE__LIST_METASET_TYPES("metasetType", "listMetasetTypes", "/api"),
     OBJECT_TYPE__LIST_OBJECT_TYPES("objectType", "listObjectTypes", "/api"),
     OSD__CREATE_META("osd", "createMeta", "/api"),
+    OSD__CREATE_OSD("osd","createOsd" ,"/api" ),
     OSD__DELEET_META("osd", "deleteMeta", "/api"),
     OSD__GET_META("osd", "getMeta", "/api"),
     OSD__GET_OBJECTS_BY_FOLDER_ID("osd", "getObjectsByFolderId", "/api"),

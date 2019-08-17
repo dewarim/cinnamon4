@@ -15,5 +15,11 @@
         FROM objtypes
     </select>
 
+    <select id="getObjectTypeById" parameterType="long" resultMap="objectTypeMap">
+        SELECT *
+        FROM objtypes
+        WHERE id = #{id}
+    </select>
+
 
 </mapper>

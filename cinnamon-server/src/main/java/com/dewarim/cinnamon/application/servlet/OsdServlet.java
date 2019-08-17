@@ -6,18 +6,21 @@ import com.dewarim.cinnamon.api.content.ContentProvider;
 import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.application.ErrorResponseGenerator;
 import com.dewarim.cinnamon.application.ResponseUtil;
-import com.dewarim.cinnamon.application.exception.CinnamonException;
+import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.application.exception.FailedRequestException;
 import com.dewarim.cinnamon.dao.*;
 import com.dewarim.cinnamon.model.*;
 import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.request.*;
+import com.dewarim.cinnamon.model.request.osd.CreateOsdRequest;
+import com.dewarim.cinnamon.model.request.osd.OsdByFolderRequest;
+import com.dewarim.cinnamon.model.request.osd.OsdRequest;
+import com.dewarim.cinnamon.model.request.osd.SetContentRequest;
 import com.dewarim.cinnamon.model.response.GenericResponse;
+import com.dewarim.cinnamon.model.response.OsdWrapper;
 import com.dewarim.cinnamon.model.response.SummaryWrapper;
 import com.dewarim.cinnamon.provider.ContentProviderService;
 import com.dewarim.cinnamon.security.authorization.AuthorizationService;
-import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
-import com.dewarim.cinnamon.model.response.OsdWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import org.apache.logging.log4j.LogManager;
@@ -61,6 +64,9 @@ public class OsdServlet extends BaseServlet {
         OsdDao      osdDao = new OsdDao();
         try {
             switch (pathInfo) {
+                case "/createOsd":
+                    createOsd(request, response, user, osdDao);
+                    break;
                 case "/createMeta":
                     createMeta(request, response, user, osdDao);
                     break;
@@ -101,6 +107,93 @@ public class OsdServlet extends BaseServlet {
             ErrorCode errorCode = e.getErrorCode();
             ErrorResponseGenerator.generateErrorMessage(response, errorCode.getHttpResponseCode(), errorCode, e.getMessage());
         }
+    }
+
+    private void createOsd(HttpServletRequest request, HttpServletResponse response, UserAccount user, OsdDao osdDao) throws IOException, ServletException {
+        String contentType = Optional.ofNullable(request.getContentType())
+                .orElseThrow(ErrorCode.NO_CONTENT_TYPE_IN_HEADER.getException());
+        if (!contentType.toLowerCase().startsWith(MULTIPART)) {
+            ErrorCode.NOT_MULTIPART_UPLOAD.throwUp();
+        }
+
+        Part contentRequest = request.getPart("createOsdRequest");
+        if (contentRequest == null) {
+            ErrorCode.MISSING_REQUEST_PAYLOAD.throwUp();
+        }
+
+        CreateOsdRequest createRequest = xmlMapper.readValue(contentRequest.getInputStream(), CreateOsdRequest.class)
+                .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
+
+        // check parent folder exists
+        Folder parentFolder = new FolderDao().getFolderById(createRequest.getParentId())
+                .orElseThrow(ErrorCode.PARENT_FOLDER_NOT_FOUND.getException());
+
+        // check acl of parent folder
+        boolean createAllowed = new AuthorizationService().userHasPermission(parentFolder.getAclId(), DefaultPermission.CREATE_OBJECT.getName(), user);
+        if (!createAllowed) {
+            ErrorCode.NO_CREATE_PERMISSION.throwUp();
+        }
+
+        ObjectSystemData osd = new ObjectSystemData();
+        osd.setParentId(parentFolder.getId());
+
+        // check acl exists
+        Long aclId = new AclDao().getAclByIdOpt(createRequest.getAclId()).orElseThrow(ErrorCode.ACL_NOT_FOUND.getException())
+                .getId();
+        osd.setAclId(aclId);
+
+        // check owner exists
+        Long ownerId = new UserAccountDao().getUserAccountById(createRequest.getOwnerId())
+                .orElseThrow(ErrorCode.USER_ACCOUNT_NOT_FOUND.getException()).getId();
+        osd.setOwnerId(ownerId);
+
+        // check type exists
+        Long typeId = new ObjectTypeDao().getObjectTypeById(createRequest.getTypeId())
+                .orElseThrow(ErrorCode.OBJECT_TYPE_NOT_FOUND.getException()).getId();
+        osd.setTypeId(typeId);
+
+        // check lifecycleState (if necessary)
+        if (createRequest.getLifecycleStateId() != null) {
+            Long lifecycleStateId = new LifecycleStateDao().getLifecycleStateById(createRequest.getLifecycleStateId())
+                              .orElseThrow(ErrorCode.LIFECYCLE_STATE_NOT_FOUND.getException()).getId();
+            osd.setLifecycleStateId(lifecycleStateId);
+        }
+
+        // check language if given
+        if(createRequest.getLanguageId() != null){
+            Long languageId = new LanguageDao().getLanguageById(createRequest.getLanguageId())
+                 .orElseThrow(ErrorCode.LANGUAGE_NOT_FOUND.getException()).getId();
+            osd.setLanguageId(languageId);
+        }
+
+        osd.setCreatorId(user.getId());
+        osd.setModifierId(user.getId());
+        osd.setSummary(createRequest.getSummary());
+
+        Part file = request.getPart("file");
+        if (file != null) {
+            FormatDao formatDao = new FormatDao();
+            Format format = formatDao.getFormatById(createRequest.getFormatId())
+                    .orElseThrow(ErrorCode.FORMAT_NOT_FOUND.getException());
+
+            // store file in tmp dir:
+            Path tempFile       = Files.createTempFile("cinnamon-upload-", ".data");
+            File tempOutputFile = tempFile.toFile();
+            long bytesWritten   = Files.copy(file.getInputStream(), tempFile, REPLACE_EXISTING);
+
+            // get content provider and store data:
+            ContentProvider contentProvider = ContentProviderService.getInstance().getContentProvider(osd.getContentProvider());
+            ContentMetadata metadata        = contentProvider.writeContentStream(osd, new FileInputStream(tempOutputFile));
+            osd.setContentHash(metadata.getContentHash());
+            osd.setContentPath(metadata.getContentPath());
+            osd.setContentSize(metadata.getContentSize());
+            osd.setFormatId(format.getId());
+
+        }
+        osdDao.updateOsd(osd);
+        GenericResponse genericResponse = new GenericResponse(true);
+        ResponseUtil.responseIsOkayAndXml(response);
+        xmlMapper.writeValue(response.getOutputStream(), genericResponse);
     }
 
     private void deleteMeta(HttpServletRequest request, HttpServletResponse response, UserAccount user, OsdDao osdDao) throws IOException {
@@ -288,40 +381,30 @@ public class OsdServlet extends BaseServlet {
     }
 
     private void setContent(HttpServletRequest request, HttpServletResponse response, UserAccount user, OsdDao osdDao) throws ServletException, IOException {
-        String contentType = request.getContentType();
-        if (contentType == null || !contentType.toLowerCase().startsWith(MULTIPART)) {
-            ErrorResponseGenerator.generateErrorMessage(response, SC_BAD_REQUEST, ErrorCode.NOT_MULTIPART_UPLOAD);
-            return;
+        String contentType = Optional.ofNullable(request.getContentType())
+                .orElseThrow(ErrorCode.NO_CONTENT_TYPE_IN_HEADER.getException());
+        if (!contentType.toLowerCase().startsWith(MULTIPART)) {
+            ErrorCode.NOT_MULTIPART_UPLOAD.throwUp();
         }
         Part contentRequest = request.getPart("setContentRequest");
         if (contentRequest == null) {
-            ErrorResponseGenerator.generateErrorMessage(response, SC_BAD_REQUEST, ErrorCode.INVALID_REQUEST);
-            return;
+            ErrorCode.INVALID_REQUEST.throwUp();
         }
         Part file = request.getPart("file");
         if (file == null) {
-            ErrorResponseGenerator.generateErrorMessage(response, SC_BAD_REQUEST, ErrorCode.MISSING_FILE_PARAMETER);
-            return;
+            ErrorCode.MISSING_FILE_PARAMETER.throwUp();
         }
         SetContentRequest setContentRequest = xmlMapper.readValue(contentRequest.getInputStream(), SetContentRequest.class);
         if (setContentRequest.validated()) {
-            Optional<ObjectSystemData> osdOpt = osdDao.getObjectById(setContentRequest.getId());
-            if (!osdOpt.isPresent()) {
-                ErrorResponseGenerator.generateErrorMessage(response, SC_NOT_FOUND, ErrorCode.OBJECT_NOT_FOUND);
-                return;
-            }
-            ObjectSystemData osd          = osdOpt.get();
+            ObjectSystemData osd          = osdDao.getObjectById(setContentRequest.getId()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
             boolean          writeAllowed = new AuthorizationService().hasUserOrOwnerPermission(osd, DefaultPermission.WRITE_OBJECT_CONTENT, user);
             if (!writeAllowed) {
                 ErrorResponseGenerator.generateErrorMessage(response, SC_FORBIDDEN, ErrorCode.NO_WRITE_PERMISSION);
                 return;
             }
-            FormatDao        formatDao = new FormatDao();
-            Optional<Format> formatOpt = formatDao.getFormatById(setContentRequest.getFormatId());
-            if (!formatOpt.isPresent()) {
-                generateErrorMessage(response, SC_NOT_FOUND, ErrorCode.FORMAT_NOT_FOUND);
-                return;
-            }
+            FormatDao formatDao = new FormatDao();
+            Format    format    = formatDao.getFormatById(setContentRequest.getFormatId()).orElseThrow(ErrorCode.FORMAT_NOT_FOUND.getException());
+
             // store file in tmp dir:
             Path tempFile       = Files.createTempFile("cinnamon-upload-", ".data");
             File tempOutputFile = tempFile.toFile();
@@ -333,7 +416,7 @@ public class OsdServlet extends BaseServlet {
             osd.setContentHash(metadata.getContentHash());
             osd.setContentPath(metadata.getContentPath());
             osd.setContentSize(metadata.getContentSize());
-            osd.setFormatId(formatOpt.get().getId());
+            osd.setFormatId(format.getId());
             osdDao.updateOsd(osd);
             GenericResponse genericResponse = new GenericResponse(true);
             ResponseUtil.responseIsOkayAndXml(response);

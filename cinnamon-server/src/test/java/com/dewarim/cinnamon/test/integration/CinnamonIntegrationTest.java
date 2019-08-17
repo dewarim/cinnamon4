@@ -169,6 +169,11 @@ public class CinnamonIntegrationTest {
                 .execute().returnResponse();
     }
 
+    protected Request createStandardRequestHeader(UrlMapping urlMapping) throws IOException {
+        return Request.Post("http://localhost:" + cinnamonTestPort + urlMapping.getPath())
+                .addHeader("ticket", getDoesTicket(false));
+    }
+
     protected HttpResponse sendAdminRequest(UrlMapping urlMapping) throws IOException {
         return Request.Post("http://localhost:" + cinnamonTestPort + urlMapping.getPath())
                 .addHeader("ticket", ticket)
