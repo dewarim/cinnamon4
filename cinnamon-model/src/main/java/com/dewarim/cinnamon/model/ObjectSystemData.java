@@ -16,8 +16,6 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject {
     
     private Long id;
     private String name;
-    private String applicationName = "";
-    
     private String contentPath;
     private Long contentSize;
     private Long predecessorId;
@@ -60,14 +58,6 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public String getApplicationName() {
-        return applicationName;
-    }
-
-    public void setApplicationName(String applicationName) {
-        this.applicationName = applicationName;
     }
 
     public String getContentPath() {
@@ -281,7 +271,6 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject {
         return latestHead == that.latestHead &&
                 latestBranch == that.latestBranch &&
                 Objects.equals(name, that.name) &&
-                Objects.equals(applicationName, that.applicationName) &&
                 Objects.equals(contentSize, that.contentSize) &&
                 Objects.equals(predecessorId, that.predecessorId) &&
                 Objects.equals(rootId, that.rootId) &&
