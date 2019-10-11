@@ -42,6 +42,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import static com.dewarim.cinnamon.Constants.LANGUAGE_UNDETERMINED_ISO_CODE;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static javax.servlet.http.HttpServletResponse.*;
 
@@ -136,6 +137,7 @@ public class OsdServlet extends BaseServlet {
 
         ObjectSystemData osd = new ObjectSystemData();
         osd.setParentId(parentFolder.getId());
+        osd.setName(createRequest.getName());
 
         // check acl exists
         Long aclId = new AclDao().getAclByIdOpt(createRequest.getAclId()).orElseThrow(ErrorCode.ACL_NOT_FOUND.getException())
@@ -155,45 +157,35 @@ public class OsdServlet extends BaseServlet {
         // check lifecycleState (if necessary)
         if (createRequest.getLifecycleStateId() != null) {
             Long lifecycleStateId = new LifecycleStateDao().getLifecycleStateById(createRequest.getLifecycleStateId())
-                              .orElseThrow(ErrorCode.LIFECYCLE_STATE_NOT_FOUND.getException()).getId();
+                    .orElseThrow(ErrorCode.LIFECYCLE_STATE_NOT_FOUND.getException()).getId();
             osd.setLifecycleStateId(lifecycleStateId);
         }
 
         // check language if given
-        if(createRequest.getLanguageId() != null){
-            Long languageId = new LanguageDao().getLanguageById(createRequest.getLanguageId())
-                 .orElseThrow(ErrorCode.LANGUAGE_NOT_FOUND.getException()).getId();
-            osd.setLanguageId(languageId);
+        final Long languageId;
+        if (createRequest.getLanguageId() != null) {
+            languageId = new LanguageDao().getLanguageById(createRequest.getLanguageId())
+                    .orElseThrow(ErrorCode.LANGUAGE_NOT_FOUND.getException()).getId();
+        } else {
+            languageId = new LanguageDao().getLanguageByIsoCode(LANGUAGE_UNDETERMINED_ISO_CODE)
+                    .orElseThrow(ErrorCode.DB_IS_MISSING_LANGUAGE_CODE.getException()).getId();
         }
+        osd.setLanguageId(languageId);
 
         osd.setCreatorId(user.getId());
         osd.setModifierId(user.getId());
         osd.setSummary(createRequest.getSummary());
 
+        osd = osdDao.saveOsd(osd);
+
         Part file = request.getPart("file");
         if (file != null) {
-            FormatDao formatDao = new FormatDao();
-            Format format = formatDao.getFormatById(createRequest.getFormatId())
-                    .orElseThrow(ErrorCode.FORMAT_NOT_FOUND.getException());
-
-            // store file in tmp dir:
-            Path tempFile       = Files.createTempFile("cinnamon-upload-", ".data");
-            File tempOutputFile = tempFile.toFile();
-            long bytesWritten   = Files.copy(file.getInputStream(), tempFile, REPLACE_EXISTING);
-
-            // get content provider and store data:
-            ContentProvider contentProvider = ContentProviderService.getInstance().getContentProvider(osd.getContentProvider());
-            ContentMetadata metadata        = contentProvider.writeContentStream(osd, new FileInputStream(tempOutputFile));
-            osd.setContentHash(metadata.getContentHash());
-            osd.setContentPath(metadata.getContentPath());
-            osd.setContentSize(metadata.getContentSize());
-            osd.setFormatId(format.getId());
-
+            storeFileUpload(file.getInputStream(), osd, createRequest.getFormatId());
+            osdDao.updateOsd(osd, false);
         }
-        osdDao.updateOsd(osd);
-        GenericResponse genericResponse = new GenericResponse(true);
+        OsdWrapper osdWrapper = new OsdWrapper(Collections.singletonList(osd));
         ResponseUtil.responseIsOkayAndXml(response);
-        xmlMapper.writeValue(response.getOutputStream(), genericResponse);
+        xmlMapper.writeValue(response.getOutputStream(), osdWrapper);
     }
 
     private void deleteMeta(HttpServletRequest request, HttpServletResponse response, UserAccount user, OsdDao osdDao) throws IOException {
@@ -300,7 +292,7 @@ public class OsdServlet extends BaseServlet {
                 }
             }
             osd.setLockerId(user.getId());
-            osdDao.updateOsd(osd);
+            osdDao.updateOsd(osd, false);
             ResponseUtil.responseIsOkayAndXml(response);
             xmlMapper.writeValue(response.getWriter(), new GenericResponse(true));
         } else {
@@ -330,7 +322,7 @@ public class OsdServlet extends BaseServlet {
                 // superuser may remove locks from other users.
                 if (lockHolder.equals(user.getId()) || userDao.isSuperuser(user)) {
                     osd.setLockerId(null);
-                    osdDao.updateOsd(osd);
+                    osdDao.updateOsd(osd, false);
                     ResponseUtil.responseIsGenericOkay(response);
                     return;
                 } else {
@@ -402,28 +394,40 @@ public class OsdServlet extends BaseServlet {
                 ErrorResponseGenerator.generateErrorMessage(response, SC_FORBIDDEN, ErrorCode.NO_WRITE_PERMISSION);
                 return;
             }
-            FormatDao formatDao = new FormatDao();
-            Format    format    = formatDao.getFormatById(setContentRequest.getFormatId()).orElseThrow(ErrorCode.FORMAT_NOT_FOUND.getException());
-
-            // store file in tmp dir:
-            Path tempFile       = Files.createTempFile("cinnamon-upload-", ".data");
-            File tempOutputFile = tempFile.toFile();
-            long bytesWritten   = Files.copy(file.getInputStream(), tempFile, REPLACE_EXISTING);
-
-            // get content provider and store data:
-            ContentProvider contentProvider = ContentProviderService.getInstance().getContentProvider(osd.getContentProvider());
-            ContentMetadata metadata        = contentProvider.writeContentStream(osd, new FileInputStream(tempOutputFile));
-            osd.setContentHash(metadata.getContentHash());
-            osd.setContentPath(metadata.getContentPath());
-            osd.setContentSize(metadata.getContentSize());
-            osd.setFormatId(format.getId());
-            osdDao.updateOsd(osd);
+            storeFileUpload(file.getInputStream(), osd, setContentRequest.getFormatId());
+            osdDao.updateOsd(osd, true);
             GenericResponse genericResponse = new GenericResponse(true);
             ResponseUtil.responseIsOkayAndXml(response);
             xmlMapper.writeValue(response.getOutputStream(), genericResponse);
         } else {
             ErrorResponseGenerator.generateErrorMessage(response, SC_BAD_REQUEST, ErrorCode.INVALID_REQUEST, "setContentRequest parameter is invalid");
         }
+    }
+
+    private void deleteTempFile(File tempFile) {
+        boolean deleteResult = tempFile.delete();
+        if (!deleteResult) {
+            log.warn("Could not delete temporary upload file " + tempFile.getAbsolutePath());
+        }
+    }
+
+    private void storeFileUpload(InputStream inputStream, ObjectSystemData osd, Long formatId) throws IOException {
+        FormatDao formatDao = new FormatDao();
+        Format    format    = formatDao.getFormatById(formatId).orElseThrow(ErrorCode.FORMAT_NOT_FOUND.getException());
+
+        // store file in tmp dir:
+        Path tempFile       = Files.createTempFile("cinnamon-upload-", ".data");
+        File tempOutputFile = tempFile.toFile();
+        long bytesWritten   = Files.copy(inputStream, tempFile, REPLACE_EXISTING);
+
+        // get content provider and store data:
+        ContentProvider contentProvider = ContentProviderService.getInstance().getContentProvider(osd.getContentProvider());
+        ContentMetadata metadata        = contentProvider.writeContentStream(osd, new FileInputStream(tempOutputFile));
+        osd.setContentHash(metadata.getContentHash());
+        osd.setContentPath(metadata.getContentPath());
+        osd.setContentSize(metadata.getContentSize());
+        osd.setFormatId(format.getId());
+        deleteTempFile(tempOutputFile);
     }
 
     private void setSummary(HttpServletRequest request, HttpServletResponse response, UserAccount user, OsdDao osdDao) throws IOException {
@@ -433,7 +437,7 @@ public class OsdServlet extends BaseServlet {
             ObjectSystemData osd = osdOpt.get();
             if (authorizationService.hasUserOrOwnerPermission(osd, DefaultPermission.WRITE_OBJECT_SYS_METADATA.getName(), user)) {
                 osd.setSummary(summaryRequest.getSummary());
-                osdDao.updateOsd(osd);
+                osdDao.updateOsd(osd, true);
                 ResponseUtil.responseIsOkayAndXml(response);
                 xmlMapper.writeValue(response.getWriter(), new GenericResponse(true));
                 return;

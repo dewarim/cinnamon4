@@ -210,7 +210,6 @@ create table objects
   id bigint not null
     constraint objects_pkey
     primary key,
-  appname varchar(255),
   content_path varchar(255),
   content_size bigint,
   created timestamp not null,

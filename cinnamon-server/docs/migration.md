@@ -125,3 +125,5 @@
     drop table folder_metasets;
     drop table metasets;         
     
+    -- remove objects.appname column:
+    alter table objects drop column appname;

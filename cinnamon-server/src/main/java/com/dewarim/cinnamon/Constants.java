@@ -13,6 +13,7 @@ public class Constants {
 
     public static final String CONTENT_TYPE_XML = "application/xml";
 
+    public static final String LANGUAGE_UNDETERMINED_ISO_CODE = "und";
 
     // Group and ACL related constants:
     public static final String ACL_DEFAULT      = "_default_acl";

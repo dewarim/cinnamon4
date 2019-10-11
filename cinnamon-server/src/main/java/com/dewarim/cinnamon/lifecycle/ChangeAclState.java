@@ -1,24 +1,21 @@
 package com.dewarim.cinnamon.lifecycle;
 
 import com.dewarim.cinnamon.api.CinnamonObject;
+import com.dewarim.cinnamon.api.lifecycle.LifecycleStateConfig;
 import com.dewarim.cinnamon.api.lifecycle.State;
 import com.dewarim.cinnamon.api.lifecycle.StateChangeResult;
-import com.dewarim.cinnamon.api.lifecycle.StateProvider;
 import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.dao.AclDao;
 import com.dewarim.cinnamon.dao.OsdDao;
 import com.dewarim.cinnamon.model.Acl;
-import com.dewarim.cinnamon.api.lifecycle.LifecycleStateConfig;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.provider.StateProviderService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class ChangeAclState implements State {
 
@@ -45,7 +42,7 @@ public class ChangeAclState implements State {
         log.debug("Setting acl from " + osd.getAclId() + " to " + acl.getId());
         OsdDao osdDao = new OsdDao();
         osd.setAclId(acl.getId());
-        osdDao.updateOsd((ObjectSystemData) osd);
+        osdDao.updateOsd((ObjectSystemData) osd, false);
         return new StateChangeResult(true);
     }
 

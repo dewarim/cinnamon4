@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.dao;
 
+import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import org.apache.ibatis.session.SqlSession;
@@ -55,10 +56,23 @@ public class OsdDao {
         return Optional.of(objectsById.get(0));
     }
     
-    public void updateOsd(ObjectSystemData osd){
+    public void updateOsd(ObjectSystemData osd, boolean updateModifier){
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        osd.setModified(new Date());
-        osd.setModifierId(ThreadLocalSqlSession.getCurrentUser().getId());
+        if(updateModifier) {
+            // TODO: do not update modifier if user is exempt from change tracking
+            osd.setModified(new Date());
+            osd.setModifierId(ThreadLocalSqlSession.getCurrentUser().getId());
+        }
         sqlSession.update("com.dewarim.cinnamon.ObjectSystemDataMapper.updateOsd", osd);
+    }
+
+
+    public ObjectSystemData saveOsd(ObjectSystemData osd){
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        int resultRows =  sqlSession.insert("com.dewarim.cinnamon.ObjectSystemDataMapper.insertOsd", osd);
+        if(resultRows != 1){
+            ErrorCode.DB_INSERT_FAILED.throwUp();
+        }
+        return osd;
     }
 }

@@ -7,7 +7,6 @@
 
     <resultMap id="osdMap" type="com.dewarim.cinnamon.model.ObjectSystemData">
         <id property="id" column="id"/>
-        <result property="applicationName" column="appname"/>
         <result property="contentHash" column="content_hash"/>
         <result property="contentPath" column="content_path"/>
         <result property="contentSize" column="content_size"/>
@@ -38,7 +37,6 @@
     <select id="getOsdsById" parameterType="map" resultMap="osdMap">
         SELECT
         id,
-        appname,
         content_hash,
         content_path,
         content_size,
@@ -74,36 +72,35 @@
     </select>
 
     <select id="getOsdsByFolderId" parameterType="map" resultMap="osdMap">
-        SELECT
-            id,
-            appname,
-            content_hash,
-            content_path,
-            content_size,
-            created,
-            latest_branch,
-            latest_head,
-            modified,
-            name,
-            version,
-            cmn_version,
-            acl_id,
-            creator_id,
-            format_id,
-            language_id,
-            locker_id,
-            modifier_id,
-            owner_id,
-            parent_id,
-            predecessor_id,
-            root_id,
-            type_id,
-            state_id,
-            content_changed,
-            metadata_changed,
-            CASE WHEN #{includeSummary}
-                THEN summary
-            ELSE null END AS summary
+        SELECT id,
+               content_hash,
+               content_path,
+               content_size,
+               created,
+               latest_branch,
+               latest_head,
+               modified,
+               name,
+               version,
+               cmn_version,
+               acl_id,
+               creator_id,
+               format_id,
+               language_id,
+               locker_id,
+               modifier_id,
+               owner_id,
+               parent_id,
+               predecessor_id,
+               root_id,
+               type_id,
+               state_id,
+               content_changed,
+               metadata_changed,
+               CASE
+                   WHEN #{includeSummary}
+                       THEN summary
+                   ELSE null END AS summary
 
         FROM objects
         WHERE parent_id = #{folderId}
@@ -112,15 +109,14 @@
     <select id="com.dewarim.cinnamon.ObjectSystemDataMapper.getLatestHead" parameterType="long" resultMap="osdMap">
         select *
         from objects
-        where root_id = #{id} and latest_head = true
+        where root_id = #{id}
+          and latest_head = true
     </select>
 
     <!-- TODO: perhaps implement safe version (checking for osd.version=version) -->
     <update id="updateOsd">
         UPDATE objects
-        SET
-            appname          = #{applicationName},
-            content_hash     = #{contentHash},
+        SET content_hash     = #{contentHash},
             content_size     = #{contentSize},
             content_path     = #{contentPath},
             created          = #{created},
@@ -147,5 +143,25 @@
             summary          = #{summary}
         WHERE id = #{id}
     </update>
+
+    <insert id="insertOsd" parameterType="com.dewarim.cinnamon.model.ObjectSystemData">
+        <selectKey keyProperty="id" resultType="long" order="BEFORE">
+            select nextval('seq_objects_id')
+        </selectKey>
+        INSERT INTO objects
+        (id,name,version,content_hash,content_size,content_path,
+        created, latest_branch, latest_head,modified, modifier_id,
+        cmn_version, acl_id, creator_id,format_id,
+        language_id, owner_id,parent_id,
+        predecessor_id, root_id, type_id, state_id,
+        content_changed, metadata_changed, summary
+        )
+        values (#{id}, #{name}, 0, #{contentHash}, #{contentSize}, #{contentPath},
+        #{created}, #{latestBranch}, #{latestHead}, #{modified}, #{modifierId},
+        #{cmnVersion}, #{aclId}, #{creatorId}, #{formatId},
+        #{languageId}, #{ownerId}, #{parentId},
+        #{predecessorId}, #{rootId}, #{typeId}, #{lifecycleStateId},
+        #{contentChanged}, #{metadataChanged}, #{summary})
+    </insert>
 
 </mapper>

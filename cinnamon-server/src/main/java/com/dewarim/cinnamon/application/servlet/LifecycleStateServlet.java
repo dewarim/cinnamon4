@@ -1,12 +1,10 @@
 package com.dewarim.cinnamon.application.servlet;
 
-import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.api.lifecycle.State;
 import com.dewarim.cinnamon.api.lifecycle.StateChangeResult;
 import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.application.ErrorResponseGenerator;
 import com.dewarim.cinnamon.application.ResponseUtil;
-import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.application.exception.FailedRequestException;
 import com.dewarim.cinnamon.dao.LifecycleDao;
 import com.dewarim.cinnamon.dao.LifecycleStateDao;
@@ -14,18 +12,15 @@ import com.dewarim.cinnamon.dao.OsdDao;
 import com.dewarim.cinnamon.model.Lifecycle;
 import com.dewarim.cinnamon.model.LifecycleState;
 import com.dewarim.cinnamon.model.ObjectSystemData;
-import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.request.AttachLifecycleRequest;
 import com.dewarim.cinnamon.model.request.ChangeLifecycleStateRequest;
 import com.dewarim.cinnamon.model.request.IdRequest;
 import com.dewarim.cinnamon.model.response.LifecycleStateWrapper;
 import com.dewarim.cinnamon.provider.StateProviderService;
-import com.dewarim.cinnamon.security.authorization.AuthorizationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -125,7 +120,7 @@ public class LifecycleStateServlet extends BaseServlet {
         StateChangeResult stateChangeResult = newState.enter(osd, lcState.getLifecycleStateConfig());
         if (stateChangeResult.isSuccessful()) {
             osd.setLifecycleStateId(lcState.getId());
-            osdDao.updateOsd(osd);
+            osdDao.updateOsd(osd, true);
             ResponseUtil.responseIsGenericOkay(response);
         } else {
             throw new FailedRequestException(ErrorCode.LIFECYCLE_STATE_CHANGE_FAILED, stateChangeResult.getCombinedMessages());
@@ -142,7 +137,7 @@ public class LifecycleStateServlet extends BaseServlet {
         throwUnlessSysMetadataIsWritable(osd);
 
         osd.setLifecycleStateId(null);
-        osdDao.updateOsd(osd);
+        osdDao.updateOsd(osd, true);
         ResponseUtil.responseIsGenericOkay(response);
     }
 

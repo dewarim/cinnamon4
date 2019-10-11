@@ -31,7 +31,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Collections;
@@ -45,6 +44,24 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.*;
 
 public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
+
+    private static final Long CREATE_ACL_ID                     = 8L;
+    /**
+     * Non-Admin user id
+     */
+    private static final Long STANDARD_USER_ID                  = 2L;
+    private static final Long PLAINTEXT_FORMAT_ID               = 2L;
+    private static final Long DEFAULT_OBJECT_TYPE_ID            = 1L;
+    /**
+     * This folder's ACL does not permit object creation inside.
+     */
+    private static final Long NO_CREATE_FOLDER_ID               = 8L;
+    /**
+     * This folder's ACL allows object creation.
+     */
+    private static final Long CREATE_FOLDER_ID                  = 6L;
+    private static final Long NEW_RENDERTASK_LIFECYCLE_STATE_ID = 1L;
+    private static final Long GERMAN_LANGUAGE_ID                = 1L;
 
     @Test
     public void getObjectsById() throws IOException {
@@ -234,7 +251,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void setContentWithoutProperRequest() throws IOException {
-        File            pomXml          = new File("pom.xml");
+        File            pomXml          = getPomXml();
         FileBody        fileBody        = new FileBody(pomXml);
         MultipartEntity multipartEntity = new MultipartEntity();
         multipartEntity.addPart("file", fileBody);
@@ -242,10 +259,14 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
     }
 
+    private File getPomXml() {
+        return new File("pom.xml");
+    }
+
     @Test
     public void setContentWithoutFile() throws IOException {
         SetContentRequest contentRequest  = new SetContentRequest(22L, 1L);
-        StringBody        setContentBody  = new StringBody(mapper.writeValueAsString(contentRequest), APPLICATION_XML.getMimeType(), Charset.forName("UTF-8"));
+        StringBody        setContentBody  = new StringBody(mapper.writeValueAsString(contentRequest), APPLICATION_XML.getMimeType(), StandardCharsets.UTF_8);
         MultipartEntity   multipartEntity = new MultipartEntity();
         multipartEntity.addPart("setContentRequest", setContentBody);
         HttpResponse response = sendStandardMultipartRequest(UrlMapping.OSD__SET_CONTENT, multipartEntity);
@@ -415,7 +436,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         request.setVersion3CompatibilityRequired(true);
         HttpResponse metaResponse = sendStandardRequest(UrlMapping.OSD__GET_META, request);
         assertResponseOkay(metaResponse);
-        String   content = new String(metaResponse.getEntity().getContent().readAllBytes(), Charset.forName("UTF-8"));
+        String   content = new String(metaResponse.getEntity().getContent().readAllBytes(), StandardCharsets.UTF_8);
         Document metaDoc = new Builder().build(content, null);
         Nodes    nodes   = metaDoc.query("/meta/metaset[@type='comment']/p");
         Node     node    = nodes.get(0);
@@ -427,7 +448,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         MetaRequest  request      = new MetaRequest(36L, null);
         HttpResponse metaResponse = sendStandardRequest(UrlMapping.OSD__GET_META, request);
         assertResponseOkay(metaResponse);
-        String   content = new String(metaResponse.getEntity().getContent().readAllBytes(), Charset.forName("UTF-8"));
+        String   content = new String(metaResponse.getEntity().getContent().readAllBytes(), StandardCharsets.UTF_8);
         Document metaDoc = new Builder().build(content, null);
         Node     comment = metaDoc.query("//metasets/metaset[typeId/text()='1']/content").get(0);
         assertEquals("<metaset><p>Good Test</p></metaset>", comment.getValue());
@@ -440,7 +461,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         MetaRequest  request      = new MetaRequest(36L, Collections.singletonList("license"));
         HttpResponse metaResponse = sendStandardRequest(UrlMapping.OSD__GET_META, request);
         assertResponseOkay(metaResponse);
-        String   content  = new String(metaResponse.getEntity().getContent().readAllBytes(), Charset.forName("UTF-8"));
+        String   content  = new String(metaResponse.getEntity().getContent().readAllBytes(), StandardCharsets.UTF_8);
         Document metaDoc  = new Builder().build(content, null);
         Nodes    metasets = metaDoc.query("//metasets/metaset");
         assertEquals(1, metasets.size());
@@ -580,7 +601,6 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     // TODO: create tests from PARENT_FOLDER_NOT_FOUND onwards
-
     @Test
     public void createOsdInvalidRequest() throws IOException {
         CreateOsdRequest request = new CreateOsdRequest();
@@ -591,6 +611,188 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
     }
 
+    @Test
+    public void createOsdParentFolderNotFound() throws IOException {
+        CreateOsdRequest request = new CreateOsdRequest();
+        request.setAclId(CREATE_ACL_ID);
+        request.setName("new osd");
+        request.setOwnerId(STANDARD_USER_ID);
+        request.setParentId(Long.MAX_VALUE);
+        request.setFormatId(PLAINTEXT_FORMAT_ID);
+        request.setTypeId(DEFAULT_OBJECT_TYPE_ID);
+        MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
+                .addTextBody("createOsdRequest", mapper.writeValueAsString(request),
+                        APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
+        HttpResponse response = sendStandardMultipartRequest(UrlMapping.OSD__CREATE_OSD, entityBuilder.build());
+        assertCinnamonError(response, ErrorCode.PARENT_FOLDER_NOT_FOUND);
+    }
+
+    @Test
+    public void createOsdNoCreatePermission() throws IOException {
+        CreateOsdRequest request = new CreateOsdRequest();
+        request.setAclId(CREATE_ACL_ID);
+        request.setName("new osd");
+        request.setOwnerId(STANDARD_USER_ID);
+        request.setParentId(NO_CREATE_FOLDER_ID);
+        request.setFormatId(PLAINTEXT_FORMAT_ID);
+        request.setTypeId(DEFAULT_OBJECT_TYPE_ID);
+        MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
+                .addTextBody("createOsdRequest", mapper.writeValueAsString(request),
+                        APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
+        HttpResponse response = sendStandardMultipartRequest(UrlMapping.OSD__CREATE_OSD, entityBuilder.build());
+        assertCinnamonError(response, ErrorCode.NO_CREATE_PERMISSION);
+    }
+
+    @Test
+    public void createOsdAclNotFound() throws IOException {
+        CreateOsdRequest request = new CreateOsdRequest();
+        request.setAclId(Long.MAX_VALUE);
+        request.setName("new osd");
+        request.setOwnerId(STANDARD_USER_ID);
+        request.setParentId(CREATE_FOLDER_ID);
+        request.setFormatId(PLAINTEXT_FORMAT_ID);
+        request.setTypeId(DEFAULT_OBJECT_TYPE_ID);
+        MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
+                .addTextBody("createOsdRequest", mapper.writeValueAsString(request),
+                        APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
+        HttpResponse response = sendStandardMultipartRequest(UrlMapping.OSD__CREATE_OSD, entityBuilder.build());
+        assertCinnamonError(response, ErrorCode.ACL_NOT_FOUND);
+    }
+
+    @Test
+    public void createOsdUserNotFound() throws IOException {
+        CreateOsdRequest request = new CreateOsdRequest();
+        request.setAclId(CREATE_ACL_ID);
+        request.setName("new osd");
+        request.setOwnerId(Long.MAX_VALUE);
+        request.setParentId(CREATE_FOLDER_ID);
+        request.setFormatId(PLAINTEXT_FORMAT_ID);
+        request.setTypeId(DEFAULT_OBJECT_TYPE_ID);
+        MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
+                .addTextBody("createOsdRequest", mapper.writeValueAsString(request),
+                        APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
+        HttpResponse response = sendStandardMultipartRequest(UrlMapping.OSD__CREATE_OSD, entityBuilder.build());
+        assertCinnamonError(response, ErrorCode.USER_ACCOUNT_NOT_FOUND);
+    }
+
+    @Test
+    public void createOsdObjectTypeNotFound() throws IOException {
+        CreateOsdRequest request = new CreateOsdRequest();
+        request.setAclId(CREATE_ACL_ID);
+        request.setName("new osd");
+        request.setOwnerId(STANDARD_USER_ID);
+        request.setParentId(CREATE_FOLDER_ID);
+        request.setFormatId(PLAINTEXT_FORMAT_ID);
+        request.setTypeId(Long.MAX_VALUE);
+        MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
+                .addTextBody("createOsdRequest", mapper.writeValueAsString(request),
+                        APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
+        HttpResponse response = sendStandardMultipartRequest(UrlMapping.OSD__CREATE_OSD, entityBuilder.build());
+        assertCinnamonError(response, ErrorCode.OBJECT_TYPE_NOT_FOUND);
+    }
+
+    @Test
+    public void createOsdLifecycleStateNotFound() throws IOException {
+        CreateOsdRequest request = new CreateOsdRequest();
+        request.setAclId(CREATE_ACL_ID);
+        request.setName("new osd");
+        request.setOwnerId(STANDARD_USER_ID);
+        request.setParentId(CREATE_FOLDER_ID);
+        request.setFormatId(PLAINTEXT_FORMAT_ID);
+        request.setTypeId(DEFAULT_OBJECT_TYPE_ID);
+        request.setLifecycleStateId(Long.MAX_VALUE);
+        MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
+                .addTextBody("createOsdRequest", mapper.writeValueAsString(request),
+                        APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
+        HttpResponse response = sendStandardMultipartRequest(UrlMapping.OSD__CREATE_OSD, entityBuilder.build());
+        assertCinnamonError(response, ErrorCode.LIFECYCLE_STATE_NOT_FOUND);
+    }
+
+    @Test
+    public void createOsdLanguageNotFound() throws IOException {
+        CreateOsdRequest request = new CreateOsdRequest();
+        request.setAclId(CREATE_ACL_ID);
+        request.setName("new osd");
+        request.setOwnerId(STANDARD_USER_ID);
+        request.setParentId(CREATE_FOLDER_ID);
+        request.setFormatId(PLAINTEXT_FORMAT_ID);
+        request.setTypeId(DEFAULT_OBJECT_TYPE_ID);
+        request.setLifecycleStateId(NEW_RENDERTASK_LIFECYCLE_STATE_ID);
+        request.setLanguageId(Long.MAX_VALUE);
+        MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
+                .addTextBody("createOsdRequest", mapper.writeValueAsString(request),
+                        APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
+        HttpResponse response = sendStandardMultipartRequest(UrlMapping.OSD__CREATE_OSD, entityBuilder.build());
+        assertCinnamonError(response, ErrorCode.LANGUAGE_NOT_FOUND);
+    }
+
+    @Test
+    public void createOsdHappyCaseNoFile() throws IOException {
+        CreateOsdRequest request = new CreateOsdRequest();
+        request.setAclId(CREATE_ACL_ID);
+        request.setName("new osd");
+        request.setOwnerId(STANDARD_USER_ID);
+        request.setParentId(CREATE_FOLDER_ID);
+        request.setTypeId(DEFAULT_OBJECT_TYPE_ID);
+        MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
+                .addTextBody("createOsdRequest", mapper.writeValueAsString(request),
+                        APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
+        HttpResponse response = sendStandardMultipartRequest(UrlMapping.OSD__CREATE_OSD, entityBuilder.build());
+        assertResponseOkay(response);
+        List<ObjectSystemData> objectSystemData = unwrapOsds(response, 1);
+        ObjectSystemData osd = objectSystemData.get(0);
+        assertEquals("new osd", osd.getName());
+        assertEquals(STANDARD_USER_ID, osd.getOwnerId());
+        assertEquals(STANDARD_USER_ID, osd.getModifierId());
+        assertEquals(CREATE_ACL_ID, osd.getAclId());
+        assertEquals(DEFAULT_OBJECT_TYPE_ID, osd.getTypeId());
+        assertEquals(CREATE_FOLDER_ID, osd.getParentId());
+    }
+
+    @Test
+    public void createOsdUploadedFileWithoutFormat() throws IOException {
+        CreateOsdRequest request = new CreateOsdRequest();
+        request.setAclId(CREATE_ACL_ID);
+        request.setName("new osd");
+        request.setOwnerId(STANDARD_USER_ID);
+        request.setParentId(CREATE_FOLDER_ID);
+        request.setTypeId(DEFAULT_OBJECT_TYPE_ID);
+        request.setLifecycleStateId(NEW_RENDERTASK_LIFECYCLE_STATE_ID);
+        request.setLanguageId(GERMAN_LANGUAGE_ID);
+        File     pomXml   = new File("pom.xml");
+        FileBody fileBody = new FileBody(pomXml);
+        MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
+                .addPart("file", fileBody)
+                .addTextBody("createOsdRequest", mapper.writeValueAsString(request),
+                        APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
+        HttpResponse response = sendStandardMultipartRequest(UrlMapping.OSD__CREATE_OSD, entityBuilder.build());
+        assertCinnamonError(response, ErrorCode.FORMAT_NOT_FOUND);
+    }
+
+    @Test
+    public void createOsdUploadedFileHappyCase() throws IOException {
+        CreateOsdRequest request = new CreateOsdRequest();
+        request.setAclId(CREATE_ACL_ID);
+        request.setName("new osd");
+        request.setOwnerId(STANDARD_USER_ID);
+        request.setParentId(CREATE_FOLDER_ID);
+        request.setTypeId(DEFAULT_OBJECT_TYPE_ID);
+        request.setLifecycleStateId(NEW_RENDERTASK_LIFECYCLE_STATE_ID);
+        request.setLanguageId(GERMAN_LANGUAGE_ID);
+        request.setFormatId(PLAINTEXT_FORMAT_ID);
+        File     pomXml   = new File("pom.xml");
+        FileBody fileBody = new FileBody(pomXml);
+        MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
+                .addPart("file", fileBody)
+                .addTextBody("createOsdRequest", mapper.writeValueAsString(request),
+                        APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
+        HttpResponse response = sendStandardMultipartRequest(UrlMapping.OSD__CREATE_OSD, entityBuilder.build());
+        assertResponseOkay(response);
+        List<ObjectSystemData> objectSystemData = unwrapOsds(response, 1);
+        ObjectSystemData osd = objectSystemData.get(0);
+        assertEquals(Long.valueOf(getPomXml().length()), osd.getContentSize());
+        assertEquals(PLAINTEXT_FORMAT_ID, osd.getFormatId());
+    }
 
     private HttpResponse sendAdminMultipartRequest(UrlMapping url, HttpEntity multipartEntity) throws IOException {
         return Request.Post("http://localhost:" + cinnamonTestPort + url.getPath())

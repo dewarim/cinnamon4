@@ -109,7 +109,8 @@ public class CreateOsdRequest {
                 && (typeId == null || typeId > 0)
                 && (aclId == null || aclId > 0)
                 && (ownerId == null || ownerId > 0)
-                && formatId != null && formatId > 0
+                && (formatId == null ||  formatId > 0)
+                && (languageId == null || languageId > 0)
                 && summary != null
                 && summary.trim().length() > 0;
     }

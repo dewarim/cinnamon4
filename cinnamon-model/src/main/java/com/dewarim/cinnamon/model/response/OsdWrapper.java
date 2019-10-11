@@ -1,7 +1,7 @@
 package com.dewarim.cinnamon.model.response;
 
-import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.ObjectSystemData;
+import com.dewarim.cinnamon.model.links.Link;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
@@ -19,7 +19,14 @@ public class OsdWrapper {
     @JacksonXmlElementWrapper(localName = "links")
     @JacksonXmlProperty(localName="link")
     List<Link> links = new ArrayList<>();
-    
+
+    public OsdWrapper() {
+    }
+
+    public OsdWrapper(List<ObjectSystemData> osds) {
+        this.osds = osds;
+    }
+
     public List<ObjectSystemData> getOsds() {
         return osds;
     }

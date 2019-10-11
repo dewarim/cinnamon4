@@ -15,8 +15,14 @@ public class LanguageDao {
     }
 
     public Optional<Language> getLanguageById(long id) {
-        SqlSession   sqlSession   = ThreadLocalSqlSession.getSqlSession();
-        Language Language = sqlSession.selectOne("com.dewarim.cinnamon.LanguageMapper.getLanguageById", id);
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        Language   Language   = sqlSession.selectOne("com.dewarim.cinnamon.LanguageMapper.getLanguageById", id);
+        return Optional.ofNullable(Language);
+    }
+
+    public Optional<Language> getLanguageByIsoCode(String isoCode) {
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        Language   Language   = sqlSession.selectOne("com.dewarim.cinnamon.LanguageMapper.getLanguageByIsoCode", isoCode);
         return Optional.ofNullable(Language);
     }
 

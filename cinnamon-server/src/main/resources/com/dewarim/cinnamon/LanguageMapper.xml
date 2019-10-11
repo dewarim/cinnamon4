@@ -20,6 +20,11 @@
         FROM languages
         WHERE id = #{id}
     </select>
+    <select id="getLanguageByIsoCode" parameterType="String" resultMap="languageMap">
+        SELECT *
+        FROM languages
+        WHERE iso_code = #{isoCode}
+    </select>
 
 
 </mapper>
