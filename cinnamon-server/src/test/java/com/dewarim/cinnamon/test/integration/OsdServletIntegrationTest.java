@@ -740,7 +740,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         HttpResponse response = sendStandardMultipartRequest(UrlMapping.OSD__CREATE_OSD, entityBuilder.build());
         assertResponseOkay(response);
         List<ObjectSystemData> objectSystemData = unwrapOsds(response, 1);
-        ObjectSystemData osd = objectSystemData.get(0);
+        ObjectSystemData       osd              = objectSystemData.get(0);
         assertEquals("new osd", osd.getName());
         assertEquals(STANDARD_USER_ID, osd.getOwnerId());
         assertEquals(STANDARD_USER_ID, osd.getModifierId());
@@ -789,7 +789,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         HttpResponse response = sendStandardMultipartRequest(UrlMapping.OSD__CREATE_OSD, entityBuilder.build());
         assertResponseOkay(response);
         List<ObjectSystemData> objectSystemData = unwrapOsds(response, 1);
-        ObjectSystemData osd = objectSystemData.get(0);
+        ObjectSystemData       osd              = objectSystemData.get(0);
         assertEquals(Long.valueOf(getPomXml().length()), osd.getContentSize());
         assertEquals(PLAINTEXT_FORMAT_ID, osd.getFormatId());
     }
@@ -850,9 +850,9 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     private void createTestContentOnOsd(Long osdId, boolean asSuperuser) throws IOException {
-        SetContentRequest setContentRequest  = new SetContentRequest(osdId, 1L);
-        HttpEntity        multipartEntity    = createMultipartEntity(setContentRequest);
-        HttpResponse      setContentResponse = null;
+        SetContentRequest setContentRequest = new SetContentRequest(osdId, 1L);
+        HttpEntity        multipartEntity   = createMultipartEntity(setContentRequest);
+        HttpResponse      setContentResponse;
         if (asSuperuser) {
             setContentResponse = sendAdminMultipartRequest(UrlMapping.OSD__SET_CONTENT, multipartEntity);
         } else {

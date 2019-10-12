@@ -37,7 +37,7 @@ public class AccessFilter {
     private static final Map<String, Permission> nameToPermissionMapping = new ConcurrentHashMap<>();
     private static Map<Long, Acl> idToAclMapping = new ConcurrentHashMap<>();
 
-    private static Object INITIALIZING = new Object();
+    private static final Object INITIALIZING = new Object();
     private static Boolean initialized = false;
 
     private AccessFilter(UserAccount user) {

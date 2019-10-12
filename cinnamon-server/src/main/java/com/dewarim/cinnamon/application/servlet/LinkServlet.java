@@ -212,16 +212,13 @@ public class LinkServlet extends HttpServlet {
                 }
 
                 sendGenericResponse(response, new GenericResponse(true));
-                return;
 
             } catch (UpdateException updateException) {
                 ErrorResponseGenerator.generateErrorMessage(response, updateException.getStatusCode(), updateException.getErrorCode());
-                return;
             }
         } else {
             ErrorResponseGenerator.generateErrorMessage(response, SC_NOT_FOUND,
                     ErrorCode.OBJECT_NOT_FOUND);
-            return;
         }
 
     }

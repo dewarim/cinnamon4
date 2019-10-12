@@ -9,6 +9,7 @@ import org.junit.Test;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 import static org.apache.http.HttpStatus.SC_FORBIDDEN;
 import static org.apache.http.HttpStatus.SC_NOT_FOUND;
@@ -64,7 +65,7 @@ public class StaticServletIntegrationTest extends CinnamonIntegrationTest {
             assertThat(contentTypeElements[1].trim(), equalTo("charset="+encoding.toLowerCase()));
             return bof.toString(encoding);
         }
-        return bof.toString("UTF-8");
+        return bof.toString(StandardCharsets.UTF_8);
     }
 
 }

@@ -8,7 +8,6 @@ import com.dewarim.cinnamon.model.response.CinnamonConnection;
 import com.dewarim.cinnamon.model.response.CinnamonError;
 import com.dewarim.cinnamon.model.response.GenericResponse;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import org.apache.commons.codec.Charsets;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.fluent.Form;
@@ -26,6 +25,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
@@ -109,7 +109,7 @@ public class CinnamonIntegrationTest {
         if (!statusCode.equals(HttpStatus.SC_OK)) {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             response.getEntity().getContent().transferTo(baos);
-            log.error("Request failed with:\n{}", baos.toString(Charsets.UTF_8.name()));
+            log.error("Request failed with:\n{}", baos.toString(StandardCharsets.UTF_8));
             fail("Non-OK status code " + statusCode);
         }
         ;

@@ -3,7 +3,8 @@ package com.dewarim.cinnamon.application.servlet;
 import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.application.ErrorResponseGenerator;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
-import com.dewarim.cinnamon.dao.*;
+import com.dewarim.cinnamon.dao.ConfigEntryDao;
+import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.model.ConfigEntry;
 import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.request.ConfigEntryRequest;
@@ -61,11 +62,9 @@ public class ConfigEntryServlet extends HttpServlet {
             response.setContentType(CONTENT_TYPE_XML);
             response.setStatus(HttpServletResponse.SC_OK);
             xmlMapper.writeValue(response.getWriter(), wrapper);
-            return;
         }
         else {
             ErrorResponseGenerator.generateErrorMessage(response, HttpServletResponse.SC_NOT_FOUND, ErrorCode.OBJECT_NOT_FOUND);
-            return;
         }
     }
 

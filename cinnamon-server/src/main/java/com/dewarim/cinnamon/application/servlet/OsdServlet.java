@@ -305,7 +305,7 @@ public class OsdServlet extends BaseServlet {
         IdRequest idRequest = xmlMapper.readValue(request.getInputStream(), IdRequest.class);
         if (idRequest.validated()) {
             Optional<ObjectSystemData> osdOpt = osdDao.getObjectById(idRequest.getId());
-            if (!osdOpt.isPresent()) {
+            if (osdOpt.isEmpty()) {
                 generateErrorMessage(response, SC_NOT_FOUND, ErrorCode.OBJECT_NOT_FOUND);
                 return;
             }
@@ -324,11 +324,9 @@ public class OsdServlet extends BaseServlet {
                     osd.setLockerId(null);
                     osdDao.updateOsd(osd, false);
                     ResponseUtil.responseIsGenericOkay(response);
-                    return;
                 } else {
                     // trying to unlock another user's lock: nope.
                     generateErrorMessage(response, SC_FORBIDDEN, ErrorCode.OBJECT_LOCKED_BY_OTHER_USER);
-                    return;
                 }
             } else {
                 // trying to unlock an unlocked object: NOP
@@ -343,7 +341,7 @@ public class OsdServlet extends BaseServlet {
         IdRequest idRequest = xmlMapper.readValue(request.getInputStream(), IdRequest.class);
         if (idRequest.validated()) {
             Optional<ObjectSystemData> osdOpt = osdDao.getObjectById(idRequest.getId());
-            if (!osdOpt.isPresent()) {
+            if (osdOpt.isEmpty()) {
                 generateErrorMessage(response, SC_NOT_FOUND, ErrorCode.OBJECT_NOT_FOUND);
                 return;
             }

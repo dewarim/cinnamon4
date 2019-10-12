@@ -4,7 +4,8 @@ import com.dewarim.cinnamon.Constants;
 import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.application.UrlMapping;
 import com.dewarim.cinnamon.model.Acl;
-import com.dewarim.cinnamon.model.request.*;
+import com.dewarim.cinnamon.model.request.DeleteByIdRequest;
+import com.dewarim.cinnamon.model.request.IdRequest;
 import com.dewarim.cinnamon.model.request.acl.AclInfoRequest;
 import com.dewarim.cinnamon.model.request.acl.AclUpdateRequest;
 import com.dewarim.cinnamon.model.request.acl.CreateAclRequest;
@@ -68,6 +69,13 @@ public class AclServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
+    public void remainNonExistantAclShouldFail() throws IOException {
+        AclUpdateRequest updateRequest = new AclUpdateRequest(Long.MAX_VALUE, "foo");
+        HttpResponse aclListResponse = sendAdminRequest(UrlMapping.ACL__UPDATE_ACL, updateRequest);
+        assertCinnamonError(aclListResponse, ErrorCode.ACL_NOT_FOUND);
+    }
+
+    @Test
     public void renameToExistingOtherNameShouldFail() throws IOException {
         AclUpdateRequest updateRequest = new AclUpdateRequest(4L, Constants.ACL_DEFAULT);
         HttpResponse aclListResponse = sendAdminRequest(UrlMapping.ACL__UPDATE_ACL, updateRequest);
@@ -101,7 +109,7 @@ public class AclServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void requestForNonExistentAclShouldFail() throws IOException {
         HttpResponse aclListResponse = sendAdminRequest(UrlMapping.ACL__ACL_INFO, new AclInfoRequest(0L, null));
-        assertNull(unwrapAcls(aclListResponse, null));
+        assertCinnamonError(aclListResponse, ErrorCode.ACL_NOT_FOUND);
     }
 
     @Test
@@ -115,6 +123,13 @@ public class AclServletIntegrationTest extends CinnamonIntegrationTest {
         // TODO: verify delete fails when acl is currently used on object
         // TODO: verify delete fails when acl is currently used on link
         // TODO: verify delete fails when acl is currently used on aclentry
+    }
+
+    @Test
+    public void deleteAclShouldFailOnUnknownAcl() throws IOException {
+        // aclId 1 is default acl in test db, linked to root folder
+        HttpResponse response = sendAdminRequest(UrlMapping.ACL__DELETE_ACL, new DeleteByIdRequest(Long.MAX_VALUE));
+        assertCinnamonError(response, ErrorCode.ACL_NOT_FOUND);
     }
 
     @Test
