@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class SummaryWrapper {
+public class SummaryWrapper implements Wrapper {
 
     @JacksonXmlElementWrapper(localName = "summaries")
     @JacksonXmlProperty(localName = "summary")

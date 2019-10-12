@@ -3,10 +3,11 @@ package com.dewarim.cinnamon.application;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.dewarim.cinnamon.application.servlet.*;
+import com.dewarim.cinnamon.configuration.CinnamonConfig;
 import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.filter.AuthenticationFilter;
 import com.dewarim.cinnamon.filter.DbSessionFilter;
-import com.dewarim.cinnamon.configuration.CinnamonConfig;
+import com.dewarim.cinnamon.filter.RequestResponseFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -70,6 +71,7 @@ public class CinnamonServer {
     private void addFilters(WebAppContext handler) {
         handler.addFilter(DbSessionFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
         handler.addFilter(AuthenticationFilter.class, "/api/*", EnumSet.of(DispatcherType.REQUEST));
+        handler.addFilter(RequestResponseFilter.class, "/api/*", EnumSet.of(DispatcherType.REQUEST));
     }
 
     private void addServlets(WebAppContext handler) {

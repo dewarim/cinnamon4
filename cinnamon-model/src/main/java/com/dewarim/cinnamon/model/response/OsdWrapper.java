@@ -10,15 +10,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class OsdWrapper {
+public class OsdWrapper implements Wrapper{
 
     @JacksonXmlElementWrapper(localName = "osds")
     @JacksonXmlProperty(localName = "osd")
-    List<ObjectSystemData> osds = new ArrayList<>();
+    private List<ObjectSystemData> osds = new ArrayList<>();
 
     @JacksonXmlElementWrapper(localName = "links")
-    @JacksonXmlProperty(localName="link")
-    List<Link> links = new ArrayList<>();
+    @JacksonXmlProperty(localName = "link")
+    private List<Link> links = new ArrayList<>();
 
     public OsdWrapper() {
     }

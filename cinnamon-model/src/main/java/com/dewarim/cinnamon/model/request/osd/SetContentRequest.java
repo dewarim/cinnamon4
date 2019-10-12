@@ -1,5 +1,7 @@
 package com.dewarim.cinnamon.model.request.osd;
 
+import java.util.Optional;
+
 public class SetContentRequest {
 
     private Long id;
@@ -29,7 +31,15 @@ public class SetContentRequest {
         this.formatId = formatId;
     }
 
-    public boolean validated() {
+    public Optional<SetContentRequest> validateRequest() {
+        if (validated()) {
+            return Optional.of(this);
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    private boolean validated() {
         return id != null && id > 0 &&
                 formatId != null && formatId > 0;
     }

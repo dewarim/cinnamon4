@@ -19,7 +19,6 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
@@ -139,7 +138,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     public void setSummaryMissingPermission() throws IOException {
         SetSummaryRequest summaryRequest = new SetSummaryRequest(18L, "a summary");
         HttpResponse      response       = sendStandardRequest(UrlMapping.OSD__SET_SUMMARY, summaryRequest);
-        assertCinnamonError(response, ErrorCode.NO_WRITE_SYS_METADATA_PERMISSION, HttpStatus.SC_FORBIDDEN);
+        assertCinnamonError(response, ErrorCode.NO_WRITE_SYS_METADATA_PERMISSION);
     }
 
     @Test
@@ -199,7 +198,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
         IdRequest    idRequest = new IdRequest(24L);
         HttpResponse response  = sendStandardRequest(UrlMapping.OSD__GET_CONTENT, idRequest);
-        assertCinnamonError(response, ErrorCode.NO_READ_PERMISSION, SC_FORBIDDEN);
+        assertCinnamonError(response, ErrorCode.NO_READ_PERMISSION);
     }
 
     @Test
@@ -298,7 +297,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     public void setContentWithoutWritePermission() throws IOException {
         SetContentRequest contentRequest = new SetContentRequest(23L, 1L);
         HttpResponse      response       = sendStandardMultipartRequest(UrlMapping.OSD__SET_CONTENT, createMultipartEntity(contentRequest));
-        assertCinnamonError(response, ErrorCode.NO_WRITE_PERMISSION, SC_FORBIDDEN);
+        assertCinnamonError(response, ErrorCode.NO_WRITE_PERMISSION);
     }
 
     @Test
@@ -383,10 +382,10 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     public void lockAndUnlockShouldFailWithoutPermission() throws IOException {
         IdRequest    idRequest    = new IdRequest(27L);
         HttpResponse lockResponse = sendStandardRequest(UrlMapping.OSD__LOCK, idRequest);
-        assertCinnamonError(lockResponse, ErrorCode.NO_LOCK_PERMISSION, SC_FORBIDDEN);
+        assertCinnamonError(lockResponse, ErrorCode.NO_LOCK_PERMISSION);
 
         HttpResponse unlockResponse = sendStandardRequest(UrlMapping.OSD__UNLOCK, idRequest);
-        assertCinnamonError(unlockResponse, ErrorCode.NO_LOCK_PERMISSION, SC_FORBIDDEN);
+        assertCinnamonError(unlockResponse, ErrorCode.NO_LOCK_PERMISSION);
     }
 
     @Test

@@ -15,11 +15,11 @@ public class OsdDao {
     private static final int BATCH_SIZE = 10000;
 
     public List<ObjectSystemData> getObjectsById(List<Long> ids, boolean includeSummary) {
-        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        List<ObjectSystemData> results = new ArrayList<>(ids.size());
-        int requestSize = ids.size();
-        int rowCount = 0;
-        Map<String, Object> params = new HashMap<>();
+        SqlSession             sqlSession  = ThreadLocalSqlSession.getSqlSession();
+        List<ObjectSystemData> results     = new ArrayList<>(ids.size());
+        int                    requestSize = ids.size();
+        int                    rowCount    = 0;
+        Map<String, Object>    params      = new HashMap<>();
         params.put("includeSummary", includeSummary);
         while (rowCount < requestSize) {
             int lastIndex = rowCount + BATCH_SIZE;
@@ -40,8 +40,8 @@ public class OsdDao {
     }
 
     public List<ObjectSystemData> getObjectsByFolderId(long folderId, boolean includeSummary) {
-        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        Map<String, Object> params = new HashMap<>();
+        SqlSession          sqlSession = ThreadLocalSqlSession.getSqlSession();
+        Map<String, Object> params     = new HashMap<>();
         params.put("includeSummary", includeSummary);
         params.put("folderId", folderId);
         return new ArrayList<>(sqlSession.selectList("com.dewarim.cinnamon.ObjectSystemDataMapper.getOsdsByFolderId", params));
@@ -50,15 +50,15 @@ public class OsdDao {
     public Optional<ObjectSystemData> getObjectById(long id) {
 
         List<ObjectSystemData> objectsById = getObjectsById(Collections.singletonList(id), false);
-        if(objectsById.isEmpty()){
+        if (objectsById.isEmpty()) {
             return Optional.empty();
         }
         return Optional.of(objectsById.get(0));
     }
-    
-    public void updateOsd(ObjectSystemData osd, boolean updateModifier){
+
+    public void updateOsd(ObjectSystemData osd, boolean updateModifier) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        if(updateModifier) {
+        if (updateModifier) {
             // TODO: do not update modifier if user is exempt from change tracking
             osd.setModified(new Date());
             osd.setModifierId(ThreadLocalSqlSession.getCurrentUser().getId());
@@ -67,10 +67,10 @@ public class OsdDao {
     }
 
 
-    public ObjectSystemData saveOsd(ObjectSystemData osd){
+    public ObjectSystemData saveOsd(ObjectSystemData osd) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        int resultRows =  sqlSession.insert("com.dewarim.cinnamon.ObjectSystemDataMapper.insertOsd", osd);
-        if(resultRows != 1){
+        int        resultRows = sqlSession.insert("com.dewarim.cinnamon.ObjectSystemDataMapper.insertOsd", osd);
+        if (resultRows != 1) {
             ErrorCode.DB_INSERT_FAILED.throwUp();
         }
         return osd;

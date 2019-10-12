@@ -2,17 +2,18 @@ package com.dewarim.cinnamon.security.authorization;
 
 import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.api.Ownable;
+import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.model.Folder;
-import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.UserAccount;
+import com.dewarim.cinnamon.model.links.Link;
 
-import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class AuthorizationService {
 
-    public List<Folder> filterFoldersByBrowsePermission(List<Folder> folders, UserAccount user){
+    public List<Folder> filterFoldersByBrowsePermission(List<Folder> folders, UserAccount user) {
         AccessFilter accessFilter = AccessFilter.getInstance(user);
         return folders.stream().filter(accessFilter::hasBrowsePermissionForOwnable).collect(Collectors.toList());
     }
@@ -49,6 +50,13 @@ public class AuthorizationService {
     public boolean userHasOwnerPermission(Long aclId, String permissionName, UserAccount user) {
         AccessFilter accessFilter = AccessFilter.getInstance(user);
         return accessFilter.hasPermission(aclId, permissionName, true);
+    }
+
+    public void throwUpUnlessUserOrOwnerHasPermission(
+            Ownable ownable, DefaultPermission permission, UserAccount user, ErrorCode errorCode) {
+        if (!hasUserOrOwnerPermission(ownable, permission.getName(), user)) {
+            errorCode.throwUp();
+        }
     }
 
     public boolean hasUserOrOwnerPermission(Ownable ownable, DefaultPermission permission, UserAccount user) {

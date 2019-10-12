@@ -2,6 +2,7 @@ package com.dewarim.cinnamon.application.servlet;
 
 import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.api.Ownable;
+import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.application.ResponseUtil;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
@@ -12,11 +13,9 @@ import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.request.MetaRequest;
 import com.dewarim.cinnamon.model.response.MetaWrapper;
 import com.dewarim.cinnamon.security.authorization.AuthorizationService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import nu.xom.*;
 
 import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -55,7 +54,7 @@ public class BaseServlet extends HttpServlet {
         }
     }
 
-    static void createMetaResponse(MetaRequest metaRequest, HttpServletResponse response, List<Meta> metaList, ObjectMapper mapper) throws IOException {
+    static void createMetaResponse(MetaRequest metaRequest, CinnamonResponse response, List<Meta> metaList) throws IOException {
 
         if (metaRequest.isVersion3CompatibilityRequired()) {
             // render traditional metaset
@@ -78,12 +77,12 @@ public class BaseServlet extends HttpServlet {
                 }
                 root.appendChild(metaset);
             });
+            ResponseUtil.responseIsOkayAndXml(response);
             response.getWriter().print(document.toXML());
         } else {
             MetaWrapper wrapper = new MetaWrapper(metaList);
-            mapper.writeValue(response.getOutputStream(), wrapper);
+            response.setWrapper(wrapper);
         }
-        ResponseUtil.responseIsOkayAndXml(response);
     }
 
     static private Document parseXml(String content) {

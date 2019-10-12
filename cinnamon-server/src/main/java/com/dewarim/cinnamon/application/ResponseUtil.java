@@ -4,7 +4,6 @@ import com.dewarim.cinnamon.model.response.GenericResponse;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
 import javax.servlet.http.HttpServletResponse;
-
 import java.io.IOException;
 
 import static com.dewarim.cinnamon.Constants.CONTENT_TYPE_XML;
@@ -21,7 +20,9 @@ public class ResponseUtil {
 
     /**
      * Set the response status to 200/Okay, along with a XML generic success message.
+     * @deprecated use CinnamonResponse.responseIsGenericOkay
      */
+    @Deprecated
     public static void responseIsGenericOkay(HttpServletResponse response) throws IOException {
         response.setContentType(CONTENT_TYPE_XML);
         response.setStatus(HttpServletResponse.SC_OK);

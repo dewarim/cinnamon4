@@ -3,9 +3,9 @@ package com.dewarim.cinnamon.application.servlet;
 import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.api.content.ContentMetadata;
 import com.dewarim.cinnamon.api.content.ContentProvider;
+import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.application.ErrorResponseGenerator;
-import com.dewarim.cinnamon.application.ResponseUtil;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.application.exception.FailedRequestException;
 import com.dewarim.cinnamon.dao.*;
@@ -16,7 +16,6 @@ import com.dewarim.cinnamon.model.request.osd.CreateOsdRequest;
 import com.dewarim.cinnamon.model.request.osd.OsdByFolderRequest;
 import com.dewarim.cinnamon.model.request.osd.OsdRequest;
 import com.dewarim.cinnamon.model.request.osd.SetContentRequest;
-import com.dewarim.cinnamon.model.response.GenericResponse;
 import com.dewarim.cinnamon.model.response.OsdWrapper;
 import com.dewarim.cinnamon.model.response.SummaryWrapper;
 import com.dewarim.cinnamon.provider.ContentProviderService;
@@ -44,7 +43,7 @@ import java.util.Optional;
 
 import static com.dewarim.cinnamon.Constants.LANGUAGE_UNDETERMINED_ISO_CODE;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
-import static javax.servlet.http.HttpServletResponse.*;
+import static javax.servlet.http.HttpServletResponse.SC_OK;
 
 @MultipartConfig
 @WebServlet(name = "Osd", urlPatterns = "/")
@@ -61,65 +60,61 @@ public class OsdServlet extends BaseServlet {
         if (pathInfo == null) {
             pathInfo = "";
         }
-        UserAccount user   = ThreadLocalSqlSession.getCurrentUser();
-        OsdDao      osdDao = new OsdDao();
-        try {
-            switch (pathInfo) {
-                case "/createOsd":
-                    createOsd(request, response, user, osdDao);
-                    break;
-                case "/createMeta":
-                    createMeta(request, response, user, osdDao);
-                    break;
-                case "/deleteMeta":
-                    deleteMeta(request, response, user, osdDao);
-                    break;
-                case "/getContent":
-                    getContent(request, response, user, osdDao);
-                    break;
-                case "/getMeta":
-                    getMeta(request, response, user, osdDao);
-                    break;
-                case "/getObjectsByFolderId":
-                    getObjectsByFolderId(request, response, user, osdDao);
-                    break;
-                case "/getObjectsById":
-                    getObjectsById(request, response, user, osdDao);
-                    break;
-                case "/getSummaries":
-                    getSummaries(request, response, user, osdDao);
-                    break;
-                case "/lock":
-                    lock(request, response, user, osdDao);
-                    break;
-                case "/setContent":
-                    setContent(request, response, user, osdDao);
-                    break;
-                case "/setSummary":
-                    setSummary(request, response, user, osdDao);
-                    break;
-                case "/unlock":
-                    unlock(request, response, user, osdDao);
-                    break;
-                default:
-                    response.setStatus(HttpServletResponse.SC_NO_CONTENT);
-            }
-        } catch (FailedRequestException e) {
-            ErrorCode errorCode = e.getErrorCode();
-            ErrorResponseGenerator.generateErrorMessage(response, errorCode.getHttpResponseCode(), errorCode, e.getMessage());
+        UserAccount      user             = ThreadLocalSqlSession.getCurrentUser();
+        OsdDao           osdDao           = new OsdDao();
+        CinnamonResponse cinnamonResponse = (CinnamonResponse) response;
+        switch (pathInfo) {
+            case "/createOsd":
+                createOsd(request, cinnamonResponse, user, osdDao);
+                break;
+            case "/createMeta":
+                createMeta(request, cinnamonResponse, user, osdDao);
+                break;
+            case "/deleteMeta":
+                deleteMeta(request, cinnamonResponse, user, osdDao);
+                break;
+            case "/getContent":
+                getContent(request, cinnamonResponse, user, osdDao);
+                break;
+            case "/getMeta":
+                getMeta(request, cinnamonResponse, user, osdDao);
+                break;
+            case "/getObjectsByFolderId":
+                getObjectsByFolderId(request, cinnamonResponse, user, osdDao);
+                break;
+            case "/getObjectsById":
+                getObjectsById(request, cinnamonResponse, user, osdDao);
+                break;
+            case "/getSummaries":
+                getSummaries(request, cinnamonResponse, user, osdDao);
+                break;
+            case "/lock":
+                lock(request, cinnamonResponse, user, osdDao);
+                break;
+            case "/setContent":
+                setContent(request, cinnamonResponse, user, osdDao);
+                break;
+            case "/setSummary":
+                setSummary(request, cinnamonResponse, user, osdDao);
+                break;
+            case "/unlock":
+                unlock(request, cinnamonResponse, user, osdDao);
+                break;
+            default:
+                response.setStatus(HttpServletResponse.SC_NO_CONTENT);
         }
     }
 
-    private void createOsd(HttpServletRequest request, HttpServletResponse response, UserAccount user, OsdDao osdDao) throws IOException, ServletException {
+    private void createOsd(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws IOException, ServletException {
         String contentType = Optional.ofNullable(request.getContentType())
                 .orElseThrow(ErrorCode.NO_CONTENT_TYPE_IN_HEADER.getException());
         if (!contentType.toLowerCase().startsWith(MULTIPART)) {
-            ErrorCode.NOT_MULTIPART_UPLOAD.throwUp();
+            throw ErrorCode.NOT_MULTIPART_UPLOAD.exception();
         }
 
         Part contentRequest = request.getPart("createOsdRequest");
         if (contentRequest == null) {
-            ErrorCode.MISSING_REQUEST_PAYLOAD.throwUp();
+            throw ErrorCode.MISSING_REQUEST_PAYLOAD.exception();
         }
 
         CreateOsdRequest createRequest = xmlMapper.readValue(contentRequest.getInputStream(), CreateOsdRequest.class)
@@ -132,7 +127,7 @@ public class OsdServlet extends BaseServlet {
         // check acl of parent folder
         boolean createAllowed = new AuthorizationService().userHasPermission(parentFolder.getAclId(), DefaultPermission.CREATE_OBJECT.getName(), user);
         if (!createAllowed) {
-            ErrorCode.NO_CREATE_PERMISSION.throwUp();
+            throw ErrorCode.NO_CREATE_PERMISSION.exception();
         }
 
         ObjectSystemData osd = new ObjectSystemData();
@@ -184,11 +179,10 @@ public class OsdServlet extends BaseServlet {
             osdDao.updateOsd(osd, false);
         }
         OsdWrapper osdWrapper = new OsdWrapper(Collections.singletonList(osd));
-        ResponseUtil.responseIsOkayAndXml(response);
-        xmlMapper.writeValue(response.getOutputStream(), osdWrapper);
+        response.setWrapper(osdWrapper);
     }
 
-    private void deleteMeta(HttpServletRequest request, HttpServletResponse response, UserAccount user, OsdDao osdDao) throws IOException {
+    private void deleteMeta(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws IOException {
         DeleteMetaRequest metaRequest = xmlMapper.readValue(request.getInputStream(), DeleteMetaRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         Long             osdId = metaRequest.getId();
@@ -203,15 +197,15 @@ public class OsdServlet extends BaseServlet {
             metas = metaDao.getMetaByNamesAndOsd(Collections.singletonList(metaRequest.getTypeName()), osdId);
         }
         if (metas.isEmpty()) {
-            throw new FailedRequestException(ErrorCode.METASET_NOT_FOUND);
+            throw ErrorCode.METASET_NOT_FOUND.exception();
         }
         metas.forEach(meta -> {
             boolean deleteSuccess = metaDao.deleteById(meta.getId()) == 1;
             if (!deleteSuccess) {
-                generateErrorMessage(response, SC_INTERNAL_SERVER_ERROR, ErrorCode.DB_DELETE_FAILED);
+                throw new FailedRequestException(ErrorCode.DB_DELETE_FAILED, "Failed to delete metaSet #"+meta.getId());
             }
         });
-        ResponseUtil.responseIsGenericOkay(response);
+        response.responseIsGenericOkay();
     }
 
     /**
@@ -221,7 +215,7 @@ public class OsdServlet extends BaseServlet {
      * This requires assembling a new DOM tree in memory for each request to getMeta, which is not something you
      * want to see with large metasets.
      */
-    private void getMeta(HttpServletRequest request, HttpServletResponse response, UserAccount user, OsdDao osdDao) throws IOException {
+    private void getMeta(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws IOException {
         MetaRequest metaRequest = xmlMapper.readValue(request.getInputStream(), MetaRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
@@ -236,10 +230,10 @@ public class OsdServlet extends BaseServlet {
             metaList = new OsdMetaDao().listByOsd(osdId);
         }
 
-        createMetaResponse(metaRequest, response, metaList, xmlMapper);
+        createMetaResponse(metaRequest, response, metaList);
     }
 
-    private void createMeta(HttpServletRequest request, HttpServletResponse response, UserAccount user, OsdDao osdDao) throws IOException {
+    private void createMeta(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws IOException {
         CreateMetaRequest metaRequest = xmlMapper.readValue(request.getInputStream(), CreateMetaRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
@@ -259,147 +253,108 @@ public class OsdServlet extends BaseServlet {
         OsdMetaDao metaDao = new OsdMetaDao();
         List<Meta> metas   = metaDao.getMetaByNamesAndOsd(Collections.singletonList(metaType.getName()), osdId);
         if (metaType.getUnique() && metas.size() > 0) {
-            throw new FailedRequestException(ErrorCode.METASET_IS_UNIQUE_AND_ALREADY_EXISTS);
+            throw ErrorCode.METASET_IS_UNIQUE_AND_ALREADY_EXISTS.exception();
         }
 
         Meta meta = metaDao.createMeta(metaRequest, metaType);
-        createMetaResponse(new MetaRequest(), response, Collections.singletonList(meta), xmlMapper);
+        createMetaResponse(new MetaRequest(), response, Collections.singletonList(meta));
     }
 
-    private void lock(HttpServletRequest request, HttpServletResponse response, UserAccount user, OsdDao osdDao) throws IOException {
-        IdRequest idRequest = xmlMapper.readValue(request.getInputStream(), IdRequest.class);
-        if (idRequest.validated()) {
-            Optional<ObjectSystemData> osdOpt = osdDao.getObjectById(idRequest.getId());
-            if (!osdOpt.isPresent()) {
-                generateErrorMessage(response, SC_NOT_FOUND, ErrorCode.OBJECT_NOT_FOUND);
-                return;
-            }
-            ObjectSystemData osd         = osdOpt.get();
-            boolean          lockAllowed = new AuthorizationService().hasUserOrOwnerPermission(osd, DefaultPermission.LOCK, user);
-            if (!lockAllowed) {
-                generateErrorMessage(response, SC_FORBIDDEN, ErrorCode.NO_LOCK_PERMISSION);
-                return;
-            }
-            Long lockHolder = osd.getLockerId();
-            if (lockHolder != null) {
-                if (lockHolder.equals(user.getId())) {
-                    // trying to lock your own object: NOP
-                    ResponseUtil.responseIsGenericOkay(response);
-                    return;
-                } else {
-                    generateErrorMessage(response, SC_FORBIDDEN, ErrorCode.OBJECT_LOCKED_BY_OTHER_USER);
-                    return;
-                }
-            }
-            osd.setLockerId(user.getId());
-            osdDao.updateOsd(osd, false);
-            ResponseUtil.responseIsOkayAndXml(response);
-            xmlMapper.writeValue(response.getWriter(), new GenericResponse(true));
-        } else {
-            generateErrorMessage(response, SC_BAD_REQUEST, ErrorCode.INVALID_REQUEST);
+    private void lock(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws IOException {
+        IdRequest idRequest = xmlMapper.readValue(request.getInputStream(), IdRequest.class)
+                .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
+
+        ObjectSystemData osd         = osdDao.getObjectById(idRequest.getId()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
+        boolean          lockAllowed = new AuthorizationService().hasUserOrOwnerPermission(osd, DefaultPermission.LOCK, user);
+        if (!lockAllowed) {
+            throw ErrorCode.NO_LOCK_PERMISSION.exception();
         }
-    }
-
-
-    private void unlock(HttpServletRequest request, HttpServletResponse response, UserAccount user, OsdDao osdDao) throws ServletException, IOException {
-        IdRequest idRequest = xmlMapper.readValue(request.getInputStream(), IdRequest.class);
-        if (idRequest.validated()) {
-            Optional<ObjectSystemData> osdOpt = osdDao.getObjectById(idRequest.getId());
-            if (osdOpt.isEmpty()) {
-                generateErrorMessage(response, SC_NOT_FOUND, ErrorCode.OBJECT_NOT_FOUND);
+        Long lockHolder = osd.getLockerId();
+        if (lockHolder != null) {
+            if (lockHolder.equals(user.getId())) {
+                // trying to lock your own object: NOP
+                response.responseIsGenericOkay();
                 return;
-            }
-            ObjectSystemData osd           = osdOpt.get();
-            boolean          unlockAllowed = new AuthorizationService().hasUserOrOwnerPermission(osd, DefaultPermission.LOCK, user);
-            if (!unlockAllowed) {
-                generateErrorMessage(response, SC_FORBIDDEN, ErrorCode.NO_LOCK_PERMISSION);
-                return;
-            }
-
-            Long lockHolder = osd.getLockerId();
-            if (lockHolder != null) {
-                UserAccountDao userDao = new UserAccountDao();
-                // superuser may remove locks from other users.
-                if (lockHolder.equals(user.getId()) || userDao.isSuperuser(user)) {
-                    osd.setLockerId(null);
-                    osdDao.updateOsd(osd, false);
-                    ResponseUtil.responseIsGenericOkay(response);
-                } else {
-                    // trying to unlock another user's lock: nope.
-                    generateErrorMessage(response, SC_FORBIDDEN, ErrorCode.OBJECT_LOCKED_BY_OTHER_USER);
-                }
             } else {
-                // trying to unlock an unlocked object: NOP
-                ResponseUtil.responseIsGenericOkay(response);
+                throw ErrorCode.OBJECT_LOCKED_BY_OTHER_USER.exception();
+            }
+        }
+        osd.setLockerId(user.getId());
+        osdDao.updateOsd(osd, false);
+        response.responseIsGenericOkay();
+    }
+
+
+    private void unlock(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws ServletException, IOException {
+        IdRequest idRequest = xmlMapper.readValue(request.getInputStream(), IdRequest.class)
+                .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
+        ObjectSystemData osd = osdDao.getObjectById(idRequest.getId()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
+        new AuthorizationService().throwUpUnlessUserOrOwnerHasPermission(osd, DefaultPermission.LOCK, user,
+                ErrorCode.NO_LOCK_PERMISSION);
+
+        Long lockHolder = osd.getLockerId();
+        if (lockHolder != null) {
+            UserAccountDao userDao = new UserAccountDao();
+            // superuser may remove locks from other users.
+            if (lockHolder.equals(user.getId()) || userDao.isSuperuser(user)) {
+                osd.setLockerId(null);
+                osdDao.updateOsd(osd, false);
+                response.responseIsGenericOkay();
+            } else {
+                // trying to unlock another user's lock: nope.
+                throw ErrorCode.OBJECT_LOCKED_BY_OTHER_USER.exception();
             }
         } else {
-            generateErrorMessage(response, SC_BAD_REQUEST, ErrorCode.INVALID_REQUEST);
+            // trying to unlock an unlocked object: NOP
+            response.responseIsGenericOkay();
         }
     }
 
-    private void getContent(HttpServletRequest request, HttpServletResponse response, UserAccount user, OsdDao osdDao) throws ServletException, IOException {
-        IdRequest idRequest = xmlMapper.readValue(request.getInputStream(), IdRequest.class);
-        if (idRequest.validated()) {
-            Optional<ObjectSystemData> osdOpt = osdDao.getObjectById(idRequest.getId());
-            if (osdOpt.isEmpty()) {
-                generateErrorMessage(response, SC_NOT_FOUND, ErrorCode.OBJECT_NOT_FOUND);
-                return;
-            }
-            ObjectSystemData osd         = osdOpt.get();
-            boolean          readAllowed = new AuthorizationService().hasUserOrOwnerPermission(osd, DefaultPermission.READ_OBJECT_CONTENT, user);
-            if (!readAllowed) {
-                generateErrorMessage(response, SC_FORBIDDEN, ErrorCode.NO_READ_PERMISSION);
-                return;
-            }
-            if (osd.getContentSize() == null || osd.getContentSize() == 0) {
-                generateErrorMessage(response, SC_NOT_FOUND, ErrorCode.OBJECT_HAS_NO_CONTENT);
-                return;
-            }
-            Optional<Format> formatOpt = new FormatDao().getFormatById(osd.getFormatId());
-            // no regular error response for missing format - this should only be possible if the database is corrupted.
-            Format format = formatOpt.orElseThrow(
-                    () -> new ServletException(String.format("Encountered object #%d with content but non-existing formatId #%d.",
-                            osd.getId(), osd.getFormatId())));
-            ContentProvider contentProvider = ContentProviderService.getInstance().getContentProvider(osd.getContentProvider());
-            InputStream     contentStream   = contentProvider.getContentStream(osd);
-            response.setContentType(format.getContentType());
-            response.setStatus(SC_OK);
-            contentStream.transferTo(response.getOutputStream());
-        } else {
-            generateErrorMessage(response, SC_BAD_REQUEST, ErrorCode.INVALID_REQUEST);
+    private void getContent(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws ServletException, IOException {
+        IdRequest idRequest = xmlMapper.readValue(request.getInputStream(), IdRequest.class)
+                .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
+        ObjectSystemData osd = osdDao.getObjectById(idRequest.getId()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
+        new AuthorizationService().throwUpUnlessUserOrOwnerHasPermission(osd, DefaultPermission.READ_OBJECT_CONTENT, user,
+                ErrorCode.NO_READ_PERMISSION);
+        if (osd.getContentSize() == null || osd.getContentSize() == 0) {
+            throw ErrorCode.OBJECT_HAS_NO_CONTENT.exception();
         }
+        Optional<Format> formatOpt = new FormatDao().getFormatById(osd.getFormatId());
+        // no regular error response for missing format - this should only be possible if the database is corrupted.
+        Format format = formatOpt.orElseThrow(
+                () -> new ServletException(String.format("Encountered object #%d with content but non-existing formatId #%d.",
+                        osd.getId(), osd.getFormatId())));
+        ContentProvider contentProvider = ContentProviderService.getInstance().getContentProvider(osd.getContentProvider());
+        InputStream     contentStream   = contentProvider.getContentStream(osd);
+        response.setContentType(format.getContentType());
+        response.setStatus(SC_OK);
+        contentStream.transferTo(response.getOutputStream());
     }
 
-    private void setContent(HttpServletRequest request, HttpServletResponse response, UserAccount user, OsdDao osdDao) throws ServletException, IOException {
+    private void setContent(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws ServletException, IOException {
         String contentType = Optional.ofNullable(request.getContentType())
                 .orElseThrow(ErrorCode.NO_CONTENT_TYPE_IN_HEADER.getException());
         if (!contentType.toLowerCase().startsWith(MULTIPART)) {
-            ErrorCode.NOT_MULTIPART_UPLOAD.throwUp();
+            throw ErrorCode.NOT_MULTIPART_UPLOAD.exception();
         }
         Part contentRequest = request.getPart("setContentRequest");
         if (contentRequest == null) {
-            ErrorCode.INVALID_REQUEST.throwUp();
+            throw ErrorCode.INVALID_REQUEST.exception();
         }
         Part file = request.getPart("file");
         if (file == null) {
-            ErrorCode.MISSING_FILE_PARAMETER.throwUp();
+            throw ErrorCode.MISSING_FILE_PARAMETER.exception();
         }
-        SetContentRequest setContentRequest = xmlMapper.readValue(contentRequest.getInputStream(), SetContentRequest.class);
-        if (setContentRequest.validated()) {
-            ObjectSystemData osd          = osdDao.getObjectById(setContentRequest.getId()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
-            boolean          writeAllowed = new AuthorizationService().hasUserOrOwnerPermission(osd, DefaultPermission.WRITE_OBJECT_CONTENT, user);
-            if (!writeAllowed) {
-                ErrorResponseGenerator.generateErrorMessage(response, SC_FORBIDDEN, ErrorCode.NO_WRITE_PERMISSION);
-                return;
-            }
-            storeFileUpload(file.getInputStream(), osd, setContentRequest.getFormatId());
-            osdDao.updateOsd(osd, true);
-            GenericResponse genericResponse = new GenericResponse(true);
-            ResponseUtil.responseIsOkayAndXml(response);
-            xmlMapper.writeValue(response.getOutputStream(), genericResponse);
-        } else {
-            ErrorResponseGenerator.generateErrorMessage(response, SC_BAD_REQUEST, ErrorCode.INVALID_REQUEST, "setContentRequest parameter is invalid");
+        SetContentRequest setContentRequest = xmlMapper.readValue(contentRequest.getInputStream(), SetContentRequest.class)
+                .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
+        ObjectSystemData osd          = osdDao.getObjectById(setContentRequest.getId()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
+        boolean          writeAllowed = new AuthorizationService().hasUserOrOwnerPermission(osd, DefaultPermission.WRITE_OBJECT_CONTENT, user);
+        if (!writeAllowed) {
+            throw ErrorCode.NO_WRITE_PERMISSION.exception();
         }
+        storeFileUpload(file.getInputStream(), osd, setContentRequest.getFormatId());
+        osdDao.updateOsd(osd, true);
+        response.responseIsGenericOkay();
     }
 
     private void deleteTempFile(File tempFile) {
@@ -428,26 +383,17 @@ public class OsdServlet extends BaseServlet {
         deleteTempFile(tempOutputFile);
     }
 
-    private void setSummary(HttpServletRequest request, HttpServletResponse response, UserAccount user, OsdDao osdDao) throws IOException {
-        SetSummaryRequest          summaryRequest = xmlMapper.readValue(request.getInputStream(), SetSummaryRequest.class);
-        Optional<ObjectSystemData> osdOpt         = osdDao.getObjectById(summaryRequest.getId());
-        if (osdOpt.isPresent()) {
-            ObjectSystemData osd = osdOpt.get();
-            if (authorizationService.hasUserOrOwnerPermission(osd, DefaultPermission.WRITE_OBJECT_SYS_METADATA.getName(), user)) {
-                osd.setSummary(summaryRequest.getSummary());
-                osdDao.updateOsd(osd, true);
-                ResponseUtil.responseIsOkayAndXml(response);
-                xmlMapper.writeValue(response.getWriter(), new GenericResponse(true));
-                return;
-            } else {
-                ErrorResponseGenerator.generateErrorMessage(response, HttpServletResponse.SC_FORBIDDEN, ErrorCode.NO_WRITE_SYS_METADATA_PERMISSION);
-                return;
-            }
-        }
-        ErrorResponseGenerator.generateErrorMessage(response, HttpServletResponse.SC_NOT_FOUND, ErrorCode.OBJECT_NOT_FOUND);
+    private void setSummary(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws IOException {
+        SetSummaryRequest summaryRequest = xmlMapper.readValue(request.getInputStream(), SetSummaryRequest.class);
+        ObjectSystemData  osd            = osdDao.getObjectById(summaryRequest.getId()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
+        authorizationService.throwUpUnlessUserOrOwnerHasPermission(osd, DefaultPermission.WRITE_OBJECT_SYS_METADATA, user,
+                ErrorCode.NO_WRITE_SYS_METADATA_PERMISSION);
+        osd.setSummary(summaryRequest.getSummary());
+        osdDao.updateOsd(osd, true);
+        response.responseIsGenericOkay();
     }
 
-    private void getSummaries(HttpServletRequest request, HttpServletResponse response, UserAccount user, OsdDao osdDao) throws IOException {
+    private void getSummaries(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws IOException {
         IdListRequest          idListRequest = xmlMapper.readValue(request.getInputStream(), IdListRequest.class);
         SummaryWrapper         wrapper       = new SummaryWrapper();
         List<ObjectSystemData> osds          = osdDao.getObjectsById(idListRequest.getIdList(), true);
@@ -456,22 +402,20 @@ public class OsdServlet extends BaseServlet {
                 wrapper.getSummaries().add(osd.getSummary());
             }
         });
-        ResponseUtil.responseIsOkayAndXml(response);
-        xmlMapper.writeValue(response.getWriter(), wrapper);
+        response.setWrapper(wrapper);
     }
 
-    private void getObjectsById(HttpServletRequest request, HttpServletResponse response, UserAccount user, OsdDao osdDao) throws IOException {
+    private void getObjectsById(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws IOException {
         OsdRequest             osdRequest   = xmlMapper.readValue(request.getInputStream(), OsdRequest.class);
         List<ObjectSystemData> osds         = osdDao.getObjectsById(osdRequest.getIds(), osdRequest.isIncludeSummary());
         List<ObjectSystemData> filteredOsds = authorizationService.filterObjectsByBrowsePermission(osds, user);
 
         OsdWrapper wrapper = new OsdWrapper();
         wrapper.setOsds(filteredOsds);
-        ResponseUtil.responseIsOkayAndXml(response);
-        xmlMapper.writeValue(response.getWriter(), wrapper);
+        response.setWrapper(wrapper);
     }
 
-    private void getObjectsByFolderId(HttpServletRequest request, HttpServletResponse response, UserAccount user, OsdDao osdDao) throws IOException {
+    private void getObjectsByFolderId(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws IOException {
         OsdByFolderRequest     osdRequest     = xmlMapper.readValue(request.getInputStream(), OsdByFolderRequest.class);
         Long                   folderId       = osdRequest.getFolderId();
         boolean                includeSummary = osdRequest.isIncludeSummary();
@@ -485,8 +429,7 @@ public class OsdServlet extends BaseServlet {
         OsdWrapper wrapper = new OsdWrapper();
         wrapper.setOsds(filteredOsds);
         wrapper.setLinks(filteredLinks);
-        ResponseUtil.responseIsOkayAndXml(response);
-        xmlMapper.writeValue(response.getWriter(), wrapper);
+        response.setWrapper(wrapper);
     }
 
     private void generateErrorMessage(HttpServletResponse response, int statusCode, ErrorCode errorCode) {

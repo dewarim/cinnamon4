@@ -107,6 +107,10 @@ public enum ErrorCode {
         return exceptionSupplier;
     }
 
+    public FailedRequestException exception() {
+        return exceptionSupplier.get();
+    }
+
     public void throwUp() {
         throw exceptionSupplier.get();
     }

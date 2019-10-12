@@ -11,6 +11,11 @@ public class ErrorResponseGenerator {
 
     private static ObjectMapper xmlMapper = new XmlMapper();
 
+    /**
+     *
+     * @deprecated - use CinnamonResponse.generateErrorMessage
+     */
+    @Deprecated
     public static void generateErrorMessage(HttpServletResponse response, int statusCode, ErrorCode errorCode, String message) {
         CinnamonError error = new CinnamonError(errorCode.getCode(), message);
         try {

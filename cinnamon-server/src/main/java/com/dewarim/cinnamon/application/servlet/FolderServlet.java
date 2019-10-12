@@ -2,10 +2,7 @@ package com.dewarim.cinnamon.application.servlet;
 
 import com.dewarim.cinnamon.Constants;
 import com.dewarim.cinnamon.DefaultPermission;
-import com.dewarim.cinnamon.application.ErrorCode;
-import com.dewarim.cinnamon.application.ErrorResponseGenerator;
-import com.dewarim.cinnamon.application.ResponseUtil;
-import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
+import com.dewarim.cinnamon.application.*;
 import com.dewarim.cinnamon.application.exception.BadArgumentException;
 import com.dewarim.cinnamon.application.exception.FailedRequestException;
 import com.dewarim.cinnamon.dao.*;
@@ -47,13 +44,14 @@ public class FolderServlet extends BaseServlet {
         }
         UserAccount user      = ThreadLocalSqlSession.getCurrentUser();
         FolderDao   folderDao = new FolderDao();
+        CinnamonResponse cinnamonResponse = (CinnamonResponse) response;
         try {
             switch (pathInfo) {
                 case "/createFolder":
                     createFolder(request, response, user, folderDao);
                     break;
                 case "/createMeta":
-                    createMeta(request, response, user, folderDao);
+                    createMeta(request, cinnamonResponse, user, folderDao);
                     break;
                 case "/deleteMeta":
                     deleteMeta(request, response, user, folderDao);
@@ -68,7 +66,7 @@ public class FolderServlet extends BaseServlet {
                     getFolders(request, response, user, folderDao);
                     break;
                 case "/getMeta":
-                    getMeta(request, response, user, folderDao);
+                    getMeta(request, cinnamonResponse, user, folderDao);
                     break;
                 case "/getSubFolders":
                     getSubFolders(request, response, user, folderDao);
@@ -270,7 +268,7 @@ public class FolderServlet extends BaseServlet {
      * This requires assembling a new DOM tree in memory for each request to getMeta, which is not something you
      * want to see with large metasets.
      */
-    private void getMeta(HttpServletRequest request, HttpServletResponse response, UserAccount user, FolderDao folderDao) throws IOException {
+    private void getMeta(HttpServletRequest request, CinnamonResponse response, UserAccount user, FolderDao folderDao) throws IOException {
         MetaRequest metaRequest = xmlMapper.readValue(request.getInputStream(), MetaRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
@@ -285,10 +283,10 @@ public class FolderServlet extends BaseServlet {
             metaList = new FolderMetaDao().listByFolderId(folderId);
         }
 
-        createMetaResponse(metaRequest, response, metaList, xmlMapper);
+        createMetaResponse(metaRequest, response, metaList);
     }
 
-    private void createMeta(HttpServletRequest request, HttpServletResponse response, UserAccount user, FolderDao folderDao) throws IOException {
+    private void createMeta(HttpServletRequest request, CinnamonResponse response, UserAccount user, FolderDao folderDao) throws IOException {
         CreateMetaRequest metaRequest = xmlMapper.readValue(request.getInputStream(), CreateMetaRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
@@ -308,11 +306,11 @@ public class FolderServlet extends BaseServlet {
         FolderMetaDao metaDao = new FolderMetaDao();
         List<Meta>    metas   = metaDao.getMetaByNamesAndFolderId(Collections.singletonList(metaType.getName()), folderId);
         if (metaType.getUnique() && metas.size() > 0) {
-            throw new FailedRequestException(ErrorCode.METASET_IS_UNIQUE_AND_ALREADY_EXISTS);
+            throw ErrorCode.METASET_IS_UNIQUE_AND_ALREADY_EXISTS.exception();
         }
 
         Meta meta = metaDao.createMeta(metaRequest, metaType);
-        createMetaResponse(new MetaRequest(), response, Collections.singletonList(meta), xmlMapper);
+        createMetaResponse(new MetaRequest(), response, Collections.singletonList(meta));
     }
 
     private void getFolderByPath(HttpServletRequest request, HttpServletResponse response, UserAccount user, FolderDao folderDao) throws IOException {
