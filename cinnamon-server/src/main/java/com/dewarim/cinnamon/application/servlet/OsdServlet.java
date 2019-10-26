@@ -352,6 +352,11 @@ public class OsdServlet extends BaseServlet {
         if (!writeAllowed) {
             throw ErrorCode.NO_WRITE_PERMISSION.exception();
         }
+        boolean isLocker = user.getId().equals(osd.getLockerId());
+        if(!isLocker){
+            throw ErrorCode.OBJECT_MUST_BE_LOCKED_BY_USER.exception();
+        }
+
         storeFileUpload(file.getInputStream(), osd, setContentRequest.getFormatId());
         osdDao.updateOsd(osd, true);
         response.responseIsGenericOkay();

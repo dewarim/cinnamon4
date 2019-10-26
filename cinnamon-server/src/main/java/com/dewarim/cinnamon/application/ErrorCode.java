@@ -69,6 +69,7 @@ public enum ErrorCode {
     OBJECT_HAS_NO_CONTENT("this object has no content", SC_NOT_FOUND),
     OBJECT_HAS_VANISHED_DURING_UPDATE("the object the you wanted to change was not found in the database anymore (maybe someone deleted it?)", SC_NOT_FOUND),
     OBJECT_LOCKED_BY_OTHER_USER("object is locked by another user", SC_FORBIDDEN),
+    OBJECT_MUST_BE_LOCKED_BY_USER("object must be locked by current user before setContent is allowed", SC_FORBIDDEN),
     OBJECT_NOT_FOUND("object not found", SC_NOT_FOUND),
     OBJECT_NOT_FOUND_OR_GONE("object not found (perhaps already deleted)", SC_NOT_FOUND),
     OBJECT_WITH_FILE_NEEDS_FORMAT("object with file data must have valid format",SC_BAD_REQUEST),

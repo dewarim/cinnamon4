@@ -36,7 +36,6 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.apache.http.HttpHeaders.CONTENT_TYPE;
-import static org.apache.http.HttpStatus.*;
 import static org.apache.http.entity.ContentType.APPLICATION_XML;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -145,7 +144,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     public void setSummaryMissingObject() throws IOException {
         SetSummaryRequest summaryRequest = new SetSummaryRequest(Long.MAX_VALUE, "a summary");
         HttpResponse      response       = sendStandardRequest(UrlMapping.OSD__SET_SUMMARY, summaryRequest);
-        assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND, SC_NOT_FOUND);
+        assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND);
     }
 
     @Test
@@ -193,9 +192,15 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void getContentWithoutReadPermission() throws IOException {
-        createTestContentOnOsd(24L, true);
+    public void setContentWithoutLockingOsd() throws IOException {
+        SetContentRequest setContentRequest  = new SetContentRequest(43L, 1L);
+        HttpEntity        multipartEntity    = createMultipartEntity(setContentRequest);
+        HttpResponse      setContentResponse = sendStandardMultipartRequest(UrlMapping.OSD__SET_CONTENT, multipartEntity);
+        assertCinnamonError(setContentResponse, ErrorCode.OBJECT_MUST_BE_LOCKED_BY_USER);
+    }
 
+    @Test
+    public void getContentWithoutReadPermission() throws IOException {
         IdRequest    idRequest = new IdRequest(24L);
         HttpResponse response  = sendStandardRequest(UrlMapping.OSD__GET_CONTENT, idRequest);
         assertCinnamonError(response, ErrorCode.NO_READ_PERMISSION);
@@ -212,14 +217,14 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     public void getContentWithoutValidObject() throws IOException {
         IdRequest    idRequest = new IdRequest(Long.MAX_VALUE);
         HttpResponse response  = sendStandardRequest(UrlMapping.OSD__GET_CONTENT, idRequest);
-        assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND, SC_NOT_FOUND);
+        assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND);
     }
 
     @Test
     public void getContentWithoutContent() throws IOException {
         IdRequest    idRequest = new IdRequest(25L);
         HttpResponse response  = sendStandardRequest(UrlMapping.OSD__GET_CONTENT, idRequest);
-        assertCinnamonError(response, ErrorCode.OBJECT_HAS_NO_CONTENT, SC_NOT_FOUND);
+        assertCinnamonError(response, ErrorCode.OBJECT_HAS_NO_CONTENT);
     }
 
     @Test
@@ -283,14 +288,17 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     public void setContentWithUnknownOsdId() throws IOException {
         SetContentRequest contentRequest = new SetContentRequest(Long.MAX_VALUE, 1L);
         HttpResponse      response       = sendStandardMultipartRequest(UrlMapping.OSD__SET_CONTENT, createMultipartEntity(contentRequest));
-        assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND, SC_NOT_FOUND);
+        assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND);
     }
 
     @Test
     public void setContentWithUnknownFormatId() throws IOException {
-        SetContentRequest contentRequest = new SetContentRequest(22L, Long.MAX_VALUE);
+        Long id = 22L;
+        lockOsd(id);
+        SetContentRequest contentRequest = new SetContentRequest(id, Long.MAX_VALUE);
         HttpResponse      response       = sendStandardMultipartRequest(UrlMapping.OSD__SET_CONTENT, createMultipartEntity(contentRequest));
-        assertCinnamonError(response, ErrorCode.FORMAT_NOT_FOUND, SC_NOT_FOUND);
+        assertCinnamonError(response, ErrorCode.FORMAT_NOT_FOUND);
+        unLockOsd(id);
     }
 
     @Test
@@ -345,7 +353,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
         // try to overwrite admin's lock:
         lockResponse = sendStandardRequest(UrlMapping.OSD__LOCK, idRequest);
-        assertCinnamonError(lockResponse, ErrorCode.OBJECT_LOCKED_BY_OTHER_USER, SC_FORBIDDEN);
+        assertCinnamonError(lockResponse, ErrorCode.OBJECT_LOCKED_BY_OTHER_USER);
 
         // cleanup:
         unlockResponse = sendAdminRequest(UrlMapping.OSD__UNLOCK, idRequest);
@@ -361,7 +369,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
         // try to unlock other user's lock:
         lockResponse = sendStandardRequest(UrlMapping.OSD__UNLOCK, idRequest);
-        assertCinnamonError(lockResponse, ErrorCode.OBJECT_LOCKED_BY_OTHER_USER, SC_FORBIDDEN);
+        assertCinnamonError(lockResponse, ErrorCode.OBJECT_LOCKED_BY_OTHER_USER);
 
         // cleanup:
         HttpResponse unlockResponse = sendAdminRequest(UrlMapping.OSD__UNLOCK, idRequest);
@@ -392,10 +400,10 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     public void lockAndUnlockShouldFailWithNonExistantObject() throws IOException {
         IdRequest    idRequest    = new IdRequest(Long.MAX_VALUE);
         HttpResponse lockResponse = sendStandardRequest(UrlMapping.OSD__LOCK, idRequest);
-        assertCinnamonError(lockResponse, ErrorCode.OBJECT_NOT_FOUND, SC_NOT_FOUND);
+        assertCinnamonError(lockResponse, ErrorCode.OBJECT_NOT_FOUND);
 
         HttpResponse unlockResponse = sendStandardRequest(UrlMapping.OSD__UNLOCK, idRequest);
-        assertCinnamonError(unlockResponse, ErrorCode.OBJECT_NOT_FOUND, SC_NOT_FOUND);
+        assertCinnamonError(unlockResponse, ErrorCode.OBJECT_NOT_FOUND);
     }
 
     @Test
@@ -419,14 +427,14 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     public void getMetaObjectNotFound() throws IOException {
         MetaRequest  request      = new MetaRequest(Long.MAX_VALUE, null);
         HttpResponse metaResponse = sendStandardRequest(UrlMapping.OSD__GET_META, request);
-        assertCinnamonError(metaResponse, ErrorCode.OBJECT_NOT_FOUND, SC_NOT_FOUND);
+        assertCinnamonError(metaResponse, ErrorCode.OBJECT_NOT_FOUND);
     }
 
     @Test
     public void getMetaWithoutReadPermission() throws IOException {
         MetaRequest  request      = new MetaRequest(37L, null);
         HttpResponse metaResponse = sendStandardRequest(UrlMapping.OSD__GET_META, request);
-        assertCinnamonError(metaResponse, ErrorCode.NO_READ_CUSTOM_METADATA_PERMISSION, SC_UNAUTHORIZED);
+        assertCinnamonError(metaResponse, ErrorCode.NO_READ_CUSTOM_METADATA_PERMISSION);
     }
 
     @Test
@@ -477,35 +485,35 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     public void createMetaObjectNotFound() throws IOException {
         CreateMetaRequest request      = new CreateMetaRequest(Long.MAX_VALUE, "foo", 1L);
         HttpResponse      metaResponse = sendStandardRequest(UrlMapping.OSD__CREATE_META, request);
-        assertCinnamonError(metaResponse, ErrorCode.OBJECT_NOT_FOUND, SC_NOT_FOUND);
+        assertCinnamonError(metaResponse, ErrorCode.OBJECT_NOT_FOUND);
     }
 
     @Test
     public void createMetaObjectNotWritable() throws IOException {
         CreateMetaRequest request      = new CreateMetaRequest(37L, "foo", 1L);
         HttpResponse      metaResponse = sendStandardRequest(UrlMapping.OSD__CREATE_META, request);
-        assertCinnamonError(metaResponse, ErrorCode.NO_WRITE_CUSTOM_METADATA_PERMISSION, SC_UNAUTHORIZED);
+        assertCinnamonError(metaResponse, ErrorCode.NO_WRITE_CUSTOM_METADATA_PERMISSION);
     }
 
     @Test
     public void createMetaMetasetTypeByIdNotFound() throws IOException {
         CreateMetaRequest request      = new CreateMetaRequest(38L, "foo", Long.MAX_VALUE);
         HttpResponse      metaResponse = sendStandardRequest(UrlMapping.OSD__CREATE_META, request);
-        assertCinnamonError(metaResponse, ErrorCode.METASET_TYPE_NOT_FOUND, SC_NOT_FOUND);
+        assertCinnamonError(metaResponse, ErrorCode.METASET_TYPE_NOT_FOUND);
     }
 
     @Test
     public void createMetaMetasetTypeByNameNotFound() throws IOException {
         CreateMetaRequest request      = new CreateMetaRequest(38L, "foo", "unknown");
         HttpResponse      metaResponse = sendStandardRequest(UrlMapping.OSD__CREATE_META, request);
-        assertCinnamonError(metaResponse, ErrorCode.METASET_TYPE_NOT_FOUND, SC_NOT_FOUND);
+        assertCinnamonError(metaResponse, ErrorCode.METASET_TYPE_NOT_FOUND);
     }
 
     @Test
     public void createMetaMetasetIsUniqueAndExists() throws IOException {
         CreateMetaRequest request      = new CreateMetaRequest(39L, "duplicate license", "license");
         HttpResponse      metaResponse = sendStandardRequest(UrlMapping.OSD__CREATE_META, request);
-        assertCinnamonError(metaResponse, ErrorCode.METASET_IS_UNIQUE_AND_ALREADY_EXISTS, SC_BAD_REQUEST);
+        assertCinnamonError(metaResponse, ErrorCode.METASET_IS_UNIQUE_AND_ALREADY_EXISTS);
     }
 
     // non-unique metasetType should allow appending new metasets.
@@ -543,21 +551,21 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     public void deleteMetaObjectNotFound() throws IOException {
         DeleteMetaRequest deleteRequest = new DeleteMetaRequest(Long.MAX_VALUE, 1L);
         HttpResponse      metaResponse  = sendStandardRequest(UrlMapping.OSD__DELEET_META, deleteRequest);
-        assertCinnamonError(metaResponse, ErrorCode.OBJECT_NOT_FOUND, SC_NOT_FOUND);
+        assertCinnamonError(metaResponse, ErrorCode.OBJECT_NOT_FOUND);
     }
 
     @Test
     public void deleteMetaWithoutPermission() throws IOException {
         DeleteMetaRequest deleteRequest = new DeleteMetaRequest(42L, "license");
         HttpResponse      metaResponse  = sendStandardRequest(UrlMapping.OSD__DELEET_META, deleteRequest);
-        assertCinnamonError(metaResponse, ErrorCode.NO_WRITE_CUSTOM_METADATA_PERMISSION, SC_UNAUTHORIZED);
+        assertCinnamonError(metaResponse, ErrorCode.NO_WRITE_CUSTOM_METADATA_PERMISSION);
     }
 
     @Test
     public void deleteMetaWithMetaNotFound() throws IOException {
         DeleteMetaRequest deleteRequest = new DeleteMetaRequest(41L, "unknown-type");
         HttpResponse      metaResponse  = sendStandardRequest(UrlMapping.OSD__DELEET_META, deleteRequest);
-        assertCinnamonError(metaResponse, ErrorCode.METASET_NOT_FOUND, SC_NOT_FOUND);
+        assertCinnamonError(metaResponse, ErrorCode.METASET_NOT_FOUND);
     }
 
     @Test
@@ -849,6 +857,9 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     private void createTestContentOnOsd(Long osdId, boolean asSuperuser) throws IOException {
+        // lock before setContent:
+        lockOsd(osdId);
+
         SetContentRequest setContentRequest = new SetContentRequest(osdId, 1L);
         HttpEntity        multipartEntity   = createMultipartEntity(setContentRequest);
         HttpResponse      setContentResponse;
@@ -858,6 +869,19 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
             setContentResponse = sendStandardMultipartRequest(UrlMapping.OSD__SET_CONTENT, multipartEntity);
         }
         assertResponseOkay(setContentResponse);
+        unLockOsd(osdId);
+    }
+
+    private void lockOsd(Long osdId) throws IOException {
+        IdRequest    idRequest    = new IdRequest(osdId);
+        HttpResponse lockResponse = sendStandardRequest(UrlMapping.OSD__LOCK, idRequest);
+        assertResponseOkay(lockResponse);
+    }
+
+    private void unLockOsd(Long osdId) throws IOException {
+        IdRequest    idRequest      = new IdRequest(osdId);
+        HttpResponse unlockResponse = sendStandardRequest(UrlMapping.OSD__UNLOCK, idRequest);
+        assertResponseOkay(unlockResponse);
     }
 
     public ObjectSystemData fetchSingleOsd(Long id) throws IOException {
