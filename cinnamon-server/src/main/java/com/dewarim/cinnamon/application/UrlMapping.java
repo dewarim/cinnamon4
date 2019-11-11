@@ -58,6 +58,7 @@ public enum UrlMapping {
     OSD__GET_SUMMARIES("osd", "getSummaries", "/api"),
     OSD__SET_SUMMARY("osd", "setSummary", "/api"),
     OSD__UNLOCK("osd", "unlock", "/api"),
+    OSD__VERSION("osd", "version", "/api"),
     PERMISSION__GET_USER_PERMISSIONS("permission", "getUserPermissions", "/api"),
     PERMISSION__LIST_PERMISSIONS("permission", "listPermissions", "/api"),
     RELATION_TYPE__LIST_RELATION_TYPES("relationType", "listRelationTypes", "/api"),

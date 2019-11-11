@@ -66,7 +66,6 @@ public class OsdDao {
         sqlSession.update("com.dewarim.cinnamon.ObjectSystemDataMapper.updateOsd", osd);
     }
 
-
     public ObjectSystemData saveOsd(ObjectSystemData osd) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
         int        resultRows = sqlSession.insert("com.dewarim.cinnamon.ObjectSystemDataMapper.insertOsd", osd);
@@ -74,5 +73,18 @@ public class OsdDao {
             ErrorCode.DB_INSERT_FAILED.throwUp();
         }
         return osd;
+    }
+
+    public Optional<String> findLastDescendantVersion(long predecessorId) {
+        List<ObjectSystemData> objects = findObjectsWithSamePredecessor(predecessorId);
+        if (objects.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(objects.get(0).getCmnVersion());
+    }
+
+    public List<ObjectSystemData> findObjectsWithSamePredecessor(long predecessorId) {
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        return sqlSession.selectList("com.dewarim.cinnamon.ObjectSystemDataMapper.findLastDescendantVersion", predecessorId);
     }
 }

@@ -1,10 +1,10 @@
 package com.dewarim.cinnamon.model;
 
 import com.dewarim.cinnamon.api.CinnamonObject;
-import com.dewarim.cinnamon.api.Ownable;
 import com.dewarim.cinnamon.api.content.ContentMetadata;
 import com.dewarim.cinnamon.provider.DefaultContentProvider;
 
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Objects;
 
@@ -13,37 +13,111 @@ import java.util.Objects;
  * It's abbreviated to OSD.
  */
 public class ObjectSystemData implements ContentMetadata, CinnamonObject {
-    
-    private Long id;
-    private String name;
-    private String contentPath;
-    private Long contentSize;
-    private Long predecessorId;
-    private Long rootId;
-    private Long creatorId;
-    private Long modifierId;
-    private Long ownerId;
-    private Long lockerId;
-    private Date created = new Date();
-    private Date modified = new Date();
-    private Long languageId;
-    private Long aclId;
-    private Long parentId;
-    private Long formatId;
-    private Long typeId;
+
+    private Long    id;
+    private String  name;
+    private String  contentPath;
+    private Long    contentSize;
+    private Long    predecessorId;
+    private Long    rootId;
+    private Long    creatorId;
+    private Long    modifierId;
+    private Long    ownerId;
+    private Long    lockerId;
+    private Date    created         = new Date();
+    private Date    modified        = new Date();
+    private Long    languageId;
+    private Long    aclId;
+    private Long    parentId;
+    private Long    formatId;
+    private Long    typeId;
+
+    /**
+     * An object is latestHead, if it is not of part of a branch and has no
+     * descendants.
+     */
     private boolean latestHead;
-    private boolean latestBranch = true;
-    private boolean contentChanged = false;
+
+     /**
+     * An object is latestBranch, if it has no descendants and its cmnVersion contains a ".".
+     * You can only delete an object without descendants.
+     */
+    private boolean latestBranch    = true;
+    private boolean contentChanged  = false;
     private boolean metadataChanged = false;
-    private String cmnVersion = "1";
-    private Long lifecycleStateId;
-    private String summary = "<summary/>";
-    
-    private Long objVersion;
+    private String  cmnVersion      = "1";
+    private Long    lifecycleStateId;
+    private String  summary         = "<summary/>";
+
+    private Long   objVersion;
     private String contentHash;
     private String contentProvider = DefaultContentProvider.FILE_SYSTEM.name();
 
-    public Long getId() {
+    public ObjectSystemData() {
+    }
+
+    /**
+     * Create a new version of the current object.
+     * <br/>
+     * Does not copy lifecycle state or content.
+     *
+     * @param user
+     * @return
+     */
+    public ObjectSystemData createNewVersion(UserAccount user, String lastDescendantVersion) {
+        ObjectSystemData nextVersion = new ObjectSystemData();
+        Calendar         calendar    = Calendar.getInstance();
+        nextVersion.setAclId(aclId);
+        nextVersion.setCreated(calendar.getTime());
+        nextVersion.setCreatorId(user.getId());
+        nextVersion.setModified(calendar.getTime());
+        nextVersion.setModifierId(user.getId());
+        nextVersion.setOwnerId(user.getId());
+        nextVersion.setLanguageId(languageId);
+        nextVersion.setLatestHead(latestHead);
+        nextVersion.setLatestBranch(latestBranch);
+        nextVersion.setLockerId(null);
+        nextVersion.setName(name);
+        nextVersion.setParentId(parentId);
+        nextVersion.setRootId(rootId);
+        nextVersion.setPredecessorId(id);
+        nextVersion.setTypeId(typeId);
+        String nextVersionLabel = createNewVersionLabel(lastDescendantVersion);
+        nextVersion.setCmnVersion(nextVersionLabel);
+        return nextVersion;
+    }
+
+    /**
+     * Create a new version label for this object. This method should only be used
+     * by OSD.createNewVersion
+     *
+     * @param lastDescendantVersion
+     * @return new version label
+     */
+    private String createNewVersionLabel(String lastDescendantVersion) {
+        String   predecessorVersion = cmnVersion;
+        String[] branches           = predecessorVersion.split("\\.");
+        String   lastSegment        = branches[branches.length - 1];
+        String[] lastBranch         = lastSegment.split("-");
+
+        if (lastDescendantVersion == null) {
+            // no object with same predecessor
+            String buffer = lastBranch.length == 2 ? lastBranch[1] : lastBranch[0];
+            String stem   = predecessorVersion.substring(0, predecessorVersion.length() - buffer.length());
+            buffer = String.valueOf(Integer.parseInt(buffer) + 1);
+            return stem + buffer;
+        }
+        String[] lastDescBranches = lastDescendantVersion.split("\\.");
+        if (branches.length == lastDescBranches.length) {
+            // last descendant is the only one so far: create first branch
+            return predecessorVersion + ".1-1";
+        }
+        String buffer = lastDescBranches[lastDescBranches.length - 1].split("-")[0];
+        buffer = String.valueOf(Integer.parseInt(buffer) + 1);
+        return predecessorVersion + "." + buffer + "-1";
+    }
+
+     public Long getId() {
         return id;
     }
 
@@ -262,11 +336,15 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject {
     public void setContentProvider(String contentProvider) {
         this.contentProvider = contentProvider;
     }
-    
+
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         ObjectSystemData that = (ObjectSystemData) o;
         return latestHead == that.latestHead &&
                 latestBranch == that.latestBranch &&

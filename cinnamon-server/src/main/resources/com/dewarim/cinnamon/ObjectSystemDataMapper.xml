@@ -113,6 +113,12 @@
           and latest_head = true
     </select>
 
+    <select id="com.dewarim.cinnamon.ObjectSystemDataMapper.findLastDescendantVersion" parameterType="long" resultMap="osdMap">
+        select *
+        from objects
+        where predecessor_id = #{id}
+    </select>
+
     <!-- TODO: perhaps implement safe version (checking for osd.version=version) -->
     <update id="updateOsd">
         UPDATE objects

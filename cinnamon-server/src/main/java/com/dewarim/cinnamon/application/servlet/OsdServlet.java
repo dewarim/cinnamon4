@@ -3,9 +3,10 @@ package com.dewarim.cinnamon.application.servlet;
 import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.api.content.ContentMetadata;
 import com.dewarim.cinnamon.api.content.ContentProvider;
+import com.dewarim.cinnamon.api.lifecycle.State;
+import com.dewarim.cinnamon.api.lifecycle.StateChangeResult;
 import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.application.ErrorCode;
-import com.dewarim.cinnamon.application.ErrorResponseGenerator;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.application.exception.FailedRequestException;
 import com.dewarim.cinnamon.dao.*;
@@ -19,6 +20,7 @@ import com.dewarim.cinnamon.model.request.osd.SetContentRequest;
 import com.dewarim.cinnamon.model.response.OsdWrapper;
 import com.dewarim.cinnamon.model.response.SummaryWrapper;
 import com.dewarim.cinnamon.provider.ContentProviderService;
+import com.dewarim.cinnamon.provider.StateProviderService;
 import com.dewarim.cinnamon.security.authorization.AuthorizationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -37,6 +39,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -100,6 +103,9 @@ public class OsdServlet extends BaseServlet {
             case "/unlock":
                 unlock(request, cinnamonResponse, user, osdDao);
                 break;
+            case "/version":
+                newVersion(request, cinnamonResponse, user, osdDao);
+                break;
             default:
                 response.setStatus(HttpServletResponse.SC_NO_CONTENT);
         }
@@ -154,6 +160,7 @@ public class OsdServlet extends BaseServlet {
             Long lifecycleStateId = new LifecycleStateDao().getLifecycleStateById(createRequest.getLifecycleStateId())
                     .orElseThrow(ErrorCode.LIFECYCLE_STATE_NOT_FOUND.getException()).getId();
             osd.setLifecycleStateId(lifecycleStateId);
+            // TODO: + enterState?
         }
 
         // check language if given
@@ -202,7 +209,7 @@ public class OsdServlet extends BaseServlet {
         metas.forEach(meta -> {
             boolean deleteSuccess = metaDao.deleteById(meta.getId()) == 1;
             if (!deleteSuccess) {
-                throw new FailedRequestException(ErrorCode.DB_DELETE_FAILED, "Failed to delete metaSet #"+meta.getId());
+                throw new FailedRequestException(ErrorCode.DB_DELETE_FAILED, "Failed to delete metaSet #" + meta.getId());
             }
         });
         response.responseIsGenericOkay();
@@ -240,14 +247,7 @@ public class OsdServlet extends BaseServlet {
         Long             osdId = metaRequest.getId();
         ObjectSystemData osd   = osdDao.getObjectById(osdId).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
         throwUnlessCustomMetaIsWritable(osd, user);
-        MetasetType metaType;
-        if (metaRequest.getTypeId() != null) {
-            metaType = new MetasetTypeDao().getMetasetTypeById(metaRequest.getTypeId())
-                    .orElseThrow(ErrorCode.METASET_TYPE_NOT_FOUND.getException());
-        } else {
-            metaType = new MetasetTypeDao().getMetasetTypeByName(metaRequest.getTypeName())
-                    .orElseThrow(ErrorCode.METASET_TYPE_NOT_FOUND.getException());
-        }
+        MetasetType metaType = determineMetasetType(metaRequest.getTypeId(), metaRequest.getTypeName());
 
         // does meta already exist and is unique?
         OsdMetaDao metaDao = new OsdMetaDao();
@@ -258,6 +258,16 @@ public class OsdServlet extends BaseServlet {
 
         Meta meta = metaDao.createMeta(metaRequest, metaType);
         createMetaResponse(new MetaRequest(), response, Collections.singletonList(meta));
+    }
+
+    private MetasetType determineMetasetType(Long typeId, String typeName) {
+        if (typeId != null) {
+            return new MetasetTypeDao().getMetasetTypeById(typeId)
+                    .orElseThrow(ErrorCode.METASET_TYPE_NOT_FOUND.getException());
+        } else {
+            return new MetasetTypeDao().getMetasetTypeByName(typeName)
+                    .orElseThrow(ErrorCode.METASET_TYPE_NOT_FOUND.getException());
+        }
     }
 
     private void lock(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws IOException {
@@ -353,7 +363,7 @@ public class OsdServlet extends BaseServlet {
             throw ErrorCode.NO_WRITE_PERMISSION.exception();
         }
         boolean isLocker = user.getId().equals(osd.getLockerId());
-        if(!isLocker){
+        if (!isLocker) {
             throw ErrorCode.OBJECT_MUST_BE_LOCKED_BY_USER.exception();
         }
 
@@ -437,7 +447,74 @@ public class OsdServlet extends BaseServlet {
         response.setWrapper(wrapper);
     }
 
-    private void generateErrorMessage(HttpServletResponse response, int statusCode, ErrorCode errorCode) {
-        ErrorResponseGenerator.generateErrorMessage(response, statusCode, errorCode);
+    private void newVersion(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws ServletException, IOException {
+        CreateNewVersionRequest versionRequest = xmlMapper.readValue(request.getInputStream(), CreateNewVersionRequest.class)
+                .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
+        ObjectSystemData preOsd = osdDao.getObjectById(versionRequest.getId()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
+        authorizationService.throwUpUnlessUserOrOwnerHasPermission(preOsd, DefaultPermission.VERSION_OBJECT, user,
+                ErrorCode.NO_VERSION_PERMISSION);
+
+        Optional<String> lastDescendantVersion = osdDao.findLastDescendantVersion(preOsd.getId());
+        ObjectSystemData osd                   = preOsd.createNewVersion(user, lastDescendantVersion.orElse(null));
+
+        /*
+         * fixLatestHeadAndBranch:
+         * When a new version is created, the predecessor is no longer the latest version in head or branch:
+         */
+        preOsd.setLatestBranch(false);
+        preOsd.setLatestHead(false);
+        osdDao.updateOsd(preOsd, false);
+
+        if (osd.getCmnVersion().matches("^\\d+$")) {
+            osd.setLatestHead(true);
+        }
+        // save here to generate Id so metasets can be created and linked to the OSD.
+        ObjectSystemData savedOsd = osdDao.saveOsd(osd);
+
+        // storeMetadata
+        if (versionRequest.getMetaRequests().size() > 0) {
+            OsdMetaDao            osdMetaDao = new OsdMetaDao();
+            final List<ErrorCode> errorCodes = new ArrayList<>();
+            versionRequest.getMetaRequests().forEach(metadata -> {
+                        try {
+                            MetasetType       metasetType       = determineMetasetType(metadata.getTypeId(), metadata.getTypeName());
+                            CreateMetaRequest createMetaRequest = new CreateMetaRequest(osd.getId(), metadata.getContent(), metasetType.getName());
+                            osdMetaDao.createMeta(createMetaRequest, metasetType);
+                        } catch (FailedRequestException e) {
+                            errorCodes.add(e.getErrorCode());
+                        } catch (Exception e) {
+                            errorCodes.add(ErrorCode.INTERNAL_SERVER_ERROR_TRY_AGAIN_LATER);
+                        }
+                    }
+            );
+            if (errorCodes.size() > 0) {
+                // for now, just throw the first error.
+                throw errorCodes.get(0).exception();
+            }
+        }
+
+        // saveFileUpload
+        Part file = request.getPart("file");
+        if (file != null) {
+            storeFileUpload(file.getInputStream(), osd, versionRequest.getFormatId());
+        }
+
+        // set lifecycle state
+        if (preOsd.getLifecycleStateId() != null) {
+            LifecycleState lifecycleState = new LifecycleStateDao()
+                    .getLifecycleStateById(preOsd.getLifecycleStateId())
+                    .orElseThrow(ErrorCode.LIFECYCLE_STATE_NOT_FOUND.getException());
+            State             stateImpl         = StateProviderService.getInstance().getStateProvider(lifecycleState.getStateClass()).getState();
+            StateChangeResult attachStateResult = stateImpl.enter(osd, lifecycleState.getLifecycleStateConfig());
+            if (!attachStateResult.isSuccessful()) {
+                throw ErrorCode.LIFECYCLE_STATE_CHANGE_FAILED.exception();
+            }
+            osd.setLifecycleStateId(lifecycleState.getLifecycleStateForCopyId());
+        }
+        osdDao.updateOsd(osd, false);
+        OsdWrapper wrapper = new OsdWrapper();
+        wrapper.setOsds(Collections.singletonList(savedOsd));
+        response.setWrapper(wrapper);
     }
+
 }

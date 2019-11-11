@@ -218,7 +218,7 @@ create table objects
   modified timestamp not null,
   name varchar(128) not null,
   version bigint default 0,
-  cmn_version varchar(128) default '1' not null,
+  cmn_version varchar(1024) default '1' not null,
   acl_id bigint not null
     constraint fk9d13c5143e44742f
     references acls,
@@ -1055,6 +1055,11 @@ insert into objects (id, created, latest_branch, latest_head, modified, name, cr
 values (nextval('seq_objects_id'), now(), true, true, now(), 'has-deletable-meta-but-no-permission', 1, 1, 1, 1, 6, 1, 5);
 
 -- #43 test object for unlocked setContent/getContent in creation folder #6
+insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+                     owner_id, parent_id, type_id, acl_id)
+values (nextval('seq_objects_id'), now(), true, true, now(), 'content-holder', 1, 1, 1, 1, 6, 1, 2);
+
+-- #44 test object for version request in creation folder #6
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
 values (nextval('seq_objects_id'), now(), true, true, now(), 'content-holder', 1, 1, 1, 1, 6, 1, 2);

@@ -801,6 +801,27 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         assertEquals(PLAINTEXT_FORMAT_ID, osd.getFormatId());
     }
 
+    @Test
+    public void versionWithInvalidRequest() throws IOException {
+        IdRequest    idRequest       = new IdRequest(-1L);
+        HttpResponse versionResponse = sendStandardRequest(UrlMapping.OSD__VERSION, idRequest);
+        assertCinnamonError(versionResponse, ErrorCode.INVALID_REQUEST);
+    }
+
+    @Test
+    public void versionWithoutValidTarget() throws IOException {
+        IdRequest    idRequest       = new IdRequest(Long.MAX_VALUE);
+        HttpResponse versionResponse = sendStandardRequest(UrlMapping.OSD__VERSION, idRequest);
+        assertCinnamonError(versionResponse, ErrorCode.OBJECT_NOT_FOUND);
+    }
+
+    @Test
+    public void versionWithoutVersionPermission() throws IOException {
+        IdRequest    idRequest       = new IdRequest(44L);
+        HttpResponse versionResponse = sendStandardRequest(UrlMapping.OSD__VERSION, idRequest);
+        assertCinnamonError(versionResponse, ErrorCode.NO_VERSION_PERMISSION);
+    }
+
     private HttpResponse sendAdminMultipartRequest(UrlMapping url, HttpEntity multipartEntity) throws IOException {
         return Request.Post("http://localhost:" + cinnamonTestPort + url.getPath())
                 .addHeader("ticket", getAdminTicket())
