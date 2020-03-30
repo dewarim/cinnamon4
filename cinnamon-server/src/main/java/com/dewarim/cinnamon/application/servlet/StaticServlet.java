@@ -42,24 +42,25 @@ public class StaticServlet extends HttpServlet {
     }
 
     private void handleStaticContentRequest(String pathInfo, HttpServletResponse response) throws IOException {
-        InputStream inputStream = getClass().getResourceAsStream("/static" + pathInfo);
-        if (inputStream == null) {
-            ErrorResponseGenerator.generateErrorMessage(response, SC_NOT_FOUND, ErrorCode.FILE_NOT_FOUND);
-            return;
+        try (InputStream inputStream = getClass().getResourceAsStream("/static" + pathInfo)) {
+            if (inputStream == null) {
+                ErrorResponseGenerator.generateErrorMessage(response, SC_NOT_FOUND, ErrorCode.FILE_NOT_FOUND);
+                return;
+            }
+            String defaultMimeByExtension = MimeTypes.getDefaultMimeByExtension(pathInfo);
+            response.setContentType(defaultMimeByExtension);
+            switch (defaultMimeByExtension) {
+                case "application/xml":
+                case "text/plain":
+                case "text/css":
+                case "text/html":
+                case "text/javascript":
+                    response.setCharacterEncoding("UTF-8");
+                    break;
+                default: // do not set character encoding.
+            }
+            response.setStatus(HttpServletResponse.SC_OK);
+            inputStream.transferTo(response.getOutputStream());
         }
-        String defaultMimeByExtension = MimeTypes.getDefaultMimeByExtension(pathInfo);
-        response.setContentType(defaultMimeByExtension);
-        switch (defaultMimeByExtension) {
-            case "application/xml":
-            case "text/plain":
-            case "text/css":
-            case "text/html":
-            case "text/javascript":
-                response.setCharacterEncoding("UTF-8");
-                break;
-            default: // do not set character encoding.
-        }
-        response.setStatus(HttpServletResponse.SC_OK);
-        inputStream.transferTo(response.getOutputStream());
     }
 }
