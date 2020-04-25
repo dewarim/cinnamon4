@@ -57,6 +57,13 @@ public class OsdServlet extends BaseServlet {
     private static final Logger               log                  = LogManager.getLogger(OsdServlet.class);
     private static final String               MULTIPART            = "multipart/";
 
+    public OsdServlet() {
+        super();
+        // Would like to use UNWRAP_ROOT_VALUE to prevent an IdRequest being mistaken for a CreateNewVersionRequest.
+        // but currently this featuer does not work on XML input:
+        // xmlMapper.configure(DeserializationFeature.UNWRAP_ROOT_VALUE, true);
+    }
+
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
         String pathInfo = request.getPathInfo();
@@ -112,12 +119,7 @@ public class OsdServlet extends BaseServlet {
     }
 
     private void createOsd(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws IOException, ServletException {
-        String contentType = Optional.ofNullable(request.getContentType())
-                .orElseThrow(ErrorCode.NO_CONTENT_TYPE_IN_HEADER.getException());
-        if (!contentType.toLowerCase().startsWith(MULTIPART)) {
-            throw ErrorCode.NOT_MULTIPART_UPLOAD.exception();
-        }
-
+        verifyIsMultipart(request);
         Part contentRequest = request.getPart("createOsdRequest");
         if (contentRequest == null) {
             throw ErrorCode.MISSING_REQUEST_PAYLOAD.exception();
@@ -342,16 +344,12 @@ public class OsdServlet extends BaseServlet {
     }
 
     private void setContent(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws ServletException, IOException {
-        String contentType = Optional.ofNullable(request.getContentType())
-                .orElseThrow(ErrorCode.NO_CONTENT_TYPE_IN_HEADER.getException());
-        if (!contentType.toLowerCase().startsWith(MULTIPART)) {
-            throw ErrorCode.NOT_MULTIPART_UPLOAD.exception();
-        }
+        verifyIsMultipart(request);
         Part contentRequest = request.getPart("setContentRequest");
         if (contentRequest == null) {
             throw ErrorCode.INVALID_REQUEST.exception();
         }
-        Part file = request.getPart("file");
+        Part file = request.getPart(("file"));
         if (file == null) {
             throw ErrorCode.MISSING_FILE_PARAMETER.exception();
         }
@@ -432,7 +430,7 @@ public class OsdServlet extends BaseServlet {
 
     private void getObjectsByFolderId(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws IOException {
         OsdByFolderRequest     osdRequest     = xmlMapper.readValue(request.getInputStream(), OsdByFolderRequest.class);
-        Long                   folderId       = osdRequest.getFolderId();
+        long                   folderId       = osdRequest.getFolderId();
         boolean                includeSummary = osdRequest.isIncludeSummary();
         List<ObjectSystemData> osds           = osdDao.getObjectsByFolderId(folderId, includeSummary);
         List<ObjectSystemData> filteredOsds   = authorizationService.filterObjectsByBrowsePermission(osds, user);
@@ -448,7 +446,9 @@ public class OsdServlet extends BaseServlet {
     }
 
     private void newVersion(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws ServletException, IOException {
-        CreateNewVersionRequest versionRequest = xmlMapper.readValue(request.getInputStream(), CreateNewVersionRequest.class)
+        verifyIsMultipart(request);
+        Part contentRequest = request.getPart("createNewVersionRequest");
+        CreateNewVersionRequest versionRequest = xmlMapper.readValue(contentRequest.getInputStream(), CreateNewVersionRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         ObjectSystemData preOsd = osdDao.getObjectById(versionRequest.getId()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
         authorizationService.throwUpUnlessUserOrOwnerHasPermission(preOsd, DefaultPermission.VERSION_OBJECT, user,
@@ -472,7 +472,7 @@ public class OsdServlet extends BaseServlet {
         ObjectSystemData savedOsd = osdDao.saveOsd(osd);
 
         // storeMetadata
-        if (versionRequest.getMetaRequests().size() > 0) {
+        if (versionRequest.hasMetaRequests()) {
             OsdMetaDao            osdMetaDao = new OsdMetaDao();
             final List<ErrorCode> errorCodes = new ArrayList<>();
             versionRequest.getMetaRequests().forEach(metadata -> {
@@ -515,6 +515,14 @@ public class OsdServlet extends BaseServlet {
         OsdWrapper wrapper = new OsdWrapper();
         wrapper.setOsds(Collections.singletonList(savedOsd));
         response.setWrapper(wrapper);
+    }
+
+    private void verifyIsMultipart(HttpServletRequest request) {
+        String contentType = Optional.ofNullable(request.getContentType())
+                .orElseThrow(ErrorCode.NO_CONTENT_TYPE_IN_HEADER.getException());
+        if (!contentType.toLowerCase().startsWith(MULTIPART)) {
+            throw ErrorCode.NOT_MULTIPART_UPLOAD.exception();
+        }
     }
 
 }

@@ -14,23 +14,23 @@ import java.util.Objects;
  */
 public class ObjectSystemData implements ContentMetadata, CinnamonObject {
 
-    private Long    id;
-    private String  name;
-    private String  contentPath;
-    private Long    contentSize;
-    private Long    predecessorId;
-    private Long    rootId;
-    private Long    creatorId;
-    private Long    modifierId;
-    private Long    ownerId;
-    private Long    lockerId;
-    private Date    created         = new Date();
-    private Date    modified        = new Date();
-    private Long    languageId;
-    private Long    aclId;
-    private Long    parentId;
-    private Long    formatId;
-    private Long    typeId;
+    private Long   id;
+    private String name;
+    private String contentPath;
+    private Long   contentSize;
+    private Long   predecessorId;
+    private Long   rootId;
+    private Long   creatorId;
+    private Long   modifierId;
+    private Long   ownerId;
+    private Long   lockerId;
+    private Date   created  = new Date();
+    private Date   modified = new Date();
+    private Long   languageId;
+    private Long   aclId;
+    private Long   parentId;
+    private Long   formatId;
+    private Long   typeId;
 
     /**
      * An object is latestHead, if it is not of part of a branch and has no
@@ -38,7 +38,7 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject {
      */
     private boolean latestHead;
 
-     /**
+    /**
      * An object is latestBranch, if it has no descendants and its cmnVersion contains a ".".
      * You can only delete an object without descendants.
      */
@@ -91,33 +91,160 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject {
      * Create a new version label for this object. This method should only be used
      * by OSD.createNewVersion
      *
-     * @param lastDescendantVersion
+     * @param lastDescendantVersion latest object (highest id) with the same predecessor
      * @return new version label
      */
     private String createNewVersionLabel(String lastDescendantVersion) {
-        String   predecessorVersion = cmnVersion;
-        String[] branches           = predecessorVersion.split("\\.");
-        String   lastSegment        = branches[branches.length - 1];
-        String[] lastBranch         = lastSegment.split("-");
+        String predecessorVersion = cmnVersion;
 
+        /* Note: this is somewhat non-intuitive code which I have inherited without documentation,
+         * so let's take it step by step.
+         *
+         * This method is called by createNewVersion which generates a new version of *this*
+         * object, so *this* object is the predecessor.
+         *
+         * Simple cmnVersion is a monotonically increasing integer 1 ..n.
+         * It only increases by one from version to version.
+         * Simple versions belong to the main trunk. (So, trunk and branches)
+         *
+         * Cinnamon supports branching, so you can create a new object based on an earlier
+         * version instead. For example, if you have version 1, 2 and 3, you can create a
+         * new branch based on version 2. A new branch is created when you version an object
+         * that already has a descendant version. If you create an object without a descendant,
+         * the current version is simply increased by 1.
+         *
+         * The version numbers of branches are constructed by using the predecessor version
+         * number (in this example: 2), adding a "." and the branch counter (1 for the first
+         * branch) and a hyphen for the new version of the first object in this branch:
+         * Example 1:
+         * 2.1-1
+         *  - 2: base version in main trunk
+         *  - "." as separator
+         *  - version 1 for first branch
+         *  - "-" as separator between branch and version
+         *  - version 1 for first object in this new branch.
+         *
+         * Next version in this branch would be 2.1-2
+         *
+         * Example 2:
+         * A new version based on branch based on 2.1-2 with an existing sibling branch of
+         * 2.2-1 will be 2.1-1.1-1
+         *  - 2.1-1 "base branch"
+         *  - "."
+         *  - 1-1 first branch (of base), first version
+         *
+         * Example 3:
+         * A new version based on v2 (where only v3 exists, but no branches of v2 yet)
+         *
+         * Example 4: new version based on v3 (no descendants, no siblings)
+         */
+
+        /*
+         * First, split the branches at the branch separator:
+         * Example 1: 2.1-1 has predecessorVersion 2 so this becomes [2]
+         * Example 2:  same as Ex.1
+         * Example 3: 2 becomes [2]
+         * Example 4: 3 becomes [3]
+         */
+        String[] branches = predecessorVersion.split("\\.");
+
+        /*
+         * lastSegment is the last version:
+         * Example 1: one-element array [2]
+         * Example 2: same as Ex.1
+         * Example 3: one-element array [2]
+         * Example 4: one-element array [3]
+         */
+        String lastSegment = branches[branches.length - 1];
+
+        /*
+         * Example 1: lastBranch is [2]
+         * Example 2: sames as Ex.1
+         * Example 3: one-element array [2]
+         * Example 4: one-element array [3]
+         */
+        String[] lastBranch = lastSegment.split("-");
+
+        /*
+         * The lastDescendantVersion is version of the newest object
+         * (the one with the highest id (object ids are monotonically increasing integers, too))
+         * which has this object as its predecessor.
+         * Example 1: 2.1.1 (assuming 2.1-1 is the first version of the first branch with no other
+         * branches of version 2 existing)
+         * Example 2: v2.1-1 has lastDescendantVersion v2.2-1
+         * Example 3: v2 has lastDescendantVersion v3 (with v1, v2, v3, v3 is lastDescendant of v2)
+         * Example 4: null (v3 has no further descendants)
+         */
         if (lastDescendantVersion == null) {
             // no object with same predecessor
-            String buffer = lastBranch.length == 2 ? lastBranch[1] : lastBranch[0];
-            String stem   = predecessorVersion.substring(0, predecessorVersion.length() - buffer.length());
-            buffer = String.valueOf(Integer.parseInt(buffer) + 1);
-            return stem + buffer;
+            String leaf;
+            if (lastBranch.length == 2) {
+                /*
+                 * Example: creating a new version of a branch like 2.1-3 with no siblings:
+                 * branches = 2, 1-3
+                 * lastSegement = 1-3
+                 * two elements in lastBranch [1],[3]
+                 * leaf = 3, new version would be 2.1-4
+                 */
+                leaf = lastBranch[1];
+            } else {
+                /*
+                 * Example 2: one element in lastBranch; 2
+                 * Example 4: there is only one element in lastBranch, "3"
+                 */
+                leaf = lastBranch[0];
+            }
+
+            /*
+             * new version on this branch increases by 1
+             * Example 2: 2
+             * Example 4: 4
+             */
+            leaf = String.valueOf(Integer.parseInt(leaf) + 1);
+
+            /*
+             * Build the new version out of the stem (trunk+branch) + leaf (new version)
+             * Example 1: predecessor version for the new version of is 2.1-1, so
+             * stem is 2.1- and leaf is 2 -> new version is 2.1-2
+             *
+             * Example 4: predecessor version is v3, so stem is ''
+             * -> new version is '' + 4 = 4
+             */
+            String stem = predecessorVersion.substring(0, predecessorVersion.length() - leaf.length());
+            return stem + leaf;
         }
+        /*
+         * Example 2: has 2.1-1 has a sibling branch 2.2-1
+         * lastDescendant version is 2.2-1 (the sibling is newer)
+         * branches would be [2], [1-1]
+         * lastDescBranches is [2], [2-1]
+         */
         String[] lastDescBranches = lastDescendantVersion.split("\\.");
+
+        /*
+         * Example 2: siblings have same branch length
+         */
         if (branches.length == lastDescBranches.length) {
-            // last descendant is the only one so far: create first branch
+            /*
+             * predecessorVersion is Ex.2 (2.1-1) and we append the first version of a new branch:
+             * -> v2.1-1.1-1 "first version of first branch of 2.1-1"
+             */
             return predecessorVersion + ".1-1";
         }
-        String buffer = lastDescBranches[lastDescBranches.length - 1].split("-")[0];
-        buffer = String.valueOf(Integer.parseInt(buffer) + 1);
-        return predecessorVersion + "." + buffer + "-1";
+
+        /*
+         * Example: we have version 2.1-1 and want to create a new version of 2, which will be the second branch of 2.
+         * - latestDescBranches are 2 and 1-1 (splitting lastDescendant 2.1-1 at ".")
+         * - newest descendant branch is 1.1
+         * - new branch version should be 2-1 of v2 -> 2.2-1
+         */
+        String newestDescendantBranch = lastDescBranches[lastDescBranches.length - 1];
+        String currentBranchVersion          = newestDescendantBranch.split("-")[0];
+        String newBranchVersion = String.valueOf(Integer.parseInt(currentBranchVersion) + 1);
+        return predecessorVersion + "." + newBranchVersion + "-1";
     }
 
-     public Long getId() {
+    public Long getId() {
         return id;
     }
 

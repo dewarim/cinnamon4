@@ -117,6 +117,7 @@
         select *
         from objects
         where predecessor_id = #{id}
+        order by id desc
     </select>
 
     <!-- TODO: perhaps implement safe version (checking for osd.version=version) -->

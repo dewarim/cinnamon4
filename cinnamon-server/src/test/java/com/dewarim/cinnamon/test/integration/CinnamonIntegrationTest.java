@@ -34,6 +34,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.fail;
 
 /**
+ *
  */
 public class CinnamonIntegrationTest {
 
@@ -44,7 +45,7 @@ public class CinnamonIntegrationTest {
     static String         ticket;
     static String         ticketForDoe;
     static String         HOST             = "http://localhost:" + cinnamonTestPort;
-    XmlMapper mapper = new XmlMapper();
+    static XmlMapper      mapper           = new XmlMapper();
 
     @BeforeClass
     public static void setUpServer() throws Exception {
@@ -117,7 +118,7 @@ public class CinnamonIntegrationTest {
 
     protected void assertCinnamonError(HttpResponse response, ErrorCode errorCode) throws IOException {
         String responseText = new String(response.getEntity().getContent().readAllBytes());
-        Assert.assertTrue(responseText.contains(errorCode.getCode()));
+        Assert.assertTrue("response should contain errorCode " + errorCode +" but was "+responseText, responseText.contains(errorCode.getCode()));
         Assert.assertThat(errorCode.getHttpResponseCode(), equalTo(response.getStatusLine().getStatusCode()));
         CinnamonError cinnamonError = mapper.readValue(response.getEntity().getContent(), CinnamonError.class);
         Assert.assertThat(cinnamonError.getCode(), equalTo(errorCode.getCode()));

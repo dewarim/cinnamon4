@@ -653,6 +653,8 @@ insert into aclentry_permissions(id,aclentry_id,permission_id) values (nextval('
 insert into aclentry_permissions(id,aclentry_id,permission_id) values (nextval('seq_aclentry_permission_id'),8,6);
 -- #15 add write_object_sysmeta permission to reviewers.acl:
 insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),5,17);
+-- #16 add version permission to reviewers.acl
+insert into aclentry_permissions values(nextval('seq_aclentry_permission_id'), 5,14);
 
 ---- set.acl.allowed acl#11
 -- #16 add write_object_sysmeta to set.acl.allowed acl #11 with reviewers group
@@ -1059,10 +1061,32 @@ insert into objects (id, created, latest_branch, latest_head, modified, name, cr
                      owner_id, parent_id, type_id, acl_id)
 values (nextval('seq_objects_id'), now(), true, true, now(), 'content-holder', 1, 1, 1, 1, 6, 1, 2);
 
--- #44 test object for version request in creation folder #6
+-- #44 test object for version request in creation folder #6 (no permission)
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'content-holder', 1, 1, 1, 1, 6, 1, 2);
+values (nextval('seq_objects_id'), now(), true, true, now(), 'version-test', 1, 1, 1, 1, 6, 1, 1);
+
+-- #45 test object for version request in creation folder #6
+-- state_id 1 is set below via update.
+insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+                     owner_id, parent_id, type_id, acl_id)
+values (nextval('seq_objects_id'), now(), true, true, now(), 'version-test', 1, 1, 1, 1, 6, 1, 2);
+
+-- #46 test object for version request in creation folder #6
+-- state_id 4 is set below via update to test failed state.
+insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+                     owner_id, parent_id, type_id, acl_id)
+values (nextval('seq_objects_id'), now(), true, true, now(), 'version-test', 1, 1, 1, 1, 6, 1, 2);
+
+-- #47 test object for version label tests in creation folder #6
+insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+                     owner_id, parent_id, type_id, acl_id)
+values (nextval('seq_objects_id'), now(), true, true, now(), 'test-version-numbering', 1, 1, 1, 1, 6, 1, 2);
+
+-- #48 test object for version test with metadata in creation folder #6
+insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+                     owner_id, parent_id, type_id, acl_id)
+values (nextval('seq_objects_id'), now(), true, true, now(), 'version-with-metadata', 1, 1, 1, 1, 6, 1, 2);
 
 -- #1 link to osd #1 with default acl (#1)
 insert into links(id, type,owner_id,acl_id,parent_id,osd_id) 
@@ -1235,6 +1259,7 @@ insert into lifecycle_state_to_copy_state(lifecycle_state_id, copy_state_id)
 update lifecycles set default_state_id=1 where id=3;
 update objects set state_id=2 where id=31;
 update objects set state_id=2 where id=35;
+update objects set state_id=1 where id=45;
 
 -- #3 second lifecycle_state of lc 3 with ChangeAclState
 insert into lifecycle_states(id, name, config, state_class, life_cycle_id )
@@ -1252,6 +1277,7 @@ insert into lifecycle_state_to_copy_state(lifecycle_state_id, copy_state_id)
 values (currval('seq_lifecycle_states_id'), currval('seq_lifecycle_states_id'));
 -- osd#32 with FailState lifecycle state: should fail on state.exit()
 update objects set state_id=4 where id=32;
+update objects set state_id=4 where id=46;
 
 -- #1 metaset type 'comment'
 insert into metaset_types(id, name, is_unique) VALUES (nextval('seq_metaset_types_id'), 'comment', false );

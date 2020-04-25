@@ -8,7 +8,7 @@ public class CreateNewVersionRequest {
 
     private Long           id;
     private List<Metadata> metaRequests = new ArrayList<>();
-    private Long         formatId;
+    private Long           formatId;
 
     public CreateNewVersionRequest() {
     }
@@ -41,12 +41,18 @@ public class CreateNewVersionRequest {
         this.formatId = formatId;
     }
 
+    public boolean hasMetaRequests() {
+        return metaRequests != null && metaRequests.size() > 0;
+    }
+
     private boolean validated() {
-        if (metaRequests.size() > 0 && metaRequests.stream().filter(Metadata::validated).count() != metaRequests.size()) {
+        if (metaRequests != null &&
+                metaRequests.size() > 0 &&
+                metaRequests.stream().filter(Metadata::validated).count() != metaRequests.size()) {
             return false;
         }
 
-        return (formatId == null || formatId > 0) &&  id != null && id > 0;
+        return (formatId == null || formatId > 0) && id != null && id > 0;
     }
 
     public Optional<CreateNewVersionRequest> validateRequest() {
