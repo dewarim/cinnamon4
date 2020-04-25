@@ -1,2 +1,4 @@
+target/
 *.idea/**
-cinnamon-server/target/**
+cinnamon-server/target/
+cinnamon-server/temp/
