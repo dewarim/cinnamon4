@@ -6,16 +6,22 @@
     <groupId>com.dewarim.cinnamon</groupId>
     <artifactId>cinnamon-server</artifactId>
     <packaging>jar</packaging>
-    <version>1.0-SNAPSHOT</version>
+    <version>0.1</version>
     <name>cinnamon-server</name>
 
     <properties>
-        <jetty.version>9.4.27.v20200227</jetty.version>
+        <jetty.version>9.4.30.v20200611</jetty.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.plugin.version>3.8.1</maven.compiler.plugin.version>
-        <log4j.version>2.11.1</log4j.version>
-        <httpcomponents.version>4.5.6</httpcomponents.version>
+        <log4j.version>2.13.3</log4j.version>
+        <httpcomponents.version>4.5.12</httpcomponents.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+
+    <scm>
+        <connection>scm:git:https://github.com/dewarim/cinnamon4.git</connection>
+        <url>https://github.com/dewarim/cinnamon4</url>
+    </scm>
 
     <dependencies>
 
@@ -46,13 +52,13 @@
         <dependency>
             <groupId>org.mybatis</groupId>
             <artifactId>mybatis</artifactId>
-            <version>3.4.6</version>
+            <version>3.5.5</version>
         </dependency>
 
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>42.2.5</version>
+            <version>42.2.14</version>
         </dependency>
 
         <dependency>
@@ -66,7 +72,7 @@
         <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>
             <artifactId>jackson-dataformat-xml</artifactId>
-            <version>2.10.1</version>
+            <version>2.11.1</version>
         </dependency>
 
         <dependency>
@@ -111,7 +117,7 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.12</version>
+            <version>4.13</version>
             <scope>test</scope>
         </dependency>
 
@@ -127,7 +133,7 @@
         <dependency>
             <groupId>com.beust</groupId>
             <artifactId>jcommander</artifactId>
-            <version>1.72</version>
+            <version>1.78</version>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
@@ -152,6 +158,8 @@
         <finalName>cinnamon-server</finalName>
         <plugins>
             <plugin>
+                <!-- https://maven.apache.org/surefire/maven-surefire-plugin/ -->
+                <!-- run tests -->
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.0.0-M1</version>
@@ -162,42 +170,8 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-enforcer-plugin</artifactId>
-                <version>3.0.0-M2</version>
-                <executions>
-                    <execution>
-                        <id>enforce-versions</id>
-                        <goals>
-                            <goal>enforce</goal>
-                        </goals>
-                        <configuration>
-                            <rules>
-                                <bannedPlugins>
-                                    <!-- will only display a warning but does not fail the build. -->
-                                    <level>WARN</level>
-                                    <excludes>
-                                        <exclude>org.apache.maven.plugins:maven-verifier-plugin</exclude>
-                                    </excludes>
-                                    <message>Please consider using the maven-invoker-plugin
-                                        (http://maven.apache.org/plugins/maven-invoker-plugin/)!
-                                    </message>
-                                </bannedPlugins>
-                                <requireMavenVersion>
-                                    <version>3.3.0</version>
-                                </requireMavenVersion>
-                                <!--<requireJavaVersion>-->
-                                <!--<version>1.11</version>-->
-                                <!--</requireJavaVersion>-->
-                                <!--<requireOS>-->
-                                <!--<family>unix</family>-->
-                                <!--</requireOS>-->
-                            </rules>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
+                <!-- https://www.mojohaus.org/versions-maven-plugin/ -->
+                <!-- used to show available updates to dependencies -->
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>versions-maven-plugin</artifactId>
                 <version>2.7</version>
@@ -216,39 +190,75 @@
                     <target>11</target>
                 </configuration>
             </plugin>
+            <!--            <plugin>-->
+            <!-- assembly plugin: used to collect all dependencies into one executable jar; alternative: shade plugin below. -->
+            <!--                <groupId>org.apache.maven.plugins</groupId>-->
+            <!--                <artifactId>maven-assembly-plugin</artifactId>-->
+            <!--                <configuration>-->
+            <!--                    <archive>-->
+            <!--                        <manifest>-->
+            <!--                            <mainClass>com.dewarim.cinnamon.application.CinnamonServer</mainClass>-->
+            <!--                        </manifest>-->
+            <!--                    </archive>-->
+            <!--                    <descriptorRefs>-->
+            <!--                        <descriptorRef>jar-with-dependencies</descriptorRef>-->
+            <!--                    </descriptorRefs>-->
+            <!--                </configuration>-->
+            <!--            </plugin>-->
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>1.6.0</version>
+                <!-- shade plugin: used to collect all dependencies into one executable jar; alternative: assembly plugin above. -->
+                <!-- https://maven.apache.org/plugins/maven-shade-plugin/examples/executable-jar.html -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.2.4</version>
                 <executions>
                     <execution>
+                        <phase>package</phase>
                         <goals>
-                            <goal>java</goal>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <transformers>
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <manifestEntries>
+                                        <Main-Class>com.dewarim.cinnamon.application.CinnamonServer</Main-Class>
+                                        <Build-Number>${buildNumber}</Build-Number>
+                                    </manifestEntries>
+                                </transformer>
+                            </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <!-- update buildNumber.properties and increase build counter whenever the maven _test_ step is executed -->
+                <!-- https://www.mojohaus.org/buildnumber-maven-plugin/ -->
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>buildnumber-maven-plugin</artifactId>
+                <version>1.4</version>
+                <executions>
+                    <execution>
+                        <!-- use "package" instead of default validate - we do not check remote git etc at the moment,
+                        and a build is only relevant if it compiles and tests work, so
+                        no need to change build number before package step. -->
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>create</goal>
                         </goals>
                     </execution>
                 </executions>
                 <configuration>
-                    <mainClass>com.dewarim.cinnamon.application.CinnamonServer</mainClass>
+                    <doCheck>false</doCheck>
+                    <doUpdate>false</doUpdate>
+                    <buildNumberPropertiesFileLocation>src/main/resources/buildNumber.properties
+                    </buildNumberPropertiesFileLocation>
+                    <buildNumberPropertyName>build</buildNumberPropertyName>
+                    <format>{0,number}</format>
+                    <items>
+                        <item>buildNumber0</item>
+                    </items>
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <mainClass>com.dewarim.cinnamon.application.CinnamonServer</mainClass>
-                        </manifest>
-                    </archive>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.eclipse.jetty</groupId>
-                <artifactId>jetty-maven-plugin</artifactId>
-                <version>${jetty.version}</version>
             </plugin>
         </plugins>
     </build>
