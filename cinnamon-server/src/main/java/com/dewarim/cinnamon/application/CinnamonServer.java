@@ -29,7 +29,8 @@ import static com.dewarim.cinnamon.Constants.DEFAULT_DATABASE_SESSION_FACTORY;
  */
 public class CinnamonServer {
 
-    private int                  port;
+    public static final String VERSION ="0.1.0";
+    private int                port;
     private Server               server;
     private DbSessionFactory     dbSessionFactory;
     private WebAppContext        webAppContext = new WebAppContext();

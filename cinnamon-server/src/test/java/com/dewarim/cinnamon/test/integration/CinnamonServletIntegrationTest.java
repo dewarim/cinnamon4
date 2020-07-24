@@ -2,6 +2,7 @@ package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.application.UrlMapping;
+import com.dewarim.cinnamon.application.servlet.CinnamonServlet;
 import com.dewarim.cinnamon.model.response.CinnamonError;
 import com.dewarim.cinnamon.model.response.DisconnectResponse;
 import org.apache.http.HttpResponse;
@@ -15,6 +16,7 @@ import java.io.IOException;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class CinnamonServletIntegrationTest extends CinnamonIntegrationTest{
@@ -109,5 +111,15 @@ public class CinnamonServletIntegrationTest extends CinnamonIntegrationTest{
     public void connectSucceedsWithValidUsernameAndPassword(){
         assertThat(ticket,notNullValue());
     }
-    
+
+    @Test
+    public void infoPageReturnsBuildNumber() throws IOException {
+        HttpResponse response = Request.Get("http://localhost:" + cinnamonTestPort + UrlMapping.CINNAMON__INFO.getPath()).execute().returnResponse();
+        assertResponseOkay(response);
+        CinnamonServlet.CinnamonVersion version = mapper.readValue(response.getEntity().getContent(), CinnamonServlet.CinnamonVersion.class);
+        CinnamonServlet servlet = new CinnamonServlet();
+        CinnamonServlet.CinnamonVersion cinnamonVersion = servlet.getCinnamonVersion();
+        assertEquals(version.getBuild(), cinnamonVersion.getBuild());
+        assertEquals(version.getVersion(), cinnamonVersion.getVersion());
+    }
 }
