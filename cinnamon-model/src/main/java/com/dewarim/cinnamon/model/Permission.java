@@ -45,4 +45,12 @@ public class Permission {
 
         return Objects.hash(name);
     }
+
+    @Override
+    public String toString() {
+        return "Permission{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                '}';
+    }
 }

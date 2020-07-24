@@ -40,6 +40,7 @@ public class PermissionServletIntegrationTest extends CinnamonIntegrationTest {
         assertTrue(browseFolder.isPresent());
 
         /* user doe @ reviewers acl: should have 
+        - browse
         - create folder,
         - write_object_sysmeta
         - browse permission
@@ -51,10 +52,11 @@ public class PermissionServletIntegrationTest extends CinnamonIntegrationTest {
         - edit_folder
         - set_acl
         - move
+        - version
          */
         UserPermissionRequest reviewerPermissionRequest = new UserPermissionRequest(2L,2L);
         HttpResponse reviewerResponse = sendAdminRequest(UrlMapping.PERMISSION__GET_USER_PERMISSIONS, reviewerPermissionRequest);
-        unwrapPermissions(reviewerResponse,11);
+        unwrapPermissions(reviewerResponse,12);
     }    
     
     @Test
