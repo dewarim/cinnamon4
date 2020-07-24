@@ -8,15 +8,13 @@ import com.dewarim.cinnamon.api.lifecycle.StateChangeResult;
 import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
+import com.dewarim.cinnamon.application.exception.CinnamonException;
 import com.dewarim.cinnamon.application.exception.FailedRequestException;
 import com.dewarim.cinnamon.dao.*;
 import com.dewarim.cinnamon.model.*;
 import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.request.*;
-import com.dewarim.cinnamon.model.request.osd.CreateOsdRequest;
-import com.dewarim.cinnamon.model.request.osd.OsdByFolderRequest;
-import com.dewarim.cinnamon.model.request.osd.OsdRequest;
-import com.dewarim.cinnamon.model.request.osd.SetContentRequest;
+import com.dewarim.cinnamon.model.request.osd.*;
 import com.dewarim.cinnamon.model.response.OsdWrapper;
 import com.dewarim.cinnamon.model.response.SummaryWrapper;
 import com.dewarim.cinnamon.provider.ContentProviderService;
@@ -80,6 +78,9 @@ public class OsdServlet extends BaseServlet {
             case "/createMeta":
                 createMeta(request, cinnamonResponse, user, osdDao);
                 break;
+            case "/delete":
+                deleteOsd(request,cinnamonResponse,user,osdDao);
+                break;
             case "/deleteMeta":
                 deleteMeta(request, cinnamonResponse, user, osdDao);
                 break;
@@ -116,6 +117,14 @@ public class OsdServlet extends BaseServlet {
             default:
                 response.setStatus(HttpServletResponse.SC_NO_CONTENT);
         }
+    }
+
+    private void deleteOsd(HttpServletRequest request, CinnamonResponse cinnamonResponse, UserAccount user, OsdDao osdDao) throws IOException {
+        DeleteOsdRequest deleteRequest = xmlMapper.readValue(request.getInputStream(), DeleteOsdRequest.class)
+                         .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
+        List<ObjectSystemData> osds = osdDao.getObjectsById(deleteRequest.getIds(),false);
+         // BLOCKED: TODO: determine how to handle partial deletes / protected relations / missing objects (error, ignore, extra flags?)
+        throw new CinnamonException("Not implemented yet!");
     }
 
     private void createOsd(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws IOException, ServletException {
