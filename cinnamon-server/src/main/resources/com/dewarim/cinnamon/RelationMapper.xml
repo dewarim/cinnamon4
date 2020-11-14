@@ -13,6 +13,50 @@
         <result property="metadata" column="metadata"/>
     </resultMap>
 
+    <select id="getProtectedRelations" parameterType="map" resultMap="relationMap">
+        SELECT
+        r.id,
+        r.left_id,
+        r.right_id,
+        r.type_id
+        FROM relations r join relationtypes rt on r.type_id = rt.id
+        WHERE
+        ( rt.leftobjectprotected = true and r.left_id in
+        <foreach item="item" index="index" collection="ids"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        )
+        OR (rt.rightobjectprotected = true and r.right_id in
+        <foreach item="item" index="index" collection="ids"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        )
+    </select>
+
+    <select id="getAllRelationsOfObjects" parameterType="map" resultMap="relationMap">
+        SELECT
+        r.id,
+        r.left_id,
+        r.right_id,
+        r.type_id
+        FROM relations r
+        WHERE
+        ( r.left_id in
+        <foreach item="item" index="index" collection="ids"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        )
+        OR (r.right_id in
+        <foreach item="item" index="index" collection="ids"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        )
+    </select>
+
     <select id="getRelationsWithCriteria" parameterType="map" resultMap="relationMap">
         SELECT
         r.id,
@@ -59,12 +103,36 @@
     </insert>
 
     <delete id="deleteRelation" parameterType="map">
-        DELETE FROM relations
+        DELETE
+        FROM relations
         WHERE left_id = #{leftId}
-              AND right_id = #{rightId}
-              AND type_id IN (select id
-                              from relationtypes
-                              where name = #{name})
+          AND right_id = #{rightId}
+          AND type_id IN (select id
+                          from relationtypes
+                          where name = #{name})
+    </delete>
+
+    <delete id="deleteAllUnprotectedRelationsOfObjects" parameterType="map">
+        DELETE
+        FROM relations
+        WHERE id in (
+        SELECT
+        r.id
+        FROM relations r join relationtypes rt on r.type_id = rt.id
+        WHERE
+        ( rt.leftobjectprotected = false and r.left_id in
+        <foreach item="item" index="index" collection="ids"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        )
+        OR (rt.rightobjectprotected = false and r.right_id in
+        <foreach item="item" index="index" collection="ids"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        )
+        )
     </delete>
 
 </mapper>

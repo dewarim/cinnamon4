@@ -711,8 +711,11 @@ insert into aclentry_permissions(id, aclentry_id, permission_id) values (nextval
 -- #38 move permission for reviewers on reviewer.acl
 insert into aclentry_permissions(id, aclentry_id, permission_id) values (nextval('seq_aclentry_permission_id'),5,9);
 
--- #38 create permission for reviewers on create.acl
+-- #39 create permission for reviewers on create.acl
 insert into aclentry_permissions(id, aclentry_id, permission_id) values (nextval('seq_aclentry_permission_id'),10,3);
+
+-- #40 delete permission for reviewers on reviewer.acl #2
+insert into aclentry_permissions(id, aclentry_id, permission_id) values (nextval('seq_aclentry_permission_id'),5,6);
 
 
 -- #1 default folder type
@@ -1087,6 +1090,12 @@ values (nextval('seq_objects_id'), now(), true, true, now(), 'test-version-numbe
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
 values (nextval('seq_objects_id'), now(), true, true, now(), 'version-with-metadata', 1, 1, 1, 1, 6, 1, 2);
+
+-- #49 test object for delete happy path (delete a single OSD)
+insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+                     owner_id, parent_id, type_id, acl_id)
+values (nextval('seq_objects_id'), now(), true, true, now(), 'delete-me', 1, 1, 1, 1, 6, 1, 2);
+
 
 -- #1 link to osd #1 with default acl (#1)
 insert into links(id, type,owner_id,acl_id,parent_id,osd_id) 

@@ -14,6 +14,7 @@ public enum ErrorCode {
     AUTHENTICATION_FAIL_SESSION_EXPIRED("session expired", SC_FORBIDDEN),
     AUTHENTICATION_FAIL_USER_NOT_FOUND("user not found or inactive", SC_FORBIDDEN),
     CANNOT_MOVE_FOLDER_INTO_ITSELF("source and parent folder are identical", SC_BAD_REQUEST),
+    CANNOT_DELETE_DUE_TO_ERRORS("delete operation encountered errors", SC_CONFLICT),
     CONNECTION_FAIL_ACCOUNT_INACTIVE("account inactive", SC_UNAUTHORIZED),
     CONNECTION_FAIL_INVALID_USERNAME("invalid username", SC_UNAUTHORIZED),
     CONNECTION_FAIL_ACCOUNT_LOCKED("account locked", SC_UNAUTHORIZED),
@@ -56,6 +57,7 @@ public enum ErrorCode {
     NO_BROWSE_PERMISSION("missing browse permission", SC_UNAUTHORIZED),
     NO_CONTENT_TYPE_IN_HEADER("missing content-type field in header", SC_BAD_REQUEST),
     NO_CREATE_PERMISSION("missing permission to create an object inside a folder", SC_UNAUTHORIZED),
+    NO_DELETE_PERMISSION("missing permission to delete this item", SC_UNAUTHORIZED),
     NO_EDIT_FOLDER_PERMISSION("missing permission to edit the folder", SC_UNAUTHORIZED),
     NO_LOCK_PERMISSION("missing permission to (un)lock this object", SC_UNAUTHORIZED),
     NO_MOVE_PERMISSION("missing permission to move object", SC_UNAUTHORIZED),
@@ -67,7 +69,9 @@ public enum ErrorCode {
     NO_WRITE_PERMISSION("missing write content permission for current object", SC_UNAUTHORIZED),
     NO_WRITE_SYS_METADATA_PERMISSION("Required permission to write system metadata was not found.", SC_UNAUTHORIZED),
     NOT_MULTIPART_UPLOAD("the request must have the contentType multipart/form-data", SC_BAD_REQUEST),
+    OBJECT_HAS_DESCENDANTS("this object has descendants", SC_BAD_REQUEST),
     OBJECT_HAS_NO_CONTENT("this object has no content", SC_NOT_FOUND),
+    OBJECT_HAS_PROTECTED_RELATIONS("this object has protected relations", SC_UNAUTHORIZED),
     OBJECT_HAS_VANISHED_DURING_UPDATE("the object the you wanted to change was not found in the database anymore (maybe someone deleted it?)", SC_NOT_FOUND),
     OBJECT_LOCKED_BY_OTHER_USER("object is locked by another user", SC_FORBIDDEN),
     OBJECT_MUST_BE_LOCKED_BY_USER("object must be locked by current user before setContent is allowed", SC_FORBIDDEN),
@@ -87,7 +91,7 @@ public enum ErrorCode {
     USER_INFO_REQUEST_WITHOUT_NAME_OR_ID("userInfoRequest missing id or name", SC_BAD_REQUEST),
     USER_ACCOUNT_NOT_FOUND("userInfoRequest invalid id or name", SC_NOT_FOUND);
 
-    String                           code;
+    String code;
     int                              httpResponseCode;
     Supplier<FailedRequestException> exceptionSupplier;
 
@@ -116,4 +120,5 @@ public enum ErrorCode {
     public void throwUp() {
         throw exceptionSupplier.get();
     }
+
 }

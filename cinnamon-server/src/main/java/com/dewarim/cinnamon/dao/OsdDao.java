@@ -87,4 +87,11 @@ public class OsdDao {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
         return sqlSession.selectList("com.dewarim.cinnamon.ObjectSystemDataMapper.findLastDescendantVersion", predecessorId);
     }
+
+    public void deleteOsds(List<Long> osdIdsToToDelete) {
+        SqlSession          sqlSession = ThreadLocalSqlSession.getSqlSession();
+        Map<String, Object> params     = new HashMap<>();
+        params.put("ids", osdIdsToToDelete);
+        sqlSession.delete("com.dewarim.cinnamon.ObjectSystemDataMapper.deleteOsds", params);
+    }
 }

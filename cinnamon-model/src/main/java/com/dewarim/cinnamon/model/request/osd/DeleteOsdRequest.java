@@ -8,6 +8,7 @@ import java.util.Optional;
 public class DeleteOsdRequest {
 
     private List<Long> ids = new ArrayList<>();
+    private boolean deleteDescendants = false;
 
     public DeleteOsdRequest() {
     }
@@ -22,6 +23,14 @@ public class DeleteOsdRequest {
 
     public void setIds(List<Long> ids) {
         this.ids = ids;
+    }
+
+    public boolean isDeleteDescendants() {
+        return deleteDescendants;
+    }
+
+    public void setDeleteDescendants(boolean deleteDescendants) {
+        this.deleteDescendants = deleteDescendants;
     }
 
     private boolean validated() {

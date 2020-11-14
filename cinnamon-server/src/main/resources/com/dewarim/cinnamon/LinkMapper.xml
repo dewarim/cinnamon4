@@ -32,6 +32,15 @@
         WHERE id = #{id}
     </delete>
 
+    <delete id="deleteAllLinksToObjects" parameterType="map">
+        DELETE FROM links
+        WHERE osd_id IN
+        <foreach item="item" index="index" collection="ids"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
     <insert id="insertLink" parameterType="com.dewarim.cinnamon.model.links.Link">
         <selectKey keyProperty="id" resultType="long" order="BEFORE">
             select nextval('seq_links_id')

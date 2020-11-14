@@ -1,10 +1,12 @@
 package com.dewarim.cinnamon.application;
 
+import com.dewarim.cinnamon.application.exception.CinnamonException;
 import com.dewarim.cinnamon.model.response.CinnamonError;
 import com.dewarim.cinnamon.model.response.GenericResponse;
 import com.dewarim.cinnamon.model.response.Wrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import org.apache.http.HttpStatus;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
@@ -14,9 +16,10 @@ import static com.dewarim.cinnamon.Constants.CONTENT_TYPE_XML;
 
 public class CinnamonResponse extends HttpServletResponseWrapper {
 
-    private final ObjectMapper        xmlMapper = new XmlMapper();
+    private final ObjectMapper        xmlMapper  = new XmlMapper();
     private final HttpServletResponse response;
     private       Wrapper             wrapper;
+    private       int                 statusCode = HttpStatus.SC_OK;
 
     public CinnamonResponse(HttpServletResponse response) {
         super(response);
@@ -31,12 +34,12 @@ public class CinnamonResponse extends HttpServletResponseWrapper {
             response.setCharacterEncoding("UTF-8");
             xmlMapper.writeValue(response.getWriter(), error);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new CinnamonException("Failed to generate error message:", e);
         }
     }
 
-    public void responseIsGenericOkay(){
-       setWrapper(new GenericResponse(true));
+    public void responseIsGenericOkay() {
+        setWrapper(new GenericResponse(true));
     }
 
     public Wrapper getWrapper() {
@@ -57,9 +60,17 @@ public class CinnamonResponse extends HttpServletResponseWrapper {
      * and raw data (for example: returning non-wrappable Cinnamon3-style metasets)
      */
     public void renderResponseIfNecessary() throws IOException {
-        if(hasPendingContent()) {
-            ResponseUtil.responseIsOkayAndXml(response);
+        if (hasPendingContent()) {
+            ResponseUtil.responseIsXmlWithStatus(response, statusCode);
             xmlMapper.writeValue(response.getOutputStream(), wrapper);
         }
+    }
+
+    public int getStatusCode() {
+        return statusCode;
+    }
+
+    public void setStatusCode(int statusCode) {
+        this.statusCode = statusCode;
     }
 }

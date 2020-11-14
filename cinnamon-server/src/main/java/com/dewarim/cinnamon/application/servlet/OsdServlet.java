@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.application.servlet;
 
+import com.beust.jcommander.Strings;
 import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.api.content.ContentMetadata;
 import com.dewarim.cinnamon.api.content.ContentProvider;
@@ -8,13 +9,16 @@ import com.dewarim.cinnamon.api.lifecycle.StateChangeResult;
 import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
-import com.dewarim.cinnamon.application.exception.CinnamonException;
+import com.dewarim.cinnamon.application.TransactionStatus;
 import com.dewarim.cinnamon.application.exception.FailedRequestException;
 import com.dewarim.cinnamon.dao.*;
 import com.dewarim.cinnamon.model.*;
 import com.dewarim.cinnamon.model.links.Link;
+import com.dewarim.cinnamon.model.relations.Relation;
 import com.dewarim.cinnamon.model.request.*;
 import com.dewarim.cinnamon.model.request.osd.*;
+import com.dewarim.cinnamon.model.response.CinnamonError;
+import com.dewarim.cinnamon.model.response.DeleteOsdResponseWrapper;
 import com.dewarim.cinnamon.model.response.OsdWrapper;
 import com.dewarim.cinnamon.model.response.SummaryWrapper;
 import com.dewarim.cinnamon.provider.ContentProviderService;
@@ -22,6 +26,7 @@ import com.dewarim.cinnamon.provider.StateProviderService;
 import com.dewarim.cinnamon.security.authorization.AuthorizationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -37,10 +42,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.dewarim.cinnamon.Constants.LANGUAGE_UNDETERMINED_ISO_CODE;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
@@ -50,16 +53,13 @@ import static javax.servlet.http.HttpServletResponse.SC_OK;
 @WebServlet(name = "Osd", urlPatterns = "/")
 public class OsdServlet extends BaseServlet {
 
-    private              ObjectMapper         xmlMapper            = new XmlMapper();
-    private              AuthorizationService authorizationService = new AuthorizationService();
+    private final        ObjectMapper         xmlMapper            = new XmlMapper();
+    private final        AuthorizationService authorizationService = new AuthorizationService();
     private static final Logger               log                  = LogManager.getLogger(OsdServlet.class);
     private static final String               MULTIPART            = "multipart/";
 
     public OsdServlet() {
         super();
-        // Would like to use UNWRAP_ROOT_VALUE to prevent an IdRequest being mistaken for a CreateNewVersionRequest.
-        // but currently this featuer does not work on XML input:
-        // xmlMapper.configure(DeserializationFeature.UNWRAP_ROOT_VALUE, true);
     }
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -78,8 +78,8 @@ public class OsdServlet extends BaseServlet {
             case "/createMeta":
                 createMeta(request, cinnamonResponse, user, osdDao);
                 break;
-            case "/delete":
-                deleteOsd(request,cinnamonResponse,user,osdDao);
+            case "/deleteOsds":
+                deleteOsds(request, cinnamonResponse, user, osdDao);
                 break;
             case "/deleteMeta":
                 deleteMeta(request, cinnamonResponse, user, osdDao);
@@ -119,12 +119,69 @@ public class OsdServlet extends BaseServlet {
         }
     }
 
-    private void deleteOsd(HttpServletRequest request, CinnamonResponse cinnamonResponse, UserAccount user, OsdDao osdDao) throws IOException {
+    private void deleteOsds(HttpServletRequest request, CinnamonResponse cinnamonResponse, UserAccount user, OsdDao osdDao) throws IOException {
         DeleteOsdRequest deleteRequest = xmlMapper.readValue(request.getInputStream(), DeleteOsdRequest.class)
-                         .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
-        List<ObjectSystemData> osds = osdDao.getObjectsById(deleteRequest.getIds(),false);
-         // BLOCKED: TODO: determine how to handle partial deletes / protected relations / missing objects (error, ignore, extra flags?)
-        throw new CinnamonException("Not implemented yet!");
+                .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
+        List<ObjectSystemData> osds = osdDao.getObjectsById(deleteRequest.getIds(), false);
+        // reverse sort by id, so we try to delete descendants first.
+        osds.sort(Comparator.comparingLong(ObjectSystemData::getId).reversed());
+        boolean   deleteDescendants = deleteRequest.isDeleteDescendants();
+        Set<Long> osdIds            = osds.stream().map(ObjectSystemData::getId).collect(Collectors.toSet());
+
+        List<CinnamonError> errors = delete(osds, deleteDescendants, user, osdDao, osdIds);
+        if (errors.size() > 0) {
+            // TODO: create FailedRequestException with list of errors.
+            ThreadLocalSqlSession.setTransactionStatus(TransactionStatus.ROLLBACK);
+            DeleteOsdResponseWrapper deleteResponse = new DeleteOsdResponseWrapper(errors);
+            cinnamonResponse.setWrapper(deleteResponse);
+            cinnamonResponse.setStatusCode(HttpStatus.SC_CONFLICT);
+            return;
+        }
+        List<Long> osdIdsToToDelete = new ArrayList<>(osdIds);
+        log.debug("delete " + Strings.join(",", osdIdsToToDelete.stream().map(String::valueOf).collect(Collectors.toList())));
+        new RelationDao().deleteAllUnprotectedRelationsOfObjects(osdIdsToToDelete);
+        new LinkDao().deleteAllLinksToObjects(osdIdsToToDelete);
+        osdDao.deleteOsds(osdIdsToToDelete);
+
+        cinnamonResponse.responseIsGenericOkay();
+    }
+
+    private List<CinnamonError> delete(List<ObjectSystemData> osds, boolean deleteDesendants, UserAccount user, OsdDao osdDao, Set<Long> osdIds) {
+        AuthorizationService authorizationService = new AuthorizationService();
+        List<CinnamonError>  errors               = new ArrayList<>();
+        for (ObjectSystemData osd : osds) {
+            Long osdId = osd.getId();
+            // 1. check permission for delete
+            boolean deleteAllowed = authorizationService.userHasPermission(osd.getAclId(), DefaultPermission.DELETE_OBJECT.getName(), user);
+            if (!deleteAllowed) {
+                CinnamonError error = new CinnamonError(ErrorCode.NO_DELETE_PERMISSION.getCode(), osdId);
+                errors.add(error);
+            }
+
+            // 2. check for descendants
+            // Note: this has potential for N sub-requests if an object has N later versions. Perhaps let
+            // Postgres do a recursive fetch for all descendants?
+            // TODO: use getOsdIdByIdWithDescendants
+            List<ObjectSystemData> descendants = osdDao.findObjectsWithSamePredecessor(osdId);
+            if (descendants.size() > 0) {
+                Set<Long> descendantIds = descendants.stream().map(ObjectSystemData::getId).collect(Collectors.toSet());
+                if (deleteDesendants || osdIds.containsAll(descendantIds)) {
+                    osdIds.addAll(descendantIds);
+                    errors.addAll(delete(descendants, deleteDesendants, user, osdDao, osdIds));
+                } else {
+                    CinnamonError error = new CinnamonError(ErrorCode.OBJECT_HAS_DESCENDANTS.getCode(), osdId);
+                    errors.add(error);
+                }
+            }
+
+            // 3. check for protected relations
+            List<Relation> protectedRelations = new RelationDao().getProtectedRelations(Collections.singletonList(osdId));
+            if (protectedRelations.size() > 0) {
+                CinnamonError error = new CinnamonError(ErrorCode.OBJECT_HAS_PROTECTED_RELATIONS.getCode(), osdId);
+                errors.add(error);
+            }
+        }
+        return errors;
     }
 
     private void createOsd(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws IOException, ServletException {

@@ -71,6 +71,31 @@
         </foreach>
     </select>
 
+
+    <select id="getOsdIdByIdWithDescendants" parameterType="map" resultMap="osdMap">
+        SELECT id
+        FROM objects
+        WHERE id in (
+            with recursive osdId (id, predecessor_id, root_id)
+                               as (
+                    select o.id, o.predecessor_id, o.root_id
+                    from objects o
+                    where o.predecessor_id =
+                    <foreach item="item" index="index" collection="idList" open="(" separator="," close=")">
+                        #{item}
+                    </foreach>
+        union
+                    select child.id, child.predecessor_id, child.root_id
+                    from osdId parent,
+                         objects child
+                    WHERE child.predecessor_id = parent.id
+                )
+            SELECT id
+            FROM osdId
+        )
+    </select>
+
+
     <select id="getOsdsByFolderId" parameterType="map" resultMap="osdMap">
         SELECT id,
                content_hash,
@@ -113,7 +138,8 @@
           and latest_head = true
     </select>
 
-    <select id="com.dewarim.cinnamon.ObjectSystemDataMapper.findLastDescendantVersion" parameterType="long" resultMap="osdMap">
+    <select id="com.dewarim.cinnamon.ObjectSystemDataMapper.findLastDescendantVersion" parameterType="long"
+            resultMap="osdMap">
         select *
         from objects
         where predecessor_id = #{id}
@@ -170,5 +196,14 @@
         #{predecessorId}, #{rootId}, #{typeId}, #{lifecycleStateId},
         #{contentChanged}, #{metadataChanged}, #{summary})
     </insert>
+
+    <delete id="deleteOsds" parameterType="map">
+        DELETE FROM objects
+        WHERE id IN
+        <foreach item="item" index="index" collection="ids"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
 
 </mapper>

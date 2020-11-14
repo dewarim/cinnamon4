@@ -7,10 +7,7 @@ import com.dewarim.cinnamon.model.Meta;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.request.*;
-import com.dewarim.cinnamon.model.request.osd.CreateOsdRequest;
-import com.dewarim.cinnamon.model.request.osd.OsdByFolderRequest;
-import com.dewarim.cinnamon.model.request.osd.OsdRequest;
-import com.dewarim.cinnamon.model.request.osd.SetContentRequest;
+import com.dewarim.cinnamon.model.request.osd.*;
 import com.dewarim.cinnamon.model.response.MetaWrapper;
 import com.dewarim.cinnamon.model.response.OsdWrapper;
 import com.dewarim.cinnamon.model.response.SummaryWrapper;
@@ -965,7 +962,6 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         assertEquals("2.1-1.1-1", branchOfBranch.getCmnVersion());
     }
 
-
     @Test
     public void versionWithFailingLifecycleStateChange() throws IOException {
         CreateNewVersionRequest versionRequest = new CreateNewVersionRequest(46L);
@@ -974,6 +970,20 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         HttpResponse versionResponse = sendStandardMultipartRequest(UrlMapping.OSD__VERSION, entity);
         assertCinnamonError(versionResponse, ErrorCode.LIFECYCLE_STATE_CHANGE_FAILED);
     }
+
+    @Test
+    public void deleteOsdHappyPath() throws IOException{
+        DeleteOsdRequest deleteRequest = new DeleteOsdRequest(Collections.singletonList(49L));
+        HttpResponse           response = sendStandardRequest(UrlMapping.OSD__DELETE_OSDS, deleteRequest);
+        assertResponseOkay(response);
+    }
+
+//    @Test
+//    public void deleteOsdsNoDeletePermission() throws IOException{
+//        DeleteOsdRequest deleteRequest = new DeleteOsdRequest(Collections.singletonList(49L));
+//        HttpResponse           response = sendStandardRequest(UrlMapping.OSD__DELEET_OSDS, deleteRequest);
+//        assertCinnamonError(response, ErrorCode.NO_DELETE_PERMISSION);
+//    }
 
     private HttpResponse sendAdminMultipartRequest(UrlMapping url, HttpEntity multipartEntity) throws IOException {
         return Request.Post("http://localhost:" + cinnamonTestPort + url.getPath())

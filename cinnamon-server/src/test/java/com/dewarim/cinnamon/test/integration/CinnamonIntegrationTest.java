@@ -31,6 +31,7 @@ import java.nio.file.Path;
 import java.sql.Connection;
 
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.fail;
 
 /**
@@ -119,9 +120,9 @@ public class CinnamonIntegrationTest {
     protected void assertCinnamonError(HttpResponse response, ErrorCode errorCode) throws IOException {
         String responseText = new String(response.getEntity().getContent().readAllBytes());
         Assert.assertTrue("response should contain errorCode " + errorCode +" but was "+responseText, responseText.contains(errorCode.getCode()));
-        Assert.assertThat(errorCode.getHttpResponseCode(), equalTo(response.getStatusLine().getStatusCode()));
+        assertThat(errorCode.getHttpResponseCode(), equalTo(response.getStatusLine().getStatusCode()));
         CinnamonError cinnamonError = mapper.readValue(response.getEntity().getContent(), CinnamonError.class);
-        Assert.assertThat(cinnamonError.getCode(), equalTo(errorCode.getCode()));
+        assertThat(cinnamonError.getCode(), equalTo(errorCode.getCode()));
     }
 
     /**
@@ -130,9 +131,9 @@ public class CinnamonIntegrationTest {
      */
     @Deprecated(forRemoval = true)
     protected void assertCinnamonError(HttpResponse response, ErrorCode errorCode, int statusCode) throws IOException {
-        Assert.assertThat(response.getStatusLine().getStatusCode(), equalTo(statusCode));
+        assertThat(response.getStatusLine().getStatusCode(), equalTo(statusCode));
         CinnamonError cinnamonError = mapper.readValue(response.getEntity().getContent(), CinnamonError.class);
-        Assert.assertThat(cinnamonError.getCode(), equalTo(errorCode.getCode()));
+        assertThat(cinnamonError.getCode(), equalTo(errorCode.getCode()));
     }
 
     /**

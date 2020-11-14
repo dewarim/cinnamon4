@@ -5,7 +5,9 @@ import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.request.CreateLinkRequest;
 import org.apache.ibatis.session.SqlSession;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class LinkDao {
@@ -29,7 +31,7 @@ public class LinkDao {
 
     public Link createLink(CreateLinkRequest linkRequest) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        Link link = new Link();
+        Link       link       = new Link();
         link.setType(linkRequest.getLinkType());
         switch (link.getType()) {
             case FOLDER:
@@ -43,7 +45,7 @@ public class LinkDao {
         link.setOwnerId(linkRequest.getOwnerId());
         link.setParentId(linkRequest.getParentId());
         int resultRows = sqlSession.insert("com.dewarim.cinnamon.LinkMapper.insertLink", link);
-        if(resultRows != 1){
+        if (resultRows != 1) {
             throw new RuntimeException("Create link failed.");
         }
         return link;
@@ -53,5 +55,12 @@ public class LinkDao {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
         return sqlSession.update("com.dewarim.cinnamon.LinkMapper.updateLink", link);
 
+    }
+
+    public void deleteAllLinksToObjects(List<Long> osdIds) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("ids", osdIds);
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        sqlSession.delete("com.dewarim.cinnamon.LinkMapper.deleteAllLinksToObjects", params);
     }
 }
