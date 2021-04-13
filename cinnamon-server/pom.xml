@@ -10,7 +10,7 @@
     <name>cinnamon-server</name>
 
     <properties>
-        <jetty.version>9.4.35.v20201120</jetty.version>
+        <jetty.version>11.0.2</jetty.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.plugin.version>3.8.1</maven.compiler.plugin.version>
         <log4j.version>2.13.3</log4j.version>
