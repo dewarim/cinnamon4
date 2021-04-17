@@ -94,4 +94,11 @@ public class OsdDao {
         params.put("ids", osdIdsToToDelete);
         sqlSession.delete("com.dewarim.cinnamon.ObjectSystemDataMapper.deleteOsds", params);
     }
+
+    public List<Long> getOsdIdByIdWithDescendants(Long id) {
+        SqlSession          sqlSession = ThreadLocalSqlSession.getSqlSession();
+        Map<String, Object> params     = new HashMap<>();
+        params.put("ids", Collections.singletonList(id));
+        return sqlSession.selectList("com.dewarim.cinnamon.ObjectSystemDataMaper.getOsdIdByIdWithDescendants", id);
+    }
 }

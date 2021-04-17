@@ -9,7 +9,6 @@ import com.dewarim.cinnamon.api.lifecycle.StateChangeResult;
 import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
-import com.dewarim.cinnamon.application.TransactionStatus;
 import com.dewarim.cinnamon.application.exception.FailedRequestException;
 import com.dewarim.cinnamon.dao.*;
 import com.dewarim.cinnamon.model.*;
@@ -18,7 +17,6 @@ import com.dewarim.cinnamon.model.relations.Relation;
 import com.dewarim.cinnamon.model.request.*;
 import com.dewarim.cinnamon.model.request.osd.*;
 import com.dewarim.cinnamon.model.response.CinnamonError;
-import com.dewarim.cinnamon.model.response.DeleteOsdResponseWrapper;
 import com.dewarim.cinnamon.model.response.OsdWrapper;
 import com.dewarim.cinnamon.model.response.SummaryWrapper;
 import com.dewarim.cinnamon.provider.ContentProviderService;
@@ -26,7 +24,6 @@ import com.dewarim.cinnamon.provider.StateProviderService;
 import com.dewarim.cinnamon.security.authorization.AuthorizationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -130,23 +127,18 @@ public class OsdServlet extends BaseServlet {
 
         List<CinnamonError> errors = delete(osds, deleteDescendants, user, osdDao, osdIds);
         if (errors.size() > 0) {
-            // TODO: create FailedRequestException with list of errors.
-            ThreadLocalSqlSession.setTransactionStatus(TransactionStatus.ROLLBACK);
-            DeleteOsdResponseWrapper deleteResponse = new DeleteOsdResponseWrapper(errors);
-            cinnamonResponse.setWrapper(deleteResponse);
-            cinnamonResponse.setStatusCode(HttpStatus.SC_CONFLICT);
-            return;
+            throw new FailedRequestException(ErrorCode.CANNOT_DELETE_DUE_TO_ERRORS, errors );
         }
         List<Long> osdIdsToToDelete = new ArrayList<>(osdIds);
         log.debug("delete " + Strings.join(",", osdIdsToToDelete.stream().map(String::valueOf).collect(Collectors.toList())));
         new RelationDao().deleteAllUnprotectedRelationsOfObjects(osdIdsToToDelete);
         new LinkDao().deleteAllLinksToObjects(osdIdsToToDelete);
         osdDao.deleteOsds(osdIdsToToDelete);
-
+        // TODO: deleteContent? -> cleanup process?
         cinnamonResponse.responseIsGenericOkay();
     }
 
-    private List<CinnamonError> delete(List<ObjectSystemData> osds, boolean deleteDesendants, UserAccount user, OsdDao osdDao, Set<Long> osdIds) {
+    private List<CinnamonError> delete(List<ObjectSystemData> osds, boolean deleteDescendants, UserAccount user, OsdDao osdDao, Set<Long> osdIds) {
         AuthorizationService authorizationService = new AuthorizationService();
         List<CinnamonError>  errors               = new ArrayList<>();
         for (ObjectSystemData osd : osds) {
@@ -161,13 +153,12 @@ public class OsdServlet extends BaseServlet {
             // 2. check for descendants
             // Note: this has potential for N sub-requests if an object has N later versions. Perhaps let
             // Postgres do a recursive fetch for all descendants?
-            // TODO: use getOsdIdByIdWithDescendants
-            List<ObjectSystemData> descendants = osdDao.findObjectsWithSamePredecessor(osdId);
+            List<ObjectSystemData> descendants = osdDao.getObjectsById(osdDao.getOsdIdByIdWithDescendants(osdId), false);
             if (descendants.size() > 0) {
                 Set<Long> descendantIds = descendants.stream().map(ObjectSystemData::getId).collect(Collectors.toSet());
-                if (deleteDesendants || osdIds.containsAll(descendantIds)) {
+                if (deleteDescendants || osdIds.containsAll(descendantIds)) {
                     osdIds.addAll(descendantIds);
-                    errors.addAll(delete(descendants, deleteDesendants, user, osdDao, osdIds));
+                    errors.addAll(delete(descendants, deleteDescendants, user, osdDao, osdIds));
                 } else {
                     CinnamonError error = new CinnamonError(ErrorCode.OBJECT_HAS_DESCENDANTS.getCode(), osdId);
                     errors.add(error);

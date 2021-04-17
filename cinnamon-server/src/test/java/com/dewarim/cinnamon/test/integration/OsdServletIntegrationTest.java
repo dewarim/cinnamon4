@@ -398,7 +398,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void lockAndUnlockShouldFailWithNonExistantObject() throws IOException {
+    public void lockAndUnlockShouldFailWithNonExistentObject() throws IOException {
         IdRequest    idRequest    = new IdRequest(Long.MAX_VALUE);
         HttpResponse lockResponse = sendStandardRequest(UrlMapping.OSD__LOCK, idRequest);
         assertCinnamonError(lockResponse, ErrorCode.OBJECT_NOT_FOUND);
@@ -906,7 +906,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Ignore("Currently no easy way to setup DB to ignore FK-constraint on lifecycle so we would get a missing LC exception")
     @Test
-    public void versionWithLifecycleStateNotFoundError() throws IOException {
+    public void versionWithLifecycleStateNotFoundError() {
         // so it should not be possible for this to happen unless the DB tables (or DAO) are broken.
         throw new IllegalStateException("implementation pending");
     }
@@ -972,9 +972,9 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void deleteOsdHappyPath() throws IOException{
+    public void deleteOsdHappyPath() throws IOException {
         DeleteOsdRequest deleteRequest = new DeleteOsdRequest(Collections.singletonList(49L));
-        HttpResponse           response = sendStandardRequest(UrlMapping.OSD__DELETE_OSDS, deleteRequest);
+        HttpResponse     response      = sendStandardRequest(UrlMapping.OSD__DELETE_OSDS, deleteRequest);
         assertResponseOkay(response);
     }
 
@@ -984,6 +984,10 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 //        HttpResponse           response = sendStandardRequest(UrlMapping.OSD__DELEET_OSDS, deleteRequest);
 //        assertCinnamonError(response, ErrorCode.NO_DELETE_PERMISSION);
 //    }
+
+    // TODO: deleteOsdWithDescendantsHappyPath
+    // TODO: deleteOsdWithDescendantsFails
+    // TODO: deleteOsdWithProtectedRelations
 
     private HttpResponse sendAdminMultipartRequest(UrlMapping url, HttpEntity multipartEntity) throws IOException {
         return Request.Post("http://localhost:" + cinnamonTestPort + url.getPath())

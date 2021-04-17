@@ -81,7 +81,7 @@
                     select o.id, o.predecessor_id, o.root_id
                     from objects o
                     where o.predecessor_id =
-                    <foreach item="item" index="index" collection="idList" open="(" separator="," close=")">
+                    <foreach item="item" index="index" collection="ids" open="(" separator="," close=")">
                         #{item}
                     </foreach>
         union
