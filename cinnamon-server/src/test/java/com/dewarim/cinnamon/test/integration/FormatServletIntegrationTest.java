@@ -1,6 +1,6 @@
 package com.dewarim.cinnamon.test.integration;
 
-import com.dewarim.cinnamon.application.UrlMapping;
+import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.model.Format;
 import com.dewarim.cinnamon.model.request.ListRequest;
 import com.dewarim.cinnamon.model.response.FormatWrapper;
@@ -13,9 +13,7 @@ import java.util.Optional;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class FormatServletIntegrationTest extends CinnamonIntegrationTest{
     

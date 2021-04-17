@@ -1,6 +1,6 @@
 package com.dewarim.cinnamon.test.integration;
 
-import com.dewarim.cinnamon.application.UrlMapping;
+import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.model.Language;
 import com.dewarim.cinnamon.model.request.ListRequest;
 import com.dewarim.cinnamon.model.response.LanguageWrapper;
@@ -11,7 +11,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.*;
 
 public class LanguageServletIntegrationTest extends CinnamonIntegrationTest {

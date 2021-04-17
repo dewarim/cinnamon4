@@ -1,6 +1,6 @@
 package com.dewarim.cinnamon.test.integration;
 
-import com.dewarim.cinnamon.application.UrlMapping;
+import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.model.relations.RelationType;
 import com.dewarim.cinnamon.model.request.ListRequest;
 import com.dewarim.cinnamon.model.response.RelationTypeWrapper;

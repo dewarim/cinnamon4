@@ -1,8 +1,8 @@
 package com.dewarim.cinnamon.test.integration;
 
+import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.api.lifecycle.LifecycleStateConfig;
 import com.dewarim.cinnamon.application.ErrorCode;
-import com.dewarim.cinnamon.application.UrlMapping;
 import com.dewarim.cinnamon.model.LifecycleState;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.request.AttachLifecycleRequest;

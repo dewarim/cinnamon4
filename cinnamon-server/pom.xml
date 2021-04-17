@@ -14,7 +14,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.plugin.version>3.8.1</maven.compiler.plugin.version>
         <log4j.version>2.13.3</log4j.version>
-        <httpcomponents.version>4.5.12</httpcomponents.version>
+        <httpcomponents.version>4.5.13</httpcomponents.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 

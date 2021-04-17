@@ -1,8 +1,8 @@
 package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.Constants;
+import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.ErrorCode;
-import com.dewarim.cinnamon.application.UrlMapping;
 import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.request.DeleteByIdRequest;
 import com.dewarim.cinnamon.model.request.IdRequest;

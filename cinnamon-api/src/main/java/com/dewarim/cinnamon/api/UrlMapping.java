@@ -1,4 +1,4 @@
-package com.dewarim.cinnamon.application;
+package com.dewarim.cinnamon.api;
 
 /**
  * All API url mappings.

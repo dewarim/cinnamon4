@@ -1,6 +1,6 @@
 package com.dewarim.cinnamon.test.integration;
 
-import com.dewarim.cinnamon.application.UrlMapping;
+import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.model.request.ListRequest;
 import com.dewarim.cinnamon.model.response.ConfigWrapper;
 import org.apache.http.HttpResponse;
@@ -8,7 +8,8 @@ import org.junit.Test;
 
 import java.io.IOException;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 
 public class ConfigServletIntegrationTest extends CinnamonIntegrationTest {
 

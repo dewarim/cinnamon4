@@ -1,7 +1,7 @@
 package com.dewarim.cinnamon.test.integration;
 
+import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.ErrorCode;
-import com.dewarim.cinnamon.application.UrlMapping;
 import com.dewarim.cinnamon.model.relations.Relation;
 import com.dewarim.cinnamon.model.request.CreateRelationRequest;
 import com.dewarim.cinnamon.model.request.DeleteRelationRequest;
@@ -14,9 +14,7 @@ import java.io.IOException;
 import java.util.Collections;
 
 import static org.apache.http.HttpStatus.SC_NOT_FOUND;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
     private final String firstRelationTypeName = "all-protector";

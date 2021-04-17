@@ -1,7 +1,7 @@
 package com.dewarim.cinnamon.test.integration;
 
+import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.ErrorCode;
-import com.dewarim.cinnamon.application.UrlMapping;
 import com.dewarim.cinnamon.application.servlet.CinnamonServlet;
 import com.dewarim.cinnamon.model.response.CinnamonError;
 import com.dewarim.cinnamon.model.response.DisconnectResponse;

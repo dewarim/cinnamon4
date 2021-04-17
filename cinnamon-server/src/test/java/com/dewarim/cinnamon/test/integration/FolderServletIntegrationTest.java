@@ -1,7 +1,7 @@
 package com.dewarim.cinnamon.test.integration;
 
+import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.ErrorCode;
-import com.dewarim.cinnamon.application.UrlMapping;
 import com.dewarim.cinnamon.model.Folder;
 import com.dewarim.cinnamon.model.Meta;
 import com.dewarim.cinnamon.model.request.*;
