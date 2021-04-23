@@ -21,9 +21,9 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.dewarim.cinnamon.Constants.CONTENT_TYPE_XML;
-import static jakarta.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
 
 /**
+ *
  */
 @WebServlet(name = "Permission", urlPatterns = "/")
 public class PermissionServlet extends HttpServlet {
@@ -50,8 +50,8 @@ public class PermissionServlet extends HttpServlet {
     }
 
     private void listPermissions(HttpServletResponse response) throws IOException {
-        List<Permission> permissions = new PermissionDao().listPermissions();
-        PermissionWrapper wrapper = new PermissionWrapper();
+        List<Permission>  permissions = new PermissionDao().listPermissions();
+        PermissionWrapper wrapper     = new PermissionWrapper();
         wrapper.setPermissions(permissions);
         response.setContentType(CONTENT_TYPE_XML);
         response.setStatus(HttpServletResponse.SC_OK);
@@ -59,18 +59,18 @@ public class PermissionServlet extends HttpServlet {
     }
 
     private void getUserPermissions(UserPermissionRequest permissionRequest, HttpServletResponse response) throws IOException {
-        long userId = permissionRequest.getUserId();
-        long aclId = permissionRequest.getAclId();
-        AclDao aclDao = new AclDao();
+        long      userId   = permissionRequest.getUserId();
+        long      aclId    = permissionRequest.getAclId();
+        AclDao    aclDao   = new AclDao();
         List<Acl> userAcls = aclDao.getUserAcls(userId);
         if (userAcls == null) {
-            ErrorResponseGenerator.generateErrorMessage(response, SC_BAD_REQUEST, ErrorCode.PERMISSIONS_NOT_FOUND, "");
+            ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.PERMISSIONS_NOT_FOUND);
             return;
         }
-        Optional<Acl> optAcl = userAcls.stream().filter(acl -> acl.getId().equals(aclId)).findFirst();
+        Optional<Acl>     optAcl  = userAcls.stream().filter(acl -> acl.getId().equals(aclId)).findFirst();
         PermissionWrapper wrapper = new PermissionWrapper();
         if (optAcl.isPresent()) {
-            PermissionDao dao = new PermissionDao();
+            PermissionDao    dao             = new PermissionDao();
             List<Permission> userPermissions = dao.getUserPermissionForAcl(userId, aclId);
             wrapper.getPermissions().addAll(userPermissions);
         }

@@ -18,7 +18,6 @@ import org.junit.Test;
 
 import java.io.IOException;
 
-import static jakarta.servlet.http.HttpServletResponse.*;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -103,7 +102,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
         // request link #2, which points to the "home" folder with default acl:
         LinkRequest linkRequest = new LinkRequest(3L, false);
         HttpResponse response = sendStandardRequest(UrlMapping.LINK__GET_LINK_BY_ID, linkRequest);
-        assertCinnamonError(response, ErrorCode.UNAUTHORIZED, SC_UNAUTHORIZED);
+        assertCinnamonError(response, ErrorCode.UNAUTHORIZED);
     }
 
     @Test
@@ -111,7 +110,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
         // request link #4, which points to object #7 with acl "unseen" #7:
         LinkRequest linkRequest = new LinkRequest(4L, false);
         HttpResponse response = sendStandardRequest(UrlMapping.LINK__GET_LINK_BY_ID, linkRequest);
-        assertCinnamonError(response, ErrorCode.UNAUTHORIZED, SC_UNAUTHORIZED);
+        assertCinnamonError(response, ErrorCode.UNAUTHORIZED);
     }
 
     @Test
@@ -119,14 +118,14 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
         // request link #5, which points to folder #3 with acl "unseen" #7:
         LinkRequest linkRequest = new LinkRequest(5L, false);
         HttpResponse response = sendStandardRequest(UrlMapping.LINK__GET_LINK_BY_ID, linkRequest);
-        assertCinnamonError(response, ErrorCode.UNAUTHORIZED, SC_UNAUTHORIZED);
+        assertCinnamonError(response, ErrorCode.UNAUTHORIZED);
     }
 
     @Test
     public void deleteLinkWithInvalidId() throws IOException {
         DeleteByIdRequest deleteRequest = new DeleteByIdRequest(-1L);
         HttpResponse response = sendStandardRequest(UrlMapping.LINK__DELETE_LINK, deleteRequest);
-        assertCinnamonError(response, ErrorCode.ID_PARAM_IS_INVALID, SC_BAD_REQUEST);
+        assertCinnamonError(response, ErrorCode.ID_PARAM_IS_INVALID);
     }
 
     @Test
@@ -143,14 +142,14 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
     public void deleteLinkWithMissingBrowsePermission() throws IOException {
         DeleteByIdRequest deleteRequest = new DeleteByIdRequest(11L);
         HttpResponse response = sendStandardRequest(UrlMapping.LINK__DELETE_LINK, deleteRequest);
-        assertCinnamonError(response, ErrorCode.UNAUTHORIZED, SC_UNAUTHORIZED);
+        assertCinnamonError(response, ErrorCode.UNAUTHORIZED);
     }
 
     @Test
     public void deleteLinkToObjectWithoutPermission() throws IOException {
         DeleteByIdRequest deleteRequest = new DeleteByIdRequest(12L);
         HttpResponse response = sendStandardRequest(UrlMapping.LINK__DELETE_LINK, deleteRequest);
-        assertCinnamonError(response, ErrorCode.UNAUTHORIZED, SC_UNAUTHORIZED);
+        assertCinnamonError(response, ErrorCode.UNAUTHORIZED);
     }
 
     @Test
@@ -175,7 +174,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
     public void deleteLinkToFolderWithoutPermission() throws IOException {
         DeleteByIdRequest deleteRequest = new DeleteByIdRequest(13L);
         HttpResponse response = sendStandardRequest(UrlMapping.LINK__DELETE_LINK, deleteRequest);
-        assertCinnamonError(response, ErrorCode.UNAUTHORIZED, SC_UNAUTHORIZED);
+        assertCinnamonError(response, ErrorCode.UNAUTHORIZED);
     }
 
     @Test
@@ -190,7 +189,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
         // verify delete:
         LinkRequest linkRequest = new LinkRequest(9L, true);
         HttpResponse linkResponse = sendStandardRequest(UrlMapping.LINK__GET_LINK_BY_ID, linkRequest);
-        assertCinnamonError(linkResponse, ErrorCode.OBJECT_NOT_FOUND, SC_NOT_FOUND);
+        assertCinnamonError(linkResponse, ErrorCode.OBJECT_NOT_FOUND);
     }
 
     @Test
@@ -205,7 +204,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
         // verify delete:
         LinkRequest linkRequest = new LinkRequest(10L, true);
         HttpResponse linkResponse = sendStandardRequest(UrlMapping.LINK__GET_LINK_BY_ID, linkRequest);
-        assertCinnamonError(linkResponse, ErrorCode.OBJECT_NOT_FOUND, SC_NOT_FOUND);
+        assertCinnamonError(linkResponse, ErrorCode.OBJECT_NOT_FOUND);
     }
 
     @Test
@@ -295,21 +294,21 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
     public void createLinkWithinParentFolderWithoutBrowsePermission() throws IOException {
         CreateLinkRequest crlId = new CreateLinkRequest(13L, 7, LinkType.OBJECT, 1, 1);
         HttpResponse response = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, crlId);
-        assertCinnamonError(response, ErrorCode.UNAUTHORIZED, SC_UNAUTHORIZED);
+        assertCinnamonError(response, ErrorCode.UNAUTHORIZED);
     }
 
     @Test
     public void createLinkWithinParentFolderWithoutCreatePermission() throws IOException {
         CreateLinkRequest crlId = new CreateLinkRequest(13L, 8, LinkType.OBJECT, 1, 1);
         HttpResponse response = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, crlId);
-        assertCinnamonError(response, ErrorCode.UNAUTHORIZED, SC_UNAUTHORIZED);
+        assertCinnamonError(response, ErrorCode.UNAUTHORIZED);
     }
 
     @Test
     public void createLinkToFolderWithoutBrowsePermission() throws IOException {
         CreateLinkRequest crlId = new CreateLinkRequest(7, 6, LinkType.FOLDER, 1, 1);
         HttpResponse response = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, crlId);
-        assertCinnamonError(response, ErrorCode.UNAUTHORIZED, SC_UNAUTHORIZED);
+        assertCinnamonError(response, ErrorCode.UNAUTHORIZED);
     }
     @Test
     public void createLinkToFolderWithBrowsePermissionByOwner() throws IOException {
@@ -324,7 +323,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
     public void createLinkToObjectWithoutBrowsePermission() throws IOException {
         CreateLinkRequest crlId = new CreateLinkRequest(4, 6, LinkType.OBJECT, 1, 1);
         HttpResponse response = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, crlId);
-        assertCinnamonError(response, ErrorCode.UNAUTHORIZED, SC_UNAUTHORIZED);
+        assertCinnamonError(response, ErrorCode.UNAUTHORIZED);
     }
     
     @Test
@@ -340,13 +339,13 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
     public void createLinkWithNonExistentTargetObject() throws IOException{
         CreateLinkRequest createLinkRequest = new CreateLinkRequest(Long.MAX_VALUE, 6L, LinkType.OBJECT, 1, 1);
         HttpResponse response = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, createLinkRequest);
-        assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND, SC_NOT_FOUND);
+        assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND);
     }    
     @Test
     public void createLinkWithNonExistentTargetFolder() throws IOException{
         CreateLinkRequest createLinkRequest = new CreateLinkRequest(Long.MAX_VALUE, 6, LinkType.FOLDER, 1, 1);
         HttpResponse response = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, createLinkRequest);
-        assertCinnamonError(response, ErrorCode.FOLDER_NOT_FOUND, SC_NOT_FOUND);
+        assertCinnamonError(response, ErrorCode.FOLDER_NOT_FOUND);
     }
 
     @Test
@@ -361,7 +360,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
         LinkUpdateRequest updateRequest = new LinkUpdateRequest(17L);
         updateRequest.setOwnerId(1L);
         HttpResponse response = sendStandardRequest(UrlMapping.LINK__UPDATE_LINK, updateRequest);
-        assertCinnamonError(response, ErrorCode.NO_BROWSE_PERMISSION, SC_UNAUTHORIZED);
+        assertCinnamonError(response, ErrorCode.NO_BROWSE_PERMISSION);
     }
 
     @Test
@@ -369,7 +368,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
         LinkUpdateRequest updateRequest = new LinkUpdateRequest(1L);
         updateRequest.setOwnerId(1L);
         HttpResponse response = sendStandardRequest(UrlMapping.LINK__UPDATE_LINK, updateRequest);
-        assertCinnamonError(response, ErrorCode.MISSING_WRITE_OBJECT_SYS_METADATA, SC_UNAUTHORIZED);
+        assertCinnamonError(response, ErrorCode.MISSING_WRITE_OBJECT_SYS_METADATA);
     }
     
     @Test
@@ -394,7 +393,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
         LinkUpdateRequest updateRequest = new LinkUpdateRequest(21L);
         updateRequest.setAclId(Long.MAX_VALUE);
         HttpResponse response = sendStandardRequest(UrlMapping.LINK__UPDATE_LINK, updateRequest);
-        assertCinnamonError(response, ErrorCode.ACL_NOT_FOUND, SC_NOT_FOUND);
+        assertCinnamonError(response, ErrorCode.ACL_NOT_FOUND);
     }    
     
     @Test
@@ -402,7 +401,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
         LinkUpdateRequest updateRequest = new LinkUpdateRequest(21L);
         updateRequest.setFolderId(Long.MAX_VALUE);
         HttpResponse response = sendStandardRequest(UrlMapping.LINK__UPDATE_LINK, updateRequest);
-        assertCinnamonError(response, ErrorCode.FOLDER_NOT_FOUND, SC_NOT_FOUND);
+        assertCinnamonError(response, ErrorCode.FOLDER_NOT_FOUND);
     }        
     
     @Test
@@ -411,7 +410,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
         // try to link to "unseen-folder" #3
         updateRequest.setFolderId(3L);
         HttpResponse response = sendStandardRequest(UrlMapping.LINK__UPDATE_LINK, updateRequest);
-        assertCinnamonError(response, ErrorCode.NO_BROWSE_PERMISSION, SC_UNAUTHORIZED);
+        assertCinnamonError(response, ErrorCode.NO_BROWSE_PERMISSION);
     }    
     
     @Test
@@ -419,7 +418,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
         LinkUpdateRequest updateRequest = new LinkUpdateRequest(21L);
         updateRequest.setOwnerId(Long.MAX_VALUE);
         HttpResponse response = sendStandardRequest(UrlMapping.LINK__UPDATE_LINK, updateRequest);
-        assertCinnamonError(response, ErrorCode.USER_ACCOUNT_NOT_FOUND, SC_NOT_FOUND);
+        assertCinnamonError(response, ErrorCode.USER_ACCOUNT_NOT_FOUND);
     }      
     
     @Test
@@ -436,7 +435,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
         LinkUpdateRequest updateRequest = new LinkUpdateRequest(21L);
         updateRequest.setParentId(7L);
         HttpResponse response = sendStandardRequest(UrlMapping.LINK__UPDATE_LINK, updateRequest);
-        assertCinnamonError(response, ErrorCode.NO_BROWSE_PERMISSION, SC_UNAUTHORIZED);
+        assertCinnamonError(response, ErrorCode.NO_BROWSE_PERMISSION);
     }    
     
     @Test
@@ -444,7 +443,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
         LinkUpdateRequest updateRequest = new LinkUpdateRequest(21L);
         updateRequest.setParentId(8L);
         HttpResponse response = sendStandardRequest(UrlMapping.LINK__UPDATE_LINK, updateRequest);
-        assertCinnamonError(response, ErrorCode.NO_CREATE_PERMISSION, SC_UNAUTHORIZED);
+        assertCinnamonError(response, ErrorCode.NO_CREATE_PERMISSION);
     }
     
     @Test
@@ -452,7 +451,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
         LinkUpdateRequest updateRequest = new LinkUpdateRequest(21L);
         updateRequest.setParentId(Long.MAX_VALUE);
         HttpResponse response = sendStandardRequest(UrlMapping.LINK__UPDATE_LINK, updateRequest);
-        assertCinnamonError(response, ErrorCode.FOLDER_NOT_FOUND, SC_NOT_FOUND);
+        assertCinnamonError(response, ErrorCode.FOLDER_NOT_FOUND);
     }
     
     @Test
@@ -511,7 +510,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
         LinkUpdateRequest updateRequest = new LinkUpdateRequest(21L);
         updateRequest.setObjectId(Long.MAX_VALUE);
         HttpResponse response = sendStandardRequest(UrlMapping.LINK__UPDATE_LINK, updateRequest);
-        assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND, SC_NOT_FOUND);
+        assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND);
     }
                 
     @Test
@@ -519,7 +518,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
         LinkUpdateRequest updateRequest = new LinkUpdateRequest(21L);
         updateRequest.setObjectId(4L);
         HttpResponse response = sendStandardRequest(UrlMapping.LINK__UPDATE_LINK, updateRequest);
-        assertCinnamonError(response, ErrorCode.NO_BROWSE_PERMISSION, SC_UNAUTHORIZED);
+        assertCinnamonError(response, ErrorCode.NO_BROWSE_PERMISSION);
     }
     
 

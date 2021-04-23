@@ -43,7 +43,7 @@ public class StaticServletIntegrationTest extends CinnamonIntegrationTest {
     public void handle404() throws IOException {
         String       url      = "http://localhost:" + cinnamonTestPort + UrlMapping.STATIC__ROOT.getPath() + "does-not-exist.txt";
         HttpResponse response = Request.Get(url).execute().returnResponse();
-        assertCinnamonError(response, ErrorCode.FILE_NOT_FOUND, SC_NOT_FOUND);
+        assertCinnamonError(response, ErrorCode.FILE_NOT_FOUND);
     }
 
     @Test

@@ -14,7 +14,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
-import static org.apache.http.HttpStatus.SC_NOT_FOUND;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.*;
@@ -64,10 +63,10 @@ public class LifecycleServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void getLifecycleFailOnNotFound() throws IOException {
         HttpResponse response = sendStandardRequest(UrlMapping.LIFECYCLE__GET_LIFECYCLE, new LifecycleRequest(Long.MAX_VALUE, null));
-        assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND, SC_NOT_FOUND);
+        assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND);
 
         HttpResponse nameNotFoundResponse = sendStandardRequest(UrlMapping.LIFECYCLE__GET_LIFECYCLE, new LifecycleRequest(null, "does-not-exist"));
-        assertCinnamonError(nameNotFoundResponse, ErrorCode.OBJECT_NOT_FOUND, SC_NOT_FOUND);
+        assertCinnamonError(nameNotFoundResponse, ErrorCode.OBJECT_NOT_FOUND);
     }
 
     @Test

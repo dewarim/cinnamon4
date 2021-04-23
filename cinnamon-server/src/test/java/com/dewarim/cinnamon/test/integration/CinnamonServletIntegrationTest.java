@@ -77,7 +77,7 @@ public class CinnamonServletIntegrationTest extends CinnamonIntegrationTest{
         assertTrue(disconnectResponse.isDisconnectSuccessful());
         
         HttpResponse verifyDisconnect = sendAdminRequest(UrlMapping.ACL__GET_ACLS);
-        assertCinnamonError(verifyDisconnect,ErrorCode.AUTHENTICATION_FAIL_NO_SESSION_FOUND, HttpStatus.SC_FORBIDDEN);
+        assertCinnamonError(verifyDisconnect,ErrorCode.AUTHENTICATION_FAIL_NO_SESSION_FOUND);
         
         ticket = getAdminTicket();
     } 
@@ -88,7 +88,7 @@ public class CinnamonServletIntegrationTest extends CinnamonIntegrationTest{
         ticket = null;
         String url = "http://localhost:" + cinnamonTestPort + UrlMapping.CINNAMON__DISCONNECT.getPath();
         HttpResponse response = Request.Post(url).execute().returnResponse();
-        assertCinnamonError(response,ErrorCode.SESSION_NOT_FOUND, HttpStatus.SC_NOT_FOUND);
+        assertCinnamonError(response,ErrorCode.SESSION_NOT_FOUND);
         ticket = adminTicket;
     }    
     
@@ -98,7 +98,7 @@ public class CinnamonServletIntegrationTest extends CinnamonIntegrationTest{
         ticket = "totally invalid ticket";
         String url = "http://localhost:" + cinnamonTestPort + UrlMapping.CINNAMON__DISCONNECT.getPath();
         HttpResponse response = Request.Post(url).execute().returnResponse();
-        assertCinnamonError(response,ErrorCode.SESSION_NOT_FOUND, HttpStatus.SC_NOT_FOUND);
+        assertCinnamonError(response,ErrorCode.SESSION_NOT_FOUND);
         ticket = adminTicket;
     }
     

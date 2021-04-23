@@ -29,8 +29,6 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.dewarim.cinnamon.Constants.CONTENT_TYPE_XML;
-import static jakarta.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
-import static jakarta.servlet.http.HttpServletResponse.SC_NOT_FOUND;
 
 @WebServlet(name = "LifecycleState", urlPatterns = "/")
 public class LifecycleStateServlet extends BaseServlet {
@@ -68,7 +66,7 @@ public class LifecycleStateServlet extends BaseServlet {
             }
         } catch (FailedRequestException e) {
             ErrorCode errorCode = e.getErrorCode();
-            ErrorResponseGenerator.generateErrorMessage(response, errorCode.getHttpResponseCode(), errorCode, e.getMessage());
+            ErrorResponseGenerator.generateErrorMessage(response, errorCode, e.getMessage());
         }
     }
 
@@ -155,7 +153,7 @@ public class LifecycleStateServlet extends BaseServlet {
             if (!stateOpt.isPresent()) {
                 stateOpt = stateDao.getLifecycleStateById(lifecycle.getDefaultStateId());
                 if (!stateOpt.isPresent()) {
-                    ErrorResponseGenerator.generateErrorMessage(response, SC_NOT_FOUND, ErrorCode.LIFECYCLE_STATE_NOT_FOUND);
+                    ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.LIFECYCLE_STATE_NOT_FOUND);
                     return;
                 }
             }
@@ -164,7 +162,7 @@ public class LifecycleStateServlet extends BaseServlet {
             changeStateAndCreateResponse(newState, osd, lifecycleState, osdDao, response);
 
         } else {
-            ErrorResponseGenerator.generateErrorMessage(response, SC_BAD_REQUEST, ErrorCode.INVALID_REQUEST);
+            ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.INVALID_REQUEST);
         }
     }
 
@@ -181,11 +179,11 @@ public class LifecycleStateServlet extends BaseServlet {
                 xmlMapper.writeValue(response.getWriter(), wrapper);
                 return;
             } else {
-                ErrorResponseGenerator.generateErrorMessage(response, SC_NOT_FOUND, ErrorCode.OBJECT_NOT_FOUND);
+                ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.OBJECT_NOT_FOUND);
                 return;
             }
         }
-        ErrorResponseGenerator.generateErrorMessage(response, SC_BAD_REQUEST, ErrorCode.INVALID_REQUEST);
+        ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.INVALID_REQUEST);
 
     }
 

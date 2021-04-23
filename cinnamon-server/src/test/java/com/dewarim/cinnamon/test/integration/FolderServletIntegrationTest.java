@@ -4,8 +4,16 @@ import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.model.Folder;
 import com.dewarim.cinnamon.model.Meta;
-import com.dewarim.cinnamon.model.request.*;
-import com.dewarim.cinnamon.model.request.folder.*;
+import com.dewarim.cinnamon.model.request.CreateMetaRequest;
+import com.dewarim.cinnamon.model.request.DeleteMetaRequest;
+import com.dewarim.cinnamon.model.request.IdListRequest;
+import com.dewarim.cinnamon.model.request.MetaRequest;
+import com.dewarim.cinnamon.model.request.SetSummaryRequest;
+import com.dewarim.cinnamon.model.request.folder.CreateFolderRequest;
+import com.dewarim.cinnamon.model.request.folder.FolderPathRequest;
+import com.dewarim.cinnamon.model.request.folder.FolderRequest;
+import com.dewarim.cinnamon.model.request.folder.SingleFolderRequest;
+import com.dewarim.cinnamon.model.request.folder.UpdateFolderRequest;
 import com.dewarim.cinnamon.model.response.FolderWrapper;
 import com.dewarim.cinnamon.model.response.MetaWrapper;
 import com.dewarim.cinnamon.model.response.SummaryWrapper;
@@ -14,7 +22,6 @@ import nu.xom.Document;
 import nu.xom.Node;
 import nu.xom.ParsingException;
 import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -24,7 +31,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.apache.http.HttpStatus.*;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.*;
@@ -48,14 +54,14 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     public void setSummaryMissingPermission() throws IOException {
         SetSummaryRequest summaryRequest = new SetSummaryRequest(12L, "a summary");
         HttpResponse      response       = sendStandardRequest(UrlMapping.FOLDER__SET_SUMMARY, summaryRequest);
-        assertCinnamonError(response, ErrorCode.NO_WRITE_SYS_METADATA_PERMISSION, HttpStatus.SC_FORBIDDEN);
+        assertCinnamonError(response, ErrorCode.NO_WRITE_SYS_METADATA_PERMISSION);
     }
 
     @Test
     public void setSummaryMissingObject() throws IOException {
         SetSummaryRequest summaryRequest = new SetSummaryRequest(Long.MAX_VALUE, "a summary");
         HttpResponse      response       = sendStandardRequest(UrlMapping.FOLDER__SET_SUMMARY, summaryRequest);
-        assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND, SC_NOT_FOUND);
+        assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND);
     }
 
     @Test
@@ -101,7 +107,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     public void getUnknownFolder() throws IOException {
         SingleFolderRequest singleRequest = new SingleFolderRequest(Long.MAX_VALUE, false);
         HttpResponse        response      = sendStandardRequest(UrlMapping.FOLDER__GET_FOLDER, singleRequest);
-        assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND, SC_NOT_FOUND);
+        assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND);
     }
 
     @Test
@@ -125,7 +131,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     public void getUnknownFolders() throws IOException {
         FolderRequest folderRequest = new FolderRequest(Collections.singletonList(Long.MAX_VALUE), false);
         HttpResponse  response      = sendStandardRequest(UrlMapping.FOLDER__GET_FOLDERS, folderRequest);
-        assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND, SC_NOT_FOUND);
+        assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND);
     }
 
     @Test
@@ -140,19 +146,19 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         // "//" is not allowed
         FolderPathRequest request  = new FolderPathRequest("http://", true);
         HttpResponse      response = sendStandardRequest(UrlMapping.FOLDER__GET_FOLDER_BY_PATH, request);
-        assertCinnamonError(response, ErrorCode.INVALID_FOLDER_PATH_STRUCTURE, SC_BAD_REQUEST);
+        assertCinnamonError(response, ErrorCode.INVALID_FOLDER_PATH_STRUCTURE);
 
         // trailing "/" is not allowed
         FolderPathRequest trailingRequest  = new FolderPathRequest("http://", true);
         HttpResponse      trailingResponse = sendStandardRequest(UrlMapping.FOLDER__GET_FOLDER_BY_PATH, trailingRequest);
-        assertCinnamonError(trailingResponse, ErrorCode.INVALID_FOLDER_PATH_STRUCTURE, SC_BAD_REQUEST);
+        assertCinnamonError(trailingResponse, ErrorCode.INVALID_FOLDER_PATH_STRUCTURE);
     }
 
     @Test
     public void getFolderByPathFolderNotFound() throws IOException {
         FolderPathRequest request  = new FolderPathRequest("/foo/bar", true);
         HttpResponse      response = sendStandardRequest(UrlMapping.FOLDER__GET_FOLDER_BY_PATH, request);
-        assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND, SC_NOT_FOUND);
+        assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND);
     }
 
     @Test
@@ -181,14 +187,14 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     public void getMetaObjectNotFound() throws IOException {
         MetaRequest  request      = new MetaRequest(Long.MAX_VALUE, null);
         HttpResponse metaResponse = sendStandardRequest(UrlMapping.FOLDER__GET_META, request);
-        assertCinnamonError(metaResponse, ErrorCode.OBJECT_NOT_FOUND, SC_NOT_FOUND);
+        assertCinnamonError(metaResponse, ErrorCode.OBJECT_NOT_FOUND);
     }
 
     @Test
     public void getMetaWithoutReadPermission() throws IOException {
         MetaRequest  request      = new MetaRequest(15L, null);
         HttpResponse metaResponse = sendStandardRequest(UrlMapping.FOLDER__GET_META, request);
-        assertCinnamonError(metaResponse, ErrorCode.NO_READ_CUSTOM_METADATA_PERMISSION, SC_UNAUTHORIZED);
+        assertCinnamonError(metaResponse, ErrorCode.NO_READ_CUSTOM_METADATA_PERMISSION);
     }
 
     @Test
@@ -213,35 +219,35 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     public void createMetaObjectNotFound() throws IOException {
         CreateMetaRequest request      = new CreateMetaRequest(Long.MAX_VALUE, "foo", 1L);
         HttpResponse      metaResponse = sendStandardRequest(UrlMapping.FOLDER__CREATE_META, request);
-        assertCinnamonError(metaResponse, ErrorCode.FOLDER_NOT_FOUND, SC_NOT_FOUND);
+        assertCinnamonError(metaResponse, ErrorCode.FOLDER_NOT_FOUND);
     }
 
     @Test
     public void createMetaObjectNotWritable() throws IOException {
         CreateMetaRequest request      = new CreateMetaRequest(15L, "foo", 1L);
         HttpResponse      metaResponse = sendStandardRequest(UrlMapping.FOLDER__CREATE_META, request);
-        assertCinnamonError(metaResponse, ErrorCode.NO_WRITE_CUSTOM_METADATA_PERMISSION, SC_UNAUTHORIZED);
+        assertCinnamonError(metaResponse, ErrorCode.NO_WRITE_CUSTOM_METADATA_PERMISSION);
     }
 
     @Test
     public void createMetaMetasetTypeByIdNotFound() throws IOException {
         CreateMetaRequest request      = new CreateMetaRequest(17L, "foo", Long.MAX_VALUE);
         HttpResponse      metaResponse = sendStandardRequest(UrlMapping.FOLDER__CREATE_META, request);
-        assertCinnamonError(metaResponse, ErrorCode.METASET_TYPE_NOT_FOUND, SC_NOT_FOUND);
+        assertCinnamonError(metaResponse, ErrorCode.METASET_TYPE_NOT_FOUND);
     }
 
     @Test
     public void createMetaMetasetTypeByNameNotFound() throws IOException {
         CreateMetaRequest request      = new CreateMetaRequest(17L, "foo", "unknown");
         HttpResponse      metaResponse = sendStandardRequest(UrlMapping.FOLDER__CREATE_META, request);
-        assertCinnamonError(metaResponse, ErrorCode.METASET_TYPE_NOT_FOUND, SC_NOT_FOUND);
+        assertCinnamonError(metaResponse, ErrorCode.METASET_TYPE_NOT_FOUND);
     }
 
     @Test
     public void createMetaMetasetIsUniqueAndExists() throws IOException {
         CreateMetaRequest request      = new CreateMetaRequest(18L, "duplicate license", "license");
         HttpResponse      metaResponse = sendStandardRequest(UrlMapping.FOLDER__CREATE_META, request);
-        assertCinnamonError(metaResponse, ErrorCode.METASET_IS_UNIQUE_AND_ALREADY_EXISTS, SC_BAD_REQUEST);
+        assertCinnamonError(metaResponse, ErrorCode.METASET_IS_UNIQUE_AND_ALREADY_EXISTS);
     }
 
     @Test
@@ -280,21 +286,21 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     public void deleteMetaObjectNotFound() throws IOException {
         DeleteMetaRequest deleteRequest = new DeleteMetaRequest(Long.MAX_VALUE, 1L);
         HttpResponse      metaResponse  = sendStandardRequest(UrlMapping.FOLDER__DELETE_META, deleteRequest);
-        assertCinnamonError(metaResponse, ErrorCode.FOLDER_NOT_FOUND, SC_NOT_FOUND);
+        assertCinnamonError(metaResponse, ErrorCode.FOLDER_NOT_FOUND);
     }
 
     @Test
     public void deleteMetaWithoutPermission() throws IOException {
         DeleteMetaRequest deleteRequest = new DeleteMetaRequest(20L, "comment");
         HttpResponse      metaResponse  = sendStandardRequest(UrlMapping.FOLDER__DELETE_META, deleteRequest);
-        assertCinnamonError(metaResponse, ErrorCode.NO_WRITE_CUSTOM_METADATA_PERMISSION, SC_UNAUTHORIZED);
+        assertCinnamonError(metaResponse, ErrorCode.NO_WRITE_CUSTOM_METADATA_PERMISSION);
     }
 
     @Test
     public void deleteMetaWithMetaNotFound() throws IOException {
         DeleteMetaRequest deleteRequest = new DeleteMetaRequest(21L, "unknown-type");
         HttpResponse      metaResponse  = sendStandardRequest(UrlMapping.FOLDER__DELETE_META, deleteRequest);
-        assertCinnamonError(metaResponse, ErrorCode.METASET_NOT_FOUND, SC_NOT_FOUND);
+        assertCinnamonError(metaResponse, ErrorCode.METASET_NOT_FOUND);
     }
 
     @Test

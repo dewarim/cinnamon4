@@ -23,8 +23,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
-import static jakarta.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
-
 
 @WebServlet(name = "Relation", urlPatterns = "/")
 public class RelationServlet extends HttpServlet {
@@ -90,7 +88,7 @@ public class RelationServlet extends HttpServlet {
             }
             return;
         }
-        ErrorResponseGenerator.generateErrorMessage(response, SC_BAD_REQUEST, ErrorCode.INVALID_REQUEST);
+        ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.INVALID_REQUEST);
     }
 
     private void listRelations(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -105,7 +103,7 @@ public class RelationServlet extends HttpServlet {
             xmlMapper.writeValue(response.getWriter(), wrapper);
             return;
         }
-        ErrorResponseGenerator.generateErrorMessage(response, SC_BAD_REQUEST, ErrorCode.INVALID_REQUEST);
+        ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.INVALID_REQUEST);
 
     }
 

@@ -30,15 +30,16 @@ import java.util.Properties;
 import static com.dewarim.cinnamon.Constants.CONTENT_TYPE_XML;
 
 /**
+ *
  */
 @WebServlet(name = "Cinnamon", urlPatterns = {"/*"})
 public class CinnamonServlet extends HttpServlet {
 
-    private static final Logger log = LogManager.getLogger(CinnamonServlet.class);
-    private ObjectMapper xmlMapper = new XmlMapper();
-    private final UserAccountDao userAccountDao = new UserAccountDao();
-    private LoginProviderService loginProviderService = LoginProviderService.getInstance();
-    private final CinnamonVersion cinnamonVersion = new CinnamonVersion();
+    private static final Logger               log                  = LogManager.getLogger(CinnamonServlet.class);
+    private              ObjectMapper         xmlMapper            = new XmlMapper();
+    private final        UserAccountDao       userAccountDao       = new UserAccountDao();
+    private              LoginProviderService loginProviderService = LoginProviderService.getInstance();
+    private final        CinnamonVersion      cinnamonVersion      = new CinnamonVersion();
     // TODO: move to constants or use http core?
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -50,7 +51,7 @@ public class CinnamonServlet extends HttpServlet {
         }
         switch (pathInfo) {
             case "/info":
-                info(request,response);
+                info(request, response);
                 break;
             default:
                 hello(response);
@@ -75,7 +76,7 @@ public class CinnamonServlet extends HttpServlet {
 
     }
 
-    private void info(HttpServletRequest request,HttpServletResponse response) throws IOException {
+    private void info(HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.setContentType("application/xml");
         response.setStatus(HttpServletResponse.SC_OK);
         response.getWriter().println(xmlMapper.writeValueAsString(cinnamonVersion));
@@ -92,27 +93,21 @@ public class CinnamonServlet extends HttpServlet {
             // TODO: initial parameter check (null, non-empty)
             String                username = request.getParameter("user");
             String                password = request.getParameter("pwd");
-            Optional<UserAccount> userOpt     = userAccountDao.getUserAccountByName(username);
-            
+            Optional<UserAccount> userOpt  = userAccountDao.getUserAccountByName(username);
+
             if (!userOpt.isPresent()) {
-                ErrorResponseGenerator.generateErrorMessage(response, HttpServletResponse.SC_UNAUTHORIZED,
-                        ErrorCode.CONNECTION_FAIL_INVALID_USERNAME, "valid username required"
-                );
+                ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.CONNECTION_FAIL_INVALID_USERNAME);
                 return;
             }
-            
+
             UserAccount user = userOpt.get();
             if (!user.isActivated()) {
-                ErrorResponseGenerator.generateErrorMessage(response, HttpServletResponse.SC_UNAUTHORIZED,
-                        ErrorCode.CONNECTION_FAIL_ACCOUNT_INACTIVE, "user account is not active"
-                );
+                ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.CONNECTION_FAIL_ACCOUNT_INACTIVE);
                 return;
             }
 
             if (user.isLocked()) {
-                ErrorResponseGenerator.generateErrorMessage(response, HttpServletResponse.SC_UNAUTHORIZED,
-                        ErrorCode.CONNECTION_FAIL_ACCOUNT_LOCKED, "user account is locked"
-                );
+                ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.CONNECTION_FAIL_ACCOUNT_LOCKED);
                 return;
             }
 
@@ -126,29 +121,25 @@ public class CinnamonServlet extends HttpServlet {
                 response.setContentType(CONTENT_TYPE_XML);
                 response.setStatus(HttpServletResponse.SC_OK);
                 xmlMapper.writeValue(response.getWriter(), cinnamonConnection);
-            }
-            else {
-                ErrorResponseGenerator.generateErrorMessage(response, HttpServletResponse.SC_UNAUTHORIZED,
-                        ErrorCode.CONNECTION_FAIL_WRONG_PASSWORD, "wrong password");
+            } else {
+                ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.CONNECTION_FAIL_WRONG_PASSWORD, "wrong password");
             }
         } catch (Exception e) {
             // TODO: test with unit test & mocked request which throws exception etc
             log.debug("connect failed for unknown reason:", e);
-            ErrorResponseGenerator.generateErrorMessage(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                    ErrorCode.INTERNAL_SERVER_ERROR_TRY_AGAIN_LATER, e.getMessage());
+            ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.INTERNAL_SERVER_ERROR_TRY_AGAIN_LATER, e.getMessage());
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         }
     }
 
     private void disconnect(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String ticket = request.getHeader("ticket");
+        String     ticket     = request.getHeader("ticket");
         SessionDao sessionDao = new SessionDao();
-        Session session = sessionDao.getSessionByTicket(ticket);
+        Session    session    = sessionDao.getSessionByTicket(ticket);
         if (session != null) {
             sessionDao.delete(session.getId());
-        }
-        else {
-            ErrorResponseGenerator.generateErrorMessage(response, HttpServletResponse.SC_NOT_FOUND, ErrorCode.SESSION_NOT_FOUND);
+        } else {
+            ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.SESSION_NOT_FOUND);
             return;
         }
         DisconnectResponse disconnectResponse = new DisconnectResponse(true);
@@ -163,18 +154,17 @@ public class CinnamonServlet extends HttpServlet {
     }
 
     @JsonRootName("CinnamonServer")
-    public static class CinnamonVersion{
+    public static class CinnamonVersion {
         private final String version;
         private final String build;
 
         public CinnamonVersion() {
-            version =  CinnamonServer.VERSION;
+            version = CinnamonServer.VERSION;
             try {
                 Properties properties = new Properties();
                 properties.load(getClass().getResourceAsStream("/buildNumber.properties"));
                 build = properties.getProperty("buildNumber0");
-            }
-            catch (IOException e){
+            } catch (IOException e) {
                 throw new CinnamonException("Could not load build number.");
             }
         }

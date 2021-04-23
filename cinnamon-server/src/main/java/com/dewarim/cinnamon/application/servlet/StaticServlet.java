@@ -13,9 +13,6 @@ import org.eclipse.jetty.http.MimeTypes;
 import java.io.IOException;
 import java.io.InputStream;
 
-import static jakarta.servlet.http.HttpServletResponse.SC_FORBIDDEN;
-import static jakarta.servlet.http.HttpServletResponse.SC_NOT_FOUND;
-
 
 /**
  */
@@ -36,7 +33,7 @@ public class StaticServlet extends HttpServlet {
         }
         // note: pathInfo seems to filter out ../ automatically, but I think it's useful to be sure.
         if (request.getRequestURI().contains("../")) {
-            ErrorResponseGenerator.generateErrorMessage(response, SC_FORBIDDEN, ErrorCode.STATIC__NO_PATH_TRAVERSAL);
+            ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.STATIC__NO_PATH_TRAVERSAL);
             return;
         }
         handleStaticContentRequest(pathInfo, response);
@@ -45,7 +42,7 @@ public class StaticServlet extends HttpServlet {
     private void handleStaticContentRequest(String pathInfo, HttpServletResponse response) throws IOException {
         try (InputStream inputStream = getClass().getResourceAsStream("/static" + pathInfo)) {
             if (inputStream == null) {
-                ErrorResponseGenerator.generateErrorMessage(response, SC_NOT_FOUND, ErrorCode.FILE_NOT_FOUND);
+                ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.FILE_NOT_FOUND);
                 return;
             }
             String defaultMimeByExtension = MimeTypes.getDefaultMimeByExtension(pathInfo);

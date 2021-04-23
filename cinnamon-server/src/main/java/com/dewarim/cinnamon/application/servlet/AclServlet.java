@@ -63,7 +63,7 @@ public class AclServlet extends HttpServlet {
             }
         } catch (FailedRequestException e) {
             ErrorCode errorCode = e.getErrorCode();
-            ErrorResponseGenerator.generateErrorMessage(response, errorCode.getHttpResponseCode(), errorCode, e.getMessage());
+            ErrorResponseGenerator.generateErrorMessage(response, errorCode, e.getMessage());
         }
 
     }
@@ -78,7 +78,7 @@ public class AclServlet extends HttpServlet {
             ErrorCode.NAME_PARAM_IS_INVALID.throwUp();
         }
         AclDao aclDao         = new AclDao();
-        Acl    aclToBeRenamed = aclDao.getAclByIdOpt(updateRequest.getId()).orElseThrow(ErrorCode.ACL_NOT_FOUND.getException());
+        Acl    aclToBeRenamed = aclDao.getAclById(updateRequest.getId()).orElseThrow(ErrorCode.ACL_NOT_FOUND.getException());
         aclToBeRenamed.setName(name);
         try {
             aclDao.changeAclName(aclToBeRenamed);
@@ -116,7 +116,7 @@ public class AclServlet extends HttpServlet {
         AclDao         aclDao         = new AclDao();
         Acl            acl;
         if (aclInfoRequest.byId()) {
-            acl = aclDao.getAclByIdOpt(aclInfoRequest.getAclId()).orElseThrow(ErrorCode.ACL_NOT_FOUND.getException());
+            acl = aclDao.getAclById(aclInfoRequest.getAclId()).orElseThrow(ErrorCode.ACL_NOT_FOUND.getException());
         } else if (aclInfoRequest.byName()) {
             acl = aclDao.getAclByName(aclInfoRequest.getName());
         } else {
@@ -139,7 +139,7 @@ public class AclServlet extends HttpServlet {
 
         DeletionResponse deletionResponse = new DeletionResponse();
         AclDao           aclDao           = new AclDao();
-        Acl              acl              = aclDao.getAclByIdOpt(id).orElseThrow(ErrorCode.ACL_NOT_FOUND.getException());
+        Acl              acl              = aclDao.getAclById(id).orElseThrow(ErrorCode.ACL_NOT_FOUND.getException());
         int              deletedRows      = aclDao.deleteAcl(acl.getId());
         deletionResponse.setSuccess(deletedRows == 1);
 

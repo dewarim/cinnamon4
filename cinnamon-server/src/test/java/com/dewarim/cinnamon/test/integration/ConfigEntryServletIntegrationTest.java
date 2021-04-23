@@ -7,7 +7,6 @@ import com.dewarim.cinnamon.model.request.ConfigEntryRequest;
 import com.dewarim.cinnamon.model.request.CreateConfigEntryRequest;
 import com.dewarim.cinnamon.model.response.ConfigEntryWrapper;
 import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -25,7 +24,7 @@ public class ConfigEntryServletIntegrationTest extends CinnamonIntegrationTest {
 
         // must be admin to create config entry
         HttpResponse failedCreate = sendStandardRequest(UrlMapping.CONFIG_ENTRY__SET_CONFIG_ENTRY, createRequest);
-        assertCinnamonError(failedCreate, ErrorCode.UNAUTHORIZED, HttpStatus.SC_FORBIDDEN);
+        assertCinnamonError(failedCreate, ErrorCode.UNAUTHORIZED);
 
         HttpResponse validCreate = sendAdminRequest(UrlMapping.CONFIG_ENTRY__SET_CONFIG_ENTRY, createRequest);
         assertResponseOkay(validCreate);
@@ -33,7 +32,7 @@ public class ConfigEntryServletIntegrationTest extends CinnamonIntegrationTest {
         // non-admin cannot read non-public config entry:
         ConfigEntryRequest configEntryRequest = new ConfigEntryRequest("test-config");
         HttpResponse       failedRequest      = sendStandardRequest(UrlMapping.CONFIG_ENTRY__GET_CONFIG_ENTRY, configEntryRequest);
-        assertCinnamonError(failedRequest, ErrorCode.UNAUTHORIZED, HttpStatus.SC_FORBIDDEN);
+        assertCinnamonError(failedRequest, ErrorCode.UNAUTHORIZED);
 
         // must be admin to get non-public config entry
         HttpResponse okayRequest = sendAdminRequest(UrlMapping.CONFIG_ENTRY__GET_CONFIG_ENTRY, configEntryRequest);
@@ -76,7 +75,7 @@ public class ConfigEntryServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void doesNotExistPath() throws IOException {
         HttpResponse response = sendStandardRequest(UrlMapping.CONFIG_ENTRY__GET_CONFIG_ENTRY, new ConfigEntryRequest("unknown-entry"));
-        assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND, HttpStatus.SC_NOT_FOUND);
+        assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND);
     }
 
 }

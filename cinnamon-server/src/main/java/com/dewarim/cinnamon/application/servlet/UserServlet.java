@@ -27,7 +27,6 @@ import java.util.Optional;
 
 import static com.dewarim.cinnamon.Constants.CONTENT_TYPE_XML;
 import static com.dewarim.cinnamon.application.ResponseUtil.responseIsOkayAndXml;
-import static jakarta.servlet.http.HttpServletResponse.*;
 
 /**
  */
@@ -68,18 +67,18 @@ public class UserServlet extends HttpServlet {
         if (!passwordRequest.getUserId().equals(currentUser.getId())) {
 
             if (!userDao.isSuperuser(currentUser)) {
-                ErrorResponseGenerator.generateErrorMessage(response, SC_FORBIDDEN, ErrorCode.FORBIDDEN);
+                ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.FORBIDDEN);
                 return;
             }
         }
 
         if (passwordRequest.getPassword() == null || passwordRequest.getPassword().length() < config.getMinimumPasswordLength()) {
-            ErrorResponseGenerator.generateErrorMessage(response, SC_BAD_REQUEST, ErrorCode.PASSWORD_TOO_SHORT);
+            ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.PASSWORD_TOO_SHORT);
             return;
         }
 
-        if (!userOpt.isPresent()) {
-            ErrorResponseGenerator.generateErrorMessage(response, SC_NOT_FOUND, ErrorCode.USER_ACCOUNT_NOT_FOUND);
+        if (userOpt.isEmpty()) {
+            ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.USER_ACCOUNT_NOT_FOUND);
             return;
         }
 

@@ -22,8 +22,6 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.dewarim.cinnamon.application.ErrorResponseGenerator.generateErrorMessage;
-import static jakarta.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
-import static jakarta.servlet.http.HttpServletResponse.SC_NOT_FOUND;
 
 @WebServlet(name = "Lifecycle", urlPatterns = "/")
 public class LifecycleServlet extends HttpServlet {
@@ -57,7 +55,7 @@ public class LifecycleServlet extends HttpServlet {
             Optional<Lifecycle> lifecycleOpt = lifecycleDao.getLifecycleById(id);
             lifecycle = lifecycleOpt.orElseGet(() -> lifecycleDao.getLifecycleByName(lifecycleRequest.getName()).orElse(null));
             if (lifecycle == null) {
-                generateErrorMessage(response, SC_NOT_FOUND, ErrorCode.OBJECT_NOT_FOUND);
+                generateErrorMessage(response, ErrorCode.OBJECT_NOT_FOUND);
                 return;
             }
             List<LifecycleState> lifecycleStates = new LifecycleStateDao().getLifecycleStatesByLifecycleId(lifecycle.getId());
@@ -67,7 +65,7 @@ public class LifecycleServlet extends HttpServlet {
             wrapper.setLifecycles(Collections.singletonList(lifecycle));
             xmlMapper.writeValue(response.getWriter(), wrapper);
         } else {
-            generateErrorMessage(response, SC_BAD_REQUEST, ErrorCode.INVALID_REQUEST);
+            generateErrorMessage(response, ErrorCode.INVALID_REQUEST);
         }
     }
 

@@ -13,7 +13,6 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.Collections;
 
-import static org.apache.http.HttpStatus.SC_NOT_FOUND;
 import static org.junit.Assert.*;
 
 public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
@@ -127,7 +126,7 @@ public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
     public void deleteRelationWhichDoesNotExist() throws IOException {
         DeleteRelationRequest deleteRequest = new DeleteRelationRequest(Long.MAX_VALUE, Long.MAX_VALUE, firstRelationTypeName);
         HttpResponse          response      = sendStandardRequest(UrlMapping.RELATION__DELETE_RELATION, deleteRequest);
-        assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND_OR_GONE, SC_NOT_FOUND);
+        assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND_OR_GONE);
     }
 
     @Test

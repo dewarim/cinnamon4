@@ -18,7 +18,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.apache.http.HttpStatus.SC_FORBIDDEN;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.*;
 
@@ -89,7 +88,7 @@ public class UserServletIntegrationTest extends CinnamonIntegrationTest {
     public void setOtherUsersPassword() throws IOException{
         SetPasswordRequest setPasswordRequest = new SetPasswordRequest(1L, "testTest");
         HttpResponse response = sendStandardRequest(UrlMapping.USER__SET_PASSWORD,setPasswordRequest);
-        assertCinnamonError(response, ErrorCode.FORBIDDEN, SC_FORBIDDEN); 
+        assertCinnamonError(response, ErrorCode.FORBIDDEN);
     }       
     
     @Test

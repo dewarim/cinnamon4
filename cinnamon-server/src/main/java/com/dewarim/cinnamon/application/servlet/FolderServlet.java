@@ -50,7 +50,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.dewarim.cinnamon.application.ErrorResponseGenerator.generateErrorMessage;
-import static jakarta.servlet.http.HttpServletResponse.*;
 
 @WebServlet(name = "Folder", urlPatterns = "/")
 public class FolderServlet extends BaseServlet {
@@ -107,7 +106,7 @@ public class FolderServlet extends BaseServlet {
             }
         } catch (FailedRequestException e) {
             ErrorCode errorCode = e.getErrorCode();
-            ErrorResponseGenerator.generateErrorMessage(response, errorCode.getHttpResponseCode(), errorCode, e.getMessage());
+            ErrorResponseGenerator.generateErrorMessage(response, errorCode, e.getMessage());
         }
     }
 
@@ -148,7 +147,7 @@ public class FolderServlet extends BaseServlet {
         if (aclId == null) {
             aclId = parentFolder.getAclId();
         } else {
-            aclId = new AclDao().getAclByIdOpt(aclId)
+            aclId = new AclDao().getAclById(aclId)
                     .orElseThrow(ErrorCode.ACL_NOT_FOUND.getException()).getId();
         }
 
@@ -234,7 +233,7 @@ public class FolderServlet extends BaseServlet {
             if (!accessFilter.hasPermissionOnOwnable(folder, DefaultPermission.SET_ACL, folder)) {
                 ErrorCode.MISSING_SET_ACL_PERMISSION.throwUp();
             }
-            Acl acl = new AclDao().getAclByIdOpt(aclId)
+            Acl acl = new AclDao().getAclById(aclId)
                     .orElseThrow(ErrorCode.ACL_NOT_FOUND.getException());
             folder.setAclId(acl.getId());
             changed = true;
@@ -277,7 +276,7 @@ public class FolderServlet extends BaseServlet {
         metas.forEach(meta -> {
             boolean deleteSuccess = metaDao.deleteById(meta.getId()) == 1;
             if (!deleteSuccess) {
-                generateErrorMessage(response, SC_INTERNAL_SERVER_ERROR, ErrorCode.DB_DELETE_FAILED);
+                generateErrorMessage(response, ErrorCode.DB_DELETE_FAILED);
             }
         });
         ResponseUtil.responseIsGenericOkay(response);
@@ -343,12 +342,12 @@ public class FolderServlet extends BaseServlet {
             try {
                 rawFolders = folderDao.getFolderByPathWithAncestors(pathRequest.getPath(), pathRequest.isIncludeSummary());
             } catch (BadArgumentException e) {
-                generateErrorMessage(response, SC_BAD_REQUEST, e.getErrorCode());
+                generateErrorMessage(response, e.getErrorCode());
                 return;
             }
             List<Folder> folders = new AuthorizationService().filterFoldersByBrowsePermission(rawFolders, user);
             if (folders.isEmpty()) {
-                generateErrorMessage(response, SC_NOT_FOUND, ErrorCode.OBJECT_NOT_FOUND);
+                generateErrorMessage(response, ErrorCode.OBJECT_NOT_FOUND);
                 return;
             }
 
@@ -357,7 +356,7 @@ public class FolderServlet extends BaseServlet {
             folderWrapper.setFolders(folders);
             xmlMapper.writeValue(response.getWriter(), folderWrapper);
         } else {
-            generateErrorMessage(response, SC_BAD_REQUEST, ErrorCode.INVALID_REQUEST);
+            generateErrorMessage(response, ErrorCode.INVALID_REQUEST);
         }
     }
 
@@ -372,7 +371,7 @@ public class FolderServlet extends BaseServlet {
         List<Folder> rawFolders = folderDao.getFolderByIdWithAncestors(folderRequest.getId(), folderRequest.isIncludeSummary());
         List<Folder> folders    = new AuthorizationService().filterFoldersByBrowsePermission(rawFolders, user);
         if (folders.isEmpty()) {
-            generateErrorMessage(response, SC_NOT_FOUND, ErrorCode.OBJECT_NOT_FOUND);
+            generateErrorMessage(response, ErrorCode.OBJECT_NOT_FOUND);
             return;
         }
 
@@ -392,7 +391,7 @@ public class FolderServlet extends BaseServlet {
         List<Folder> rawFolders = folderDao.getFoldersById(folderRequest.getIds(), folderRequest.isIncludeSummary());
         List<Folder> folders    = new AuthorizationService().filterFoldersByBrowsePermission(rawFolders, user);
         if (folders.isEmpty()) {
-            generateErrorMessage(response, SC_NOT_FOUND, ErrorCode.OBJECT_NOT_FOUND);
+            generateErrorMessage(response, ErrorCode.OBJECT_NOT_FOUND);
             return;
         }
 
@@ -414,11 +413,11 @@ public class FolderServlet extends BaseServlet {
                 xmlMapper.writeValue(response.getWriter(), new GenericResponse(true));
                 return;
             } else {
-                generateErrorMessage(response, HttpServletResponse.SC_FORBIDDEN, ErrorCode.NO_WRITE_SYS_METADATA_PERMISSION);
+                generateErrorMessage(response, ErrorCode.NO_WRITE_SYS_METADATA_PERMISSION);
                 return;
             }
         }
-        generateErrorMessage(response, SC_NOT_FOUND, ErrorCode.OBJECT_NOT_FOUND);
+        generateErrorMessage(response, ErrorCode.OBJECT_NOT_FOUND);
     }
 
     private void getSummaries(HttpServletRequest request, HttpServletResponse response, UserAccount user, FolderDao folderDao) throws IOException {

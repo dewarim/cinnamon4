@@ -43,7 +43,6 @@ import java.util.Optional;
 
 import static com.dewarim.cinnamon.Constants.CONTENT_TYPE_XML;
 import static com.dewarim.cinnamon.application.exception.UpdateException.*;
-import static jakarta.servlet.http.HttpServletResponse.*;
 
 @WebServlet(name = "Link", urlPatterns = "/")
 public class LinkServlet extends HttpServlet {
@@ -79,7 +78,7 @@ public class LinkServlet extends HttpServlet {
             }
         } catch (FailedRequestException e) {
             ErrorCode errorCode = e.getErrorCode();
-            ErrorResponseGenerator.generateErrorMessage(response, errorCode.getHttpResponseCode(), errorCode);
+            ErrorResponseGenerator.generateErrorMessage(response, errorCode);
         }
 
     }
@@ -109,8 +108,8 @@ public class LinkServlet extends HttpServlet {
         }
 
         AclDao aclDao = new AclDao();
-        Acl    acl    = aclDao.getAclById(linkRequest.getAclId());
-        if (acl == null) {
+        Optional<Acl>    acl    = aclDao.getAclById(linkRequest.getAclId());
+        if (acl.isEmpty()) {
             ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.ACL_NOT_FOUND);
             return;
         }
@@ -134,7 +133,7 @@ public class LinkServlet extends HttpServlet {
                     folder = folderOpt.get();
                     hasBrowsePermission = accessFilter.hasPermissionOnOwnable(folder, DefaultPermission.BROWSE_FOLDER, folder);
                 } else {
-                    ErrorResponseGenerator.generateErrorMessage(response, SC_NOT_FOUND, ErrorCode.FOLDER_NOT_FOUND);
+                    ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.FOLDER_NOT_FOUND);
                     return;
                 }
                 break;
@@ -145,7 +144,7 @@ public class LinkServlet extends HttpServlet {
                     osd = osdOpt.get();
                     hasBrowsePermission = accessFilter.hasPermissionOnOwnable(osd, DefaultPermission.BROWSE_OBJECT, osd);
                 } else {
-                    ErrorResponseGenerator.generateErrorMessage(response, SC_NOT_FOUND, ErrorCode.OBJECT_NOT_FOUND);
+                    ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.OBJECT_NOT_FOUND);
                     return;
                 }
                 break;
@@ -154,7 +153,7 @@ public class LinkServlet extends HttpServlet {
         }
 
         if (!hasBrowsePermission) {
-            ErrorResponseGenerator.generateErrorMessage(response, SC_UNAUTHORIZED, ErrorCode.UNAUTHORIZED);
+            ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.UNAUTHORIZED);
             return;
         }
 
@@ -178,8 +177,7 @@ public class LinkServlet extends HttpServlet {
     private void updateLink(HttpServletRequest request, HttpServletResponse response) throws IOException {
         LinkUpdateRequest updateRequest = xmlMapper.readValue(request.getInputStream(), LinkUpdateRequest.class);
         if (!updateRequest.validated()) {
-            ErrorResponseGenerator.generateErrorMessage(response, SC_BAD_REQUEST,
-                    ErrorCode.INVALID_REQUEST, "Id must be a positive integer value and one or more fields must be set.");
+            ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.INVALID_REQUEST, "Id must be a positive integer value and one or more fields must be set.");
             return;
         }
         LinkDao        linkDao      = new LinkDao();
@@ -218,11 +216,10 @@ public class LinkServlet extends HttpServlet {
                 sendGenericResponse(response, new GenericResponse(true));
 
             } catch (UpdateException updateException) {
-                ErrorResponseGenerator.generateErrorMessage(response, updateException.getStatusCode(), updateException.getErrorCode());
+                ErrorResponseGenerator.generateErrorMessage(response, updateException.getErrorCode());
             }
         } else {
-            ErrorResponseGenerator.generateErrorMessage(response, SC_NOT_FOUND,
-                    ErrorCode.OBJECT_NOT_FOUND);
+            ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.OBJECT_NOT_FOUND);
         }
 
     }
@@ -289,8 +286,8 @@ public class LinkServlet extends HttpServlet {
     }
 
     private void updateAcl(LinkUpdateRequest updateRequest, Link link, LinkDao linkDao) {
-        Acl acl = new AclDao().getAclById(updateRequest.getAclId());
-        if (acl == null) {
+        Optional<Acl> acl = new AclDao().getAclById(updateRequest.getAclId());
+        if (acl.isEmpty()) {
             ErrorCode.ACL_NOT_FOUND.throwUp();
         }
         UserAccount  user         = ThreadLocalSqlSession.getCurrentUser();
@@ -315,8 +312,8 @@ public class LinkServlet extends HttpServlet {
     private void deleteLink(HttpServletRequest request, HttpServletResponse response) throws IOException {
         DeleteByIdRequest deleteRequest = xmlMapper.readValue(request.getInputStream(), DeleteByIdRequest.class);
         if (!deleteRequest.validated()) {
-            ErrorResponseGenerator.generateErrorMessage(response, SC_BAD_REQUEST,
-                    ErrorCode.ID_PARAM_IS_INVALID, "Id must be a positive integer value.");
+            ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.ID_PARAM_IS_INVALID,
+                    "Id must be a positive integer value.");
             return;
         }
         LinkDao          linkDao          = new LinkDao();
@@ -327,7 +324,7 @@ public class LinkServlet extends HttpServlet {
             UserAccount user         = ThreadLocalSqlSession.getCurrentUser();
             List<Link>  filteredLink = authorizationService.filterLinksByBrowsePermission(Collections.singletonList(link), user);
             if (filteredLink.isEmpty()) {
-                ErrorResponseGenerator.generateErrorMessage(response, SC_UNAUTHORIZED, ErrorCode.UNAUTHORIZED, "");
+                ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.UNAUTHORIZED);
                 return;
             }
 
@@ -354,7 +351,7 @@ public class LinkServlet extends HttpServlet {
                     throw new IllegalStateException("unknown link type");
             }
             if (!deleteOkay) {
-                ErrorResponseGenerator.generateErrorMessage(response, SC_UNAUTHORIZED, ErrorCode.UNAUTHORIZED, "");
+                ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.UNAUTHORIZED);
                 return;
             }
             int deletedRows = linkDao.deleteLink(link.getId());
@@ -370,14 +367,14 @@ public class LinkServlet extends HttpServlet {
     private void getLinkById(HttpServletRequest request, HttpServletResponse response) throws IOException {
         LinkRequest linkRequest = xmlMapper.readValue(request.getInputStream(), LinkRequest.class);
         if (!linkRequest.validated()) {
-            ErrorResponseGenerator.generateErrorMessage(response, SC_BAD_REQUEST,
+            ErrorResponseGenerator.generateErrorMessage(response,
                     ErrorCode.ID_PARAM_IS_INVALID, "Id must be a positive integer value.");
             return;
         }
         LinkDao        linkDao      = new LinkDao();
         Optional<Link> linkOptional = linkDao.getLinkById(linkRequest.getId());
         if (!linkOptional.isPresent()) {
-            ErrorResponseGenerator.generateErrorMessage(response, SC_NOT_FOUND, ErrorCode.OBJECT_NOT_FOUND, "");
+            ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.OBJECT_NOT_FOUND);
             return;
         }
 
@@ -388,7 +385,7 @@ public class LinkServlet extends HttpServlet {
         UserAccount user         = ThreadLocalSqlSession.getCurrentUser();
         List<Link>  filteredLink = authorizationService.filterLinksByBrowsePermission(Collections.singletonList(link), user);
         if (filteredLink.isEmpty()) {
-            ErrorResponseGenerator.generateErrorMessage(response, SC_UNAUTHORIZED, ErrorCode.UNAUTHORIZED, "");
+            ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.UNAUTHORIZED);
             return;
         }
 
@@ -426,7 +423,7 @@ public class LinkServlet extends HttpServlet {
             linkResponse.setFolder(folder);
             return Optional.of(linkResponse);
         }
-        ErrorResponseGenerator.generateErrorMessage(response, SC_UNAUTHORIZED, ErrorCode.UNAUTHORIZED, "");
+        ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.UNAUTHORIZED);
         return Optional.empty();
     }
 
@@ -444,7 +441,7 @@ public class LinkServlet extends HttpServlet {
             return Optional.of(linkResponse);
 
         }
-        ErrorResponseGenerator.generateErrorMessage(response, SC_UNAUTHORIZED, ErrorCode.UNAUTHORIZED, "");
+        ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.UNAUTHORIZED);
         return Optional.empty();
     }
 

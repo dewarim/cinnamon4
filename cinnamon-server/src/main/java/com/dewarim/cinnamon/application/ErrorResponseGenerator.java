@@ -11,15 +11,10 @@ public class ErrorResponseGenerator {
 
     private static ObjectMapper xmlMapper = new XmlMapper();
 
-    /**
-     *
-     * @deprecated - use CinnamonResponse.generateErrorMessage
-     */
-    @Deprecated
-    public static void generateErrorMessage(HttpServletResponse response, int statusCode, ErrorCode errorCode, String message) {
+    public static void generateErrorMessage(HttpServletResponse response, ErrorCode errorCode, String message) {
         CinnamonError error = new CinnamonError(errorCode.getCode(), message);
         try {
-            response.setStatus(statusCode);
+            response.setStatus(errorCode.getHttpResponseCode());
             response.setContentType("application/xml");
             response.setCharacterEncoding("UTF-8");
             xmlMapper.writeValue(response.getWriter(), error);
@@ -28,17 +23,12 @@ public class ErrorResponseGenerator {
         }
     }
 
-    public static void generateErrorMessage(HttpServletResponse response, int statusCode, ErrorCode errorCode) {
-        generateErrorMessage(response, statusCode, errorCode, null);
-    }
-
-
     public static void superuserRequired(HttpServletResponse response) {
-        generateErrorMessage(response, HttpServletResponse.SC_FORBIDDEN,
-                ErrorCode.REQUIRES_SUPERUSER_STATUS, "");
+        generateErrorMessage(response, ErrorCode.REQUIRES_SUPERUSER_STATUS, "");
     }
 
     public static void generateErrorMessage(HttpServletResponse response, ErrorCode errorCode) {
-        generateErrorMessage(response, errorCode.getHttpResponseCode(), errorCode);
+        generateErrorMessage(response, errorCode, null);
     }
+
 }

@@ -138,17 +138,6 @@ public class CinnamonIntegrationTest {
     }
 
     /**
-     * @deprecated use assertCinnamonError with two parameters version - http response code is stored in ErrorCode
-     * anyway.
-     */
-    @Deprecated(forRemoval = true)
-    protected void assertCinnamonError(HttpResponse response, ErrorCode errorCode, int statusCode) throws IOException {
-        assertThat(response.getStatusLine().getStatusCode(), equalTo(statusCode));
-        CinnamonError cinnamonError = mapper.readValue(response.getEntity().getContent(), CinnamonError.class);
-        assertThat(cinnamonError.getCode(), equalTo(errorCode.getCode()));
-    }
-
-    /**
      * Send a POST request with the admin's ticket to the Cinnamon server.
      * The request object will be serialized and put into the
      * request body.

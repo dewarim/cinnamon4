@@ -53,7 +53,7 @@ public class ConfigEntryServlet extends HttpServlet {
         if (entryByName.isPresent()) {
             ConfigEntry entry = entryByName.get();
             if (!entry.isPublicVisibility() && !callerIsSuperuser()) {
-                ErrorResponseGenerator.generateErrorMessage(response, HttpServletResponse.SC_FORBIDDEN, ErrorCode.UNAUTHORIZED);
+                ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.UNAUTHORIZED);
                 return;
             }
 
@@ -64,13 +64,13 @@ public class ConfigEntryServlet extends HttpServlet {
             xmlMapper.writeValue(response.getWriter(), wrapper);
         }
         else {
-            ErrorResponseGenerator.generateErrorMessage(response, HttpServletResponse.SC_NOT_FOUND, ErrorCode.OBJECT_NOT_FOUND);
+            ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.OBJECT_NOT_FOUND);
         }
     }
 
     private void setConfigEntry(HttpServletRequest request, HttpServletResponse response) throws IOException {
         if (!callerIsSuperuser()) {
-            ErrorResponseGenerator.generateErrorMessage(response, HttpServletResponse.SC_FORBIDDEN, ErrorCode.UNAUTHORIZED);
+            ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.UNAUTHORIZED);
             return;
         }
         CreateConfigEntryRequest creationRequest = xmlMapper.readValue(request.getInputStream(), CreateConfigEntryRequest.class);
