@@ -7,6 +7,7 @@ drop table if exists users cascade;
 CREATE TABLE users (
   id BIGINT PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
+  -- description varchar(255),
   pwd VARCHAR(255) NOT NULL,
   obj_version int NOT NULL DEFAULT 0,
   login_type VARCHAR(64) NOT NULL DEFAULT 'CINNAMON',
@@ -15,7 +16,10 @@ CREATE TABLE users (
   ui_language_id BIGINT,
   fullname varchar(255) NOT NULL,
   email varchar(255),
-  change_tracking BOOLEAN NOT NULL DEFAULT TRUE
+  change_tracking BOOLEAN NOT NULL DEFAULT TRUE,
+  token varchar(255),
+  tokens_today int,
+  password_expired BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 drop sequence if exists seq_user_id;

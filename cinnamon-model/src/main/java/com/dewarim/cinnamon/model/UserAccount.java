@@ -11,7 +11,6 @@ public class UserAccount implements Principal, LoginUser {
     
     private Long id;
     private String name;
-    private Long objVersion;
     private String loginType;
     private String password;
     private boolean activated;
@@ -19,8 +18,11 @@ public class UserAccount implements Principal, LoginUser {
     private Long uiLanguageId;
     private String fullname;
     private String email;
-    private boolean changeTracking = true;
-        
+    private boolean changeTracking;
+    private String token;
+    private int tokensToday;
+    private boolean passwordExpired;
+
     @Override
     public String getName() {
         return name;
@@ -36,14 +38,6 @@ public class UserAccount implements Principal, LoginUser {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public Long getObjVersion() {
-        return objVersion;
-    }
-
-    public void setObjVersion(Long objVersion) {
-        this.objVersion = objVersion;
     }
 
     public String getLoginType() {
@@ -120,21 +114,28 @@ public class UserAccount implements Principal, LoginUser {
         this.changeTracking = changeTracking;
     }
 
-    @Override
-    public String toString() {
-        return "UserAccount{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", objVersion=" + objVersion +
-                ", loginType='" + loginType + '\'' +
-                ", password='" + password + '\'' +
-                ", activated=" + activated +
-                ", locked=" + locked +
-                ", uiLanguageId=" + uiLanguageId +
-                ", fullname='" + fullname + '\'' +
-                ", email='" + email + '\'' +
-                ", changeTracking=" + changeTracking +
-                '}';
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
+
+    public int getTokensToday() {
+        return tokensToday;
+    }
+
+    public void setTokensToday(int tokensToday) {
+        this.tokensToday = tokensToday;
+    }
+
+    public boolean isPasswordExpired() {
+        return passwordExpired;
+    }
+
+    public void setPasswordExpired(boolean passwordExpired) {
+        this.passwordExpired = passwordExpired;
     }
 
     @Override
@@ -146,21 +147,30 @@ public class UserAccount implements Principal, LoginUser {
             return false;
         }
         UserAccount that = (UserAccount) o;
-        return activated == that.activated &&
-                locked == that.locked &&
-                changeTracking == that.changeTracking &&
-                Objects.equals(name, that.name) &&
-                Objects.equals(objVersion, that.objVersion) &&
-                Objects.equals(loginType, that.loginType) &&
-                Objects.equals(password, that.password) &&
-                Objects.equals(uiLanguageId, that.uiLanguageId) &&
-                Objects.equals(fullname, that.fullname) &&
-                Objects.equals(email, that.email);
+        return activated == that.activated && locked == that.locked && changeTracking == that.changeTracking && tokensToday == that.tokensToday && passwordExpired == that.passwordExpired && id.equals(that.id) && name.equals(that.name) && loginType.equals(that.loginType) && password.equals(that.password) && Objects.equals(uiLanguageId, that.uiLanguageId) && Objects.equals(fullname, that.fullname) && Objects.equals(email, that.email) && Objects.equals(token, that.token);
     }
 
     @Override
     public int hashCode() {
-        return name.hashCode();
+        return Objects.hash(id, name);
     }
-    
+
+    @Override
+    public String toString() {
+        return "UserAccount{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", loginType='" + loginType + '\'' +
+                ", password='" + "***censored***" + '\'' +
+                ", activated=" + activated +
+                ", locked=" + locked +
+                ", uiLanguageId=" + uiLanguageId +
+                ", fullname='" + fullname + '\'' +
+                ", email='" + email + '\'' +
+                ", changeTracking=" + changeTracking +
+                ", token='" + token + '\'' +
+                ", tokensToday=" + tokensToday +
+                ", passwordExpired=" + passwordExpired +
+                '}';
+    }
 }

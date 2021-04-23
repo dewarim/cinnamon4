@@ -55,8 +55,8 @@ public class UserServletIntegrationTest extends CinnamonIntegrationTest {
         List<String>   names = Arrays.asList("admin", "doe", "deactivated user", "locked user");
         List<UserInfo> users = unwrapUsers(userInfoResponse, 4);
         users.forEach(user -> assertTrue(names.contains(user.getName())));
-        assertTrue(users.contains(new UserInfo(3L, "deactivated user", "CINNAMON", false, false, 1L, null, "inactive", true)));
-        assertTrue(users.contains(new UserInfo(4L, "locked user", "CINNAMON", true, true, 1L, null, "locked", true)));
+        assertTrue(users.contains(new UserInfo(3L, "deactivated user", "CINNAMON", false, false, 1L, null, "inactive", true, false)));
+        assertTrue(users.contains(new UserInfo(4L, "locked user", "CINNAMON", true, true, 1L, null, "locked", true, false)));
     }
 
     @Test
@@ -67,44 +67,44 @@ public class UserServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void setUsersOwnPassword() throws IOException{
+    public void setUsersOwnPassword() throws IOException {
         SetPasswordRequest setPasswordRequest = new SetPasswordRequest(2L, "testTest");
-        HttpResponse response = sendStandardRequest(UrlMapping.USER__SET_PASSWORD,setPasswordRequest);
+        HttpResponse       response           = sendStandardRequest(UrlMapping.USER__SET_PASSWORD, setPasswordRequest);
         assertResponseOkay(response);
         String url = "http://localhost:" + cinnamonTestPort + UrlMapping.CINNAMON__CONNECT.getPath();
         HttpResponse ticketResponse = Request.Post(url)
                 .bodyForm(Form.form().add("user", "doe").add("pwd", "testTest").build())
                 .execute().returnResponse();
-       assertResponseOkay(ticketResponse);
-       
-       // cleanup:
+        assertResponseOkay(ticketResponse);
+
+        // cleanup:
         CinnamonServer.config.getSecurityConfig().setMinimumPasswordLength(4);
         SetPasswordRequest setPasswordRequest2 = new SetPasswordRequest(2L, "admin");
-        HttpResponse response2 = sendStandardRequest(UrlMapping.USER__SET_PASSWORD,setPasswordRequest);
+        HttpResponse       response2           = sendStandardRequest(UrlMapping.USER__SET_PASSWORD, setPasswordRequest);
         CinnamonServer.config.getSecurityConfig().setMinimumPasswordLength(8);
     }
-    
+
     @Test
-    public void setOtherUsersPassword() throws IOException{
+    public void setOtherUsersPassword() throws IOException {
         SetPasswordRequest setPasswordRequest = new SetPasswordRequest(1L, "testTest");
-        HttpResponse response = sendStandardRequest(UrlMapping.USER__SET_PASSWORD,setPasswordRequest);
+        HttpResponse       response           = sendStandardRequest(UrlMapping.USER__SET_PASSWORD, setPasswordRequest);
         assertCinnamonError(response, ErrorCode.FORBIDDEN);
-    }       
-    
-    @Test
-    public void setOtherUsersPasswordAsAdmin() throws IOException{
-        SetPasswordRequest setPasswordRequest = new SetPasswordRequest(3L, "testTest");
-        HttpResponse response = sendAdminRequest(UrlMapping.USER__SET_PASSWORD,setPasswordRequest);
-        assertResponseOkay(response);
-    }    
-    
-    @Test
-    public void setTooShortPassword() throws IOException{
-        SetPasswordRequest setPasswordRequest = new SetPasswordRequest(2L, "test");
-        HttpResponse response = sendStandardRequest(UrlMapping.USER__SET_PASSWORD,setPasswordRequest);
-        assertCinnamonError(response, ErrorCode.PASSWORD_TOO_SHORT); 
     }
-    
+
+    @Test
+    public void setOtherUsersPasswordAsAdmin() throws IOException {
+        SetPasswordRequest setPasswordRequest = new SetPasswordRequest(3L, "testTest");
+        HttpResponse       response           = sendAdminRequest(UrlMapping.USER__SET_PASSWORD, setPasswordRequest);
+        assertResponseOkay(response);
+    }
+
+    @Test
+    public void setTooShortPassword() throws IOException {
+        SetPasswordRequest setPasswordRequest = new SetPasswordRequest(2L, "test");
+        HttpResponse       response           = sendStandardRequest(UrlMapping.USER__SET_PASSWORD, setPasswordRequest);
+        assertCinnamonError(response, ErrorCode.PASSWORD_TOO_SHORT);
+    }
+
     private List<UserInfo> unwrapUsers(HttpResponse response, Integer expectedSize) throws IOException {
         assertResponseOkay(response);
         List<UserInfo> users = mapper.readValue(response.getEntity().getContent(), UserWrapper.class).getUsers();

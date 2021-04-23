@@ -7,21 +7,22 @@ import java.util.Objects;
 @JacksonXmlRootElement(localName = "user")
 public class UserInfo {
 
-    private Long id;
-    private String name;
-    private String loginType;
+    private Long    id;
+    private String  name;
+    private String  loginType;
     private boolean activated;
     private boolean locked;
-    private Long uiLanguageId;
-    private String fullname;
-    private String email;
-    private boolean changeTracking = true;
+    private Long    uiLanguageId;
+    private String  fullname;
+    private String  email;
+    private boolean changeTracking;
+    private boolean passwordExpired;
 
     public UserInfo() {
     }
 
     public UserInfo(Long id, String name, String loginType, boolean activated, boolean locked, Long uiLanguageId, String email, String fullname,
-                    boolean changeTracking) {
+                    boolean changeTracking, boolean passwordExpired) {
         this.id = id;
         this.name = name;
         this.loginType = loginType;
@@ -31,6 +32,7 @@ public class UserInfo {
         this.email = email;
         this.fullname = fullname;
         this.changeTracking = changeTracking;
+        this.passwordExpired = passwordExpired;
     }
 
     public Long getId() {

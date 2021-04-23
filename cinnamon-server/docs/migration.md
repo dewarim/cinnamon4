@@ -127,3 +127,8 @@
     
     -- remove objects.appname column:
     alter table objects drop column appname;
+
+    -- remove sudoer/sudoable columns:
+    alter table users drop column sudoer;
+    alter table users drop column sudoable;
+    alter table users drop column token_age;

@@ -8,7 +8,6 @@
     <resultMap id="userAccountMap" type="com.dewarim.cinnamon.model.UserAccount">
         <id property="id" column="id"/>
         <result property="name" column="name"/>
-        <result property="objVersion" column="obj_version"/>
         <result property="loginType" column="login_type"/>
         <result property="password" column="pwd"/>
         <result property="activated" column="activated"/>
@@ -17,6 +16,9 @@
         <result property="fullname" column="fullname"/>
         <result property="email" column="email"/>
         <result property="changeTracking" column="change_tracking"/>
+        <result property="token" column="token"/>
+        <result property="tokensToday" column="tokens_today"/>
+        <result property="passwordExpired" column="password_expired"/>
     </resultMap>
 
     <select id="getUserAccountByName" parameterType="String" resultMap="userAccountMap">
@@ -38,11 +40,11 @@
     <select id="getSuperuserStatus" parameterMap="statusMap" resultType="long">
         select u.id
         from users u
-            JOIN group_users gu ON u.id = gu.user_id
+                 JOIN group_users gu ON u.id = gu.user_id
         where u.id = #{userId}
-              and gu.group_id in (select g.id
-                                  from groups g
-                                  where g.name = #{superuserGroupName})
+          and gu.group_id in (select g.id
+                              from groups g
+                              where g.name = #{superuserGroupName})
     </select>
 
     <update id="changeUserActivationStatus" parameterType="com.dewarim.cinnamon.model.UserAccount">
@@ -54,7 +56,8 @@
     <select id="listActiveUserAccounts" resultMap="userAccountMap">
         SELECT *
         FROM users
-        WHERE activated = true and account_locked = false
+        WHERE activated = true
+          and locked = false
     </select>
 
     <select id="listUserAccounts" resultMap="userAccountMap">
@@ -64,17 +67,18 @@
 
     <update id="updateUser">
         UPDATE users
-        SET
-            name           = #{name},
-            obj_version    = obj_version + 1,
-            login_type     = #{loginType},
-            pwd            = #{password},
-            activated      = #{activated},
-            locked = #{locked},
-            ui_language_id    = #{uiLanguageId},
-            fullname = #{fullname},
-            email = #{email},
-            change_tracking = #{changeTracking}
+        SET name             = #{name},
+            login_type       = #{loginType},
+            pwd              = #{password},
+            activated        = #{activated},
+            locked           = #{locked},
+            ui_language_id   = #{uiLanguageId},
+            fullname         = #{fullname},
+            email            = #{email},
+            change_tracking  = #{changeTracking},
+            token            = #{token},
+            tokens_today     = #{tokensToday},
+            password_expired = #{passwordExpired}
         WHERE id = #{id}
     </update>
 
