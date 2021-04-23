@@ -7,7 +7,6 @@ drop table if exists users cascade;
 CREATE TABLE users (
   id BIGINT PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
-  -- description varchar(255),
   pwd VARCHAR(255) NOT NULL,
   obj_version int NOT NULL DEFAULT 0,
   login_type VARCHAR(64) NOT NULL DEFAULT 'CINNAMON',

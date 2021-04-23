@@ -8,6 +8,7 @@
     ALTER TABLE users RENAME COLUMN account_locked TO locked;
     ALTER TABLE users RENAME COLUMN language_id TO ui_language_id;
     ALTER TABLE users ALTER COLUMN change_tracking SET DEFAULT true;
+    ALTER TABLE users DROP COLUMN description;
     
     -- note: this will set the created date of all existing folders to now()
     ALTER TABLE folders ADD created TIMESTAMP DEFAULT NOW();
