@@ -117,7 +117,7 @@ public class LinkServlet extends HttpServlet {
         // check if owner of new link exists:
         UserAccountDao        userDao  = new UserAccountDao();
         Optional<UserAccount> ownerOpt = userDao.getUserAccountById(linkRequest.getOwnerId());
-        if (!ownerOpt.isPresent()) {
+        if (ownerOpt.isEmpty()) {
             ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.OWNER_NOT_FOUND);
             return;
         }
@@ -373,7 +373,7 @@ public class LinkServlet extends HttpServlet {
         }
         LinkDao        linkDao      = new LinkDao();
         Optional<Link> linkOptional = linkDao.getLinkById(linkRequest.getId());
-        if (!linkOptional.isPresent()) {
+        if (linkOptional.isEmpty()) {
             ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.OBJECT_NOT_FOUND);
             return;
         }

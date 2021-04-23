@@ -4,17 +4,18 @@ import com.dewarim.cinnamon.api.content.ContentMetadata;
 import com.dewarim.cinnamon.api.content.ContentMetadataLight;
 import com.dewarim.cinnamon.api.content.ContentProvider;
 import com.dewarim.cinnamon.application.CinnamonServer;
-import com.dewarim.cinnamon.configuration.ServerConfig;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.UUID;
-
-import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 public class FileSystemContentProvider implements ContentProvider {
 
@@ -32,7 +33,7 @@ public class FileSystemContentProvider implements ContentProvider {
     @Override
     public InputStream getContentStream(ContentMetadata metadata) throws IOException{
         String path = dataRootPath + SEP + metadata.getContentPath();
-        return new FileInputStream(new File(path));
+        return new FileInputStream(path);
     }
 
     @Override

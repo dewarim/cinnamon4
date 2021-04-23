@@ -26,7 +26,7 @@ public class AuthenticationFilter implements Filter {
     private static final Logger log = LogManager.getLogger(AuthenticationFilter.class);
 
     @Override
-    public void init(FilterConfig filterConfig) throws ServletException {
+    public void init(FilterConfig filterConfig) {
 
     }
 
@@ -54,7 +54,7 @@ public class AuthenticationFilter implements Filter {
             }
 
             Optional<UserAccount> userAccountOpt = new UserAccountDao().getUserAccountById(cinnamonSession.getUserId());
-            if (!userAccountOpt.isPresent() || !userAccountOpt.get().isActivated()) {
+            if (userAccountOpt.isEmpty() || !userAccountOpt.get().isActivated()) {
                 failAuthentication(servletResponse, ErrorCode.AUTHENTICATION_FAIL_USER_NOT_FOUND);
                 return;
             }

@@ -6,18 +6,31 @@ import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.model.Meta;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.links.Link;
-import com.dewarim.cinnamon.model.request.*;
-import com.dewarim.cinnamon.model.request.osd.*;
+import com.dewarim.cinnamon.model.request.CreateMetaRequest;
+import com.dewarim.cinnamon.model.request.CreateNewVersionRequest;
+import com.dewarim.cinnamon.model.request.DeleteMetaRequest;
+import com.dewarim.cinnamon.model.request.IdListRequest;
+import com.dewarim.cinnamon.model.request.IdRequest;
+import com.dewarim.cinnamon.model.request.MetaRequest;
+import com.dewarim.cinnamon.model.request.SetSummaryRequest;
+import com.dewarim.cinnamon.model.request.osd.CreateOsdRequest;
+import com.dewarim.cinnamon.model.request.osd.DeleteOsdRequest;
+import com.dewarim.cinnamon.model.request.osd.OsdByFolderRequest;
+import com.dewarim.cinnamon.model.request.osd.OsdRequest;
+import com.dewarim.cinnamon.model.request.osd.SetContentRequest;
 import com.dewarim.cinnamon.model.response.MetaWrapper;
 import com.dewarim.cinnamon.model.response.OsdWrapper;
 import com.dewarim.cinnamon.model.response.SummaryWrapper;
-import nu.xom.*;
+import nu.xom.Builder;
+import nu.xom.Document;
+import nu.xom.Node;
+import nu.xom.Nodes;
+import nu.xom.ParsingException;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
-import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.entity.mime.content.StringBody;
@@ -256,10 +269,10 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void setContentWithoutProperRequest() throws IOException {
-        File            pomXml          = getPomXml();
-        FileBody        fileBody        = new FileBody(pomXml);
-        MultipartEntity multipartEntity = new MultipartEntity();
-        multipartEntity.addPart("file", fileBody);
+        File     pomXml   = getPomXml();
+        FileBody fileBody = new FileBody(pomXml);
+        HttpEntity multipartEntity = MultipartEntityBuilder.create()
+                .addPart("file", fileBody).build();
         HttpResponse response = sendStandardMultipartRequest(UrlMapping.OSD__SET_CONTENT, multipartEntity);
         assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
     }
@@ -270,10 +283,10 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void setContentWithoutFile() throws IOException {
-        SetContentRequest contentRequest  = new SetContentRequest(22L, 1L);
-        StringBody        setContentBody  = new StringBody(mapper.writeValueAsString(contentRequest), APPLICATION_XML.getMimeType(), StandardCharsets.UTF_8);
-        MultipartEntity   multipartEntity = new MultipartEntity();
-        multipartEntity.addPart("setContentRequest", setContentBody);
+        SetContentRequest contentRequest = new SetContentRequest(22L, 1L);
+        StringBody        setContentBody = new StringBody(mapper.writeValueAsString(contentRequest), APPLICATION_XML);
+        HttpEntity multipartEntity = MultipartEntityBuilder.create().
+                addPart("setContentRequest", setContentBody).build();
         HttpResponse response = sendStandardMultipartRequest(UrlMapping.OSD__SET_CONTENT, multipartEntity);
         assertCinnamonError(response, ErrorCode.MISSING_FILE_PARAMETER);
     }
@@ -544,35 +557,35 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void deleteMetaInvalidRequest() throws IOException {
         DeleteMetaRequest deleteRequest = new DeleteMetaRequest();
-        HttpResponse      metaResponse  = sendStandardRequest(UrlMapping.OSD__DELEET_META, deleteRequest);
+        HttpResponse      metaResponse  = sendStandardRequest(UrlMapping.OSD__DELETE_META, deleteRequest);
         assertCinnamonError(metaResponse, ErrorCode.INVALID_REQUEST);
     }
 
     @Test
     public void deleteMetaObjectNotFound() throws IOException {
         DeleteMetaRequest deleteRequest = new DeleteMetaRequest(Long.MAX_VALUE, 1L);
-        HttpResponse      metaResponse  = sendStandardRequest(UrlMapping.OSD__DELEET_META, deleteRequest);
+        HttpResponse      metaResponse  = sendStandardRequest(UrlMapping.OSD__DELETE_META, deleteRequest);
         assertCinnamonError(metaResponse, ErrorCode.OBJECT_NOT_FOUND);
     }
 
     @Test
     public void deleteMetaWithoutPermission() throws IOException {
         DeleteMetaRequest deleteRequest = new DeleteMetaRequest(42L, "license");
-        HttpResponse      metaResponse  = sendStandardRequest(UrlMapping.OSD__DELEET_META, deleteRequest);
+        HttpResponse      metaResponse  = sendStandardRequest(UrlMapping.OSD__DELETE_META, deleteRequest);
         assertCinnamonError(metaResponse, ErrorCode.NO_WRITE_CUSTOM_METADATA_PERMISSION);
     }
 
     @Test
     public void deleteMetaWithMetaNotFound() throws IOException {
         DeleteMetaRequest deleteRequest = new DeleteMetaRequest(41L, "unknown-type");
-        HttpResponse      metaResponse  = sendStandardRequest(UrlMapping.OSD__DELEET_META, deleteRequest);
+        HttpResponse      metaResponse  = sendStandardRequest(UrlMapping.OSD__DELETE_META, deleteRequest);
         assertCinnamonError(metaResponse, ErrorCode.METASET_NOT_FOUND);
     }
 
     @Test
     public void deleteMetaHappyPathById() throws IOException {
         DeleteMetaRequest request  = new DeleteMetaRequest(41L, 7L);
-        HttpResponse      response = sendStandardRequest(UrlMapping.OSD__DELEET_META, request);
+        HttpResponse      response = sendStandardRequest(UrlMapping.OSD__DELETE_META, request);
         assertResponseOkay(response);
         assertTrue(parseGenericResponse(response).isSuccessful());
     }
@@ -580,7 +593,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void deleteMetaHappyPathByName() throws IOException {
         DeleteMetaRequest request  = new DeleteMetaRequest(41L, "comment");
-        HttpResponse      response = sendStandardRequest(UrlMapping.OSD__DELEET_META, request);
+        HttpResponse      response = sendStandardRequest(UrlMapping.OSD__DELETE_META, request);
         assertResponseOkay(response);
         assertTrue(parseGenericResponse(response).isSuccessful());
     }
@@ -603,8 +616,8 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createOsdRequestWithoutPayload() throws IOException {
-        MultipartEntity multipartEntity = new MultipartEntity();
-        HttpResponse    response        = sendStandardMultipartRequest(UrlMapping.OSD__CREATE_OSD, multipartEntity);
+        HttpEntity   multipartEntity = MultipartEntityBuilder.create().build();
+        HttpResponse response        = sendStandardMultipartRequest(UrlMapping.OSD__CREATE_OSD, multipartEntity);
         assertCinnamonError(response, ErrorCode.MISSING_REQUEST_PAYLOAD);
     }
 
@@ -981,7 +994,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 //    @Test
 //    public void deleteOsdsNoDeletePermission() throws IOException{
 //        DeleteOsdRequest deleteRequest = new DeleteOsdRequest(Collections.singletonList(49L));
-//        HttpResponse           response = sendStandardRequest(UrlMapping.OSD__DELEET_OSDS, deleteRequest);
+//        HttpResponse           response = sendStandardRequest(UrlMapping.OSD__DELETE_OSDS, deleteRequest);
 //        assertCinnamonError(response, ErrorCode.NO_DELETE_PERMISSION);
 //    }
 

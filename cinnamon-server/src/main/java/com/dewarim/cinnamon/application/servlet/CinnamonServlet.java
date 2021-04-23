@@ -15,7 +15,6 @@ import com.dewarim.cinnamon.security.LoginProviderService;
 import com.fasterxml.jackson.annotation.JsonRootName;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -42,7 +41,7 @@ public class CinnamonServlet extends HttpServlet {
     private final        CinnamonVersion      cinnamonVersion      = new CinnamonVersion();
     // TODO: move to constants or use http core?
 
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
         String pathInfo = request.getPathInfo();
         if (pathInfo == null) {
@@ -59,7 +58,7 @@ public class CinnamonServlet extends HttpServlet {
 
     }
 
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
         String pathInfo = request.getPathInfo();
 
@@ -95,7 +94,7 @@ public class CinnamonServlet extends HttpServlet {
             String                password = request.getParameter("pwd");
             Optional<UserAccount> userOpt  = userAccountDao.getUserAccountByName(username);
 
-            if (!userOpt.isPresent()) {
+            if (userOpt.isEmpty()) {
                 ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.CONNECTION_FAIL_INVALID_USERNAME);
                 return;
             }

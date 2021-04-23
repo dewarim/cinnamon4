@@ -5,7 +5,6 @@ import com.dewarim.cinnamon.model.Permission;
 import com.dewarim.cinnamon.model.request.user.UserPermissionRequest;
 import com.dewarim.cinnamon.model.response.PermissionWrapper;
 import org.apache.http.HttpResponse;
-import org.hamcrest.MatcherAssert;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -13,6 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.*;
 
 
@@ -75,7 +75,7 @@ public class PermissionServletIntegrationTest extends CinnamonIntegrationTest {
         if (expectedSize != null) {
             assertNotNull(permissions);
             assertFalse(permissions.isEmpty());
-            MatcherAssert.assertThat(permissions.size(), equalTo(expectedSize));
+            assertThat(permissions.size(), equalTo(expectedSize));
         }
         return permissions;
     }

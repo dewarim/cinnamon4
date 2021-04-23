@@ -2,7 +2,6 @@ package com.dewarim.cinnamon.provider;
 
 import com.dewarim.cinnamon.api.content.ContentProvider;
 
-import java.util.Iterator;
 import java.util.ServiceConfigurationError;
 import java.util.ServiceLoader;
 

@@ -26,7 +26,7 @@ public class FailState implements State {
 
     @Override
     public StateChangeResult exit(CinnamonObject osd, State nextState, LifecycleStateConfig config) {
-        log.debug("OSD {} tries to leave FailStatee.", osd.getId());
+        log.debug("OSD {} tries to leave FailState.", osd.getId());
         return new StateChangeResult(false, Collections.singletonList("Failed to leave FailState."));
     }
 

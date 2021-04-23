@@ -52,7 +52,7 @@ public enum UrlMapping {
     OSD__CREATE_META("osd", "createMeta", "/api"),
     OSD__CREATE_OSD("osd","createOsd" ,"/api" ),
     OSD__DELETE_OSDS("osd", "deleteOsds", "/api"),
-    OSD__DELEET_META("osd", "deleteMeta", "/api"),
+    OSD__DELETE_META("osd", "deleteMeta", "/api"),
     OSD__GET_META("osd", "getMeta", "/api"),
     OSD__GET_OBJECTS_BY_FOLDER_ID("osd", "getObjectsByFolderId", "/api"),
     OSD__GET_OBJECTS_BY_ID("osd", "getObjectsById", "/api"),

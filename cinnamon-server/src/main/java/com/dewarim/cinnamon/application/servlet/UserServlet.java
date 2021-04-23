@@ -115,7 +115,7 @@ public class UserServlet extends HttpServlet {
             ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.USER_INFO_REQUEST_WITHOUT_NAME_OR_ID);
             return;
         }
-        if (!userOpt.isPresent()) {
+        if (userOpt.isEmpty()) {
             ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.USER_ACCOUNT_NOT_FOUND);
             return;
         }

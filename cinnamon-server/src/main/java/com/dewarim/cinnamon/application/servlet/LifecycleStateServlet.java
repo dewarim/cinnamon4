@@ -150,9 +150,9 @@ public class LifecycleStateServlet extends BaseServlet {
 
             LifecycleState           lifecycleState;
             Optional<LifecycleState> stateOpt = stateDao.getLifecycleStateById(attachReq.getLifecycleStateId());
-            if (!stateOpt.isPresent()) {
+            if (stateOpt.isEmpty()) {
                 stateOpt = stateDao.getLifecycleStateById(lifecycle.getDefaultStateId());
-                if (!stateOpt.isPresent()) {
+                if (stateOpt.isEmpty()) {
                     ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.LIFECYCLE_STATE_NOT_FOUND);
                     return;
                 }
@@ -177,11 +177,10 @@ public class LifecycleStateServlet extends BaseServlet {
                 response.setContentType(CONTENT_TYPE_XML);
                 response.setStatus(HttpServletResponse.SC_OK);
                 xmlMapper.writeValue(response.getWriter(), wrapper);
-                return;
             } else {
                 ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.OBJECT_NOT_FOUND);
-                return;
             }
+            return;
         }
         ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.INVALID_REQUEST);
 

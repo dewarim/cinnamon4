@@ -61,8 +61,6 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject {
      * <br/>
      * Does not copy lifecycle state or content.
      *
-     * @param user
-     * @return
      */
     public ObjectSystemData createNewVersion(UserAccount user, String lastDescendantVersion) {
         ObjectSystemData nextVersion = new ObjectSystemData();
@@ -182,7 +180,7 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject {
                 /*
                  * Example: creating a new version of a branch like 2.1-3 with no siblings:
                  * branches = 2, 1-3
-                 * lastSegement = 1-3
+                 * lastSegment = 1-3
                  * two elements in lastBranch [1],[3]
                  * leaf = 3, new version would be 2.1-4
                  */

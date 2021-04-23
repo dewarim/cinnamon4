@@ -129,7 +129,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void deleteLinkWithNonExistantLink() throws IOException {
+    public void deleteLinkWithNonExistentLink() throws IOException {
         DeleteByIdRequest deleteRequest = new DeleteByIdRequest(Long.MAX_VALUE);
         HttpResponse response = sendStandardRequest(UrlMapping.LINK__DELETE_LINK, deleteRequest);
         assertResponseOkay(response);

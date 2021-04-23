@@ -386,7 +386,7 @@ public class OsdServlet extends BaseServlet {
     }
 
 
-    private void unlock(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws ServletException, IOException {
+    private void unlock(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws IOException {
         IdRequest idRequest = xmlMapper.readValue(request.getInputStream(), IdRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         ObjectSystemData osd = osdDao.getObjectById(idRequest.getId()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());

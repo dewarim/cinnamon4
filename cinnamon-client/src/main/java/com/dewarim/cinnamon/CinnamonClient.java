@@ -32,10 +32,8 @@ public class CinnamonClient {
                     .execute().returnContent().asString();
             CinnamonConnection cinnamonConnection = mapper.readValue(tokenRequestResult, CinnamonConnection.class);
             ticket = cinnamonConnection.getTicket();
-            return ticket;
-        } else {
-            return ticket;
         }
+        return ticket;
     }
 
 }

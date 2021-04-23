@@ -4,7 +4,6 @@ import com.dewarim.cinnamon.api.login.LoginProvider;
 import com.dewarim.cinnamon.api.login.LoginResult;
 import com.dewarim.cinnamon.api.login.LoginUser;
 
-import java.util.Iterator;
 import java.util.ServiceConfigurationError;
 import java.util.ServiceLoader;
 

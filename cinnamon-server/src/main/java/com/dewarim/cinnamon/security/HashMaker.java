@@ -3,7 +3,6 @@ package com.dewarim.cinnamon.security;
 import com.dewarim.cinnamon.application.CinnamonServer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.mindrot.jbcrypt.BCrypt;
 
 /**
@@ -22,7 +21,7 @@ public class HashMaker {
      * @return a digest based upon the configured number of hash generation rounds and the specified plain-text.
 	 */
 	public static String createDigest(String text){
-		Integer rounds = CinnamonServer.config.getSecurityConfig().getPasswordRounds();
+		int    rounds = CinnamonServer.config.getSecurityConfig().getPasswordRounds();
 		String digest = BCrypt.hashpw(text, BCrypt.gensalt(rounds));
 		log.debug("digest:"+digest);
 		return digest;

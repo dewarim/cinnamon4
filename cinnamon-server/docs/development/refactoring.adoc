@@ -1,7 +1,7 @@
-# Design and Refactoring Notes
+= Design and Refactoring Notes
 :icons: font
 
-## LifecycleStateConfig
+== LifecycleStateConfig
 
 LifecycleStateConfig is currently stored as an XML string in the lifecycle_states table.
 It is de-serialized to an object via LifecycleState.getLifecycleStateConfig().
@@ -9,7 +9,7 @@ It is de-serialized to an object via LifecycleState.getLifecycleStateConfig().
 Format is
 
 [source,xml]
----
+'''
  <config>
    <properties><property><name>aclName</name><value>reviewers.acl</value></property></properties>
    <nextStates><stateName>published</stateName></nextStates>

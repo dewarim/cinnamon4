@@ -112,10 +112,8 @@ public class CinnamonIntegrationTest {
             XmlMapper          mapper             = new XmlMapper();
             CinnamonConnection cinnamonConnection = mapper.readValue(tokenRequestResult, CinnamonConnection.class);
             ticketForDoe = cinnamonConnection.getTicket();
-            return ticketForDoe;
-        } else {
-            return ticketForDoe;
         }
+        return ticketForDoe;
     }
 
     protected void assertResponseOkay(HttpResponse response) throws IOException {

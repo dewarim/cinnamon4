@@ -11,7 +11,6 @@ import com.dewarim.cinnamon.model.response.UserWrapper;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Form;
 import org.apache.http.client.fluent.Request;
-import org.hamcrest.MatcherAssert;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -19,6 +18,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.*;
 
 public class UserServletIntegrationTest extends CinnamonIntegrationTest {
@@ -111,7 +111,7 @@ public class UserServletIntegrationTest extends CinnamonIntegrationTest {
         if (expectedSize != null) {
             assertNotNull(users);
             assertFalse(users.isEmpty());
-            MatcherAssert.assertThat(users.size(), equalTo(expectedSize));
+            assertThat(users.size(), equalTo(expectedSize));
         }
         return users;
     }
