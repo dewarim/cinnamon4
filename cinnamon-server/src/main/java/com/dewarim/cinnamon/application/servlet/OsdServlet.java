@@ -232,7 +232,7 @@ public class OsdServlet extends BaseServlet {
         osd.setName(createRequest.getName());
 
         // check acl exists
-        Long aclId = new AclDao().getAclByIdOpt(createRequest.getAclId()).orElseThrow(ErrorCode.ACL_NOT_FOUND.getException())
+        Long aclId = new AclDao().getAclById(createRequest.getAclId()).orElseThrow(ErrorCode.ACL_NOT_FOUND.getException())
                 .getId();
         osd.setAclId(aclId);
 

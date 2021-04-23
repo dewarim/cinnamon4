@@ -12,17 +12,7 @@ import java.util.stream.Collectors;
 
 public class AclDao {
 
-    /**
-     *
-     * @deprecated use getAclByIdOpt, which will replace getAclById later
-     */
-    @Deprecated(forRemoval = true)
-    public Acl getAclById(long id) {
-        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        return sqlSession.selectOne("com.dewarim.cinnamon.AclMapper.getAclById", id);
-    }
-
-    public Optional<Acl> getAclByIdOpt(long id) {
+    public Optional<Acl> getAclById(long id) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
         Acl acl = sqlSession.selectOne("com.dewarim.cinnamon.AclMapper.getAclById", id);
         return Optional.ofNullable(acl);
