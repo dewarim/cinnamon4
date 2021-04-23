@@ -7,12 +7,17 @@ import com.dewarim.cinnamon.dao.SessionDao;
 import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.model.Session;
 import com.dewarim.cinnamon.model.UserAccount;
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.FilterConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.servlet.*;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Date;
 import java.util.Optional;
@@ -29,9 +34,9 @@ public class AuthenticationFilter implements Filter {
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         try {
             log.debug("AuthenticationFilter: before");
-            HttpServletRequest servletRequest = (HttpServletRequest) request;
+            HttpServletRequest  servletRequest  = (HttpServletRequest) request;
             HttpServletResponse servletResponse = (HttpServletResponse) response;
-            String ticket = servletRequest.getHeader("ticket");
+            String              ticket          = servletRequest.getHeader("ticket");
             if (ticket == null || ticket.trim().isEmpty()) {
                 failAuthentication(servletResponse, ErrorCode.AUTHENTICATION_FAIL_NO_TICKET_GIVEN);
                 return;

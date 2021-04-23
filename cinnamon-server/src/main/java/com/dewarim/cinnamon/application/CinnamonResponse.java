@@ -6,10 +6,10 @@ import com.dewarim.cinnamon.model.response.GenericResponse;
 import com.dewarim.cinnamon.model.response.Wrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponseWrapper;
 import org.apache.http.HttpStatus;
 
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpServletResponseWrapper;
 import java.io.IOException;
 
 import static com.dewarim.cinnamon.Constants.CONTENT_TYPE_XML;

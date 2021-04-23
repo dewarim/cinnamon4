@@ -18,7 +18,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 
-import static javax.servlet.http.HttpServletResponse.*;
+import static jakarta.servlet.http.HttpServletResponse.*;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;

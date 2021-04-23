@@ -51,6 +51,7 @@ public class CinnamonIntegrationTest {
     @BeforeClass
     public static void setUpServer() throws Exception {
         if (cinnamonServer == null) {
+            log.info("Create new CinnamonServer.");
             cinnamonServer = new CinnamonServer(cinnamonTestPort);
 
             DbSessionFactory dbSessionFactory = new DbSessionFactory("sql/mybatis.test.properties.xml");
@@ -71,8 +72,9 @@ public class CinnamonIntegrationTest {
             // set data root:
             Path tempDirectory = Files.createTempDirectory("cinnamon-data-root");
             CinnamonServer.config.getServerConfig().setDataRoot(tempDirectory.toAbsolutePath().toString());
+            ticket = getAdminTicket();
+            log.info("admin ticket: " + ticket);
         }
-        ticket = getAdminTicket();
     }
 
     /**
@@ -119,7 +121,7 @@ public class CinnamonIntegrationTest {
 
     protected void assertCinnamonError(HttpResponse response, ErrorCode errorCode) throws IOException {
         String responseText = new String(response.getEntity().getContent().readAllBytes());
-        Assert.assertTrue("response should contain errorCode " + errorCode +" but was "+responseText, responseText.contains(errorCode.getCode()));
+        Assert.assertTrue("response should contain errorCode " + errorCode + " but was " + responseText, responseText.contains(errorCode.getCode()));
         assertThat(errorCode.getHttpResponseCode(), equalTo(response.getStatusLine().getStatusCode()));
         CinnamonError cinnamonError = mapper.readValue(response.getEntity().getContent(), CinnamonError.class);
         assertThat(cinnamonError.getCode(), equalTo(errorCode.getCode()));

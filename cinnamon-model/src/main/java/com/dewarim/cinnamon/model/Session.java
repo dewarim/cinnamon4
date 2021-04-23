@@ -1,6 +1,7 @@
 package com.dewarim.cinnamon.model;
 
 import java.util.Date;
+import java.util.Objects;
 import java.util.UUID;
 
 public class Session {
@@ -51,5 +52,32 @@ public class Session {
 
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        Session session = (Session) o;
+        return Objects.equals(id, session.id) && Objects.equals(ticket, session.ticket) && Objects.equals(expires, session.expires) && Objects.equals(userId, session.userId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, ticket, expires, userId);
+    }
+
+    @Override
+    public String toString() {
+        return "Session{" +
+                "id=" + id +
+                ", ticket='" + ticket + '\'' +
+                ", expires=" + expires +
+                ", userId=" + userId +
+                '}';
     }
 }

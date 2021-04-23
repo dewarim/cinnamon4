@@ -2,8 +2,8 @@ package com.dewarim.cinnamon.application;
 
 import com.dewarim.cinnamon.model.response.GenericResponse;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import jakarta.servlet.http.HttpServletResponse;
 
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 import static com.dewarim.cinnamon.Constants.CONTENT_TYPE_XML;

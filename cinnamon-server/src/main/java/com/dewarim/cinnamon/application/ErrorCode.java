@@ -4,7 +4,8 @@ import com.dewarim.cinnamon.application.exception.FailedRequestException;
 
 import java.util.function.Supplier;
 
-import static javax.servlet.http.HttpServletResponse.*;
+import static jakarta.servlet.http.HttpServletResponse.*;
+
 
 public enum ErrorCode {
 

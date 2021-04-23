@@ -2,13 +2,35 @@ package com.dewarim.cinnamon.application.servlet;
 
 import com.dewarim.cinnamon.Constants;
 import com.dewarim.cinnamon.DefaultPermission;
-import com.dewarim.cinnamon.application.*;
+import com.dewarim.cinnamon.application.CinnamonResponse;
+import com.dewarim.cinnamon.application.ErrorCode;
+import com.dewarim.cinnamon.application.ErrorResponseGenerator;
+import com.dewarim.cinnamon.application.ResponseUtil;
+import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.application.exception.BadArgumentException;
 import com.dewarim.cinnamon.application.exception.FailedRequestException;
-import com.dewarim.cinnamon.dao.*;
-import com.dewarim.cinnamon.model.*;
-import com.dewarim.cinnamon.model.request.*;
-import com.dewarim.cinnamon.model.request.folder.*;
+import com.dewarim.cinnamon.dao.AclDao;
+import com.dewarim.cinnamon.dao.FolderDao;
+import com.dewarim.cinnamon.dao.FolderMetaDao;
+import com.dewarim.cinnamon.dao.FolderTypeDao;
+import com.dewarim.cinnamon.dao.MetasetTypeDao;
+import com.dewarim.cinnamon.dao.UserAccountDao;
+import com.dewarim.cinnamon.model.Acl;
+import com.dewarim.cinnamon.model.Folder;
+import com.dewarim.cinnamon.model.FolderType;
+import com.dewarim.cinnamon.model.Meta;
+import com.dewarim.cinnamon.model.MetasetType;
+import com.dewarim.cinnamon.model.UserAccount;
+import com.dewarim.cinnamon.model.request.CreateMetaRequest;
+import com.dewarim.cinnamon.model.request.DeleteMetaRequest;
+import com.dewarim.cinnamon.model.request.IdListRequest;
+import com.dewarim.cinnamon.model.request.MetaRequest;
+import com.dewarim.cinnamon.model.request.SetSummaryRequest;
+import com.dewarim.cinnamon.model.request.folder.CreateFolderRequest;
+import com.dewarim.cinnamon.model.request.folder.FolderPathRequest;
+import com.dewarim.cinnamon.model.request.folder.FolderRequest;
+import com.dewarim.cinnamon.model.request.folder.SingleFolderRequest;
+import com.dewarim.cinnamon.model.request.folder.UpdateFolderRequest;
 import com.dewarim.cinnamon.model.response.FolderWrapper;
 import com.dewarim.cinnamon.model.response.GenericResponse;
 import com.dewarim.cinnamon.model.response.SummaryWrapper;
@@ -16,11 +38,11 @@ import com.dewarim.cinnamon.security.authorization.AccessFilter;
 import com.dewarim.cinnamon.security.authorization.AuthorizationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
@@ -28,7 +50,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.dewarim.cinnamon.application.ErrorResponseGenerator.generateErrorMessage;
-import static javax.servlet.http.HttpServletResponse.*;
+import static jakarta.servlet.http.HttpServletResponse.*;
 
 @WebServlet(name = "Folder", urlPatterns = "/")
 public class FolderServlet extends BaseServlet {
@@ -396,7 +418,7 @@ public class FolderServlet extends BaseServlet {
                 return;
             }
         }
-        generateErrorMessage(response, HttpServletResponse.SC_NOT_FOUND, ErrorCode.OBJECT_NOT_FOUND);
+        generateErrorMessage(response, SC_NOT_FOUND, ErrorCode.OBJECT_NOT_FOUND);
     }
 
     private void getSummaries(HttpServletRequest request, HttpServletResponse response, UserAccount user, FolderDao folderDao) throws IOException {

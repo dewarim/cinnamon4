@@ -11,13 +11,13 @@ import com.dewarim.cinnamon.model.request.user.UserInfoRequest;
 import com.dewarim.cinnamon.model.response.CinnamonError;
 import com.dewarim.cinnamon.model.response.UserInfo;
 import com.dewarim.cinnamon.model.response.UserWrapper;
+import jakarta.servlet.http.HttpServletResponse;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.entity.ContentType;
 import org.apache.ibatis.session.SqlSession;
 import org.junit.Test;
 
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Date;
 

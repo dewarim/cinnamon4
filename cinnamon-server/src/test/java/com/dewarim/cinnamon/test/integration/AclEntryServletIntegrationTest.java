@@ -6,6 +6,8 @@ import com.dewarim.cinnamon.model.AclEntry;
 import com.dewarim.cinnamon.model.request.AclEntryListRequest;
 import com.dewarim.cinnamon.model.response.AclEntryWrapper;
 import org.apache.http.HttpResponse;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -15,6 +17,7 @@ import static org.junit.Assert.assertEquals;
 
 public class AclEntryServletIntegrationTest extends CinnamonIntegrationTest {
 
+    private final static Logger log = LogManager.getLogger(AclEntryServletIntegrationTest.class);
 
     @Test
     public void testListAclEntryByAclId() throws IOException {

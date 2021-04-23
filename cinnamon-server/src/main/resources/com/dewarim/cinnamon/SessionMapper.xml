@@ -18,6 +18,11 @@
         WHERE ticket = #{ticket}
     </select>
 
+    <select id="listSessions" resultMap="sessionMap">
+        SELECT *
+        FROM sessions
+    </select>
+
     <insert id="insertSession" parameterType="com.dewarim.cinnamon.model.Session" flushCache="true">
         <selectKey keyProperty="id" resultType="long" order="BEFORE">
             select nextval('seq_session_id')
@@ -30,13 +35,14 @@
     <!-- Only field that should be updated is the expiration time when a session is renewed before it expires -->
     <update id="updateSession" parameterType="com.dewarim.cinnamon.model.Session" flushCache="true">
         UPDATE sessions
-        SET
-            expires = #{expires}
+        SET expires = #{expires}
         WHERE id = #{id}
     </update>
 
     <delete id="deleteSession" parameterType="long" flushCache="true">
-        DELETE FROM sessions WHERE id = #{id}
+        DELETE
+        FROM sessions
+        WHERE id = #{id}
     </delete>
-    
+
 </mapper>

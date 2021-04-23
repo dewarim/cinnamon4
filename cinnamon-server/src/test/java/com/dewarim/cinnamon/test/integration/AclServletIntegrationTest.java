@@ -12,6 +12,8 @@ import com.dewarim.cinnamon.model.request.acl.CreateAclRequest;
 import com.dewarim.cinnamon.model.response.AclWrapper;
 import com.dewarim.cinnamon.model.response.DeletionResponse;
 import org.apache.http.HttpResponse;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -24,6 +26,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.*;
 
 public class AclServletIntegrationTest extends CinnamonIntegrationTest {
+
+    private final static Logger log = LogManager.getLogger(AclServletIntegrationTest.class);
 
     @Test
     public void listAclsTest() throws IOException {
@@ -69,7 +73,7 @@ public class AclServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void remainNonExistantAclShouldFail() throws IOException {
+    public void remainNonExistentAclShouldFail() throws IOException {
         AclUpdateRequest updateRequest = new AclUpdateRequest(Long.MAX_VALUE, "foo");
         HttpResponse aclListResponse = sendAdminRequest(UrlMapping.ACL__UPDATE_ACL, updateRequest);
         assertCinnamonError(aclListResponse, ErrorCode.ACL_NOT_FOUND);

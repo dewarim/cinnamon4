@@ -4,6 +4,8 @@ import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.model.Session;
 import org.apache.ibatis.session.SqlSession;
 
+import java.util.List;
+
 public class SessionDao {
 
     public Session getSessionByTicket(String ticket) {
@@ -15,7 +17,6 @@ public class SessionDao {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
         sqlSession.insert("com.dewarim.cinnamon.SessionMapper.insertSession", session);
         return session;
-
     }
 
     public void update(Session session) {
@@ -26,6 +27,10 @@ public class SessionDao {
     public void delete(long id) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
         sqlSession.delete("com.dewarim.cinnamon.SessionMapper.deleteSession", id);
+    }
 
+    public List<Session> list(){
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        return sqlSession.selectList("com.dewarim.cinnamon.SessionMapper.listSessions");
     }
 }

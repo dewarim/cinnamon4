@@ -16,18 +16,18 @@ import com.dewarim.cinnamon.model.response.UserWrapper;
 import com.dewarim.cinnamon.security.HashMaker;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Optional;
 
 import static com.dewarim.cinnamon.Constants.CONTENT_TYPE_XML;
 import static com.dewarim.cinnamon.application.ResponseUtil.responseIsOkayAndXml;
-import static javax.servlet.http.HttpServletResponse.*;
+import static jakarta.servlet.http.HttpServletResponse.*;
 
 /**
  */

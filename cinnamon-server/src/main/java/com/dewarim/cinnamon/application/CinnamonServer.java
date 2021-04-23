@@ -2,7 +2,29 @@ package com.dewarim.cinnamon.application;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
-import com.dewarim.cinnamon.application.servlet.*;
+import com.dewarim.cinnamon.application.servlet.AclEntryServlet;
+import com.dewarim.cinnamon.application.servlet.AclServlet;
+import com.dewarim.cinnamon.application.servlet.CinnamonServlet;
+import com.dewarim.cinnamon.application.servlet.ConfigEntryServlet;
+import com.dewarim.cinnamon.application.servlet.ConfigServlet;
+import com.dewarim.cinnamon.application.servlet.FolderServlet;
+import com.dewarim.cinnamon.application.servlet.FolderTypeServlet;
+import com.dewarim.cinnamon.application.servlet.FormatServlet;
+import com.dewarim.cinnamon.application.servlet.GroupServlet;
+import com.dewarim.cinnamon.application.servlet.IndexItemServlet;
+import com.dewarim.cinnamon.application.servlet.LanguageServlet;
+import com.dewarim.cinnamon.application.servlet.LifecycleServlet;
+import com.dewarim.cinnamon.application.servlet.LifecycleStateServlet;
+import com.dewarim.cinnamon.application.servlet.LinkServlet;
+import com.dewarim.cinnamon.application.servlet.MetasetTypeServlet;
+import com.dewarim.cinnamon.application.servlet.ObjectTypeServlet;
+import com.dewarim.cinnamon.application.servlet.OsdServlet;
+import com.dewarim.cinnamon.application.servlet.PermissionServlet;
+import com.dewarim.cinnamon.application.servlet.RelationServlet;
+import com.dewarim.cinnamon.application.servlet.RelationTypeServlet;
+import com.dewarim.cinnamon.application.servlet.StaticServlet;
+import com.dewarim.cinnamon.application.servlet.UiLanguageServlet;
+import com.dewarim.cinnamon.application.servlet.UserServlet;
 import com.dewarim.cinnamon.configuration.CinnamonConfig;
 import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.filter.AuthenticationFilter;
@@ -11,11 +33,11 @@ import com.dewarim.cinnamon.filter.RequestResponseFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import jakarta.servlet.DispatcherType;
 import org.eclipse.jetty.annotations.AnnotationDecorator;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.webapp.WebAppContext;
 
-import javax.servlet.DispatcherType;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -32,9 +54,9 @@ public class CinnamonServer {
     public static final String VERSION ="0.1.0";
     private int                port;
     private Server               server;
-    private DbSessionFactory     dbSessionFactory;
-    private WebAppContext        webAppContext = new WebAppContext();
-    public static CinnamonConfig config        = new CinnamonConfig();
+    private       DbSessionFactory dbSessionFactory;
+    private       WebAppContext    webAppContext = new WebAppContext();
+    public static CinnamonConfig   config        = new CinnamonConfig();
 
     public CinnamonServer(int port) {
         this.port = port;
@@ -53,6 +75,10 @@ public class CinnamonServer {
         server.start();
 
         addSingletons();
+    }
+
+    public void stop() throws Exception {
+        server.stop();
     }
 
     private void addSingletons() {

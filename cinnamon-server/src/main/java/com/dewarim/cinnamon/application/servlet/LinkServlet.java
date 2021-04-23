@@ -6,7 +6,11 @@ import com.dewarim.cinnamon.application.ErrorResponseGenerator;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.application.exception.FailedRequestException;
 import com.dewarim.cinnamon.application.exception.UpdateException;
-import com.dewarim.cinnamon.dao.*;
+import com.dewarim.cinnamon.dao.AclDao;
+import com.dewarim.cinnamon.dao.FolderDao;
+import com.dewarim.cinnamon.dao.LinkDao;
+import com.dewarim.cinnamon.dao.OsdDao;
+import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.Folder;
 import com.dewarim.cinnamon.model.ObjectSystemData;
@@ -25,13 +29,13 @@ import com.dewarim.cinnamon.security.authorization.AccessFilter;
 import com.dewarim.cinnamon.security.authorization.AuthorizationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
@@ -39,7 +43,7 @@ import java.util.Optional;
 
 import static com.dewarim.cinnamon.Constants.CONTENT_TYPE_XML;
 import static com.dewarim.cinnamon.application.exception.UpdateException.*;
-import static javax.servlet.http.HttpServletResponse.*;
+import static jakarta.servlet.http.HttpServletResponse.*;
 
 @WebServlet(name = "Link", urlPatterns = "/")
 public class LinkServlet extends HttpServlet {

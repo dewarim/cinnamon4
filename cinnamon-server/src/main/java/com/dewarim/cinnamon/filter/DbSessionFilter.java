@@ -5,12 +5,15 @@ import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.application.TransactionStatus;
 import com.dewarim.cinnamon.model.response.CinnamonError;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.servlet.*;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 import static com.dewarim.cinnamon.Constants.CONTENT_TYPE_XML;
@@ -24,13 +27,9 @@ public class DbSessionFilter implements Filter {
 
     private final XmlMapper xmlMapper = new XmlMapper();
 
-    @Override
-    public void init(FilterConfig filterConfig) throws ServletException {
-
-    }
 
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException {
         try {
             log.debug("DbSessionFilter: before");
             chain.doFilter(request, response);

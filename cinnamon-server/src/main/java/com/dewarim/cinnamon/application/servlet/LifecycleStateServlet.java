@@ -19,18 +19,18 @@ import com.dewarim.cinnamon.model.response.LifecycleStateWrapper;
 import com.dewarim.cinnamon.provider.StateProviderService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 import static com.dewarim.cinnamon.Constants.CONTENT_TYPE_XML;
-import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
-import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
+import static jakarta.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
+import static jakarta.servlet.http.HttpServletResponse.SC_NOT_FOUND;
 
 @WebServlet(name = "LifecycleState", urlPatterns = "/")
 public class LifecycleStateServlet extends BaseServlet {

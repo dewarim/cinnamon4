@@ -3,8 +3,8 @@ package com.dewarim.cinnamon.application;
 import com.dewarim.cinnamon.model.response.CinnamonError;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import jakarta.servlet.http.HttpServletResponse;
 
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 public class ErrorResponseGenerator {
