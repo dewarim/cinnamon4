@@ -3,6 +3,7 @@ package com.dewarim.cinnamon.security.authorization;
 import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.api.Ownable;
 import com.dewarim.cinnamon.application.ErrorCode;
+import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.model.Folder;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.UserAccount;
@@ -64,6 +65,10 @@ public class AuthorizationService {
     }
 
     public boolean hasUserOrOwnerPermission(Ownable ownable, String permissionName, UserAccount user) {
+        if(UserAccountDao.currentUserIsSuperuser()){
+            // Superuser is allowed to do everything.
+            return true;
+        }
         Long aclId = ownable.getAclId();
         if (userHasPermission(aclId, permissionName, user)) {
             return true;
