@@ -2,10 +2,11 @@ package com.dewarim.cinnamon.configuration;
 
 public class SecurityConfig {
 
-    private int passwordRounds = 10;
-    private int minimumPasswordLength = 8;
+    private int     passwordRounds        = 10;
+    private int     minimumPasswordLength = 8;
     private Boolean transferAssetsAllowed = true;
-    private Boolean deleteUserAllowed = true;
+    private Boolean deleteUserAllowed     = true;
+    private long    sessionLengthInMillis = 3600_000;
 
     public Boolean getTransferAssetsAllowed() {
         return transferAssetsAllowed;
@@ -37,5 +38,13 @@ public class SecurityConfig {
 
     public void setMinimumPasswordLength(int minimumPasswordLength) {
         this.minimumPasswordLength = minimumPasswordLength;
+    }
+
+    public long getSessionLengthInMillis() {
+        return sessionLengthInMillis;
+    }
+
+    public void setSessionLengthInMillis(long sessionLengthInMillis) {
+        this.sessionLengthInMillis = sessionLengthInMillis;
     }
 }

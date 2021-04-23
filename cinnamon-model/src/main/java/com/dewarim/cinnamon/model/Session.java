@@ -14,11 +14,10 @@ public class Session {
     public Session() {
     }
 
-    public Session(Long userId) {
+    public Session(Long userId, long sessionLengthInMillis) {
         ticket = UUID.randomUUID().toString();
         Date now = new Date();
-        // TODO: make expiration configurable
-        expires = new Date(now.getTime()+3600_000);
+        expires = new Date(now.getTime()+sessionLengthInMillis);
         this.userId = userId;
     }
 
