@@ -3,6 +3,7 @@ package com.dewarim.cinnamon.dao;
 import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.model.ObjectSystemData;
+import com.dewarim.cinnamon.model.UserAccount;
 import org.apache.ibatis.session.SqlSession;
 
 import java.util.ArrayList;
@@ -65,9 +66,11 @@ public class OsdDao {
     public void updateOsd(ObjectSystemData osd, boolean updateModifier) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
         if (updateModifier) {
-            // TODO: do not update modifier if user is exempt from change tracking
-            osd.setModified(new Date());
-            osd.setModifierId(ThreadLocalSqlSession.getCurrentUser().getId());
+            UserAccount currentUser = ThreadLocalSqlSession.getCurrentUser();
+            if(currentUser.isChangeTracking()) {
+                osd.setModified(new Date());
+                osd.setModifierId(currentUser.getId());
+            }
         }
         sqlSession.update("com.dewarim.cinnamon.ObjectSystemDataMapper.updateOsd", osd);
     }

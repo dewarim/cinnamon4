@@ -49,7 +49,7 @@ import java.util.List;
 import static com.dewarim.cinnamon.application.ErrorCode.NOT_MULTIPART_UPLOAD;
 import static org.apache.http.HttpHeaders.CONTENT_TYPE;
 import static org.apache.http.entity.ContentType.APPLICATION_XML;
-import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.*;
 
@@ -989,6 +989,42 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         DeleteOsdRequest deleteRequest = new DeleteOsdRequest(Collections.singletonList(49L));
         HttpResponse     response      = sendStandardRequest(UrlMapping.OSD__DELETE_OSDS, deleteRequest);
         assertResponseOkay(response);
+    }
+
+    @Test
+    public void updateOsdWithChangeTracking() throws IOException {
+        CreateOsdRequest request = new CreateOsdRequest();
+        request.setAclId(CREATE_ACL_ID);
+        request.setName("new osd");
+        request.setOwnerId(STANDARD_USER_ID);
+        request.setParentId(CREATE_FOLDER_ID);
+        request.setTypeId(DEFAULT_OBJECT_TYPE_ID);
+        MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
+                .addTextBody("createOsdRequest", mapper.writeValueAsString(request),
+                        APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
+        HttpResponse response = sendStandardMultipartRequest(UrlMapping.OSD__CREATE_OSD, entityBuilder.build());
+        assertResponseOkay(response);
+        ObjectSystemData osd = unwrapOsds(response, 1).get(0);
+        assertThat(osd.getModifierId(), notNullValue());
+        assertThat(osd.getModified(), notNullValue());
+
+        // admin without changeTracking
+        SetSummaryRequest summaryRequest = new SetSummaryRequest(osd.getId(), "a summary");
+        response = sendAdminRequest(UrlMapping.OSD__SET_SUMMARY, summaryRequest);
+        assertResponseOkay(response);
+        OsdRequest osdRequest = new OsdRequest(Collections.singletonList(osd.getId()), false);
+        response = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
+        ObjectSystemData updatedOsd = unwrapOsds(response, 1).get(0);
+        assertThat(updatedOsd.getModifierId(), equalTo(osd.getModifierId()));
+        assertThat(updatedOsd.getModified(), equalTo(osd.getModified()));
+
+        // standard user should have changeTracking
+        response = sendStandardRequest(UrlMapping.OSD__SET_SUMMARY, summaryRequest);
+        assertResponseOkay(response);
+        response = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
+        updatedOsd = unwrapOsds(response, 1).get(0);
+        assertThat(updatedOsd.getModifierId(), equalTo(osd.getModifierId()));
+        assertThat(updatedOsd.getModified(), not(equalTo(osd.getModified())));
     }
 
 //    @Test

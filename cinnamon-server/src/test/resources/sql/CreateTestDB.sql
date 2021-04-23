@@ -527,8 +527,8 @@ create sequence seq_folder_meta_id;
 -- -----------------------
 
 -- #1
-INSERT INTO users(id,name,pwd,activated, ui_language_id, fullname)
-VALUES ( nextval('seq_user_id'),'admin','$2a$10$VG9LCf6h/Qwb7Y.pafHkaepdnJNgFZUzzuMV3EcyvLbKnueHQ4IW.',true,1,'The Admin');
+INSERT INTO users(id,name,pwd,activated, ui_language_id, fullname, change_tracking)
+VALUES ( nextval('seq_user_id'),'admin','$2a$10$VG9LCf6h/Qwb7Y.pafHkaepdnJNgFZUzzuMV3EcyvLbKnueHQ4IW.',true,1,'The Admin',false);
 -- #2
 INSERT INTO users(id,name,pwd,activated, ui_language_id, fullname)
 VALUES ( nextval('seq_user_id'),'doe','$2a$10$VG9LCf6h/Qwb7Y.pafHkaepdnJNgFZUzzuMV3EcyvLbKnueHQ4IW.',true,1,'Jane Doe');
