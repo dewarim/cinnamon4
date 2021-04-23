@@ -93,7 +93,7 @@ public class CinnamonIntegrationTest {
     protected static String getAdminTicket() throws IOException {
         String url = "http://localhost:" + cinnamonTestPort + UrlMapping.CINNAMON__CONNECT.getPath();
         String tokenRequestResult = Request.Post(url)
-                .bodyForm(Form.form().add("user", "admin").add("pwd", "admin").build())
+                .bodyForm(Form.form().add("user", "admin").add("password", "admin").build())
                 .execute().returnContent().asString();
         XmlMapper          mapper             = new XmlMapper();
         CinnamonConnection cinnamonConnection = mapper.readValue(tokenRequestResult, CinnamonConnection.class);
@@ -107,7 +107,7 @@ public class CinnamonIntegrationTest {
         if (ticketForDoe == null || newTicket) {
             String url = "http://localhost:" + cinnamonTestPort + UrlMapping.CINNAMON__CONNECT.getPath();
             String tokenRequestResult = Request.Post(url)
-                    .bodyForm(Form.form().add("user", "doe").add("pwd", "admin").build())
+                    .bodyForm(Form.form().add("user", "doe").add("password", "admin").build())
                     .execute().returnContent().asString();
             XmlMapper          mapper             = new XmlMapper();
             CinnamonConnection cinnamonConnection = mapper.readValue(tokenRequestResult, CinnamonConnection.class);

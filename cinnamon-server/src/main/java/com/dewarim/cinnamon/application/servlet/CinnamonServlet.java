@@ -91,7 +91,7 @@ public class CinnamonServlet extends HttpServlet {
         try {
             // TODO: initial parameter check (null, non-empty)
             String                username = request.getParameter("user");
-            String                password = request.getParameter("pwd");
+            String                password = request.getParameter("password");
             Optional<UserAccount> userOpt  = userAccountDao.getUserAccountByName(username);
 
             if (userOpt.isEmpty()) {
