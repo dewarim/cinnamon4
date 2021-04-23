@@ -5,7 +5,13 @@ import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import org.apache.ibatis.session.SqlSession;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 public class OsdDao {
 
@@ -99,6 +105,6 @@ public class OsdDao {
         SqlSession          sqlSession = ThreadLocalSqlSession.getSqlSession();
         Map<String, Object> params     = new HashMap<>();
         params.put("ids", Collections.singletonList(id));
-        return sqlSession.selectList("com.dewarim.cinnamon.ObjectSystemDataMaper.getOsdIdByIdWithDescendants", id);
+        return sqlSession.selectList("com.dewarim.cinnamon.ObjectSystemDataMapper.getOsdIdByIdWithDescendants", params);
     }
 }

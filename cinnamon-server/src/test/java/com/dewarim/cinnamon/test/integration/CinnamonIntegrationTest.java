@@ -4,6 +4,8 @@ import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.application.DbSessionFactory;
 import com.dewarim.cinnamon.application.ErrorCode;
+import com.dewarim.cinnamon.dao.SessionDao;
+import com.dewarim.cinnamon.model.Session;
 import com.dewarim.cinnamon.model.response.CinnamonConnection;
 import com.dewarim.cinnamon.model.response.CinnamonError;
 import com.dewarim.cinnamon.model.response.GenericResponse;
@@ -19,6 +21,7 @@ import org.apache.ibatis.session.SqlSession;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.BeforeClass;
 
 import java.io.ByteArrayOutputStream;
@@ -29,6 +32,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -47,6 +51,12 @@ public class CinnamonIntegrationTest {
     static String         ticketForDoe;
     static String         HOST             = "http://localhost:" + cinnamonTestPort;
     static XmlMapper      mapper           = new XmlMapper();
+
+    @Before
+    public void dumpSession() {
+        log.info("session in db: " + new SessionDao().list().stream().map(Session::getTicket).collect(Collectors.joining(" ")));
+        log.info("current ticket: " + ticket);
+    }
 
     @BeforeClass
     public static void setUpServer() throws Exception {

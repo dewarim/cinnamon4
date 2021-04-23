@@ -1,11 +1,10 @@
 package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.api.UrlMapping;
+import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
-import com.dewarim.cinnamon.dao.SessionDao;
 import com.dewarim.cinnamon.dao.UserAccountDao;
-import com.dewarim.cinnamon.model.Session;
 import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.request.user.UserInfoRequest;
 import com.dewarim.cinnamon.model.response.CinnamonError;
@@ -19,7 +18,6 @@ import org.apache.ibatis.session.SqlSession;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.util.Date;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.assertThat;
@@ -55,14 +53,12 @@ public class AuthenticationFilterIntegrationTest extends CinnamonIntegrationTest
     }
 
     @Test
-    public void callApiWithExpiredSession() throws IOException {
-        SessionDao dao             = new SessionDao();
-        Session    cinnamonSession = dao.getSessionByTicket(ticket);
-        cinnamonSession.setExpires(new Date(1000000));
-        dao.update(cinnamonSession);
-        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        sqlSession.commit();
-
+    public void callApiWithExpiredSession() throws IOException, InterruptedException {
+        String oldTicket             = ticket;
+        long   sessionLengthInMillis = CinnamonServer.config.getSecurityConfig().getSessionLengthInMillis();
+        CinnamonServer.config.getSecurityConfig().setSessionLengthInMillis(0);
+        ticket = getAdminTicket();
+        Thread.sleep(10);
         UserInfoRequest userInfoRequest = new UserInfoRequest(null, "admin");
         HttpResponse    response        = sendAdminRequest(UrlMapping.USER__USER_INFO, userInfoRequest);
         assertThat(response.getStatusLine().getStatusCode(), equalTo(HttpServletResponse.SC_FORBIDDEN));
@@ -70,7 +66,8 @@ public class AuthenticationFilterIntegrationTest extends CinnamonIntegrationTest
         assertThat(error.getCode(), equalTo(ErrorCode.AUTHENTICATION_FAIL_SESSION_EXPIRED.getCode()));
 
         // create new, not expired ticket for other tests
-        ticket = getAdminTicket();
+        ticket = oldTicket;
+        CinnamonServer.config.getSecurityConfig().setSessionLengthInMillis(sessionLengthInMillis);
     }
 
     @Test

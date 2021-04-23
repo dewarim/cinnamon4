@@ -73,8 +73,7 @@ public class AuthenticationFilter implements Filter {
     }
 
     private void failAuthentication(HttpServletResponse servletResponse, ErrorCode errorCode) {
-        ErrorResponseGenerator.generateErrorMessage(servletResponse,
-                HttpServletResponse.SC_FORBIDDEN, errorCode, "authentication failed");
+        ErrorResponseGenerator.generateErrorMessage(servletResponse, errorCode);
     }
 
 

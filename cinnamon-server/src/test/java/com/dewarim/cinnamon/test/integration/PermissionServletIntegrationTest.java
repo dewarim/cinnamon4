@@ -53,10 +53,11 @@ public class PermissionServletIntegrationTest extends CinnamonIntegrationTest {
         - set_acl
         - move
         - version
+        - delete_object
          */
         UserPermissionRequest reviewerPermissionRequest = new UserPermissionRequest(2L,2L);
         HttpResponse reviewerResponse = sendAdminRequest(UrlMapping.PERMISSION__GET_USER_PERMISSIONS, reviewerPermissionRequest);
-        unwrapPermissions(reviewerResponse,12);
+        unwrapPermissions(reviewerResponse, 13);
     }    
     
     @Test

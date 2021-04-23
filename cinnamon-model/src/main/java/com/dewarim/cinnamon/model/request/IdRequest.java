@@ -26,12 +26,18 @@ public class IdRequest {
         return id != null && id > 0;
     }
 
-    public Optional<IdRequest> validateRequest(){
-        if(validated()){
+    public Optional<IdRequest> validateRequest() {
+        if (validated()) {
             return Optional.of(this);
-        }
-        else{
+        } else {
             return Optional.empty();
         }
+    }
+
+    @Override
+    public String toString() {
+        return "IdRequest{" +
+                "id=" + id +
+                '}';
     }
 }

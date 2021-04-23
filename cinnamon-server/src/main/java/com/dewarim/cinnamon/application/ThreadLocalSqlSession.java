@@ -34,6 +34,7 @@ public class ThreadLocalSqlSession {
     public static void refreshSession(){
         log.debug("Refresh session for thread "+ Thread.currentThread().getName());
         localSqlSession.set(dbSessionFactory.getSqlSessionFactory().openSession(transactionIsolationLevel));
+        setTransactionStatus(TransactionStatus.OK);
     }
     
     public static TransactionStatus getTransactionStatus(){
