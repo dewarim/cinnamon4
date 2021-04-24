@@ -72,7 +72,7 @@
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>42.2.14</version>
+            <version>42.2.20</version>
         </dependency>
 
         <!-- xml handling -->
@@ -80,6 +80,9 @@
             <groupId>com.fasterxml.jackson.dataformat</groupId>
             <artifactId>jackson-dataformat-xml</artifactId>
             <version>2.11.1</version>
+            <!--
+            TODO: create bug report - update to 2.12.3 breaks when serializing String field with XML content. (summary="<summary/>")
+            -->
         </dependency>
 
         <dependency>
@@ -106,6 +109,12 @@
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>fluent-hc</artifactId>
             <version>${httpcomponents.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpmime</artifactId>
+            <version>${httpcomponents.version}</version>
+            <scope>test</scope>
         </dependency>
 
         <!--logging  -->
@@ -154,12 +163,6 @@
             <artifactId>jcommander</artifactId>
             <version>1.78</version>
         </dependency>
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpmime</artifactId>
-            <version>${httpcomponents.version}</version>
-            <scope>test</scope>
-        </dependency>
 
     </dependencies>
 
@@ -171,7 +174,7 @@
                 <!-- run tests -->
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.0.0-M1</version>
+                <version>3.0.0-M5</version>
                 <configuration>
                     <argLine>
                         --illegal-access=permit
