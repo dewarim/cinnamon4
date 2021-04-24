@@ -196,8 +196,8 @@ create table lifecycle_states
 alter table lifecycles add constraint fk_default_state_id FOREIGN KEY 
   (default_state_id) references lifecycle_states(id);
 
-drop sequence if exists seq_lifecycle_states_id;
-create sequence seq_lifecycle_states_id start with 1;
+drop sequence if exists seq_lifecycle_state_id;
+create sequence seq_lifecycle_state_id start with 1;
 
 -- lifecycle_state_to_copy_state --
 drop table if exists lifecycle_state_to_copy_state cascade ;
@@ -263,8 +263,8 @@ create table objects
   summary text default '<summary />' not null,
   content_hash varchar(128)
 );
-drop sequence if exists seq_objects_id;
-create sequence seq_objects_id start with 1;
+drop sequence if exists seq_object_id;
+create sequence seq_object_id start with 1;
 
 
 -- links --
@@ -305,8 +305,8 @@ create index fki_links_parent_id_fk
   on links (parent_id)
 ;
 
-drop sequence if exists seq_links_id;
-create sequence seq_links_id start with 1;
+drop sequence if exists seq_link_id;
+create sequence seq_link_id start with 1;
 
 
 -- groups --
@@ -317,8 +317,8 @@ create table groups(
   group_of_one boolean default false not null,
   parent_id bigint constraint fk_group_parent_id references groups
 );
-drop sequence if exists seq_groups;
-create SEQUENCE seq_groups start with 1;
+drop sequence if exists seq_group_id;
+create SEQUENCE seq_group_id start with 1;
 
 -- aclentries --
 
@@ -337,8 +337,8 @@ create table aclentries
   constraint unique_acl_id
   unique (group_id, acl_id)
 );
-drop sequence if exists seq_acl_entries_id;
-create sequence seq_acl_entries_id start with 1;
+drop sequence if exists seq_acl_entry_id;
+create sequence seq_acl_entry_id start with 1;
 
 
 -- group_users --
@@ -402,8 +402,8 @@ create table relationtypes
   clone_on_right_version boolean default false not null
 )
 ;
-drop sequence if exists seq_relationtypes_id;
-create sequence seq_relationtypes_id start with 1;
+drop sequence if exists seq_relationtype_id;
+create sequence seq_relationtype_id start with 1;
 
 drop table if exists relations cascade ;
 create table relations
@@ -425,8 +425,8 @@ create table relations
   unique (type_id, right_id, left_id)
 )
 ;
-drop sequence if exists seq_relations_id;
-create sequence seq_relations_id start with 1;
+drop sequence if exists seq_relation_id;
+create sequence seq_relation_id start with 1;
 
 -- metaset_types --
 drop table if exists metaset_types cascade ;
@@ -440,8 +440,8 @@ create table metaset_types
     unique,
   is_unique boolean not null default true
 );
-drop sequence if exists seq_metaset_types_id;
-create sequence seq_metaset_types_id start with 1;
+drop sequence if exists seq_metaset_type_id;
+create sequence seq_metaset_type_id start with 1;
 
 -- index_items --
 drop table if exists index_items cascade ;
@@ -481,8 +481,8 @@ create table config_entries
   public_visibility boolean not null default false
 )
 ;
-drop sequence if exists seq_config_entries_id;
-create sequence seq_config_entries_id start with 1;
+drop sequence if exists seq_config_entrie_id;
+create sequence seq_config_entrie_id start with 1;
 
 drop table if exists osd_meta cascade;
 create table osd_meta
@@ -557,13 +557,13 @@ insert into acls(id,name) values(nextval('seq_acl_id'),'no.set.acl.allowed'); --
 -- #1
 insert into objtypes(id,name) values(nextval('seq_obj_type_id'),'_default_objtype');
 
-insert into groups(id,name) VALUES(nextval('seq_groups'),'_superusers'); -- #1
-insert into groups(id,name,group_of_one) VALUES(nextval('seq_groups'),'_1_admin',true); -- #2
-insert into groups(id,name,parent_id) VALUES(nextval('seq_groups'),'admin_child_group',2); -- #3
-insert into groups(id,name,group_of_one) VALUES(nextval('seq_groups'),'_2_doe',true); -- #4
-insert into groups(id,name) values (nextval('seq_groups'),'reviewers'); -- #5
-insert into groups(id,name) values (nextval('seq_groups'),'_everyone'); -- #6
-insert into groups(id,name) values (nextval('seq_groups'),'_owner'); -- #7
+insert into groups(id,name) VALUES(nextval('seq_group_id'),'_superusers'); -- #1
+insert into groups(id,name,group_of_one) VALUES(nextval('seq_group_id'),'_1_admin',true); -- #2
+insert into groups(id,name,parent_id) VALUES(nextval('seq_group_id'),'admin_child_group',2); -- #3
+insert into groups(id,name,group_of_one) VALUES(nextval('seq_group_id'),'_2_doe',true); -- #4
+insert into groups(id,name) values (nextval('seq_group_id'),'reviewers'); -- #5
+insert into groups(id,name) values (nextval('seq_group_id'),'_everyone'); -- #6
+insert into groups(id,name) values (nextval('seq_group_id'),'_owner'); -- #7
 
 -- #1 admin is member of superuser group:
 insert into group_users VALUES(1,1);
@@ -575,37 +575,37 @@ insert into group_users VALUES (2,4);
 insert into group_users values (2,5);
 
 -- #1 link superusers group to default acl:
-insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),1,1);
+insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entry_id'),1,1);
 -- #2 admin's group is connected to reviewers acl:
-insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),2,2);
+insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entry_id'),2,2);
 -- #3 doe's group is connected to reviewers.acl
-insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),2,4);
+insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entry_id'),2,4);
 -- #4 admin's child group is connected to rename.me.acl:
-insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),4,3);
+insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entry_id'),4,3);
 -- #5 reviewers are connected to reviewers acl:
-insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),2,5);
+insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entry_id'),2,5);
 -- #6 doe's group is connected to default acl
-insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),1,4);
+insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entry_id'),1,4);
 -- #7 reviewers also have the default acl
-insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),1,5);
+insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entry_id'),1,5);
 -- #8 _owner is connected to the no-permission-except-owner.acl
-insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),5,7);
+insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entry_id'),5,7);
 -- #9 _everyone is connected to no-permission-except-everyone.acl
-insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),6,6);
+insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entry_id'),6,6);
 -- #10 doe's group linked to creation acl#8 
-insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),8,4);
+insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entry_id'),8,4);
 -- #11 doe's group linked to no-browse.acl#9 
-insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),9,4);
+insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entry_id'),9,4);
 -- #12 doe's group linked to no-create.acl#10 
-insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),10,4);
+insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entry_id'),10,4);
 -- #13 reviewers connected to set.acl.allowed#
-insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),11,5);
+insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entry_id'),11,5);
 -- #14 reviewers connected to set.edit_folder but not write sys meta
-insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),12,5);
+insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entry_id'),12,5);
 -- #15 reviewers connected to no.move.allowed acl (with setAcl allowed)
-insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),13,5);
+insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entry_id'),13,5);
 -- #16 reviewers connected to acl#14 no set acl allowed
-insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entries_id'),14,5);
+insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entry_id'),14,5);
 
 
 insert into permissions values (nextval('seq_permission_id'),'_browse'); -- #1
@@ -857,350 +857,350 @@ insert into languages (id,iso_code) values (nextval('seq_language_id'), 'zxx');
 -- #1 test object with summary, default acl in root folder
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id, summary)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'test-1', 1, 1, 1, 1, 1, 1, 1, '<summary>sum of sum</summary>');
+values (nextval('seq_object_id'), now(), true, true, now(), 'test-1', 1, 1, 1, 1, 1, 1, 1, '<summary>sum of sum</summary>');
 -- #2
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'test-2', 1, 1, 1, 1, 1, 1, 1);
+values (nextval('seq_object_id'), now(), true, true, now(), 'test-2', 1, 1, 1, 1, 1, 1, 1);
 -- #3
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'test-3', 1, 1, 1, 1, 1, 1, 1);
+values (nextval('seq_object_id'), now(), true, true, now(), 'test-3', 1, 1, 1, 1, 1, 1, 1);
 
 -- #4 object with no permissions, used in getObjectsById tests and create/update-Link test
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'unbrowsable-test', 1, 1, 1, 1, 1, 1, 5);
+values (nextval('seq_object_id'), now(), true, true, now(), 'unbrowsable-test', 1, 1, 1, 1, 1, 1, 5);
 
 -- #5 - acl #5 has no permission for user Doe, but allows owners to view the item, so Doe should see it anyway.
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'owned-by-doe', 1, 1, 1, 2, 1, 1, 5);
+values (nextval('seq_object_id'), now(), true, true, now(), 'owned-by-doe', 1, 1, 1, 2, 1, 1, 5);
 
 -- #6 - acl #6 has no permission for user Doe, but allows "_everyone" to view the item, so Doe should see it anyway.
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'acl-for-everyone', 1, 1, 1, 1, 1, 1, 6);
+values (nextval('seq_object_id'), now(), true, true, now(), 'acl-for-everyone', 1, 1, 1, 1, 1, 1, 6);
 
 -- #7 - acl #7 has no permission for anyone.
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'see-me-not', 1, 1, 1, 1, 1, 1, 7);
+values (nextval('seq_object_id'), now(), true, true, now(), 'see-me-not', 1, 1, 1, 1, 1, 1, 7);
 
 -- #8 parent for #9  default acl in root folder
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_objects_id'), now(), false, false, now(), 'test-parent', 1, 1, 1, 1, 1, 1, 1);
+values (nextval('seq_object_id'), now(), false, false, now(), 'test-parent', 1, 1, 1, 1, 1, 1, 1);
 
 -- #9 child object for #8
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id, root_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'test-child', 1, 1, 1, 1, 1, 1, 1, 8);
+values (nextval('seq_object_id'), now(), true, true, now(), 'test-child', 1, 1, 1, 1, 1, 1, 1, 8);
 
 -- #10 parent for osd#11 in archive folder#4
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_objects_id'), now(), false, false, now(), 'test-parent', 1, 1, 1, 1, 4, 1, 1);
+values (nextval('seq_object_id'), now(), false, false, now(), 'test-parent', 1, 1, 1, 1, 4, 1, 1);
 
 -- #11 child object for #10, also in archive folder#4
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id, root_id, summary)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'test-child', 1, 1, 1, 1, 4, 1, 1, 10,'<summary>child@archive</summary>');
+values (nextval('seq_object_id'), now(), true, true, now(), 'test-child', 1, 1, 1, 1, 4, 1, 1, 10,'<summary>child@archive</summary>');
 
 -- #12 test object for deletion,  default acl in deletion folder#5 -> currently used as target for deleteLink-Test
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'linked-to-me', 1, 1, 1, 1, 5, 1, 1);
+values (nextval('seq_object_id'), now(), true, true, now(), 'linked-to-me', 1, 1, 1, 1, 5, 1, 1);
 
 -- #13 test object for create link,  default acl in creation folder#6 
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'linked-to-me-2', 1, 1, 1, 1, 6, 1, 1);
+values (nextval('seq_object_id'), now(), true, true, now(), 'linked-to-me-2', 1, 1, 1, 1, 6, 1, 1);
 
 -- #14 test object for create link in folder#7 (where doe has no browse permission)  
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'linked-to-me-3', 1, 1, 1, 1, 7, 1, 1);
+values (nextval('seq_object_id'), now(), true, true, now(), 'linked-to-me-3', 1, 1, 1, 1, 7, 1, 1);
 
 -- #15 test object for update link to object,  default acl in creation folder#6  
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'linked-to-me-2', 1, 1, 1, 1, 6, 1, 1);
+values (nextval('seq_object_id'), now(), true, true, now(), 'linked-to-me-2', 1, 1, 1, 1, 6, 1, 1);
 
 -- #16 test object for getSummaries,  reviewer acl in creation folder#6  
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id, summary)
-values (nextval('seq_objects_id'), now(), true, true, now(), '7th-sum-of-a-7th-sum', 1, 1, 1, 1, 6, 1, 2,'<sum>7</sum>');
+values (nextval('seq_object_id'), now(), true, true, now(), '7th-sum-of-a-7th-sum', 1, 1, 1, 1, 6, 1, 2,'<sum>7</sum>');
 
 -- #17 test object for setSummary,  reviewer acl in creation folder#6  
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id, summary)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'summ-summ-summ', 1, 1, 1, 1, 6, 1, 2,'no summary');
+values (nextval('seq_object_id'), now(), true, true, now(), 'summ-summ-summ', 1, 1, 1, 1, 6, 1, 2,'no summary');
 
 -- #18 test object for setSummaryNoPermission,  default acl in creation folder#6  
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id, summary)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'no-perm-summary', 1, 1, 1, 1, 6, 1, 1,'no summary');
+values (nextval('seq_object_id'), now(), true, true, now(), 'no-perm-summary', 1, 1, 1, 1, 6, 1, 1,'no summary');
 
 -- #19 test object for relations (as rightId) in creation folder #6
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'right-related', 1, 1, 1, 1, 6, 1, 1);
+values (nextval('seq_object_id'), now(), true, true, now(), 'right-related', 1, 1, 1, 1, 6, 1, 1);
 
 -- #20 test object for relations (as leftId) in creation folder #6
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'left-related', 1, 1, 1, 1, 6, 1, 1);
+values (nextval('seq_object_id'), now(), true, true, now(), 'left-related', 1, 1, 1, 1, 6, 1, 1);
 
 -- #21 test object for create-delete relations (target: osd#20) in creation folder #6
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'related', 1, 1, 1, 1, 6, 1, 1);
+values (nextval('seq_object_id'), now(), true, true, now(), 'related', 1, 1, 1, 1, 6, 1, 1);
 
 -- #22 test object for setContent/getContent in creation folder #6
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'content-holder', 1, 1, 1, 1, 6, 1, 2);
+values (nextval('seq_object_id'), now(), true, true, now(), 'content-holder', 1, 1, 1, 1, 6, 1, 2);
 
 -- #23 test object for setContent/getContent without write permission for reviewers in creation folder #6
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'content-holder', 1, 1, 1, 1, 6, 1, 1);
+values (nextval('seq_object_id'), now(), true, true, now(), 'content-holder', 1, 1, 1, 1, 6, 1, 1);
 
 -- #24 test object for getContent without read/write permission for reviewers in creation folder #6
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id, locker_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'content-holder', 1, 1, 1, 1, 6, 1, 1, 2);
+values (nextval('seq_object_id'), now(), true, true, now(), 'content-holder', 1, 1, 1, 1, 6, 1, 1, 2);
 
 -- #25 empty test object for getContent test in creation folder #6
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'content-holder', 1, 1, 1, 1, 6, 1, 2);
+values (nextval('seq_object_id'), now(), true, true, now(), 'content-holder', 1, 1, 1, 1, 6, 1, 2);
 
 -- #26 empty test object for lock/unlock test in creation folder #6
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'lock-me', 1, 1, 1, 1, 6, 1, 2);
+values (nextval('seq_object_id'), now(), true, true, now(), 'lock-me', 1, 1, 1, 1, 6, 1, 2);
 
 -- #27 empty test object without permissions for lock/unlock and attachLifecycle/getNextStates tests in creation folder #6
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'u-no-lock-me', 1, 1, 1, 1, 6, 1, 7);
+values (nextval('seq_object_id'), now(), true, true, now(), 'u-no-lock-me', 1, 1, 1, 1, 6, 1, 7);
 
 -- #28 empty test object to test lifecycle state changes (in creation folder #6)
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'lifecycle-test', 1, 1, 1, 1, 6, 1, 2);
+values (nextval('seq_object_id'), now(), true, true, now(), 'lifecycle-test', 1, 1, 1, 1, 6, 1, 2);
 
 -- #29 empty test object to test detach lifecycle  (in creation folder #6)
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'lifecycle-detach-test', 1, 1, 1, 1, 6, 1, 2);
+values (nextval('seq_object_id'), now(), true, true, now(), 'lifecycle-detach-test', 1, 1, 1, 1, 6, 1, 2);
 
 -- #30 empty test object to test attaching ChangeAclState.published in lifecycle  (in creation folder #6)
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'acl-changing-lifecycle-test', 1, 1, 1, 1, 6, 1, 2);
+values (nextval('seq_object_id'), now(), true, true, now(), 'acl-changing-lifecycle-test', 1, 1, 1, 1, 6, 1, 2);
 
 -- #31 empty test object to test ChangeAclState in lifecycle  (in creation folder #6)
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'acl-changing-lifecycle-test', 1, 1, 1, 1, 6, 1, 2);
+values (nextval('seq_object_id'), now(), true, true, now(), 'acl-changing-lifecycle-test', 1, 1, 1, 1, 6, 1, 2);
 
 -- #32 empty test object to test change state with FailState in lifecycle  (in creation folder #6)
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'fail-state-lifecycle-test', 1, 1, 1, 1, 6, 1, 2);
+values (nextval('seq_object_id'), now(), true, true, now(), 'fail-state-lifecycle-test', 1, 1, 1, 1, 6, 1, 2);
 
 -- #33 empty test object to test attach FailState in lifecycle  (in creation folder #6)
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'fail-state-attach-test', 1, 1, 1, 1, 6, 1, 2);
+values (nextval('seq_object_id'), now(), true, true, now(), 'fail-state-attach-test', 1, 1, 1, 1, 6, 1, 2);
 
 -- #34 empty test object to test unhappy path in change lifecycle  state (in creation folder #6)
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'fail-state-attach-test', 1, 1, 1, 1, 6, 1, 2);
+values (nextval('seq_object_id'), now(), true, true, now(), 'fail-state-attach-test', 1, 1, 1, 1, 6, 1, 2);
 
 -- #35 empty test object to test getNextState lifecycle  state (in creation folder #6)
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'has-lifecycle-state-authoring', 1, 1, 1, 1, 6, 1, 2);
+values (nextval('seq_object_id'), now(), true, true, now(), 'has-lifecycle-state-authoring', 1, 1, 1, 1, 6, 1, 2);
 
 -- #36 empty test object with osd_meta for getMeta test
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'has-meta', 1, 1, 1, 1, 6, 1, 2);
+values (nextval('seq_object_id'), now(), true, true, now(), 'has-meta', 1, 1, 1, 1, 6, 1, 2);
 
 -- #37 object with no permissions, used in getMeta and createMeta test
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'no-read-custom-meta-permission', 1, 1, 1, 1, 1, 1, 5);
+values (nextval('seq_object_id'), now(), true, true, now(), 'no-read-custom-meta-permission', 1, 1, 1, 1, 1, 1, 5);
 
 -- #38 empty test object for createMeta
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'create-me-a-meta', 1, 1, 1, 1, 6, 1, 2);
+values (nextval('seq_object_id'), now(), true, true, now(), 'create-me-a-meta', 1, 1, 1, 1, 6, 1, 2);
 
 -- #39 empty test object for createMeta with existing license metaset
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'has-a-license-meta-already', 1, 1, 1, 1, 6, 1, 2);
+values (nextval('seq_object_id'), now(), true, true, now(), 'has-a-license-meta-already', 1, 1, 1, 1, 6, 1, 2);
 
 -- #40 empty test object for createMeta with existing non-unique comment metaset
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'has-a-comment-meta-already', 1, 1, 1, 1, 6, 1, 2);
+values (nextval('seq_object_id'), now(), true, true, now(), 'has-a-comment-meta-already', 1, 1, 1, 1, 6, 1, 2);
 
 -- #41 empty test object for deleteMeta with one metaset by name, one by id
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'has-deletable-meta', 1, 1, 1, 1, 6, 1, 2);
+values (nextval('seq_object_id'), now(), true, true, now(), 'has-deletable-meta', 1, 1, 1, 1, 6, 1, 2);
 
 -- #42 empty test object for deleteMeta without permission
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'has-deletable-meta-but-no-permission', 1, 1, 1, 1, 6, 1, 5);
+values (nextval('seq_object_id'), now(), true, true, now(), 'has-deletable-meta-but-no-permission', 1, 1, 1, 1, 6, 1, 5);
 
 -- #43 test object for unlocked setContent/getContent in creation folder #6
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'content-holder', 1, 1, 1, 1, 6, 1, 2);
+values (nextval('seq_object_id'), now(), true, true, now(), 'content-holder', 1, 1, 1, 1, 6, 1, 2);
 
 -- #44 test object for version request in creation folder #6 (no permission)
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'version-test', 1, 1, 1, 1, 6, 1, 1);
+values (nextval('seq_object_id'), now(), true, true, now(), 'version-test', 1, 1, 1, 1, 6, 1, 1);
 
 -- #45 test object for version request in creation folder #6
 -- state_id 1 is set below via update.
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'version-test', 1, 1, 1, 1, 6, 1, 2);
+values (nextval('seq_object_id'), now(), true, true, now(), 'version-test', 1, 1, 1, 1, 6, 1, 2);
 
 -- #46 test object for version request in creation folder #6
 -- state_id 4 is set below via update to test failed state.
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'version-test', 1, 1, 1, 1, 6, 1, 2);
+values (nextval('seq_object_id'), now(), true, true, now(), 'version-test', 1, 1, 1, 1, 6, 1, 2);
 
 -- #47 test object for version label tests in creation folder #6
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'test-version-numbering', 1, 1, 1, 1, 6, 1, 2);
+values (nextval('seq_object_id'), now(), true, true, now(), 'test-version-numbering', 1, 1, 1, 1, 6, 1, 2);
 
 -- #48 test object for version test with metadata in creation folder #6
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'version-with-metadata', 1, 1, 1, 1, 6, 1, 2);
+values (nextval('seq_object_id'), now(), true, true, now(), 'version-with-metadata', 1, 1, 1, 1, 6, 1, 2);
 
 -- #49 test object for delete happy path (delete a single OSD)
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_objects_id'), now(), true, true, now(), 'delete-me', 1, 1, 1, 1, 6, 1, 2);
+values (nextval('seq_object_id'), now(), true, true, now(), 'delete-me', 1, 1, 1, 1, 6, 1, 2);
 
 
 -- #1 link to osd #1 with default acl (#1)
 insert into links(id, type,owner_id,acl_id,parent_id,osd_id) 
-values (nextval('seq_links_id'), 'OBJECT',  1,1,1,1);
+values (nextval('seq_link_id'), 'OBJECT',  1,1,1,1);
 
 -- #2 link to folder #2 with default acl (#1)
 insert into links(id, type,owner_id,acl_id,parent_id,folder_id) 
-values (nextval('seq_links_id'), 'FOLDER',  1,1,1,2);
+values (nextval('seq_link_id'), 'FOLDER',  1,1,1,2);
 
 -- #3 link to osd #1 with no permission except owner acl (#1)
 insert into links(id, type,owner_id,acl_id,parent_id,osd_id)
-values (nextval('seq_links_id'), 'OBJECT',  1,5,1,1);
+values (nextval('seq_link_id'), 'OBJECT',  1,5,1,1);
 
 -- #4 link to osd #7 with no-permission.acl (#7)
 insert into links(id, type,owner_id,acl_id,parent_id,osd_id)    
-values (nextval('seq_links_id'), 'OBJECT',  1,1,1,7);
+values (nextval('seq_link_id'), 'OBJECT',  1,1,1,7);
 
 -- #5 link to folder #3 with no-permission. acl (#7)
 insert into links(id, type,owner_id,acl_id,parent_id,folder_id)
-values (nextval('seq_links_id'), 'FOLDER',  1,1,1,3);
+values (nextval('seq_link_id'), 'FOLDER',  1,1,1,3);
 
 -- deprecated (removed resolvers):
 -- -- #6 link to osd #8 with latest_head resolver - should return osd#9 when link is queried.
 insert into links(id, type,owner_id,acl_id,parent_id,osd_id)
-values (nextval('seq_links_id'), 'OBJECT', 1,1,1,8);
+values (nextval('seq_link_id'), 'OBJECT', 1,1,1,8);
 
 -- deprecated (removed resolvers):
 -- #7 link to osd #10 with latest_head  in folder 'archive' #7 - should return osd#11 when link is queried.
 -- used in getObjectsByFolderId
 insert into links(id, type,owner_id,acl_id,parent_id,osd_id)
-values (nextval('seq_links_id'), 'OBJECT', 1,1,4,10);
+values (nextval('seq_link_id'), 'OBJECT', 1,1,4,10);
 
 -- #8 link to osd #11 with fixed resolver - should return osd#11 when link is queried.
 -- used in getObjectsByFolderId, but with no_permission.acl #7, should not be seen by normal user.
 insert into links(id, type,owner_id,acl_id,parent_id,osd_id)
-values (nextval('seq_links_id'), 'OBJECT',  1,7,4,11);
+values (nextval('seq_link_id'), 'OBJECT',  1,7,4,11);
 
 -- #9 link to osd#12 for deletion tests: default acl, deletion allowed
 insert into links(id, type,owner_id,acl_id,parent_id,osd_id)
-values (nextval('seq_links_id'), 'OBJECT',  1,1,1,12);
+values (nextval('seq_link_id'), 'OBJECT',  1,1,1,12);
 
 -- #10 link to folder#5 for deletion tests: default acl, deletion allowed
 insert into links(id, type,owner_id,acl_id,parent_id,folder_id)
-values (nextval('seq_links_id'), 'FOLDER',  1,1,1,5);
+values (nextval('seq_link_id'), 'FOLDER',  1,1,1,5);
 
 -- #11 link to osd#12 for deletion tests: no_permission-acl, browse not allowed
 insert into links(id, type,owner_id,acl_id,parent_id,osd_id)
-values (nextval('seq_links_id'), 'OBJECT',  1,7,1,12);
+values (nextval('seq_link_id'), 'OBJECT',  1,7,1,12);
 
 -- #12 link to osd#12 for deletion tests: reviewer-acl#2, browse allowed, deletion not allowed
 insert into links(id, type,owner_id,acl_id,parent_id,osd_id)
-values (nextval('seq_links_id'), 'OBJECT',  1,7,1,12);
+values (nextval('seq_link_id'), 'OBJECT',  1,7,1,12);
 
 -- #13 link to folder#5 for deletion tests: reviewer acl#2, browse_folder allowed, deletion not allowed
 insert into links(id, type,owner_id,acl_id,parent_id,folder_id)
-values (nextval('seq_links_id'), 'FOLDER',  1,2,1,5);
+values (nextval('seq_link_id'), 'FOLDER',  1,2,1,5);
 
 -- #14 link to osd#13 for testing owner browse permission: only-owner-acl#5, link owned by doe.
 insert into links(id, type,owner_id,acl_id,parent_id,osd_id)
-values (nextval('seq_links_id'), 'OBJECT',  2, 5, 1, 13);
+values (nextval('seq_link_id'), 'OBJECT',  2, 5, 1, 13);
 
 -- #15 link to osd#13 for testing delete link with just owner permission: only-owner-acl#5, link owned by doe.
 insert into links(id, type,owner_id,acl_id,parent_id,osd_id)
-values (nextval('seq_links_id'), 'OBJECT',  2, 5, 1, 13);
+values (nextval('seq_link_id'), 'OBJECT',  2, 5, 1, 13);
 
 -- #16 link to folder#5 for testing delete link with just owner permission: only-owner-acl#5, link owned by doe.
 insert into links(id, type,owner_id,acl_id,parent_id, folder_id)
-values (nextval('seq_links_id'), 'FOLDER',  2, 5, 1, 5);
+values (nextval('seq_link_id'), 'FOLDER',  2, 5, 1, 5);
 
 -- #17 link to osd#13 with no-permission-acl #7 to test updateLink without browse permission
 insert into links(id, type,owner_id,acl_id,parent_id,osd_id)
-values (nextval('seq_links_id'), 'OBJECT',  2, 7, 1, 13);
+values (nextval('seq_link_id'), 'OBJECT',  2, 7, 1, 13);
 
 -- #18 link to osd#13 with reviewer-acl # to test updateLink.setAcl without setAcl permission
 insert into links(id, type,owner_id,acl_id,parent_id,osd_id)
-values (nextval('seq_links_id'), 'OBJECT',  1, 14, 1, 13);
+values (nextval('seq_link_id'), 'OBJECT',  1, 14, 1, 13);
 
 -- #19 link to osd#13 with set-acl.allowed-acl #11 to test updateLink.setAcl with setAcl permission
 insert into links(id, type,owner_id,acl_id,parent_id,osd_id)
-values (nextval('seq_links_id'), 'OBJECT',  1, 11, 1, 13);
+values (nextval('seq_link_id'), 'OBJECT',  1, 11, 1, 13);
 
 -- #20 link to folder #5, will try to change this link to folder #3 (unseen folder) 
 insert into links(id, type,owner_id,acl_id,parent_id,folder_id)
-values (nextval('seq_links_id'), 'FOLDER',  1, 11, 1, 5);
+values (nextval('seq_link_id'), 'FOLDER',  1, 11, 1, 5);
 
 -- #21 link to osd#13 with set-acl.allowed-acl #11 to test non-acl updates
 insert into links(id, type,owner_id,acl_id,parent_id,osd_id)
-values (nextval('seq_links_id'), 'OBJECT',  1, 11, 1, 13);
+values (nextval('seq_link_id'), 'OBJECT',  1, 11, 1, 13);
 
 -- #22 link to folder #5, will try to change this link to osd#13 
 insert into links(id, type,owner_id,acl_id,parent_id,folder_id)
-values (nextval('seq_links_id'), 'FOLDER',  1, 11, 1, 5);
+values (nextval('seq_link_id'), 'FOLDER',  1, 11, 1, 5);
 
 -- deprecated (removed resolvers):
 -- -- #23 link to osd#13, will try to change this link to folder#6 
 insert into links(id, type,owner_id,acl_id,parent_id,osd_id)
-values (nextval('seq_links_id'), 'OBJECT', 1, 11, 1, 13);
+values (nextval('seq_link_id'), 'OBJECT', 1, 11, 1, 13);
 
 -- deprecated (removed resolvers):
 -- #24 link to osd#13, will try to change this resolver to fixed 
 insert into links(id, type,owner_id,acl_id,parent_id,osd_id)
-values (nextval('seq_links_id'), 'OBJECT', 1, 11, 1, 13);
+values (nextval('seq_link_id'), 'OBJECT', 1, 11, 1, 13);
 
 -- #1 add format: xml
 insert into formats(id, contenttype, extension, name, default_object_type_id) 
@@ -1213,13 +1213,13 @@ VALUES (nextval('seq_format_id'),'text/plain','txt', 'plaintext', 1);
 -- #1 relationType: protect all & clone always
 insert into relationtypes (id, leftobjectprotected, name, rightobjectprotected,
                            clone_on_right_copy, clone_on_left_copy, clone_on_left_version, clone_on_right_version                           )
-VALUES (nextval('seq_relationtypes_id'), true, 'all-protector', true,
+VALUES (nextval('seq_relationtype_id'), true, 'all-protector', true,
         true, true, true, true); 
 
 -- #2 relationType: protect nothing & clone never
 insert into relationtypes (id, leftobjectprotected, name, rightobjectprotected,
                            clone_on_right_copy, clone_on_left_copy, clone_on_left_version, clone_on_right_version                           )
-VALUES (nextval('seq_relationtypes_id'), true, 'unprotected', true,
+VALUES (nextval('seq_relationtype_id'), true, 'unprotected', true,
         false, false, false, false);    
 
 -- #1 uiLanguage: de
@@ -1236,9 +1236,9 @@ values (nextval('seq_index_item_id'), 'acl', false,false,true,false,'index.acl',
 );
 
 -- #1 relation: type 1 relation
-insert into relations(id,left_id, right_id, type_id, metadata) VALUES (nextval('seq_relations_id'),20,19,1,'<meta>important</meta>' );;
+insert into relations(id,left_id, right_id, type_id, metadata) VALUES (nextval('seq_relation_id'),20,19,1,'<meta>important</meta>' );;
 -- #2 relation: type 2 relation
-insert into relations(id,left_id, right_id, type_id, metadata) VALUES (nextval('seq_relations_id'),19,20,2,'<meta>ignore</meta>' );
+insert into relations(id,left_id, right_id, type_id, metadata) VALUES (nextval('seq_relation_id'),19,20,2,'<meta>ignore</meta>' );
 
 
 -- #1 lifecycle review.lc (lifecycle_state #1 will be configured as default state, see below).
@@ -1252,22 +1252,22 @@ insert into lifecycles(id, name, default_state_id) VALUES (nextval('seq_lifecycl
 
 -- #1 lifecycle_state of lc #1
 insert into lifecycle_states (id, name, config, state_class, life_cycle_id)
-values (nextval('seq_lifecycle_states_id'), 'newRenderTask', '<config>' ||
+values (nextval('seq_lifecycle_state_id'), 'newRenderTask', '<config>' ||
                                                              '<properties><property><name>render.server.host</name><value>localhost</value></property></properties>' ||
                                                              '<nextStates/>' ||
                                                              '</config>', 'NopState', 2);
 insert into lifecycle_state_to_copy_state(lifecycle_state_id, copy_state_id)
-  values (currval('seq_lifecycle_states_id'), currval('seq_lifecycle_states_id'));
+  values (currval('seq_lifecycle_state_id'), currval('seq_lifecycle_state_id'));
 update lifecycles set default_state_id=1 where id=1;
 
 -- #2 first lifecycle_state of lc 3 with ChangeAclState
 insert into lifecycle_states(id, name, config, state_class, life_cycle_id )
-    values (nextval('seq_lifecycle_states_id'), 'authoring', '<config>' ||
+    values (nextval('seq_lifecycle_state_id'), 'authoring', '<config>' ||
                                                              '<properties><property><name>aclName</name><value>reviewers.acl</value></property></properties>' ||
                                                              '<nextStates><name>published</name></nextStates>' ||
                                                              '</config>', 'ChangeAclState', 3);
 insert into lifecycle_state_to_copy_state(lifecycle_state_id, copy_state_id)
-  values (currval('seq_lifecycle_states_id'), currval('seq_lifecycle_states_id'));
+  values (currval('seq_lifecycle_state_id'), currval('seq_lifecycle_state_id'));
 update lifecycles set default_state_id=1 where id=3;
 update objects set state_id=2 where id=31;
 update objects set state_id=2 where id=35;
@@ -1275,26 +1275,26 @@ update objects set state_id=1 where id=45;
 
 -- #3 second lifecycle_state of lc 3 with ChangeAclState
 insert into lifecycle_states(id, name, config, state_class, life_cycle_id )
-    values (nextval('seq_lifecycle_states_id'), 'published', '<config>' ||
+    values (nextval('seq_lifecycle_state_id'), 'published', '<config>' ||
                                                              '<properties><property><name>aclName</name><value>_default_acl</value></property></properties>' ||
                                                              '<nextStates><name>authoring</name></nextStates>' ||
                                                              '</config>', 'ChangeAclState', 3);
 insert into lifecycle_state_to_copy_state(lifecycle_state_id, copy_state_id)
-  values (currval('seq_lifecycle_states_id'), currval('seq_lifecycle_states_id'));
+  values (currval('seq_lifecycle_state_id'), currval('seq_lifecycle_state_id'));
 
 -- #4 failState for lc 4
 insert into lifecycle_states(id, name, config, state_class, life_cycle_id )
-values (nextval('seq_lifecycle_states_id'), 'failed', '<config></config>', 'FailState', 4);
+values (nextval('seq_lifecycle_state_id'), 'failed', '<config></config>', 'FailState', 4);
 insert into lifecycle_state_to_copy_state(lifecycle_state_id, copy_state_id)
-values (currval('seq_lifecycle_states_id'), currval('seq_lifecycle_states_id'));
+values (currval('seq_lifecycle_state_id'), currval('seq_lifecycle_state_id'));
 -- osd#32 with FailState lifecycle state: should fail on state.exit()
 update objects set state_id=4 where id=32;
 update objects set state_id=4 where id=46;
 
 -- #1 metaset type 'comment'
-insert into metaset_types(id, name, is_unique) VALUES (nextval('seq_metaset_types_id'), 'comment', false );
+insert into metaset_types(id, name, is_unique) VALUES (nextval('seq_metaset_type_id'), 'comment', false );
 -- #2 metaset type 'license' (note: in production, this may be a better stored in a relation)
-insert into metaset_types(id, name, is_unique) VALUES (nextval('seq_metaset_types_id'), 'license', true);
+insert into metaset_types(id, name, is_unique) VALUES (nextval('seq_metaset_type_id'), 'license', true);
 
 -- #1 osd_meta with metaset_type#1 comment #1 for osd#36
 insert into osd_meta(id, osd_id, content, type_id)

@@ -20,7 +20,7 @@
 
     <insert id="insertConfigEntry" parameterType="com.dewarim.cinnamon.model.ConfigEntry">
         <selectKey keyProperty="id" resultType="long" order="BEFORE">
-            select nextval('seq_config_entries_id')
+            select nextval('seq_config_entry_id')
         </selectKey>
         INSERT INTO config_entries (id, name, config, public_visibility) VALUES
         (#{id}, #{name}, #{config}, #{publicVisibility})

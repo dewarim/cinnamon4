@@ -133,3 +133,100 @@
     alter table users drop column sudoer;
     alter table users drop column sudoable;
     alter table users drop column token_age;
+
+    -- create per-table sequences:
+    drop sequence if exists seq_user_id;
+    create sequence seq_user_id start with 1;
+    select setval('seq_user_id', (select MAX(id) FROM users));
+    
+    drop sequence if exists seq_session_id;
+    create sequence seq_session_id start with 1;
+    select setval('seq_session_id', (select MAX(id) FROM sessions));
+    
+    drop sequence if exists seq_ui_language_id;
+    create sequence seq_ui_language_id start with 1;
+    select setval('seq_ui_language_id', (select MAX(id) FROM ui_languages));
+    
+    drop sequence if exists seq_language_id;
+    create sequence seq_language_id start with 1;
+    select setval('seq_language_id', (select MAX(id) FROM languages));
+    
+    drop sequence if exists seq_acl_id;
+    create sequence seq_acl_id start with 1;
+    select setval('seq_acl_id', (select MAX(id) FROM acls));
+    
+    drop sequence if exists seq_folder_type_id;
+    create sequence seq_folder_type_id start with 1;
+    select setval('seq_folder_type_id', (select MAX(id) FROM folder_types));
+    
+    drop sequence if exists seq_folder_id;
+    create sequence seq_folder_id start with 1;
+    select setval('seq_folder_id', (select MAX(id) FROM folders));
+    
+    drop sequence if exists seq_obj_type_id;
+    create sequence seq_obj_type_id start with 1;
+    select setval('seq_obj_type_id', (select MAX(id) FROM objtypes));
+    
+    drop sequence if exists seq_format_id;
+    create sequence seq_format_id start with 1;
+    select setval('seq_format_id', (select MAX(id) FROM formats));
+    
+    drop sequence if exists seq_lifecycle_id ;
+    create sequence seq_lifecycle_id start with 1;
+    select setval('seq_lifecycle_id', (select MAX(id) FROM lifecycles));
+    
+    drop sequence if exists seq_lifecycle_state_id;
+    create sequence seq_lifecycle_state_id start with 1;
+    select setval('seq_lifecycle_state_id', (select MAX(id) FROM lifecycle_states));
+    
+    drop sequence if exists seq_object_id;
+    create sequence seq_object_id start with 1;
+    select setval('seq_object_id', (select MAX(id) FROM objects));
+    
+    drop sequence if exists seq_link_id;
+    create sequence seq_link_id start with 1;
+    select setval('seq_link_id', (select MAX(id) FROM links));
+    
+    drop sequence if exists seq_group_id;
+    create sequence seq_group_id start with 1;
+    select setval('seq_group_id', (select MAX(id) FROM groups));
+    
+    drop sequence if exists seq_acl_entry_id;
+    create sequence seq_acl_entry_id start with 1;
+    select setval('seq_acl_entry_id', (select MAX(id) FROM aclentries));
+    
+    drop sequence if exists seq_permission_id;
+    create sequence seq_permission_id start with 1;
+    select setval('seq_permission_id', (select MAX(id) FROM permissions));
+    
+    drop sequence if exists seq_aclentry_permission_id;
+    create sequence seq_aclentry_permission_id start with 1;
+    select setval('seq_aclentry_permission_id', (select MAX(id) FROM aclentry_permissions));
+    
+    drop sequence if exists seq_relationtype_id;
+    create sequence seq_relationtype_id start with 1;
+    select setval('seq_relationtype_id', (select MAX(id) FROM relationtypes));
+    
+    drop sequence if exists seq_relation_id;
+    create sequence seq_relation_id start with 1;
+    select setval('seq_relation_id', (select MAX(id) FROM relations));
+    
+    drop sequence if exists seq_metaset_type_id;
+    create sequence seq_metaset_type_id start with 1;
+    select setval('seq_metaset_type_id', (select MAX(id) FROM metaset_types));
+    
+    drop sequence if exists seq_index_item_id;
+    create sequence seq_index_item_id start with 1;
+    select setval('seq_index_item_id', (select MAX(id) FROM index_items));
+    
+    drop sequence if exists seq_config_entry_id;
+    create sequence seq_config_entry_id start with 1;
+    select setval('seq_config_entry_id', (select MAX(id) FROM config_entries ));
+    
+    drop sequence if exists seq_osd_meta_id;
+    create sequence seq_osd_meta_id;
+    select setval('seq_osd_meta_id', (select MAX(id) FROM osd_meta ));
+    
+    drop sequence if exists seq_folder_meta_id;
+    create sequence seq_folder_meta_id;
+    select setval('seq_folder_id', (select MAX(id) FROM folder_meta ));

@@ -179,7 +179,7 @@
 
     <insert id="insertOsd" parameterType="com.dewarim.cinnamon.model.ObjectSystemData">
         <selectKey keyProperty="id" resultType="long" order="BEFORE">
-            select nextval('seq_objects_id')
+            select nextval('seq_object_id')
         </selectKey>
         INSERT INTO objects
         (id,name,version,content_hash,content_size,content_path,

@@ -96,7 +96,7 @@
 
     <insert id="createRelation" parameterType="com.dewarim.cinnamon.model.relations.Relation">
         <selectKey keyProperty="id" resultType="long" order="BEFORE">
-            select nextval('seq_relations_id')
+            select nextval('seq_relation_id')
         </selectKey>
         INSERT INTO relations (id, left_id, right_id, type_id, metadata) values
         ( #{id},#{leftId},#{rightId},#{typeId},#{metadata} )
