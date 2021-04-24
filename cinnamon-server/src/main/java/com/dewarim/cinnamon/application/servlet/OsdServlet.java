@@ -8,6 +8,7 @@ import com.dewarim.cinnamon.api.lifecycle.State;
 import com.dewarim.cinnamon.api.lifecycle.StateChangeResult;
 import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.application.ErrorCode;
+import com.dewarim.cinnamon.application.ErrorResponseGenerator;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.application.exception.FailedRequestException;
 import com.dewarim.cinnamon.dao.AclDao;
@@ -100,51 +101,56 @@ public class OsdServlet extends BaseServlet {
         UserAccount      user             = ThreadLocalSqlSession.getCurrentUser();
         OsdDao           osdDao           = new OsdDao();
         CinnamonResponse cinnamonResponse = (CinnamonResponse) response;
-        switch (pathInfo) {
-            case "/createOsd":
-                createOsd(request, cinnamonResponse, user, osdDao);
-                break;
-            case "/createMeta":
-                createMeta(request, cinnamonResponse, user, osdDao);
-                break;
-            case "/deleteOsds":
-                deleteOsds(request, cinnamonResponse, user, osdDao);
-                break;
-            case "/deleteMeta":
-                deleteMeta(request, cinnamonResponse, user, osdDao);
-                break;
-            case "/getContent":
-                getContent(request, cinnamonResponse, user, osdDao);
-                break;
-            case "/getMeta":
-                getMeta(request, cinnamonResponse, user, osdDao);
-                break;
-            case "/getObjectsByFolderId":
-                getObjectsByFolderId(request, cinnamonResponse, user, osdDao);
-                break;
-            case "/getObjectsById":
-                getObjectsById(request, cinnamonResponse, user, osdDao);
-                break;
-            case "/getSummaries":
-                getSummaries(request, cinnamonResponse, user, osdDao);
-                break;
-            case "/lock":
-                lock(request, cinnamonResponse, user, osdDao);
-                break;
-            case "/setContent":
-                setContent(request, cinnamonResponse, user, osdDao);
-                break;
-            case "/setSummary":
-                setSummary(request, cinnamonResponse, user, osdDao);
-                break;
-            case "/unlock":
-                unlock(request, cinnamonResponse, user, osdDao);
-                break;
-            case "/version":
-                newVersion(request, cinnamonResponse, user, osdDao);
-                break;
-            default:
-                response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+        try {
+            switch (pathInfo) {
+                case "/createOsd":
+                    createOsd(request, cinnamonResponse, user, osdDao);
+                    break;
+                case "/createMeta":
+                    createMeta(request, cinnamonResponse, user, osdDao);
+                    break;
+                case "/deleteOsds":
+                    deleteOsds(request, cinnamonResponse, user, osdDao);
+                    break;
+                case "/deleteMeta":
+                    deleteMeta(request, cinnamonResponse, user, osdDao);
+                    break;
+                case "/getContent":
+                    getContent(request, cinnamonResponse, user, osdDao);
+                    break;
+                case "/getMeta":
+                    getMeta(request, cinnamonResponse, user, osdDao);
+                    break;
+                case "/getObjectsByFolderId":
+                    getObjectsByFolderId(request, cinnamonResponse, user, osdDao);
+                    break;
+                case "/getObjectsById":
+                    getObjectsById(request, cinnamonResponse, user, osdDao);
+                    break;
+                case "/getSummaries":
+                    getSummaries(request, cinnamonResponse, user, osdDao);
+                    break;
+                case "/lock":
+                    lock(request, cinnamonResponse, user, osdDao);
+                    break;
+                case "/setContent":
+                    setContent(request, cinnamonResponse, user, osdDao);
+                    break;
+                case "/setSummary":
+                    setSummary(request, cinnamonResponse, user, osdDao);
+                    break;
+                case "/unlock":
+                    unlock(request, cinnamonResponse, user, osdDao);
+                    break;
+                case "/version":
+                    newVersion(request, cinnamonResponse, user, osdDao);
+                    break;
+                default:
+                    response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+            }
+        } catch (FailedRequestException e) {
+            ErrorCode errorCode = e.getErrorCode();
+            ErrorResponseGenerator.generateErrorMessage(response, errorCode, e.getMessage());
         }
     }
 
@@ -159,7 +165,7 @@ public class OsdServlet extends BaseServlet {
 
         List<CinnamonError> errors = delete(osds, deleteDescendants, user, osdDao, osdIds);
         if (errors.size() > 0) {
-            throw new FailedRequestException(ErrorCode.CANNOT_DELETE_DUE_TO_ERRORS, errors );
+            throw new FailedRequestException(ErrorCode.CANNOT_DELETE_DUE_TO_ERRORS, errors);
         }
         List<Long> osdIdsToToDelete = new ArrayList<>(osdIds);
         log.debug("delete " + Strings.join(",", osdIdsToToDelete.stream().map(String::valueOf).collect(Collectors.toList())));

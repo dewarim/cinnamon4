@@ -4,6 +4,7 @@ import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.application.ErrorResponseGenerator;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
+import com.dewarim.cinnamon.application.exception.FailedRequestException;
 import com.dewarim.cinnamon.configuration.SecurityConfig;
 import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.model.UserAccount;
@@ -29,6 +30,7 @@ import static com.dewarim.cinnamon.Constants.CONTENT_TYPE_XML;
 import static com.dewarim.cinnamon.application.ResponseUtil.responseIsOkayAndXml;
 
 /**
+ *
  */
 @WebServlet(name = "User", urlPatterns = "/")
 public class UserServlet extends HttpServlet {
@@ -41,20 +43,25 @@ public class UserServlet extends HttpServlet {
         if (pathInfo == null) {
             pathInfo = "";
         }
-        switch (pathInfo) {
-            case "/userInfo":
-                showUserInfo(xmlMapper.readValue(request.getReader(), UserInfoRequest.class), response);
-                break;
-            case "/listUsers":
-                listUsers(request, response);
-                break;
-            case "/setPassword":
-                setPassword(request, response);
-                break;
-            default:
-                response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+        try {
+            switch (pathInfo) {
+                case "/userInfo":
+                    showUserInfo(xmlMapper.readValue(request.getReader(), UserInfoRequest.class), response);
+                    break;
+                case "/listUsers":
+                    listUsers(request, response);
+                    break;
+                case "/setPassword":
+                    setPassword(request, response);
+                    break;
+                default:
+                    response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+            }
+        } catch (
+                FailedRequestException e) {
+            ErrorCode errorCode = e.getErrorCode();
+            ErrorResponseGenerator.generateErrorMessage(response, errorCode, e.getMessage());
         }
-
     }
 
     private void setPassword(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -67,19 +74,16 @@ public class UserServlet extends HttpServlet {
         if (!passwordRequest.getUserId().equals(currentUser.getId())) {
 
             if (!userDao.isSuperuser(currentUser)) {
-                ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.FORBIDDEN);
-                return;
+                ErrorCode.FORBIDDEN.throwUp();
             }
         }
 
         if (passwordRequest.getPassword() == null || passwordRequest.getPassword().length() < config.getMinimumPasswordLength()) {
-            ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.PASSWORD_TOO_SHORT);
-            return;
+            ErrorCode.PASSWORD_TOO_SHORT.throwUp();
         }
 
         if (userOpt.isEmpty()) {
-            ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.USER_ACCOUNT_NOT_FOUND);
-            return;
+            ErrorCode.USER_ACCOUNT_NOT_FOUND.throwUp();
         }
 
         String      pwdHash = HashMaker.createDigest(passwordRequest.getPassword());
@@ -107,17 +111,14 @@ public class UserServlet extends HttpServlet {
         Optional<UserAccount> userOpt;
         if (userInfoRequest.byId()) {
             userOpt = userAccountDao.getUserAccountById(userInfoRequest.getUserId());
-        }
-        else if (userInfoRequest.byName()) {
+        } else if (userInfoRequest.byName()) {
             userOpt = userAccountDao.getUserAccountByName(userInfoRequest.getUsername());
-        }
-        else {
-            ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.USER_INFO_REQUEST_WITHOUT_NAME_OR_ID);
+        } else {
+            ErrorCode.USER_INFO_REQUEST_WITHOUT_NAME_OR_ID.throwUp();
             return;
         }
         if (userOpt.isEmpty()) {
-            ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.USER_ACCOUNT_NOT_FOUND);
-            return;
+            ErrorCode.USER_ACCOUNT_NOT_FOUND.throwUp();
         }
 
         UserAccount user = userOpt.get();

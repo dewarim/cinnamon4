@@ -8,6 +8,7 @@ import com.dewarim.cinnamon.dao.SessionDao;
 import com.dewarim.cinnamon.model.Session;
 import com.dewarim.cinnamon.model.response.CinnamonConnection;
 import com.dewarim.cinnamon.model.response.CinnamonError;
+import com.dewarim.cinnamon.model.response.CinnamonErrorWrapper;
 import com.dewarim.cinnamon.model.response.GenericResponse;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import org.apache.http.HttpResponse;
@@ -44,6 +45,8 @@ import static org.junit.Assert.fail;
 public class CinnamonIntegrationTest {
 
     private final static Logger log = LogManager.getLogger(CinnamonIntegrationTest.class);
+
+    static final String PASSWORD_PARAMETER_NAME = "password";
 
     static int            cinnamonTestPort = 19999;
     static CinnamonServer cinnamonServer;
@@ -131,7 +134,7 @@ public class CinnamonIntegrationTest {
         String responseText = new String(response.getEntity().getContent().readAllBytes());
         Assert.assertTrue("response should contain errorCode " + errorCode + " but was " + responseText, responseText.contains(errorCode.getCode()));
         assertThat(errorCode.getHttpResponseCode(), equalTo(response.getStatusLine().getStatusCode()));
-        CinnamonError cinnamonError = mapper.readValue(response.getEntity().getContent(), CinnamonError.class);
+        CinnamonError cinnamonError = mapper.readValue(response.getEntity().getContent(), CinnamonErrorWrapper.class).getErrors().get(0);
         assertThat(cinnamonError.getCode(), equalTo(errorCode.getCode()));
     }
 

@@ -30,10 +30,13 @@ import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.filter.AuthenticationFilter;
 import com.dewarim.cinnamon.filter.DbSessionFilter;
 import com.dewarim.cinnamon.filter.RequestResponseFilter;
+import com.dewarim.cinnamon.model.UserAccount;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import jakarta.servlet.DispatcherType;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.annotations.AnnotationDecorator;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.webapp.WebAppContext;
@@ -43,20 +46,24 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.EnumSet;
+import java.util.List;
 
 import static com.dewarim.cinnamon.Constants.DAO_USER_ACCOUNT;
 import static com.dewarim.cinnamon.Constants.DEFAULT_DATABASE_SESSION_FACTORY;
 
 /**
+ *
  */
 public class CinnamonServer {
 
-    public static final String VERSION ="0.1.0";
-    private int                port;
-    private Server               server;
-    private       DbSessionFactory dbSessionFactory;
-    private       WebAppContext    webAppContext = new WebAppContext();
-    public static CinnamonConfig   config        = new CinnamonConfig();
+    private static final Logger log = LogManager.getLogger(CinnamonServer.class);
+
+    public static final String           VERSION       = "0.1.0";
+    private             int              port;
+    private             Server           server;
+    private             DbSessionFactory dbSessionFactory;
+    private             WebAppContext    webAppContext = new WebAppContext();
+    public static       CinnamonConfig   config        = new CinnamonConfig();
 
     public CinnamonServer(int port) {
         this.port = port;
@@ -72,9 +79,12 @@ public class CinnamonServer {
         addServlets(webAppContext);
         server = new Server(port);
         server.setHandler(webAppContext);
+        log.info("Starting CinnamonServer.");
         server.start();
 
         addSingletons();
+
+        log.info("Server is running at port " + config.getServerConfig().getPort());
     }
 
     public void stop() throws Exception {
@@ -85,14 +95,19 @@ public class CinnamonServer {
 
         // initialize mybatis:
         if (dbSessionFactory == null) {
+            log.info("Create new database session factory");
             dbSessionFactory = new DbSessionFactory(null);
         }
         ThreadLocalSqlSession.dbSessionFactory = dbSessionFactory;
         server.setAttribute(DEFAULT_DATABASE_SESSION_FACTORY, dbSessionFactory);
 
         // add DAOs
-        server.setAttribute(DAO_USER_ACCOUNT, new UserAccountDao());
+        UserAccountDao userAccountDao = new UserAccountDao();
+        server.setAttribute(DAO_USER_ACCOUNT, userAccountDao);
 
+        // test query:
+        List<UserAccount> userAccounts = userAccountDao.listUserAccounts();
+        log.info("Test query: database contains " + userAccounts.size() + " user accounts.");
     }
 
     private void addFilters(WebAppContext handler) {
@@ -128,25 +143,25 @@ public class CinnamonServer {
     }
 
     public static void main(String[] args) throws Exception {
-        Args cliArguments = new Args();
-        JCommander commander = JCommander.newBuilder().addObject(cliArguments).build();
+        Args       cliArguments = new Args();
+        JCommander commander    = JCommander.newBuilder().addObject(cliArguments).build();
         commander.parse(args);
-        
-        if((cliArguments.help)){
+
+        if ((cliArguments.help)) {
             commander.setColumnSize(80);
             commander.usage();
             return;
         }
-        
+
         if (cliArguments.writeConfigFile != null) {
             writeConfig(cliArguments.writeConfigFile);
             return;
         }
-        
+
         if (cliArguments.configFilename != null) {
             config = readConfig(cliArguments.configFilename);
         }
-        
+
         if (cliArguments.port != null) {
             config.getServerConfig().setPort(cliArguments.port);
         }
@@ -196,7 +211,7 @@ public class CinnamonServer {
         @Parameter(names = {"--config", "-c"}, description = "Where to load the configuration file from")
         String configFilename;
 
-        @Parameter(names = {"--help","-h"}, help = true, description = "Display help text.")
+        @Parameter(names = {"--help", "-h"}, help = true, description = "Display help text.")
         boolean help;
     }
 }

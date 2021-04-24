@@ -1,6 +1,7 @@
 package com.dewarim.cinnamon.application;
 
 import com.dewarim.cinnamon.model.response.CinnamonError;
+import com.dewarim.cinnamon.model.response.CinnamonErrorWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import jakarta.servlet.http.HttpServletResponse;
@@ -17,7 +18,8 @@ public class ErrorResponseGenerator {
             response.setStatus(errorCode.getHttpResponseCode());
             response.setContentType("application/xml");
             response.setCharacterEncoding("UTF-8");
-            xmlMapper.writeValue(response.getWriter(), error);
+            CinnamonErrorWrapper wrapper = new CinnamonErrorWrapper(error);
+            xmlMapper.writeValue(response.getWriter(), wrapper);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

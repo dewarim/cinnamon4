@@ -481,8 +481,8 @@ create table config_entries
   public_visibility boolean not null default false
 )
 ;
-drop sequence if exists seq_config_entrie_id;
-create sequence seq_config_entrie_id start with 1;
+drop sequence if exists seq_config_entry_id;
+create sequence seq_config_entry_id start with 1;
 
 drop table if exists osd_meta cascade;
 create table osd_meta

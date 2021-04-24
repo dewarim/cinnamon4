@@ -3,6 +3,7 @@ package com.dewarim.cinnamon.application.servlet;
 import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.application.ErrorResponseGenerator;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
+import com.dewarim.cinnamon.application.exception.FailedRequestException;
 import com.dewarim.cinnamon.dao.ConfigEntryDao;
 import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.model.ConfigEntry;
@@ -34,15 +35,20 @@ public class ConfigEntryServlet extends HttpServlet {
         if (pathInfo == null) {
             pathInfo = "";
         }
-        switch (pathInfo) {
-            case "/getConfigEntry":
-                getConfigEntry(request, response);
-                break;
-            case "/setConfigEntry":
-                setConfigEntry(request, response);
-                break;
-            default:
-                response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+        try {
+            switch (pathInfo) {
+                case "/getConfigEntry":
+                    getConfigEntry(request, response);
+                    break;
+                case "/setConfigEntry":
+                    setConfigEntry(request, response);
+                    break;
+                default:
+                    response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+            }
+        } catch (FailedRequestException e) {
+            ErrorCode errorCode = e.getErrorCode();
+            ErrorResponseGenerator.generateErrorMessage(response, errorCode, e.getMessage());
         }
     }
 
@@ -62,16 +68,14 @@ public class ConfigEntryServlet extends HttpServlet {
             response.setContentType(CONTENT_TYPE_XML);
             response.setStatus(HttpServletResponse.SC_OK);
             xmlMapper.writeValue(response.getWriter(), wrapper);
-        }
-        else {
-            ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.OBJECT_NOT_FOUND);
+        } else {
+            ErrorCode.OBJECT_NOT_FOUND.throwUp();
         }
     }
 
     private void setConfigEntry(HttpServletRequest request, HttpServletResponse response) throws IOException {
         if (!callerIsSuperuser()) {
-            ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.UNAUTHORIZED);
-            return;
+            ErrorCode.UNAUTHORIZED.throwUp();
         }
         CreateConfigEntryRequest creationRequest = xmlMapper.readValue(request.getInputStream(), CreateConfigEntryRequest.class);
 
@@ -80,8 +84,7 @@ public class ConfigEntryServlet extends HttpServlet {
         Optional<ConfigEntry> existingEntry  = configEntryDao.getConfigEntryByName(creationRequest.getName());
         if (existingEntry.isPresent()) {
             configEntryDao.updateConfigEntry(configEntry);
-        }
-        else {
+        } else {
             configEntryDao.insertConfigEntry(configEntry);
         }
 

@@ -33,7 +33,7 @@ import static com.dewarim.cinnamon.Constants.CONTENT_TYPE_XML;
 @WebServlet(name = "LifecycleState", urlPatterns = "/")
 public class LifecycleStateServlet extends BaseServlet {
 
-    private ObjectMapper xmlMapper = new XmlMapper();
+    private final ObjectMapper xmlMapper = new XmlMapper();
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
@@ -125,8 +125,6 @@ public class LifecycleStateServlet extends BaseServlet {
         }
     }
 
-
-
     private void detachLifecycleState(HttpServletRequest request, HttpServletResponse response, OsdDao osdDao) throws IOException {
         IdRequest detachReq = xmlMapper.readValue(request.getInputStream(), IdRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
@@ -183,7 +181,6 @@ public class LifecycleStateServlet extends BaseServlet {
             return;
         }
         ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.INVALID_REQUEST);
-
     }
 
 }

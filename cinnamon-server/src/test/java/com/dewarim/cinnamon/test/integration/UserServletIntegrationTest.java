@@ -73,7 +73,7 @@ public class UserServletIntegrationTest extends CinnamonIntegrationTest {
         assertResponseOkay(response);
         String url = "http://localhost:" + cinnamonTestPort + UrlMapping.CINNAMON__CONNECT.getPath();
         HttpResponse ticketResponse = Request.Post(url)
-                .bodyForm(Form.form().add("user", "doe").add("pwd", "testTest").build())
+                .bodyForm(Form.form().add("user", "doe").add(PASSWORD_PARAMETER_NAME, "testTest").build())
                 .execute().returnResponse();
         assertResponseOkay(ticketResponse);
 

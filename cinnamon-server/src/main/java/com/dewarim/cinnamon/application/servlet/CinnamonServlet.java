@@ -5,6 +5,7 @@ import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.application.ErrorResponseGenerator;
 import com.dewarim.cinnamon.application.exception.CinnamonException;
+import com.dewarim.cinnamon.application.exception.FailedRequestException;
 import com.dewarim.cinnamon.dao.SessionDao;
 import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.model.Session;
@@ -27,6 +28,7 @@ import java.util.Optional;
 import java.util.Properties;
 
 import static com.dewarim.cinnamon.Constants.CONTENT_TYPE_XML;
+import static com.dewarim.cinnamon.application.ErrorCode.CONNECTION_FAIL_WRONG_PASSWORD;
 
 /**
  *
@@ -62,15 +64,20 @@ public class CinnamonServlet extends HttpServlet {
 
         String pathInfo = request.getPathInfo();
 
-        switch (pathInfo) {
-            case "/connect":
-                connect(request, response);
-                break;
-            case "/disconnect":
-                disconnect(request, response);
-                break;
-            default:
-                hello(response);
+        try {
+            switch (pathInfo) {
+                case "/connect":
+                    connect(request, response);
+                    break;
+                case "/disconnect":
+                    disconnect(request, response);
+                    break;
+                default:
+                    hello(response);
+            }
+        } catch (FailedRequestException e) {
+            ErrorCode errorCode = e.getErrorCode();
+            ErrorResponseGenerator.generateErrorMessage(response, errorCode, e.getMessage());
         }
 
     }
@@ -87,48 +94,39 @@ public class CinnamonServlet extends HttpServlet {
         response.getWriter().println("<h1>Cinnamon 4 Server</h1>");
     }
 
-    private void connect(HttpServletRequest request, HttpServletResponse response) {
-        try {
-            // TODO: initial parameter check (null, non-empty)
-            String                username = request.getParameter("user");
-            String                password = request.getParameter("password");
-            Optional<UserAccount> userOpt  = userAccountDao.getUserAccountByName(username);
+    private void connect(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        // TODO: initial parameter check (null, non-empty)
+        String                username = request.getParameter("user");
+        String                password = request.getParameter("password");
+        Optional<UserAccount> userOpt  = userAccountDao.getUserAccountByName(username);
 
-            if (userOpt.isEmpty()) {
-                ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.CONNECTION_FAIL_INVALID_USERNAME);
-                return;
-            }
-
-            UserAccount user = userOpt.get();
-            if (!user.isActivated()) {
-                ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.CONNECTION_FAIL_ACCOUNT_INACTIVE);
-                return;
-            }
-
-            if (user.isLocked()) {
-                ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.CONNECTION_FAIL_ACCOUNT_LOCKED);
-                return;
-            }
-
-            if (authenticate(user, password)) {
-                // TODO: get optional uiLanguageParam.
-                long               sessionLengthInMillis = CinnamonServer.config.getSecurityConfig().getSessionLengthInMillis();
-                Session            session               = new SessionDao().save(new Session(user.getId(), sessionLengthInMillis));
-                CinnamonConnection cinnamonConnection    = new CinnamonConnection(session.getTicket());
-
-                // Return the token on the response
-                response.setContentType(CONTENT_TYPE_XML);
-                response.setStatus(HttpServletResponse.SC_OK);
-                xmlMapper.writeValue(response.getWriter(), cinnamonConnection);
-            } else {
-                ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.CONNECTION_FAIL_WRONG_PASSWORD, "wrong password");
-            }
-        } catch (Exception e) {
-            // TODO: test with unit test & mocked request which throws exception etc
-            log.debug("connect failed for unknown reason:", e);
-            ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.INTERNAL_SERVER_ERROR_TRY_AGAIN_LATER, e.getMessage());
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        if (userOpt.isEmpty()) {
+            ErrorCode.CONNECTION_FAIL_INVALID_USERNAME.throwUp();
         }
+
+        UserAccount user = userOpt.get();
+        if (!user.isActivated()) {
+            ErrorCode.CONNECTION_FAIL_ACCOUNT_INACTIVE.throwUp();
+        }
+
+        if (user.isLocked()) {
+            ErrorCode.CONNECTION_FAIL_ACCOUNT_LOCKED.throwUp();
+        }
+
+        if (authenticate(user, password)) {
+            // TODO: get optional uiLanguageParam.
+            long               sessionLengthInMillis = CinnamonServer.config.getSecurityConfig().getSessionLengthInMillis();
+            Session            session               = new SessionDao().save(new Session(user.getId(), sessionLengthInMillis));
+            CinnamonConnection cinnamonConnection    = new CinnamonConnection(session.getTicket());
+
+            // Return the token on the response
+            response.setContentType(CONTENT_TYPE_XML);
+            response.setStatus(HttpServletResponse.SC_OK);
+            xmlMapper.writeValue(response.getWriter(), cinnamonConnection);
+        } else {
+            CONNECTION_FAIL_WRONG_PASSWORD.throwUp();
+        }
+
     }
 
     private void disconnect(HttpServletRequest request, HttpServletResponse response) throws IOException {
