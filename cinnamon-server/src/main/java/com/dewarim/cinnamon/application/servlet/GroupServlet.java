@@ -6,6 +6,7 @@ import com.dewarim.cinnamon.model.request.ListRequest;
 import com.dewarim.cinnamon.model.response.GroupWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.dataformat.xml.deser.FromXmlParser;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,7 +20,7 @@ import static com.dewarim.cinnamon.Constants.CONTENT_TYPE_XML;
 @WebServlet(name = "Group", urlPatterns = "/")
 public class GroupServlet extends HttpServlet {
 
-    private ObjectMapper xmlMapper = new XmlMapper();
+    private ObjectMapper xmlMapper = new XmlMapper().configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL, true);
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
@@ -29,7 +30,7 @@ public class GroupServlet extends HttpServlet {
         }
         switch (pathInfo) {
             case "/listGroups":
-                listGroups(request,response);
+                listGroups(request, response);
                 break;
             default:
                 response.setStatus(HttpServletResponse.SC_NO_CONTENT);
@@ -38,10 +39,10 @@ public class GroupServlet extends HttpServlet {
 
     private void listGroups(HttpServletRequest request, HttpServletResponse response) throws IOException {
         // ignore listRequest for now, just make sure it's valid xml:
-        ListRequest   listRequest = xmlMapper.readValue(request.getInputStream(), ListRequest.class);
-        CmnGroupDao groupDao = new CmnGroupDao();
-        List<CmnGroup> groups = groupDao.listGroups();
-        GroupWrapper wrapper = new GroupWrapper();
+        ListRequest    listRequest = xmlMapper.readValue(request.getInputStream(), ListRequest.class);
+        CmnGroupDao    groupDao    = new CmnGroupDao();
+        List<CmnGroup> groups      = groupDao.listGroups();
+        GroupWrapper   wrapper     = new GroupWrapper();
         wrapper.setGroups(groups);
         response.setContentType(CONTENT_TYPE_XML);
         response.setStatus(HttpServletResponse.SC_OK);

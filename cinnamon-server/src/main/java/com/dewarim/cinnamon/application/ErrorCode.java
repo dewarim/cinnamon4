@@ -92,18 +92,18 @@ public enum ErrorCode {
     USER_INFO_REQUEST_WITHOUT_NAME_OR_ID("userInfoRequest missing id or name", SC_BAD_REQUEST),
     USER_ACCOUNT_NOT_FOUND("userInfoRequest invalid id or name", SC_NOT_FOUND);
 
-    String code;
-    int                              httpResponseCode;
+    String description;
+    int    httpResponseCode;
     Supplier<FailedRequestException> exceptionSupplier;
 
-    ErrorCode(String code, int httpResponseCode) {
-        this.code = code;
+    ErrorCode(String description, int httpResponseCode) {
+        this.description = description;
         this.httpResponseCode = httpResponseCode;
         this.exceptionSupplier = () -> new FailedRequestException(this);
     }
 
     public String getCode() {
-        return code;
+        return name();
     }
 
     public int getHttpResponseCode() {

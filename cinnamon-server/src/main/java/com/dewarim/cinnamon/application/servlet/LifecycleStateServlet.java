@@ -19,6 +19,7 @@ import com.dewarim.cinnamon.model.response.LifecycleStateWrapper;
 import com.dewarim.cinnamon.provider.StateProviderService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.dataformat.xml.deser.FromXmlParser;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -33,7 +34,7 @@ import static com.dewarim.cinnamon.Constants.CONTENT_TYPE_XML;
 @WebServlet(name = "LifecycleState", urlPatterns = "/")
 public class LifecycleStateServlet extends BaseServlet {
 
-    private final ObjectMapper xmlMapper = new XmlMapper();
+    private ObjectMapper xmlMapper = new XmlMapper().configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL, true);
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 

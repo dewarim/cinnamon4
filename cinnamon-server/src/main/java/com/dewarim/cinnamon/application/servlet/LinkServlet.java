@@ -29,6 +29,7 @@ import com.dewarim.cinnamon.security.authorization.AccessFilter;
 import com.dewarim.cinnamon.security.authorization.AuthorizationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.dataformat.xml.deser.FromXmlParser;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -50,7 +51,7 @@ public class LinkServlet extends HttpServlet {
     private static final Logger log             = LogManager.getLogger(LinkServlet.class);
     private static final int    UPDATED_ONE_ROW = 1;
 
-    private ObjectMapper         xmlMapper            = new XmlMapper();
+    private ObjectMapper         xmlMapper            = new XmlMapper().configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL, true);
     private AuthorizationService authorizationService = new AuthorizationService();
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -107,8 +108,8 @@ public class LinkServlet extends HttpServlet {
             return;
         }
 
-        AclDao aclDao = new AclDao();
-        Optional<Acl>    acl    = aclDao.getAclById(linkRequest.getAclId());
+        AclDao        aclDao = new AclDao();
+        Optional<Acl> acl    = aclDao.getAclById(linkRequest.getAclId());
         if (acl.isEmpty()) {
             ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.ACL_NOT_FOUND);
             return;

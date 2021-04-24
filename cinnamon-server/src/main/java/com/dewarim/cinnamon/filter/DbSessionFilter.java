@@ -4,7 +4,9 @@ import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.application.TransactionStatus;
 import com.dewarim.cinnamon.model.response.CinnamonError;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.dataformat.xml.deser.FromXmlParser;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletRequest;
@@ -25,7 +27,7 @@ public class DbSessionFilter implements Filter {
 
     private static final Logger log = LogManager.getLogger(DbSessionFilter.class);
 
-    private final XmlMapper xmlMapper = new XmlMapper();
+    private ObjectMapper xmlMapper = new XmlMapper().configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL,true);
 
 
     @Override

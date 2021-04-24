@@ -13,7 +13,7 @@ public class ErrorResponseGenerator {
     private static ObjectMapper xmlMapper = new XmlMapper();
 
     public static void generateErrorMessage(HttpServletResponse response, ErrorCode errorCode, String message) {
-        CinnamonError error = new CinnamonError(errorCode.getCode(), message);
+        CinnamonError error = new CinnamonError(errorCode.name(), message);
         try {
             response.setStatus(errorCode.getHttpResponseCode());
             response.setContentType("application/xml");

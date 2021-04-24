@@ -6,6 +6,7 @@ import com.dewarim.cinnamon.model.request.ListRequest;
 import com.dewarim.cinnamon.model.response.LanguageWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.dataformat.xml.deser.FromXmlParser;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,7 +20,7 @@ import static com.dewarim.cinnamon.Constants.CONTENT_TYPE_XML;
 @WebServlet(name = "Language", urlPatterns = "/")
 public class LanguageServlet extends HttpServlet {
 
-    private ObjectMapper xmlMapper = new XmlMapper();
+    private ObjectMapper xmlMapper = new XmlMapper().configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL, true);
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
@@ -38,9 +39,9 @@ public class LanguageServlet extends HttpServlet {
 
     private void listLanguages(HttpServletRequest request, HttpServletResponse response) throws IOException {
         // ignore listRequest for now, just make sure it's valid xml:
-        ListRequest         listRequest = xmlMapper.readValue(request.getInputStream(), ListRequest.class);
-        LanguageDao     languageDao     = new LanguageDao();
-        List<Language>  languages       = languageDao.listLanguages();
+        ListRequest     listRequest = xmlMapper.readValue(request.getInputStream(), ListRequest.class);
+        LanguageDao     languageDao = new LanguageDao();
+        List<Language>  languages   = languageDao.listLanguages();
         LanguageWrapper wrapper     = new LanguageWrapper();
         wrapper.setLanguages(languages);
         response.setContentType(CONTENT_TYPE_XML);

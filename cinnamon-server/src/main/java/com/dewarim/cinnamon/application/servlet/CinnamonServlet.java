@@ -16,6 +16,7 @@ import com.dewarim.cinnamon.security.LoginProviderService;
 import com.fasterxml.jackson.annotation.JsonRootName;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.dataformat.xml.deser.FromXmlParser;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -37,7 +38,7 @@ import static com.dewarim.cinnamon.application.ErrorCode.CONNECTION_FAIL_WRONG_P
 public class CinnamonServlet extends HttpServlet {
 
     private static final Logger               log                  = LogManager.getLogger(CinnamonServlet.class);
-    private              ObjectMapper         xmlMapper            = new XmlMapper();
+    private              ObjectMapper         xmlMapper            = new XmlMapper().configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL, true);
     private final        UserAccountDao       userAccountDao       = new UserAccountDao();
     private              LoginProviderService loginProviderService = LoginProviderService.getInstance();
     private final        CinnamonVersion      cinnamonVersion      = new CinnamonVersion();

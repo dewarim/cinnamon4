@@ -2,8 +2,6 @@ package com.dewarim.cinnamon.application.servlet;
 
 import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.application.ErrorResponseGenerator;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,8 +16,6 @@ import java.io.InputStream;
  */
 @WebServlet(name = "Static", urlPatterns = "/")
 public class StaticServlet extends HttpServlet {
-
-    private ObjectMapper xmlMapper = new XmlMapper();
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
 

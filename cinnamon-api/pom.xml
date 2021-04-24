@@ -11,7 +11,18 @@
     <properties>
         <maven.compiler.plugin.version>3.8.1</maven.compiler.plugin.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
     </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-xml</artifactId>
+            <version>2.12.3</version>
+            <scope>compile</scope>
+        </dependency>
+    </dependencies>
 
     <build>
         <finalName>cinnamon-api</finalName>
@@ -22,8 +33,9 @@
                 <version>${maven.compiler.plugin.version}</version>
                 <inherited>true</inherited>
                 <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
+                    <release>11</release>
+                    <source>11</source>
+                    <target>11</target>
                 </configuration>
             </plugin>
             <plugin>
@@ -37,13 +49,6 @@
             </plugin>
         </plugins>
     </build>
-    <dependencies>
-        <dependency>
-            <groupId>com.fasterxml.jackson.dataformat</groupId>
-            <artifactId>jackson-dataformat-xml</artifactId>
-            <version>2.10.1</version>
-            <scope>compile</scope>
-        </dependency>
-    </dependencies>
+
 
 </project>

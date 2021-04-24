@@ -10,6 +10,7 @@ import com.dewarim.cinnamon.model.request.user.UserPermissionRequest;
 import com.dewarim.cinnamon.model.response.PermissionWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.dataformat.xml.deser.FromXmlParser;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -27,7 +28,7 @@ import static com.dewarim.cinnamon.Constants.CONTENT_TYPE_XML;
 @WebServlet(name = "Permission", urlPatterns = "/")
 public class PermissionServlet extends HttpServlet {
 
-    private ObjectMapper xmlMapper = new XmlMapper();
+    private ObjectMapper xmlMapper = new XmlMapper().configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL, true);
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 

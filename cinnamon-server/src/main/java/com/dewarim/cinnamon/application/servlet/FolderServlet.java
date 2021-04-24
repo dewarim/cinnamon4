@@ -39,6 +39,7 @@ import com.dewarim.cinnamon.security.authorization.AccessFilter;
 import com.dewarim.cinnamon.security.authorization.AuthorizationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.dataformat.xml.deser.FromXmlParser;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -54,7 +55,7 @@ import static com.dewarim.cinnamon.application.ErrorResponseGenerator.generateEr
 @WebServlet(name = "Folder", urlPatterns = "/")
 public class FolderServlet extends BaseServlet {
 
-    private ObjectMapper         xmlMapper            = new XmlMapper();
+    private ObjectMapper         xmlMapper            = new XmlMapper().configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL, true);
     private AuthorizationService authorizationService = new AuthorizationService();
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -63,8 +64,8 @@ public class FolderServlet extends BaseServlet {
         if (pathInfo == null) {
             pathInfo = "";
         }
-        UserAccount user      = ThreadLocalSqlSession.getCurrentUser();
-        FolderDao   folderDao = new FolderDao();
+        UserAccount      user             = ThreadLocalSqlSession.getCurrentUser();
+        FolderDao        folderDao        = new FolderDao();
         CinnamonResponse cinnamonResponse = (CinnamonResponse) response;
         try {
             switch (pathInfo) {
@@ -151,7 +152,7 @@ public class FolderServlet extends BaseServlet {
                     .orElseThrow(ErrorCode.ACL_NOT_FOUND.getException()).getId();
         }
 
-        Folder folder = new Folder(name, aclId, ownerId, parentId, typeId, createRequest.getSummary());
+        Folder folder      = new Folder(name, aclId, ownerId, parentId, typeId, createRequest.getSummary());
         Folder savedFolder = folderDao.saveFolder(folder);
 
         FolderWrapper wrapper = new FolderWrapper(Collections.singletonList(savedFolder));

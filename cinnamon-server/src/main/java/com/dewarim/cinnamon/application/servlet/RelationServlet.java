@@ -14,6 +14,7 @@ import com.dewarim.cinnamon.model.response.GenericResponse;
 import com.dewarim.cinnamon.model.response.RelationWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.dataformat.xml.deser.FromXmlParser;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -27,7 +28,7 @@ import java.util.Optional;
 @WebServlet(name = "Relation", urlPatterns = "/")
 public class RelationServlet extends HttpServlet {
 
-    private ObjectMapper xmlMapper = new XmlMapper();
+    private ObjectMapper xmlMapper = new XmlMapper().configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL, true);
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
@@ -57,7 +58,7 @@ public class RelationServlet extends HttpServlet {
             int         affectedRows = dao.deleteRelation(deleteRequest.getLeftId(), deleteRequest.getRightId(), deleteRequest.getTypeName());
             switch (affectedRows) {
                 case 0:
-                    ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.OBJECT_NOT_FOUND_OR_GONE );
+                    ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.OBJECT_NOT_FOUND_OR_GONE);
                     break;
                 case 1:
                     ResponseUtil.responseIsOkayAndXml(response);
@@ -82,8 +83,7 @@ public class RelationServlet extends HttpServlet {
                 ResponseUtil.responseIsOkayAndXml(response);
                 xmlMapper.writeValue(response.getWriter(), new GenericResponse(true));
                 return;
-            }
-            else {
+            } else {
                 ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.RELATION_TYPE_NOT_FOUND);
             }
             return;

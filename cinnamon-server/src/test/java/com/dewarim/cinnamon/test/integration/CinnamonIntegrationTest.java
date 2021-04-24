@@ -9,7 +9,9 @@ import com.dewarim.cinnamon.model.response.CinnamonConnection;
 import com.dewarim.cinnamon.model.response.CinnamonError;
 import com.dewarim.cinnamon.model.response.CinnamonErrorWrapper;
 import com.dewarim.cinnamon.model.response.GenericResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.dataformat.xml.deser.FromXmlParser;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.fluent.Form;
@@ -51,7 +53,7 @@ public class CinnamonIntegrationTest {
     static String         ticket;
     static String         ticketForDoe;
     static String         HOST             = "http://localhost:" + cinnamonTestPort;
-    static XmlMapper      mapper           = new XmlMapper();
+    static ObjectMapper   mapper           = new XmlMapper().configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL, true);
     static CinnamonClient client;
 
     @Before

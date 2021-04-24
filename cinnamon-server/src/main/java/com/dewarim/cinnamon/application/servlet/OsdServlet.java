@@ -53,6 +53,7 @@ import com.dewarim.cinnamon.provider.StateProviderService;
 import com.dewarim.cinnamon.security.authorization.AuthorizationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.dataformat.xml.deser.FromXmlParser;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
@@ -84,7 +85,7 @@ import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 @WebServlet(name = "Osd", urlPatterns = "/")
 public class OsdServlet extends BaseServlet {
 
-    private final        ObjectMapper         xmlMapper            = new XmlMapper();
+    private              ObjectMapper         xmlMapper            = new XmlMapper().configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL, true);
     private final        AuthorizationService authorizationService = new AuthorizationService();
     private static final Logger               log                  = LogManager.getLogger(OsdServlet.class);
     private static final String               MULTIPART            = "multipart/";
@@ -188,7 +189,7 @@ public class OsdServlet extends BaseServlet {
                 CinnamonError error = new CinnamonError(ErrorCode.NO_DELETE_PERMISSION.getCode(), osdId);
                 errors.add(error);
             }
-            if(osd.getLockerId() != null && !user.getId().equals(osd.getLockerId())){
+            if (osd.getLockerId() != null && !user.getId().equals(osd.getLockerId())) {
                 CinnamonError error = new CinnamonError(ErrorCode.OBJECT_LOCKED_BY_OTHER_USER.getCode(), osdId);
                 errors.add(error);
             }
