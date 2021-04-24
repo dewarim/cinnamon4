@@ -1,9 +1,8 @@
 package com.dewarim.cinnamon.model.response;
 
-public interface Wrapper {
+import java.util.List;
 
-    default String contentType() {
-        return "application/xml";
-    }
+public interface Wrapper<T> {
 
+    List<T> get();
 }

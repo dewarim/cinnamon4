@@ -37,6 +37,13 @@
             <version>0.1</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.dewarim.cinnamon</groupId>
+            <artifactId>cinnamon-client</artifactId>
+            <version>0.1</version>
+            <scope>test</scope>
+        </dependency>
+
         <!-- jetty server -->
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
@@ -79,10 +86,7 @@
         <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>
             <artifactId>jackson-dataformat-xml</artifactId>
-            <version>2.11.1</version>
-            <!--
-            TODO: create bug report - update to 2.12.3 breaks when serializing String field with XML content. (summary="<summary/>")
-            -->
+            <version>2.11.3</version>
         </dependency>
 
         <dependency>

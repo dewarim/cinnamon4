@@ -41,10 +41,9 @@ public class UserServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void requestByUserId() throws IOException {
-        UserInfoRequest userInfoRequest  = new UserInfoRequest(1L, null);
-        HttpResponse    userInfoResponse = sendAdminRequest(UrlMapping.USER__USER_INFO, userInfoRequest);
-        UserInfo        admin            = unwrapUsers(userInfoResponse, 1).get(0);
-        assertThat(admin.getId(), equalTo(1L));
+        UserInfo userInfo = client.getUser(1L);
+        assertThat(userInfo.getId(), equalTo(1L));
+        assertThat(userInfo.getName(), equalTo("admin"));
 
     }
 

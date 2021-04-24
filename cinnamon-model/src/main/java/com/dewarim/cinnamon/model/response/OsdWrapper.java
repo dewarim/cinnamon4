@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class OsdWrapper implements Wrapper{
+public class OsdWrapper implements Wrapper<ObjectSystemData>{
 
     @JacksonXmlElementWrapper(localName = "osds")
     @JacksonXmlProperty(localName = "osd")
@@ -41,5 +41,10 @@ public class OsdWrapper implements Wrapper{
 
     public void setLinks(List<Link> links) {
         this.links = links;
+    }
+
+    @Override
+    public List<ObjectSystemData> get() {
+        return osds;
     }
 }

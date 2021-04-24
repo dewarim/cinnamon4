@@ -46,6 +46,7 @@ import com.dewarim.cinnamon.model.request.osd.OsdRequest;
 import com.dewarim.cinnamon.model.request.osd.SetContentRequest;
 import com.dewarim.cinnamon.model.response.CinnamonError;
 import com.dewarim.cinnamon.model.response.OsdWrapper;
+import com.dewarim.cinnamon.model.response.Summary;
 import com.dewarim.cinnamon.model.response.SummaryWrapper;
 import com.dewarim.cinnamon.provider.ContentProviderService;
 import com.dewarim.cinnamon.provider.StateProviderService;
@@ -185,6 +186,10 @@ public class OsdServlet extends BaseServlet {
             boolean deleteAllowed = authorizationService.userHasPermission(osd.getAclId(), DefaultPermission.DELETE_OBJECT.getName(), user);
             if (!deleteAllowed) {
                 CinnamonError error = new CinnamonError(ErrorCode.NO_DELETE_PERMISSION.getCode(), osdId);
+                errors.add(error);
+            }
+            if(osd.getLockerId() != null && !user.getId().equals(osd.getLockerId())){
+                CinnamonError error = new CinnamonError(ErrorCode.OBJECT_LOCKED_BY_OTHER_USER.getCode(), osdId);
                 errors.add(error);
             }
 
@@ -507,7 +512,7 @@ public class OsdServlet extends BaseServlet {
         List<ObjectSystemData> osds          = osdDao.getObjectsById(idListRequest.getIdList(), true);
         osds.forEach(osd -> {
             if (authorizationService.hasUserOrOwnerPermission(osd, DefaultPermission.READ_OBJECT_SYS_METADATA.getName(), user)) {
-                wrapper.getSummaries().add(osd.getSummary());
+                wrapper.getSummaries().add(new Summary(osd.getId(), osd.getSummary()));
             }
         });
         response.setWrapper(wrapper);

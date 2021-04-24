@@ -20,6 +20,7 @@ public class CinnamonResponse extends HttpServletResponseWrapper {
     private final HttpServletResponse response;
     private       Wrapper             wrapper;
     private       int                 statusCode = HttpStatus.SC_OK;
+    private       GenericResponse     genericResponse;
 
     public CinnamonResponse(HttpServletResponse response) {
         super(response);
@@ -39,7 +40,7 @@ public class CinnamonResponse extends HttpServletResponseWrapper {
     }
 
     public void responseIsGenericOkay() {
-        setWrapper(new GenericResponse(true));
+        genericResponse = new GenericResponse(true);
     }
 
     public Wrapper getWrapper() {
@@ -51,7 +52,7 @@ public class CinnamonResponse extends HttpServletResponseWrapper {
     }
 
     private boolean hasPendingContent() {
-        return wrapper != null;
+        return wrapper != null || genericResponse != null;
     }
 
     /**
@@ -62,7 +63,12 @@ public class CinnamonResponse extends HttpServletResponseWrapper {
     public void renderResponseIfNecessary() throws IOException {
         if (hasPendingContent()) {
             ResponseUtil.responseIsXmlWithStatus(response, statusCode);
-            xmlMapper.writeValue(response.getOutputStream(), wrapper);
+            if(wrapper != null) {
+                xmlMapper.writeValue(response.getOutputStream(), wrapper);
+            }
+            else{
+                xmlMapper.writeValue(response.getOutputStream(), genericResponse);
+            }
         }
     }
 

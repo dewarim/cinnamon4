@@ -4,9 +4,9 @@ package com.dewarim.cinnamon.model.response;
  * A simple class to report the success or failure of an operation.
  * (Just using http status code 204 is a little ambiguous)
  */
-public class GenericResponse implements Wrapper {
-    
-    private String message;
+public class GenericResponse {
+
+    private String  message;
     private boolean successful;
 
     public GenericResponse() {

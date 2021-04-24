@@ -8,17 +8,22 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class SummaryWrapper implements Wrapper {
+public class SummaryWrapper implements Wrapper<Summary> {
 
     @JacksonXmlElementWrapper(localName = "summaries")
     @JacksonXmlProperty(localName = "summary")
-    List<String> summaries = new ArrayList<>();
+    List<Summary> summaries = new ArrayList<>();
 
-    public void setSummaries(List<String> summaries) {
+    public List<Summary> getSummaries() {
+        return summaries;
+    }
+
+    public void setSummaries(List<Summary> summaries) {
         this.summaries = summaries;
     }
 
-    public List<String> getSummaries() {
-        return summaries;
+    @Override
+    public List<Summary> get() {
+        return null;
     }
 }

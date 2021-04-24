@@ -1,11 +1,10 @@
 package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.api.UrlMapping;
+import com.dewarim.cinnamon.application.CinnamonClient;
 import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.application.DbSessionFactory;
 import com.dewarim.cinnamon.application.ErrorCode;
-import com.dewarim.cinnamon.dao.SessionDao;
-import com.dewarim.cinnamon.model.Session;
 import com.dewarim.cinnamon.model.response.CinnamonConnection;
 import com.dewarim.cinnamon.model.response.CinnamonError;
 import com.dewarim.cinnamon.model.response.CinnamonErrorWrapper;
@@ -33,7 +32,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
-import java.util.stream.Collectors;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -54,11 +52,12 @@ public class CinnamonIntegrationTest {
     static String         ticketForDoe;
     static String         HOST             = "http://localhost:" + cinnamonTestPort;
     static XmlMapper      mapper           = new XmlMapper();
+    static CinnamonClient client;
 
     @Before
     public void dumpSession() {
-        log.info("session in db: " + new SessionDao().list().stream().map(Session::getTicket).collect(Collectors.joining(" ")));
-        log.info("current ticket: " + ticket);
+//        log.info("session in db: " + new SessionDao().list().stream().map(Session::getTicket).collect(Collectors.joining(" ")));
+//        log.info("current ticket: " + ticket);
     }
 
     @BeforeClass
@@ -87,6 +86,8 @@ public class CinnamonIntegrationTest {
             CinnamonServer.config.getServerConfig().setDataRoot(tempDirectory.toAbsolutePath().toString());
             ticket = getAdminTicket();
             log.info("admin ticket: " + ticket);
+
+            client = new CinnamonClient(cinnamonTestPort, "localhost", "http", "doe", "admin");
         }
     }
 

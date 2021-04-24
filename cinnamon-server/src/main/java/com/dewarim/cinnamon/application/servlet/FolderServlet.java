@@ -33,6 +33,7 @@ import com.dewarim.cinnamon.model.request.folder.SingleFolderRequest;
 import com.dewarim.cinnamon.model.request.folder.UpdateFolderRequest;
 import com.dewarim.cinnamon.model.response.FolderWrapper;
 import com.dewarim.cinnamon.model.response.GenericResponse;
+import com.dewarim.cinnamon.model.response.Summary;
 import com.dewarim.cinnamon.model.response.SummaryWrapper;
 import com.dewarim.cinnamon.security.authorization.AccessFilter;
 import com.dewarim.cinnamon.security.authorization.AuthorizationService;
@@ -178,7 +179,6 @@ public class FolderServlet extends BaseServlet {
         Long         folderId     = updateRequest.getId();
         Folder       folder       = folderDao.getFolderById(folderId, true).orElseThrow(ErrorCode.FOLDER_NOT_FOUND.getException());
         AccessFilter accessFilter = AccessFilter.getInstance(user);
-
 
         if (!accessFilter.hasPermissionOnOwnable(folder, DefaultPermission.EDIT_FOLDER, folder)) {
             ErrorCode.NO_EDIT_FOLDER_PERMISSION.throwUp();
@@ -425,7 +425,7 @@ public class FolderServlet extends BaseServlet {
         List<Folder>   folders       = folderDao.getFoldersById(idListRequest.getIdList(), true);
         folders.forEach(folder -> {
             if (authorizationService.hasUserOrOwnerPermission(folder, DefaultPermission.READ_OBJECT_SYS_METADATA.getName(), user)) {
-                wrapper.getSummaries().add(folder.getSummary());
+                wrapper.getSummaries().add(new Summary(folder.getId(), folder.getSummary()));
             }
         });
         ResponseUtil.responseIsOkayAndXml(response);

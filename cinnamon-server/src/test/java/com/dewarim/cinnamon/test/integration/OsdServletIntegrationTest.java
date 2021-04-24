@@ -14,12 +14,12 @@ import com.dewarim.cinnamon.model.request.IdRequest;
 import com.dewarim.cinnamon.model.request.MetaRequest;
 import com.dewarim.cinnamon.model.request.SetSummaryRequest;
 import com.dewarim.cinnamon.model.request.osd.CreateOsdRequest;
-import com.dewarim.cinnamon.model.request.osd.DeleteOsdRequest;
 import com.dewarim.cinnamon.model.request.osd.OsdByFolderRequest;
 import com.dewarim.cinnamon.model.request.osd.OsdRequest;
 import com.dewarim.cinnamon.model.request.osd.SetContentRequest;
 import com.dewarim.cinnamon.model.response.MetaWrapper;
 import com.dewarim.cinnamon.model.response.OsdWrapper;
+import com.dewarim.cinnamon.model.response.Summary;
 import com.dewarim.cinnamon.model.response.SummaryWrapper;
 import nu.xom.Builder;
 import nu.xom.Document;
@@ -144,7 +144,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         HttpResponse  verifyResponse = sendStandardRequest(UrlMapping.OSD__GET_SUMMARIES, idListRequest);
         assertResponseOkay(verifyResponse);
         SummaryWrapper wrapper = mapper.readValue(verifyResponse.getEntity().getContent(), SummaryWrapper.class);
-        assertThat(wrapper.getSummaries().get(0), equalTo("a summary"));
+        assertThat(wrapper.getSummaries().get(0).getContent(), equalTo("a summary"));
     }
 
     @Test
@@ -167,10 +167,10 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         HttpResponse  response      = sendStandardRequest(UrlMapping.OSD__GET_SUMMARIES, idListRequest);
         assertResponseOkay(response);
         SummaryWrapper wrapper   = mapper.readValue(response.getEntity().getContent(), SummaryWrapper.class);
-        List<String>   summaries = wrapper.getSummaries();
+        List<Summary>  summaries = wrapper.getSummaries();
         assertNotNull(summaries);
         assertFalse(summaries.isEmpty());
-        assertThat(wrapper.getSummaries().get(0), equalTo("<sum>7</sum>"));
+        assertThat(wrapper.getSummaries().get(0).getContent(), equalTo("<sum>7</sum>"));
     }
 
     @Test
@@ -985,13 +985,6 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void deleteOsdHappyPath() throws IOException {
-        DeleteOsdRequest deleteRequest = new DeleteOsdRequest(Collections.singletonList(49L));
-        HttpResponse     response      = sendStandardRequest(UrlMapping.OSD__DELETE_OSDS, deleteRequest);
-        assertResponseOkay(response);
-    }
-
-    @Test
     public void updateOsdWithChangeTracking() throws IOException {
         CreateOsdRequest request = new CreateOsdRequest();
         request.setAclId(CREATE_ACL_ID);
@@ -1026,6 +1019,12 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         assertThat(updatedOsd.getModifierId(), equalTo(osd.getModifierId()));
         assertThat(updatedOsd.getModified(), not(equalTo(osd.getModified())));
     }
+
+    @Test
+    public void deleteOsdHappyPath() throws IOException {
+        client.deleteOsd(49L);
+    }
+
 
 //    @Test
 //    public void deleteOsdsNoDeletePermission() throws IOException{

@@ -16,6 +16,7 @@ import com.dewarim.cinnamon.model.request.folder.SingleFolderRequest;
 import com.dewarim.cinnamon.model.request.folder.UpdateFolderRequest;
 import com.dewarim.cinnamon.model.response.FolderWrapper;
 import com.dewarim.cinnamon.model.response.MetaWrapper;
+import com.dewarim.cinnamon.model.response.Summary;
 import com.dewarim.cinnamon.model.response.SummaryWrapper;
 import nu.xom.Builder;
 import nu.xom.Document;
@@ -47,7 +48,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         HttpResponse  verifyResponse = sendStandardRequest(UrlMapping.FOLDER__GET_SUMMARIES, idListRequest);
         assertResponseOkay(verifyResponse);
         SummaryWrapper wrapper = mapper.readValue(verifyResponse.getEntity().getContent(), SummaryWrapper.class);
-        assertThat(wrapper.getSummaries().get(0), equalTo("a summary"));
+        assertThat(wrapper.getSummaries().get(0).getContent(), equalTo("a summary"));
     }
 
     @Test
@@ -70,10 +71,10 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         HttpResponse  response      = sendStandardRequest(UrlMapping.FOLDER__GET_SUMMARIES, idListRequest);
         assertResponseOkay(response);
         SummaryWrapper wrapper   = mapper.readValue(response.getEntity().getContent(), SummaryWrapper.class);
-        List<String>   summaries = wrapper.getSummaries();
+        List<Summary>  summaries = wrapper.getSummaries();
         assertNotNull(summaries);
         assertFalse(summaries.isEmpty());
-        assertThat(wrapper.getSummaries().get(0), equalTo("<sum>folder</sum>"));
+        assertThat(wrapper.getSummaries().get(0).getContent(), equalTo("<sum>folder</sum>"));
     }
 
     @Test
