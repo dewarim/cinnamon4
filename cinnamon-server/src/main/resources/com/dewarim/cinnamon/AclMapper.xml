@@ -22,6 +22,16 @@
         WHERE id = #{id}
     </select>
 
+    <select id="getAllById" parameterType="list" resultMap="aclMap">
+        SELECT *
+        FROM acls
+        WHERE id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
     <update id="changeAclName" parameterType="com.dewarim.cinnamon.model.Acl">
         UPDATE acls
         SET name = #{name}
@@ -35,20 +45,17 @@
         INSERT INTO acls (id,name) VALUES (#{id}, #{name})
     </insert>
 
-    <delete id="deleteAcl" parameterType="long">
-        DELETE FROM acls
-        WHERE id = #{id}
-              AND id NOT IN (select acl_id
-                             from links)
-              AND id NOT IN (select acl_id
-                             from folders)
-              AND id NOT IN (select acl_id
-                             from objects)
-              AND id NOT IN (select acl_id
-                             from aclentries)
+    <delete id="delete" parameterType="list">
+        DELETE
+        FROM acls
+        WHERE id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
     </delete>
 
-    <select id="listAcls" resultMap="aclMap">
+    <select id="list" resultMap="aclMap">
         SELECT *
         FROM acls
     </select>

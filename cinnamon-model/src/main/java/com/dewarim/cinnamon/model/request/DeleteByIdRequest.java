@@ -1,25 +1,43 @@
 package com.dewarim.cinnamon.model.request;
 
-public class DeleteByIdRequest {
-    
-    private Long id;
+import java.util.ArrayList;
+import java.util.List;
 
-    public DeleteByIdRequest(Long id) {
-        this.id = id;
+public abstract class DeleteByIdRequest<T> implements DeleteRequest<T>{
+
+    private boolean ignoreNotFound =false;
+
+    private List<Long> ids = new ArrayList<>();
+    @Override
+    public List<Long> list() {
+        return ids;
     }
 
     public DeleteByIdRequest() {
     }
 
-    public Long getId() {
-        return id;
+    public DeleteByIdRequest(List<Long> ids) {
+        this.ids = ids;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public DeleteByIdRequest(Long id){
+        ids.add(id);
     }
-    
-    public boolean validated(){
-        return id != null && id > 0;
+
+    @Override
+    public boolean validated() {
+        return ids.stream().allMatch(id -> id != null && id > 0 );
+    }
+
+    public List<Long> getIds() {
+        return ids;
+    }
+
+    public boolean isIgnoreNotFound() {
+        return ignoreNotFound;
+    }
+
+    public void setIgnoreNotFound(boolean ignoreNotFound) {
+        this.ignoreNotFound = ignoreNotFound;
     }
 }

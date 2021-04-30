@@ -6,9 +6,9 @@ import com.dewarim.cinnamon.model.Folder;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.links.LinkType;
 import com.dewarim.cinnamon.model.request.CreateLinkRequest;
-import com.dewarim.cinnamon.model.request.DeleteByIdRequest;
-import com.dewarim.cinnamon.model.request.LinkRequest;
-import com.dewarim.cinnamon.model.request.LinkUpdateRequest;
+import com.dewarim.cinnamon.model.request.link.DeleteLinkRequest;
+import com.dewarim.cinnamon.model.request.link.LinkRequest;
+import com.dewarim.cinnamon.model.request.link.LinkUpdateRequest;
 import com.dewarim.cinnamon.model.response.DeletionResponse;
 import com.dewarim.cinnamon.model.response.GenericResponse;
 import com.dewarim.cinnamon.model.response.LinkResponse;
@@ -123,14 +123,14 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void deleteLinkWithInvalidId() throws IOException {
-        DeleteByIdRequest deleteRequest = new DeleteByIdRequest(-1L);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__DELETE_LINK, deleteRequest);
+        DeleteLinkRequest deleteRequest = new DeleteLinkRequest(-1L);
+        HttpResponse      response      = sendStandardRequest(UrlMapping.LINK__DELETE_LINK, deleteRequest);
         assertCinnamonError(response, ErrorCode.ID_PARAM_IS_INVALID);
     }
 
     @Test
     public void deleteLinkWithNonExistentLink() throws IOException {
-        DeleteByIdRequest deleteRequest = new DeleteByIdRequest(Long.MAX_VALUE);
+        DeleteLinkRequest deleteRequest = new DeleteLinkRequest(Long.MAX_VALUE);
         HttpResponse response = sendStandardRequest(UrlMapping.LINK__DELETE_LINK, deleteRequest);
         assertResponseOkay(response);
         DeletionResponse deletionResponse = mapper.readValue(response.getEntity().getContent(), DeletionResponse.class);
@@ -140,21 +140,21 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void deleteLinkWithMissingBrowsePermission() throws IOException {
-        DeleteByIdRequest deleteRequest = new DeleteByIdRequest(11L);
+        DeleteLinkRequest deleteRequest = new DeleteLinkRequest(11L);
         HttpResponse response = sendStandardRequest(UrlMapping.LINK__DELETE_LINK, deleteRequest);
         assertCinnamonError(response, ErrorCode.UNAUTHORIZED);
     }
 
     @Test
     public void deleteLinkToObjectWithoutPermission() throws IOException {
-        DeleteByIdRequest deleteRequest = new DeleteByIdRequest(12L);
+        DeleteLinkRequest deleteRequest = new DeleteLinkRequest(12L);
         HttpResponse response = sendStandardRequest(UrlMapping.LINK__DELETE_LINK, deleteRequest);
         assertCinnamonError(response, ErrorCode.UNAUTHORIZED);
     }
 
     @Test
     public void deleteLinkToObjectWithOwnerPermission() throws IOException {
-        DeleteByIdRequest deleteRequest = new DeleteByIdRequest(15L);
+        DeleteLinkRequest deleteRequest = new DeleteLinkRequest(15L);
         HttpResponse response = sendStandardRequest(UrlMapping.LINK__DELETE_LINK, deleteRequest);
         DeletionResponse deletionResponse = mapper.readValue(response.getEntity().getContent(), DeletionResponse.class);
         assertFalse(deletionResponse.isNotFound());
@@ -163,7 +163,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void deleteLinkToFolderWithOwnerPermission() throws IOException {
-        DeleteByIdRequest deleteRequest = new DeleteByIdRequest(16L);
+        DeleteLinkRequest deleteRequest = new DeleteLinkRequest(16L);
         HttpResponse response = sendStandardRequest(UrlMapping.LINK__DELETE_LINK, deleteRequest);
         DeletionResponse deletionResponse = mapper.readValue(response.getEntity().getContent(), DeletionResponse.class);
         assertFalse(deletionResponse.isNotFound());
@@ -172,14 +172,14 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void deleteLinkToFolderWithoutPermission() throws IOException {
-        DeleteByIdRequest deleteRequest = new DeleteByIdRequest(13L);
+        DeleteLinkRequest deleteRequest = new DeleteLinkRequest(13L);
         HttpResponse response = sendStandardRequest(UrlMapping.LINK__DELETE_LINK, deleteRequest);
         assertCinnamonError(response, ErrorCode.UNAUTHORIZED);
     }
 
     @Test
     public void deleteObjectLinkHappyPath() throws IOException {
-        DeleteByIdRequest deleteRequest = new DeleteByIdRequest(9L);
+        DeleteLinkRequest deleteRequest = new DeleteLinkRequest(9L);
         HttpResponse response = sendStandardRequest(UrlMapping.LINK__DELETE_LINK, deleteRequest);
         assertResponseOkay(response);
         DeletionResponse deletionResponse = mapper.readValue(response.getEntity().getContent(), DeletionResponse.class);
@@ -194,7 +194,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void deleteFolderLinkHappyPath() throws IOException {
-        DeleteByIdRequest deleteRequest = new DeleteByIdRequest(10L);
+        DeleteLinkRequest deleteRequest = new DeleteLinkRequest(10L);
         HttpResponse response = sendStandardRequest(UrlMapping.LINK__DELETE_LINK, deleteRequest);
         assertResponseOkay(response);
         DeletionResponse deletionResponse = mapper.readValue(response.getEntity().getContent(), DeletionResponse.class);

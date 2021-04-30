@@ -9,8 +9,8 @@ public enum UrlMapping {
 
     ACL__ACL_INFO("acl", "aclInfo", "/api"),
     ACL__CREATE_ACL("acl", "create", "/api"),
-    ACL__DELETE_ACL("acl", "deleteAcl", "/api"),
-    ACL__GET_ACLS("acl", "getAcls", "/api"),
+    ACL__DELETE_ACL("acl", "delete", "/api"),
+    ACL__GET_ACLS("acl", "list", "/api"),
     ACL__GET_USER_ACLS("acl", "getUserAcls", "/api"),
     ACL__UPDATE_ACL("acl", "updateAcl", "/api"),
     ACL_ENTRY__LIST_ACL_ENTRIES("aclEntry", "listAclEntries", "/api"),

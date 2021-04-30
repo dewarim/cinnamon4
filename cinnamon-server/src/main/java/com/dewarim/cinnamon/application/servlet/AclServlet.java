@@ -6,15 +6,13 @@ import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.application.ErrorResponseGenerator;
 import com.dewarim.cinnamon.dao.AclDao;
 import com.dewarim.cinnamon.dao.CrudDao;
-import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.model.Acl;
-import com.dewarim.cinnamon.model.request.DeleteByIdRequest;
 import com.dewarim.cinnamon.model.request.IdRequest;
 import com.dewarim.cinnamon.model.request.acl.AclInfoRequest;
 import com.dewarim.cinnamon.model.request.acl.AclUpdateRequest;
 import com.dewarim.cinnamon.model.request.acl.CreateAclRequest;
+import com.dewarim.cinnamon.model.request.acl.DeleteAclRequest;
 import com.dewarim.cinnamon.model.response.AclWrapper;
-import com.dewarim.cinnamon.model.response.DeletionResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.dataformat.xml.deser.FromXmlParser;
@@ -22,6 +20,8 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -32,7 +32,8 @@ import static com.dewarim.cinnamon.Constants.CONTENT_TYPE_XML;
 @WebServlet(name = "Acl", urlPatterns = "/")
 public class AclServlet extends HttpServlet implements CruddyServlet<Acl> {
 
-    private ObjectMapper xmlMapper = new XmlMapper().configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL, true);
+    private              ObjectMapper xmlMapper = new XmlMapper().configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL, true);
+    private static final Logger       log       = LogManager.getLogger(AclServlet.class);
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
@@ -46,30 +47,31 @@ public class AclServlet extends HttpServlet implements CruddyServlet<Acl> {
         try {
             switch (pathInfo) {
                 case "/create":
+                    superuserCheck();
                     create(convertCreateRequest(request, CreateAclRequest.class), aclDao, cinnamonResponse);
                     break;
-//                case "/createAcl":
-//                    createAcl(request, cinnamonResponse);
-//                    break;
                 case "/aclInfo":
                     getAclByNameOrId(request, response);
                     break;
-                case "/deleteAcl":
-                    deleteById(request, response);
+                case "/delete":
+                    superuserCheck();
+                    delete(convertDeleteRequest(request, DeleteAclRequest.class), aclDao, cinnamonResponse);
                     break;
-                case "/getAcls":
+                case "/list":
                     listAcls(response);
                     break;
                 case "/getUserAcls":
                     getUserAcls(request, response);
                     break;
                 case "/updateAcl":
+                    superuserCheck();
                     updateAcl(request, response);
                     break;
                 default:
                     response.setStatus(HttpServletResponse.SC_NO_CONTENT);
             }
         } catch (FailedRequestException e) {
+            log.debug("Failed request: ",e);
             ErrorCode errorCode = e.getErrorCode();
             ErrorResponseGenerator.generateErrorMessage(response, errorCode, e.getMessage());
         }
@@ -77,9 +79,6 @@ public class AclServlet extends HttpServlet implements CruddyServlet<Acl> {
     }
 
     private void updateAcl(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        if (!UserAccountDao.currentUserIsSuperuser()) {
-            ErrorCode.REQUIRES_SUPERUSER_STATUS.throwUp();
-        }
         AclUpdateRequest updateRequest = xmlMapper.readValue(request.getInputStream(), AclUpdateRequest.class);
         String           name          = updateRequest.getName();
         if (name == null || name.trim().isEmpty()) {
@@ -101,23 +100,6 @@ public class AclServlet extends HttpServlet implements CruddyServlet<Acl> {
         List<Acl> acls   = aclDao.list();
         sendWrappedAcls(response, acls);
     }
-//
-//    private void createAcl(HttpServletRequest request, HttpServletResponse response) throws IOException {
-//        if (!UserAccountDao.currentUserIsSuperuser()) {
-//            ErrorCode.REQUIRES_SUPERUSER_STATUS.throwUp();
-//        }
-//
-//        CreateAclRequest aclRequest = xmlMapper.readValue(request.getInputStream(), CreateAclRequest.class);
-//        String           name       = aclRequest.getName();
-//        if (name == null || name.trim().isEmpty()) {
-//            ErrorCode.NAME_PARAM_IS_INVALID.throwUp();
-//        }
-//        Acl acl = new Acl();
-//        acl.setName(name);
-//        AclDao aclDao   = new AclDao();
-//        Acl    savedAcl = aclDao.save(acl);
-//        sendWrappedAcls(response, Collections.singletonList(savedAcl));
-//    }
 
     private void getAclByNameOrId(HttpServletRequest request, HttpServletResponse response) throws IOException {
         AclInfoRequest aclInfoRequest = xmlMapper.readValue(request.getInputStream(), AclInfoRequest.class);
@@ -132,28 +114,6 @@ public class AclServlet extends HttpServlet implements CruddyServlet<Acl> {
             return;
         }
         sendWrappedAcls(response, Collections.singletonList(acl));
-    }
-
-    private void deleteById(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        DeleteByIdRequest deletionRequest = xmlMapper.readValue(request.getInputStream(), DeleteByIdRequest.class);
-        if (!UserAccountDao.currentUserIsSuperuser()) {
-            ErrorCode.REQUIRES_SUPERUSER_STATUS.throwUp();
-        }
-
-        Long id = deletionRequest.getId();
-        if (id == null) {
-            ErrorCode.DELETE_REQUEST_WITHOUT_ID.throwUp();
-        }
-
-        DeletionResponse deletionResponse = new DeletionResponse();
-        AclDao           aclDao           = new AclDao();
-        Acl              acl              = aclDao.getAclById(id).orElseThrow(ErrorCode.ACL_NOT_FOUND.getException());
-        int              deletedRows      = aclDao.deleteAcl(acl.getId());
-        deletionResponse.setSuccess(deletedRows == 1);
-
-        response.setContentType(CONTENT_TYPE_XML);
-        response.setStatus(HttpServletResponse.SC_OK);
-        xmlMapper.writeValue(response.getWriter(), deletionResponse);
     }
 
     private void getUserAcls(HttpServletRequest request, HttpServletResponse response) throws IOException {

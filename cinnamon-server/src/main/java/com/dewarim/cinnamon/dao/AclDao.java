@@ -39,11 +39,6 @@ public class AclDao implements CrudDao<Acl>{
         return sqlSession.delete("com.dewarim.cinnamon.model.Acl.deleteAcl", id);
     }
 
-    public List<Acl> list() {
-        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        return sqlSession.selectList("com.dewarim.cinnamon.model.Acl.listAcls");
-    }
-
     public List<Acl> getUserAcls(Long userId) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
         CmnGroupDao groupDao = new CmnGroupDao();
@@ -53,4 +48,8 @@ public class AclDao implements CrudDao<Acl>{
         return acls.stream().distinct().collect(Collectors.toList());
     }
 
+    @Override
+    public String getTypeClassName() {
+        return Acl.class.getName();
+    }
 }

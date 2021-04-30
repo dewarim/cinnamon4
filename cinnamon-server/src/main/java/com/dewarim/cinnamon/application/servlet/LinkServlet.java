@@ -18,9 +18,9 @@ import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.links.LinkType;
 import com.dewarim.cinnamon.model.request.CreateLinkRequest;
-import com.dewarim.cinnamon.model.request.DeleteByIdRequest;
-import com.dewarim.cinnamon.model.request.LinkRequest;
-import com.dewarim.cinnamon.model.request.LinkUpdateRequest;
+import com.dewarim.cinnamon.model.request.link.DeleteLinkRequest;
+import com.dewarim.cinnamon.model.request.link.LinkRequest;
+import com.dewarim.cinnamon.model.request.link.LinkUpdateRequest;
 import com.dewarim.cinnamon.model.response.DeletionResponse;
 import com.dewarim.cinnamon.model.response.GenericResponse;
 import com.dewarim.cinnamon.model.response.LinkResponse;
@@ -311,14 +311,14 @@ public class LinkServlet extends HttpServlet {
     }
 
     private void deleteLink(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        DeleteByIdRequest deleteRequest = xmlMapper.readValue(request.getInputStream(), DeleteByIdRequest.class);
+        DeleteLinkRequest deleteRequest = xmlMapper.readValue(request.getInputStream(), DeleteLinkRequest.class);
         if (!deleteRequest.validated()) {
             ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.ID_PARAM_IS_INVALID,
                     "Id must be a positive integer value.");
             return;
         }
         LinkDao          linkDao          = new LinkDao();
-        Optional<Link>   linkOptional     = linkDao.getLinkById(deleteRequest.getId());
+        Optional<Link>   linkOptional     = linkDao.getLinkById(deleteRequest.list().get(0));
         DeletionResponse deletionResponse = new DeletionResponse();
         if (linkOptional.isPresent()) {
             Link        link         = linkOptional.get();
@@ -356,7 +356,7 @@ public class LinkServlet extends HttpServlet {
                 return;
             }
             int deletedRows = linkDao.deleteLink(link.getId());
-            deletionResponse.setSuccess(deletedRows == 1);
+            deletionResponse.setSuccess(deletedRows == 1 || deleteRequest.isIgnoreNotFound());
         } else {
             deletionResponse.setNotFound(true);
         }

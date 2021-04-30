@@ -1,6 +1,6 @@
 package com.dewarim.cinnamon.test.unit;
 
-import com.dewarim.cinnamon.model.request.LinkUpdateRequest;
+import com.dewarim.cinnamon.model.request.link.LinkUpdateRequest;
 import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;

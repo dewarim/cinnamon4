@@ -1,5 +1,9 @@
 package com.dewarim.cinnamon.model.response;
 
+/**
+ * Deprecated, use DeleteResponse
+ */
+@Deprecated(forRemoval = true)
 public class DeletionResponse {
     
     private boolean notFound;

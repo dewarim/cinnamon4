@@ -21,6 +21,13 @@ public class FailedRequestException extends RuntimeException {
         this.message = errorCode.getCode();
     }
 
+    public FailedRequestException( ErrorCode errorCode, Throwable cause) {
+        super(cause);
+        this.errorCode = errorCode;
+        this.message=errorCode.getCode();
+
+    }
+
     public FailedRequestException(ErrorCode errorCode, String message) {
         super();
         this.errorCode = errorCode;
