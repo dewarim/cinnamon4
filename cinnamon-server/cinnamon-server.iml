@@ -30,9 +30,9 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="cinnamon-api" />
     <orderEntry type="module" module-name="cinnamon-model" />
+    <orderEntry type="library" name="Maven: org.eclipse.jetty.toolchain:jetty-jakarta-servlet-api:5.0.2" level="project" />
     <orderEntry type="module" module-name="cinnamon-client" scope="TEST" />
     <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-server:11.0.2" level="project" />
-    <orderEntry type="library" name="Maven: org.eclipse.jetty.toolchain:jetty-jakarta-servlet-api:5.0.2" level="project" />
     <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-http:11.0.2" level="project" />
     <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-util:11.0.2" level="project" />
     <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-io:11.0.2" level="project" />

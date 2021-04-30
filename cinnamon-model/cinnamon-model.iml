@@ -21,5 +21,6 @@
     <orderEntry type="library" name="Maven: jakarta.activation:jakarta.activation-api:1.2.1" level="project" />
     <orderEntry type="library" name="Maven: org.codehaus.woodstox:stax2-api:4.2" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.woodstox:woodstox-core:6.0.2" level="project" />
+    <orderEntry type="library" name="Maven: org.eclipse.jetty.toolchain:jetty-jakarta-servlet-api:5.0.2" level="project" />
   </component>
 </module>
