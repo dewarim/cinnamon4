@@ -1,6 +1,6 @@
 package com.dewarim.cinnamon.filter;
 
-import com.dewarim.cinnamon.application.ErrorCode;
+import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.application.ErrorResponseGenerator;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.dao.SessionDao;

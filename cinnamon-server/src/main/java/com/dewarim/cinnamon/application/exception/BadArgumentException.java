@@ -1,6 +1,6 @@
 package com.dewarim.cinnamon.application.exception;
 
-import com.dewarim.cinnamon.application.ErrorCode;
+import com.dewarim.cinnamon.ErrorCode;
 
 public class BadArgumentException extends RuntimeException {
 

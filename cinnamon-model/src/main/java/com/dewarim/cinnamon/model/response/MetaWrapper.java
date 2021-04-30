@@ -30,7 +30,13 @@ public class MetaWrapper implements Wrapper<Meta> {
         this.metasets = metasets;
     }
 
-    public List<Meta> get(){
+    public List<Meta> list() {
         return metasets;
+    }
+
+    @Override
+    public Wrapper<Meta> setList(List<Meta> metas) {
+        this.metasets = metas;
+        return this;
     }
 }

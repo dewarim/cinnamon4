@@ -1,8 +1,8 @@
 package com.dewarim.cinnamon.test.integration;
 
+import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonServer;
-import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.model.request.ListRequest;
 import com.dewarim.cinnamon.model.request.user.SetPasswordRequest;
 import com.dewarim.cinnamon.model.request.user.UserInfoRequest;

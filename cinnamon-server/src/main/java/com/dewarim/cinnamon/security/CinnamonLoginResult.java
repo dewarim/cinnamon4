@@ -1,8 +1,8 @@
 package com.dewarim.cinnamon.security;
 
+import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.login.GroupMapping;
 import com.dewarim.cinnamon.api.login.LoginResult;
-import com.dewarim.cinnamon.application.ErrorCode;
 
 import java.util.Collections;
 import java.util.List;

@@ -1,6 +1,6 @@
 package com.dewarim.cinnamon.application.exception;
 
-import com.dewarim.cinnamon.application.ErrorCode;
+import com.dewarim.cinnamon.ErrorCode;
 
 import static jakarta.servlet.http.HttpServletResponse.*;
 

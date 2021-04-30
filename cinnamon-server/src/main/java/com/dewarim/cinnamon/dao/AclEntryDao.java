@@ -18,16 +18,16 @@ public class AclEntryDao {
         Map<String, Object> params = new HashMap<>();
         params.put("groupIds", groupIds);
         params.put("aclId", aclId);
-        return sqlSession.selectList("com.dewarim.cinnamon.AclEntryMapper.getAclEntriesByGroupIdsAndAcl", params);
+        return sqlSession.selectList("com.dewarim.cinnamon.model.AclEntryMapper.getAclEntriesByGroupIdsAndAcl", params);
     }
 
     public List<AclEntry> getAclEntriesByAclId(long aclId) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        return sqlSession.selectList("com.dewarim.cinnamon.AclEntryMapper.getAclEntriesByAclId", aclId);
+        return sqlSession.selectList("com.dewarim.cinnamon.model.AclEntryMapper.getAclEntriesByAclId", aclId);
     }
     public List<AclEntry> getAclEntriesByGroupId(long groupId) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        return sqlSession.selectList("com.dewarim.cinnamon.AclEntryMapper.getAclEntriesByGroupId", groupId);
+        return sqlSession.selectList("com.dewarim.cinnamon.model.AclEntryMapper.getAclEntriesByGroupId", groupId);
     }
     
     public List<AclEntry> getAclEntriesByGroup(CmnGroup group) {
@@ -47,7 +47,7 @@ public class AclEntryDao {
         Map<String, Object> params = new HashMap<>();
         params.put("groupName", name);
         params.put("aclId", aclId);
-        return Optional.ofNullable(sqlSession.selectOne("com.dewarim.cinnamon.AclEntryMapper.getAclEntryByAclAndGroupName", params));
+        return Optional.ofNullable(sqlSession.selectOne("com.dewarim.cinnamon.model.AclEntryMapper.getAclEntryByAclAndGroupName", params));
     }
 
 

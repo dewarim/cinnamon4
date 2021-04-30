@@ -1,8 +1,5 @@
-package com.dewarim.cinnamon.application.exception;
+package com.dewarim.cinnamon;
 
-import com.dewarim.cinnamon.application.ErrorCode;
-import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
-import com.dewarim.cinnamon.application.TransactionStatus;
 import com.dewarim.cinnamon.model.response.CinnamonError;
 
 import java.util.List;
@@ -22,14 +19,12 @@ public class FailedRequestException extends RuntimeException {
         super();
         this.errorCode = errorCode;
         this.message = errorCode.getCode();
-        ThreadLocalSqlSession.setTransactionStatus(TransactionStatus.ROLLBACK);
     }
 
     public FailedRequestException(ErrorCode errorCode, String message) {
         super();
         this.errorCode = errorCode;
         this.message = message;
-        ThreadLocalSqlSession.setTransactionStatus(TransactionStatus.ROLLBACK);
     }
 
     public FailedRequestException(ErrorCode errorCode, List<CinnamonError> errors) {

@@ -1,8 +1,8 @@
 package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.Constants;
+import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
-import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.request.DeleteByIdRequest;
 import com.dewarim.cinnamon.model.request.IdRequest;
@@ -17,6 +17,7 @@ import org.apache.logging.log4j.Logger;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -43,7 +44,7 @@ public class AclServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void createAclTest() throws IOException {
         String aclName = "test_acl_" + Math.random();
-        HttpResponse aclListResponse = sendAdminRequest(UrlMapping.ACL__CREATE_ACL, new CreateAclRequest(aclName));
+        HttpResponse aclListResponse = sendAdminRequest(UrlMapping.ACL__CREATE_ACL, new CreateAclRequest(Collections.singletonList(aclName)));
         List<Acl> acls = unwrapAcls(aclListResponse, 1);
         Optional<Acl> testAcl = acls.stream().filter(acl -> acl.getName().equals(aclName)).findFirst();
         assertTrue(testAcl.isPresent());
@@ -51,8 +52,8 @@ public class AclServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createAclShouldFailOnInvalidName() throws IOException {
-        HttpResponse aclListResponse = sendAdminRequest(UrlMapping.ACL__CREATE_ACL, new CreateAclRequest(null));
-        assertCinnamonError(aclListResponse, ErrorCode.NAME_PARAM_IS_INVALID);
+        HttpResponse aclListResponse = sendAdminRequest(UrlMapping.ACL__CREATE_ACL, new CreateAclRequest(Collections.singletonList("")));
+        assertCinnamonError(aclListResponse, ErrorCode.INVALID_REQUEST);
     }
 
     @Test

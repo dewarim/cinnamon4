@@ -1,10 +1,10 @@
 package com.dewarim.cinnamon.lifecycle;
 
+import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.CinnamonObject;
 import com.dewarim.cinnamon.api.lifecycle.LifecycleStateConfig;
 import com.dewarim.cinnamon.api.lifecycle.State;
 import com.dewarim.cinnamon.api.lifecycle.StateChangeResult;
-import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.dao.AclDao;
 import com.dewarim.cinnamon.dao.OsdDao;
 import com.dewarim.cinnamon.model.Acl;

@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.application;
 
+import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.application.exception.CinnamonException;
 import com.dewarim.cinnamon.model.response.CinnamonError;
 import com.dewarim.cinnamon.model.response.GenericResponse;

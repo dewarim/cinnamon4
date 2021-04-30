@@ -4,5 +4,7 @@ import java.util.List;
 
 public interface Wrapper<T> {
 
-    List<T> get();
+    List<T> list();
+
+    Wrapper<T> setList(List<T> ts);
 }

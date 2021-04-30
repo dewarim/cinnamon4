@@ -1,8 +1,8 @@
 package com.dewarim.cinnamon.security.authorization;
 
 import com.dewarim.cinnamon.DefaultPermission;
+import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.Ownable;
-import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.model.Folder;
 import com.dewarim.cinnamon.model.ObjectSystemData;

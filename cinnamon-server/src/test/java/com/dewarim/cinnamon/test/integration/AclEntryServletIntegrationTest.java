@@ -1,7 +1,7 @@
 package com.dewarim.cinnamon.test.integration;
 
+import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
-import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.model.AclEntry;
 import com.dewarim.cinnamon.model.request.AclEntryListRequest;
 import com.dewarim.cinnamon.model.response.AclEntryWrapper;

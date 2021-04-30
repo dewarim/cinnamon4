@@ -6,7 +6,11 @@ import com.dewarim.cinnamon.model.AclEntryPermission;
 import com.dewarim.cinnamon.model.Permission;
 import org.apache.ibatis.session.SqlSession;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class AclEntryPermissionDao {
@@ -32,6 +36,6 @@ public class AclEntryPermissionDao {
         Map<String, Object> params = new HashMap<>();
         params.put("aclEntries", aclEntries);
         params.put("permissionId", permission.getId());
-        return sqlSession.selectList("com.dewarim.cinnamon.AclEntryPermissionMapper.getAclEntryPermissionForAclEntriesAndPermission", params);
+        return sqlSession.selectList("com.dewarim.cinnamon.model.AclEntryPermissionMapper.getAclEntryPermissionForAclEntriesAndPermission", params);
     }
 }

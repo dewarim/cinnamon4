@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class AclWrapper {
+public class AclWrapper implements Wrapper<Acl>{
 
     @JacksonXmlElementWrapper(localName = "acls")
     @JacksonXmlProperty(localName = "acl")
@@ -21,5 +21,16 @@ public class AclWrapper {
 
     public List<Acl> getAcls() {
         return acls;
+    }
+
+    @Override
+    public List<Acl> list() {
+        return acls;
+    }
+
+    @Override
+    public Wrapper<Acl> setList(List<Acl> acls) {
+        this.acls = acls;
+        return this;
     }
 }

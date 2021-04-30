@@ -1,8 +1,8 @@
 package com.dewarim.cinnamon.test.integration;
 
+import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonServer;
-import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.model.Meta;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.links.Link;
@@ -46,7 +46,7 @@ import java.nio.file.Files;
 import java.util.Collections;
 import java.util.List;
 
-import static com.dewarim.cinnamon.application.ErrorCode.NOT_MULTIPART_UPLOAD;
+import static com.dewarim.cinnamon.ErrorCode.NOT_MULTIPART_UPLOAD;
 import static org.apache.http.HttpHeaders.CONTENT_TYPE;
 import static org.apache.http.entity.ContentType.APPLICATION_XML;
 import static org.hamcrest.CoreMatchers.*;

@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.application;
 
+import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.model.response.CinnamonError;
 import com.dewarim.cinnamon.model.response.CinnamonErrorWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,6 +23,9 @@ public class ErrorResponseGenerator {
             xmlMapper.writeValue(response.getWriter(), wrapper);
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+        finally {
+            ThreadLocalSqlSession.setTransactionStatus(TransactionStatus.ROLLBACK);
         }
     }
 

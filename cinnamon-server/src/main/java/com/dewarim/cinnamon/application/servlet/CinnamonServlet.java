@@ -1,11 +1,11 @@
 package com.dewarim.cinnamon.application.servlet;
 
+import com.dewarim.cinnamon.ErrorCode;
+import com.dewarim.cinnamon.FailedRequestException;
 import com.dewarim.cinnamon.api.login.LoginResult;
 import com.dewarim.cinnamon.application.CinnamonServer;
-import com.dewarim.cinnamon.application.ErrorCode;
 import com.dewarim.cinnamon.application.ErrorResponseGenerator;
 import com.dewarim.cinnamon.application.exception.CinnamonException;
-import com.dewarim.cinnamon.application.exception.FailedRequestException;
 import com.dewarim.cinnamon.dao.SessionDao;
 import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.model.Session;
@@ -29,7 +29,7 @@ import java.util.Optional;
 import java.util.Properties;
 
 import static com.dewarim.cinnamon.Constants.CONTENT_TYPE_XML;
-import static com.dewarim.cinnamon.application.ErrorCode.CONNECTION_FAIL_WRONG_PASSWORD;
+import static com.dewarim.cinnamon.ErrorCode.CONNECTION_FAIL_WRONG_PASSWORD;
 
 /**
  *

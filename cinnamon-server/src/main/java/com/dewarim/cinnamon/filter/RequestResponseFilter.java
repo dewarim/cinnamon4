@@ -1,10 +1,10 @@
 package com.dewarim.cinnamon.filter;
 
 
+import com.dewarim.cinnamon.ErrorCode;
+import com.dewarim.cinnamon.FailedRequestException;
 import com.dewarim.cinnamon.application.CinnamonRequest;
 import com.dewarim.cinnamon.application.CinnamonResponse;
-import com.dewarim.cinnamon.application.ErrorCode;
-import com.dewarim.cinnamon.application.exception.FailedRequestException;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.FilterConfig;

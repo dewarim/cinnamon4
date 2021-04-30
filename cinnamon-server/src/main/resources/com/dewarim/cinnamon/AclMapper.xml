@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.dewarim.cinnamon.AclMapper">
+<mapper namespace="com.dewarim.cinnamon.model.Acl">
 
     <resultMap id="aclMap" type="com.dewarim.cinnamon.model.Acl">
         <id property="id" column="id"/>
@@ -28,7 +28,7 @@
         WHERE id = #{id}
     </update>
 
-    <insert id="insertAcl" parameterType="com.dewarim.cinnamon.model.Acl">
+    <insert id="insert" parameterType="com.dewarim.cinnamon.model.Acl">
         <selectKey keyProperty="id" resultType="long" order="BEFORE">
             select nextval('seq_acl_id')
         </selectKey>

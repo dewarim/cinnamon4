@@ -1,6 +1,6 @@
 package com.dewarim.cinnamon.filter;
 
-import com.dewarim.cinnamon.application.ErrorCode;
+import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.application.TransactionStatus;
 import com.dewarim.cinnamon.model.response.CinnamonError;

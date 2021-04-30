@@ -1,9 +1,9 @@
 package com.dewarim.cinnamon.application.servlet;
 
-import com.dewarim.cinnamon.application.ErrorCode;
+import com.dewarim.cinnamon.ErrorCode;
+import com.dewarim.cinnamon.FailedRequestException;
 import com.dewarim.cinnamon.application.ErrorResponseGenerator;
 import com.dewarim.cinnamon.application.ResponseUtil;
-import com.dewarim.cinnamon.application.exception.FailedRequestException;
 import com.dewarim.cinnamon.dao.AclEntryDao;
 import com.dewarim.cinnamon.model.AclEntry;
 import com.dewarim.cinnamon.model.request.AclEntryListRequest;

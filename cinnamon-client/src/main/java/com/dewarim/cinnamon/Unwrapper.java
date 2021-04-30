@@ -27,7 +27,7 @@ public class Unwrapper<T, W extends Wrapper<T>> {
 
     public List<T> unwrap(HttpResponse response, Integer expectedSize) throws IOException {
         List<T> items = mapper.readValue(response.getEntity().getContent(), new TypeReference<W>() {
-        }).get();
+        }).list();
         return checkList(items, expectedSize);
     }
 }

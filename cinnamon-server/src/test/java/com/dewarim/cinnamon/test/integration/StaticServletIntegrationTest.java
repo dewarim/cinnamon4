@@ -1,7 +1,7 @@
 package com.dewarim.cinnamon.test.integration;
 
+import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
-import com.dewarim.cinnamon.application.ErrorCode;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
 import org.junit.Test;

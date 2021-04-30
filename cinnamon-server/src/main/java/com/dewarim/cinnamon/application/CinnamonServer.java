@@ -64,7 +64,6 @@ public class CinnamonServer {
     private             DbSessionFactory dbSessionFactory;
     private             WebAppContext    webAppContext = new WebAppContext();
     public static       CinnamonConfig   config        = new CinnamonConfig();
-
     public CinnamonServer(int port) {
         this.port = port;
     }

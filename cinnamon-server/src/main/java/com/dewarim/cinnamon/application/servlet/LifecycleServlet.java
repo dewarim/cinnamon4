@@ -1,6 +1,6 @@
 package com.dewarim.cinnamon.application.servlet;
 
-import com.dewarim.cinnamon.application.ErrorCode;
+import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.application.ResponseUtil;
 import com.dewarim.cinnamon.dao.LifecycleDao;
 import com.dewarim.cinnamon.dao.LifecycleStateDao;

@@ -1,9 +1,11 @@
 package com.dewarim.cinnamon.application.servlet;
 
-import com.dewarim.cinnamon.application.ErrorCode;
+import com.dewarim.cinnamon.ErrorCode;
+import com.dewarim.cinnamon.FailedRequestException;
+import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.application.ErrorResponseGenerator;
-import com.dewarim.cinnamon.application.exception.FailedRequestException;
 import com.dewarim.cinnamon.dao.AclDao;
+import com.dewarim.cinnamon.dao.CrudDao;
 import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.request.DeleteByIdRequest;
@@ -28,7 +30,7 @@ import java.util.List;
 import static com.dewarim.cinnamon.Constants.CONTENT_TYPE_XML;
 
 @WebServlet(name = "Acl", urlPatterns = "/")
-public class AclServlet extends HttpServlet {
+public class AclServlet extends HttpServlet implements CruddyServlet<Acl> {
 
     private ObjectMapper xmlMapper = new XmlMapper().configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL, true);
 
@@ -38,11 +40,17 @@ public class AclServlet extends HttpServlet {
         if (pathInfo == null) {
             pathInfo = "";
         }
+        CinnamonResponse cinnamonResponse = (CinnamonResponse) response;
+        CrudDao<Acl>     aclDao           = new AclDao();
+
         try {
             switch (pathInfo) {
-                case "/createAcl":
-                    createAcl(request, response);
+                case "/create":
+                    create(convertCreateRequest(request, CreateAclRequest.class), aclDao, cinnamonResponse);
                     break;
+//                case "/createAcl":
+//                    createAcl(request, cinnamonResponse);
+//                    break;
                 case "/aclInfo":
                     getAclByNameOrId(request, response);
                     break;
@@ -93,23 +101,23 @@ public class AclServlet extends HttpServlet {
         List<Acl> acls   = aclDao.list();
         sendWrappedAcls(response, acls);
     }
-
-    private void createAcl(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        if (!UserAccountDao.currentUserIsSuperuser()) {
-            ErrorCode.REQUIRES_SUPERUSER_STATUS.throwUp();
-        }
-
-        CreateAclRequest aclRequest = xmlMapper.readValue(request.getInputStream(), CreateAclRequest.class);
-        String           name       = aclRequest.getName();
-        if (name == null || name.trim().isEmpty()) {
-            ErrorCode.NAME_PARAM_IS_INVALID.throwUp();
-        }
-        Acl acl = new Acl();
-        acl.setName(name);
-        AclDao aclDao   = new AclDao();
-        Acl    savedAcl = aclDao.save(acl);
-        sendWrappedAcls(response, Collections.singletonList(savedAcl));
-    }
+//
+//    private void createAcl(HttpServletRequest request, HttpServletResponse response) throws IOException {
+//        if (!UserAccountDao.currentUserIsSuperuser()) {
+//            ErrorCode.REQUIRES_SUPERUSER_STATUS.throwUp();
+//        }
+//
+//        CreateAclRequest aclRequest = xmlMapper.readValue(request.getInputStream(), CreateAclRequest.class);
+//        String           name       = aclRequest.getName();
+//        if (name == null || name.trim().isEmpty()) {
+//            ErrorCode.NAME_PARAM_IS_INVALID.throwUp();
+//        }
+//        Acl acl = new Acl();
+//        acl.setName(name);
+//        AclDao aclDao   = new AclDao();
+//        Acl    savedAcl = aclDao.save(acl);
+//        sendWrappedAcls(response, Collections.singletonList(savedAcl));
+//    }
 
     private void getAclByNameOrId(HttpServletRequest request, HttpServletResponse response) throws IOException {
         AclInfoRequest aclInfoRequest = xmlMapper.readValue(request.getInputStream(), AclInfoRequest.class);
@@ -168,4 +176,8 @@ public class AclServlet extends HttpServlet {
         xmlMapper.writeValue(response.getWriter(), aclWrapper);
     }
 
+    public ObjectMapper getMapper() {
+        // TODO: use mapper according to request contentType (XML, JSON)
+        return xmlMapper;
+    }
 }

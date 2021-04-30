@@ -23,7 +23,13 @@ public class SummaryWrapper implements Wrapper<Summary> {
     }
 
     @Override
-    public List<Summary> get() {
+    public List<Summary> list() {
         return null;
+    }
+
+    @Override
+    public Wrapper<Summary> setList(List<Summary> summaries) {
+        this.summaries = summaries;
+        return this;
     }
 }

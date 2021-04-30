@@ -1,6 +1,6 @@
 package com.dewarim.cinnamon.application.servlet;
 
-import com.dewarim.cinnamon.application.ErrorCode;
+import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.application.ErrorResponseGenerator;
 import com.dewarim.cinnamon.dao.AclDao;
 import com.dewarim.cinnamon.dao.PermissionDao;

@@ -44,7 +44,13 @@ public class OsdWrapper implements Wrapper<ObjectSystemData>{
     }
 
     @Override
-    public List<ObjectSystemData> get() {
+    public List<ObjectSystemData> list() {
         return osds;
+    }
+
+    @Override
+    public Wrapper<ObjectSystemData> setList(List<ObjectSystemData> osds) {
+        this.osds = osds;
+        return this;
     }
 }
