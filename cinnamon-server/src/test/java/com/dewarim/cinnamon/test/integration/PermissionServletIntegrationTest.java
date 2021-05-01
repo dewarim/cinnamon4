@@ -2,6 +2,7 @@ package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.model.Permission;
+import com.dewarim.cinnamon.model.request.ListPermissionRequest;
 import com.dewarim.cinnamon.model.request.user.UserPermissionRequest;
 import com.dewarim.cinnamon.model.response.PermissionWrapper;
 import org.apache.http.HttpResponse;
@@ -21,7 +22,7 @@ public class PermissionServletIntegrationTest extends CinnamonIntegrationTest {
     
     @Test
     public void listPermissions() throws IOException {
-        HttpResponse response = sendAdminRequest(UrlMapping.PERMISSION__LIST_PERMISSIONS);
+        HttpResponse response = sendAdminRequest(UrlMapping.PERMISSION__LIST_PERMISSIONS, new ListPermissionRequest());
         assertResponseOkay(response);
         PermissionWrapper wrapper = mapper.readValue(response.getEntity().getContent(),PermissionWrapper.class);
         assertThat(wrapper.getPermissions().size(), equalTo(17));
