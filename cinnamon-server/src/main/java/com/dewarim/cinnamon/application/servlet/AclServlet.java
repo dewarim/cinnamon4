@@ -2,6 +2,7 @@ package com.dewarim.cinnamon.application.servlet;
 
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.FailedRequestException;
+import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.application.ErrorResponseGenerator;
 import com.dewarim.cinnamon.dao.AclDao;
@@ -12,6 +13,7 @@ import com.dewarim.cinnamon.model.request.acl.AclInfoRequest;
 import com.dewarim.cinnamon.model.request.acl.AclUpdateRequest;
 import com.dewarim.cinnamon.model.request.acl.CreateAclRequest;
 import com.dewarim.cinnamon.model.request.acl.DeleteAclRequest;
+import com.dewarim.cinnamon.model.request.acl.ListAclRequest;
 import com.dewarim.cinnamon.model.response.AclWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -32,46 +34,44 @@ import static com.dewarim.cinnamon.Constants.CONTENT_TYPE_XML;
 @WebServlet(name = "Acl", urlPatterns = "/")
 public class AclServlet extends HttpServlet implements CruddyServlet<Acl> {
 
-    private              ObjectMapper xmlMapper = new XmlMapper().configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL, true);
     private static final Logger       log       = LogManager.getLogger(AclServlet.class);
+    private final        ObjectMapper xmlMapper = new XmlMapper()
+            .configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL, true);
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
-        String pathInfo = request.getPathInfo();
-        if (pathInfo == null) {
-            pathInfo = "";
-        }
         CinnamonResponse cinnamonResponse = (CinnamonResponse) response;
         CrudDao<Acl>     aclDao           = new AclDao();
 
         try {
-            switch (pathInfo) {
-                case "/create":
+            UrlMapping mapping = UrlMapping.getByPath(request.getRequestURI());
+            switch (mapping) {
+                case ACL__CREATE_ACL:
                     superuserCheck();
                     create(convertCreateRequest(request, CreateAclRequest.class), aclDao, cinnamonResponse);
                     break;
-                case "/aclInfo":
+                case ACL__ACL_INFO:
                     getAclByNameOrId(request, response);
                     break;
-                case "/delete":
+                case ACL__DELETE_ACL:
                     superuserCheck();
                     delete(convertDeleteRequest(request, DeleteAclRequest.class), aclDao, cinnamonResponse);
                     break;
-                case "/list":
-                    listAcls(response);
+                case ACL__GET_ACLS:
+                    list(convertListRequest(request, ListAclRequest.class), aclDao, cinnamonResponse);
                     break;
-                case "/getUserAcls":
+                case ACL__GET_USER_ACLS:
                     getUserAcls(request, response);
                     break;
-                case "/updateAcl":
+                case ACL__UPDATE_ACL:
                     superuserCheck();
                     updateAcl(request, response);
                     break;
                 default:
-                    response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+                    ErrorCode.RESOURCE_NOT_FOUND.throwUp();
             }
         } catch (FailedRequestException e) {
-            log.debug("Failed request: ",e);
+            log.debug("Failed request: ", e);
             ErrorCode errorCode = e.getErrorCode();
             ErrorResponseGenerator.generateErrorMessage(response, errorCode, e.getMessage());
         }

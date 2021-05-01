@@ -2,7 +2,7 @@ package com.dewarim.cinnamon.application.servlet;
 
 import com.dewarim.cinnamon.dao.FolderTypeDao;
 import com.dewarim.cinnamon.model.FolderType;
-import com.dewarim.cinnamon.model.request.ListRequest;
+import com.dewarim.cinnamon.model.request.folderType.ListFolderTypeRequest;
 import com.dewarim.cinnamon.model.response.FolderTypeWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -39,10 +39,10 @@ public class FolderTypeServlet extends HttpServlet {
 
     private void listFolderTypes(HttpServletRequest request, HttpServletResponse response) throws IOException {
         // ignore listRequest for now, just make sure it's valid xml:
-        ListRequest       listRequest = xmlMapper.readValue(request.getInputStream(), ListRequest.class);
-        FolderTypeDao     typeDao     = new FolderTypeDao();
-        List<FolderType>  types       = typeDao.listFolderTypes();
-        FolderTypeWrapper wrapper     = new FolderTypeWrapper();
+        xmlMapper.readValue(request.getInputStream(), ListFolderTypeRequest.class);
+        FolderTypeDao     typeDao = new FolderTypeDao();
+        List<FolderType>  types   = typeDao.listFolderTypes();
+        FolderTypeWrapper wrapper = new FolderTypeWrapper();
         wrapper.setFolderTypes(types);
         response.setContentType(CONTENT_TYPE_XML);
         response.setStatus(HttpServletResponse.SC_OK);

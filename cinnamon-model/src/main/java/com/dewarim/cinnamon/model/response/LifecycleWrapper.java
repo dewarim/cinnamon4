@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class LifecycleWrapper {
+public class LifecycleWrapper implements Wrapper<Lifecycle>{
 
     @JacksonXmlElementWrapper(localName = "lifecycles")
     @JacksonXmlProperty(localName = "lifecycle")
@@ -22,5 +22,16 @@ public class LifecycleWrapper {
 
     public void setLifecycles(List<Lifecycle> lifecycles) {
         this.lifecycles = lifecycles;
+    }
+
+    @Override
+    public List<Lifecycle> list() {
+        return getLifecycles();
+    }
+
+    @Override
+    public Wrapper<Lifecycle> setList(List<Lifecycle> lifecycles) {
+        setLifecycles(lifecycles);
+        return this;
     }
 }

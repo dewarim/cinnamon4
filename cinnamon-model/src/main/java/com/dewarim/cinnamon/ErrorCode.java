@@ -83,6 +83,7 @@ public enum ErrorCode {
     PARENT_FOLDER_NOT_FOUND("parent folder not found", HttpServletResponse.SC_BAD_REQUEST),
     PERMISSIONS_NOT_FOUND("no permissions found for user and acl", HttpServletResponse.SC_BAD_REQUEST),
     RELATION_TYPE_NOT_FOUND("RelationType was not found.", HttpServletResponse.SC_NOT_FOUND),
+    RESOURCE_NOT_FOUND("No code path maps to this URL path", HttpServletResponse.SC_NOT_FOUND),
     REQUIRES_SUPERUSER_STATUS("action requires superuser status", HttpServletResponse.SC_FORBIDDEN),
     SESSION_NOT_FOUND("session not found", HttpServletResponse.SC_NOT_FOUND),
     STATIC__NO_PATH_TRAVERSAL("no path traversal allowed", HttpServletResponse.SC_FORBIDDEN),

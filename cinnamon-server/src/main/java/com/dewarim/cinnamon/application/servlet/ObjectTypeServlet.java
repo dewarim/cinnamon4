@@ -3,6 +3,7 @@ package com.dewarim.cinnamon.application.servlet;
 import com.dewarim.cinnamon.dao.ObjectTypeDao;
 import com.dewarim.cinnamon.model.ObjectType;
 import com.dewarim.cinnamon.model.request.ListRequest;
+import com.dewarim.cinnamon.model.request.objectType.ListObjectTypeRequest;
 import com.dewarim.cinnamon.model.response.ObjectTypeWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -39,7 +40,7 @@ public class ObjectTypeServlet extends HttpServlet {
 
     private void listObjectTypes(HttpServletRequest request, HttpServletResponse response) throws IOException {
         // ignore listRequest for now, just make sure it's valid xml:
-        ListRequest       listRequest   = xmlMapper.readValue(request.getInputStream(), ListRequest.class);
+        ListRequest       listRequest   = xmlMapper.readValue(request.getInputStream(), ListObjectTypeRequest.class);
         ObjectTypeDao     objectTypeDao = new ObjectTypeDao();
         List<ObjectType>  objectTypes   = objectTypeDao.listObjectTypes();
         ObjectTypeWrapper wrapper       = new ObjectTypeWrapper();

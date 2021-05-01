@@ -3,7 +3,7 @@ package com.dewarim.cinnamon.test.integration;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonServer;
-import com.dewarim.cinnamon.model.request.ListRequest;
+import com.dewarim.cinnamon.model.request.user.ListUserInfoRequest;
 import com.dewarim.cinnamon.model.request.user.SetPasswordRequest;
 import com.dewarim.cinnamon.model.request.user.UserInfoRequest;
 import com.dewarim.cinnamon.model.response.UserInfo;
@@ -49,7 +49,7 @@ public class UserServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void listUsers() throws IOException {
-        HttpResponse userInfoResponse = sendAdminRequest(UrlMapping.USER__LIST_USERS, new ListRequest());
+        HttpResponse userInfoResponse = sendAdminRequest(UrlMapping.USER__LIST_USERS, new ListUserInfoRequest());
 
         List<String>   names = Arrays.asList("admin", "doe", "deactivated user", "locked user");
         List<UserInfo> users = unwrapUsers(userInfoResponse, 4);

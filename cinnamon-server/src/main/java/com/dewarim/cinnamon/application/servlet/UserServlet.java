@@ -2,13 +2,15 @@ package com.dewarim.cinnamon.application.servlet;
 
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.FailedRequestException;
+import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.application.ErrorResponseGenerator;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.configuration.SecurityConfig;
 import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.model.UserAccount;
-import com.dewarim.cinnamon.model.request.ListRequest;
+import com.dewarim.cinnamon.model.request.DefaultListRequest;
+import com.dewarim.cinnamon.model.request.user.ListUserInfoRequest;
 import com.dewarim.cinnamon.model.request.user.SetPasswordRequest;
 import com.dewarim.cinnamon.model.request.user.UserInfoRequest;
 import com.dewarim.cinnamon.model.response.GenericResponse;
@@ -40,26 +42,22 @@ public class UserServlet extends HttpServlet {
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
-        String pathInfo = request.getPathInfo();
-        if (pathInfo == null) {
-            pathInfo = "";
-        }
         try {
-            switch (pathInfo) {
-                case "/userInfo":
+            UrlMapping mapping = UrlMapping.getByPath(request.getRequestURI());
+            switch (mapping) {
+                case USER__USER_INFO:
                     showUserInfo(xmlMapper.readValue(request.getReader(), UserInfoRequest.class), response);
                     break;
-                case "/listUsers":
+                case USER__LIST_USERS:
                     listUsers(request, response);
                     break;
-                case "/setPassword":
+                case USER__SET_PASSWORD:
                     setPassword(request, response);
                     break;
                 default:
-                    response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+                    ErrorCode.RESOURCE_NOT_FOUND.throwUp();
             }
-        } catch (
-                FailedRequestException e) {
+        } catch (FailedRequestException e) {
             ErrorCode errorCode = e.getErrorCode();
             ErrorResponseGenerator.generateErrorMessage(response, errorCode, e.getMessage());
         }
@@ -97,10 +95,9 @@ public class UserServlet extends HttpServlet {
 
     private void listUsers(HttpServletRequest request, HttpServletResponse response) throws IOException {
         // ignore listRequest for now, just make sure it's valid xml:
-        ListRequest listRequest = xmlMapper.readValue(request.getInputStream(), ListRequest.class);
-
-        UserAccountDao userAccountDao = new UserAccountDao();
-        UserWrapper    wrapper        = new UserWrapper();
+        DefaultListRequest listRequest    = xmlMapper.readValue(request.getInputStream(), ListUserInfoRequest.class);
+        UserAccountDao     userAccountDao = new UserAccountDao();
+        UserWrapper        wrapper        = new UserWrapper();
         wrapper.setUsers(userAccountDao.listUserAccountsAsUserInfo());
         response.setContentType(CONTENT_TYPE_XML);
         response.setStatus(HttpServletResponse.SC_OK);

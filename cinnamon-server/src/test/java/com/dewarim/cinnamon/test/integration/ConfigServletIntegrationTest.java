@@ -1,7 +1,7 @@
 package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.api.UrlMapping;
-import com.dewarim.cinnamon.model.request.ListRequest;
+import com.dewarim.cinnamon.model.request.config.ListConfigRequest;
 import com.dewarim.cinnamon.model.response.ConfigWrapper;
 import org.apache.http.HttpResponse;
 import org.junit.Test;
@@ -15,7 +15,7 @@ public class ConfigServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void listConfig() throws IOException {
-        HttpResponse response = sendStandardRequest(UrlMapping.CONFIG__LIST_ALL_CONFIGURATIONS, new ListRequest());
+        HttpResponse response = sendStandardRequest(UrlMapping.CONFIG__LIST_ALL_CONFIGURATIONS, new ListConfigRequest());
 
         ConfigWrapper config = parseResponse(response);
         assertFalse(config.getAcls().isEmpty());

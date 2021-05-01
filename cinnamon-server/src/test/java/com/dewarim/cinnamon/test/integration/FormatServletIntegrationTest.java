@@ -2,7 +2,7 @@ package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.model.Format;
-import com.dewarim.cinnamon.model.request.ListRequest;
+import com.dewarim.cinnamon.model.request.format.ListFormatRequest;
 import com.dewarim.cinnamon.model.response.FormatWrapper;
 import org.apache.http.HttpResponse;
 import org.junit.Test;
@@ -19,7 +19,7 @@ public class FormatServletIntegrationTest extends CinnamonIntegrationTest{
     
     @Test
     public void listFormats() throws IOException {
-        HttpResponse response = sendStandardRequest(UrlMapping.FORMAT__LIST_FORMATS, new ListRequest());
+        HttpResponse response = sendStandardRequest(UrlMapping.FORMAT__LIST_FORMATS, new ListFormatRequest());
         List<Format> formats = parseResponse(response);
         
         assertNotNull(formats);

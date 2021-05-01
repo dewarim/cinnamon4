@@ -1,5 +1,8 @@
 package com.dewarim.cinnamon.api;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 /**
  * All API url mappings.
  * <p>
@@ -16,12 +19,12 @@ public enum UrlMapping {
     ACL_ENTRY__LIST_ACL_ENTRIES("aclEntry", "listAclEntries", "/api"),
     CINNAMON__CONNECT("cinnamon", "connect", ""),
     CINNAMON__DISCONNECT("cinnamon", "disconnect", ""),
-    CINNAMON__INFO("cinnamon","info" ,"" ),
+    CINNAMON__INFO("cinnamon", "info", ""),
     CONFIG_ENTRY__GET_CONFIG_ENTRY("configEntry", "getConfigEntry", "/api"),
     CONFIG_ENTRY__SET_CONFIG_ENTRY("configEntry", "setConfigEntry", "/api"),
     CONFIG__LIST_ALL_CONFIGURATIONS("config", "listAllConfigurations", "/api"),
     FOLDER_TYPE__LIST_FOLDER_TYPES("folderType", "listFolderTypes", "/api"),
-    FOLDER__CREATE_FOLDER("folder","createFolder" ,"/api" ),
+    FOLDER__CREATE_FOLDER("folder", "createFolder", "/api"),
     FOLDER__CREATE_META("folder", "createMeta", "/api"),
     FOLDER__DELETE_META("folder", "deleteMeta", "/api"),
     FOLDER__GET_FOLDER("folder", "getFolder", "/api"),
@@ -48,9 +51,10 @@ public enum UrlMapping {
     LINK__GET_LINK_BY_ID("link", "getLinkById", "/api"),
     LINK__UPDATE_LINK("link", "updateLink", "/api"),
     METASET_TYPE__LIST_METASET_TYPES("metasetType", "listMetasetTypes", "/api"),
+    NULL_MAPPING("", "", "/api"),
     OBJECT_TYPE__LIST_OBJECT_TYPES("objectType", "listObjectTypes", "/api"),
     OSD__CREATE_META("osd", "createMeta", "/api"),
-    OSD__CREATE_OSD("osd","createOsd" ,"/api" ),
+    OSD__CREATE_OSD("osd", "createOsd", "/api"),
     OSD__DELETE_OSDS("osd", "deleteOsds", "/api"),
     OSD__DELETE_META("osd", "deleteMeta", "/api"),
     OSD__GET_META("osd", "getMeta", "/api"),
@@ -71,13 +75,15 @@ public enum UrlMapping {
     OSD__SET_CONTENT("osd", "setContent", "/api"),
     STATIC__ROOT("static", "", ""),
     UI_LANGUAGE__LIST_UI_LANGUAGES("uiLanguage", "listUiLanguages", "/api"),
-    USER__LIST_USERS("user", "listUsers", "/api"),
+    USER__LIST_USERS("user", "list", "/api"),
     USER__SET_PASSWORD("user", "setPassword", "/api"),
     USER__USER_INFO("user", "userInfo", "/api");
 
-    private String servlet;
-    private String action;
-    private String prefix;
+
+    private static Map<String, UrlMapping> pathMapping = new ConcurrentHashMap<>();
+    private        String                  servlet;
+    private        String                  action;
+    private        String                  prefix;
 
     /**
      * @param servlet the servlet handling the url
@@ -89,6 +95,19 @@ public enum UrlMapping {
         this.servlet = servlet;
         this.action = action;
         this.prefix = prefix;
+    }
+
+    public static UrlMapping getByPath(String path) {
+        if (pathMapping.isEmpty()) {
+            initializePathMapping();
+        }
+        return pathMapping.getOrDefault(path, UrlMapping.NULL_MAPPING);
+    }
+
+    private static void initializePathMapping() {
+        for (UrlMapping mapping : values()) {
+            pathMapping.put(mapping.prefix + "/" + mapping.servlet + "/" + mapping.action, mapping);
+        }
     }
 
     public String getPath() {

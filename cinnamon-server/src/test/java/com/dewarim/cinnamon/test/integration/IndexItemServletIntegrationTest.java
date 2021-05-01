@@ -2,7 +2,7 @@ package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.model.IndexItem;
-import com.dewarim.cinnamon.model.request.ListRequest;
+import com.dewarim.cinnamon.model.request.index.ListIndexItemRequest;
 import com.dewarim.cinnamon.model.response.IndexItemWrapper;
 import org.apache.http.HttpResponse;
 import org.junit.Test;
@@ -19,7 +19,7 @@ public class IndexItemServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void listIndexItems() throws IOException {
-        HttpResponse       response      = sendStandardRequest(UrlMapping.INDEX_ITEM__LIST_INDEX_ITEMS, new ListRequest());
+        HttpResponse       response      = sendStandardRequest(UrlMapping.INDEX_ITEM__LIST_INDEX_ITEMS, new ListIndexItemRequest());
         List<IndexItem> indexItems = parseResponse(response);
 
         assertNotNull(indexItems);

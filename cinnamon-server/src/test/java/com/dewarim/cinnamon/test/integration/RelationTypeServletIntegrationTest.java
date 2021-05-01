@@ -2,7 +2,7 @@ package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.model.relations.RelationType;
-import com.dewarim.cinnamon.model.request.ListRequest;
+import com.dewarim.cinnamon.model.request.relationType.ListRelationTypeRequest;
 import com.dewarim.cinnamon.model.response.RelationTypeWrapper;
 import org.apache.http.HttpResponse;
 import org.junit.Test;
@@ -19,7 +19,7 @@ public class RelationTypeServletIntegrationTest extends CinnamonIntegrationTest 
 
     @Test
     public void listRelationTypes() throws IOException {
-        HttpResponse       response      = sendStandardRequest(UrlMapping.RELATION_TYPE__LIST_RELATION_TYPES, new ListRequest());
+        HttpResponse       response      = sendStandardRequest(UrlMapping.RELATION_TYPE__LIST_RELATION_TYPES, new ListRelationTypeRequest());
         List<RelationType> relationTypes = parseResponse(response);
 
         assertNotNull(relationTypes);

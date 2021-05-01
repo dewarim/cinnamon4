@@ -3,6 +3,7 @@ package com.dewarim.cinnamon.application.servlet;
 import com.dewarim.cinnamon.dao.CmnGroupDao;
 import com.dewarim.cinnamon.model.CmnGroup;
 import com.dewarim.cinnamon.model.request.ListRequest;
+import com.dewarim.cinnamon.model.request.group.ListGroupRequest;
 import com.dewarim.cinnamon.model.response.GroupWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -39,7 +40,7 @@ public class GroupServlet extends HttpServlet {
 
     private void listGroups(HttpServletRequest request, HttpServletResponse response) throws IOException {
         // ignore listRequest for now, just make sure it's valid xml:
-        ListRequest    listRequest = xmlMapper.readValue(request.getInputStream(), ListRequest.class);
+        ListRequest    listRequest = xmlMapper.readValue(request.getInputStream(), ListGroupRequest.class);
         CmnGroupDao    groupDao    = new CmnGroupDao();
         List<CmnGroup> groups      = groupDao.listGroups();
         GroupWrapper   wrapper     = new GroupWrapper();

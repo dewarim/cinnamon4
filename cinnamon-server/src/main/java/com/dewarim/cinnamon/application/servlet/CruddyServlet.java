@@ -7,6 +7,8 @@ import com.dewarim.cinnamon.dao.CrudDao;
 import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.request.DeleteRequest;
+import com.dewarim.cinnamon.model.request.ListRequest;
+import com.dewarim.cinnamon.model.response.Wrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.ibatis.exceptions.PersistenceException;
@@ -20,8 +22,8 @@ import java.util.List;
  */
 public interface CruddyServlet<T> {
 
-    default void create(CreateRequest<T> createRequest, CrudDao<T> crudDao, CinnamonResponse cinnamonResponse) {
-        List<T> ts = crudDao.create(createRequest.list());
+    default void create(CreateRequest<T> createRequest, CrudDao<T> dao, CinnamonResponse cinnamonResponse) {
+        List<T> ts = dao.create(createRequest.list());
         cinnamonResponse.setWrapper(createRequest.fetchResponseWrapper().setList(ts));
     }
 
@@ -35,11 +37,16 @@ public interface CruddyServlet<T> {
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
     }
 
+    default ListRequest<T> convertListRequest(HttpServletRequest request, Class<? extends ListRequest<T>> clazz) throws IOException {
+        return getMapper().readValue(request.getInputStream(), clazz)
+                .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
+    }
+
     ObjectMapper getMapper();
 
-    default void delete(DeleteRequest<T> deleteRequest, CrudDao<T> crudDao, CinnamonResponse cinnamonResponse) {
+    default void delete(DeleteRequest<T> deleteRequest, CrudDao<T> dao, CinnamonResponse cinnamonResponse) {
         try {
-            int deletedRows = crudDao.delete(deleteRequest.list());
+            int deletedRows = dao.delete(deleteRequest.list());
             if (deletedRows != deleteRequest.list().size() && !deleteRequest.isIgnoreNotFound()) {
                 throw new FailedRequestException(ErrorCode.OBJECT_NOT_FOUND);
             }
@@ -55,10 +62,13 @@ public interface CruddyServlet<T> {
         }
     }
 
-//    CrudDao<T> getDao();
-//
-//    List<T> list();
-//
+    //    CrudDao<T> getDao();
+
+    default void list(ListRequest<T> listRequest, CrudDao<T> dao, CinnamonResponse cinnamonResponse) {
+        Wrapper<T> wrapper = listRequest.fetchResponseWrapper().setList(dao.list());
+        cinnamonResponse.setWrapper(wrapper);
+    }
+
 //    T update(T t);
 //
 //    void delete(T t);

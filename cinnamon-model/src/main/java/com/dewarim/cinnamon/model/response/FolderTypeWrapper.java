@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class FolderTypeWrapper {
+public class FolderTypeWrapper implements Wrapper<FolderType> {
 
     @JacksonXmlElementWrapper(localName = "folderTypes")
     @JacksonXmlProperty(localName = "folderType")
@@ -22,5 +22,16 @@ public class FolderTypeWrapper {
 
     public void setFolderTypes(List<FolderType> folderTypes) {
         this.folderTypes = folderTypes;
+    }
+
+    @Override
+    public List<FolderType> list() {
+        return getFolderTypes();
+    }
+
+    @Override
+    public Wrapper<FolderType> setList(List<FolderType> folderTypes) {
+        setFolderTypes(folderTypes);
+        return this;
     }
 }

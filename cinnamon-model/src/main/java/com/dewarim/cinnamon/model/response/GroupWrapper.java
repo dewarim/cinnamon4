@@ -10,7 +10,7 @@ import java.util.List;
 
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class GroupWrapper {
+public class GroupWrapper implements Wrapper<CmnGroup>{
 
     @JacksonXmlElementWrapper(localName = "groups")
     @JacksonXmlProperty(localName = "group")
@@ -22,5 +22,16 @@ public class GroupWrapper {
 
     public void setGroups(List<CmnGroup> groups) {
         this.groups = groups;
+    }
+
+    @Override
+    public List<CmnGroup> list() {
+        return getGroups();
+    }
+
+    @Override
+    public Wrapper<CmnGroup> setList(List<CmnGroup> cmnGroups) {
+        setGroups(cmnGroups);
+        return this;
     }
 }

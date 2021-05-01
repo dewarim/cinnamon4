@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class MetasetTypeWrapper {
+public class MetasetTypeWrapper implements Wrapper<MetasetType>{
 
     @JacksonXmlElementWrapper(localName = "metasetTypes")
     @JacksonXmlProperty(localName = "metasetType")
@@ -22,5 +22,16 @@ public class MetasetTypeWrapper {
 
     public void setMetasetTypes(List<MetasetType> metasetTypes) {
         this.metasetTypes = metasetTypes;
+    }
+
+    @Override
+    public List<MetasetType> list() {
+        return getMetasetTypes();
+    }
+
+    @Override
+    public Wrapper<MetasetType> setList(List<MetasetType> metasetTypes) {
+        setMetasetTypes(metasetTypes);
+        return this;
     }
 }

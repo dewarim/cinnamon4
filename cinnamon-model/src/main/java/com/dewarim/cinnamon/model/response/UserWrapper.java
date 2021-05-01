@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class UserWrapper {
+public class UserWrapper implements Wrapper<UserInfo> {
 
     @JacksonXmlElementWrapper(localName = "users")
     @JacksonXmlProperty(localName = "user")
@@ -31,5 +31,16 @@ public class UserWrapper {
 
     public void setUsers(List<UserInfo> users) {
         this.users = users;
+    }
+
+    @Override
+    public List<UserInfo> list() {
+        return getUsers();
+    }
+
+    @Override
+    public Wrapper<UserInfo> setList(List<UserInfo> userInfos) {
+        setUsers(userInfos);
+        return this;
     }
 }

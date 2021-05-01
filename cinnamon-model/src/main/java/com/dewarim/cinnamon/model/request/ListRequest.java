@@ -1,20 +1,30 @@
 package com.dewarim.cinnamon.model.request;
 
+import com.dewarim.cinnamon.model.response.Wrapper;
+
+import java.util.Optional;
+
 /**
  * A simple list request. Currently this class is empty, but should be used to avoid
- * empty POST requests send to the server.
- * 
+ * sending empty POST requests to the server.
+ * <p>
  * Future versions may include filter fields (for example, String nameFilter).
  */
-public class ListRequest {
-    
-    int version = 0;
+public interface ListRequest<T> {
 
-    public int getVersion() {
-        return version;
+    default boolean validated() {
+        // not much to validate about a simple list request at the moment
+        return true;
     }
 
-    public void setVersion(int version) {
-        this.version = version;
+    default Optional<ListRequest<T>> validateRequest() {
+        if (validated()) {
+            return Optional.of(this);
+        } else {
+            return Optional.empty();
+        }
     }
+
+    Wrapper<T> fetchResponseWrapper();
+
 }

@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class ObjectTypeWrapper {
+public class ObjectTypeWrapper implements Wrapper<ObjectType>{
 
     @JacksonXmlElementWrapper(localName = "objectTypes")
     @JacksonXmlProperty(localName = "objectType")
@@ -21,5 +21,16 @@ public class ObjectTypeWrapper {
 
     public void setObjectTypes(List<ObjectType> objectTypes) {
         this.objectTypes = objectTypes;
+    }
+
+    @Override
+    public List<ObjectType> list() {
+        return getObjectTypes();
+    }
+
+    @Override
+    public Wrapper<ObjectType> setList(List<ObjectType> objectTypes) {
+        setObjectTypes(objectTypes);
+        return this;
     }
 }

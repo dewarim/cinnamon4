@@ -2,7 +2,7 @@ package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.model.MetasetType;
-import com.dewarim.cinnamon.model.request.ListRequest;
+import com.dewarim.cinnamon.model.request.metasetType.ListMetasetTypeRequest;
 import com.dewarim.cinnamon.model.response.MetasetTypeWrapper;
 import org.apache.http.HttpResponse;
 import org.junit.Test;
@@ -19,7 +19,7 @@ public class MetasetTypeServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void listMetasetTypes() throws IOException {
-        HttpResponse      response     = sendStandardRequest(UrlMapping.METASET_TYPE__LIST_METASET_TYPES, new ListRequest());
+        HttpResponse      response     = sendStandardRequest(UrlMapping.METASET_TYPE__LIST_METASET_TYPES, new ListMetasetTypeRequest());
         List<MetasetType> metasetTypes = parseResponse(response);
 
         assertNotNull(metasetTypes);

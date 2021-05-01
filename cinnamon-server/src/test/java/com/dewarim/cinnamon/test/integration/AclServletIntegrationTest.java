@@ -9,6 +9,7 @@ import com.dewarim.cinnamon.model.request.acl.AclInfoRequest;
 import com.dewarim.cinnamon.model.request.acl.AclUpdateRequest;
 import com.dewarim.cinnamon.model.request.acl.CreateAclRequest;
 import com.dewarim.cinnamon.model.request.acl.DeleteAclRequest;
+import com.dewarim.cinnamon.model.request.acl.ListAclRequest;
 import com.dewarim.cinnamon.model.response.AclWrapper;
 import com.dewarim.cinnamon.model.response.DeleteResponse;
 import org.apache.http.HttpResponse;
@@ -32,7 +33,7 @@ public class AclServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void listAclsTest() throws IOException {
-        HttpResponse aclListResponse = sendAdminRequest(UrlMapping.ACL__GET_ACLS);
+        HttpResponse aclListResponse = sendAdminRequest(UrlMapping.ACL__GET_ACLS, new ListAclRequest());
         List<Acl>    acls            = unwrapAcls(aclListResponse, null);
         assertFalse(acls.isEmpty());
         Optional<Acl> defaultAcl = acls.stream().filter(acl -> acl.getName().equals(ACL_DEFAULT)).findFirst();

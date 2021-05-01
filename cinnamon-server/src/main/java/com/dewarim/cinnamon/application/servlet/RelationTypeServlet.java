@@ -3,6 +3,7 @@ package com.dewarim.cinnamon.application.servlet;
 import com.dewarim.cinnamon.dao.RelationTypeDao;
 import com.dewarim.cinnamon.model.relations.RelationType;
 import com.dewarim.cinnamon.model.request.ListRequest;
+import com.dewarim.cinnamon.model.request.relationType.ListRelationTypeRequest;
 import com.dewarim.cinnamon.model.response.RelationTypeWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -39,7 +40,7 @@ public class RelationTypeServlet extends HttpServlet {
 
     private void listRelationTypes(HttpServletRequest request, HttpServletResponse response) throws IOException {
         // ignore listRequest for now, just make sure it's valid xml:
-        ListRequest         listRequest = xmlMapper.readValue(request.getInputStream(), ListRequest.class);
+        ListRequest         listRequest = xmlMapper.readValue(request.getInputStream(), ListRelationTypeRequest.class);
         RelationTypeDao     typeDao     = new RelationTypeDao();
         List<RelationType>  types       = typeDao.listRelationTypes();
         RelationTypeWrapper wrapper     = new RelationTypeWrapper();

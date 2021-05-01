@@ -5,7 +5,7 @@ import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.model.Lifecycle;
 import com.dewarim.cinnamon.model.LifecycleState;
 import com.dewarim.cinnamon.model.request.LifecycleRequest;
-import com.dewarim.cinnamon.model.request.ListRequest;
+import com.dewarim.cinnamon.model.request.lifecycle.ListLifecycleRequest;
 import com.dewarim.cinnamon.model.response.LifecycleWrapper;
 import org.apache.http.HttpResponse;
 import org.junit.Test;
@@ -22,7 +22,7 @@ public class LifecycleServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void listLifecycles() throws IOException {
-        HttpResponse    response   = sendStandardRequest(UrlMapping.LIFECYCLE__LIST_LIFECYCLES, new ListRequest());
+        HttpResponse    response   = sendStandardRequest(UrlMapping.LIFECYCLE__LIST_LIFECYCLES, new ListLifecycleRequest());
         List<Lifecycle> lifecycles = parseResponse(response);
 
         assertNotNull(lifecycles);

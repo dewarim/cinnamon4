@@ -3,7 +3,7 @@ package com.dewarim.cinnamon.test.integration;
 import com.dewarim.cinnamon.Constants;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.model.FolderType;
-import com.dewarim.cinnamon.model.request.ListRequest;
+import com.dewarim.cinnamon.model.request.folderType.ListFolderTypeRequest;
 import com.dewarim.cinnamon.model.response.FolderTypeWrapper;
 import org.apache.http.HttpResponse;
 import org.junit.Test;
@@ -20,7 +20,7 @@ public class FolderTypeServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void listFolderTypes() throws IOException {
-        HttpResponse       response      = sendStandardRequest(UrlMapping.FOLDER_TYPE__LIST_FOLDER_TYPES, new ListRequest());
+        HttpResponse       response      = sendStandardRequest(UrlMapping.FOLDER_TYPE__LIST_FOLDER_TYPES, new ListFolderTypeRequest());
         List<FolderType> folderTypes = parseResponse(response);
 
         assertNotNull(folderTypes);

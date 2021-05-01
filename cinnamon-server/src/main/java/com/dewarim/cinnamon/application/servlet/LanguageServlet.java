@@ -3,6 +3,7 @@ package com.dewarim.cinnamon.application.servlet;
 import com.dewarim.cinnamon.dao.LanguageDao;
 import com.dewarim.cinnamon.model.Language;
 import com.dewarim.cinnamon.model.request.ListRequest;
+import com.dewarim.cinnamon.model.request.language.ListLanguageRequest;
 import com.dewarim.cinnamon.model.response.LanguageWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -39,7 +40,7 @@ public class LanguageServlet extends HttpServlet {
 
     private void listLanguages(HttpServletRequest request, HttpServletResponse response) throws IOException {
         // ignore listRequest for now, just make sure it's valid xml:
-        ListRequest     listRequest = xmlMapper.readValue(request.getInputStream(), ListRequest.class);
+        ListRequest     listRequest = xmlMapper.readValue(request.getInputStream(), ListLanguageRequest.class);
         LanguageDao     languageDao = new LanguageDao();
         List<Language>  languages   = languageDao.listLanguages();
         LanguageWrapper wrapper     = new LanguageWrapper();

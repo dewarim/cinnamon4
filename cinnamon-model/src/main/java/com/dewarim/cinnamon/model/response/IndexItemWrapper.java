@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class IndexItemWrapper {
+public class IndexItemWrapper implements Wrapper<IndexItem>{
 
     @JacksonXmlElementWrapper(localName = "indexItems")
     @JacksonXmlProperty(localName = "indexItem")
@@ -22,5 +22,16 @@ public class IndexItemWrapper {
 
     public void setIndexItems(List<IndexItem> indexItems) {
         this.indexItems = indexItems;
+    }
+
+    @Override
+    public List<IndexItem> list() {
+        return getIndexItems();
+    }
+
+    @Override
+    public Wrapper<IndexItem> setList(List<IndexItem> indexItems) {
+        setIndexItems(indexItems);
+        return this;
     }
 }

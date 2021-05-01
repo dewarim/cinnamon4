@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class FormatWrapper {
+public class FormatWrapper implements Wrapper<Format>{
 
     @JacksonXmlElementWrapper(localName = "formats")
     @JacksonXmlProperty(localName = "format")
@@ -21,5 +21,16 @@ public class FormatWrapper {
 
     public void setFormats(List<Format> formats) {
         this.formats = formats;
+    }
+
+    @Override
+    public List<Format> list() {
+        return getFormats();
+    }
+
+    @Override
+    public Wrapper<Format> setList(List<Format> formats) {
+        setFormats(formats);
+        return this;
     }
 }

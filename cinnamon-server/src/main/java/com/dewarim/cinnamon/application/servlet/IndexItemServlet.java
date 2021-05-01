@@ -3,6 +3,7 @@ package com.dewarim.cinnamon.application.servlet;
 import com.dewarim.cinnamon.dao.IndexItemDao;
 import com.dewarim.cinnamon.model.IndexItem;
 import com.dewarim.cinnamon.model.request.ListRequest;
+import com.dewarim.cinnamon.model.request.index.ListIndexItemRequest;
 import com.dewarim.cinnamon.model.response.IndexItemWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -39,7 +40,7 @@ public class IndexItemServlet extends HttpServlet {
 
     private void listIndexItems(HttpServletRequest request, HttpServletResponse response) throws IOException {
         // ignore listRequest for now, just make sure it's valid xml:
-        ListRequest      listRequest = xmlMapper.readValue(request.getInputStream(), ListRequest.class);
+        ListRequest      listRequest = xmlMapper.readValue(request.getInputStream(), ListIndexItemRequest.class);
         IndexItemDao     typeDao     = new IndexItemDao();
         List<IndexItem>  types       = typeDao.listIndexItems();
         IndexItemWrapper wrapper     = new IndexItemWrapper();

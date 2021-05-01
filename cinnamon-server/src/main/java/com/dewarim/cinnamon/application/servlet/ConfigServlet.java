@@ -13,7 +13,7 @@ import com.dewarim.cinnamon.dao.PermissionDao;
 import com.dewarim.cinnamon.dao.RelationTypeDao;
 import com.dewarim.cinnamon.dao.UiLanguageDao;
 import com.dewarim.cinnamon.dao.UserAccountDao;
-import com.dewarim.cinnamon.model.request.ListRequest;
+import com.dewarim.cinnamon.model.request.config.ListConfigRequest;
 import com.dewarim.cinnamon.model.response.ConfigWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -49,7 +49,7 @@ public class ConfigServlet extends HttpServlet {
 
     private void listAllConfigurations(HttpServletRequest request, HttpServletResponse response) throws IOException {
         // ignore listRequest for now, just make sure it's valid xml:
-        ListRequest listRequest = xmlMapper.readValue(request.getInputStream(), ListRequest.class);
+        xmlMapper.readValue(request.getInputStream(), ListConfigRequest.class);
 
         ConfigWrapper wrapper = new ConfigWrapper();
         wrapper.setAcls(new AclDao().list());

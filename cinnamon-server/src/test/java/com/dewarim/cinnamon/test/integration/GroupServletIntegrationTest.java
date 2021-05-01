@@ -2,7 +2,7 @@ package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.model.CmnGroup;
-import com.dewarim.cinnamon.model.request.ListRequest;
+import com.dewarim.cinnamon.model.request.group.ListGroupRequest;
 import com.dewarim.cinnamon.model.response.GroupWrapper;
 import org.apache.http.HttpResponse;
 import org.junit.Test;
@@ -18,7 +18,7 @@ public class GroupServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void listGroups() throws IOException {
-        HttpResponse   response = sendStandardRequest(UrlMapping.GROUP__LIST_GROUPS, new ListRequest());
+        HttpResponse   response = sendStandardRequest(UrlMapping.GROUP__LIST_GROUPS, new ListGroupRequest());
         List<CmnGroup> groups   = parseResponse(response);
 
         assertNotNull(groups);

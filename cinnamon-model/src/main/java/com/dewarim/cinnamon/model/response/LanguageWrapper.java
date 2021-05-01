@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class LanguageWrapper {
+public class LanguageWrapper implements Wrapper<Language>{
 
     @JacksonXmlElementWrapper(localName = "languages")
     @JacksonXmlProperty(localName = "language")
@@ -22,5 +22,16 @@ public class LanguageWrapper {
 
     public void setLanguages(List<Language> Languages) {
         this.languages = Languages;
+    }
+
+    @Override
+    public List<Language> list() {
+        return getLanguages();
+    }
+
+    @Override
+    public Wrapper<Language> setList(List<Language> languages) {
+        setLanguages(languages);
+        return this;
     }
 }

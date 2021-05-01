@@ -3,6 +3,7 @@ package com.dewarim.cinnamon.application.servlet;
 import com.dewarim.cinnamon.dao.MetasetTypeDao;
 import com.dewarim.cinnamon.model.MetasetType;
 import com.dewarim.cinnamon.model.request.ListRequest;
+import com.dewarim.cinnamon.model.request.metasetType.ListMetasetTypeRequest;
 import com.dewarim.cinnamon.model.response.MetasetTypeWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -39,7 +40,7 @@ public class MetasetTypeServlet extends HttpServlet {
 
     private void listMetasetTypes(HttpServletRequest request, HttpServletResponse response) throws IOException {
         // ignore listRequest for now, just make sure it's valid xml:
-        ListRequest        listRequest = xmlMapper.readValue(request.getInputStream(), ListRequest.class);
+        ListRequest        listRequest = xmlMapper.readValue(request.getInputStream(), ListMetasetTypeRequest.class);
         MetasetTypeDao     typeDao     = new MetasetTypeDao();
         List<MetasetType>  types       = typeDao.listMetasetTypes();
         MetasetTypeWrapper wrapper     = new MetasetTypeWrapper();

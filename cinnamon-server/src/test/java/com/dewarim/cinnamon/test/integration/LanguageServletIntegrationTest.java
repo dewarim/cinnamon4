@@ -2,7 +2,7 @@ package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.model.Language;
-import com.dewarim.cinnamon.model.request.ListRequest;
+import com.dewarim.cinnamon.model.request.language.ListLanguageRequest;
 import com.dewarim.cinnamon.model.response.LanguageWrapper;
 import org.apache.http.HttpResponse;
 import org.junit.Test;
@@ -17,7 +17,7 @@ public class LanguageServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void listLanguages() throws IOException {
-        HttpResponse   response  = sendStandardRequest(UrlMapping.LANGUAGE__LIST__LANGUAGES, new ListRequest());
+        HttpResponse   response  = sendStandardRequest(UrlMapping.LANGUAGE__LIST__LANGUAGES, new ListLanguageRequest());
         List<Language> languages = parseResponse(response);
 
         assertNotNull(languages);

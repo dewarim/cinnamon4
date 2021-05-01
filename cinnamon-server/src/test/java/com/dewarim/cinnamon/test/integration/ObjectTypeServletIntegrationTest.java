@@ -2,7 +2,7 @@ package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.model.ObjectType;
-import com.dewarim.cinnamon.model.request.ListRequest;
+import com.dewarim.cinnamon.model.request.objectType.ListObjectTypeRequest;
 import com.dewarim.cinnamon.model.response.ObjectTypeWrapper;
 import org.apache.http.HttpResponse;
 import org.junit.Test;
@@ -19,7 +19,7 @@ public class ObjectTypeServletIntegrationTest extends CinnamonIntegrationTest{
     
     @Test
     public void listObjectTypes() throws IOException {
-        HttpResponse response = sendStandardRequest(UrlMapping.OBJECT_TYPE__LIST_OBJECT_TYPES, new ListRequest());
+        HttpResponse response = sendStandardRequest(UrlMapping.OBJECT_TYPE__LIST_OBJECT_TYPES, new ListObjectTypeRequest());
         List<ObjectType> objectTypes = parseResponse(response);
         
         assertNotNull(objectTypes);
