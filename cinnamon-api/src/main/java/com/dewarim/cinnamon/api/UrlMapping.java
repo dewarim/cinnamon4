@@ -11,11 +11,11 @@ import java.util.concurrent.ConcurrentHashMap;
 public enum UrlMapping {
 
     ACL__ACL_INFO("acl", "aclInfo", "/api"),
-    ACL__CREATE_ACL("acl", "create", "/api"),
-    ACL__DELETE_ACL("acl", "delete", "/api"),
-    ACL__GET_ACLS("acl", "list", "/api"),
+    ACL__CREATE("acl", "create", "/api"),
+    ACL__DELETE("acl", "delete", "/api"),
+    ACL__LIST("acl", "list", "/api"),
     ACL__GET_USER_ACLS("acl", "getUserAcls", "/api"),
-    ACL__UPDATE_ACL("acl", "updateAcl", "/api"),
+    ACL__UPDATE("acl", "updateAcl", "/api"),
     ACL_ENTRY__LIST_ACL_ENTRIES("aclEntry", "listAclEntries", "/api"),
     CINNAMON__CONNECT("cinnamon", "connect", ""),
     CINNAMON__DISCONNECT("cinnamon", "disconnect", ""),

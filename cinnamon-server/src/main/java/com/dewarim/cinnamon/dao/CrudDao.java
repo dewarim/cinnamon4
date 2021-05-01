@@ -77,6 +77,8 @@ public interface CrudDao<T> {
                 return name + DELETE.getSuffix();
             case LIST:
                 return name + LIST.getSuffix();
+            case UPDATE:
+                return name+UPDATE.getSuffix();
             default:
                 throw new IllegalArgumentException("Unmapped SqlAction " + action);
         }
@@ -96,5 +98,17 @@ public interface CrudDao<T> {
             rowCount += BATCH_SIZE;
         }
         return partitions;
+    }
+
+    default List<T> update(List<T> items){
+        List<T>    updatedItems = new ArrayList<>();
+        SqlSession sqlSession   = ThreadLocalSqlSession.getSqlSession();
+        items.forEach(item -> {
+            String sqlAction = getMapperNamespace(UPDATE);
+            // we could check if this returns != 1, but generally it's not forbidden to update an item without changing it
+            sqlSession.update(sqlAction, item);
+            updatedItems.add(item);
+        });
+        return updatedItems;
     }
 }

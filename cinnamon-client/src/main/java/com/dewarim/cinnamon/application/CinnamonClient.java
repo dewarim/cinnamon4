@@ -39,7 +39,7 @@ public class CinnamonClient {
     private String    ticket;
     private XmlMapper mapper   = new XmlMapper();
 
-    private Unwrapper<ObjectSystemData, OsdWrapper> osdUnwrapper = new Unwrapper<>();
+    private Unwrapper<ObjectSystemData, OsdWrapper> osdUnwrapper = new Unwrapper<>(OsdWrapper.class);
 
 
     public CinnamonClient() {

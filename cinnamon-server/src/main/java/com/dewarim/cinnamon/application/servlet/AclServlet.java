@@ -10,10 +10,10 @@ import com.dewarim.cinnamon.dao.CrudDao;
 import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.request.IdRequest;
 import com.dewarim.cinnamon.model.request.acl.AclInfoRequest;
-import com.dewarim.cinnamon.model.request.acl.AclUpdateRequest;
 import com.dewarim.cinnamon.model.request.acl.CreateAclRequest;
 import com.dewarim.cinnamon.model.request.acl.DeleteAclRequest;
 import com.dewarim.cinnamon.model.request.acl.ListAclRequest;
+import com.dewarim.cinnamon.model.request.acl.UpdateAclRequest;
 import com.dewarim.cinnamon.model.response.AclWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -46,26 +46,26 @@ public class AclServlet extends HttpServlet implements CruddyServlet<Acl> {
         try {
             UrlMapping mapping = UrlMapping.getByPath(request.getRequestURI());
             switch (mapping) {
-                case ACL__CREATE_ACL:
+                case ACL__CREATE:
                     superuserCheck();
                     create(convertCreateRequest(request, CreateAclRequest.class), aclDao, cinnamonResponse);
                     break;
                 case ACL__ACL_INFO:
                     getAclByNameOrId(request, response);
                     break;
-                case ACL__DELETE_ACL:
+                case ACL__DELETE:
                     superuserCheck();
                     delete(convertDeleteRequest(request, DeleteAclRequest.class), aclDao, cinnamonResponse);
                     break;
-                case ACL__GET_ACLS:
+                case ACL__LIST:
                     list(convertListRequest(request, ListAclRequest.class), aclDao, cinnamonResponse);
                     break;
                 case ACL__GET_USER_ACLS:
                     getUserAcls(request, response);
                     break;
-                case ACL__UPDATE_ACL:
+                case ACL__UPDATE:
                     superuserCheck();
-                    updateAcl(request, response);
+                    update(convertUpdateRequest(request, UpdateAclRequest.class), aclDao, cinnamonResponse);
                     break;
                 default:
                     ErrorCode.RESOURCE_NOT_FOUND.throwUp();
@@ -76,29 +76,6 @@ public class AclServlet extends HttpServlet implements CruddyServlet<Acl> {
             ErrorResponseGenerator.generateErrorMessage(response, errorCode, e.getMessage());
         }
 
-    }
-
-    private void updateAcl(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        AclUpdateRequest updateRequest = xmlMapper.readValue(request.getInputStream(), AclUpdateRequest.class);
-        String           name          = updateRequest.getName();
-        if (name == null || name.trim().isEmpty()) {
-            ErrorCode.NAME_PARAM_IS_INVALID.throwUp();
-        }
-        AclDao aclDao         = new AclDao();
-        Acl    aclToBeRenamed = aclDao.getAclById(updateRequest.getId()).orElseThrow(ErrorCode.ACL_NOT_FOUND.getException());
-        aclToBeRenamed.setName(name);
-        try {
-            aclDao.changeAclName(aclToBeRenamed);
-        } catch (Exception e) {
-            throw new FailedRequestException(ErrorCode.DB_UPDATE_FAILED, e.getMessage());
-        }
-        sendWrappedAcls(response, Collections.singletonList(aclToBeRenamed));
-    }
-
-    private void listAcls(HttpServletResponse response) throws IOException {
-        AclDao    aclDao = new AclDao();
-        List<Acl> acls   = aclDao.list();
-        sendWrappedAcls(response, acls);
     }
 
     private void getAclByNameOrId(HttpServletRequest request, HttpServletResponse response) throws IOException {

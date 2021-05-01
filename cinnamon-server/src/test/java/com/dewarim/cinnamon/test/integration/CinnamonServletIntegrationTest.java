@@ -77,7 +77,7 @@ public class CinnamonServletIntegrationTest extends CinnamonIntegrationTest {
         DisconnectResponse disconnectResponse = mapper.readValue(response.getEntity().getContent(), DisconnectResponse.class);
         assertTrue(disconnectResponse.isDisconnectSuccessful());
 
-        HttpResponse verifyDisconnect = sendAdminRequest(UrlMapping.ACL__GET_ACLS);
+        HttpResponse verifyDisconnect = sendAdminRequest(UrlMapping.ACL__LIST);
         assertCinnamonError(verifyDisconnect, ErrorCode.AUTHENTICATION_FAIL_NO_SESSION_FOUND);
 
         ticket = getAdminTicket();

@@ -1,7 +1,6 @@
 package com.dewarim.cinnamon;
 
 import com.dewarim.cinnamon.model.response.Wrapper;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import org.apache.http.HttpResponse;
 
@@ -11,6 +10,12 @@ import java.util.List;
 public class Unwrapper<T, W extends Wrapper<T>> {
 
     private XmlMapper mapper = new XmlMapper();
+
+    private Class<W> clazz;
+
+    public Unwrapper(Class<W> clazz) {
+        this.clazz = clazz;
+    }
 
     private List<T> checkList(List<T> list, Integer expectedSize){
         if (expectedSize != null) {
@@ -25,9 +30,16 @@ public class Unwrapper<T, W extends Wrapper<T>> {
         return list;
     }
 
+    // this will not work with Jackson 2.12.3, so we need to supply W via clazz in constructor.
+//    public List<T> unwrap(HttpResponse response, Integer expectedSize) throws IOException {
+//        List<T> items = mapper.readValue(response.getEntity().getContent(), new TypeReference<W>() {
+//        }).list();
+//        return checkList(items, expectedSize);
+//    }
+
     public List<T> unwrap(HttpResponse response, Integer expectedSize) throws IOException {
-        List<T> items = mapper.readValue(response.getEntity().getContent(), new TypeReference<W>() {
-        }).list();
+        List<T> items = mapper.readValue(response.getEntity().getContent(), clazz).list();
         return checkList(items, expectedSize);
     }
+
 }

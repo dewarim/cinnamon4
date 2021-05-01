@@ -5,7 +5,8 @@ public enum SqlAction {
     DELETE(".delete"),
     GET_ALL_BY_ID(".getAllById"),
     INSERT(".insert"),
-    LIST(".list")
+    LIST(".list"),
+    UPDATE(".update")
     ;
 
 

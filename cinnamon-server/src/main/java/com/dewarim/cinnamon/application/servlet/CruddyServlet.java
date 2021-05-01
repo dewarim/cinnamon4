@@ -8,6 +8,7 @@ import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.request.DeleteRequest;
 import com.dewarim.cinnamon.model.request.ListRequest;
+import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.response.Wrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
@@ -42,6 +43,11 @@ public interface CruddyServlet<T> {
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
     }
 
+    default UpdateRequest<T> convertUpdateRequest(HttpServletRequest request, Class<? extends UpdateRequest<T>> clazz) throws IOException {
+        return getMapper().readValue(request.getInputStream(), clazz)
+                .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
+    }
+
     ObjectMapper getMapper();
 
     default void delete(DeleteRequest<T> deleteRequest, CrudDao<T> dao, CinnamonResponse cinnamonResponse) {
@@ -69,8 +75,9 @@ public interface CruddyServlet<T> {
         cinnamonResponse.setWrapper(wrapper);
     }
 
-//    T update(T t);
-//
-//    void delete(T t);
+    default void update(UpdateRequest<T> updateRequest, CrudDao<T> dao, CinnamonResponse cinnamonResponse){
+        List<T> updatedItems = dao.update(updateRequest.list());
+        cinnamonResponse.setWrapper(updateRequest.fetchResponseWrapper().setList(updatedItems));
+    }
 
 }

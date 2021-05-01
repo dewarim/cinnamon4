@@ -15,6 +15,13 @@ public class AclWrapper implements Wrapper<Acl> {
     @JacksonXmlProperty(localName = "acl")
     List<Acl> acls = new ArrayList<>();
 
+    public AclWrapper(List<Acl> acls) {
+        this.acls = acls;
+    }
+
+    public AclWrapper() {
+    }
+
     public void setAcls(List<Acl> acls) {
         this.acls = acls;
     }
