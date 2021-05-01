@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class PermissionWrapper {
+public class PermissionWrapper implements Wrapper<Permission> {
 
     @JacksonXmlElementWrapper(localName = "permissions")
     @JacksonXmlProperty(localName = "permission")
@@ -21,5 +21,16 @@ public class PermissionWrapper {
 
     public void setPermissions(List<Permission> permissions) {
         this.permissions = permissions;
+    }
+
+    @Override
+    public List<Permission> list() {
+        return getPermissions();
+    }
+
+    @Override
+    public Wrapper<Permission> setList(List<Permission> permissions) {
+        setPermissions(permissions);
+        return this;
     }
 }

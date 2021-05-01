@@ -6,6 +6,8 @@ import com.dewarim.cinnamon.dao.AclDao;
 import com.dewarim.cinnamon.dao.PermissionDao;
 import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.Permission;
+import com.dewarim.cinnamon.model.request.ListPermissionRequest;
+import com.dewarim.cinnamon.model.request.ListRequest;
 import com.dewarim.cinnamon.model.request.user.UserPermissionRequest;
 import com.dewarim.cinnamon.model.response.PermissionWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -38,7 +40,7 @@ public class PermissionServlet extends HttpServlet {
         }
         switch (pathInfo) {
             case "/listPermissions":
-                listPermissions(response);
+                listPermissions(request, response);
                 break;
             case "/getUserPermissions":
                 getUserPermissions(xmlMapper.readValue(request.getReader(), UserPermissionRequest.class), response);
@@ -49,7 +51,8 @@ public class PermissionServlet extends HttpServlet {
 
     }
 
-    private void listPermissions(HttpServletResponse response) throws IOException {
+    private void listPermissions(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        ListRequest       listRequest = xmlMapper.readValue(request.getInputStream(), ListPermissionRequest.class);
         List<Permission>  permissions = new PermissionDao().listPermissions();
         PermissionWrapper wrapper     = new PermissionWrapper();
         wrapper.setPermissions(permissions);
