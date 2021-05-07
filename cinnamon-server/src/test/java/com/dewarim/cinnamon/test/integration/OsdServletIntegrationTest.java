@@ -47,6 +47,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static com.dewarim.cinnamon.ErrorCode.NOT_MULTIPART_UPLOAD;
+import static com.dewarim.cinnamon.api.Constants.CREATE_NEW_VERSION;
 import static org.apache.http.HttpHeaders.CONTENT_TYPE;
 import static org.apache.http.entity.ContentType.APPLICATION_XML;
 import static org.hamcrest.CoreMatchers.*;
@@ -73,7 +74,6 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     private static final Long NEW_RENDERTASK_LIFECYCLE_STATE_ID = 1L;
     private static final Long GERMAN_LANGUAGE_ID                = 1L;
 
-    private static final String CREATE_NEW_VERSION = "createNewVersionRequest";
 
     @Test
     public void getObjectsById() throws IOException {
@@ -1025,9 +1025,9 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         client.deleteOsd(49L);
     }
 
-
 //    @Test
 //    public void deleteOsdsNoDeletePermission() throws IOException{
+//
 //        DeleteOsdRequest deleteRequest = new DeleteOsdRequest(Collections.singletonList(49L));
 //        HttpResponse           response = sendStandardRequest(UrlMapping.OSD__DELETE_OSDS, deleteRequest);
 //        assertCinnamonError(response, ErrorCode.NO_DELETE_PERMISSION);

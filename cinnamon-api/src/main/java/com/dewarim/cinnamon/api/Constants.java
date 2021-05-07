@@ -30,4 +30,10 @@ public class Constants {
     public static final String HEADER_FIELD_CINNAMON_ERROR = "cinnamon-error";
 
     public static final Integer EXPECTED_SIZE_ANY = -1;
+
+    /**
+     * Name of the field of the multipart-entity request which contains the XML request data.
+     */
+    public static final String CREATE_NEW_VERSION = "createNewVersionRequest";
+
 }

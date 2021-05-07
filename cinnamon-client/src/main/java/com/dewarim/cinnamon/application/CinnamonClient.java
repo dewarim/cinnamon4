@@ -8,12 +8,16 @@ import com.dewarim.cinnamon.model.FolderType;
 import com.dewarim.cinnamon.model.Meta;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.request.CreateMetaRequest;
+import com.dewarim.cinnamon.model.request.CreateNewVersionRequest;
 import com.dewarim.cinnamon.model.request.folder.UpdateFolderRequest;
 import com.dewarim.cinnamon.model.request.folderType.CreateFolderTypeRequest;
+import com.dewarim.cinnamon.model.request.folderType.DeleteFolderTypeRequest;
+import com.dewarim.cinnamon.model.request.folderType.UpdateFolderTypeRequest;
 import com.dewarim.cinnamon.model.request.osd.DeleteOsdRequest;
 import com.dewarim.cinnamon.model.request.osd.OsdRequest;
 import com.dewarim.cinnamon.model.request.user.UserInfoRequest;
 import com.dewarim.cinnamon.model.response.CinnamonConnection;
+import com.dewarim.cinnamon.model.response.DeleteResponse;
 import com.dewarim.cinnamon.model.response.FolderTypeWrapper;
 import com.dewarim.cinnamon.model.response.FolderWrapper;
 import com.dewarim.cinnamon.model.response.GenericResponse;
@@ -27,14 +31,19 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Form;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 
+import static com.dewarim.cinnamon.api.Constants.CREATE_NEW_VERSION;
+import static com.dewarim.cinnamon.api.Constants.EXPECTED_SIZE_ANY;
 import static org.apache.http.HttpStatus.SC_OK;
+import static org.apache.http.entity.ContentType.APPLICATION_XML;
 
 public class CinnamonClient {
 
@@ -48,10 +57,12 @@ public class CinnamonClient {
     private String    ticket;
     private XmlMapper mapper   = new XmlMapper();
 
-    private final Unwrapper<ObjectSystemData, OsdWrapper>  osdUnwrapper        = new Unwrapper<>(OsdWrapper.class);
-    private final Unwrapper<FolderType, FolderTypeWrapper> folderTypeUnwrapper = new Unwrapper<>(FolderTypeWrapper.class);
-    private final Unwrapper<Folder, FolderWrapper>         folderUnwrapper     = new Unwrapper<>(FolderWrapper.class);
-    private final Unwrapper<Meta, MetaWrapper>             metaUnwrapper       = new Unwrapper<>(MetaWrapper.class);
+    private final Unwrapper<ObjectSystemData, OsdWrapper>   osdUnwrapper         = new Unwrapper<>(OsdWrapper.class);
+    private final Unwrapper<FolderType, FolderTypeWrapper>  folderTypeUnwrapper  = new Unwrapper<>(FolderTypeWrapper.class);
+    private final Unwrapper<Folder, FolderWrapper>          folderUnwrapper      = new Unwrapper<>(FolderWrapper.class);
+    private final Unwrapper<Meta, MetaWrapper>              metaUnwrapper        = new Unwrapper<>(MetaWrapper.class);
+    private final Unwrapper<UserInfo, UserWrapper>          userUnwrapper        = new Unwrapper<>(UserWrapper.class);
+    private final Unwrapper<DeleteResponse, DeleteResponse> deleteResponseWrapper = new Unwrapper<>(DeleteResponse.class);
 
     public CinnamonClient() {
     }
@@ -90,13 +101,13 @@ public class CinnamonClient {
     public UserInfo getUser(String name) throws IOException {
         UserInfoRequest userInfoRequest  = new UserInfoRequest(null, name);
         HttpResponse    userInfoResponse = sendStandardRequest(UrlMapping.USER__USER_INFO, userInfoRequest);
-        return unwrapUsers(userInfoResponse, 1).get(0);
+        return userUnwrapper.unwrap(userInfoResponse, 1).get(0);
     }
 
     public UserInfo getUser(Long id) throws IOException {
         UserInfoRequest userInfoRequest  = new UserInfoRequest(id, null);
         HttpResponse    userInfoResponse = sendStandardRequest(UrlMapping.USER__USER_INFO, userInfoRequest);
-        return unwrapUsers(userInfoResponse, 1).get(0);
+        return userUnwrapper.unwrap(userInfoResponse, 1).get(0);
     }
 
     protected String getTicket(boolean newTicket) throws IOException {
@@ -156,8 +167,18 @@ public class CinnamonClient {
         return mapper.readValue(response.getEntity().getContent(), GenericResponse.class);
     }
 
+    private boolean verifyDeleteResponse(HttpResponse response) throws IOException {
+        return deleteResponseWrapper.unwrap(response,EXPECTED_SIZE_ANY).get(0).isSuccess();
+    }
+
     public void setTicket(String ticket) {
         this.ticket = ticket;
+    }
+
+    // OSDs
+    public List<ObjectSystemData> version(CreateNewVersionRequest versionRequest) throws IOException {
+        HttpEntity request = createSimpleMultipartEntity(CREATE_NEW_VERSION, versionRequest);
+        return unwrapOsds(sendStandardMultipartRequest(UrlMapping.OSD__VERSION, request), 1);
     }
 
     public boolean deleteOsd(Long id) throws IOException {
@@ -166,28 +187,21 @@ public class CinnamonClient {
         return parseGenericResponse(response).isSuccessful();
     }
 
-
-    private List<UserInfo> unwrapUsers(HttpResponse response, Integer expectedSize) throws IOException {
-        verifyResponseIsOkay(response);
-        List<UserInfo> users = mapper.readValue(response.getEntity().getContent(), UserWrapper.class).getUsers();
-        if (expectedSize != null) {
-            if (users == null || users.isEmpty()) {
-                throw new CinnamonClientException("No users objects found in response");
-            }
-            if (!expectedSize.equals(users.size())) {
-                String message = String.format("Unexpected number of users found: %s instead of %s ", users.size(), expectedSize);
-                throw new CinnamonClientException(message);
-            }
-        }
-        return users;
-    }
-
     // FolderTypes
     public List<FolderType> createFolderTypes(List<String> names) throws IOException {
         HttpResponse response = sendStandardRequest(UrlMapping.FOLDER_TYPE__CREATE, new CreateFolderTypeRequest(names));
         return folderTypeUnwrapper.unwrap(response, names.size());
     }
 
+    public boolean deleteFolderTypes(List<Long> ids) throws IOException {
+        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER_TYPE__DELETE, new DeleteFolderTypeRequest(ids));
+        return verifyDeleteResponse(response);
+    }
+
+    public List<FolderType> updateFolderTypes(List<FolderType> types)throws IOException{
+        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER_TYPE__UPDATE,new UpdateFolderTypeRequest(types));
+        return folderTypeUnwrapper.unwrap(response, types.size());
+    }
 
     // Folders
     public List<Meta> createFolderMeta(CreateMetaRequest metaRequest) throws IOException {
@@ -195,9 +209,16 @@ public class CinnamonClient {
         return metaUnwrapper.unwrap(response, 1);
     }
 
-    public List<Folder> updateFolders(UpdateFolderRequest updateFolderRequest) throws IOException{
-        HttpResponse response=sendStandardRequest(UrlMapping.FOLDER__UPDATE_FOLDER, updateFolderRequest);
+    public List<Folder> updateFolders(UpdateFolderRequest updateFolderRequest) throws IOException {
+        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__UPDATE_FOLDER, updateFolderRequest);
         return folderUnwrapper.unwrap(response, 1);
+    }
+
+    private HttpEntity createSimpleMultipartEntity(String fieldname, Object contentRequest) throws IOException {
+        MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
+                .addTextBody(fieldname, mapper.writeValueAsString(contentRequest),
+                        APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
+        return entityBuilder.build();
     }
 
     public static void main(String[] args) throws IOException {
