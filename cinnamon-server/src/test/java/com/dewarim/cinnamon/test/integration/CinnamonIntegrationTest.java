@@ -55,6 +55,7 @@ public class CinnamonIntegrationTest {
     static String         HOST             = "http://localhost:" + cinnamonTestPort;
     static ObjectMapper   mapper           = new XmlMapper().configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL, true);
     static CinnamonClient client;
+    static CinnamonClient adminClient;
 
     @Before
     public void dumpSession() {
@@ -90,6 +91,7 @@ public class CinnamonIntegrationTest {
             log.info("admin ticket: " + ticket);
 
             client = new CinnamonClient(cinnamonTestPort, "localhost", "http", "doe", "admin");
+            adminClient = new CinnamonClient(cinnamonTestPort, "localhost", "http", "admin", "admin");
         }
     }
 
@@ -130,7 +132,6 @@ public class CinnamonIntegrationTest {
             log.error("Request failed with:\n{}", baos.toString(StandardCharsets.UTF_8));
             fail("Non-OK status code " + statusCode);
         }
-        ;
     }
 
     protected void assertCinnamonError(HttpResponse response, ErrorCode errorCode) throws IOException {

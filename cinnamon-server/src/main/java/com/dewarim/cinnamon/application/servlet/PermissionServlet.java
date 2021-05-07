@@ -22,7 +22,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
-import static com.dewarim.cinnamon.Constants.CONTENT_TYPE_XML;
+import static com.dewarim.cinnamon.api.Constants.CONTENT_TYPE_XML;
 
 /**
  *
@@ -46,7 +46,7 @@ public class PermissionServlet extends HttpServlet {
                 getUserPermissions(xmlMapper.readValue(request.getReader(), UserPermissionRequest.class), response);
                 break;
             default:
-                response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+                ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
 
     }

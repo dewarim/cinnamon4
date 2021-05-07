@@ -7,6 +7,17 @@ public class ServerConfig {
     private String dataRoot = "/opt/cinnamon/cinnamon-data";
     private String luceneIndexPath = "/opt/cinnamon/cinnamon-data/index";
 
+    /**
+     * If true, check if an object exists in the database before trying to update it.
+     */
+    private boolean verifyExistence = true;
+
+    /**
+     * If true, do not check if an update actually changed something in the database.
+     * (So you can decide if sending no-effect update requests to the server is allowed or not.)
+     */
+    private boolean ignoreNopUpdates = false;
+
     public int getPort() {
         return port;
     }
@@ -37,5 +48,21 @@ public class ServerConfig {
 
     public void setLuceneIndexPath(String luceneIndexPath) {
         this.luceneIndexPath = luceneIndexPath;
+    }
+
+    public boolean isVerifyExistence() {
+        return verifyExistence;
+    }
+
+    public void setVerifyExistence(boolean verifyExistence) {
+        this.verifyExistence = verifyExistence;
+    }
+
+    public boolean isIgnoreNopUpdates() {
+        return ignoreNopUpdates;
+    }
+
+    public void setIgnoreNopUpdates(boolean ignoreNopUpdates) {
+        this.ignoreNopUpdates = ignoreNopUpdates;
     }
 }

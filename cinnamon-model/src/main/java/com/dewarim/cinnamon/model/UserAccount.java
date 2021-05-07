@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.model;
 
+import com.dewarim.cinnamon.api.Identifiable;
 import com.dewarim.cinnamon.api.login.LoginUser;
 
 import java.security.Principal;
@@ -7,7 +8,7 @@ import java.util.Objects;
 
 /**
  */
-public class UserAccount implements Principal, LoginUser {
+public class UserAccount implements Principal, LoginUser, Identifiable {
     
     private Long id;
     private String name;

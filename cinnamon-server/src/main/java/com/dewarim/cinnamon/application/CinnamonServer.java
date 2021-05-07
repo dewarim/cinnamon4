@@ -48,8 +48,8 @@ import java.io.IOException;
 import java.util.EnumSet;
 import java.util.List;
 
-import static com.dewarim.cinnamon.Constants.DAO_USER_ACCOUNT;
-import static com.dewarim.cinnamon.Constants.DEFAULT_DATABASE_SESSION_FACTORY;
+import static com.dewarim.cinnamon.api.Constants.DAO_USER_ACCOUNT;
+import static com.dewarim.cinnamon.api.Constants.DEFAULT_DATABASE_SESSION_FACTORY;
 
 /**
  *

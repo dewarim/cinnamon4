@@ -1,6 +1,7 @@
-package com.dewarim.cinnamon;
+package com.dewarim.cinnamon.api;
 
 /**
+ *
  */
 public class Constants {
 
@@ -26,5 +27,7 @@ public class Constants {
     public static final String OBJTYPE_DEFAULT     = "_default_objtype";
     public static final String ROOT_FOLDER_NAME    = "root";
 
+    public static final String HEADER_FIELD_CINNAMON_ERROR = "cinnamon-error";
 
+    public static final Integer EXPECTED_SIZE_ANY = -1;
 }

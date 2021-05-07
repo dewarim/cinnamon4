@@ -3,6 +3,7 @@ package com.dewarim.cinnamon.application;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.application.exception.CinnamonException;
 import com.dewarim.cinnamon.model.response.CinnamonError;
+import com.dewarim.cinnamon.model.response.CinnamonErrorWrapper;
 import com.dewarim.cinnamon.model.response.GenericResponse;
 import com.dewarim.cinnamon.model.response.Wrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -12,8 +13,11 @@ import jakarta.servlet.http.HttpServletResponseWrapper;
 import org.apache.http.HttpStatus;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 
-import static com.dewarim.cinnamon.Constants.CONTENT_TYPE_XML;
+import static com.dewarim.cinnamon.api.Constants.CONTENT_TYPE_XML;
+import static com.dewarim.cinnamon.api.Constants.HEADER_FIELD_CINNAMON_ERROR;
 
 public class CinnamonResponse extends HttpServletResponseWrapper {
 
@@ -29,12 +33,20 @@ public class CinnamonResponse extends HttpServletResponseWrapper {
     }
 
     public void generateErrorMessage(int statusCode, ErrorCode errorCode, String message) {
-        CinnamonError error = new CinnamonError(errorCode.getCode(), message);
+        generateErrorMessage(statusCode, errorCode, message, Collections.emptyList());
+    }
+
+    public void generateErrorMessage(int statusCode, ErrorCode errorCode, String message, List<CinnamonError> errors) {
+        CinnamonError        error   = new CinnamonError(errorCode.getCode(), message);
+        CinnamonErrorWrapper wrapper = new CinnamonErrorWrapper();
+        wrapper.getErrors().add(error);
+        wrapper.getErrors().addAll(errors);
         try {
             response.setStatus(statusCode);
             response.setContentType(CONTENT_TYPE_XML);
             response.setCharacterEncoding("UTF-8");
-            xmlMapper.writeValue(response.getWriter(), error);
+            response.setHeader(HEADER_FIELD_CINNAMON_ERROR, errorCode.name());
+            xmlMapper.writeValue(response.getWriter(), wrapper);
         } catch (IOException e) {
             throw new CinnamonException("Failed to generate error message:", e);
         }
@@ -64,10 +76,9 @@ public class CinnamonResponse extends HttpServletResponseWrapper {
     public void renderResponseIfNecessary() throws IOException {
         if (hasPendingContent()) {
             ResponseUtil.responseIsXmlWithStatus(response, statusCode);
-            if(wrapper != null) {
+            if (wrapper != null) {
                 xmlMapper.writeValue(response.getOutputStream(), wrapper);
-            }
-            else{
+            } else {
                 xmlMapper.writeValue(response.getOutputStream(), genericResponse);
             }
         }

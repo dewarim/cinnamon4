@@ -9,7 +9,6 @@ import com.dewarim.cinnamon.api.content.ContentProvider;
 import com.dewarim.cinnamon.api.lifecycle.State;
 import com.dewarim.cinnamon.api.lifecycle.StateChangeResult;
 import com.dewarim.cinnamon.application.CinnamonResponse;
-import com.dewarim.cinnamon.application.ErrorResponseGenerator;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.dao.AclDao;
 import com.dewarim.cinnamon.dao.FolderDao;
@@ -77,7 +76,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.dewarim.cinnamon.Constants.LANGUAGE_UNDETERMINED_ISO_CODE;
+import static com.dewarim.cinnamon.api.Constants.LANGUAGE_UNDETERMINED_ISO_CODE;
 import static jakarta.servlet.http.HttpServletResponse.SC_OK;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
@@ -103,7 +102,6 @@ public class OsdServlet extends BaseServlet {
         UserAccount      user             = ThreadLocalSqlSession.getCurrentUser();
         OsdDao           osdDao           = new OsdDao();
         CinnamonResponse cinnamonResponse = (CinnamonResponse) response;
-        try {
             switch (pathInfo) {
                 case "/createOsd":
                     createOsd(request, cinnamonResponse, user, osdDao);
@@ -148,12 +146,8 @@ public class OsdServlet extends BaseServlet {
                     newVersion(request, cinnamonResponse, user, osdDao);
                     break;
                 default:
-                    response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+                    ErrorCode.RESOURCE_NOT_FOUND.throwUp();
             }
-        } catch (FailedRequestException e) {
-            ErrorCode errorCode = e.getErrorCode();
-            ErrorResponseGenerator.generateErrorMessage(response, errorCode, e.getMessage());
-        }
     }
 
     private void deleteOsds(HttpServletRequest request, CinnamonResponse cinnamonResponse, UserAccount user, OsdDao osdDao) throws IOException {

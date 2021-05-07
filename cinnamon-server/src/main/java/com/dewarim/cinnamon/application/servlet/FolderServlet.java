@@ -1,11 +1,10 @@
 package com.dewarim.cinnamon.application.servlet;
 
-import com.dewarim.cinnamon.Constants;
 import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.FailedRequestException;
+import com.dewarim.cinnamon.api.Constants;
 import com.dewarim.cinnamon.application.CinnamonResponse;
-import com.dewarim.cinnamon.application.ErrorResponseGenerator;
 import com.dewarim.cinnamon.application.ResponseUtil;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.application.exception.BadArgumentException;
@@ -67,47 +66,42 @@ public class FolderServlet extends BaseServlet {
         UserAccount      user             = ThreadLocalSqlSession.getCurrentUser();
         FolderDao        folderDao        = new FolderDao();
         CinnamonResponse cinnamonResponse = (CinnamonResponse) response;
-        try {
-            switch (pathInfo) {
-                case "/createFolder":
-                    createFolder(request, response, user, folderDao);
-                    break;
-                case "/createMeta":
-                    createMeta(request, cinnamonResponse, user, folderDao);
-                    break;
-                case "/deleteMeta":
-                    deleteMeta(request, response, user, folderDao);
-                    break;
-                case "/getFolder":
-                    getFolder(request, response, user, folderDao);
-                    break;
-                case "/getFolderByPath":
-                    getFolderByPath(request, response, user, folderDao);
-                    break;
-                case "/getFolders":
-                    getFolders(request, response, user, folderDao);
-                    break;
-                case "/getMeta":
-                    getMeta(request, cinnamonResponse, user, folderDao);
-                    break;
-                case "/getSubFolders":
-                    getSubFolders(request, response, user, folderDao);
-                    break;
-                case "/setSummary":
-                    setSummary(request, response, user, folderDao);
-                    break;
-                case "/getSummaries":
-                    getSummaries(request, response, user, folderDao);
-                    break;
-                case "/updateFolder":
-                    updateFolder(request, response, user, folderDao);
-                    break;
-                default:
-                    response.setStatus(HttpServletResponse.SC_NO_CONTENT);
-            }
-        } catch (FailedRequestException e) {
-            ErrorCode errorCode = e.getErrorCode();
-            ErrorResponseGenerator.generateErrorMessage(response, errorCode, e.getMessage());
+        switch (pathInfo) {
+            case "/createFolder":
+                createFolder(request, response, user, folderDao);
+                break;
+            case "/createMeta":
+                createMeta(request, cinnamonResponse, user, folderDao);
+                break;
+            case "/deleteMeta":
+                deleteMeta(request, response, user, folderDao);
+                break;
+            case "/getFolder":
+                getFolder(request, response, user, folderDao);
+                break;
+            case "/getFolderByPath":
+                getFolderByPath(request, response, user, folderDao);
+                break;
+            case "/getFolders":
+                getFolders(request, response, user, folderDao);
+                break;
+            case "/getMeta":
+                getMeta(request, cinnamonResponse, user, folderDao);
+                break;
+            case "/getSubFolders":
+                getSubFolders(request, response, user, folderDao);
+                break;
+            case "/setSummary":
+                setSummary(request, response, user, folderDao);
+                break;
+            case "/getSummaries":
+                getSummaries(request, response, user, folderDao);
+                break;
+            case "/updateFolder":
+                updateFolder(request, response, user, folderDao);
+                break;
+            default:
+                ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
     }
 

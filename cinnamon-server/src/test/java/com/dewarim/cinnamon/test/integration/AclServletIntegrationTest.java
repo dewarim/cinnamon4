@@ -1,8 +1,8 @@
 package com.dewarim.cinnamon.test.integration;
 
-import com.dewarim.cinnamon.Constants;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.Unwrapper;
+import com.dewarim.cinnamon.api.Constants;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.request.IdRequest;
@@ -23,7 +23,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static com.dewarim.cinnamon.Constants.ACL_DEFAULT;
+import static com.dewarim.cinnamon.api.Constants.ACL_DEFAULT;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.*;
@@ -73,14 +73,14 @@ public class AclServletIntegrationTest extends CinnamonIntegrationTest {
     public void renameToNullShouldFail() throws IOException {
         UpdateAclRequest updateRequest   = new UpdateAclRequest(4L, null);
         HttpResponse     aclListResponse = sendAdminRequest(UrlMapping.ACL__UPDATE, updateRequest);
-        assertCinnamonError(aclListResponse, ErrorCode.NAME_PARAM_IS_INVALID);
+        assertCinnamonError(aclListResponse, ErrorCode.INVALID_REQUEST);
     }
 
     @Test
-    public void remainNonExistentAclShouldFail() throws IOException {
-        UpdateAclRequest updateRequest   = new UpdateAclRequest(Long.MAX_VALUE, "foo");
+    public void renameNonExistentAclShouldFail() throws IOException {
+        UpdateAclRequest updateRequest   = new UpdateAclRequest(Long.MAX_VALUE, "fooXXX");
         HttpResponse     aclListResponse = sendAdminRequest(UrlMapping.ACL__UPDATE, updateRequest);
-        assertCinnamonError(aclListResponse, ErrorCode.ACL_NOT_FOUND);
+        assertCinnamonError(aclListResponse, ErrorCode.OBJECT_NOT_FOUND);
     }
 
     @Test

@@ -1,11 +1,12 @@
 package com.dewarim.cinnamon.model;
 
+import com.dewarim.cinnamon.api.Identifiable;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.Objects;
 
 @JacksonXmlRootElement(localName = "acl")
-public class Acl {
+public class Acl implements Identifiable {
     
     private Long id;
     private String name;

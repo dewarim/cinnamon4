@@ -1,9 +1,11 @@
 package com.dewarim.cinnamon.model;
 
+import com.dewarim.cinnamon.api.Identifiable;
+
 import java.util.List;
 import java.util.Objects;
 
-public class Lifecycle {
+public class Lifecycle implements Identifiable {
     
     private Long id;
     private String name;

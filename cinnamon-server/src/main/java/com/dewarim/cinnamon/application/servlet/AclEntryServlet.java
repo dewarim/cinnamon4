@@ -2,7 +2,7 @@ package com.dewarim.cinnamon.application.servlet;
 
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.FailedRequestException;
-import com.dewarim.cinnamon.application.ErrorResponseGenerator;
+import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.ResponseUtil;
 import com.dewarim.cinnamon.dao.AclEntryDao;
 import com.dewarim.cinnamon.model.AclEntry;
@@ -26,21 +26,14 @@ public class AclEntryServlet extends HttpServlet {
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
-        String pathInfo = request.getPathInfo();
-        if (pathInfo == null) {
-            pathInfo = "";
-        }
-        try {
-            switch (pathInfo) {
-                case "/listAclEntries":
-                    listAclEntries(request, response);
-                    break;
-                default:
-                    response.setStatus(HttpServletResponse.SC_NO_CONTENT);
-            }
-        } catch (FailedRequestException e) {
-            ErrorCode errorCode = e.getErrorCode();
-            ErrorResponseGenerator.generateErrorMessage(response, errorCode, e.getMessage());
+        UrlMapping mapping = UrlMapping.getByPath(request.getRequestURI());
+
+        switch (mapping) {
+            case ACL_ENTRY__LIST_ACL_ENTRIES:
+                listAclEntries(request, response);
+                break;
+            default:
+                ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
     }
 

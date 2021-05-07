@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.model;
 
+import com.dewarim.cinnamon.api.Identifiable;
 import com.dewarim.cinnamon.api.lifecycle.LifecycleStateConfig;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -9,7 +10,7 @@ import java.io.IOException;
 import java.util.Objects;
 
 @JsonIgnoreProperties(value = { "lifecycleStateConfig" })
-public class LifecycleState {
+public class LifecycleState implements Identifiable {
 
     private Long   id;
     private String name;

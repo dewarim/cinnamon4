@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.application.servlet;
 
+import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.dao.CmnGroupDao;
 import com.dewarim.cinnamon.model.CmnGroup;
 import com.dewarim.cinnamon.model.request.ListRequest;
@@ -16,7 +17,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
 
-import static com.dewarim.cinnamon.Constants.CONTENT_TYPE_XML;
+import static com.dewarim.cinnamon.api.Constants.CONTENT_TYPE_XML;
 
 @WebServlet(name = "Group", urlPatterns = "/")
 public class GroupServlet extends HttpServlet {
@@ -34,7 +35,7 @@ public class GroupServlet extends HttpServlet {
                 listGroups(request, response);
                 break;
             default:
-                response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+                ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
     }
 

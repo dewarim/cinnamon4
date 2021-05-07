@@ -29,8 +29,7 @@ public class StaticServlet extends HttpServlet {
         }
         // note: pathInfo seems to filter out ../ automatically, but I think it's useful to be sure.
         if (request.getRequestURI().contains("../")) {
-            ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.STATIC__NO_PATH_TRAVERSAL);
-            return;
+            ErrorCode.STATIC__NO_PATH_TRAVERSAL.throwUp();
         }
         handleStaticContentRequest(pathInfo, response);
     }

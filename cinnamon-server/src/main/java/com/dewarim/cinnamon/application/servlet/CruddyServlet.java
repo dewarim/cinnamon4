@@ -2,6 +2,7 @@ package com.dewarim.cinnamon.application.servlet;
 
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.FailedRequestException;
+import com.dewarim.cinnamon.api.Identifiable;
 import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.dao.CrudDao;
 import com.dewarim.cinnamon.dao.UserAccountDao;
@@ -21,7 +22,7 @@ import java.util.List;
 /**
  * An interface for Servlets that implements CRUD operations.
  */
-public interface CruddyServlet<T> {
+public interface CruddyServlet<T extends Identifiable> {
 
     default void create(CreateRequest<T> createRequest, CrudDao<T> dao, CinnamonResponse cinnamonResponse) {
         List<T> ts = dao.create(createRequest.list());
@@ -76,8 +77,13 @@ public interface CruddyServlet<T> {
     }
 
     default void update(UpdateRequest<T> updateRequest, CrudDao<T> dao, CinnamonResponse cinnamonResponse){
-        List<T> updatedItems = dao.update(updateRequest.list());
-        cinnamonResponse.setWrapper(updateRequest.fetchResponseWrapper().setList(updatedItems));
+        try {
+            List<T> updatedItems = dao.update(updateRequest.list());
+            cinnamonResponse.setWrapper(updateRequest.fetchResponseWrapper().setList(updatedItems));
+        }
+        catch (PersistenceException | SQLException e){
+            throw new FailedRequestException(ErrorCode.DB_UPDATE_FAILED, e.getMessage());
+        }
     }
 
 }

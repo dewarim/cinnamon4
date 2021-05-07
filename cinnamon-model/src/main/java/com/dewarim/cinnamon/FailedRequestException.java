@@ -2,6 +2,7 @@ package com.dewarim.cinnamon;
 
 import com.dewarim.cinnamon.model.response.CinnamonError;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -12,31 +13,27 @@ import java.util.List;
 public class FailedRequestException extends RuntimeException {
 
     private final ErrorCode           errorCode;
-    private final String              message;
-    private       List<CinnamonError> errors;
+    private       List<CinnamonError> errors = new ArrayList<>();
 
     public FailedRequestException(ErrorCode errorCode) {
-        super();
+        super(errorCode.getCode());
         this.errorCode = errorCode;
-        this.message = errorCode.getCode();
     }
 
-    public FailedRequestException( ErrorCode errorCode, Throwable cause) {
-        super(cause);
+    public FailedRequestException(ErrorCode errorCode, Throwable cause) {
+        super(errorCode.getCode(),cause);
         this.errorCode = errorCode;
-        this.message=errorCode.getCode();
 
     }
 
     public FailedRequestException(ErrorCode errorCode, String message) {
-        super();
+        super(message);
         this.errorCode = errorCode;
-        this.message = message;
     }
 
     public FailedRequestException(ErrorCode errorCode, List<CinnamonError> errors) {
+        super(errorCode.getCode());
         this.errorCode = errorCode;
-        this.message = errorCode.getCode();
         this.errors = errors;
     }
 
@@ -44,10 +41,7 @@ public class FailedRequestException extends RuntimeException {
         return errorCode;
     }
 
-    @Override
-    public String getMessage() {
-        return message;
+    public List<CinnamonError> getErrors() {
+        return errors;
     }
-
-
 }

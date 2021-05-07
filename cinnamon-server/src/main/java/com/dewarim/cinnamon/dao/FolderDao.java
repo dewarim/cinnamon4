@@ -16,7 +16,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static com.dewarim.cinnamon.Constants.ROOT_FOLDER_NAME;
+import static com.dewarim.cinnamon.api.Constants.ROOT_FOLDER_NAME;
 
 public class FolderDao {
 

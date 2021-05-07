@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.test.integration;
 
+import com.dewarim.cinnamon.CinnamonClientException;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.model.Folder;
@@ -211,44 +212,62 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createMetaInvalidRequest() throws IOException {
-        CreateMetaRequest request      = new CreateMetaRequest();
-        HttpResponse      metaResponse = sendStandardRequest(UrlMapping.FOLDER__CREATE_META, request);
-        assertCinnamonError(metaResponse, ErrorCode.INVALID_REQUEST);
+        CreateMetaRequest request = new CreateMetaRequest();
+        try {
+            client.createFolderMeta(request);
+        } catch (CinnamonClientException e) {
+            assertEquals(e.getErrorCode(), ErrorCode.INVALID_REQUEST);
+        }
     }
 
     @Test
     public void createMetaObjectNotFound() throws IOException {
-        CreateMetaRequest request      = new CreateMetaRequest(Long.MAX_VALUE, "foo", 1L);
-        HttpResponse      metaResponse = sendStandardRequest(UrlMapping.FOLDER__CREATE_META, request);
-        assertCinnamonError(metaResponse, ErrorCode.FOLDER_NOT_FOUND);
+        CreateMetaRequest request = new CreateMetaRequest(Long.MAX_VALUE, "foo", 1L);
+        try {
+            client.createFolderMeta(request);
+        } catch (CinnamonClientException e) {
+            assertEquals(e.getErrorCode(), ErrorCode.FOLDER_NOT_FOUND);
+        }
     }
 
     @Test
     public void createMetaObjectNotWritable() throws IOException {
-        CreateMetaRequest request      = new CreateMetaRequest(15L, "foo", 1L);
-        HttpResponse      metaResponse = sendStandardRequest(UrlMapping.FOLDER__CREATE_META, request);
-        assertCinnamonError(metaResponse, ErrorCode.NO_WRITE_CUSTOM_METADATA_PERMISSION);
+        CreateMetaRequest request = new CreateMetaRequest(15L, "foo", 1L);
+        try {
+            client.createFolderMeta(request);
+        } catch (CinnamonClientException e) {
+            assertEquals(e.getErrorCode(), ErrorCode.NO_WRITE_CUSTOM_METADATA_PERMISSION);
+        }
     }
 
     @Test
     public void createMetaMetasetTypeByIdNotFound() throws IOException {
-        CreateMetaRequest request      = new CreateMetaRequest(17L, "foo", Long.MAX_VALUE);
-        HttpResponse      metaResponse = sendStandardRequest(UrlMapping.FOLDER__CREATE_META, request);
-        assertCinnamonError(metaResponse, ErrorCode.METASET_TYPE_NOT_FOUND);
+        CreateMetaRequest request = new CreateMetaRequest(17L, "foo", Long.MAX_VALUE);
+        try {
+            client.createFolderMeta(request);
+        } catch (CinnamonClientException e) {
+            assertEquals(e.getErrorCode(), ErrorCode.METASET_TYPE_NOT_FOUND);
+        }
     }
 
     @Test
     public void createMetaMetasetTypeByNameNotFound() throws IOException {
-        CreateMetaRequest request      = new CreateMetaRequest(17L, "foo", "unknown");
-        HttpResponse      metaResponse = sendStandardRequest(UrlMapping.FOLDER__CREATE_META, request);
-        assertCinnamonError(metaResponse, ErrorCode.METASET_TYPE_NOT_FOUND);
+        CreateMetaRequest request = new CreateMetaRequest(17L, "foo", "unknown");
+        try {
+            client.createFolderMeta(request);
+        } catch (CinnamonClientException e) {
+            assertEquals(e.getErrorCode(), ErrorCode.METASET_TYPE_NOT_FOUND);
+        }
     }
 
     @Test
     public void createMetaMetasetIsUniqueAndExists() throws IOException {
-        CreateMetaRequest request      = new CreateMetaRequest(18L, "duplicate license", "license");
-        HttpResponse      metaResponse = sendStandardRequest(UrlMapping.FOLDER__CREATE_META, request);
-        assertCinnamonError(metaResponse, ErrorCode.METASET_IS_UNIQUE_AND_ALREADY_EXISTS);
+        CreateMetaRequest request = new CreateMetaRequest(18L, "duplicate license", "license");
+        try {
+            client.createFolderMeta(request);
+        } catch (CinnamonClientException e) {
+            assertEquals(e.getErrorCode(), ErrorCode.METASET_IS_UNIQUE_AND_ALREADY_EXISTS);
+        }
     }
 
     @Test
@@ -324,65 +343,88 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateFolderInvalidRequest() throws IOException {
-        UpdateFolderRequest request  = new UpdateFolderRequest();
-        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__UPDATE_FOLDER, request);
-        assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
+        UpdateFolderRequest request = new UpdateFolderRequest();
+        try {
+            client.updateFolders(request);
+        } catch (CinnamonClientException e) {
+            assertEquals(e.getErrorCode(), ErrorCode.INVALID_REQUEST);
+        }
     }
 
     @Test
     public void updateFolderFolderNotFound() throws IOException {
         UpdateFolderRequest request = new UpdateFolderRequest(
                 Long.MAX_VALUE, null, null, null, null, null);
-        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__UPDATE_FOLDER, request);
-        assertCinnamonError(response, ErrorCode.FOLDER_NOT_FOUND);
+        try {
+            client.updateFolders(request);
+        } catch (CinnamonClientException e) {
+            assertEquals(e.getErrorCode(), ErrorCode.FOLDER_NOT_FOUND);
+        }
     }
 
     @Test
     public void updateFolderNoEditPermission() throws IOException {
         UpdateFolderRequest request = new UpdateFolderRequest(
                 22L, null, null, null, null, null);
-        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__UPDATE_FOLDER, request);
-        assertCinnamonError(response, ErrorCode.NO_EDIT_FOLDER_PERMISSION);
+        try {
+            client.updateFolders(request);
+        } catch (CinnamonClientException e) {
+            assertEquals(e.getErrorCode(), ErrorCode.NO_EDIT_FOLDER_PERMISSION);
+        }
     }
 
     @Test
     public void updateFolderNotWritable() throws IOException {
         UpdateFolderRequest request = new UpdateFolderRequest(
                 26L, null, null, null, null, null);
-        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__UPDATE_FOLDER, request);
-        assertCinnamonError(response, ErrorCode.NO_WRITE_SYS_METADATA_PERMISSION);
+        try {
+            client.updateFolders(request);
+        } catch (CinnamonClientException e) {
+            assertEquals(e.getErrorCode(), ErrorCode.NO_WRITE_SYS_METADATA_PERMISSION);
+        }
     }
 
     @Test
     public void updateFolderCannotMoveFolderIntoItself() throws IOException {
-        UpdateFolderRequest request = new UpdateFolderRequest(
-                25L, 25L, null, null, null, null);
-        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__UPDATE_FOLDER, request);
-        assertCinnamonError(response, ErrorCode.CANNOT_MOVE_FOLDER_INTO_ITSELF);
+        UpdateFolderRequest request = new UpdateFolderRequest(25L, 25L, null, null, null, null);
+        try {
+            client.updateFolders(request);
+        } catch (CinnamonClientException e) {
+            assertEquals(e.getErrorCode(), ErrorCode.CANNOT_MOVE_FOLDER_INTO_ITSELF);
+        }
     }
 
     @Test
     public void updateFolderNoCreatePermission() throws IOException {
         UpdateFolderRequest request = new UpdateFolderRequest(
                 25L, 22L, null, null, null, null);
-        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__UPDATE_FOLDER, request);
-        assertCinnamonError(response, ErrorCode.NO_CREATE_PERMISSION);
+        try {
+            client.updateFolders(request);
+        } catch (CinnamonClientException e) {
+            assertEquals(e.getErrorCode(), ErrorCode.NO_CREATE_PERMISSION);
+        }
     }
 
     @Test
     public void updateFolderParentFolderNotFound() throws IOException {
         UpdateFolderRequest request = new UpdateFolderRequest(
                 25L, Long.MAX_VALUE, null, null, null, null);
-        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__UPDATE_FOLDER, request);
-        assertCinnamonError(response, ErrorCode.PARENT_FOLDER_NOT_FOUND);
+        try {
+            client.updateFolders(request);
+        } catch (CinnamonClientException e) {
+            assertEquals(e.getErrorCode(), ErrorCode.PARENT_FOLDER_NOT_FOUND);
+        }
     }
 
     @Test
     public void updateFolderNoMovePermission() throws IOException {
         UpdateFolderRequest request = new UpdateFolderRequest(
                 28L, 27L, null, null, null, null);
-        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__UPDATE_FOLDER, request);
-        assertCinnamonError(response, ErrorCode.NO_MOVE_PERMISSION);
+        try {
+            client.updateFolders(request);
+        } catch (CinnamonClientException e) {
+            assertEquals(e.getErrorCode(), ErrorCode.NO_MOVE_PERMISSION);
+        }
     }
 
     @Test
@@ -390,8 +432,11 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         UpdateFolderRequest request = new UpdateFolderRequest(
                 25L, null, "move here", null, null, null
         );
-        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__UPDATE_FOLDER, request);
-        assertCinnamonError(response, ErrorCode.DUPLICATE_FOLDER_NAME_FORBIDDEN);
+        try {
+            client.updateFolders(request);
+        } catch (CinnamonClientException e) {
+            assertEquals(e.getErrorCode(), ErrorCode.DUPLICATE_FOLDER_NAME_FORBIDDEN);
+        }
     }
 
     @Test
@@ -399,8 +444,11 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         UpdateFolderRequest request = new UpdateFolderRequest(
                 25L, null, null, null, Long.MAX_VALUE, null
         );
-        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__UPDATE_FOLDER, request);
-        assertCinnamonError(response, ErrorCode.FOLDER_TYPE_NOT_FOUND);
+        try {
+            client.updateFolders(request);
+        } catch (CinnamonClientException e) {
+            assertEquals(e.getErrorCode(), ErrorCode.FOLDER_TYPE_NOT_FOUND);
+        }
     }
 
     @Test
@@ -408,8 +456,12 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         UpdateFolderRequest request = new UpdateFolderRequest(
                 23L, null, null, null, null, 1L
         );
-        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__UPDATE_FOLDER, request);
-        assertCinnamonError(response, ErrorCode.MISSING_SET_ACL_PERMISSION);
+
+        try {
+            client.updateFolders(request);
+        } catch (CinnamonClientException e) {
+            assertEquals(e.getErrorCode(), ErrorCode.MISSING_SET_ACL_PERMISSION);
+        }
     }
 
     @Test
@@ -417,8 +469,12 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         UpdateFolderRequest request = new UpdateFolderRequest(
                 24L, null, null, null, null, Long.MAX_VALUE
         );
-        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__UPDATE_FOLDER, request);
-        assertCinnamonError(response, ErrorCode.ACL_NOT_FOUND);
+
+        try {
+            client.updateFolders(request);
+        } catch (CinnamonClientException e) {
+            assertEquals(e.getErrorCode(), ErrorCode.ACL_NOT_FOUND);
+        }
     }
 
     @Test
@@ -426,8 +482,11 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         UpdateFolderRequest request = new UpdateFolderRequest(
                 23L, null, null, Long.MAX_VALUE, null, null
         );
-        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__UPDATE_FOLDER, request);
-        assertCinnamonError(response, ErrorCode.USER_ACCOUNT_NOT_FOUND);
+        try {
+            client.updateFolders(request);
+        } catch (CinnamonClientException e) {
+            assertEquals(e.getErrorCode(), ErrorCode.USER_ACCOUNT_NOT_FOUND);
+        }
     }
 
     @Test

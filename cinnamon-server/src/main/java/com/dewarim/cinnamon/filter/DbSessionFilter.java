@@ -18,7 +18,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 
-import static com.dewarim.cinnamon.Constants.CONTENT_TYPE_XML;
+import static com.dewarim.cinnamon.api.Constants.CONTENT_TYPE_XML;
 
 /**
  *

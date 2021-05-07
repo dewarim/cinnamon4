@@ -47,7 +47,7 @@ public class RelationServlet extends HttpServlet {
                 deleteRelation(request, response);
                 break;
             default:
-                response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+                ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
     }
 

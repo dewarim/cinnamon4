@@ -28,8 +28,8 @@ import java.io.IOException;
 import java.util.Optional;
 import java.util.Properties;
 
-import static com.dewarim.cinnamon.Constants.CONTENT_TYPE_XML;
 import static com.dewarim.cinnamon.ErrorCode.CONNECTION_FAIL_WRONG_PASSWORD;
+import static com.dewarim.cinnamon.api.Constants.CONTENT_TYPE_XML;
 
 /**
  *

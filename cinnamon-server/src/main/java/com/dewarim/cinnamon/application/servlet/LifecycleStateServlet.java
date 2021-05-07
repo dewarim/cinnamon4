@@ -29,7 +29,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static com.dewarim.cinnamon.Constants.CONTENT_TYPE_XML;
+import static com.dewarim.cinnamon.api.Constants.CONTENT_TYPE_XML;
 
 @WebServlet(name = "LifecycleState", urlPatterns = "/")
 public class LifecycleStateServlet extends BaseServlet {
@@ -45,29 +45,24 @@ public class LifecycleStateServlet extends BaseServlet {
         OsdDao            osdDao       = new OsdDao();
         LifecycleDao      lifecycleDao = new LifecycleDao();
         LifecycleStateDao stateDao     = new LifecycleStateDao();
-        try {
-            switch (pathInfo) {
-                case "/attachLifecycle":
-                    attachLifecycleState(request, response, osdDao, lifecycleDao, stateDao);
-                    break;
-                case "/changeState":
-                    changeState(request, response, osdDao, stateDao);
-                    break;
-                case "/detachLifecycle":
-                    detachLifecycleState(request, response, osdDao);
-                    break;
-                case "/getLifecycleState":
-                    getLifecycleState(request, response);
-                    break;
-                case "/getNextStates":
-                    getNextStates(request, response, osdDao, stateDao);
-                    break;
-                default:
-                    response.setStatus(HttpServletResponse.SC_NO_CONTENT);
-            }
-        } catch (FailedRequestException e) {
-            ErrorCode errorCode = e.getErrorCode();
-            ErrorResponseGenerator.generateErrorMessage(response, errorCode, e.getMessage());
+        switch (pathInfo) {
+            case "/attachLifecycle":
+                attachLifecycleState(request, response, osdDao, lifecycleDao, stateDao);
+                break;
+            case "/changeState":
+                changeState(request, response, osdDao, stateDao);
+                break;
+            case "/detachLifecycle":
+                detachLifecycleState(request, response, osdDao);
+                break;
+            case "/getLifecycleState":
+                getLifecycleState(request, response);
+                break;
+            case "/getNextStates":
+                getNextStates(request, response, osdDao, stateDao);
+                break;
+            default:
+                ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
     }
 

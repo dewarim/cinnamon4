@@ -1,8 +1,10 @@
 package com.dewarim.cinnamon.model;
 
+import com.dewarim.cinnamon.api.Identifiable;
+
 import java.util.Objects;
 
-public class Language {
+public class Language implements Identifiable {
     
     private Long id;
     private String isoCode;

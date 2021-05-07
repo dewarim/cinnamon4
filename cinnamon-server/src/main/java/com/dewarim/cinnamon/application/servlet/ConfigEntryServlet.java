@@ -1,7 +1,6 @@
 package com.dewarim.cinnamon.application.servlet;
 
 import com.dewarim.cinnamon.ErrorCode;
-import com.dewarim.cinnamon.FailedRequestException;
 import com.dewarim.cinnamon.application.ErrorResponseGenerator;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.dao.ConfigEntryDao;
@@ -23,7 +22,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Optional;
 
-import static com.dewarim.cinnamon.Constants.CONTENT_TYPE_XML;
+import static com.dewarim.cinnamon.api.Constants.CONTENT_TYPE_XML;
 
 @WebServlet(name = "ConfigEntry", urlPatterns = "/")
 public class ConfigEntryServlet extends HttpServlet {
@@ -36,20 +35,15 @@ public class ConfigEntryServlet extends HttpServlet {
         if (pathInfo == null) {
             pathInfo = "";
         }
-        try {
-            switch (pathInfo) {
-                case "/getConfigEntry":
-                    getConfigEntry(request, response);
-                    break;
-                case "/setConfigEntry":
-                    setConfigEntry(request, response);
-                    break;
-                default:
-                    response.setStatus(HttpServletResponse.SC_NO_CONTENT);
-            }
-        } catch (FailedRequestException e) {
-            ErrorCode errorCode = e.getErrorCode();
-            ErrorResponseGenerator.generateErrorMessage(response, errorCode, e.getMessage());
+        switch (pathInfo) {
+            case "/getConfigEntry":
+                getConfigEntry(request, response);
+                break;
+            case "/setConfigEntry":
+                setConfigEntry(request, response);
+                break;
+            default:
+                ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
     }
 

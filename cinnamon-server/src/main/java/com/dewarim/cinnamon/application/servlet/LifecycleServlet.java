@@ -44,7 +44,7 @@ public class LifecycleServlet extends HttpServlet {
                 listLifecycles(request, response);
                 break;
             default:
-                response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+                ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
     }
 

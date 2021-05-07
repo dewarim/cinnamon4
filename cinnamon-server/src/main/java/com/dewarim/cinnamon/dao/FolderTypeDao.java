@@ -7,7 +7,12 @@ import org.apache.ibatis.session.SqlSession;
 import java.util.List;
 import java.util.Optional;
 
-public class FolderTypeDao {
+public class FolderTypeDao implements CrudDao<FolderType>{
+
+    @Override
+    public String getTypeClassName() {
+        return FolderType.class.getName();
+    }
 
     public List<FolderType> listFolderTypes() {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
@@ -16,13 +21,13 @@ public class FolderTypeDao {
 
     public Optional<FolderType> getFolderTypeById(long id) {
         SqlSession   sqlSession   = ThreadLocalSqlSession.getSqlSession();
-        FolderType folderType = sqlSession.selectOne("com.dewarim.cinnamon.FolderTypeMapper.getFolderTypeById", id);
+        FolderType folderType = sqlSession.selectOne("com.dewarim.cinnamon.model.FolderType.getFolderTypeById", id);
         return Optional.ofNullable(folderType);
     }
 
     public Optional<FolderType> getFolderTypeByName(String name) {
         SqlSession   sqlSession   = ThreadLocalSqlSession.getSqlSession();
-        FolderType folderType = sqlSession.selectOne("com.dewarim.cinnamon.FolderTypeMapper.getFolderTypeByName", name);
+        FolderType folderType = sqlSession.selectOne("com.dewarim.cinnamon.model.FolderType.getFolderTypeByName", name);
         return Optional.ofNullable(folderType);
     }
 

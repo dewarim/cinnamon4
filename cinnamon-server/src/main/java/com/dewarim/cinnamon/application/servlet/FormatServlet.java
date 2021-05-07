@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.application.servlet;
 
+import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.dao.FormatDao;
 import com.dewarim.cinnamon.model.Format;
 import com.dewarim.cinnamon.model.request.format.ListFormatRequest;
@@ -15,7 +16,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
 
-import static com.dewarim.cinnamon.Constants.CONTENT_TYPE_XML;
+import static com.dewarim.cinnamon.api.Constants.CONTENT_TYPE_XML;
 
 @WebServlet(name = "Format", urlPatterns = "/")
 public class FormatServlet extends HttpServlet {
@@ -33,7 +34,7 @@ public class FormatServlet extends HttpServlet {
                 listFormats(request, response);
                 break;
             default:
-                response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+                ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
     }
 

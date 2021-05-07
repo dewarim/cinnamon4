@@ -2,7 +2,6 @@ package com.dewarim.cinnamon.application.servlet;
 
 import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.ErrorCode;
-import com.dewarim.cinnamon.FailedRequestException;
 import com.dewarim.cinnamon.application.ErrorResponseGenerator;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.application.exception.UpdateException;
@@ -42,7 +41,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static com.dewarim.cinnamon.Constants.CONTENT_TYPE_XML;
+import static com.dewarim.cinnamon.api.Constants.CONTENT_TYPE_XML;
 import static com.dewarim.cinnamon.application.exception.UpdateException.*;
 
 @WebServlet(name = "Link", urlPatterns = "/")
@@ -60,7 +59,6 @@ public class LinkServlet extends HttpServlet {
         if (pathInfo == null) {
             pathInfo = "";
         }
-        try {
             switch (pathInfo) {
                 case "/createLink":
                     createLink(request, response);
@@ -75,13 +73,8 @@ public class LinkServlet extends HttpServlet {
                     updateLink(request, response);
                     break;
                 default:
-                    response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+                    ErrorCode.RESOURCE_NOT_FOUND.throwUp();
             }
-        } catch (FailedRequestException e) {
-            ErrorCode errorCode = e.getErrorCode();
-            ErrorResponseGenerator.generateErrorMessage(response, errorCode);
-        }
-
     }
 
     private void createLink(HttpServletRequest request, HttpServletResponse response) throws IOException {

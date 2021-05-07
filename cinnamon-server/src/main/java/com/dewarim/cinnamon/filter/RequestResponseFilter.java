@@ -13,10 +13,14 @@ import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 
 public class RequestResponseFilter implements Filter {
+
+    private static final Logger log = LogManager.getLogger(RequestResponseFilter.class);
 
     @Override
     public void init(FilterConfig filterConfig) {
@@ -30,14 +34,20 @@ public class RequestResponseFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        CinnamonRequest  cinnmonRequest   = new CinnamonRequest((HttpServletRequest) request);
+        CinnamonRequest  cinnamonRequest   = new CinnamonRequest((HttpServletRequest) request);
         CinnamonResponse cinnamonResponse = new CinnamonResponse((HttpServletResponse) response);
         try {
-            chain.doFilter(cinnmonRequest, cinnamonResponse);
+            chain.doFilter(cinnamonRequest, cinnamonResponse);
             cinnamonResponse.renderResponseIfNecessary();
         } catch (FailedRequestException e) {
+            log.debug("Failed request: ",e);
             ErrorCode errorCode = e.getErrorCode();
-            cinnamonResponse.generateErrorMessage(errorCode.getHttpResponseCode(), errorCode, e.getMessage());
+            if(e.getErrors().isEmpty()){
+                cinnamonResponse.generateErrorMessage(errorCode.getHttpResponseCode(), errorCode, e.getMessage());
+            }
+            else{
+                cinnamonResponse.generateErrorMessage(errorCode.getHttpResponseCode(), errorCode, e.getMessage(), e.getErrors());
+            }
         }
 
     }

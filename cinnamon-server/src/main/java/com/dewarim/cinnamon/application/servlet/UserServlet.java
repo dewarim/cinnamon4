@@ -1,10 +1,8 @@
 package com.dewarim.cinnamon.application.servlet;
 
 import com.dewarim.cinnamon.ErrorCode;
-import com.dewarim.cinnamon.FailedRequestException;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonServer;
-import com.dewarim.cinnamon.application.ErrorResponseGenerator;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.configuration.SecurityConfig;
 import com.dewarim.cinnamon.dao.UserAccountDao;
@@ -29,7 +27,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Optional;
 
-import static com.dewarim.cinnamon.Constants.CONTENT_TYPE_XML;
+import static com.dewarim.cinnamon.api.Constants.CONTENT_TYPE_XML;
 import static com.dewarim.cinnamon.application.ResponseUtil.responseIsOkayAndXml;
 
 /**
@@ -42,24 +40,19 @@ public class UserServlet extends HttpServlet {
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
-        try {
-            UrlMapping mapping = UrlMapping.getByPath(request.getRequestURI());
-            switch (mapping) {
-                case USER__USER_INFO:
-                    showUserInfo(xmlMapper.readValue(request.getReader(), UserInfoRequest.class), response);
-                    break;
-                case USER__LIST_USERS:
-                    listUsers(request, response);
-                    break;
-                case USER__SET_PASSWORD:
-                    setPassword(request, response);
-                    break;
-                default:
-                    ErrorCode.RESOURCE_NOT_FOUND.throwUp();
-            }
-        } catch (FailedRequestException e) {
-            ErrorCode errorCode = e.getErrorCode();
-            ErrorResponseGenerator.generateErrorMessage(response, errorCode, e.getMessage());
+        UrlMapping mapping = UrlMapping.getByPath(request.getRequestURI());
+        switch (mapping) {
+            case USER__USER_INFO:
+                showUserInfo(xmlMapper.readValue(request.getReader(), UserInfoRequest.class), response);
+                break;
+            case USER__LIST_USERS:
+                listUsers(request, response);
+                break;
+            case USER__SET_PASSWORD:
+                setPassword(request, response);
+                break;
+            default:
+                ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
     }
 

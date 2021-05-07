@@ -1,6 +1,6 @@
 package com.dewarim.cinnamon.dao;
 
-import com.dewarim.cinnamon.Constants;
+import com.dewarim.cinnamon.api.Constants;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.model.AclEntry;
 import com.dewarim.cinnamon.model.CmnGroup;

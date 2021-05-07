@@ -1,16 +1,22 @@
 package com.dewarim.cinnamon.dao;
 
+import com.dewarim.cinnamon.ErrorCode;
+import com.dewarim.cinnamon.FailedRequestException;
+import com.dewarim.cinnamon.api.Identifiable;
+import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import org.apache.ibatis.session.SqlSession;
 import org.postgresql.util.PSQLException;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.dewarim.cinnamon.dao.SqlAction.*;
 
-public interface CrudDao<T> {
+public interface CrudDao<T extends Identifiable> {
 
     int BATCH_SIZE = 1000;
 
@@ -75,10 +81,12 @@ public interface CrudDao<T> {
                 return name + INSERT.getSuffix();
             case DELETE:
                 return name + DELETE.getSuffix();
+            case GET_ALL_BY_ID:
+                return name + GET_ALL_BY_ID.getSuffix();
             case LIST:
                 return name + LIST.getSuffix();
             case UPDATE:
-                return name+UPDATE.getSuffix();
+                return name + UPDATE.getSuffix();
             default:
                 throw new IllegalArgumentException("Unmapped SqlAction " + action);
         }
@@ -100,15 +108,36 @@ public interface CrudDao<T> {
         return partitions;
     }
 
-    default List<T> update(List<T> items){
+    default List<T> update(List<T> items) throws SQLException {
         List<T>    updatedItems = new ArrayList<>();
         SqlSession sqlSession   = ThreadLocalSqlSession.getSqlSession();
         items.forEach(item -> {
             String sqlAction = getMapperNamespace(UPDATE);
-            // we could check if this returns != 1, but generally it's not forbidden to update an item without changing it
-            sqlSession.update(sqlAction, item);
+            // some more effort to check if an object does exist, so we can
+            // return a proper error message.
+            if (verifyExistence()) {
+                T existing = sqlSession.selectOne(getMapperNamespace(GET_ALL_BY_ID), Collections.singletonList(item.getId()));
+                if (existing == null) {
+                    throw new FailedRequestException(ErrorCode.OBJECT_NOT_FOUND, "Object with id " + item.getId() + " was not found in the database.");
+                }
+            }
+            int updatedRows = sqlSession.update(sqlAction, item);
+            if (updatedRows == 0) {
+                if (ignoreNopUpdates()) {
+                    throw new FailedRequestException(ErrorCode.DB_UPDATE_FAILED, "update failed on item " + item.getId());
+                }
+            }
             updatedItems.add(item);
         });
         return updatedItems;
     }
+
+    default boolean verifyExistence() {
+        return CinnamonServer.config.getServerConfig().isVerifyExistence();
+    }
+
+    default boolean ignoreNopUpdates() {
+        return CinnamonServer.config.getServerConfig().isIgnoreNopUpdates();
+    }
+
 }

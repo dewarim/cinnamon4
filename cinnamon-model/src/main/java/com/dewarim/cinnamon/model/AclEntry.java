@@ -1,9 +1,11 @@
 package com.dewarim.cinnamon.model;
 
+import com.dewarim.cinnamon.api.Identifiable;
+
 import java.util.Objects;
 
-public class AclEntry {
-    
+public class AclEntry implements Identifiable {
+
     private Long id;
     private Long aclId;
     private Long groupId;
@@ -42,8 +44,12 @@ public class AclEntry {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         AclEntry aclEntry = (AclEntry) o;
         return Objects.equals(aclId, aclEntry.aclId) &&
                 Objects.equals(groupId, aclEntry.groupId);

@@ -2,6 +2,8 @@ package com.dewarim.cinnamon;
 
 import jakarta.servlet.http.HttpServletResponse;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 
@@ -52,6 +54,10 @@ public enum ErrorCode {
     MISSING_SET_ACL_PERMISSION("missing set_acl permission", HttpServletResponse.SC_UNAUTHORIZED),
     MISSING_WRITE_OBJECT_SYS_METADATA("missing write_object_sys_metadata", HttpServletResponse.SC_UNAUTHORIZED),
     NAME_PARAM_IS_INVALID("name param is invalid", HttpServletResponse.SC_BAD_REQUEST),
+    /**
+     * Only to be used as default value if no other error is specified (see: CinnamonClientException with causes != known errors)
+     */
+    UNKNOWN_ERROR_TYPE("undefined error", HttpServletResponse.SC_INTERNAL_SERVER_ERROR),
     MISSING_REQUEST_PAYLOAD("request is missing request data", HttpServletResponse.SC_BAD_REQUEST),
     NO_BROWSE_PERMISSION("missing browse permission", HttpServletResponse.SC_UNAUTHORIZED),
     NO_CONTENT_TYPE_IN_HEADER("missing content-type field in header", HttpServletResponse.SC_BAD_REQUEST),
@@ -91,6 +97,7 @@ public enum ErrorCode {
     USER_INFO_REQUEST_WITHOUT_NAME_OR_ID("userInfoRequest missing id or name", HttpServletResponse.SC_BAD_REQUEST),
     USER_ACCOUNT_NOT_FOUND("userInfoRequest invalid id or name", HttpServletResponse.SC_NOT_FOUND);
 
+    private static final Map<String, ErrorCode> codeMapping = new ConcurrentHashMap<>();
     String                           description;
     int                              httpResponseCode;
     Supplier<FailedRequestException> exceptionSupplier;
@@ -103,6 +110,16 @@ public enum ErrorCode {
 
     public String getCode() {
         return name();
+    }
+
+    static {
+        for (ErrorCode errorCode : values()) {
+            codeMapping.put(errorCode.getCode(), errorCode);
+        }
+    }
+
+    public static ErrorCode getErrorCode(String code) {
+        return codeMapping.getOrDefault(code, UNKNOWN_ERROR_TYPE);
     }
 
     public int getHttpResponseCode() {

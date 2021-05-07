@@ -1,10 +1,12 @@
 package com.dewarim.cinnamon.model;
 
+import com.dewarim.cinnamon.api.Identifiable;
+
 import java.util.Date;
 import java.util.Objects;
 import java.util.UUID;
 
-public class Session {
+public class Session implements Identifiable {
     
     private Long id;
     private String ticket;

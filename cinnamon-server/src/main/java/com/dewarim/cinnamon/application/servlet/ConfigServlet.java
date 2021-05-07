@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.application.servlet;
 
+import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.dao.AclDao;
 import com.dewarim.cinnamon.dao.CmnGroupDao;
 import com.dewarim.cinnamon.dao.FolderTypeDao;
@@ -25,7 +26,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 
-import static com.dewarim.cinnamon.Constants.CONTENT_TYPE_XML;
+import static com.dewarim.cinnamon.api.Constants.CONTENT_TYPE_XML;
 
 @WebServlet(name = "Config", urlPatterns = "/")
 public class ConfigServlet extends HttpServlet {
@@ -43,7 +44,7 @@ public class ConfigServlet extends HttpServlet {
                 listAllConfigurations(request, response);
                 break;
             default:
-                response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+                ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
     }
 
@@ -53,7 +54,7 @@ public class ConfigServlet extends HttpServlet {
 
         ConfigWrapper wrapper = new ConfigWrapper();
         wrapper.setAcls(new AclDao().list());
-        wrapper.setFolderTypes(new FolderTypeDao().listFolderTypes());
+        wrapper.setFolderTypes(new FolderTypeDao().list());
         wrapper.setFormats(new FormatDao().listFormats());
         wrapper.setGroups(new CmnGroupDao().listGroups());
         wrapper.setIndexItems(new IndexItemDao().listIndexItems());

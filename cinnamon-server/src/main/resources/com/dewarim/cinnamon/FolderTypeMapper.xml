@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.dewarim.cinnamon.FolderTypeMapper">
+<mapper namespace="com.dewarim.cinnamon.model.FolderType">
 
     <resultMap id="folderTypeMap" type="com.dewarim.cinnamon.model.FolderType">
         <id property="id" column="id"/>
@@ -27,5 +27,36 @@
         WHERE name = #{name}
     </select>
 
+    <update id="update" parameterType="com.dewarim.cinnamon.model.FolderType">
+        UPDATE folderTypes
+        SET name = #{name}
+        WHERE id = #{id}
+    </update>
 
+    <insert id="insert" parameterType="com.dewarim.cinnamon.model.FolderType">
+        <selectKey keyProperty="id" resultType="long" order="BEFORE">
+            select nextval('seq_folder_type_id')
+        </selectKey>
+        INSERT INTO folder_types (id,name) VALUES (#{id}, #{name})
+    </insert>
+
+    <delete id="delete" parameterType="list">
+        DELETE
+        FROM folder_types
+        WHERE id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <select id="getAllById" parameterType="list" resultMap="folderTypeMap">
+        SELECT *
+        FROM folder_types
+        WHERE id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
 </mapper>
