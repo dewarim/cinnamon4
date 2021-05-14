@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.dewarim.cinnamon.model.AclEntryMapper">
+<mapper namespace="com.dewarim.cinnamon.model.AclEntry">
 
     <resultMap id="aclEntryMap" type="com.dewarim.cinnamon.model.AclEntry">
         <id property="id" column="id"/>
@@ -26,19 +26,58 @@
         FROM aclentries
         WHERE acl_id = #{aclId}
     </select>
-    
+
     <select id="getAclEntriesByGroupId" parameterType="long" resultMap="aclEntryMap">
         SELECT *
         FROM aclentries
         WHERE group_id = #{groupId}
     </select>
-    
+
     <select id="getAclEntryByAclAndGroupName" parameterType="map" resultMap="aclEntryMap">
         SELECT ae.*
-        FROM aclentries ae JOIN groups g on ae.group_id = g.id
-        WHERE ae.acl_id = #{aclId} AND g.name = #{groupName}
-        
+        FROM aclentries ae
+                 JOIN groups g on ae.group_id = g.id
+        WHERE ae.acl_id = #{aclId}
+          AND g.name = #{groupName}
     </select>
 
+    <select id="list" resultMap="aclEntryMap">
+        SELECT *
+        FROM aclentries
+    </select>
+
+    <update id="update" parameterType="com.dewarim.cinnamon.model.AclEntry">
+        UPDATE aclentries
+        SET acl_id = #{aclId}, group_id = #{groupId}
+        WHERE id = #{id}
+    </update>
+
+    <insert id="insert" parameterType="com.dewarim.cinnamon.model.AclEntry">
+        <selectKey keyProperty="id" resultType="long" order="BEFORE">
+            select nextval('seq_acl_entry_id')
+        </selectKey>
+        INSERT INTO aclentries (id, acl_id, group_id)
+        VALUES (#{id}, #{aclId}, #{groupId})
+    </insert>
+
+    <delete id="delete" parameterType="list">
+        DELETE
+        FROM aclentries
+        WHERE id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <select id="getAllById" parameterType="list" resultMap="aclEntryMap">
+        SELECT *
+        FROM aclentries
+        WHERE id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
 
 </mapper>

@@ -314,7 +314,6 @@ drop table if exists groups cascade ;
 create table groups(
   id bigint PRIMARY KEY,
   name varchar(255) UNIQUE,
-  group_of_one boolean default false not null,
   parent_id bigint constraint fk_group_parent_id references groups
 );
 drop sequence if exists seq_group_id;
@@ -558,9 +557,9 @@ insert into acls(id,name) values(nextval('seq_acl_id'),'no.set.acl.allowed'); --
 insert into objtypes(id,name) values(nextval('seq_obj_type_id'),'_default_objtype');
 
 insert into groups(id,name) VALUES(nextval('seq_group_id'),'_superusers'); -- #1
-insert into groups(id,name,group_of_one) VALUES(nextval('seq_group_id'),'_1_admin',true); -- #2
+insert into groups(id,name) VALUES(nextval('seq_group_id'),'_1_admin'); -- #2
 insert into groups(id,name,parent_id) VALUES(nextval('seq_group_id'),'admin_child_group',2); -- #3
-insert into groups(id,name,group_of_one) VALUES(nextval('seq_group_id'),'_2_doe',true); -- #4
+insert into groups(id,name) VALUES(nextval('seq_group_id'),'_2_doe'); -- #4
 insert into groups(id,name) values (nextval('seq_group_id'),'reviewers'); -- #5
 insert into groups(id,name) values (nextval('seq_group_id'),'_everyone'); -- #6
 insert into groups(id,name) values (nextval('seq_group_id'),'_owner'); -- #7

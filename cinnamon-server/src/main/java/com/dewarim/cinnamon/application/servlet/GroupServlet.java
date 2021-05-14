@@ -1,11 +1,14 @@
 package com.dewarim.cinnamon.application.servlet;
 
 import com.dewarim.cinnamon.ErrorCode;
-import com.dewarim.cinnamon.dao.CmnGroupDao;
-import com.dewarim.cinnamon.model.CmnGroup;
-import com.dewarim.cinnamon.model.request.ListRequest;
+import com.dewarim.cinnamon.api.UrlMapping;
+import com.dewarim.cinnamon.application.CinnamonResponse;
+import com.dewarim.cinnamon.dao.GroupDao;
+import com.dewarim.cinnamon.model.Group;
+import com.dewarim.cinnamon.model.request.group.CreateGroupRequest;
+import com.dewarim.cinnamon.model.request.group.DeleteGroupRequest;
 import com.dewarim.cinnamon.model.request.group.ListGroupRequest;
-import com.dewarim.cinnamon.model.response.GroupWrapper;
+import com.dewarim.cinnamon.model.request.group.UpdateGroupRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.dataformat.xml.deser.FromXmlParser;
@@ -15,40 +18,41 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
-import java.util.List;
-
-import static com.dewarim.cinnamon.api.Constants.CONTENT_TYPE_XML;
 
 @WebServlet(name = "Group", urlPatterns = "/")
-public class GroupServlet extends HttpServlet {
+public class GroupServlet extends HttpServlet implements CruddyServlet<Group> {
 
     private ObjectMapper xmlMapper = new XmlMapper().configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL, true);
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
-        String pathInfo = request.getPathInfo();
-        if (pathInfo == null) {
-            pathInfo = "";
-        }
-        switch (pathInfo) {
-            case "/listGroups":
-                listGroups(request, response);
+        CinnamonResponse cinnamonResponse = (CinnamonResponse) response;
+        GroupDao         groupDao         = new GroupDao();
+
+        UrlMapping mapping = UrlMapping.getByPath(request.getRequestURI());
+        switch (mapping) {
+            case GROUP__CREATE:
+                superuserCheck();
+                create(convertCreateRequest(request, CreateGroupRequest.class), groupDao, cinnamonResponse);
+                break;
+            case GROUP__LIST:
+                list(convertListRequest(request, ListGroupRequest.class), groupDao, cinnamonResponse);
+                break;
+            case GROUP__DELETE:
+                superuserCheck();
+                delete(convertDeleteRequest(request, DeleteGroupRequest.class), groupDao, cinnamonResponse);
+                break;
+            case GROUP__UPDATE:
+                superuserCheck();
+                update(convertUpdateRequest(request, UpdateGroupRequest.class), groupDao, cinnamonResponse);
                 break;
             default:
                 ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
     }
 
-    private void listGroups(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        // ignore listRequest for now, just make sure it's valid xml:
-        ListRequest    listRequest = xmlMapper.readValue(request.getInputStream(), ListGroupRequest.class);
-        CmnGroupDao    groupDao    = new CmnGroupDao();
-        List<CmnGroup> groups      = groupDao.listGroups();
-        GroupWrapper   wrapper     = new GroupWrapper();
-        wrapper.setGroups(groups);
-        response.setContentType(CONTENT_TYPE_XML);
-        response.setStatus(HttpServletResponse.SC_OK);
-        xmlMapper.writeValue(response.getWriter(), wrapper);
+    @Override
+    public ObjectMapper getMapper() {
+        return xmlMapper;
     }
-
 }

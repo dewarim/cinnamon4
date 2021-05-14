@@ -8,7 +8,7 @@ import com.dewarim.cinnamon.model.request.LifecycleRequest;
 import com.dewarim.cinnamon.model.request.lifecycle.ListLifecycleRequest;
 import com.dewarim.cinnamon.model.response.LifecycleWrapper;
 import org.apache.http.HttpResponse;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.List;
@@ -16,7 +16,7 @@ import java.util.Optional;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class LifecycleServletIntegrationTest extends CinnamonIntegrationTest {
 

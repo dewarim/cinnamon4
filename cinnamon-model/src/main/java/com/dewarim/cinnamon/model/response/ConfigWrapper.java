@@ -1,6 +1,16 @@
 package com.dewarim.cinnamon.model.response;
 
-import com.dewarim.cinnamon.model.*;
+import com.dewarim.cinnamon.model.Acl;
+import com.dewarim.cinnamon.model.FolderType;
+import com.dewarim.cinnamon.model.Format;
+import com.dewarim.cinnamon.model.Group;
+import com.dewarim.cinnamon.model.IndexItem;
+import com.dewarim.cinnamon.model.Language;
+import com.dewarim.cinnamon.model.Lifecycle;
+import com.dewarim.cinnamon.model.MetasetType;
+import com.dewarim.cinnamon.model.ObjectType;
+import com.dewarim.cinnamon.model.Permission;
+import com.dewarim.cinnamon.model.UiLanguage;
 import com.dewarim.cinnamon.model.relations.RelationType;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
@@ -26,7 +36,7 @@ public class ConfigWrapper {
 
     @JacksonXmlElementWrapper(localName = "groups")
     @JacksonXmlProperty(localName = "group")
-    private List<CmnGroup> groups = new ArrayList<>();
+    private List<Group> groups = new ArrayList<>();
     
     @JacksonXmlElementWrapper(localName = "indexItems")
     @JacksonXmlProperty(localName = "indexItem")
@@ -88,11 +98,11 @@ public class ConfigWrapper {
         this.formats = formats;
     }
 
-    public List<CmnGroup> getGroups() {
+    public List<Group> getGroups() {
         return groups;
     }
 
-    public void setGroups(List<CmnGroup> groups) {
+    public void setGroups(List<Group> groups) {
         this.groups = groups;
     }
 

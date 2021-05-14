@@ -230,3 +230,12 @@
     drop sequence if exists seq_folder_meta_id;
     create sequence seq_folder_meta_id;
     select setval('seq_folder_id', (select MAX(id) FROM folder_meta ));
+
+    -- we no longer automatically create single-user personal groups
+    alter table groups drop column group_of_one;
+    alter table groups drop column obj_version;
+
+    -- group_users no longer needs obj_version
+    alter table group_users drop column obj_version;
+
+    alter table aclentries drop column obj_version;

@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class CinnamonErrorWrapper {
+public class CinnamonErrorWrapper implements Wrapper<CinnamonError> {
 
     @JacksonXmlElementWrapper(localName = "errors")
     @JacksonXmlProperty(localName = "error")
@@ -31,5 +31,16 @@ public class CinnamonErrorWrapper {
 
     public void setErrors(List<CinnamonError> errors) {
         this.errors = errors;
+    }
+
+    @Override
+    public List<CinnamonError> list() {
+        return getErrors();
+    }
+
+    @Override
+    public Wrapper<CinnamonError> setList(List<CinnamonError> cinnamonErrors) {
+        setErrors(cinnamonErrors);
+        return this;
     }
 }

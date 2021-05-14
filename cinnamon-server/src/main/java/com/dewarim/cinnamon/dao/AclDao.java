@@ -2,7 +2,7 @@ package com.dewarim.cinnamon.dao;
 
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.model.Acl;
-import com.dewarim.cinnamon.model.CmnGroup;
+import com.dewarim.cinnamon.model.Group;
 import org.apache.ibatis.session.SqlSession;
 
 import java.util.List;
@@ -24,11 +24,11 @@ public class AclDao implements CrudDao<Acl> {
     }
 
     public List<Acl> getUserAcls(Long userId) {
-        SqlSession    sqlSession = ThreadLocalSqlSession.getSqlSession();
-        CmnGroupDao   groupDao   = new CmnGroupDao();
-        Set<CmnGroup> groups     = groupDao.getGroupsWithAncestorsOfUserById(userId);
-        List<Long>    groupIds   = groups.stream().map(CmnGroup::getId).collect(Collectors.toList());
-        List<Acl>     acls       = sqlSession.selectList("com.dewarim.cinnamon.model.Acl.getUserAcls", groupIds);
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        GroupDao   groupDao   = new GroupDao();
+        Set<Group> groups     = groupDao.getGroupsWithAncestorsOfUserById(userId);
+        List<Long>  groupIds = groups.stream().map(Group::getId).collect(Collectors.toList());
+        List<Acl>   acls     = sqlSession.selectList("com.dewarim.cinnamon.model.Acl.getUserAcls", groupIds);
         return acls.stream().distinct().collect(Collectors.toList());
     }
 

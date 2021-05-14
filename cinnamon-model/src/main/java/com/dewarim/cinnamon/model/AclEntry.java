@@ -18,6 +18,12 @@ public class AclEntry implements Identifiable {
         this.groupId = groupId;
     }
 
+    public AclEntry(Long id, Long aclId, Long groupId) {
+        this.id = id;
+        this.aclId = aclId;
+        this.groupId = groupId;
+    }
+
     public Long getAclId() {
         return aclId;
     }

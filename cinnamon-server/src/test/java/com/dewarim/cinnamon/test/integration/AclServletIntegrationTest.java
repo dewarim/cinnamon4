@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.test.integration;
 
+import com.dewarim.cinnamon.CinnamonClientException;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.Unwrapper;
 import com.dewarim.cinnamon.api.Constants;
@@ -16,7 +17,7 @@ import com.dewarim.cinnamon.model.response.DeleteResponse;
 import org.apache.http.HttpResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -26,7 +27,7 @@ import java.util.Optional;
 import static com.dewarim.cinnamon.api.Constants.ACL_DEFAULT;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class AclServletIntegrationTest extends CinnamonIntegrationTest {
 
@@ -54,9 +55,9 @@ public class AclServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void createAclShouldFailOnInvalidName() throws IOException {
-        HttpResponse aclListResponse = sendAdminRequest(UrlMapping.ACL__CREATE, new CreateAclRequest(Collections.singletonList("")));
-        assertCinnamonError(aclListResponse, ErrorCode.INVALID_REQUEST);
+    public void createAclShouldFailOnInvalidName()  {
+        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> adminClient.createAcl(List.of("")));
+        assertEquals(ex.getErrorCode(),ErrorCode.INVALID_REQUEST );
     }
 
     @Test

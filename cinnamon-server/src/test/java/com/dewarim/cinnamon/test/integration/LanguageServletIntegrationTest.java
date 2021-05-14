@@ -5,13 +5,13 @@ import com.dewarim.cinnamon.model.Language;
 import com.dewarim.cinnamon.model.request.language.ListLanguageRequest;
 import com.dewarim.cinnamon.model.response.LanguageWrapper;
 import org.apache.http.HttpResponse;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class LanguageServletIntegrationTest extends CinnamonIntegrationTest {
 

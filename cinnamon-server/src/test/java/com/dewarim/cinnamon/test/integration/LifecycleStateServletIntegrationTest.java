@@ -10,12 +10,12 @@ import com.dewarim.cinnamon.model.request.ChangeLifecycleStateRequest;
 import com.dewarim.cinnamon.model.request.IdRequest;
 import com.dewarim.cinnamon.model.response.LifecycleStateWrapper;
 import org.apache.http.HttpResponse;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTest {
 

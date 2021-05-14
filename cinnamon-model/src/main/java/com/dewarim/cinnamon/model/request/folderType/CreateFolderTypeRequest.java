@@ -7,7 +7,6 @@ import com.dewarim.cinnamon.model.response.Wrapper;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 public class CreateFolderTypeRequest implements CreateRequest<FolderType> {
@@ -32,14 +31,7 @@ public class CreateFolderTypeRequest implements CreateRequest<FolderType> {
 
     @Override
     public boolean validated() {
-        AtomicBoolean valid = new AtomicBoolean(true);
-        names.forEach(name -> {
-            if (name == null || name.trim().isEmpty()) {
-                valid.set(false);
-            }
-        });
-
-        return valid.get();
+        return names.stream().noneMatch(name -> name == null || name.trim().isEmpty());
     }
 
     @Override

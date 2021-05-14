@@ -4,12 +4,25 @@ package com.dewarim.cinnamon.security.authorization;
 import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.api.Accessible;
 import com.dewarim.cinnamon.api.Ownable;
-import com.dewarim.cinnamon.dao.*;
-import com.dewarim.cinnamon.model.*;
+import com.dewarim.cinnamon.dao.AclDao;
+import com.dewarim.cinnamon.dao.AclEntryDao;
+import com.dewarim.cinnamon.dao.AclEntryPermissionDao;
+import com.dewarim.cinnamon.dao.GroupDao;
+import com.dewarim.cinnamon.dao.PermissionDao;
+import com.dewarim.cinnamon.dao.UserAccountDao;
+import com.dewarim.cinnamon.model.Acl;
+import com.dewarim.cinnamon.model.AclEntry;
+import com.dewarim.cinnamon.model.Group;
+import com.dewarim.cinnamon.model.Permission;
+import com.dewarim.cinnamon.model.UserAccount;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -23,7 +36,7 @@ public class AccessFilter {
     private static List<Acl> acls;
     private static Permission browsePermission;
     private static Permission folderBrowsePermission;
-    private static CmnGroup ownerGroup;
+    private static Group      ownerGroup;
 
     private Set<Long> objectAclsWithBrowsePermissions;
     private Set<Long> ownerAclsWithBrowsePermissions;
@@ -141,7 +154,7 @@ public class AccessFilter {
             AclDao aclDao = new AclDao();
             acls = aclDao.list();
             acls.forEach(acl -> idToAclMapping.put(acl.getId(), acl));
-            ownerGroup = new CmnGroupDao().getOwnerGroup();
+            ownerGroup = new GroupDao().getOwnerGroup();
             List<Permission> permissions = permissionDao.listPermissions();
             permissions.forEach(permission -> nameToPermissionMapping.put(permission.getName(), permission));
         }
@@ -207,8 +220,8 @@ public class AccessFilter {
     private static boolean checkAclEntries(Acl acl, Permission permission, UserAccount user) {
         // create Union of Sets: user.groups and acl.groups => iterate over each group for permitlevel.
 
-        Set<CmnGroup> userGroups = new CmnGroupDao().getGroupsWithAncestorsOfUserById(user.getId());
-        List<Long> groupIds = userGroups.stream().map(CmnGroup::getId).collect(Collectors.toList());
+        Set<Group>  userGroups  = new GroupDao().getGroupsWithAncestorsOfUserById(user.getId());
+        List<Long>  groupIds    = userGroups.stream().map(Group::getId).collect(Collectors.toList());
         AclEntryDao aclEntryDao = new AclEntryDao();
         List<AclEntry> aclEntries = aclEntryDao.getAclEntriesByGroupIdsAndAcl(groupIds, acl.getId());
 

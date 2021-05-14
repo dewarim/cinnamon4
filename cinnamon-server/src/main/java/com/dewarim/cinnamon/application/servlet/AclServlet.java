@@ -67,7 +67,6 @@ public class AclServlet extends HttpServlet implements CruddyServlet<Acl> {
             default:
                 ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
-
     }
 
     private void getAclByNameOrId(HttpServletRequest request, HttpServletResponse response) throws IOException {

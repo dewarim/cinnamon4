@@ -2,9 +2,9 @@ package com.dewarim.cinnamon.application.servlet;
 
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.dao.AclDao;
-import com.dewarim.cinnamon.dao.CmnGroupDao;
 import com.dewarim.cinnamon.dao.FolderTypeDao;
 import com.dewarim.cinnamon.dao.FormatDao;
+import com.dewarim.cinnamon.dao.GroupDao;
 import com.dewarim.cinnamon.dao.IndexItemDao;
 import com.dewarim.cinnamon.dao.LanguageDao;
 import com.dewarim.cinnamon.dao.LifecycleDao;
@@ -56,7 +56,7 @@ public class ConfigServlet extends HttpServlet {
         wrapper.setAcls(new AclDao().list());
         wrapper.setFolderTypes(new FolderTypeDao().list());
         wrapper.setFormats(new FormatDao().listFormats());
-        wrapper.setGroups(new CmnGroupDao().listGroups());
+        wrapper.setGroups(new GroupDao().list());
         wrapper.setIndexItems(new IndexItemDao().listIndexItems());
         wrapper.setLanguages(new LanguageDao().listLanguages());
         wrapper.setLifecycles(new LifecycleDao().listLifecycles());

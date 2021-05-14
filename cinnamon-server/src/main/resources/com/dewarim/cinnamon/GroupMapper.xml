@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dewarim.cinnamon.model.Group">
+    
+    <resultMap id="groupMap" type="com.dewarim.cinnamon.model.Group">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="parentId" column="parent_id"/>
+    </resultMap>
+
+    <select id="getGroupById" parameterType="long" resultMap="groupMap">
+        SELECT *
+        FROM groups
+        WHERE id = #{id}
+    </select>
+    <select id="getGroupByName" parameterType="string" resultMap="groupMap">
+        SELECT *
+        FROM groups
+        WHERE name = #{name}
+    </select>
+    
+    <select id="getGroupsOfUserById" parameterType="long" resultMap="groupMap">
+        SELECT * 
+        FROM groups JOIN group_users gu on groups.id = gu.group_id WHERE gu.user_id= #{id}
+    </select>
+    
+    <select id="list" resultMap="groupMap">
+        SELECT *
+        FROM groups
+    </select>
+
+    <update id="update" parameterType="com.dewarim.cinnamon.model.Group">
+        UPDATE groups
+        SET name = #{name}
+        WHERE id = #{id}
+    </update>
+
+    <insert id="insert" parameterType="com.dewarim.cinnamon.model.Group">
+        <selectKey keyProperty="id" resultType="long" order="BEFORE">
+            select nextval('seq_group_id')
+        </selectKey>
+        INSERT INTO groups (id,name) VALUES (#{id}, #{name})
+    </insert>
+
+    <delete id="delete" parameterType="list">
+        DELETE
+        FROM groups
+        WHERE id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+    
+</mapper>

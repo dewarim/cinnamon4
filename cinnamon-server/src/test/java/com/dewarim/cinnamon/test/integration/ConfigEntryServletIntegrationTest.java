@@ -7,13 +7,13 @@ import com.dewarim.cinnamon.model.request.ConfigEntryRequest;
 import com.dewarim.cinnamon.model.request.CreateConfigEntryRequest;
 import com.dewarim.cinnamon.model.response.ConfigEntryWrapper;
 import org.apache.http.HttpResponse;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ConfigEntryServletIntegrationTest extends CinnamonIntegrationTest {
 

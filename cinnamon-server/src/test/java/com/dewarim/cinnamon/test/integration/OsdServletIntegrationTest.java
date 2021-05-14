@@ -34,8 +34,8 @@ import org.apache.http.client.fluent.Request;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.entity.mime.content.StringBody;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -52,7 +52,7 @@ import static org.apache.http.HttpHeaders.CONTENT_TYPE;
 import static org.apache.http.entity.ContentType.APPLICATION_XML;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
@@ -917,14 +917,14 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         assertCinnamonError(response, ErrorCode.FORMAT_NOT_FOUND);
     }
 
-    @Ignore("Currently no easy way to setup DB to ignore FK-constraint on lifecycle so we would get a missing LC exception")
+    @Disabled("Currently no easy way to setup DB to ignore FK-constraint on lifecycle so we would get a missing LC exception")
     @Test
     public void versionWithLifecycleStateNotFoundError() {
         // so it should not be possible for this to happen unless the DB tables (or DAO) are broken.
         throw new IllegalStateException("implementation pending");
     }
 
-    @Ignore("Currently no easy way to setup DB fail to generate Internal Server Error")
+    @Disabled("Currently no easy way to setup DB fail to generate Internal Server Error")
     @Test
     public void versionWithInternalServerErrorWhenCreatingMetaset() {
         // this can only happen when DB cannot insert a new Metaset for an object. (or DAO is broken)

@@ -24,7 +24,7 @@ import nu.xom.Document;
 import nu.xom.Node;
 import nu.xom.ParsingException;
 import org.apache.http.HttpResponse;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 

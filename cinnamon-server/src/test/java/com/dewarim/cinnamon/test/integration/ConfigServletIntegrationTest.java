@@ -4,12 +4,13 @@ import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.model.request.config.ListConfigRequest;
 import com.dewarim.cinnamon.model.response.ConfigWrapper;
 import org.apache.http.HttpResponse;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 
 public class ConfigServletIntegrationTest extends CinnamonIntegrationTest {
 

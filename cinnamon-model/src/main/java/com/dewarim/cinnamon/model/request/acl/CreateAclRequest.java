@@ -7,7 +7,6 @@ import com.dewarim.cinnamon.model.response.Wrapper;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 public class CreateAclRequest implements CreateRequest<Acl> {
@@ -22,6 +21,10 @@ public class CreateAclRequest implements CreateRequest<Acl> {
     public CreateAclRequest() {
     }
 
+    public CreateAclRequest(String name) {
+        names.add(name);
+    }
+
     public CreateAclRequest(List<String> names) {
         this.names = names;
     }
@@ -32,15 +35,8 @@ public class CreateAclRequest implements CreateRequest<Acl> {
 
     @Override
     public boolean validated() {
-        AtomicBoolean valid = new AtomicBoolean(true);
-        names.forEach(name -> {
-            if (name == null || name.trim().isEmpty()) {
-//                ErrorCode.NAME_PARAM_IS_INVALID.throwUp();
-                valid.set(false);
-            }
-        });
-
-        return valid.get();
+        return names.stream().noneMatch(name ->
+                name == null || name.trim().isEmpty());
     }
 
     @Override

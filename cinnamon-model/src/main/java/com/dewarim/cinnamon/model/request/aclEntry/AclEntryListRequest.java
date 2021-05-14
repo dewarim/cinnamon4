@@ -1,10 +1,10 @@
-package com.dewarim.cinnamon.model.request;
+package com.dewarim.cinnamon.model.request.aclEntry;
 
 import java.util.Optional;
 
 public class AclEntryListRequest {
 
-    public static enum IdType{
+    public enum IdType{
         ACL,GROUP
     }
 

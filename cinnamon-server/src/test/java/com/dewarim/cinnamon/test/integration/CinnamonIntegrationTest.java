@@ -22,9 +22,7 @@ import org.apache.ibatis.jdbc.ScriptRunner;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
+import org.junit.jupiter.api.BeforeAll;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -37,7 +35,8 @@ import java.sql.Connection;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  *
@@ -57,13 +56,8 @@ public class CinnamonIntegrationTest {
     static CinnamonClient client;
     static CinnamonClient adminClient;
 
-    @Before
-    public void dumpSession() {
-//        log.info("session in db: " + new SessionDao().list().stream().map(Session::getTicket).collect(Collectors.joining(" ")));
-//        log.info("current ticket: " + ticket);
-    }
 
-    @BeforeClass
+    @BeforeAll
     public static void setUpServer() throws Exception {
         if (cinnamonServer == null) {
             log.info("Create new CinnamonServer.");
@@ -136,7 +130,7 @@ public class CinnamonIntegrationTest {
 
     protected void assertCinnamonError(HttpResponse response, ErrorCode errorCode) throws IOException {
         String responseText = new String(response.getEntity().getContent().readAllBytes());
-        Assert.assertTrue("response should contain errorCode " + errorCode + " but was " + responseText, responseText.contains(errorCode.getCode()));
+        assertTrue(responseText.contains(errorCode.getCode()), "response should contain errorCode " + errorCode + " but was " + responseText);
         assertThat(errorCode.getHttpResponseCode(), equalTo(response.getStatusLine().getStatusCode()));
         CinnamonError cinnamonError = mapper.readValue(response.getEntity().getContent(), CinnamonErrorWrapper.class).getErrors().get(0);
         assertThat(cinnamonError.getCode(), equalTo(errorCode.getCode()));

@@ -8,12 +8,12 @@ import com.dewarim.cinnamon.model.request.DeleteRelationRequest;
 import com.dewarim.cinnamon.model.request.RelationRequest;
 import com.dewarim.cinnamon.model.response.RelationWrapper;
 import org.apache.http.HttpResponse;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.Collections;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
     private final String firstRelationTypeName = "all-protector";
