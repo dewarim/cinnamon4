@@ -5,6 +5,7 @@ import com.dewarim.cinnamon.FailedRequestException;
 import com.dewarim.cinnamon.api.Identifiable;
 import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
+import org.apache.ibatis.exceptions.PersistenceException;
 import org.apache.ibatis.session.SqlSession;
 import org.postgresql.util.PSQLException;
 
@@ -25,7 +26,12 @@ public interface CrudDao<T extends Identifiable> {
         SqlSession sqlSession   = ThreadLocalSqlSession.getSqlSession();
         items.forEach(item -> {
             String sqlAction = getMapperNamespace(INSERT);
-            sqlSession.insert(sqlAction, item);
+            try {
+                sqlSession.insert(sqlAction, item);
+            }
+            catch (PersistenceException e){
+                throw new FailedRequestException(ErrorCode.DB_INSERT_FAILED, e);
+            }
             createdItems.add(item);
         });
         return createdItems;
@@ -36,7 +42,12 @@ public interface CrudDao<T extends Identifiable> {
         List<List<Long>> partitions  = partitionLongList(ids);
         AtomicInteger    deleteCount = new AtomicInteger(0);
         partitions.forEach(partition -> {
-            deleteCount.getAndAdd(sqlSession.delete(getMapperNamespace(DELETE), partition));
+            try {
+                deleteCount.getAndAdd(sqlSession.delete(getMapperNamespace(DELETE), partition));
+            }
+            catch (PersistenceException e){
+                throw new FailedRequestException(ErrorCode.DB_DELETE_FAILED, e);
+            }
         });
         return deleteCount.get();
     }
@@ -121,11 +132,16 @@ public interface CrudDao<T extends Identifiable> {
                     throw new FailedRequestException(ErrorCode.OBJECT_NOT_FOUND, "Object with id " + item.getId() + " was not found in the database.");
                 }
             }
-            int updatedRows = sqlSession.update(sqlAction, item);
-            if (updatedRows == 0) {
-                if (ignoreNopUpdates()) {
-                    throw new FailedRequestException(ErrorCode.DB_UPDATE_FAILED, "update failed on item " + item.getId());
+            try {
+                int updatedRows = sqlSession.update(sqlAction, item);
+                if (updatedRows == 0) {
+                    if (ignoreNopUpdates()) {
+                        throw new FailedRequestException(ErrorCode.DB_UPDATE_FAILED, "update failed on item " + item.getId());
+                    }
                 }
+            }
+            catch (PersistenceException e){
+                throw new FailedRequestException(ErrorCode.DB_UPDATE_FAILED, e);
             }
             updatedItems.add(item);
         });

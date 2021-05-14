@@ -13,7 +13,6 @@ import com.dewarim.cinnamon.model.request.acl.DeleteAclRequest;
 import com.dewarim.cinnamon.model.request.acl.ListAclRequest;
 import com.dewarim.cinnamon.model.request.acl.UpdateAclRequest;
 import com.dewarim.cinnamon.model.response.AclWrapper;
-import com.dewarim.cinnamon.model.response.DeleteResponse;
 import org.apache.http.HttpResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -153,10 +152,7 @@ public class AclServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void deleteAcl() throws IOException {
         // aclId 3 is "delete.me.acl" in test db
-        HttpResponse response = sendAdminRequest(UrlMapping.ACL__DELETE, new DeleteAclRequest(3L));
-        assertResponseOkay(response);
-        DeleteResponse deleteResponse = mapper.readValue(response.getEntity().getContent(), DeleteResponse.class);
-        assertThat(deleteResponse.isSuccess(), equalTo(true));
+        assertTrue(adminClient.deleteAcl(Collections.singletonList(3L)));
     }
 
     @Test

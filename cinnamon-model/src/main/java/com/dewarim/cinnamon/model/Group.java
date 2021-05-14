@@ -18,7 +18,7 @@ public class Group implements Identifiable {
     public Group() {
     }
 
-    public Group(boolean groupOfOne, String name, Long parentId) {
+    public Group(String name, Long parentId) {
         this.name = name;
         this.parentId = parentId;
     }

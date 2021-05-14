@@ -13,6 +13,7 @@ import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.request.CreateMetaRequest;
 import com.dewarim.cinnamon.model.request.CreateNewVersionRequest;
 import com.dewarim.cinnamon.model.request.acl.CreateAclRequest;
+import com.dewarim.cinnamon.model.request.acl.DeleteAclRequest;
 import com.dewarim.cinnamon.model.request.aclEntry.CreateAclEntryRequest;
 import com.dewarim.cinnamon.model.request.aclEntry.DeleteAclEntryRequest;
 import com.dewarim.cinnamon.model.request.aclEntry.ListAclEntryRequest;
@@ -22,6 +23,9 @@ import com.dewarim.cinnamon.model.request.folderType.CreateFolderTypeRequest;
 import com.dewarim.cinnamon.model.request.folderType.DeleteFolderTypeRequest;
 import com.dewarim.cinnamon.model.request.folderType.UpdateFolderTypeRequest;
 import com.dewarim.cinnamon.model.request.group.CreateGroupRequest;
+import com.dewarim.cinnamon.model.request.group.DeleteGroupRequest;
+import com.dewarim.cinnamon.model.request.group.ListGroupRequest;
+import com.dewarim.cinnamon.model.request.group.UpdateGroupRequest;
 import com.dewarim.cinnamon.model.request.osd.DeleteOsdRequest;
 import com.dewarim.cinnamon.model.request.osd.OsdRequest;
 import com.dewarim.cinnamon.model.request.user.UserInfoRequest;
@@ -239,6 +243,12 @@ public class CinnamonClient {
         return aclUnwrapper.unwrap(response, aclRequest.list().size());
     }
 
+    public boolean deleteAcl(List<Long> ids) throws IOException{
+        DeleteAclRequest deleteRequest = new DeleteAclRequest(ids);
+        var response = sendStandardRequest(UrlMapping.ACL__DELETE,deleteRequest);
+        return verifyDeleteResponse(response);
+    }
+
     // AclEntries
     public List<AclEntry> listAclEntries() throws IOException {
         HttpResponse response = sendStandardRequest(UrlMapping.ACL_ENTRY__LIST, new ListAclEntryRequest());
@@ -266,6 +276,24 @@ public class CinnamonClient {
         var request  = new CreateGroupRequest(groupNames);
         var response = sendStandardRequest(UrlMapping.GROUP__CREATE, request);
         return groupUnWrapper.unwrap(response,groupNames.size());
+    }
+
+    public List<Group> listGroups() throws IOException{
+        var request = new ListGroupRequest();
+        var response = sendStandardRequest(UrlMapping.GROUP__LIST, request);
+        return groupUnWrapper.unwrap(response, EXPECTED_SIZE_ANY);
+    }
+
+    public boolean deleteGroups(List<Long> ids) throws IOException {
+        var request = new DeleteGroupRequest(ids);
+        var response = sendStandardRequest(UrlMapping.GROUP__DELETE, request);
+        return verifyDeleteResponse(response);
+    }
+
+    public List<Group> updateGroups(List<Group> groups) throws IOException{
+        var request = new UpdateGroupRequest(groups);
+        var response = sendStandardRequest(UrlMapping.GROUP__UPDATE, request);
+        return groupUnWrapper.unwrap(response, groups.size());
     }
 
     private HttpEntity createSimpleMultipartEntity(String fieldname, Object contentRequest) throws IOException {

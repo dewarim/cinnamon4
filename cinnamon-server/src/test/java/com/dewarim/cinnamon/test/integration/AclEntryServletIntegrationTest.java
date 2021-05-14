@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.test.integration;
 
+import com.dewarim.cinnamon.CinnamonClientException;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.model.Acl;
@@ -21,8 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class AclEntryServletIntegrationTest extends CinnamonIntegrationTest {
@@ -88,7 +88,24 @@ public class AclEntryServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    @Order(2)
+    @Order(150)
+    public void createAclEntryWithoutPermission() {
+        List<AclEntry> entries = new ArrayList<>();
+        entries.add(new AclEntry(acls.get(0).getId(), groups.get(0).getId()));
+        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> client.createAclEntries(entries));
+        assertEquals(ErrorCode.REQUIRES_SUPERUSER_STATUS, ex.getErrorCode());
+    }
+
+    @Test
+    public void createAclEntryWithInvalidRequest() {
+        List<AclEntry> entries = new ArrayList<>();
+        entries.add(new AclEntry(0L, 0L));
+        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> adminClient.createAclEntries(entries));
+        assertEquals(ErrorCode.INVALID_REQUEST, ex.getErrorCode());
+    }
+
+    @Test
+    @Order(200)
     public void updateAclEntry() throws IOException {
         Acl   a1           = acls.get(0);
         Group g2           = groups.get(1);
@@ -96,23 +113,36 @@ public class AclEntryServletIntegrationTest extends CinnamonIntegrationTest {
         // replace g1 in aclEntry (a1,g1) with g2
         UpdateAclEntryRequest updateRequest  = new UpdateAclEntryRequest(idOfFirstAcl, a1.getId(), g2.getId());
         var                   updatedEntries = adminClient.updateAclEntries(updateRequest);
-        var aclEntry = updatedEntries.get(0);
+        var                   aclEntry       = updatedEntries.get(0);
         assertEquals(idOfFirstAcl, aclEntry.getId());
         assertEquals(g2.getId(), aclEntry.getGroupId());
         assertEquals(a1.getId(), aclEntry.getAclId());
     }
 
     @Test
-    @Order(3)
+    @Order(225)
+    public void updateAclEntryWithoutPermisson() {
+        UpdateAclEntryRequest updateRequest = new UpdateAclEntryRequest(1L, 1L, 1L);
+
+        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> client.updateAclEntries(updateRequest));
+        assertEquals(ErrorCode.REQUIRES_SUPERUSER_STATUS, ex.getErrorCode());
+    }
+
+    @Test
+    @Order(250)
+    public void deleteAclEntryWithoutPermission() {
+        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> client.deleteAclEntries(aclEntries.stream().map(AclEntry::getId).collect(Collectors.toList())));
+        assertEquals(ErrorCode.REQUIRES_SUPERUSER_STATUS, ex.getErrorCode());
+    }
+
+    @Test
+    @Order(300)
     public void deleteAclEntry() throws IOException {
         boolean deleteResult = adminClient.deleteAclEntries(aclEntries.stream().map(AclEntry::getId).collect(Collectors.toList()));
         assertTrue(deleteResult);
         List<AclEntry> remainingEntries = client.listAclEntries();
         assertTrue(aclEntries.stream().noneMatch(remainingEntries::contains));
     }
-
-    // TODO: add non-admin-client calls to delete/create/update and verify errors.
-
 
     private List<AclEntry> unwrapAclEntries(HttpResponse httpResponse, int expectedSize) throws IOException {
         assertResponseOkay(httpResponse);
