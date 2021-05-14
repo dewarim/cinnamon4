@@ -21,11 +21,11 @@
         WHERE name = #{name}
     </select>
 
-    <select id="getUserPermissionsForAclEntries" resultMap="permissionMap">
+    <select id="getUserPermissionsForAclGroups" resultMap="permissionMap">
         SELECT p.*
         FROM permissions p
-        JOIN aclentry_permissions a on p.id = a.permission_id
-        WHERE a.aclentry_id in
+        JOIN acl_group_permissions a on p.id = a.permission_id
+        WHERE a.acl_group_id in
         <foreach item="item" index="index" collection="list"
                  open="(" separator="," close=")">
             #{item.id}

@@ -1,8 +1,8 @@
-package com.dewarim.cinnamon.model.request.aclEntry;
+package com.dewarim.cinnamon.model.request.aclGroup;
 
 import java.util.Optional;
 
-public class AclEntryListRequest {
+public class AclGroupListRequest {
 
     public enum IdType{
         ACL,GROUP
@@ -12,10 +12,10 @@ public class AclEntryListRequest {
     private IdType idType;
 
 
-    public AclEntryListRequest() {
+    public AclGroupListRequest() {
     }
 
-    public AclEntryListRequest(Long id, IdType idType) {
+    public AclGroupListRequest(Long id, IdType idType) {
         this.id = id;
         this.idType = idType;
     }
@@ -40,7 +40,7 @@ public class AclEntryListRequest {
         this.idType = idType;
     }
 
-    public Optional<AclEntryListRequest> validateRequest() {
+    public Optional<AclGroupListRequest> validateRequest() {
         if (validated()) {
             return Optional.of(this);
         } else {
@@ -50,7 +50,7 @@ public class AclEntryListRequest {
 
     @Override
     public String toString() {
-        return "AclEntryListRequest{" +
+        return "AclGroupListRequest{" +
                 "id=" + id +
                 ", idType=" + idType +
                 '}';

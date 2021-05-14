@@ -3,19 +3,19 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.dewarim.cinnamon.model.AclEntryPermissionMapper">
+<mapper namespace="com.dewarim.cinnamon.model.AclGroupPermissionMapper">
 
-    <resultMap id="aepMap" type="com.dewarim.cinnamon.model.AclEntryPermission">
+    <resultMap id="aepMap" type="com.dewarim.cinnamon.model.AclGroupPermission">
         <id property="id" column="id"/>
-        <result property="aclEntryId" column="aclentry_id"/>
+        <result property="aclGroupId" column="acl_group_id"/>
         <result property="permissionId" column="permission_id"/>
     </resultMap>
 
-    <select id="getAclEntryPermissionForAclEntriesAndPermission" parameterType="map" resultMap="aepMap">
+    <select id="getAclGroupPermissionForAclGroupsAndPermission" parameterType="map" resultMap="aepMap">
         SELECT *
-        FROM aclentry_permissions
-        WHERE aclentry_id IN
-        <foreach item="item" index="index" collection="aclEntries"
+        FROM acl_group_permissions
+        WHERE acl_group_id IN
+        <foreach item="item" index="index" collection="aclGroups"
                  open="(" separator="," close=")">
             #{item.id}
         </foreach>

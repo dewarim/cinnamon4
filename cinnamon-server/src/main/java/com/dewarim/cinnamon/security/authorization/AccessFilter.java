@@ -5,13 +5,13 @@ import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.api.Accessible;
 import com.dewarim.cinnamon.api.Ownable;
 import com.dewarim.cinnamon.dao.AclDao;
-import com.dewarim.cinnamon.dao.AclEntryDao;
-import com.dewarim.cinnamon.dao.AclEntryPermissionDao;
+import com.dewarim.cinnamon.dao.AclGroupDao;
+import com.dewarim.cinnamon.dao.AclGroupPermissionDao;
 import com.dewarim.cinnamon.dao.GroupDao;
 import com.dewarim.cinnamon.dao.PermissionDao;
 import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.model.Acl;
-import com.dewarim.cinnamon.model.AclEntry;
+import com.dewarim.cinnamon.model.AclGroup;
 import com.dewarim.cinnamon.model.Group;
 import com.dewarim.cinnamon.model.Permission;
 import com.dewarim.cinnamon.model.UserAccount;
@@ -129,7 +129,7 @@ public class AccessFilter {
             return checkedPermissions.get(new AclPermission(aclId, permission.getId(), true));
         }
 
-        boolean checkResult = checkAclEntries(acl, permission, user);
+        boolean checkResult = checkAclGroups(acl, permission, user);
         checkedPermissions.put(aclPermission, checkResult);
         return checkResult;
     }
@@ -208,7 +208,7 @@ public class AccessFilter {
 
         for (Acl acl : acls) {
             // compute browse permissions for acls
-            boolean checkAclResult = checkAclEntries(acl, permission, user);
+            boolean checkAclResult = checkAclGroups(acl, permission, user);
             if (checkAclResult) {
                 aclIds.add(acl.getId());
             }
@@ -217,19 +217,19 @@ public class AccessFilter {
         return aclIds;
     }
 
-    private static boolean checkAclEntries(Acl acl, Permission permission, UserAccount user) {
+    private static boolean checkAclGroups(Acl acl, Permission permission, UserAccount user) {
         // create Union of Sets: user.groups and acl.groups => iterate over each group for permitlevel.
 
         Set<Group>  userGroups  = new GroupDao().getGroupsWithAncestorsOfUserById(user.getId());
         List<Long>  groupIds    = userGroups.stream().map(Group::getId).collect(Collectors.toList());
-        AclEntryDao aclEntryDao = new AclEntryDao();
-        List<AclEntry> aclEntries = aclEntryDao.getAclEntriesByGroupIdsAndAcl(groupIds, acl.getId());
+        AclGroupDao aclGroupDao = new AclGroupDao();
+        List<AclGroup> aclGroups = aclGroupDao.getAclGroupsByGroupIdsAndAcl(groupIds, acl.getId());
 
-        Optional<AclEntry> everyoneAclEntry = aclEntryDao.getAclEntryForEveryoneGroup(acl.getId());
-        everyoneAclEntry.ifPresent(aclEntries::add);
+        Optional<AclGroup> everyoneAclGroup = aclGroupDao.getAclGroupForEveryoneGroup(acl.getId());
+        everyoneAclGroup.ifPresent(aclGroups::add);
 
-        AclEntryPermissionDao aepDao = new AclEntryPermissionDao();
-        return aepDao.checkIfAnyAclEntryHasThisPermission(aclEntries, permission);
+        AclGroupPermissionDao aepDao = new AclGroupPermissionDao();
+        return aepDao.checkIfAnyAclGroupHasThisPermission(aclGroups, permission);
     }
 
     private static Set<Long> generateOwnerAclIdSet(Permission permission, UserAccount user) {
@@ -239,11 +239,11 @@ public class AccessFilter {
             return acls.stream().map(Acl::getId).collect(Collectors.toSet());
         }
 
-        List<AclEntry> ownerAclEntries = new AclEntryDao().getAclEntriesByGroup(ownerGroup);
-        return new AclEntryPermissionDao()
-                .filterAclEntriesWithoutThisPermission(ownerAclEntries, permission)
+        List<AclGroup> ownerAclGroups = new AclGroupDao().getAclGroupsByGroup(ownerGroup);
+        return new AclGroupPermissionDao()
+                .filterAclGroupsWithoutThisPermission(ownerAclGroups, permission)
                 .stream()
-                .map(AclEntry::getAclId)
+                .map(AclGroup::getAclId)
                 .collect(Collectors.toSet());
     }
     

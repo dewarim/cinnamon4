@@ -1,0 +1,14 @@
+package com.dewarim.cinnamon.model.request.aclGroup;
+
+import com.dewarim.cinnamon.model.AclGroup;
+import com.dewarim.cinnamon.model.request.DefaultListRequest;
+import com.dewarim.cinnamon.model.request.ListRequest;
+import com.dewarim.cinnamon.model.response.AclGroupWrapper;
+import com.dewarim.cinnamon.model.response.Wrapper;
+
+public class ListAclGroupRequest extends DefaultListRequest implements ListRequest<AclGroup> {
+    @Override
+    public Wrapper<AclGroup> fetchResponseWrapper() {
+        return new AclGroupWrapper();
+    }
+}

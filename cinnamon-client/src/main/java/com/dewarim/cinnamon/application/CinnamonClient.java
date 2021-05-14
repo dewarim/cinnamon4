@@ -4,7 +4,7 @@ import com.dewarim.cinnamon.CinnamonClientException;
 import com.dewarim.cinnamon.Unwrapper;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.model.Acl;
-import com.dewarim.cinnamon.model.AclEntry;
+import com.dewarim.cinnamon.model.AclGroup;
 import com.dewarim.cinnamon.model.Folder;
 import com.dewarim.cinnamon.model.FolderType;
 import com.dewarim.cinnamon.model.Group;
@@ -14,10 +14,10 @@ import com.dewarim.cinnamon.model.request.CreateMetaRequest;
 import com.dewarim.cinnamon.model.request.CreateNewVersionRequest;
 import com.dewarim.cinnamon.model.request.acl.CreateAclRequest;
 import com.dewarim.cinnamon.model.request.acl.DeleteAclRequest;
-import com.dewarim.cinnamon.model.request.aclEntry.CreateAclEntryRequest;
-import com.dewarim.cinnamon.model.request.aclEntry.DeleteAclEntryRequest;
-import com.dewarim.cinnamon.model.request.aclEntry.ListAclEntryRequest;
-import com.dewarim.cinnamon.model.request.aclEntry.UpdateAclEntryRequest;
+import com.dewarim.cinnamon.model.request.aclGroup.CreateAclGroupRequest;
+import com.dewarim.cinnamon.model.request.aclGroup.DeleteAclGroupRequest;
+import com.dewarim.cinnamon.model.request.aclGroup.ListAclGroupRequest;
+import com.dewarim.cinnamon.model.request.aclGroup.UpdateAclGroupRequest;
 import com.dewarim.cinnamon.model.request.folder.UpdateFolderRequest;
 import com.dewarim.cinnamon.model.request.folderType.CreateFolderTypeRequest;
 import com.dewarim.cinnamon.model.request.folderType.DeleteFolderTypeRequest;
@@ -29,7 +29,7 @@ import com.dewarim.cinnamon.model.request.group.UpdateGroupRequest;
 import com.dewarim.cinnamon.model.request.osd.DeleteOsdRequest;
 import com.dewarim.cinnamon.model.request.osd.OsdRequest;
 import com.dewarim.cinnamon.model.request.user.UserInfoRequest;
-import com.dewarim.cinnamon.model.response.AclEntryWrapper;
+import com.dewarim.cinnamon.model.response.AclGroupWrapper;
 import com.dewarim.cinnamon.model.response.AclWrapper;
 import com.dewarim.cinnamon.model.response.CinnamonConnection;
 import com.dewarim.cinnamon.model.response.CinnamonError;
@@ -83,7 +83,7 @@ public class CinnamonClient {
     private final Unwrapper<DeleteResponse, DeleteResponse>      deleteResponseWrapper = new Unwrapper<>(DeleteResponse.class);
     private final Unwrapper<CinnamonError, CinnamonErrorWrapper> errorUnwrapper        = new Unwrapper<>(CinnamonErrorWrapper.class);
     private final Unwrapper<Acl, AclWrapper>                     aclUnwrapper          = new Unwrapper<>(AclWrapper.class);
-    private final Unwrapper<AclEntry, AclEntryWrapper>           aclEntryUnwrapper     = new Unwrapper<>(AclEntryWrapper.class);
+    private final Unwrapper<AclGroup, AclGroupWrapper>           aclGroupUnwrapper     = new Unwrapper<>(AclGroupWrapper.class);
     private final Unwrapper<Group, GroupWrapper>                 groupUnWrapper        = new Unwrapper<>(GroupWrapper.class);
 
     public CinnamonClient() {
@@ -249,25 +249,25 @@ public class CinnamonClient {
         return verifyDeleteResponse(response);
     }
 
-    // AclEntries
-    public List<AclEntry> listAclEntries() throws IOException {
-        HttpResponse response = sendStandardRequest(UrlMapping.ACL_ENTRY__LIST, new ListAclEntryRequest());
-        return aclEntryUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
+    // AclGroups
+    public List<AclGroup> listAclGroups() throws IOException {
+        HttpResponse response = sendStandardRequest(UrlMapping.ACL_ENTRY__LIST, new ListAclGroupRequest());
+        return aclGroupUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
-    public List<AclEntry> createAclEntries(List<AclEntry> aclEntries) throws IOException {
-        CreateAclEntryRequest request  = new CreateAclEntryRequest(aclEntries);
+    public List<AclGroup> createAclGroups(List<AclGroup> aclGroups) throws IOException {
+        CreateAclGroupRequest request  = new CreateAclGroupRequest(aclGroups);
         HttpResponse          response = sendStandardRequest(UrlMapping.ACL_ENTRY__CREATE, request);
-        return aclEntryUnwrapper.unwrap(response, aclEntries.size());
+        return aclGroupUnwrapper.unwrap(response, aclGroups.size());
     }
 
-    public List<AclEntry> updateAclEntries(UpdateAclEntryRequest request) throws IOException{
+    public List<AclGroup> updateAclGroups(UpdateAclGroupRequest request) throws IOException{
         HttpResponse response=sendStandardRequest(UrlMapping.ACL_ENTRY__UPDATE, request);
-        return aclEntryUnwrapper.unwrap(response, request.list().size());
+        return aclGroupUnwrapper.unwrap(response, request.list().size());
     }
 
-    public boolean deleteAclEntries(List<Long> ids) throws IOException{
-        HttpResponse response = sendStandardRequest(UrlMapping.ACL_ENTRY__DELETE, new DeleteAclEntryRequest(ids));
+    public boolean deleteAclGroups(List<Long> ids) throws IOException{
+        HttpResponse response = sendStandardRequest(UrlMapping.ACL_ENTRY__DELETE, new DeleteAclGroupRequest(ids));
         return verifyDeleteResponse(response);
     }
 

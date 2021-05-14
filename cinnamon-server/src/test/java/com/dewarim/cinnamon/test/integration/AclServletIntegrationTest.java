@@ -129,7 +129,7 @@ public class AclServletIntegrationTest extends CinnamonIntegrationTest {
 
         // TODO: verify delete fails when acl is currently used on object
         // TODO: verify delete fails when acl is currently used on link
-        // TODO: verify delete fails when acl is currently used on aclentry
+        // TODO: verify delete fails when acl is currently used on aclGroup
     }
 
     @Test

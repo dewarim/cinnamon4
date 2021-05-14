@@ -2,7 +2,7 @@ package com.dewarim.cinnamon.application;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
-import com.dewarim.cinnamon.application.servlet.AclEntryServlet;
+import com.dewarim.cinnamon.application.servlet.AclGroupServlet;
 import com.dewarim.cinnamon.application.servlet.AclServlet;
 import com.dewarim.cinnamon.application.servlet.CinnamonServlet;
 import com.dewarim.cinnamon.application.servlet.ConfigEntryServlet;
@@ -117,7 +117,7 @@ public class CinnamonServer {
 
     private void addServlets(WebAppContext handler) {
         handler.addServlet(AclServlet.class, "/api/acl/*");
-        handler.addServlet(AclEntryServlet.class, "/api/aclEntry/*");
+        handler.addServlet(AclGroupServlet.class, "/api/aclGroup/*");
         handler.addServlet(CinnamonServlet.class, "/cinnamon/*");
         handler.addServlet(ConfigServlet.class, "/api/config/*");
         handler.addServlet(ConfigEntryServlet.class, "/api/configEntry/*");

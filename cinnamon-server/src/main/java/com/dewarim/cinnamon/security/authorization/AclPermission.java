@@ -10,7 +10,7 @@ public class AclPermission {
     /**
      * true if this AclPermission was checked with regards to owner's acl permission.
      * <br>
-     * OSD and Folders may have an owner, and an Acl may grant (via AclEntry with system group '_owner')
+     * OSD and Folders may have an owner, and an Acl may grant (via AclGroup with system group '_owner')
      * specific permissions to the dynamically calculated owner. Dynamically calculated means it
      * is dependent on the ownerId of the object, not purely on the current user and acl.
      */

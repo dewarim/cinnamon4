@@ -134,6 +134,11 @@
     alter table users drop column sudoable;
     alter table users drop column token_age;
 
+    alter table aclentries rename to acl_groups;
+    alter table aclentry_permissions rename to acl_group_permissions;
+    alter table acl_group_permissions rename column aclentry_id to acl_group_id;
+    alter table acl_group_permissions drop column obj_version;
+
     -- create per-table sequences:
     drop sequence if exists seq_user_id;
     create sequence seq_user_id start with 1;
@@ -192,16 +197,16 @@
     select setval('seq_group_id', (select MAX(id) FROM groups));
     
     drop sequence if exists seq_acl_entry_id;
-    create sequence seq_acl_entry_id start with 1;
-    select setval('seq_acl_entry_id', (select MAX(id) FROM aclentries));
+    create sequence seq_acl_group_id start with 1;
+    select setval('seq_acl_group_id', (select MAX(id) FROM acl_groups));
     
     drop sequence if exists seq_permission_id;
     create sequence seq_permission_id start with 1;
     select setval('seq_permission_id', (select MAX(id) FROM permissions));
     
     drop sequence if exists seq_aclentry_permission_id;
-    create sequence seq_aclentry_permission_id start with 1;
-    select setval('seq_aclentry_permission_id', (select MAX(id) FROM aclentry_permissions));
+    create sequence seq_acl_group_permission_id start with 1;
+    select setval('seq_acl_group_permission_id', (select MAX(id) FROM acl_group_permissions));
     
     drop sequence if exists seq_relationtype_id;
     create sequence seq_relationtype_id start with 1;
@@ -238,4 +243,4 @@
     -- group_users no longer needs obj_version
     alter table group_users drop column obj_version;
 
-    alter table aclentries drop column obj_version;
+    alter table acl_groups drop column obj_version;

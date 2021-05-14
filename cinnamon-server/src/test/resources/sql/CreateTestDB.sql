@@ -319,13 +319,13 @@ create table groups(
 drop sequence if exists seq_group_id;
 create SEQUENCE seq_group_id start with 1;
 
--- aclentries --
+-- acl_groups --
 
-drop table if exists aclentries cascade ;
-create table aclentries
+drop table if exists acl_groups cascade ;
+create table acl_groups
 (
   id bigint not null
-    constraint aclentries_pkey
+    constraint acl_groups_pkey
     primary key,
   acl_id bigint not null
     constraint fk5a6c3cc63e44742f
@@ -333,11 +333,11 @@ create table aclentries
   group_id bigint not null
     constraint fk5a6c3cc64e6fdacf
     references groups,
-  constraint unique_acl_id
+  constraint unique_acl_group_id
   unique (group_id, acl_id)
 );
-drop sequence if exists seq_acl_entry_id;
-create sequence seq_acl_entry_id start with 1;
+drop sequence if exists seq_acl_group_id;
+create sequence seq_acl_group_id start with 1;
 
 
 -- group_users --
@@ -365,24 +365,24 @@ create table permissions
 drop sequence if exists seq_permission_id;
 create sequence seq_permission_id start with 1;
 
--- aclentry_permissions --
-drop table if exists  aclentry_permissions cascade ;
-create table aclentry_permissions
+-- acl_group_permissions --
+drop table if exists  acl_group_permissions cascade ;
+create table acl_group_permissions
 (
   id bigint not null
-    constraint aclentry_permissions_pkey
+    constraint acl_group_permissions_pkey
     primary key,
-  aclentry_id bigint not null
+  acl_group_id bigint not null
     constraint fk2110acedec2a9305
-    references aclentries,
+    references acl_groups,
   permission_id bigint not null
     constraint fk2110aceda5501f05
     references permissions,
-  constraint unique_aclentry_id
-  unique (permission_id, aclentry_id)
+  constraint unique_acl_group_permission_id
+  unique (permission_id, acl_group_id)
 );
-drop sequence if exists seq_aclentry_permission_id;
-create sequence seq_aclentry_permission_id start with 1;
+drop sequence if exists seq_acl_group_permission_id;
+create sequence seq_acl_group_permission_id start with 1;
 
 drop table if exists relationtypes cascade ;
 create table relationtypes
@@ -574,37 +574,37 @@ insert into group_users VALUES (2,4);
 insert into group_users values (2,5);
 
 -- #1 link superusers group to default acl:
-insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entry_id'),1,1);
+insert into acl_groups(id,acl_id,group_id) values (nextval('seq_acl_group_id'),1,1);
 -- #2 admin's group is connected to reviewers acl:
-insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entry_id'),2,2);
+insert into acl_groups(id,acl_id,group_id) values (nextval('seq_acl_group_id'),2,2);
 -- #3 doe's group is connected to reviewers.acl
-insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entry_id'),2,4);
+insert into acl_groups(id,acl_id,group_id) values (nextval('seq_acl_group_id'),2,4);
 -- #4 admin's child group is connected to rename.me.acl:
-insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entry_id'),4,3);
+insert into acl_groups(id,acl_id,group_id) values (nextval('seq_acl_group_id'),4,3);
 -- #5 reviewers are connected to reviewers acl:
-insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entry_id'),2,5);
+insert into acl_groups(id,acl_id,group_id) values (nextval('seq_acl_group_id'),2,5);
 -- #6 doe's group is connected to default acl
-insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entry_id'),1,4);
+insert into acl_groups(id,acl_id,group_id) values (nextval('seq_acl_group_id'),1,4);
 -- #7 reviewers also have the default acl
-insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entry_id'),1,5);
+insert into acl_groups(id,acl_id,group_id) values (nextval('seq_acl_group_id'),1,5);
 -- #8 _owner is connected to the no-permission-except-owner.acl
-insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entry_id'),5,7);
+insert into acl_groups(id,acl_id,group_id) values (nextval('seq_acl_group_id'),5,7);
 -- #9 _everyone is connected to no-permission-except-everyone.acl
-insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entry_id'),6,6);
+insert into acl_groups(id,acl_id,group_id) values (nextval('seq_acl_group_id'),6,6);
 -- #10 doe's group linked to creation acl#8 
-insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entry_id'),8,4);
+insert into acl_groups(id,acl_id,group_id) values (nextval('seq_acl_group_id'),8,4);
 -- #11 doe's group linked to no-browse.acl#9 
-insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entry_id'),9,4);
+insert into acl_groups(id,acl_id,group_id) values (nextval('seq_acl_group_id'),9,4);
 -- #12 doe's group linked to no-create.acl#10 
-insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entry_id'),10,4);
+insert into acl_groups(id,acl_id,group_id) values (nextval('seq_acl_group_id'),10,4);
 -- #13 reviewers connected to set.acl.allowed#
-insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entry_id'),11,5);
+insert into acl_groups(id,acl_id,group_id) values (nextval('seq_acl_group_id'),11,5);
 -- #14 reviewers connected to set.edit_folder but not write sys meta
-insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entry_id'),12,5);
+insert into acl_groups(id,acl_id,group_id) values (nextval('seq_acl_group_id'),12,5);
 -- #15 reviewers connected to no.move.allowed acl (with setAcl allowed)
-insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entry_id'),13,5);
+insert into acl_groups(id,acl_id,group_id) values (nextval('seq_acl_group_id'),13,5);
 -- #16 reviewers connected to acl#14 no set acl allowed
-insert into aclentries(id,acl_id,group_id) values (nextval('seq_acl_entry_id'),14,5);
+insert into acl_groups(id,acl_id,group_id) values (nextval('seq_acl_group_id'),14,5);
 
 
 insert into permissions values (nextval('seq_permission_id'),'_browse'); -- #1
@@ -626,98 +626,98 @@ insert into permissions values (nextval('seq_permission_id'),'_write_object_cust
 insert into permissions values (nextval('seq_permission_id'),'_write_object_sysmeta'); -- #17
 
 -- #1 browse permission for doe's group + default_acl:
-insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),6,1);
+insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),6,1);
 -- #2 browse_folder permission for doe's group + default_acl:: 
-insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),6,2);
+insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),6,2);
 -- #3 create folder permission for reviewers group + reviewers acl:
-insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),5,3);
+insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),5,3);
 -- #4 add browse permission for _owner to view the objects with no-permission-except-owner acl:  
-insert into aclentry_permissions(id,aclentry_id,permission_id) values (nextval('seq_aclentry_permission_id'),8,1);
+insert into acl_group_permissions(id,acl_group_id,permission_id) values (nextval('seq_acl_group_permission_id'),8,1);
 -- #5 add browse permission for _everyone to view the objects with no-permission-except-everyone acl
-insert into aclentry_permissions(id, aclentry_id,permission_id) values (nextval('seq_aclentry_permission_id'),9,1);
+insert into acl_group_permissions(id, acl_group_id,permission_id) values (nextval('seq_acl_group_permission_id'),9,1);
 -- #6 delete_object permission for doe's group + default_acl:
-insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),6,6);
+insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),6,6);
 -- #7 delete folder permission for doe's group + default_acl:
-insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),6,5);
+insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),6,5);
 -- #8 browse permission for doe's group + creation.acl#8:
-insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),10,1);
+insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),10,1);
 -- #9 browse_folder permission for doe's group + creation.acl#8: 
-insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),10,2);
+insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),10,2);
 -- #10 create object permission for doe's group + creation.acl#8: 
-insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),10,4);
+insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),10,4);
 -- #11 browse but no create permission for doe's group + no-creation.acl#9: (testing create link) 
-insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),11,2);
+insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),11,2);
 -- #12 create but no browse permission for doe's group + no-creation.acl#10:  (testing create link)
-insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),12,4);
+insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),12,4);
 -- #13 add delete_folder permission to no-permission-except-owner acl:
-insert into aclentry_permissions(id,aclentry_id,permission_id) values (nextval('seq_aclentry_permission_id'),8,5);
+insert into acl_group_permissions(id,acl_group_id,permission_id) values (nextval('seq_acl_group_permission_id'),8,5);
 -- #14 add delete_object permission to no-permission-except-owner acl:
-insert into aclentry_permissions(id,aclentry_id,permission_id) values (nextval('seq_aclentry_permission_id'),8,6);
+insert into acl_group_permissions(id,acl_group_id,permission_id) values (nextval('seq_acl_group_permission_id'),8,6);
 -- #15 add write_object_sysmeta permission to reviewers.acl:
-insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),5,17);
+insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),5,17);
 -- #16 add version permission to reviewers.acl
-insert into aclentry_permissions values(nextval('seq_aclentry_permission_id'), 5,14);
+insert into acl_group_permissions values(nextval('seq_acl_group_permission_id'), 5,14);
 
 ---- set.acl.allowed acl#11
 -- #16 add write_object_sysmeta to set.acl.allowed acl #11 with reviewers group
-insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),13,17);
+insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),13,17);
 -- #17 add set_acl to set.acl.allowed acl #11 with reviewers group
-insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),13,13);
+insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),13,13);
 -- #18 add browse permission to set.acl.allowed acl #11 with reviewers group
-insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),13,1);
+insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),13,1);
 
 -- #19 add browse permission to reviewers.acl with reviewer group:
-insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),5,1);
+insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),5,1);
 -- #20 add browse_folder permission to set.acl.allowed acl #11 with reviewers group
-insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),13,2);
+insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),13,2);
 -- #21 add browse_folder permission for _owner to view folders with no-permission-except-owner acl:  
-insert into aclentry_permissions(id,aclentry_id,permission_id) values (nextval('seq_aclentry_permission_id'),8,2);
+insert into acl_group_permissions(id,acl_group_id,permission_id) values (nextval('seq_acl_group_permission_id'),8,2);
 -- #22 add read_object_metadata permission for _owner to view summary with no-permission-except-owner acl:  
-insert into aclentry_permissions(id,aclentry_id,permission_id) values (nextval('seq_aclentry_permission_id'),8,12);
+insert into acl_group_permissions(id,acl_group_id,permission_id) values (nextval('seq_acl_group_permission_id'),8,12);
 -- #23 add write_object_metadata permission for _owner to view summary with no-permission-except-owner acl:  
-insert into aclentry_permissions(id,aclentry_id,permission_id) values (nextval('seq_aclentry_permission_id'),8,17);
+insert into acl_group_permissions(id,acl_group_id,permission_id) values (nextval('seq_acl_group_permission_id'),8,17);
 -- #24 add read_object_sysmeta permission to reviewers.acl:
-insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),5,12);
+insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),5,12);
 -- #25 add write_object_content to reviewers.acl
-insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),5,15);
+insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),5,15);
 -- #26 add read_object_content to reviewers.acl
-insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),5,10);
+insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),5,10);
 -- #27 add lock permission to reviewers.acl
-insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),5,8);
+insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),5,8);
 -- #28 add read_custom_metadata to reviewers.acl
-insert into aclentry_permissions values (nextval('seq_aclentry_permission_id'),5,11);
+insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),5,11);
 -- #29 add edit_folder to edit_folder acl:
-insert into aclentry_permissions(id, aclentry_id, permission_id) values (nextval('seq_aclentry_permission_id'),14,7);
+insert into acl_group_permissions(id, acl_group_id, permission_id) values (nextval('seq_acl_group_permission_id'),14,7);
 -- #30 add edit_folder to reviewers.acl
-insert into aclentry_permissions(id, aclentry_id, permission_id) values (nextval('seq_aclentry_permission_id'),5,7);
+insert into acl_group_permissions(id, acl_group_id, permission_id) values (nextval('seq_acl_group_permission_id'),5,7);
 
 -- permissions for reviewers on no.move.allowed acl#13
 -- #31 write sys meta
-insert into aclentry_permissions(id, aclentry_id, permission_id) values (nextval('seq_aclentry_permission_id'),15,17);
+insert into acl_group_permissions(id, acl_group_id, permission_id) values (nextval('seq_acl_group_permission_id'),15,17);
 -- #32 create inside folder
-insert into aclentry_permissions(id, aclentry_id, permission_id) values (nextval('seq_aclentry_permission_id'),15,3);
+insert into acl_group_permissions(id, acl_group_id, permission_id) values (nextval('seq_acl_group_permission_id'),15,3);
 -- #33 edit_folder
-insert into aclentry_permissions(id, aclentry_id, permission_id) values (nextval('seq_aclentry_permission_id'),15,7);
+insert into acl_group_permissions(id, acl_group_id, permission_id) values (nextval('seq_acl_group_permission_id'),15,7);
 
 -- #34 set_acl for reviewers.acl
-insert into aclentry_permissions(id, aclentry_id, permission_id) values (nextval('seq_aclentry_permission_id'),5,13);
+insert into acl_group_permissions(id, acl_group_id, permission_id) values (nextval('seq_acl_group_permission_id'),5,13);
 
 -- permissions for reviewers on no.set.acl.allowed acl#14
 -- #35 write sys meta
-insert into aclentry_permissions(id, aclentry_id, permission_id) values (nextval('seq_aclentry_permission_id'),16,17);
+insert into acl_group_permissions(id, acl_group_id, permission_id) values (nextval('seq_acl_group_permission_id'),16,17);
 -- #36 edit_folder
-insert into aclentry_permissions(id, aclentry_id, permission_id) values (nextval('seq_aclentry_permission_id'),16,7);
+insert into acl_group_permissions(id, acl_group_id, permission_id) values (nextval('seq_acl_group_permission_id'),16,7);
 -- #37 browse
-insert into aclentry_permissions(id, aclentry_id, permission_id) values (nextval('seq_aclentry_permission_id'),16,1);
+insert into acl_group_permissions(id, acl_group_id, permission_id) values (nextval('seq_acl_group_permission_id'),16,1);
 
 -- #38 move permission for reviewers on reviewer.acl
-insert into aclentry_permissions(id, aclentry_id, permission_id) values (nextval('seq_aclentry_permission_id'),5,9);
+insert into acl_group_permissions(id, acl_group_id, permission_id) values (nextval('seq_acl_group_permission_id'),5,9);
 
 -- #39 create permission for reviewers on create.acl
-insert into aclentry_permissions(id, aclentry_id, permission_id) values (nextval('seq_aclentry_permission_id'),10,3);
+insert into acl_group_permissions(id, acl_group_id, permission_id) values (nextval('seq_acl_group_permission_id'),10,3);
 
 -- #40 delete permission for reviewers on reviewer.acl #2
-insert into aclentry_permissions(id, aclentry_id, permission_id) values (nextval('seq_aclentry_permission_id'),5,6);
+insert into acl_group_permissions(id, acl_group_id, permission_id) values (nextval('seq_acl_group_permission_id'),5,6);
 
 
 -- #1 default folder type

@@ -4,10 +4,10 @@ import com.dewarim.cinnamon.api.Identifiable;
 
 import java.util.Objects;
 
-public class AclEntryPermission implements Identifiable {
+public class AclGroupPermission implements Identifiable {
 
     private Long id;
-    private long aclEntryId;
+    private long aclGroupId;
     private long permissionId;
 
     @Override
@@ -19,12 +19,12 @@ public class AclEntryPermission implements Identifiable {
         this.id = id;
     }
 
-    public long getAclEntryId() {
-        return aclEntryId;
+    public long getAclGroupId() {
+        return aclGroupId;
     }
 
-    public void setAclEntryId(long aclEntryId) {
-        this.aclEntryId = aclEntryId;
+    public void setAclGroupId(long aclGroupId) {
+        this.aclGroupId = aclGroupId;
     }
 
     public long getPermissionId() {
@@ -43,21 +43,21 @@ public class AclEntryPermission implements Identifiable {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        AclEntryPermission that = (AclEntryPermission) o;
-        return aclEntryId == that.aclEntryId &&
+        AclGroupPermission that = (AclGroupPermission) o;
+        return aclGroupId == that.aclGroupId &&
                 permissionId == that.permissionId;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(aclEntryId, permissionId);
+        return Objects.hash(aclGroupId, permissionId);
     }
 
     @Override
     public String toString() {
-        return "AclEntryPermission{" +
+        return "AclGroupPermission{" +
                 "id=" + id +
-                ", aclEntryId=" + aclEntryId +
+                ", aclGroupId=" + aclGroupId +
                 ", permissionId=" + permissionId +
                 '}';
     }

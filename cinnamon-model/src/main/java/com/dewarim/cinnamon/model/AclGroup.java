@@ -4,21 +4,21 @@ import com.dewarim.cinnamon.api.Identifiable;
 
 import java.util.Objects;
 
-public class AclEntry implements Identifiable {
+public class AclGroup implements Identifiable {
 
     private Long id;
     private Long aclId;
     private Long groupId;
 
-    public AclEntry() {
+    public AclGroup() {
     }
 
-    public AclEntry(Long aclId, Long groupId) {
+    public AclGroup(Long aclId, Long groupId) {
         this.aclId = aclId;
         this.groupId = groupId;
     }
 
-    public AclEntry(Long id, Long aclId, Long groupId) {
+    public AclGroup(Long id, Long aclId, Long groupId) {
         this.id = id;
         this.aclId = aclId;
         this.groupId = groupId;
@@ -56,9 +56,9 @@ public class AclEntry implements Identifiable {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        AclEntry aclEntry = (AclEntry) o;
-        return Objects.equals(aclId, aclEntry.aclId) &&
-                Objects.equals(groupId, aclEntry.groupId);
+        AclGroup aclGroup = (AclGroup) o;
+        return Objects.equals(aclId, aclGroup.aclId) &&
+                Objects.equals(groupId, aclGroup.groupId);
     }
 
     @Override
@@ -69,7 +69,7 @@ public class AclEntry implements Identifiable {
 
     @Override
     public String toString() {
-        return "AclEntry{" +
+        return "AclGroup{" +
                 "id=" + id +
                 ", aclId=" + aclId +
                 ", groupId=" + groupId +

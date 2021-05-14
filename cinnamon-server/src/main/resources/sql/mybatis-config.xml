@@ -19,8 +19,8 @@
         </environment>
     </environments>
     <mappers>
-        <mapper resource="com/dewarim/cinnamon/AclEntryMapper.xml"/>
-        <mapper resource="com/dewarim/cinnamon/AclEntryPermissionMapper.xml"/>
+        <mapper resource="com/dewarim/cinnamon/AclGroupMapper.xml"/>
+        <mapper resource="com/dewarim/cinnamon/AclGroupPermissionMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/AclMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/ConfigEntryMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/GroupMapper.xml"/>
