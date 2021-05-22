@@ -4,8 +4,8 @@ import java.util.Objects;
 
 public class AclPermission {
 
-    private long aclId;
-    private long permissionId;
+    private final long aclId;
+    private final long permissionId;
 
     /**
      * true if this AclPermission was checked with regards to owner's acl permission.
@@ -14,7 +14,7 @@ public class AclPermission {
      * specific permissions to the dynamically calculated owner. Dynamically calculated means it
      * is dependent on the ownerId of the object, not purely on the current user and acl.
      */
-    private boolean ownerPermission;
+    private final boolean ownerPermission;
 
     public AclPermission(long aclId, long permissionId, boolean ownerPermission) {
         this.aclId = aclId;

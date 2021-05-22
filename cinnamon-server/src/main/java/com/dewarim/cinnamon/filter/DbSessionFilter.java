@@ -27,7 +27,7 @@ public class DbSessionFilter implements Filter {
 
     private static final Logger log = LogManager.getLogger(DbSessionFilter.class);
 
-    private ObjectMapper xmlMapper = new XmlMapper().configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL,true);
+    private final ObjectMapper xmlMapper = new XmlMapper().configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL,true);
 
 
     @Override

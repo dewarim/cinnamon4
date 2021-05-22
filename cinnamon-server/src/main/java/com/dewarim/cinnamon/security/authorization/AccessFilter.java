@@ -38,17 +38,17 @@ public class AccessFilter {
     private static Permission folderBrowsePermission;
     private static Group      ownerGroup;
 
-    private Set<Long> objectAclsWithBrowsePermissions;
-    private Set<Long> ownerAclsWithBrowsePermissions;
-    private Set<Long> folderAclsWithBrowsePermissions;
-    private Map<AclPermission, Boolean> checkedOwnerPermissions = new ConcurrentHashMap<>();
-    private Map<AclPermission, Boolean> checkedPermissions = new ConcurrentHashMap<>();
-    private UserAccount user;
-    private static final Map<Long, Set<Long>> userAclsWithBrowsePermissionCache = new ConcurrentHashMap<>();
+    private final Set<Long> objectAclsWithBrowsePermissions;
+    private final Set<Long> ownerAclsWithBrowsePermissions;
+    private final Set<Long> folderAclsWithBrowsePermissions;
+    private final Map<AclPermission, Boolean> checkedOwnerPermissions = new ConcurrentHashMap<>();
+    private final Map<AclPermission, Boolean> checkedPermissions      = new ConcurrentHashMap<>();
+    private final UserAccount                 user;
+    private static final Map<Long, Set<Long>>        userAclsWithBrowsePermissionCache = new ConcurrentHashMap<>();
     private static final Map<Long, Set<Long>> userAclsWithFolderBrowsePermissionCache = new ConcurrentHashMap<>();
     private static final Map<Long, Set<Long>> ownerAclsWithBrowsePermissionCache = new ConcurrentHashMap<>();
     private static final Map<String, Permission> nameToPermissionMapping = new ConcurrentHashMap<>();
-    private static Map<Long, Acl> idToAclMapping = new ConcurrentHashMap<>();
+    private static final Map<Long, Acl>          idToAclMapping          = new ConcurrentHashMap<>();
 
     private static final Object INITIALIZING = new Object();
     private static Boolean initialized = false;

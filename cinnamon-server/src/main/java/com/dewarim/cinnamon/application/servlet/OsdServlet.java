@@ -84,8 +84,8 @@ import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 @WebServlet(name = "Osd", urlPatterns = "/")
 public class OsdServlet extends BaseServlet {
 
-    private              ObjectMapper         xmlMapper            = new XmlMapper().configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL, true);
-    private final        AuthorizationService authorizationService = new AuthorizationService();
+    private final ObjectMapper         xmlMapper            = new XmlMapper().configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL, true);
+    private final AuthorizationService authorizationService = new AuthorizationService();
     private static final Logger               log                  = LogManager.getLogger(OsdServlet.class);
     private static final String               MULTIPART            = "multipart/";
 

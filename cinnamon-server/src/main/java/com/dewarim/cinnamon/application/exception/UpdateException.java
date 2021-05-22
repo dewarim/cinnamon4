@@ -21,8 +21,8 @@ public class UpdateException extends RuntimeException{
     
     
     
-    private int statusCode;
-    private ErrorCode errorCode;
+    private final int       statusCode;
+    private final ErrorCode errorCode;
 
     public UpdateException(int statusCode, ErrorCode errorCode) {
         super();

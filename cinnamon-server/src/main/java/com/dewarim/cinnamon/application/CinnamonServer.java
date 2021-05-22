@@ -58,12 +58,12 @@ public class CinnamonServer {
 
     private static final Logger log = LogManager.getLogger(CinnamonServer.class);
 
-    public static final String           VERSION       = "0.1.0";
-    private             int              port;
-    private             Server           server;
-    private             DbSessionFactory dbSessionFactory;
-    private             WebAppContext    webAppContext = new WebAppContext();
-    public static       CinnamonConfig   config        = new CinnamonConfig();
+    public static final String VERSION       = "0.1.0";
+    private final       int    port;
+    private             Server server;
+    private       DbSessionFactory dbSessionFactory;
+    private final WebAppContext    webAppContext = new WebAppContext();
+    public static CinnamonConfig   config        = new CinnamonConfig();
     public CinnamonServer(int port) {
         this.port = port;
     }

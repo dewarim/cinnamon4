@@ -22,7 +22,7 @@ import java.io.IOException;
 @WebServlet(name = "Group", urlPatterns = "/")
 public class GroupServlet extends HttpServlet implements CruddyServlet<Group> {
 
-    private ObjectMapper xmlMapper = new XmlMapper().configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL, true);
+    private final ObjectMapper xmlMapper = new XmlMapper().configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL, true);
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 

@@ -72,8 +72,8 @@ public class CinnamonClient {
     private String    protocol = "http";
     private String    username = "admin";
     private String    password = "admin";
-    private String    ticket;
-    private XmlMapper mapper   = new XmlMapper();
+    private       String    ticket;
+    private final XmlMapper mapper = new XmlMapper();
 
     private final Unwrapper<ObjectSystemData, OsdWrapper>        osdUnwrapper          = new Unwrapper<>(OsdWrapper.class);
     private final Unwrapper<FolderType, FolderTypeWrapper>       folderTypeUnwrapper   = new Unwrapper<>(FolderTypeWrapper.class);

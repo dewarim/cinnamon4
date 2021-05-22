@@ -4,7 +4,7 @@ import com.dewarim.cinnamon.ErrorCode;
 
 public class BadArgumentException extends RuntimeException {
 
-    private ErrorCode errorCode;
+    private final ErrorCode errorCode;
 
     public BadArgumentException(ErrorCode errorCode) {
         this.errorCode = errorCode;

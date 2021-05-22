@@ -4,8 +4,8 @@ import java.util.List;
 
 public class StateChangeResult {
 
-    private boolean      successful;
-    private List<String> messages;
+    private final boolean      successful;
+    private       List<String> messages;
 
     public StateChangeResult(boolean successful) {
         this.successful = successful;

@@ -22,7 +22,7 @@ import static com.dewarim.cinnamon.api.Constants.CONTENT_TYPE_XML;
 @WebServlet(name = "RelationType", urlPatterns = "/")
 public class RelationTypeServlet extends HttpServlet {
 
-    private ObjectMapper xmlMapper = new XmlMapper().configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL, true);
+    private final ObjectMapper xmlMapper = new XmlMapper().configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL, true);
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 

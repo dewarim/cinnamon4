@@ -90,10 +90,10 @@ public enum UrlMapping {
     USER__USER_INFO("user", "userInfo", "/api");
 
 
-    private static Map<String, UrlMapping> pathMapping = new ConcurrentHashMap<>();
-    private        String                  servlet;
-    private        String                  action;
-    private        String                  prefix;
+    private static final Map<String, UrlMapping> pathMapping = new ConcurrentHashMap<>();
+    private final        String                  servlet;
+    private final  String                  action;
+    private final String prefix;
 
     /**
      * @param servlet the servlet handling the url

@@ -37,11 +37,11 @@ import static com.dewarim.cinnamon.api.Constants.CONTENT_TYPE_XML;
 @WebServlet(name = "Cinnamon", urlPatterns = {"/*"})
 public class CinnamonServlet extends HttpServlet {
 
-    private static final Logger               log                  = LogManager.getLogger(CinnamonServlet.class);
-    private              ObjectMapper         xmlMapper            = new XmlMapper().configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL, true);
-    private final        UserAccountDao       userAccountDao       = new UserAccountDao();
-    private              LoginProviderService loginProviderService = LoginProviderService.getInstance();
-    private final        CinnamonVersion      cinnamonVersion      = new CinnamonVersion();
+    private static final Logger         log            = LogManager.getLogger(CinnamonServlet.class);
+    private final        ObjectMapper   xmlMapper      = new XmlMapper().configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL, true);
+    private final        UserAccountDao userAccountDao = new UserAccountDao();
+    private final LoginProviderService loginProviderService = LoginProviderService.getInstance();
+    private final CinnamonVersion      cinnamonVersion      = new CinnamonVersion();
     // TODO: move to constants or use http core?
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {

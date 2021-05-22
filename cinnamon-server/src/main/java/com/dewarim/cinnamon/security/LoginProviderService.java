@@ -9,7 +9,7 @@ import java.util.ServiceLoader;
 
 public class LoginProviderService {
 
-    private ServiceLoader<LoginProvider> serviceLoader;
+    private final ServiceLoader<LoginProvider> serviceLoader;
 
     private static LoginProviderService loginProviderService;
 

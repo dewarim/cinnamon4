@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 
 public class StateProviderService {
 
-    private        ServiceLoader<StateProvider> serviceLoader;
+    private final  ServiceLoader<StateProvider> serviceLoader;
     private static StateProviderService         stateProviderService;
 
     private StateProviderService() {

@@ -30,8 +30,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class AclServletIntegrationTest extends CinnamonIntegrationTest {
 
-    private Logger                     log          = LogManager.getLogger(AclServletIntegrationTest.class);
-    private Unwrapper<Acl, AclWrapper> aclUnWrapper = new Unwrapper<>(AclWrapper.class);
+    private final Logger                     log          = LogManager.getLogger(AclServletIntegrationTest.class);
+    private final Unwrapper<Acl, AclWrapper> aclUnWrapper = new Unwrapper<>(AclWrapper.class);
 
     @Test
     public void listAclsTest() throws IOException {

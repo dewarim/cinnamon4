@@ -24,7 +24,7 @@ public class FileSystemContentProvider implements ContentProvider {
 
     static final String SEP = File.separator;
 
-    private String dataRootPath;
+    private final String dataRootPath;
 
     public FileSystemContentProvider() {
         dataRootPath = CinnamonServer.config.getServerConfig().getDataRoot();

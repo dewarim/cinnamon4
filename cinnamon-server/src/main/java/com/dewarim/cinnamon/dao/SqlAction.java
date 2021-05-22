@@ -10,7 +10,7 @@ public enum SqlAction {
     ;
 
 
-    private String suffix;
+    private final String suffix;
 
     SqlAction(String suffix) {
         this.suffix = suffix;

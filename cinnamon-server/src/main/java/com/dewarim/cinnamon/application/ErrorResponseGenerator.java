@@ -11,7 +11,7 @@ import java.io.IOException;
 
 public class ErrorResponseGenerator {
 
-    private static ObjectMapper xmlMapper = new XmlMapper();
+    private static final ObjectMapper xmlMapper = new XmlMapper();
 
     public static void generateErrorMessage(HttpServletResponse response, ErrorCode errorCode, String message) {
         CinnamonError error = new CinnamonError(errorCode.name(), message);

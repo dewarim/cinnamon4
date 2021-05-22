@@ -14,7 +14,7 @@ import java.util.Properties;
  */
 public class DbSessionFactory {
 
-    private SqlSessionFactory sqlSessionFactory;
+    private final SqlSessionFactory sqlSessionFactory;
     
     public static final String DEFAULT_PROPERTIES_FILENAME = "sql/mybatis.properties.xml";
     

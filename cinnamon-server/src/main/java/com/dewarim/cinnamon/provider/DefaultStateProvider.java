@@ -6,7 +6,7 @@ public enum DefaultStateProvider {
     NOP_STATE("NopState")
     ;
 
-    private String className;
+    private final String className;
 
     DefaultStateProvider(String className) {
         this.className = className;

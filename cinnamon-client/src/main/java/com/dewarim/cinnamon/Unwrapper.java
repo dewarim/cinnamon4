@@ -19,9 +19,9 @@ public class Unwrapper<T, W extends Wrapper<T>> {
 
     private static final Logger log = LogManager.getLogger(Unwrapper.class);
 
-    private XmlMapper mapper = new XmlMapper();
+    private final XmlMapper mapper = new XmlMapper();
 
-    private Class<W> clazz;
+    private final Class<W> clazz;
 
     public Unwrapper(Class<W> clazz) {
         this.clazz = clazz;

@@ -50,8 +50,8 @@ public class LinkServlet extends HttpServlet {
     private static final Logger log             = LogManager.getLogger(LinkServlet.class);
     private static final int    UPDATED_ONE_ROW = 1;
 
-    private ObjectMapper         xmlMapper            = new XmlMapper().configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL, true);
-    private AuthorizationService authorizationService = new AuthorizationService();
+    private final ObjectMapper         xmlMapper            = new XmlMapper().configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL, true);
+    private final AuthorizationService authorizationService = new AuthorizationService();
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 

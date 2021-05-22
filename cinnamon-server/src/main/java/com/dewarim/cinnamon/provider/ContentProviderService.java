@@ -7,8 +7,8 @@ import java.util.ServiceLoader;
 
 public class ContentProviderService {
 
-    private ServiceLoader<ContentProvider> serviceLoader;
-    private static ContentProviderService contentProviderService;
+    private final  ServiceLoader<ContentProvider> serviceLoader;
+    private static ContentProviderService         contentProviderService;
 
     private ContentProviderService(){
         serviceLoader = ServiceLoader.load(ContentProvider.class);
