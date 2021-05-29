@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.dewarim.cinnamon.LinkMapper">
+<mapper namespace="com.dewarim.cinnamon.model.links.Link">
 
     <resultMap id="linkMap" type="com.dewarim.cinnamon.model.links.Link">
         <id property="id" column="id"/>
@@ -27,9 +27,13 @@
         WHERE parent_id = #{folderId}
     </select>
 
-    <delete id="deleteLink" parameterType="long">
+    <delete id="delete" parameterType="list">
         DELETE FROM links
-        WHERE id = #{id}
+        WHERE id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
     </delete>
 
     <delete id="deleteAllLinksToObjects" parameterType="map">
@@ -41,9 +45,9 @@
         </foreach>
     </delete>
 
-    <insert id="insertLink" parameterType="com.dewarim.cinnamon.model.links.Link">
+    <insert id="insert" parameterType="com.dewarim.cinnamon.model.links.Link">
         <selectKey keyProperty="id" resultType="long" order="BEFORE">
-            select nextval('seq_links_id')
+            select nextval('seq_link_id')
         </selectKey>
         INSERT INTO links (id,type,owner_id,acl_id,parent_id,folder_id,osd_id,version) VALUES
         (#{id},#{type}, #{ownerId}, #{aclId},#{parentId},#{folderId},#{objectId},0)
@@ -58,7 +62,16 @@
             folder_id = #{folderId},
             type      = #{type}
         WHERE id = #{id}
-
     </update>
+
+    <select id="getAllById" parameterType="list" resultMap="linkMap">
+        SELECT *
+        FROM links
+        WHERE id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
 
 </mapper>

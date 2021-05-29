@@ -2,9 +2,10 @@ package com.dewarim.cinnamon.application.servlet;
 
 import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.ErrorCode;
+import com.dewarim.cinnamon.api.UrlMapping;
+import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.application.ErrorResponseGenerator;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
-import com.dewarim.cinnamon.application.exception.UpdateException;
 import com.dewarim.cinnamon.dao.AclDao;
 import com.dewarim.cinnamon.dao.FolderDao;
 import com.dewarim.cinnamon.dao.LinkDao;
@@ -16,19 +17,17 @@ import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.links.LinkType;
-import com.dewarim.cinnamon.model.request.CreateLinkRequest;
+import com.dewarim.cinnamon.model.request.UpdateRequest;
+import com.dewarim.cinnamon.model.request.link.CreateLinkRequest;
 import com.dewarim.cinnamon.model.request.link.DeleteLinkRequest;
-import com.dewarim.cinnamon.model.request.link.LinkRequest;
-import com.dewarim.cinnamon.model.request.link.LinkUpdateRequest;
-import com.dewarim.cinnamon.model.response.DeletionResponse;
-import com.dewarim.cinnamon.model.response.GenericResponse;
+import com.dewarim.cinnamon.model.request.link.GetLinksRequest;
+import com.dewarim.cinnamon.model.request.link.LinkWrapper;
+import com.dewarim.cinnamon.model.request.link.UpdateLinkRequest;
 import com.dewarim.cinnamon.model.response.LinkResponse;
-import com.dewarim.cinnamon.model.response.LinkWrapper;
+import com.dewarim.cinnamon.model.response.LinkResponseWrapper;
 import com.dewarim.cinnamon.security.authorization.AccessFilter;
 import com.dewarim.cinnamon.security.authorization.AuthorizationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import com.fasterxml.jackson.dataformat.xml.deser.FromXmlParser;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -37,59 +36,68 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
-import static com.dewarim.cinnamon.api.Constants.CONTENT_TYPE_XML;
-import static com.dewarim.cinnamon.application.exception.UpdateException.*;
+import static com.dewarim.cinnamon.DefaultPermission.DELETE_FOLDER;
+import static com.dewarim.cinnamon.DefaultPermission.DELETE_OBJECT;
+import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
+import static com.dewarim.cinnamon.model.links.LinkType.FOLDER;
+import static com.dewarim.cinnamon.model.links.LinkType.OBJECT;
 
 @WebServlet(name = "Link", urlPatterns = "/")
-public class LinkServlet extends HttpServlet {
+public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
 
     private static final Logger log             = LogManager.getLogger(LinkServlet.class);
     private static final int    UPDATED_ONE_ROW = 1;
 
-    private final ObjectMapper         xmlMapper            = new XmlMapper().configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL, true);
+    private final ObjectMapper         xmlMapper            = XML_MAPPER;
     private final AuthorizationService authorizationService = new AuthorizationService();
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
-        String pathInfo = request.getPathInfo();
-        if (pathInfo == null) {
-            pathInfo = "";
+        CinnamonResponse cinnamonResponse = (CinnamonResponse) response;
+        LinkDao          linkDao          = new LinkDao();
+
+        UrlMapping mapping = UrlMapping.getByPath(request.getRequestURI());
+        switch (mapping) {
+            case LINK__CREATE:
+                create(request, linkDao, cinnamonResponse);
+                break;
+            case LINK__DELETE:
+                delete(request, linkDao, cinnamonResponse);
+                break;
+            case LINK__GET_LINKS_BY_ID:
+                getLinksById(request, linkDao, cinnamonResponse);
+                break;
+            case LINK__UPDATE:
+                update(request, linkDao, cinnamonResponse);
+                break;
+            default:
+                ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
-            switch (pathInfo) {
-                case "/createLink":
-                    createLink(request, response);
-                    break;
-                case "/deleteLink":
-                    deleteLink(request, response);
-                    break;
-                case "/getLinkById":
-                    getLinkById(request, response);
-                    break;
-                case "/updateLink":
-                    updateLink(request, response);
-                    break;
-                default:
-                    ErrorCode.RESOURCE_NOT_FOUND.throwUp();
-            }
     }
 
-    private void createLink(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        CreateLinkRequest linkRequest = xmlMapper.readValue(request.getInputStream(), CreateLinkRequest.class);
-        if (!linkRequest.validated()) {
-            ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.INVALID_REQUEST);
-            return;
-        }
+    private void create(HttpServletRequest request, LinkDao linkDao, CinnamonResponse response) throws IOException {
+        CreateLinkRequest linkRequest = (CreateLinkRequest) getMapper().readValue(request.getInputStream(), CreateLinkRequest.class)
+                .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
+        List<Link>  links       = linkRequest.list().stream().map((Link link) -> createLink(link, linkDao)).collect(Collectors.toList());
+        LinkWrapper linkWrapper = new LinkWrapper(links);
+        response.setWrapper(linkWrapper);
+
+    }
+
+    private Link createLink(Link link, LinkDao linkDao) {
         UserAccount  user          = ThreadLocalSqlSession.getCurrentUser();
         FolderDao    folderDao     = new FolderDao();
-        List<Folder> parentFolders = folderDao.getFoldersById(Collections.singletonList(linkRequest.getParentId()), false);
+        List<Folder> parentFolders = folderDao.getFoldersById(Collections.singletonList(link.getParentId()), false);
         if (parentFolders.isEmpty()) {
-            ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.PARENT_FOLDER_NOT_FOUND);
-            return;
+            ErrorCode.PARENT_FOLDER_NOT_FOUND.throwUp();
         }
 
         Folder       parentFolder     = parentFolders.get(0);
@@ -97,331 +105,245 @@ public class LinkServlet extends HttpServlet {
         boolean      browsePermission = accessFilter.hasPermissionOnOwnable(parentFolder, DefaultPermission.BROWSE_FOLDER, parentFolder);
         boolean      writePermission  = accessFilter.hasPermissionOnOwnable(parentFolder, DefaultPermission.CREATE_OBJECT, parentFolder);
         if (!(browsePermission && writePermission)) {
-            ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.UNAUTHORIZED);
-            return;
+            ErrorCode.UNAUTHORIZED.throwUp();
         }
 
         AclDao        aclDao = new AclDao();
-        Optional<Acl> acl    = aclDao.getAclById(linkRequest.getAclId());
+        Optional<Acl> acl    = aclDao.getAclById(link.getAclId());
         if (acl.isEmpty()) {
-            ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.ACL_NOT_FOUND);
-            return;
+            ErrorCode.ACL_NOT_FOUND.throwUp();
         }
 
         // check if owner of new link exists:
         UserAccountDao        userDao  = new UserAccountDao();
-        Optional<UserAccount> ownerOpt = userDao.getUserAccountById(linkRequest.getOwnerId());
+        Optional<UserAccount> ownerOpt = userDao.getUserAccountById(link.getOwnerId());
         if (ownerOpt.isEmpty()) {
-            ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.OWNER_NOT_FOUND);
-            return;
+            ErrorCode.OWNER_NOT_FOUND.throwUp();
         }
 
-        Folder           folder = null;
-        ObjectSystemData osd    = null;
+        Folder           folder;
+        ObjectSystemData osd;
         OsdDao           osdDao = new OsdDao();
-        boolean          hasBrowsePermission;
-        switch (linkRequest.getLinkType()) {
+        switch (link.getType()) {
             case FOLDER:
-                Optional<Folder> folderOpt = folderDao.getFolderById(linkRequest.getId());
+                Optional<Folder> folderOpt = folderDao.getFolderById(link.getFolderId());
                 if (folderOpt.isPresent()) {
                     folder = folderOpt.get();
-                    hasBrowsePermission = accessFilter.hasPermissionOnOwnable(folder, DefaultPermission.BROWSE_FOLDER, folder);
+
+                    accessFilter.verifyHasPermissionOnOwnable(folder, DefaultPermission.BROWSE_FOLDER, folder, ErrorCode.UNAUTHORIZED);
                 } else {
-                    ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.FOLDER_NOT_FOUND);
-                    return;
+                    ErrorCode.FOLDER_NOT_FOUND.throwUp();
                 }
                 break;
             case OBJECT:
-                Optional<ObjectSystemData> osdOpt = osdDao.getObjectById(linkRequest.getId());
-                // TODO: check if this isPresent can be replaced with orThrow and response generation upstream.
-                if (osdOpt.isPresent()) {
-                    osd = osdOpt.get();
-                    hasBrowsePermission = accessFilter.hasPermissionOnOwnable(osd, DefaultPermission.BROWSE_OBJECT, osd);
-                } else {
-                    ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.OBJECT_NOT_FOUND);
-                    return;
-                }
+                Optional<ObjectSystemData> osdOpt = osdDao.getObjectById(link.getObjectId());
+                osd = osdOpt.orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
+                accessFilter.verifyHasPermissionOnOwnable(osd, DefaultPermission.BROWSE_OBJECT, osd, ErrorCode.UNAUTHORIZED);
                 break;
             default:
-                throw new IllegalStateException("invalid link type: " + linkRequest.getLinkType());
+                throw new IllegalStateException("invalid link type: " + link.getType());
         }
 
-        if (!hasBrowsePermission) {
-            ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.UNAUTHORIZED);
-            return;
-        }
-
-        LinkDao      linkDao      = new LinkDao();
-        Link         link         = linkDao.createLink(linkRequest);
-        LinkResponse linkResponse = new LinkResponse();
-        linkResponse.setLinkType(link.getType());
-        linkResponse.setOsd(osd);
-        linkResponse.setFolder(folder);
-        linkResponse.setOwnerId(link.getOwnerId());
-        linkResponse.setParentId(link.getParentId());
-        linkResponse.setAclId(link.getAclId());
-        LinkWrapper linkWrapper = new LinkWrapper();
-        linkWrapper.getLinks().add(linkResponse);
-        response.setContentType(CONTENT_TYPE_XML);
-        response.setStatus(HttpServletResponse.SC_OK);
-        xmlMapper.writeValue(response.getWriter(), linkWrapper);
+        return linkDao.create(Collections.singletonList(link)).get(0);
     }
 
-
-    private void updateLink(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        LinkUpdateRequest updateRequest = xmlMapper.readValue(request.getInputStream(), LinkUpdateRequest.class);
-        if (!updateRequest.validated()) {
-            ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.INVALID_REQUEST, "Id must be a positive integer value and one or more fields must be set.");
-            return;
-        }
-        LinkDao        linkDao      = new LinkDao();
-        Optional<Link> linkOptional = linkDao.getLinkById(updateRequest.getId());
-        if (linkOptional.isPresent()) {
-            Link         link         = linkOptional.get();
-            UserAccount  user         = ThreadLocalSqlSession.getCurrentUser();
-            AccessFilter accessFilter = AccessFilter.getInstance(user);
-
-            try {
-                // no update allowed for links that the user cannot even see:
-                if (!accessFilter.hasPermissionOnOwnable(link, DefaultPermission.BROWSE_OBJECT, link)) {
-                    throw NO_BROWSE_PERMISSION;
-                }
-
-                if (!accessFilter.hasPermissionOnOwnable(link, DefaultPermission.WRITE_OBJECT_SYS_METADATA, link)) {
-                    throw MISSING_SET_SYSMETA_PERMISSION;
-                }
-
-                if (updateRequest.getAclId() != null) {
-                    updateAcl(updateRequest, link, linkDao);
-                }
-                if (updateRequest.getFolderId() != null) {
-                    updateFolder(updateRequest, link, linkDao);
-                }
-                if (updateRequest.getObjectId() != null) {
-                    updateObject(updateRequest, link, linkDao);
-                }
-                if (updateRequest.getParentId() != null) {
-                    updateParent(updateRequest, link, linkDao);
-                }
-                if (updateRequest.getOwnerId() != null) {
-                    updateOwner(updateRequest, link, linkDao);
-                }
-
-                sendGenericResponse(response, new GenericResponse(true));
-
-            } catch (UpdateException updateException) {
-                ErrorResponseGenerator.generateErrorMessage(response, updateException.getErrorCode());
-            }
-        } else {
-            ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.OBJECT_NOT_FOUND);
-        }
-
+    private void update(HttpServletRequest request, LinkDao linkDao, CinnamonResponse response) throws IOException {
+        UpdateRequest<Link> updateRequest = xmlMapper.readValue(request.getInputStream(), UpdateLinkRequest.class)
+                .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
+        List<Link> links       = updateRequest.list().stream().map(link -> updateLink(link, linkDao)).collect(Collectors.toList());
+        var        linkWrapper = new LinkWrapper(links);
+        response.setWrapper(linkWrapper);
     }
 
-    private void updateFolder(LinkUpdateRequest updateRequest, Link link, LinkDao linkDao) {
+    private Link updateLink(Link update, LinkDao linkDao) {
+        Link         link         = linkDao.getLinkById(update.getId()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
+        UserAccount  user         = ThreadLocalSqlSession.getCurrentUser();
+        AccessFilter accessFilter = AccessFilter.getInstance(user);
+
+        if(link.getType() != update.getType()){
+            ErrorCode.CANNOT_CHANGE_LINK_TYPE.throwUp();
+        }
+
+        // no update allowed for links that the user cannot even see:
+        accessFilter.verifyHasPermissionOnOwnable(link, DefaultPermission.BROWSE_OBJECT, link, ErrorCode.NO_BROWSE_PERMISSION);
+        accessFilter.verifyHasPermissionOnOwnable(link, DefaultPermission.WRITE_OBJECT_SYS_METADATA, link, ErrorCode.NO_WRITE_SYS_METADATA_PERMISSION);
+
+        if (!Objects.equals(link.getAclId(), update.getAclId())) {
+            updateAcl(update, link, linkDao);
+        }
+        if (link.getType() == FOLDER && !Objects.equals(link.getFolderId(), update.getFolderId())) {
+            updateFolder(update, link, linkDao);
+        } else if (!Objects.equals(link.getObjectId(), update.getObjectId())) {
+            updateObject(update, link, linkDao);
+        }
+        if (!Objects.equals(link.getParentId(), update.getParentId())) {
+            updateParent(update, link, linkDao);
+        }
+        if (!Objects.equals(link.getOwnerId(), update.getOwnerId())) {
+            updateOwner(update, link, linkDao);
+        }
+        return link;
+    }
+
+    private void updateFolder(Link updateRequest, Link link, LinkDao linkDao) {
         if (link.getObjectId() != null) {
             // link can point either to folder OR object.
             link.setObjectId(null);
-            link.setType(LinkType.FOLDER);
+            link.setType(FOLDER);
         }
-        Folder       folder           = new FolderDao().getFolderById(updateRequest.getFolderId()).orElseThrow(() -> FOLDER_NOT_FOUND);
-        UserAccount  user             = ThreadLocalSqlSession.getCurrentUser();
-        AccessFilter accessFilter     = AccessFilter.getInstance(user);
-        boolean      browsePermission = accessFilter.hasPermissionOnOwnable(folder, DefaultPermission.BROWSE_FOLDER, folder);
-        if (!browsePermission) {
-            throw NO_BROWSE_PERMISSION;
-        }
+        Folder       folder       = new FolderDao().getFolderById(updateRequest.getFolderId()).orElseThrow(ErrorCode.FOLDER_NOT_FOUND.getException());
+        UserAccount  user         = ThreadLocalSqlSession.getCurrentUser();
+        AccessFilter accessFilter = AccessFilter.getInstance(user);
+        accessFilter.verifyHasPermissionOnOwnable(folder, DefaultPermission.BROWSE_FOLDER, folder, ErrorCode.NO_BROWSE_PERMISSION);
         link.setFolderId(updateRequest.getFolderId());
         if (linkDao.updateLink(link) != UPDATED_ONE_ROW) {
             log.debug("Folder update did not change the link.");
         }
     }
 
-    private void updateParent(LinkUpdateRequest updateRequest, Link link, LinkDao linkDao) {
-        Folder       parentFolder     = new FolderDao().getFolderById(updateRequest.getParentId()).orElseThrow(() -> FOLDER_NOT_FOUND);
-        UserAccount  user             = ThreadLocalSqlSession.getCurrentUser();
-        AccessFilter accessFilter     = AccessFilter.getInstance(user);
-        boolean      browsePermission = accessFilter.hasPermissionOnOwnable(parentFolder, DefaultPermission.BROWSE_FOLDER, parentFolder);
-        if (!browsePermission) {
-            throw NO_BROWSE_PERMISSION;
-        }
-        boolean writePermission = accessFilter.hasPermissionOnOwnable(parentFolder, DefaultPermission.CREATE_OBJECT, parentFolder);
-        if (!writePermission) {
-            throw NO_CREATE_PERMISSION;
-        }
-        link.setParentId(parentFolder.getParentId());
+    private void updateParent(Link updateRequest, Link link, LinkDao linkDao) {
+        Folder       parentFolder = new FolderDao().getFolderById(updateRequest.getParentId()).orElseThrow(ErrorCode.FOLDER_NOT_FOUND.getException());
+        UserAccount  user         = ThreadLocalSqlSession.getCurrentUser();
+        AccessFilter accessFilter = AccessFilter.getInstance(user);
+        accessFilter.verifyHasPermissionOnOwnable(parentFolder, DefaultPermission.BROWSE_FOLDER, parentFolder, ErrorCode.NO_BROWSE_PERMISSION);
+        accessFilter.verifyHasPermissionOnOwnable(parentFolder, DefaultPermission.CREATE_OBJECT, parentFolder, ErrorCode.NO_CREATE_PERMISSION);
+        link.setParentId(parentFolder.getId());
         if (linkDao.updateLink(link) != UPDATED_ONE_ROW) {
             log.debug("Folder parent update did not change the link.");
         }
     }
 
-    private void updateObject(LinkUpdateRequest updateRequest, Link link, LinkDao linkDao) {
+    private void updateObject(Link updateRequest, Link link, LinkDao linkDao) {
         if (link.getFolderId() != null) {
             link.setFolderId(null);
             link.setType(LinkType.OBJECT);
         }
-        ObjectSystemData osd       = new OsdDao().getObjectById(updateRequest.getObjectId()).orElseThrow(() -> OBJECT_NOT_FOUND);
-        boolean          mayBrowse = AccessFilter.getInstance(ThreadLocalSqlSession.getCurrentUser()).hasPermissionOnOwnable(osd, DefaultPermission.BROWSE_OBJECT, osd);
-        if (!mayBrowse) {
-            throw NO_BROWSE_PERMISSION;
-        }
+        ObjectSystemData osd = new OsdDao().getObjectById(updateRequest.getObjectId()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
+        AccessFilter.getInstance(ThreadLocalSqlSession.getCurrentUser()).verifyHasPermissionOnOwnable(osd, DefaultPermission.BROWSE_OBJECT, osd, ErrorCode.NO_BROWSE_PERMISSION);
         link.setObjectId(updateRequest.getObjectId());
         if (linkDao.updateLink(link) != UPDATED_ONE_ROW) {
             log.debug("OSD update did not change the link.");
         }
     }
 
-    private void updateOwner(LinkUpdateRequest updateRequest, Link link, LinkDao linkDao) {
+    private void updateOwner(Link updateRequest, Link link, LinkDao linkDao) {
         Optional<UserAccount> ownerOpt = new UserAccountDao().getUserAccountById(updateRequest.getOwnerId());
-        link.setOwnerId(ownerOpt.orElseThrow(() -> USER_NOT_FOUND).getId());
+        link.setOwnerId(ownerOpt.orElseThrow(ErrorCode.OWNER_NOT_FOUND.getException()).getId());
         if (linkDao.updateLink(link) != UPDATED_ONE_ROW) {
             log.debug("update owner did not change link");
         }
     }
 
-    private void updateAcl(LinkUpdateRequest updateRequest, Link link, LinkDao linkDao) {
-        Optional<Acl> acl = new AclDao().getAclById(updateRequest.getAclId());
-        if (acl.isEmpty()) {
-            ErrorCode.ACL_NOT_FOUND.throwUp();
-        }
+    private void updateAcl(Link updateRequest, Link link, LinkDao linkDao) {
+        Acl          acl          = new AclDao().getAclById(updateRequest.getAclId()).orElseThrow(ErrorCode.ACL_NOT_FOUND.getException());
         UserAccount  user         = ThreadLocalSqlSession.getCurrentUser();
         AccessFilter accessFilter = AccessFilter.getInstance(user);
-        if (accessFilter.hasPermissionOnOwnable(link, DefaultPermission.SET_ACL.getName(), link)) {
-            link.setAclId(updateRequest.getAclId());
-            if (linkDao.updateLink(link) != 1) {
-                log.debug("acl update on {} did change anything.", link);
-            }
-        } else {
-            throw MISSING_SET_ACL_PERMISSION;
+        accessFilter.verifyHasPermissionOnOwnable(link, DefaultPermission.SET_ACL, link, ErrorCode.MISSING_SET_ACL_PERMISSION);
+        link.setAclId(acl.getId());
+        if (linkDao.updateLink(link) != 1) {
+            log.debug("acl update on {} did change anything.", link);
         }
     }
 
-
-    private void sendGenericResponse(HttpServletResponse response, GenericResponse genericResponse) throws IOException {
-        response.setContentType(CONTENT_TYPE_XML);
-        response.setStatus(HttpServletResponse.SC_OK);
-        xmlMapper.writeValue(response.getWriter(), genericResponse);
-    }
-
-    private void deleteLink(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        DeleteLinkRequest deleteRequest = xmlMapper.readValue(request.getInputStream(), DeleteLinkRequest.class);
-        if (!deleteRequest.validated()) {
-            ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.ID_PARAM_IS_INVALID,
-                    "Id must be a positive integer value.");
-            return;
+    private void delete(HttpServletRequest request, LinkDao linkDao, CinnamonResponse response) throws IOException {
+        DeleteLinkRequest deleteRequest = (DeleteLinkRequest) xmlMapper.readValue(request.getInputStream(), DeleteLinkRequest.class)
+                .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
+        List<Link> links = linkDao.getObjectsById(deleteRequest.list());
+        if (links.isEmpty()) {
+            ErrorCode.OBJECT_NOT_FOUND.throwUp();
         }
-        LinkDao          linkDao          = new LinkDao();
-        Optional<Link>   linkOptional     = linkDao.getLinkById(deleteRequest.list().get(0));
-        DeletionResponse deletionResponse = new DeletionResponse();
-        if (linkOptional.isPresent()) {
-            Link        link         = linkOptional.get();
-            UserAccount user         = ThreadLocalSqlSession.getCurrentUser();
-            List<Link>  filteredLink = authorizationService.filterLinksByBrowsePermission(Collections.singletonList(link), user);
-            if (filteredLink.isEmpty()) {
-                ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.UNAUTHORIZED);
-                return;
-            }
-
-            boolean deleteOkay;
-            long    aclId = link.getAclId();
-            switch (link.getType()) {
-                case FOLDER:
-                    String deleteFolderPerm = DefaultPermission.DELETE_FOLDER.getName();
-                    deleteOkay = authorizationService.userHasPermission(aclId, deleteFolderPerm, user)
-                            ||
-                            (link.getOwnerId().equals(user.getId())
-                                    && authorizationService.userHasOwnerPermission(aclId, deleteFolderPerm, user))
-                    ;
-                    break;
-                case OBJECT:
-                    String deleteObjectPerm = DefaultPermission.DELETE_OBJECT.getName();
-                    deleteOkay = authorizationService.userHasPermission(aclId, deleteObjectPerm, user)
-                            ||
-                            (link.getOwnerId().equals(user.getId())
-                                    && authorizationService.userHasOwnerPermission(aclId, deleteObjectPerm, user))
-                    ;
-                    break;
-                default:
-                    throw new IllegalStateException("unknown link type");
-            }
-            if (!deleteOkay) {
-                ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.UNAUTHORIZED);
-                return;
-            }
-            int deletedRows = linkDao.deleteLink(link.getId());
-            deletionResponse.setSuccess(deletedRows == 1 || deleteRequest.isIgnoreNotFound());
-        } else {
-            deletionResponse.setNotFound(true);
-        }
-        response.setContentType(CONTENT_TYPE_XML);
-        response.setStatus(HttpServletResponse.SC_OK);
-        xmlMapper.writeValue(response.getWriter(), deletionResponse);
-    }
-
-    private void getLinkById(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        LinkRequest linkRequest = xmlMapper.readValue(request.getInputStream(), LinkRequest.class);
-        if (!linkRequest.validated()) {
-            ErrorResponseGenerator.generateErrorMessage(response,
-                    ErrorCode.ID_PARAM_IS_INVALID, "Id must be a positive integer value.");
-            return;
-        }
-        LinkDao        linkDao      = new LinkDao();
-        Optional<Link> linkOptional = linkDao.getLinkById(linkRequest.getId());
-        if (linkOptional.isEmpty()) {
-            ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.OBJECT_NOT_FOUND);
-            return;
-        }
-
-        boolean includeSummary = linkRequest.isIncludeSummary();
-        Link    link           = linkOptional.get();
-
-        // check the Link's ACL:
-        UserAccount user         = ThreadLocalSqlSession.getCurrentUser();
-        List<Link>  filteredLink = authorizationService.filterLinksByBrowsePermission(Collections.singletonList(link), user);
-        if (filteredLink.isEmpty()) {
+        UserAccount user          = ThreadLocalSqlSession.getCurrentUser();
+        List<Link>  filteredLinks = authorizationService.filterLinksByBrowsePermission(links, user);
+        if (filteredLinks.isEmpty() || links.size() != filteredLinks.size()) {
+            ErrorCode.UNAUTHORIZED.throwUp();
             ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.UNAUTHORIZED);
             return;
         }
 
-        Optional<LinkResponse> linkResponse;
-        switch (link.getType()) {
-            case FOLDER:
-                linkResponse = handleFolderLink(response, link, includeSummary);
-                break;
-            case OBJECT:
-                linkResponse = handleOsdLink(response, link, includeSummary);
-                break;
-            default:
-                throw new IllegalStateException("unknown link type");
+        List<Link> folderLinks = links.stream().filter(link -> link.getType().equals(FOLDER)).collect(Collectors.toList());
+        boolean deleteFolderLinksOkay = folderLinks.stream().allMatch(link ->
+                authorizationService.userHasPermission(link.getAclId(), DELETE_FOLDER, user)
+                        ||
+                        (link.getOwnerId().equals(user.getId())
+                                && authorizationService.userHasOwnerPermission(link.getAclId(), DELETE_FOLDER, user))
+        );
+        List<Link> osdLinks = links.stream().filter(link -> link.getType().equals(OBJECT)).collect(Collectors.toList());
+        boolean deleteObjectLinksOkay = osdLinks.stream().allMatch(link ->
+                authorizationService.userHasPermission(link.getAclId(), DELETE_OBJECT, user)
+                        ||
+                        (link.getOwnerId().equals(user.getId())
+                                && authorizationService.userHasOwnerPermission(link.getAclId(), DELETE_OBJECT, user))
+        );
+        if (deleteFolderLinksOkay && deleteObjectLinksOkay) {
+            linkDao.delete(deleteRequest.list());
+        } else {
+            log.warn("User does not have permission to delete all requested links.");
+            ErrorCode.UNAUTHORIZED.throwUp();
         }
-
-        if (linkResponse.isPresent()) {
-            LinkWrapper wrapper = new LinkWrapper();
-            wrapper.getLinks().add(linkResponse.get());
-            response.setContentType(CONTENT_TYPE_XML);
-            response.setStatus(HttpServletResponse.SC_OK);
-            xmlMapper.writeValue(response.getWriter(), wrapper);
-        }
+        response.setWrapper(deleteRequest.fetchResponseWrapper());
     }
 
-    private Optional<LinkResponse> handleFolderLink(HttpServletResponse response, Link link, boolean includeSummary) {
+    private void getLinksById(HttpServletRequest request, LinkDao linkDao, CinnamonResponse response) throws IOException {
+        var linkRequest = (GetLinksRequest) xmlMapper.readValue(request.getInputStream(), GetLinksRequest.class)
+                .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
+
+        int        idCount = linkRequest.getIds().size();
+        List<Link> links   = linkDao.getObjectsById(linkRequest.getIds());
+
+        if (links.size() != idCount) {
+            ErrorCode.OBJECT_NOT_FOUND.throwUp();
+            return;
+        }
+
+        // check the ACLs of all links.
+        UserAccount user          = ThreadLocalSqlSession.getCurrentUser();
+        List<Link>  filteredLinks = authorizationService.filterLinksByBrowsePermission(links, user);
+        if (filteredLinks.size() != idCount) {
+            ErrorCode.NO_BROWSE_PERMISSION.throwUp();
+            return;
+        }
+
+        List<LinkResponse> linkResponses  = new ArrayList<>();
+        boolean            includeSummary = linkRequest.isIncludeSummary();
+        filteredLinks.forEach(link -> {
+            switch (link.getType()) {
+                case FOLDER:
+                    linkResponses.add(handleFolderLink(link, includeSummary));
+                    break;
+                case OBJECT:
+                    linkResponses.add(handleOsdLink(link, includeSummary));
+                    break;
+                default:
+                    throw new IllegalStateException("unknown link type");
+            }
+        });
+
+        LinkResponseWrapper wrapper = new LinkResponseWrapper(linkResponses);
+        response.setWrapper(wrapper);
+    }
+
+    private LinkResponse handleFolderLink(Link link, boolean includeSummary) {
         FolderDao    folderDao = new FolderDao();
         List<Folder> folders   = folderDao.getFoldersById(Collections.singletonList(link.getFolderId()), includeSummary);
-        // existence of folder should be guaranteed by foreign key constraing in DB.
+        // existence of folder should be guaranteed by foreign key constraint in DB.
         Folder       folder       = folders.get(0);
         AccessFilter accessFilter = AccessFilter.getInstance(ThreadLocalSqlSession.getCurrentUser());
         // TODO: check browse permission of owner (#57)
         if (accessFilter.hasFolderBrowsePermission(folder.getAclId())) {
             LinkResponse linkResponse = new LinkResponse();
-            linkResponse.setLinkType(LinkType.FOLDER);
+            linkResponse.setType(LinkType.FOLDER);
             linkResponse.setFolder(folder);
-            return Optional.of(linkResponse);
+            linkResponse.setFolderId(folder.getId());
+            linkResponse.setAclId(link.getAclId());
+            linkResponse.setId(link.getId());
+            linkResponse.setOwnerId(link.getOwnerId());
+            linkResponse.setParentId(link.getParentId());
+            return linkResponse;
         }
-        ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.UNAUTHORIZED);
-        return Optional.empty();
+        throw ErrorCode.UNAUTHORIZED.getException().get();
     }
 
-    private Optional<LinkResponse> handleOsdLink(HttpServletResponse response, Link link, boolean includeSummary) {
+    private LinkResponse handleOsdLink(Link link, boolean includeSummary) {
         OsdDao                 osdDao = new OsdDao();
         List<ObjectSystemData> osds   = osdDao.getObjectsById(Collections.singletonList(link.getObjectId()), includeSummary);
         ObjectSystemData       osd    = osds.get(0);
@@ -430,13 +352,20 @@ public class LinkServlet extends HttpServlet {
         // TODO: check browse permission of owner (#57)
         if (accessFilter.hasUserBrowsePermission(osd.getAclId())) {
             LinkResponse linkResponse = new LinkResponse();
-            linkResponse.setLinkType(LinkType.OBJECT);
+            linkResponse.setType(LinkType.OBJECT);
             linkResponse.setOsd(osd);
-            return Optional.of(linkResponse);
-
+            linkResponse.setObjectId(osd.getId());
+            linkResponse.setAclId(link.getAclId());
+            linkResponse.setId(link.getId());
+            linkResponse.setOwnerId(link.getOwnerId());
+            linkResponse.setParentId(link.getParentId());
+            return linkResponse;
         }
-        ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.UNAUTHORIZED);
-        return Optional.empty();
+        throw ErrorCode.UNAUTHORIZED.getException().get();
     }
 
+    @Override
+    public ObjectMapper getMapper() {
+        return xmlMapper;
+    }
 }

@@ -15,8 +15,6 @@ import com.dewarim.cinnamon.model.response.DisconnectResponse;
 import com.dewarim.cinnamon.security.LoginProviderService;
 import com.fasterxml.jackson.annotation.JsonRootName;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import com.fasterxml.jackson.dataformat.xml.deser.FromXmlParser;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -30,6 +28,7 @@ import java.util.Properties;
 
 import static com.dewarim.cinnamon.ErrorCode.CONNECTION_FAIL_WRONG_PASSWORD;
 import static com.dewarim.cinnamon.api.Constants.CONTENT_TYPE_XML;
+import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
 
 /**
  *
@@ -38,7 +37,7 @@ import static com.dewarim.cinnamon.api.Constants.CONTENT_TYPE_XML;
 public class CinnamonServlet extends HttpServlet {
 
     private static final Logger         log            = LogManager.getLogger(CinnamonServlet.class);
-    private final        ObjectMapper   xmlMapper      = new XmlMapper().configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL, true);
+    private final        ObjectMapper   xmlMapper      = XML_MAPPER;
     private final        UserAccountDao userAccountDao = new UserAccountDao();
     private final LoginProviderService loginProviderService = LoginProviderService.getInstance();
     private final CinnamonVersion      cinnamonVersion      = new CinnamonVersion();

@@ -2,7 +2,6 @@ package com.dewarim.cinnamon.dao;
 
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.model.links.Link;
-import com.dewarim.cinnamon.model.request.CreateLinkRequest;
 import org.apache.ibatis.session.SqlSession;
 
 import java.util.HashMap;
@@ -10,50 +9,26 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public class LinkDao {
+public class LinkDao implements CrudDao<Link> {
 
+    @Override
+    public String getTypeClassName() {
+        return Link.class.getName();
+    }
 
     public Optional<Link> getLinkById(long id) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        return Optional.ofNullable(sqlSession.selectOne("com.dewarim.cinnamon.LinkMapper.getLinkById", id));
+        return Optional.ofNullable(sqlSession.selectOne("com.dewarim.cinnamon.model.links.Link.getLinkById", id));
     }
-
 
     public List<Link> getLinksByFolderId(Long folderId) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        return sqlSession.selectList("com.dewarim.cinnamon.LinkMapper.getLinkByFolderId", folderId);
-    }
-
-    public int deleteLink(Long id) {
-        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        return sqlSession.delete("com.dewarim.cinnamon.LinkMapper.deleteLink", id);
-    }
-
-    public Link createLink(CreateLinkRequest linkRequest) {
-        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        Link       link       = new Link();
-        link.setType(linkRequest.getLinkType());
-        switch (link.getType()) {
-            case FOLDER:
-                link.setFolderId(linkRequest.getId());
-                break;
-            case OBJECT:
-                link.setObjectId(linkRequest.getId());
-                break;
-        }
-        link.setAclId(linkRequest.getAclId());
-        link.setOwnerId(linkRequest.getOwnerId());
-        link.setParentId(linkRequest.getParentId());
-        int resultRows = sqlSession.insert("com.dewarim.cinnamon.LinkMapper.insertLink", link);
-        if (resultRows != 1) {
-            throw new RuntimeException("Create link failed.");
-        }
-        return link;
+        return sqlSession.selectList("com.dewarim.cinnamon.model.links.Link.getLinkByFolderId", folderId);
     }
 
     public int updateLink(Link link) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        return sqlSession.update("com.dewarim.cinnamon.LinkMapper.updateLink", link);
+        return sqlSession.update("com.dewarim.cinnamon.model.links.Link.updateLink", link);
 
     }
 
@@ -61,6 +36,6 @@ public class LinkDao {
         Map<String, Object> params = new HashMap<>();
         params.put("ids", osdIds);
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        sqlSession.delete("com.dewarim.cinnamon.LinkMapper.deleteAllLinksToObjects", params);
+        sqlSession.delete("com.dewarim.cinnamon.model.links.Link.deleteAllLinksToObjects", params);
     }
 }

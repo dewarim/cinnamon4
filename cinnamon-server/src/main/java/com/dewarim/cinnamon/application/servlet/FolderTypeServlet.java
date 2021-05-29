@@ -10,8 +10,6 @@ import com.dewarim.cinnamon.model.request.folderType.DeleteFolderTypeRequest;
 import com.dewarim.cinnamon.model.request.folderType.ListFolderTypeRequest;
 import com.dewarim.cinnamon.model.request.folderType.UpdateFolderTypeRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import com.fasterxml.jackson.dataformat.xml.deser.FromXmlParser;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,11 +19,13 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 
+import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
+
 @WebServlet(name = "FolderType", urlPatterns = "/")
 public class FolderTypeServlet extends HttpServlet implements CruddyServlet<FolderType> {
 
     private static final Logger       log       = LogManager.getLogger(AclServlet.class);
-    private final        ObjectMapper xmlMapper = new XmlMapper().configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL, true);
+    private final        ObjectMapper xmlMapper = XML_MAPPER;
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 

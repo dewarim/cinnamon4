@@ -37,8 +37,6 @@ import com.dewarim.cinnamon.model.response.SummaryWrapper;
 import com.dewarim.cinnamon.security.authorization.AccessFilter;
 import com.dewarim.cinnamon.security.authorization.AuthorizationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import com.fasterxml.jackson.dataformat.xml.deser.FromXmlParser;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -49,12 +47,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
 import static com.dewarim.cinnamon.application.ErrorResponseGenerator.generateErrorMessage;
 
 @WebServlet(name = "Folder", urlPatterns = "/")
 public class FolderServlet extends BaseServlet {
 
-    private final ObjectMapper         xmlMapper            = new XmlMapper().configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL, true);
+    private final ObjectMapper         xmlMapper            = XML_MAPPER;
     private final AuthorizationService authorizationService = new AuthorizationService();
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -400,7 +399,7 @@ public class FolderServlet extends BaseServlet {
         Optional<Folder>  folderOpt      = folderDao.getFolderById(summaryRequest.getId());
         if (folderOpt.isPresent()) {
             Folder folder = folderOpt.get();
-            if (authorizationService.hasUserOrOwnerPermission(folder, DefaultPermission.WRITE_OBJECT_SYS_METADATA.getName(), user)) {
+            if (authorizationService.hasUserOrOwnerPermission(folder, DefaultPermission.WRITE_OBJECT_SYS_METADATA, user)) {
                 folder.setSummary(summaryRequest.getSummary());
                 folderDao.updateFolder(folder);
                 ResponseUtil.responseIsOkayAndXml(response);
@@ -419,7 +418,7 @@ public class FolderServlet extends BaseServlet {
         SummaryWrapper wrapper       = new SummaryWrapper();
         List<Folder>   folders       = folderDao.getFoldersById(idListRequest.getIdList(), true);
         folders.forEach(folder -> {
-            if (authorizationService.hasUserOrOwnerPermission(folder, DefaultPermission.READ_OBJECT_SYS_METADATA.getName(), user)) {
+            if (authorizationService.hasUserOrOwnerPermission(folder, DefaultPermission.READ_OBJECT_SYS_METADATA, user)) {
                 wrapper.getSummaries().add(new Summary(folder.getId(), folder.getSummary()));
             }
         });

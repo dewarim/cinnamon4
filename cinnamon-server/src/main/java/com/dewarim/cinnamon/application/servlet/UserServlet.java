@@ -16,8 +16,6 @@ import com.dewarim.cinnamon.model.response.UserInfo;
 import com.dewarim.cinnamon.model.response.UserWrapper;
 import com.dewarim.cinnamon.security.HashMaker;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import com.fasterxml.jackson.dataformat.xml.deser.FromXmlParser;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -28,6 +26,7 @@ import java.util.Collections;
 import java.util.Optional;
 
 import static com.dewarim.cinnamon.api.Constants.CONTENT_TYPE_XML;
+import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
 import static com.dewarim.cinnamon.application.ResponseUtil.responseIsOkayAndXml;
 
 /**
@@ -36,7 +35,7 @@ import static com.dewarim.cinnamon.application.ResponseUtil.responseIsOkayAndXml
 @WebServlet(name = "User", urlPatterns = "/")
 public class UserServlet extends HttpServlet {
 
-    private final ObjectMapper xmlMapper = new XmlMapper().configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL, true);
+    private final ObjectMapper xmlMapper = XML_MAPPER;
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 

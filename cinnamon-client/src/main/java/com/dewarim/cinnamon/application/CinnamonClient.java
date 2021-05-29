@@ -10,6 +10,8 @@ import com.dewarim.cinnamon.model.FolderType;
 import com.dewarim.cinnamon.model.Group;
 import com.dewarim.cinnamon.model.Meta;
 import com.dewarim.cinnamon.model.ObjectSystemData;
+import com.dewarim.cinnamon.model.links.Link;
+import com.dewarim.cinnamon.model.links.LinkType;
 import com.dewarim.cinnamon.model.request.CreateMetaRequest;
 import com.dewarim.cinnamon.model.request.CreateNewVersionRequest;
 import com.dewarim.cinnamon.model.request.acl.CreateAclRequest;
@@ -18,6 +20,7 @@ import com.dewarim.cinnamon.model.request.aclGroup.CreateAclGroupRequest;
 import com.dewarim.cinnamon.model.request.aclGroup.DeleteAclGroupRequest;
 import com.dewarim.cinnamon.model.request.aclGroup.ListAclGroupRequest;
 import com.dewarim.cinnamon.model.request.aclGroup.UpdateAclGroupRequest;
+import com.dewarim.cinnamon.model.request.folder.FolderRequest;
 import com.dewarim.cinnamon.model.request.folder.UpdateFolderRequest;
 import com.dewarim.cinnamon.model.request.folderType.CreateFolderTypeRequest;
 import com.dewarim.cinnamon.model.request.folderType.DeleteFolderTypeRequest;
@@ -26,6 +29,11 @@ import com.dewarim.cinnamon.model.request.group.CreateGroupRequest;
 import com.dewarim.cinnamon.model.request.group.DeleteGroupRequest;
 import com.dewarim.cinnamon.model.request.group.ListGroupRequest;
 import com.dewarim.cinnamon.model.request.group.UpdateGroupRequest;
+import com.dewarim.cinnamon.model.request.link.CreateLinkRequest;
+import com.dewarim.cinnamon.model.request.link.DeleteLinkRequest;
+import com.dewarim.cinnamon.model.request.link.GetLinksRequest;
+import com.dewarim.cinnamon.model.request.link.LinkWrapper;
+import com.dewarim.cinnamon.model.request.link.UpdateLinkRequest;
 import com.dewarim.cinnamon.model.request.osd.DeleteOsdRequest;
 import com.dewarim.cinnamon.model.request.osd.OsdRequest;
 import com.dewarim.cinnamon.model.request.user.UserInfoRequest;
@@ -39,6 +47,8 @@ import com.dewarim.cinnamon.model.response.FolderTypeWrapper;
 import com.dewarim.cinnamon.model.response.FolderWrapper;
 import com.dewarim.cinnamon.model.response.GenericResponse;
 import com.dewarim.cinnamon.model.response.GroupWrapper;
+import com.dewarim.cinnamon.model.response.LinkResponse;
+import com.dewarim.cinnamon.model.response.LinkResponseWrapper;
 import com.dewarim.cinnamon.model.response.MetaWrapper;
 import com.dewarim.cinnamon.model.response.OsdWrapper;
 import com.dewarim.cinnamon.model.response.UserInfo;
@@ -58,8 +68,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 
-import static com.dewarim.cinnamon.api.Constants.CREATE_NEW_VERSION;
-import static com.dewarim.cinnamon.api.Constants.EXPECTED_SIZE_ANY;
+import static com.dewarim.cinnamon.api.Constants.*;
 import static org.apache.http.HttpStatus.SC_OK;
 import static org.apache.http.entity.ContentType.APPLICATION_XML;
 
@@ -67,13 +76,13 @@ public class CinnamonClient {
 
     private static final Logger log = LogManager.getLogger(CinnamonClient.class);
 
-    private int       port     = 9090;
-    private String    host     = "localhost";
-    private String    protocol = "http";
-    private String    username = "admin";
-    private String    password = "admin";
+    private       int       port     = 9090;
+    private       String    host     = "localhost";
+    private       String    protocol = "http";
+    private       String    username = "admin";
+    private       String    password = "admin";
     private       String    ticket;
-    private final XmlMapper mapper = new XmlMapper();
+    private final XmlMapper mapper   = XML_MAPPER;
 
     private final Unwrapper<ObjectSystemData, OsdWrapper>        osdUnwrapper          = new Unwrapper<>(OsdWrapper.class);
     private final Unwrapper<FolderType, FolderTypeWrapper>       folderTypeUnwrapper   = new Unwrapper<>(FolderTypeWrapper.class);
@@ -84,7 +93,10 @@ public class CinnamonClient {
     private final Unwrapper<CinnamonError, CinnamonErrorWrapper> errorUnwrapper        = new Unwrapper<>(CinnamonErrorWrapper.class);
     private final Unwrapper<Acl, AclWrapper>                     aclUnwrapper          = new Unwrapper<>(AclWrapper.class);
     private final Unwrapper<AclGroup, AclGroupWrapper>           aclGroupUnwrapper     = new Unwrapper<>(AclGroupWrapper.class);
-    private final Unwrapper<Group, GroupWrapper>                 groupUnWrapper        = new Unwrapper<>(GroupWrapper.class);
+    private final Unwrapper<Group, GroupWrapper>                 groupUnwrapper        = new Unwrapper<>(GroupWrapper.class);
+    private final Unwrapper<Link, LinkWrapper>                   linkUnwrapper         = new Unwrapper<>(LinkWrapper.class);
+    // LinkResponse contains full OSD/Folder objects, Link itself contains only ids.
+    private final Unwrapper<LinkResponse, LinkResponseWrapper>   linkResponseUnwrapper = new Unwrapper<>(LinkResponseWrapper.class);
 
     public CinnamonClient() {
     }
@@ -209,6 +221,27 @@ public class CinnamonClient {
         return parseGenericResponse(response).isSuccessful();
     }
 
+    // Folders
+    public Folder getFolderById(Long id, boolean includeSummary) throws IOException {
+        return getFolders(Collections.singletonList(id), includeSummary).get(0);
+    }
+
+    public List<Folder> getFolders(List<Long> ids, boolean includeSummary) throws IOException {
+        FolderRequest folderRequest = new FolderRequest(ids, includeSummary);
+        HttpResponse  response      = sendStandardRequest(UrlMapping.FOLDER__GET_FOLDERS, folderRequest);
+        return folderUnwrapper.unwrap(response, ids.size());
+    }
+
+    public List<Meta> createFolderMeta(CreateMetaRequest metaRequest) throws IOException {
+        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__CREATE_META, metaRequest);
+        return metaUnwrapper.unwrap(response, 1);
+    }
+
+    public List<Folder> updateFolders(UpdateFolderRequest updateFolderRequest) throws IOException {
+        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__UPDATE_FOLDER, updateFolderRequest);
+        return folderUnwrapper.unwrap(response, 1);
+    }
+
     // FolderTypes
     public List<FolderType> createFolderTypes(List<String> names) throws IOException {
         HttpResponse response = sendStandardRequest(UrlMapping.FOLDER_TYPE__CREATE, new CreateFolderTypeRequest(names));
@@ -225,17 +258,6 @@ public class CinnamonClient {
         return folderTypeUnwrapper.unwrap(response, types.size());
     }
 
-    // Folders
-    public List<Meta> createFolderMeta(CreateMetaRequest metaRequest) throws IOException {
-        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__CREATE_META, metaRequest);
-        return metaUnwrapper.unwrap(response, 1);
-    }
-
-    public List<Folder> updateFolders(UpdateFolderRequest updateFolderRequest) throws IOException {
-        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__UPDATE_FOLDER, updateFolderRequest);
-        return folderUnwrapper.unwrap(response, 1);
-    }
-
     // Acls
     public List<Acl> createAcl(List<String> names) throws IOException {
         CreateAclRequest aclRequest = new CreateAclRequest(names);
@@ -243,9 +265,9 @@ public class CinnamonClient {
         return aclUnwrapper.unwrap(response, aclRequest.list().size());
     }
 
-    public boolean deleteAcl(List<Long> ids) throws IOException{
+    public boolean deleteAcl(List<Long> ids) throws IOException {
         DeleteAclRequest deleteRequest = new DeleteAclRequest(ids);
-        var response = sendStandardRequest(UrlMapping.ACL__DELETE,deleteRequest);
+        var              response      = sendStandardRequest(UrlMapping.ACL__DELETE, deleteRequest);
         return verifyDeleteResponse(response);
     }
 
@@ -261,12 +283,12 @@ public class CinnamonClient {
         return aclGroupUnwrapper.unwrap(response, aclGroups.size());
     }
 
-    public List<AclGroup> updateAclGroups(UpdateAclGroupRequest request) throws IOException{
-        HttpResponse response=sendStandardRequest(UrlMapping.ACL_ENTRY__UPDATE, request);
+    public List<AclGroup> updateAclGroups(UpdateAclGroupRequest request) throws IOException {
+        HttpResponse response = sendStandardRequest(UrlMapping.ACL_ENTRY__UPDATE, request);
         return aclGroupUnwrapper.unwrap(response, request.list().size());
     }
 
-    public boolean deleteAclGroups(List<Long> ids) throws IOException{
+    public boolean deleteAclGroups(List<Long> ids) throws IOException {
         HttpResponse response = sendStandardRequest(UrlMapping.ACL_ENTRY__DELETE, new DeleteAclGroupRequest(ids));
         return verifyDeleteResponse(response);
     }
@@ -275,25 +297,68 @@ public class CinnamonClient {
     public List<Group> createGroups(List<String> groupNames) throws IOException {
         var request  = new CreateGroupRequest(groupNames);
         var response = sendStandardRequest(UrlMapping.GROUP__CREATE, request);
-        return groupUnWrapper.unwrap(response,groupNames.size());
+        return groupUnwrapper.unwrap(response, groupNames.size());
     }
 
-    public List<Group> listGroups() throws IOException{
-        var request = new ListGroupRequest();
+    public List<Group> listGroups() throws IOException {
+        var request  = new ListGroupRequest();
         var response = sendStandardRequest(UrlMapping.GROUP__LIST, request);
-        return groupUnWrapper.unwrap(response, EXPECTED_SIZE_ANY);
+        return groupUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
     public boolean deleteGroups(List<Long> ids) throws IOException {
-        var request = new DeleteGroupRequest(ids);
+        var request  = new DeleteGroupRequest(ids);
         var response = sendStandardRequest(UrlMapping.GROUP__DELETE, request);
         return verifyDeleteResponse(response);
     }
 
-    public List<Group> updateGroups(List<Group> groups) throws IOException{
-        var request = new UpdateGroupRequest(groups);
+    public List<Group> updateGroups(List<Group> groups) throws IOException {
+        var request  = new UpdateGroupRequest(groups);
         var response = sendStandardRequest(UrlMapping.GROUP__UPDATE, request);
-        return groupUnWrapper.unwrap(response, groups.size());
+        return groupUnwrapper.unwrap(response, groups.size());
+    }
+
+    // Links
+    public List<Link> updateLinks(List<Link> links) throws IOException {
+        var updateRequest = new UpdateLinkRequest(links);
+        var response      = sendStandardRequest(UrlMapping.LINK__UPDATE, updateRequest);
+        return linkUnwrapper.unwrap(response, links.size());
+    }
+
+    public List<Link> createLinks(List<Link> links) throws IOException {
+        var createLinkRequest = new CreateLinkRequest(links);
+        var response          = sendStandardRequest(UrlMapping.LINK__CREATE, createLinkRequest);
+        return linkUnwrapper.unwrap(response, links.size());
+    }
+
+    public Link createLink(Long parentId, LinkType type, Long aclId, Long ownerId, Long folderId, Long objectId) throws IOException {
+        var link = new Link(type, ownerId,aclId, parentId, folderId,objectId);
+        var createLinkRequest = new CreateLinkRequest(List.of(link));
+        var response          = sendStandardRequest(UrlMapping.LINK__CREATE, createLinkRequest);
+        return linkUnwrapper.unwrap(response, 1).get(0);
+    }
+
+    public Link updateLink(Link link) throws IOException{
+        var updateLinkRequest = new UpdateLinkRequest(List.of(link));
+        var response= sendStandardRequest(UrlMapping.LINK__UPDATE, updateLinkRequest);
+        return linkUnwrapper.unwrap(response,1).get(0);
+    }
+
+    public boolean deleteLinks(List<Long> ids) throws IOException {
+        var request  = new DeleteLinkRequest(ids);
+        var response = sendStandardRequest(UrlMapping.LINK__DELETE, request);
+        return verifyDeleteResponse(response);
+    }
+
+    public List<LinkResponse> getLinksById(List<Long> ids, boolean includeSummary) throws IOException {
+        var request  = new GetLinksRequest(ids, includeSummary);
+        var response = sendStandardRequest(UrlMapping.LINK__GET_LINKS_BY_ID, request);
+        return linkResponseUnwrapper.unwrap(response, ids.size());
+    }
+    public LinkResponse getLinkById(Long id, boolean includeSummary) throws IOException {
+        var request  = new GetLinksRequest(List.of(id), includeSummary);
+        var response = sendStandardRequest(UrlMapping.LINK__GET_LINKS_BY_ID, request);
+        return linkResponseUnwrapper.unwrap(response, 1).get(0);
     }
 
     private HttpEntity createSimpleMultipartEntity(String fieldname, Object contentRequest) throws IOException {

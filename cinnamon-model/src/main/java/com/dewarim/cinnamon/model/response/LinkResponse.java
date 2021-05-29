@@ -1,26 +1,15 @@
 package com.dewarim.cinnamon.model.response;
 
-import com.dewarim.cinnamon.model.*;
-import com.dewarim.cinnamon.model.links.LinkType;
+import com.dewarim.cinnamon.model.Folder;
+import com.dewarim.cinnamon.model.ObjectSystemData;
+import com.dewarim.cinnamon.model.links.Link;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
-@JacksonXmlRootElement(localName = "link")
-public class LinkResponse {
+@JacksonXmlRootElement(localName = "linkResponse")
+public class LinkResponse extends Link {
 
-    private LinkType linkType;
     private ObjectSystemData osd;
     private Folder folder;
-    private Long ownerId;
-    private Long parentId;
-    private Long aclId;
-    
-    public LinkType getLinkType() {
-        return linkType;
-    }
-
-    public void setLinkType(LinkType linkType) {
-        this.linkType = linkType;
-    }
 
     public ObjectSystemData getOsd() {
         return osd;
@@ -38,27 +27,11 @@ public class LinkResponse {
         this.folder = folder;
     }
 
-    public Long getOwnerId() {
-        return ownerId;
-    }
-
-    public void setOwnerId(Long ownerId) {
-        this.ownerId = ownerId;
-    }
-
-    public Long getParentId() {
-        return parentId;
-    }
-
-    public void setParentId(Long parentId) {
-        this.parentId = parentId;
-    }
-    
-    public Long getAclId() {
-        return aclId;
-    }
-
-    public void setAclId(Long aclId) {
-        this.aclId = aclId;
+    @Override
+    public String toString() {
+        return "LinkResponse{" +
+                "osd=" + osd +
+                ", folder=" + folder +
+                '}';
     }
 }

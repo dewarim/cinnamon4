@@ -7,7 +7,6 @@ import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import org.apache.ibatis.exceptions.PersistenceException;
 import org.apache.ibatis.session.SqlSession;
-import org.postgresql.util.PSQLException;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -37,7 +36,7 @@ public interface CrudDao<T extends Identifiable> {
         return createdItems;
     }
 
-    default int delete(List<Long> ids) throws PSQLException {
+    default int delete(List<Long> ids) {
         SqlSession       sqlSession  = ThreadLocalSqlSession.getSqlSession();
         List<List<Long>> partitions  = partitionLongList(ids);
         AtomicInteger    deleteCount = new AtomicInteger(0);

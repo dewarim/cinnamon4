@@ -260,7 +260,7 @@ create table objects
     references lifecycle_states,
   content_changed boolean default false not null,
   metadata_changed boolean default false not null,
-  summary text default '<summary />' not null,
+  summary text default '<summary/>' not null,
   content_hash varchar(128)
 );
 drop sequence if exists seq_object_id;

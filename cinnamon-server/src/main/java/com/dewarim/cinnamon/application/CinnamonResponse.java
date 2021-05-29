@@ -7,7 +7,6 @@ import com.dewarim.cinnamon.model.response.CinnamonErrorWrapper;
 import com.dewarim.cinnamon.model.response.GenericResponse;
 import com.dewarim.cinnamon.model.response.Wrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpServletResponseWrapper;
 import org.apache.http.HttpStatus;
@@ -16,12 +15,11 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
-import static com.dewarim.cinnamon.api.Constants.CONTENT_TYPE_XML;
-import static com.dewarim.cinnamon.api.Constants.HEADER_FIELD_CINNAMON_ERROR;
+import static com.dewarim.cinnamon.api.Constants.*;
 
 public class CinnamonResponse extends HttpServletResponseWrapper {
 
-    private final ObjectMapper        xmlMapper  = new XmlMapper();
+    private final ObjectMapper        xmlMapper  = XML_MAPPER;
     private final HttpServletResponse response;
     private       Wrapper             wrapper;
     private       int                 statusCode = HttpStatus.SC_OK;

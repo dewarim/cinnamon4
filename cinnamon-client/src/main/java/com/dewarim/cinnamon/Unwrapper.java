@@ -11,15 +11,14 @@ import org.apache.logging.log4j.Logger;
 import java.io.IOException;
 import java.util.List;
 
-import static com.dewarim.cinnamon.api.Constants.EXPECTED_SIZE_ANY;
-import static com.dewarim.cinnamon.api.Constants.HEADER_FIELD_CINNAMON_ERROR;
+import static com.dewarim.cinnamon.api.Constants.*;
 import static org.apache.http.HttpStatus.SC_OK;
 
 public class Unwrapper<T, W extends Wrapper<T>> {
 
     private static final Logger log = LogManager.getLogger(Unwrapper.class);
 
-    private final XmlMapper mapper = new XmlMapper();
+    private final XmlMapper mapper = XML_MAPPER;
 
     private final Class<W> clazz;
 

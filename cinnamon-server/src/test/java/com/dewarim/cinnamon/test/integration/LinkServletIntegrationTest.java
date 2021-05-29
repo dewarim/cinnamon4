@@ -4,20 +4,20 @@ import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.model.Folder;
 import com.dewarim.cinnamon.model.ObjectSystemData;
+import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.links.LinkType;
-import com.dewarim.cinnamon.model.request.CreateLinkRequest;
+import com.dewarim.cinnamon.model.request.link.CreateLinkRequest;
 import com.dewarim.cinnamon.model.request.link.DeleteLinkRequest;
-import com.dewarim.cinnamon.model.request.link.LinkRequest;
-import com.dewarim.cinnamon.model.request.link.LinkUpdateRequest;
-import com.dewarim.cinnamon.model.response.DeletionResponse;
-import com.dewarim.cinnamon.model.response.GenericResponse;
+import com.dewarim.cinnamon.model.request.link.GetLinksRequest;
 import com.dewarim.cinnamon.model.response.LinkResponse;
-import com.dewarim.cinnamon.model.response.LinkWrapper;
+import com.dewarim.cinnamon.model.response.LinkResponseWrapper;
 import org.apache.http.HttpResponse;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.util.List;
 
+import static com.dewarim.cinnamon.ErrorCode.*;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -26,48 +26,43 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
 
-    private LinkWrapper parseResponse(HttpResponse response) throws IOException {
+    private LinkResponseWrapper parseResponse(HttpResponse response) throws IOException {
         assertResponseOkay(response);
-        return mapper.readValue(response.getEntity().getContent(), LinkWrapper.class);
+        return mapper.readValue(response.getEntity().getContent(), LinkResponseWrapper.class);
     }
 
     @Test
     public void getLinkByIdForObject() throws IOException {
         // request the first link, which points to the first test object with default acl:
-        LinkRequest linkRequest = new LinkRequest(1L, true);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__GET_LINK_BY_ID, linkRequest);
-        LinkWrapper linkWrapper = parseResponse(response);
+        GetLinksRequest     linkRequest = new GetLinksRequest(1L, true);
+        HttpResponse        response    = sendStandardRequest(UrlMapping.LINK__GET_LINKS_BY_ID, linkRequest);
+        LinkResponseWrapper linkWrapper = parseResponse(response);
         assertThat(linkWrapper.getLinks().size(), equalTo(1));
-        LinkResponse link = linkWrapper.getLinks().get(0);
-        assertThat(link.getFolder(), nullValue());
-        assertThat(link.getLinkType(), equalTo(LinkType.OBJECT));
-        ObjectSystemData osd = link.getOsd();
-        assertNotNull(osd);
+        Link link = linkWrapper.getLinks().get(0);
+        assertThat(link.getFolderId(), nullValue());
+        assertThat(link.getType(), equalTo(LinkType.OBJECT));
+        assertNotNull(link.getObjectId());
+        ObjectSystemData osd = client.getOsdById(link.getObjectId(), true);
         assertThat(osd.getSummary(), equalTo("<summary>sum of sum</summary>"));
     }
 
     @Test
     public void getLinkByIdForObjectWithoutSummary() throws IOException {
         // request the first link, which points to the first test object with default acl:
-        LinkRequest linkRequest = new LinkRequest(1L, false);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__GET_LINK_BY_ID, linkRequest);
-        LinkWrapper linkWrapper = parseResponse(response);
-        LinkResponse link = linkWrapper.getLinks().get(0);
-        ObjectSystemData osd = link.getOsd();
+        var              linkResponse = client.getLinkById(1L, false);
+        Link             link         = new Link(linkResponse);
+        ObjectSystemData osd          = client.getOsdById(link.getObjectId(), false);
         assertThat(osd.getSummary(), equalTo("<summary/>"));
     }
 
     @Test
     public void getLinkByIdForFolder() throws IOException {
         // request link #2, which points to the "home" folder with default acl:
-        LinkRequest linkRequest = new LinkRequest(2L, true);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__GET_LINK_BY_ID, linkRequest);
-        LinkWrapper linkWrapper = parseResponse(response);
-        assertThat(linkWrapper.getLinks().size(), equalTo(1));
-        LinkResponse link = linkWrapper.getLinks().get(0);
-        assertThat(link.getOsd(), nullValue());
-        assertThat(link.getLinkType(), equalTo(LinkType.FOLDER));
-        Folder folder = link.getFolder();
+        LinkResponse linkResponse = client.getLinkById(2L, true);
+
+        assertThat(linkResponse.getObjectId(), nullValue());
+        assertThat(linkResponse.getType(), equalTo(LinkType.FOLDER));
+        Folder folder = client.getFolderById(linkResponse.getFolderId(), true);
         assertNotNull(folder);
         assertThat(folder.getName(), equalTo("home"));
         assertThat(folder.getSummary(), equalTo("<summary>stuff</summary>"));
@@ -76,450 +71,381 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void getLinkByIdForFolderWithoutSummary() throws IOException {
         // request link #2, which points to the "home" folder with default acl:
-        LinkRequest linkRequest = new LinkRequest(2L, false);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__GET_LINK_BY_ID, linkRequest);
-        LinkWrapper linkWrapper = parseResponse(response);
-        LinkResponse link = linkWrapper.getLinks().get(0);
-        assertThat(link.getLinkType(), equalTo(LinkType.FOLDER));
-        Folder folder = link.getFolder();
+        GetLinksRequest     linkRequest = new GetLinksRequest(2L, false);
+        HttpResponse        response    = sendStandardRequest(UrlMapping.LINK__GET_LINKS_BY_ID, linkRequest);
+        LinkResponseWrapper linkWrapper = parseResponse(response);
+        Link                link        = linkWrapper.getLinks().get(0);
+        assertThat(link.getType(), equalTo(LinkType.FOLDER));
+        Folder folder = client.getFolderById(link.getFolderId(), false);
         assertThat(folder.getSummary(), nullValue());
     }
 
     @Test
     public void getLinkWhereOnlyOwnerHasBrowsePermission() throws IOException {
         // request link #14, which points to the "home" folder with default acl:
-        LinkRequest linkRequest = new LinkRequest(14L, false);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__GET_LINK_BY_ID, linkRequest);
-        LinkWrapper linkWrapper = parseResponse(response);
-        LinkResponse link = linkWrapper.getLinks().get(0);
-        assertThat(link.getLinkType(), equalTo(LinkType.OBJECT));
-        ObjectSystemData osd = link.getOsd();
+        var linkResponse = client.getLinkById(14L,false);
+        var link = new Link(linkResponse);
+        assertThat(link.getType(), equalTo(LinkType.OBJECT));
+        ObjectSystemData osd = client.getOsdById(link.getObjectId(), true);
         assertThat(osd.getSummary(), equalTo("<summary/>"));
     }
 
     @Test
     public void aclOnLinkForbidsAccess() throws IOException {
         // request link #2, which points to the "home" folder with default acl:
-        LinkRequest linkRequest = new LinkRequest(3L, false);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__GET_LINK_BY_ID, linkRequest);
-        assertCinnamonError(response, ErrorCode.UNAUTHORIZED);
+        GetLinksRequest linkRequest = new GetLinksRequest(3L, false);
+        HttpResponse    response    = sendStandardRequest(UrlMapping.LINK__GET_LINKS_BY_ID, linkRequest);
+        assertCinnamonError(response, NO_BROWSE_PERMISSION);
     }
 
     @Test
     public void aclOnObjectForbidsAccess() throws IOException {
         // request link #4, which points to object #7 with acl "unseen" #7:
-        LinkRequest linkRequest = new LinkRequest(4L, false);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__GET_LINK_BY_ID, linkRequest);
+        GetLinksRequest linkRequest = new GetLinksRequest(4L, false);
+        HttpResponse    response    = sendStandardRequest(UrlMapping.LINK__GET_LINKS_BY_ID, linkRequest);
         assertCinnamonError(response, ErrorCode.UNAUTHORIZED);
     }
 
     @Test
     public void aclOnFolderForbidsAccess() throws IOException {
         // request link #5, which points to folder #3 with acl "unseen" #7:
-        LinkRequest linkRequest = new LinkRequest(5L, false);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__GET_LINK_BY_ID, linkRequest);
+        GetLinksRequest linkRequest = new GetLinksRequest(5L, false);
+        HttpResponse    response    = sendStandardRequest(UrlMapping.LINK__GET_LINKS_BY_ID, linkRequest);
         assertCinnamonError(response, ErrorCode.UNAUTHORIZED);
     }
 
     @Test
-    public void deleteLinkWithInvalidId() throws IOException {
-        DeleteLinkRequest deleteRequest = new DeleteLinkRequest(-1L);
-        HttpResponse      response      = sendStandardRequest(UrlMapping.LINK__DELETE_LINK, deleteRequest);
-        assertCinnamonError(response, ErrorCode.ID_PARAM_IS_INVALID);
+    public void deleteLinkWithInvalidId() {
+        assertClientError(() -> client.deleteLinks(List.of(-1L)), INVALID_REQUEST);
     }
 
     @Test
     public void deleteLinkWithNonExistentLink() throws IOException {
-        DeleteLinkRequest deleteRequest = new DeleteLinkRequest(Long.MAX_VALUE);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__DELETE_LINK, deleteRequest);
-        assertResponseOkay(response);
-        DeletionResponse deletionResponse = mapper.readValue(response.getEntity().getContent(), DeletionResponse.class);
-        assertTrue(deletionResponse.isNotFound());
-        assertFalse(deletionResponse.isSuccess());
+        assertClientError(() -> client.deleteLinks(List.of(Long.MAX_VALUE)), ErrorCode.OBJECT_NOT_FOUND);
     }
 
     @Test
     public void deleteLinkWithMissingBrowsePermission() throws IOException {
         DeleteLinkRequest deleteRequest = new DeleteLinkRequest(11L);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__DELETE_LINK, deleteRequest);
+        HttpResponse      response      = sendStandardRequest(UrlMapping.LINK__DELETE, deleteRequest);
         assertCinnamonError(response, ErrorCode.UNAUTHORIZED);
     }
 
     @Test
     public void deleteLinkToObjectWithoutPermission() throws IOException {
         DeleteLinkRequest deleteRequest = new DeleteLinkRequest(12L);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__DELETE_LINK, deleteRequest);
+        HttpResponse      response      = sendStandardRequest(UrlMapping.LINK__DELETE, deleteRequest);
         assertCinnamonError(response, ErrorCode.UNAUTHORIZED);
     }
 
     @Test
     public void deleteLinkToObjectWithOwnerPermission() throws IOException {
-        DeleteLinkRequest deleteRequest = new DeleteLinkRequest(15L);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__DELETE_LINK, deleteRequest);
-        DeletionResponse deletionResponse = mapper.readValue(response.getEntity().getContent(), DeletionResponse.class);
-        assertFalse(deletionResponse.isNotFound());
-        assertTrue(deletionResponse.isSuccess());
+        assertTrue(client.deleteLinks(List.of(15L)));
     }
 
     @Test
     public void deleteLinkToFolderWithOwnerPermission() throws IOException {
-        DeleteLinkRequest deleteRequest = new DeleteLinkRequest(16L);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__DELETE_LINK, deleteRequest);
-        DeletionResponse deletionResponse = mapper.readValue(response.getEntity().getContent(), DeletionResponse.class);
-        assertFalse(deletionResponse.isNotFound());
-        assertTrue(deletionResponse.isSuccess());
+        assertTrue(client.deleteLinks(List.of(16L)));
     }
 
     @Test
     public void deleteLinkToFolderWithoutPermission() throws IOException {
-        DeleteLinkRequest deleteRequest = new DeleteLinkRequest(13L);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__DELETE_LINK, deleteRequest);
-        assertCinnamonError(response, ErrorCode.UNAUTHORIZED);
+        assertClientError(() -> client.deleteLinks(List.of(13L)), ErrorCode.UNAUTHORIZED);
     }
 
     @Test
     public void deleteObjectLinkHappyPath() throws IOException {
-        DeleteLinkRequest deleteRequest = new DeleteLinkRequest(9L);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__DELETE_LINK, deleteRequest);
-        assertResponseOkay(response);
-        DeletionResponse deletionResponse = mapper.readValue(response.getEntity().getContent(), DeletionResponse.class);
-        assertFalse(deletionResponse.isNotFound());
-        assertTrue(deletionResponse.isSuccess());
+        assertTrue(client.deleteLinks(List.of(9L)));
 
         // verify delete:
-        LinkRequest linkRequest = new LinkRequest(9L, true);
-        HttpResponse linkResponse = sendStandardRequest(UrlMapping.LINK__GET_LINK_BY_ID, linkRequest);
-        assertCinnamonError(linkResponse, ErrorCode.OBJECT_NOT_FOUND);
+        assertClientError(() -> client.getLinksById(List.of(9L), true), ErrorCode.OBJECT_NOT_FOUND);
     }
 
     @Test
     public void deleteFolderLinkHappyPath() throws IOException {
-        DeleteLinkRequest deleteRequest = new DeleteLinkRequest(10L);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__DELETE_LINK, deleteRequest);
-        assertResponseOkay(response);
-        DeletionResponse deletionResponse = mapper.readValue(response.getEntity().getContent(), DeletionResponse.class);
-        assertFalse(deletionResponse.isNotFound());
-        assertTrue(deletionResponse.isSuccess());
+        assertTrue(client.deleteLinks(List.of(10L)));
 
         // verify delete:
-        LinkRequest linkRequest = new LinkRequest(10L, true);
-        HttpResponse linkResponse = sendStandardRequest(UrlMapping.LINK__GET_LINK_BY_ID, linkRequest);
-        assertCinnamonError(linkResponse, ErrorCode.OBJECT_NOT_FOUND);
+        assertClientError(() -> client.getLinksById(List.of(10L), true), ErrorCode.OBJECT_NOT_FOUND);
     }
 
     @Test
     public void createLinkToObjectHappyPath() throws IOException {
+        var linkParam = new Link(LinkType.OBJECT, 1L, 1L, 6L, null, 13L);
+        var link      = client.createLinks(List.of(linkParam)).get(0);
+
         // link to object in creation folder#6
-        CreateLinkRequest createLinkRequest = new CreateLinkRequest(13L, 6L,LinkType.OBJECT, 1, 1);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, createLinkRequest);
-        LinkWrapper linkWrapper = parseResponse(response);
-        LinkResponse linkResponse = linkWrapper.getLinks().get(0);
-
-        assertThat(linkResponse.getOwnerId(), equalTo(1L));
-        assertThat(linkResponse.getParentId(), equalTo(6L));
-        assertThat(linkResponse.getLinkType(), equalTo(LinkType.OBJECT));
-        assertThat(linkResponse.getAclId(), equalTo(1L));
-
-        ObjectSystemData osd = linkResponse.getOsd();
-        assertNotNull(osd);
+        assertThat(link.getOwnerId(), equalTo(1L));
+        assertThat(link.getParentId(), equalTo(6L));
+        assertThat(link.getType(), equalTo(LinkType.OBJECT));
+        assertThat(link.getAclId(), equalTo(1L));
+        assertThat(link.getObjectId(), equalTo(13L));
     }
 
     @Test
     public void createLinkToFolderHappyPath() throws IOException {
         // link to folder in creation folder#9
-        CreateLinkRequest createLinkRequest = new CreateLinkRequest(9, 6, LinkType.FOLDER, 1, 1);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, createLinkRequest);
-        LinkWrapper linkWrapper = parseResponse(response);
-        LinkResponse linkResponse = linkWrapper.getLinks().get(0);
+        CreateLinkRequest   createLinkRequest = new CreateLinkRequest(6, LinkType.FOLDER, 1, 1, 9L, null);
+        HttpResponse        response          = sendStandardRequest(UrlMapping.LINK__CREATE, createLinkRequest);
+        LinkResponseWrapper linkWrapper       = parseResponse(response);
+        Link                linkResponse      = linkWrapper.getLinks().get(0);
 
         assertThat(linkResponse.getOwnerId(), equalTo(1L));
         assertThat(linkResponse.getParentId(), equalTo(6L));
-        assertThat(linkResponse.getLinkType(), equalTo(LinkType.FOLDER));
+        assertThat(linkResponse.getType(), equalTo(LinkType.FOLDER));
         assertThat(linkResponse.getAclId(), equalTo(1L));
-
-        Folder folder = linkResponse.getFolder();
-        assertNotNull(folder);
+        assertThat(linkResponse.getFolderId(), equalTo(9L));
     }
 
     @Test
     public void createLinkWithInvalidRequest() throws IOException {
         // invalid target id
-        CreateLinkRequest crlId = new CreateLinkRequest(0L, 6L, LinkType.OBJECT, 1, 1);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, crlId);
-        assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
+        assertClientError(() -> client.createLink(6L, LinkType.OBJECT, 1L, 1L, null, 0L), INVALID_REQUEST);
 
         // invalid parent folder id
-        CreateLinkRequest crlParentId = new CreateLinkRequest(13L, 0L, LinkType.OBJECT, 1, 1);
-        HttpResponse responseParentId = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, crlParentId);
-        assertCinnamonError(responseParentId, ErrorCode.INVALID_REQUEST);
+        CreateLinkRequest crlParentId      = new CreateLinkRequest(0L, LinkType.OBJECT, 1, 1, null, 13L);
+        HttpResponse      responseParentId = sendStandardRequest(UrlMapping.LINK__CREATE, crlParentId);
+        assertCinnamonError(responseParentId, INVALID_REQUEST);
 
         // invalid link type
-        CreateLinkRequest crlLinkType = new CreateLinkRequest(13L, 6L, null, 1, 1);
-        HttpResponse responseLinkType = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, crlParentId);
-        assertCinnamonError(responseLinkType, ErrorCode.INVALID_REQUEST);
+        CreateLinkRequest crlLinkType      = new CreateLinkRequest(6L, null, 1, 1, null, 13L);
+        HttpResponse      responseLinkType = sendStandardRequest(UrlMapping.LINK__CREATE, crlParentId);
+        assertCinnamonError(responseLinkType, INVALID_REQUEST);
 
         // invalid link type
-        CreateLinkRequest crlAcl = new CreateLinkRequest(13L, 6L, LinkType.OBJECT, 0, 1);
-        HttpResponse responseAcl = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, crlParentId);
-        assertCinnamonError(responseAcl, ErrorCode.INVALID_REQUEST);
+        CreateLinkRequest crlAcl      = new CreateLinkRequest(6L, LinkType.OBJECT, 0, 1, null, 13L);
+        HttpResponse      responseAcl = sendStandardRequest(UrlMapping.LINK__CREATE, crlParentId);
+        assertCinnamonError(responseAcl, INVALID_REQUEST);
 
         // invalid ownerId
-        CreateLinkRequest crlOwnerId = new CreateLinkRequest(13L, 6L, LinkType.OBJECT, 1, 0);
-        HttpResponse responseOwnerId = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, crlOwnerId);
-        assertCinnamonError(responseOwnerId, ErrorCode.INVALID_REQUEST);
+        CreateLinkRequest crlOwnerId      = new CreateLinkRequest(6L, LinkType.OBJECT, 1, 0, null, 13L);
+        HttpResponse      responseOwnerId = sendStandardRequest(UrlMapping.LINK__CREATE, crlOwnerId);
+        assertCinnamonError(responseOwnerId, INVALID_REQUEST);
     }
 
     @Test
     public void createLinkWithUnknownParentFolder() throws IOException {
-        CreateLinkRequest crlId = new CreateLinkRequest(13L, Long.MAX_VALUE, LinkType.OBJECT, 1, 1);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, crlId);
+        CreateLinkRequest crlId    = new CreateLinkRequest(Long.MAX_VALUE, LinkType.OBJECT, 1, 1, null, 13L);
+        HttpResponse      response = sendStandardRequest(UrlMapping.LINK__CREATE, crlId);
         assertCinnamonError(response, ErrorCode.PARENT_FOLDER_NOT_FOUND);
     }
 
     @Test
     public void createLinkWithUnknownAcl() throws IOException {
-        CreateLinkRequest crlId = new CreateLinkRequest(13L, 6L, LinkType.OBJECT, Long.MAX_VALUE, 1);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, crlId);
+        CreateLinkRequest crlId    = new CreateLinkRequest(6L, LinkType.OBJECT, Long.MAX_VALUE, 1, null, 13L);
+        HttpResponse      response = sendStandardRequest(UrlMapping.LINK__CREATE, crlId);
         assertCinnamonError(response, ErrorCode.ACL_NOT_FOUND);
     }
 
     @Test
     public void createLinkWithUnknownOwner() throws IOException {
-        CreateLinkRequest crlId = new CreateLinkRequest(13L, 6L, LinkType.OBJECT, 1, Long.MAX_VALUE);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, crlId);
+        CreateLinkRequest crlId    = new CreateLinkRequest(6L, LinkType.OBJECT, 1, Long.MAX_VALUE, null, 13L);
+        HttpResponse      response = sendStandardRequest(UrlMapping.LINK__CREATE, crlId);
         assertCinnamonError(response, ErrorCode.OWNER_NOT_FOUND);
     }
 
     @Test
     public void createLinkWithinParentFolderWithoutBrowsePermission() throws IOException {
-        CreateLinkRequest crlId = new CreateLinkRequest(13L, 7, LinkType.OBJECT, 1, 1);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, crlId);
+        CreateLinkRequest crlId    = new CreateLinkRequest(7, LinkType.OBJECT, 1, 1, null, 13L);
+        HttpResponse      response = sendStandardRequest(UrlMapping.LINK__CREATE, crlId);
         assertCinnamonError(response, ErrorCode.UNAUTHORIZED);
     }
 
     @Test
     public void createLinkWithinParentFolderWithoutCreatePermission() throws IOException {
-        CreateLinkRequest crlId = new CreateLinkRequest(13L, 8, LinkType.OBJECT, 1, 1);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, crlId);
+        CreateLinkRequest crlId    = new CreateLinkRequest(8, LinkType.OBJECT, 1, 1, null, 13L);
+        HttpResponse      response = sendStandardRequest(UrlMapping.LINK__CREATE, crlId);
         assertCinnamonError(response, ErrorCode.UNAUTHORIZED);
     }
 
     @Test
     public void createLinkToFolderWithoutBrowsePermission() throws IOException {
-        CreateLinkRequest crlId = new CreateLinkRequest(7, 6, LinkType.FOLDER, 1, 1);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, crlId);
+        CreateLinkRequest crlId    = new CreateLinkRequest(6, LinkType.FOLDER, 1, 1, 7L, null);
+        HttpResponse      response = sendStandardRequest(UrlMapping.LINK__CREATE, crlId);
         assertCinnamonError(response, ErrorCode.UNAUTHORIZED);
     }
+
     @Test
     public void createLinkToFolderWithBrowsePermissionByOwner() throws IOException {
-        CreateLinkRequest crlId = new CreateLinkRequest(10, 6, LinkType.FOLDER, 5, 2);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, crlId);
-        LinkWrapper linkWrapper = parseResponse(response);
-        LinkResponse linkResponse = linkWrapper.getLinks().get(0);
-        assertThat(linkResponse.getFolder().getId(), equalTo(10L));
+        CreateLinkRequest   crlId        = new CreateLinkRequest(6, LinkType.FOLDER, 5, 2, 10L, null);
+        HttpResponse        response     = sendStandardRequest(UrlMapping.LINK__CREATE, crlId);
+        LinkResponseWrapper linkWrapper  = parseResponse(response);
+        Link                linkResponse = linkWrapper.getLinks().get(0);
+        assertThat(linkResponse.getFolderId(), equalTo(10L));
     }
 
     @Test
     public void createLinkToObjectWithoutBrowsePermission() throws IOException {
-        CreateLinkRequest crlId = new CreateLinkRequest(4, 6, LinkType.OBJECT, 1, 1);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, crlId);
+        CreateLinkRequest crlId    = new CreateLinkRequest(6, LinkType.OBJECT, 1, 1, null, 4L);
+        HttpResponse      response = sendStandardRequest(UrlMapping.LINK__CREATE, crlId);
         assertCinnamonError(response, ErrorCode.UNAUTHORIZED);
     }
-    
+
     @Test
     public void createLinkToObjectWithBrowsePermissionByOwner() throws IOException {
-        CreateLinkRequest crlId = new CreateLinkRequest(5, 6, LinkType.OBJECT, 5, 2);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, crlId);
-        LinkWrapper linkWrapper = parseResponse(response);
-        LinkResponse linkResponse = linkWrapper.getLinks().get(0);
-        assertThat(linkResponse.getOsd().getId(), equalTo(5L));
+        CreateLinkRequest   crlId        = new CreateLinkRequest(6, LinkType.OBJECT, 5, 2, null, 5L);
+        HttpResponse        response     = sendStandardRequest(UrlMapping.LINK__CREATE, crlId);
+        LinkResponseWrapper linkWrapper  = parseResponse(response);
+        Link                linkResponse = linkWrapper.getLinks().get(0);
+        assertThat(linkResponse.getObjectId(), equalTo(5L));
     }
-    
+
     @Test
-    public void createLinkWithNonExistentTargetObject() throws IOException{
-        CreateLinkRequest createLinkRequest = new CreateLinkRequest(Long.MAX_VALUE, 6L, LinkType.OBJECT, 1, 1);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, createLinkRequest);
+    public void createLinkWithNonExistentTargetObject() throws IOException {
+        CreateLinkRequest createLinkRequest = new CreateLinkRequest(6L, LinkType.OBJECT, 1, 1, null, Long.MAX_VALUE);
+        HttpResponse      response          = sendStandardRequest(UrlMapping.LINK__CREATE, createLinkRequest);
         assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND);
-    }    
+    }
+
     @Test
-    public void createLinkWithNonExistentTargetFolder() throws IOException{
-        CreateLinkRequest createLinkRequest = new CreateLinkRequest(Long.MAX_VALUE, 6, LinkType.FOLDER, 1, 1);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__CREATE_LINK, createLinkRequest);
+    public void createLinkWithNonExistentTargetFolder() throws IOException {
+        CreateLinkRequest createLinkRequest = new CreateLinkRequest(6, LinkType.FOLDER, 1, 1, Long.MAX_VALUE, null);
+        HttpResponse      response          = sendStandardRequest(UrlMapping.LINK__CREATE, createLinkRequest);
         assertCinnamonError(response, ErrorCode.FOLDER_NOT_FOUND);
     }
 
     @Test
-    public void updateLinkWithInvalidRequest() throws IOException{
-        LinkUpdateRequest updateRequest = new LinkUpdateRequest(0);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__UPDATE_LINK, updateRequest);
-        assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
+    public void updateLinkWithInvalidRequest() {
+        assertClientError(() -> client.updateLinks(List.of(new Link())), INVALID_REQUEST);
     }
 
     @Test
-    public void updateLinkWithoutBrowsePermission() throws IOException{
-        LinkUpdateRequest updateRequest = new LinkUpdateRequest(17L);
-        updateRequest.setOwnerId(1L);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__UPDATE_LINK, updateRequest);
-        assertCinnamonError(response, ErrorCode.NO_BROWSE_PERMISSION);
+    public void updateLinkWithoutBrowsePermission() throws IOException {
+        List<LinkResponse> links = adminClient.getLinksById(List.of(17L), false);
+        Link               link  = new Link(links.get(0));
+        link.setOwnerId(1L);
+        assertClientError(() -> client.updateLink(link), NO_BROWSE_PERMISSION);
     }
 
     @Test
-    public void updateLinkWithoutPermission() throws IOException{
-        LinkUpdateRequest updateRequest = new LinkUpdateRequest(1L);
-        updateRequest.setOwnerId(1L);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__UPDATE_LINK, updateRequest);
-        assertCinnamonError(response, ErrorCode.MISSING_WRITE_OBJECT_SYS_METADATA);
+    public void updateLinkWithoutPermission() throws IOException {
+        var link = client.getLinkById(1L, false);
+        link.setOwnerId(1L);
+        assertClientError(() -> client.updateLink(link), NO_WRITE_SYS_METADATA_PERMISSION);
     }
-    
+
     @Test
-    public void updateLinkAclWithoutSetAclPermission() throws IOException{
-        LinkUpdateRequest updateRequest = new LinkUpdateRequest(18L);
-        updateRequest.setAclId(1L);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__UPDATE_LINK, updateRequest);
-        assertCinnamonError(response, ErrorCode.MISSING_SET_ACL_PERMISSION);
-    } 
- 
+    public void updateLinkAclWithoutSetAclPermission() throws IOException {
+        var link = client.getLinksById(List.of(18L), false).get(0);
+        link.setAclId(1L);
+        assertClientError(() -> client.updateLink(link), MISSING_SET_ACL_PERMISSION);
+    }
+
     @Test
-    public void updateLinkAclWithPermission() throws IOException{
-        LinkUpdateRequest updateRequest = new LinkUpdateRequest(19L);
-        updateRequest.setAclId(1L);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__UPDATE_LINK, updateRequest);
-        GenericResponse genericResponse = parseGenericResponse(response);
-        assertTrue(genericResponse.isSuccessful());
-    } 
-    
+    public void updateLinkAclWithPermission() throws IOException {
+        var link = client.getLinkById(19L, false);
+        link.setAclId(1L);
+        Link updateLink = client.updateLink(new Link(link));
+        assertEquals(new Link(link), updateLink);
+    }
+
     @Test
-    public void updateLinkAclWithNonExistentAcl() throws IOException{
-        LinkUpdateRequest updateRequest = new LinkUpdateRequest(21L);
-        updateRequest.setAclId(Long.MAX_VALUE);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__UPDATE_LINK, updateRequest);
-        assertCinnamonError(response, ErrorCode.ACL_NOT_FOUND);
-    }    
-    
+    public void updateLinkAclWithNonExistentAcl() throws IOException {
+        var link = client.getLinkById(21L, false);
+        link.setAclId(Long.MAX_VALUE);
+        assertClientError(() -> client.updateLink(link), ACL_NOT_FOUND);
+    }
+
     @Test
-    public void updateLinkFolderWithNonExistentFolder() throws IOException{
-        LinkUpdateRequest updateRequest = new LinkUpdateRequest(21L);
-        updateRequest.setFolderId(Long.MAX_VALUE);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__UPDATE_LINK, updateRequest);
-        assertCinnamonError(response, ErrorCode.FOLDER_NOT_FOUND);
-    }        
-    
+    public void updateLinkFolderWithNonExistentFolder() throws IOException {
+        var linkResponse = client.getLinkById(20L, false);
+        linkResponse.setFolderId(Long.MAX_VALUE);
+        var link = new Link(linkResponse);
+        assertClientError(() -> client.updateLink(link), FOLDER_NOT_FOUND);
+    }
+
     @Test
-    public void updateLinkFolderWithoutFolderBrowsePermission() throws IOException{
-        LinkUpdateRequest updateRequest = new LinkUpdateRequest(20L);
+    public void updateLinkFolderWithoutFolderBrowsePermission() throws IOException {
+        var link = client.getLinkById(20L, false);
         // try to link to "unseen-folder" #3
-        updateRequest.setFolderId(3L);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__UPDATE_LINK, updateRequest);
-        assertCinnamonError(response, ErrorCode.NO_BROWSE_PERMISSION);
-    }    
-    
-    @Test
-    public void updateLinkOwnerWithNonExistentOwner() throws IOException{
-        LinkUpdateRequest updateRequest = new LinkUpdateRequest(21L);
-        updateRequest.setOwnerId(Long.MAX_VALUE);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__UPDATE_LINK, updateRequest);
-        assertCinnamonError(response, ErrorCode.USER_ACCOUNT_NOT_FOUND);
-    }      
-    
-    @Test
-    public void updateLinkOwner() throws IOException{
-        LinkUpdateRequest updateRequest = new LinkUpdateRequest(21L);
-        updateRequest.setOwnerId(2L);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__UPDATE_LINK, updateRequest);
-        GenericResponse genericResponse = parseGenericResponse(response);
-        assertTrue(genericResponse.isSuccessful());
-    }  
-    
-    @Test
-    public void updateLinkParentIntoFolderWithoutBrowsePermission() throws IOException{
-        LinkUpdateRequest updateRequest = new LinkUpdateRequest(21L);
-        updateRequest.setParentId(7L);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__UPDATE_LINK, updateRequest);
-        assertCinnamonError(response, ErrorCode.NO_BROWSE_PERMISSION);
-    }    
-    
-    @Test
-    public void updateLinkParentIntoFolderWithoutCreatePermission() throws IOException{
-        LinkUpdateRequest updateRequest = new LinkUpdateRequest(21L);
-        updateRequest.setParentId(8L);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__UPDATE_LINK, updateRequest);
-        assertCinnamonError(response, ErrorCode.NO_CREATE_PERMISSION);
+        link.setFolderId(3L);
+        assertClientError(() -> client.updateLink(link), NO_BROWSE_PERMISSION);
     }
-    
+
     @Test
-    public void updateLinkParentIntoFolderWithNonExistentParentFolder() throws IOException{
-        LinkUpdateRequest updateRequest = new LinkUpdateRequest(21L);
-        updateRequest.setParentId(Long.MAX_VALUE);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__UPDATE_LINK, updateRequest);
-        assertCinnamonError(response, ErrorCode.FOLDER_NOT_FOUND);
+    public void updateLinkOwnerWithNonExistentOwner() throws IOException {
+        var link = client.getLinkById(21L, false);
+        link.setOwnerId(Long.MAX_VALUE);
+        assertClientError(() -> client.updateLink(link), OWNER_NOT_FOUND);
     }
-    
+
     @Test
-    public void updateLinkParentFolder() throws IOException{
-        LinkUpdateRequest updateRequest = new LinkUpdateRequest(21L);
-        updateRequest.setParentId(6L);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__UPDATE_LINK, updateRequest);
-        GenericResponse genericResponse = parseGenericResponse(response);
-        assertTrue(genericResponse.isSuccessful());
+    public void updateLinkOwner() throws IOException {
+        var linkResponse = client.getLinkById(21L, false);
+        linkResponse.setOwnerId(2L);
+        var  link        = new Link(linkResponse);
+        Link updatedLink = client.updateLink(link);
+        assertEquals(link, updatedLink);
     }
-        
+
     @Test
-    public void updateLinkToObject() throws IOException{
-        LinkUpdateRequest updateRequest = new LinkUpdateRequest(21L);
-        updateRequest.setObjectId(15L);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__UPDATE_LINK, updateRequest);
-        GenericResponse genericResponse = parseGenericResponse(response);
-        assertTrue(genericResponse.isSuccessful());
-    }        
-    
-    @Test
-    public void updateLinkToObjectFromFolder() throws IOException{
-        LinkUpdateRequest updateRequest = new LinkUpdateRequest(22L);
-        updateRequest.setObjectId(13L);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__UPDATE_LINK, updateRequest);
-        GenericResponse genericResponse = parseGenericResponse(response);
-        assertTrue(genericResponse.isSuccessful());
-        
-        // verify link type:
-        LinkRequest linkRequest = new LinkRequest(22L,false);
-        HttpResponse linkRequestResponse = sendStandardRequest(UrlMapping.LINK__GET_LINK_BY_ID, linkRequest);
-        LinkWrapper linkWrapper = parseResponse(linkRequestResponse);
-        LinkResponse linkResponse = linkWrapper.getLinks().get(0);
-        assertThat(linkResponse.getLinkType(), equalTo(LinkType.OBJECT));
-        assertThat(linkResponse.getOsd().getId(), equalTo(13L));
-    }    
-    @Test
-    public void updateLinkToFolderFromObject() throws IOException{
-        LinkUpdateRequest updateRequest = new LinkUpdateRequest(23L);
-        updateRequest.setFolderId(6L);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__UPDATE_LINK, updateRequest);
-        GenericResponse genericResponse = parseGenericResponse(response);
-        assertTrue(genericResponse.isSuccessful());
-        
-        // verify link type:
-        LinkRequest linkRequest = new LinkRequest(23L,false);
-        HttpResponse linkRequestResponse = sendStandardRequest(UrlMapping.LINK__GET_LINK_BY_ID, linkRequest);
-        LinkWrapper linkWrapper = parseResponse(linkRequestResponse);
-        LinkResponse linkResponse = linkWrapper.getLinks().get(0);
-        assertThat(linkResponse.getLinkType(), equalTo(LinkType.FOLDER));
-        assertThat(linkResponse.getFolder().getId(), equalTo(6L));
+    public void updateLinkParentIntoFolderWithoutBrowsePermission() throws IOException {
+        var link = client.getLinkById(21L, false);
+        link.setParentId(7L);
+        assertClientError(() -> client.updateLink(link), NO_BROWSE_PERMISSION);
     }
-            
+
     @Test
-    public void updateLinkToObjectWithNonExistentObject() throws IOException{
-        LinkUpdateRequest updateRequest = new LinkUpdateRequest(21L);
-        updateRequest.setObjectId(Long.MAX_VALUE);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__UPDATE_LINK, updateRequest);
-        assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND);
+    public void updateLinkParentIntoFolderWithoutCreatePermission() throws IOException {
+        var link = client.getLinkById(21L, false);
+        link.setParentId(8L);
+        assertClientError(() -> client.updateLink(link), NO_CREATE_PERMISSION);
     }
-                
+
     @Test
-    public void updateLinkToObjectWithUnbrowsableObject() throws IOException{
-        LinkUpdateRequest updateRequest = new LinkUpdateRequest(21L);
-        updateRequest.setObjectId(4L);
-        HttpResponse response = sendStandardRequest(UrlMapping.LINK__UPDATE_LINK, updateRequest);
-        assertCinnamonError(response, ErrorCode.NO_BROWSE_PERMISSION);
+    public void updateLinkParentIntoFolderWithNonExistentParentFolder() throws IOException {
+        var link = client.getLinkById(21L, false);
+        link.setParentId(Long.MAX_VALUE);
+        assertClientError(() -> client.updateLink(link), FOLDER_NOT_FOUND);
     }
-    
+
+    @Test
+    public void updateLinkParentFolder() throws IOException {
+        var linkResponse = client.getLinkById(21L, false);
+        linkResponse.setParentId(6L);
+        var link = new Link(linkResponse);
+        assertEquals(link, client.updateLink(link));
+    }
+
+    @Test
+    public void updateLinkToObject() throws IOException {
+        var linkResponse = client.getLinkById(21L, false);
+        linkResponse.setObjectId(15L);
+        assertEquals(new Link(linkResponse), client.updateLink(new Link(linkResponse)));
+    }
+
+    @Test
+    public void updateLinkToObjectFromFolderIsForbidden() throws IOException {
+        var linkResponse = client.getLinkById(22L, false);
+        var link         = new Link(linkResponse);
+        link.setType(LinkType.OBJECT);
+        link.setObjectId(13L);
+        link.setFolderId(null);
+        assertClientError(() -> client.updateLink(link), CANNOT_CHANGE_LINK_TYPE);
+    }
+
+    @Test
+    public void updateLinkToFolderFromObjectIsForbidden() throws IOException {
+        var link = client.getLinkById(23L, false);
+        link.setType(LinkType.FOLDER);
+        link.setFolderId(6L);
+        link.setObjectId(null);
+        assertClientError(() -> client.updateLink(link), CANNOT_CHANGE_LINK_TYPE);
+    }
+
+    @Test
+    public void updateLinkToObjectWithNonExistentObject() throws IOException {
+        var link = client.getLinkById(21L, false);
+        link.setObjectId(Long.MAX_VALUE);
+        assertClientError(() -> client.updateLink(link), OBJECT_NOT_FOUND);
+    }
+
+    @Test
+    public void updateLinkToObjectWithUnbrowsableObject() throws IOException {
+        var link = client.getLinkById(21L, false);
+        link.setObjectId(4L);
+        assertClientError(() -> client.updateLink(link), NO_BROWSE_PERMISSION);
+    }
+
 
 }

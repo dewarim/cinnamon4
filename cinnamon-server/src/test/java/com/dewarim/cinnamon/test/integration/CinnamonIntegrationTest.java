@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.test.integration;
 
+import com.dewarim.cinnamon.CinnamonClientException;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonClient;
@@ -11,7 +12,6 @@ import com.dewarim.cinnamon.model.response.CinnamonErrorWrapper;
 import com.dewarim.cinnamon.model.response.GenericResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import com.fasterxml.jackson.dataformat.xml.deser.FromXmlParser;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.fluent.Form;
@@ -23,6 +23,7 @@ import org.apache.ibatis.session.SqlSession;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.function.Executable;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -33,10 +34,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
 
+import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  *
@@ -52,7 +53,7 @@ public class CinnamonIntegrationTest {
     static String         ticket;
     static String         ticketForDoe;
     static String         HOST             = "http://localhost:" + cinnamonTestPort;
-    static ObjectMapper   mapper           = new XmlMapper().configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL, true);
+    static ObjectMapper   mapper           = XML_MAPPER;
     static CinnamonClient client;
     static CinnamonClient adminClient;
 
@@ -97,7 +98,7 @@ public class CinnamonIntegrationTest {
         String tokenRequestResult = Request.Post(url)
                 .bodyForm(Form.form().add("user", "admin").add("password", "admin").build())
                 .execute().returnContent().asString();
-        XmlMapper          mapper             = new XmlMapper();
+        XmlMapper          mapper             = XML_MAPPER;
         CinnamonConnection cinnamonConnection = mapper.readValue(tokenRequestResult, CinnamonConnection.class);
         return cinnamonConnection.getTicket();
     }
@@ -111,7 +112,7 @@ public class CinnamonIntegrationTest {
             String tokenRequestResult = Request.Post(url)
                     .bodyForm(Form.form().add("user", "doe").add("password", "admin").build())
                     .execute().returnContent().asString();
-            XmlMapper          mapper             = new XmlMapper();
+            XmlMapper          mapper             = XML_MAPPER;
             CinnamonConnection cinnamonConnection = mapper.readValue(tokenRequestResult, CinnamonConnection.class);
             ticketForDoe = cinnamonConnection.getTicket();
         }
@@ -134,6 +135,11 @@ public class CinnamonIntegrationTest {
         assertThat(errorCode.getHttpResponseCode(), equalTo(response.getStatusLine().getStatusCode()));
         CinnamonError cinnamonError = mapper.readValue(response.getEntity().getContent(), CinnamonErrorWrapper.class).getErrors().get(0);
         assertThat(cinnamonError.getCode(), equalTo(errorCode.getCode()));
+    }
+
+    protected void assertClientError(Executable executable, ErrorCode errorCode) {
+        CinnamonClientException ex = assertThrows(CinnamonClientException.class, executable);
+        assertEquals(errorCode, ex.getErrorCode());
     }
 
     /**

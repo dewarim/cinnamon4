@@ -1,20 +1,54 @@
 package com.dewarim.cinnamon.model.links;
 
+import com.dewarim.cinnamon.api.Identifiable;
 import com.dewarim.cinnamon.api.Ownable;
+import com.dewarim.cinnamon.model.response.LinkResponse;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.Objects;
 
 @JacksonXmlRootElement(localName = "link")
-public class Link implements Ownable {
-    
-    private Long id;
+public class Link implements Ownable, Identifiable {
+
+    private Long     id;
     private LinkType type;
-    private Long ownerId;
-    private Long aclId;
-    private Long parentId;
-    private Long folderId;
-    private Long objectId;
+    private Long     ownerId;
+    private Long     aclId;
+    private Long     parentId;
+    private Long     folderId;
+    private Long     objectId;
+
+    public Link() {
+    }
+
+    public Link(Long id, LinkType type, Long ownerId, Long aclId, Long parentId, Long folderId, Long objectId) {
+        this.id = id;
+        this.type = type;
+        this.ownerId = ownerId;
+        this.aclId = aclId;
+        this.parentId = parentId;
+        this.folderId = folderId;
+        this.objectId = objectId;
+    }
+
+    public Link(LinkType type, Long ownerId, Long aclId, Long parentId, Long folderId, Long objectId) {
+        this.type = type;
+        this.ownerId = ownerId;
+        this.aclId = aclId;
+        this.parentId = parentId;
+        this.folderId = folderId;
+        this.objectId = objectId;
+    }
+
+    public Link(LinkResponse linkResponse){
+        this.id = linkResponse.getId();
+        this.type = linkResponse.getType();
+        this.ownerId = linkResponse.getOwnerId();
+        this.aclId = linkResponse.getAclId();
+        this.parentId = linkResponse.getParentId();
+        this.folderId = linkResponse.getFolderId();
+        this.objectId = linkResponse.getObjectId();
+    }
 
     public Long getId() {
         return id;
@@ -74,8 +108,12 @@ public class Link implements Ownable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         Link link = (Link) o;
         return type == link.type &&
                 Objects.equals(ownerId, link.ownerId) &&
@@ -102,5 +140,20 @@ public class Link implements Ownable {
                 ", folderId=" + folderId +
                 ", objectId=" + objectId +
                 '}';
+    }
+
+    /**
+     * Check if base values look okay - missing id is allowed.
+     * Use this to links supplied from external sources (update/create requests)
+     * @return true if all values pass basic validity check.
+     */
+    public boolean validated() {
+        if (folderId != null && objectId != null) {
+            return false;
+        }
+        return (id == null || id > 0) && getAclId() != null && getType() != null &&
+                ((folderId != null && folderId > 0) || (objectId != null && objectId > 0))
+                && aclId > 0 && ownerId > 0
+                && parentId != null && parentId > 0;
     }
 }

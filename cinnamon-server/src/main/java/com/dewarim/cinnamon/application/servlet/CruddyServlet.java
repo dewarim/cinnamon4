@@ -57,7 +57,7 @@ public interface CruddyServlet<T extends Identifiable> {
             if (deletedRows != deleteRequest.list().size() && !deleteRequest.isIgnoreNotFound()) {
                 throw new FailedRequestException(ErrorCode.OBJECT_NOT_FOUND);
             }
-        } catch (PersistenceException | SQLException e) {
+        } catch (PersistenceException e) {
             throw new FailedRequestException(ErrorCode.DB_DELETE_FAILED, e);
         }
         cinnamonResponse.setWrapper(deleteRequest.fetchResponseWrapper());

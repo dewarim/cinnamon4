@@ -2,6 +2,7 @@ package com.dewarim.cinnamon.security.authorization;
 
 
 import com.dewarim.cinnamon.DefaultPermission;
+import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.Accessible;
 import com.dewarim.cinnamon.api.Ownable;
 import com.dewarim.cinnamon.dao.AclDao;
@@ -91,14 +92,12 @@ public class AccessFilter {
         return hasUserBrowsePermission(aclId) || (ownable.getOwnerId().equals(user.getId()) && hasOwnerBrowsePermission(aclId));
     }
 
-
-
-    public boolean hasPermission(long aclId, String permissionName) {
-        return hasPermission(aclId, permissionName, false);
+    public boolean hasPermission(long aclId, DefaultPermission permission) {
+        return hasPermission(aclId, permission, false);
     }
 
-    public boolean hasPermission(long aclId, String permissionName, boolean checkOwnerPermission) {
-        Permission permission = nameToPermissionMapping.get(permissionName);
+    public boolean hasPermission(long aclId, DefaultPermission defaultPermission, boolean checkOwnerPermission) {
+        Permission permission = nameToPermissionMapping.get(defaultPermission.getName());
         if (permission == null) {
             throw new IllegalStateException("unknown permission name was used.");
         }
@@ -247,18 +246,20 @@ public class AccessFilter {
                 .collect(Collectors.toSet());
     }
     
-    public boolean hasPermissionOnOwnable(Accessible accessible, DefaultPermission permission, Ownable ownable) {
-        return hasPermissionOnOwnable(accessible,permission.getName(),ownable);
+    public void verifyHasPermissionOnOwnable(Accessible accessible, DefaultPermission permission, Ownable ownable, ErrorCode errorCode) {
+        if(! hasPermissionOnOwnable(accessible,permission,ownable)){
+            errorCode.throwUp();
+        }
     }
     
-    public boolean hasPermissionOnOwnable(Accessible accessible, String name, Ownable ownable) {
+    public boolean hasPermissionOnOwnable(Accessible accessible, DefaultPermission permission, Ownable ownable) {
         Long aclId = accessible.getAclId();
         if(aclId == null){
             throw new IllegalArgumentException("Cannot check permissions without the accessible providing an AclId!");
         }
         if (ownable.getOwnerId() != null && user.getId().equals(ownable.getOwnerId())) {
-            return hasPermission(aclId, name) || hasPermission(aclId, name, true);
+            return hasPermission(aclId, permission) || hasPermission(aclId, permission, true);
         }
-        return hasPermission(aclId, name);
+        return hasPermission(aclId, permission);
     }
 }

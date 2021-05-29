@@ -51,8 +51,6 @@ import com.dewarim.cinnamon.provider.ContentProviderService;
 import com.dewarim.cinnamon.provider.StateProviderService;
 import com.dewarim.cinnamon.security.authorization.AuthorizationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import com.fasterxml.jackson.dataformat.xml.deser.FromXmlParser;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
@@ -77,6 +75,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.dewarim.cinnamon.api.Constants.LANGUAGE_UNDETERMINED_ISO_CODE;
+import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
 import static jakarta.servlet.http.HttpServletResponse.SC_OK;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
@@ -84,8 +83,8 @@ import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 @WebServlet(name = "Osd", urlPatterns = "/")
 public class OsdServlet extends BaseServlet {
 
-    private final ObjectMapper         xmlMapper            = new XmlMapper().configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL, true);
-    private final AuthorizationService authorizationService = new AuthorizationService();
+    private final        ObjectMapper         xmlMapper            = XML_MAPPER;
+    private final        AuthorizationService authorizationService = new AuthorizationService();
     private static final Logger               log                  = LogManager.getLogger(OsdServlet.class);
     private static final String               MULTIPART            = "multipart/";
 
@@ -102,52 +101,52 @@ public class OsdServlet extends BaseServlet {
         UserAccount      user             = ThreadLocalSqlSession.getCurrentUser();
         OsdDao           osdDao           = new OsdDao();
         CinnamonResponse cinnamonResponse = (CinnamonResponse) response;
-            switch (pathInfo) {
-                case "/createOsd":
-                    createOsd(request, cinnamonResponse, user, osdDao);
-                    break;
-                case "/createMeta":
-                    createMeta(request, cinnamonResponse, user, osdDao);
-                    break;
-                case "/deleteOsds":
-                    deleteOsds(request, cinnamonResponse, user, osdDao);
-                    break;
-                case "/deleteMeta":
-                    deleteMeta(request, cinnamonResponse, user, osdDao);
-                    break;
-                case "/getContent":
-                    getContent(request, cinnamonResponse, user, osdDao);
-                    break;
-                case "/getMeta":
-                    getMeta(request, cinnamonResponse, user, osdDao);
-                    break;
-                case "/getObjectsByFolderId":
-                    getObjectsByFolderId(request, cinnamonResponse, user, osdDao);
-                    break;
-                case "/getObjectsById":
-                    getObjectsById(request, cinnamonResponse, user, osdDao);
-                    break;
-                case "/getSummaries":
-                    getSummaries(request, cinnamonResponse, user, osdDao);
-                    break;
-                case "/lock":
-                    lock(request, cinnamonResponse, user, osdDao);
-                    break;
-                case "/setContent":
-                    setContent(request, cinnamonResponse, user, osdDao);
-                    break;
-                case "/setSummary":
-                    setSummary(request, cinnamonResponse, user, osdDao);
-                    break;
-                case "/unlock":
-                    unlock(request, cinnamonResponse, user, osdDao);
-                    break;
-                case "/version":
-                    newVersion(request, cinnamonResponse, user, osdDao);
-                    break;
-                default:
-                    ErrorCode.RESOURCE_NOT_FOUND.throwUp();
-            }
+        switch (pathInfo) {
+            case "/createOsd":
+                createOsd(request, cinnamonResponse, user, osdDao);
+                break;
+            case "/createMeta":
+                createMeta(request, cinnamonResponse, user, osdDao);
+                break;
+            case "/deleteOsds":
+                deleteOsds(request, cinnamonResponse, user, osdDao);
+                break;
+            case "/deleteMeta":
+                deleteMeta(request, cinnamonResponse, user, osdDao);
+                break;
+            case "/getContent":
+                getContent(request, cinnamonResponse, user, osdDao);
+                break;
+            case "/getMeta":
+                getMeta(request, cinnamonResponse, user, osdDao);
+                break;
+            case "/getObjectsByFolderId":
+                getObjectsByFolderId(request, cinnamonResponse, user, osdDao);
+                break;
+            case "/getObjectsById":
+                getObjectsById(request, cinnamonResponse, user, osdDao);
+                break;
+            case "/getSummaries":
+                getSummaries(request, cinnamonResponse, user, osdDao);
+                break;
+            case "/lock":
+                lock(request, cinnamonResponse, user, osdDao);
+                break;
+            case "/setContent":
+                setContent(request, cinnamonResponse, user, osdDao);
+                break;
+            case "/setSummary":
+                setSummary(request, cinnamonResponse, user, osdDao);
+                break;
+            case "/unlock":
+                unlock(request, cinnamonResponse, user, osdDao);
+                break;
+            case "/version":
+                newVersion(request, cinnamonResponse, user, osdDao);
+                break;
+            default:
+                ErrorCode.RESOURCE_NOT_FOUND.throwUp();
+        }
     }
 
     private void deleteOsds(HttpServletRequest request, CinnamonResponse cinnamonResponse, UserAccount user, OsdDao osdDao) throws IOException {
@@ -178,7 +177,7 @@ public class OsdServlet extends BaseServlet {
         for (ObjectSystemData osd : osds) {
             Long osdId = osd.getId();
             // 1. check permission for delete
-            boolean deleteAllowed = authorizationService.userHasPermission(osd.getAclId(), DefaultPermission.DELETE_OBJECT.getName(), user);
+            boolean deleteAllowed = authorizationService.userHasPermission(osd.getAclId(), DefaultPermission.DELETE_OBJECT, user);
             if (!deleteAllowed) {
                 CinnamonError error = new CinnamonError(ErrorCode.NO_DELETE_PERMISSION.getCode(), osdId);
                 errors.add(error);
@@ -228,7 +227,7 @@ public class OsdServlet extends BaseServlet {
                 .orElseThrow(ErrorCode.PARENT_FOLDER_NOT_FOUND.getException());
 
         // check acl of parent folder
-        boolean createAllowed = new AuthorizationService().userHasPermission(parentFolder.getAclId(), DefaultPermission.CREATE_OBJECT.getName(), user);
+        boolean createAllowed = new AuthorizationService().userHasPermission(parentFolder.getAclId(), DefaultPermission.CREATE_OBJECT, user);
         if (!createAllowed) {
             throw ErrorCode.NO_CREATE_PERMISSION.exception();
         }
@@ -506,7 +505,7 @@ public class OsdServlet extends BaseServlet {
         SummaryWrapper         wrapper       = new SummaryWrapper();
         List<ObjectSystemData> osds          = osdDao.getObjectsById(idListRequest.getIdList(), true);
         osds.forEach(osd -> {
-            if (authorizationService.hasUserOrOwnerPermission(osd, DefaultPermission.READ_OBJECT_SYS_METADATA.getName(), user)) {
+            if (authorizationService.hasUserOrOwnerPermission(osd, DefaultPermission.READ_OBJECT_SYS_METADATA, user)) {
                 wrapper.getSummaries().add(new Summary(osd.getId(), osd.getSummary()));
             }
         });
