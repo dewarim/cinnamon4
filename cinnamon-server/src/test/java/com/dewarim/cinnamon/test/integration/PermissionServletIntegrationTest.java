@@ -22,7 +22,7 @@ public class PermissionServletIntegrationTest extends CinnamonIntegrationTest {
     
     @Test
     public void listPermissions() throws IOException {
-        HttpResponse response = sendAdminRequest(UrlMapping.PERMISSION__LIST_PERMISSIONS, new ListPermissionRequest());
+        HttpResponse response = sendAdminRequest(UrlMapping.PERMISSION__LIST, new ListPermissionRequest());
         assertResponseOkay(response);
         PermissionWrapper wrapper = mapper.readValue(response.getEntity().getContent(),PermissionWrapper.class);
         assertThat(wrapper.getPermissions().size(), equalTo(17));

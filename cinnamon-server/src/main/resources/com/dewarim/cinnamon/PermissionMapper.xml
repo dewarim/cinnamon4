@@ -3,14 +3,14 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.dewarim.cinnamon.PermissionMapper">
+<mapper namespace="com.dewarim.cinnamon.model.Permission">
 
     <resultMap id="permissionMap" type="com.dewarim.cinnamon.model.Permission">
         <id property="id" column="id"/>
         <result property="name" column="name"/>
     </resultMap>
 
-    <select id="listPermissions" resultMap="permissionMap">
+    <select id="list" resultMap="permissionMap">
         SELECT *
         FROM permissions
     </select>

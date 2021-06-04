@@ -76,7 +76,7 @@ public enum UrlMapping {
     OSD__UNLOCK("osd", "unlock", "/api"),
     OSD__VERSION("osd", "version", "/api"),
     PERMISSION__GET_USER_PERMISSIONS("permission", "getUserPermissions", "/api"),
-    PERMISSION__LIST_PERMISSIONS("permission", "listPermissions", "/api"),
+    PERMISSION__LIST("permission", "list", "/api"),
     RELATION_TYPE__LIST_RELATION_TYPES("relationType", "listRelationTypes", "/api"),
     RELATION__CREATE_RELATION("relation", "createRelation", "/api"),
     RELATION__DELETE_RELATION("relation", "deleteRelation", "/api"),

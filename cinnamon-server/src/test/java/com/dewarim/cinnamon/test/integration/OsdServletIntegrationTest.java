@@ -1022,7 +1022,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void deleteOsdHappyPath() throws IOException {
-        client.deleteOsd(49L);
+        assertTrue(client.deleteOsd(49L));
     }
 
 //    @Test

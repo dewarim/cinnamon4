@@ -1,13 +1,14 @@
 package com.dewarim.cinnamon.application.servlet;
 
 import com.dewarim.cinnamon.ErrorCode;
+import com.dewarim.cinnamon.api.UrlMapping;
+import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.application.ErrorResponseGenerator;
 import com.dewarim.cinnamon.dao.AclDao;
 import com.dewarim.cinnamon.dao.PermissionDao;
 import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.Permission;
 import com.dewarim.cinnamon.model.request.ListPermissionRequest;
-import com.dewarim.cinnamon.model.request.ListRequest;
 import com.dewarim.cinnamon.model.request.user.UserPermissionRequest;
 import com.dewarim.cinnamon.model.response.PermissionWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,47 +21,38 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
-import static com.dewarim.cinnamon.api.Constants.CONTENT_TYPE_XML;
 import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
 
 /**
  *
  */
 @WebServlet(name = "Permission", urlPatterns = "/")
-public class PermissionServlet extends HttpServlet {
+public class PermissionServlet extends HttpServlet implements CruddyServlet<Permission> {
 
     private final ObjectMapper xmlMapper = XML_MAPPER;
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
-        String pathInfo = request.getPathInfo();
-        if (pathInfo == null) {
-            pathInfo = "";
-        }
-        switch (pathInfo) {
-            case "/listPermissions":
-                listPermissions(request, response);
+        CinnamonResponse cinnamonResponse = (CinnamonResponse) response;
+        PermissionDao    permissionDao    = new PermissionDao();
+
+        UrlMapping mapping = UrlMapping.getByPath(request.getRequestURI());
+        switch (mapping) {
+            case PERMISSION__LIST:
+                list(convertListRequest(request, ListPermissionRequest.class), permissionDao, cinnamonResponse);
                 break;
-            case "/getUserPermissions":
-                getUserPermissions(xmlMapper.readValue(request.getReader(), UserPermissionRequest.class), response);
+            case PERMISSION__GET_USER_PERMISSIONS:
+                getUserPermissions(request, cinnamonResponse);
                 break;
             default:
                 ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
-
     }
 
-    private void listPermissions(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        ListRequest       listRequest = xmlMapper.readValue(request.getInputStream(), ListPermissionRequest.class);
-        List<Permission>  permissions = new PermissionDao().listPermissions();
-        PermissionWrapper wrapper     = new PermissionWrapper();
-        wrapper.setPermissions(permissions);
-        response.setContentType(CONTENT_TYPE_XML);
-        response.setStatus(HttpServletResponse.SC_OK);
-        xmlMapper.writeValue(response.getWriter(), wrapper);
-    }
+    private void getUserPermissions(HttpServletRequest request, CinnamonResponse response) throws IOException {
+        UserPermissionRequest permissionRequest = getMapper().readValue(request.getReader(), UserPermissionRequest.class).validateRequest()
+                .orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
-    private void getUserPermissions(UserPermissionRequest permissionRequest, HttpServletResponse response) throws IOException {
         long      userId   = permissionRequest.getUserId();
         long      aclId    = permissionRequest.getAclId();
         AclDao    aclDao   = new AclDao();
@@ -76,8 +68,11 @@ public class PermissionServlet extends HttpServlet {
             List<Permission> userPermissions = dao.getUserPermissionForAcl(userId, aclId);
             wrapper.getPermissions().addAll(userPermissions);
         }
-        response.setContentType(CONTENT_TYPE_XML);
-        response.setStatus(HttpServletResponse.SC_OK);
-        xmlMapper.writeValue(response.getWriter(), wrapper);
+        response.setWrapper(wrapper);
+    }
+
+    @Override
+    public ObjectMapper getMapper() {
+        return xmlMapper;
     }
 }

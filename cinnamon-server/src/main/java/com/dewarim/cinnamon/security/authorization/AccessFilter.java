@@ -154,7 +154,7 @@ public class AccessFilter {
             acls = aclDao.list();
             acls.forEach(acl -> idToAclMapping.put(acl.getId(), acl));
             ownerGroup = new GroupDao().getOwnerGroup();
-            List<Permission> permissions = permissionDao.listPermissions();
+            List<Permission> permissions = permissionDao.list();
             permissions.forEach(permission -> nameToPermissionMapping.put(permission.getName(), permission));
         }
 
