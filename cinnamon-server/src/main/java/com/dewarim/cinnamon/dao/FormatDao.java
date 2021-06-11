@@ -7,15 +7,20 @@ import org.apache.ibatis.session.SqlSession;
 import java.util.List;
 import java.util.Optional;
 
-public class FormatDao {
+public class FormatDao implements CrudDao<Format>{
     
     public List<Format> listFormats(){
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        return sqlSession.selectList("com.dewarim.cinnamon.FormatMapper.list");
+        return sqlSession.selectList("com.dewarim.cinnamon.Format.list");
     }
 
     public Optional<Format> getFormatById(Long formatId) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        return Optional.ofNullable(sqlSession.selectOne("com.dewarim.cinnamon.FormatMapper.getFormatById", formatId));
+        return Optional.ofNullable(sqlSession.selectOne("com.dewarim.cinnamon.Format.getFormatById", formatId));
+    }
+
+    @Override
+    public String getTypeClassName() {
+        return Format.class.getName();
     }
 }

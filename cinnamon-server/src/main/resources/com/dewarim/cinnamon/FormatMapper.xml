@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.dewarim.cinnamon.FormatMapper">
+<mapper namespace="com.dewarim.cinnamon.Format">
 
     <resultMap id="formatMap" type="com.dewarim.cinnamon.model.Format">
         <id property="id" column="id"/>
@@ -16,6 +16,43 @@
     <select id="list" parameterType="map" resultMap="formatMap">
         SELECT *
         FROM formats
+    </select>
+
+    <delete id="delete" parameterType="list">
+        DELETE
+        FROM formats
+        WHERE id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <update id="update" parameterType="com.dewarim.cinnamon.model.Format">
+        UPDATE formats
+        SET name                   = #{name},
+            contenttype            = #{contentType},
+            extension              = #{extension},
+            default_object_type_id = #{defaultObjectTypeId}
+        WHERE id = #{id}
+    </update>
+
+    <insert id="insert" parameterType="com.dewarim.cinnamon.model.Format">
+        <selectKey keyProperty="id" resultType="long" order="BEFORE">
+            select nextval('seq_format_id')
+        </selectKey>
+        INSERT INTO formats(id, name, contenttype, extension, default_object_type_id)
+        VALUES (#{id}, #{name}, #{contentType}, #{extension}, #{defaultObjectTypeId})
+    </insert>
+
+    <select id="getAllById" parameterType="list" resultMap="formatMap">
+        SELECT *
+        FROM formats
+        WHERE id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
     </select>
 
     <select id="getFormatById" parameterType="long" resultMap="formatMap">

@@ -56,7 +56,12 @@ public class CinnamonIntegrationTest {
     static ObjectMapper   mapper           = XML_MAPPER;
     static CinnamonClient client;
     static CinnamonClient adminClient;
-
+    static long           userId           = 2;
+    static long           adminId          = 1;
+    /**
+     * id of folder where the standard test user can create test objects
+     */
+    static long           createFolderId   = 6;
 
     @BeforeAll
     public static void setUpServer() throws Exception {

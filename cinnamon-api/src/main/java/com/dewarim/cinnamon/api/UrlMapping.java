@@ -42,12 +42,15 @@ public enum UrlMapping {
     FOLDER__GET_SUMMARIES("folder", "getSummaries", "/api"),
     FOLDER__SET_SUMMARY("folder", "setSummary", "/api"),
     FOLDER__UPDATE_FOLDER("folder", "updateFolder", "/api"),
-    FORMAT__LIST_FORMATS("format", "listFormats", "/api"),
-    GROUP__ADD_USER_TO_GROUPS("group","addUserToGroups" ,"/api" ),
+    FORMAT__LIST("format", "list", "/api"),
+    FORMAT__CREATE("format", "create", "/api"),
+    FORMAT__UPDATE("format", "update", "/api"),
+    FORMAT__DELETE("format", "delete", "/api"),
+    GROUP__ADD_USER_TO_GROUPS("group", "addUserToGroups", "/api"),
     GROUP__CREATE("group", "create", "/api"),
     GROUP__DELETE("group", "delete", "/api"),
     GROUP__LIST("group", "list", "/api"),
-    GROUP__REMOVE_USER_FROM_GROUPS("group","removeUserFromGroups" ,"/api" ),
+    GROUP__REMOVE_USER_FROM_GROUPS("group", "removeUserFromGroups", "/api"),
     GROUP__UPDATE("group", "update", "/api"),
     INDEX_ITEM__LIST_INDEX_ITEMS("indexItem", "listIndexItems", "/api"),
     LANGUAGE__LIST__LANGUAGES("language", "listLanguages", "/api"),
@@ -79,7 +82,7 @@ public enum UrlMapping {
     OSD__SET_SUMMARY("osd", "setSummary", "/api"),
     OSD__UNLOCK("osd", "unlock", "/api"),
     OSD__VERSION("osd", "version", "/api"),
-    PERMISSION__CHANGE_PERMISSIONS("permission","changePermissions" ,"/api" ),
+    PERMISSION__CHANGE_PERMISSIONS("permission", "changePermissions", "/api"),
     PERMISSION__GET_USER_PERMISSIONS("permission", "getUserPermissions", "/api"),
     PERMISSION__LIST("permission", "list", "/api"),
     RELATION_TYPE__LIST_RELATION_TYPES("relationType", "listRelationTypes", "/api"),
@@ -96,8 +99,8 @@ public enum UrlMapping {
 
     private static final Map<String, UrlMapping> pathMapping = new ConcurrentHashMap<>();
     private final        String                  servlet;
-    private final  String                  action;
-    private final String prefix;
+    private final        String                  action;
+    private final        String                  prefix;
 
     /**
      * @param servlet the servlet handling the url

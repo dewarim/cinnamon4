@@ -19,7 +19,7 @@ public class FormatServletIntegrationTest extends CinnamonIntegrationTest{
     
     @Test
     public void listFormats() throws IOException {
-        HttpResponse response = sendStandardRequest(UrlMapping.FORMAT__LIST_FORMATS, new ListFormatRequest());
+        HttpResponse response = sendStandardRequest(UrlMapping.FORMAT__LIST, new ListFormatRequest());
         List<Format> formats = parseResponse(response);
         
         assertNotNull(formats);
@@ -40,6 +40,7 @@ public class FormatServletIntegrationTest extends CinnamonIntegrationTest{
         assertNotNull(formatWrapper);
         return formatWrapper.getFormats();
     }
-    
+
+    // TODO: add CRUD tests
     
 }

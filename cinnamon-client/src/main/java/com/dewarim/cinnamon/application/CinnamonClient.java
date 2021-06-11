@@ -8,6 +8,7 @@ import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.AclGroup;
 import com.dewarim.cinnamon.model.Folder;
 import com.dewarim.cinnamon.model.FolderType;
+import com.dewarim.cinnamon.model.Format;
 import com.dewarim.cinnamon.model.Group;
 import com.dewarim.cinnamon.model.Meta;
 import com.dewarim.cinnamon.model.ObjectSystemData;
@@ -28,6 +29,7 @@ import com.dewarim.cinnamon.model.request.folder.UpdateFolderRequest;
 import com.dewarim.cinnamon.model.request.folderType.CreateFolderTypeRequest;
 import com.dewarim.cinnamon.model.request.folderType.DeleteFolderTypeRequest;
 import com.dewarim.cinnamon.model.request.folderType.UpdateFolderTypeRequest;
+import com.dewarim.cinnamon.model.request.format.ListFormatRequest;
 import com.dewarim.cinnamon.model.request.group.CreateGroupRequest;
 import com.dewarim.cinnamon.model.request.group.DeleteGroupRequest;
 import com.dewarim.cinnamon.model.request.group.ListGroupRequest;
@@ -39,6 +41,7 @@ import com.dewarim.cinnamon.model.request.link.DeleteLinkRequest;
 import com.dewarim.cinnamon.model.request.link.GetLinksRequest;
 import com.dewarim.cinnamon.model.request.link.LinkWrapper;
 import com.dewarim.cinnamon.model.request.link.UpdateLinkRequest;
+import com.dewarim.cinnamon.model.request.osd.CreateOsdRequest;
 import com.dewarim.cinnamon.model.request.osd.DeleteOsdRequest;
 import com.dewarim.cinnamon.model.request.osd.OsdRequest;
 import com.dewarim.cinnamon.model.request.permission.ChangePermissionsRequest;
@@ -53,6 +56,7 @@ import com.dewarim.cinnamon.model.response.CinnamonErrorWrapper;
 import com.dewarim.cinnamon.model.response.DeleteResponse;
 import com.dewarim.cinnamon.model.response.FolderTypeWrapper;
 import com.dewarim.cinnamon.model.response.FolderWrapper;
+import com.dewarim.cinnamon.model.response.FormatWrapper;
 import com.dewarim.cinnamon.model.response.GenericResponse;
 import com.dewarim.cinnamon.model.response.GroupWrapper;
 import com.dewarim.cinnamon.model.response.LinkResponse;
@@ -96,6 +100,7 @@ public class CinnamonClient {
     private final Unwrapper<ObjectSystemData, OsdWrapper>        osdUnwrapper          = new Unwrapper<>(OsdWrapper.class);
     private final Unwrapper<FolderType, FolderTypeWrapper>       folderTypeUnwrapper   = new Unwrapper<>(FolderTypeWrapper.class);
     private final Unwrapper<Folder, FolderWrapper>               folderUnwrapper       = new Unwrapper<>(FolderWrapper.class);
+    private final Unwrapper<Format, FormatWrapper>               formatUnwrapper       = new Unwrapper<>(FormatWrapper.class);
     private final Unwrapper<Meta, MetaWrapper>                   metaUnwrapper         = new Unwrapper<>(MetaWrapper.class);
     private final Unwrapper<UserInfo, UserWrapper>               userUnwrapper         = new Unwrapper<>(UserWrapper.class);
     private final Unwrapper<DeleteResponse, DeleteResponse>      deleteResponseWrapper = new Unwrapper<>(DeleteResponse.class);
@@ -236,6 +241,11 @@ public class CinnamonClient {
         return parseGenericResponse(response).isSuccessful();
     }
 
+    public ObjectSystemData createOsd(CreateOsdRequest createOsdRequest) throws IOException {
+        HttpResponse response = sendStandardRequest(UrlMapping.OSD__CREATE_OSD, createOsdRequest);
+        return osdUnwrapper.unwrap(response, 1).get(0);
+    }
+
     // Folders
     public Folder getFolderById(Long id, boolean includeSummary) throws IOException {
         return getFolders(Collections.singletonList(id), includeSummary).get(0);
@@ -296,6 +306,12 @@ public class CinnamonClient {
         return aclUnwrapper.unwrap(response, 1).get(0);
     }
 
+    // Formats
+    public List<Format> listFormats() throws IOException {
+        var response = sendStandardRequest(UrlMapping.FORMAT__LIST, new ListFormatRequest());
+        return formatUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
+    }
+
     // AclGroups
     public List<AclGroup> listAclGroups() throws IOException {
         HttpResponse response = sendStandardRequest(UrlMapping.ACL_GROUP__LIST, new ListAclGroupRequest());
@@ -344,15 +360,15 @@ public class CinnamonClient {
     }
 
     // GroupUsers
-    public void addUserToGroups(List<Long> ids) throws IOException{
-        var request = new AddUserToGroupsRequest(ids);
-        var response = sendStandardRequest(UrlMapping.GROUP__ADD_USER_TO_GROUPS,request);
+    public void addUserToGroups(List<Long> ids) throws IOException {
+        var request  = new AddUserToGroupsRequest(ids);
+        var response = sendStandardRequest(UrlMapping.GROUP__ADD_USER_TO_GROUPS, request);
         verifyResponseIsOkay(response);
     }
 
-    public void removeUserFromGroups(List<Long> ids) throws IOException{
-        var request = new RemoveUserFromGroupsRequest(ids);
-        var response = sendStandardRequest(UrlMapping.GROUP__REMOVE_USER_FROM_GROUPS,request);
+    public void removeUserFromGroups(List<Long> ids) throws IOException {
+        var request  = new RemoveUserFromGroupsRequest(ids);
+        var response = sendStandardRequest(UrlMapping.GROUP__REMOVE_USER_FROM_GROUPS, request);
         verifyResponseIsOkay(response);
     }
 
