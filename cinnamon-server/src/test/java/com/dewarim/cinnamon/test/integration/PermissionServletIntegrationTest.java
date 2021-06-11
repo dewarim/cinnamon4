@@ -1,42 +1,35 @@
 package com.dewarim.cinnamon.test.integration;
 
-import com.dewarim.cinnamon.api.UrlMapping;
+import com.dewarim.cinnamon.ErrorCode;
+import com.dewarim.cinnamon.model.Acl;
+import com.dewarim.cinnamon.model.AclGroup;
+import com.dewarim.cinnamon.model.Group;
 import com.dewarim.cinnamon.model.Permission;
-import com.dewarim.cinnamon.model.request.ListPermissionRequest;
-import com.dewarim.cinnamon.model.request.user.UserPermissionRequest;
-import com.dewarim.cinnamon.model.response.PermissionWrapper;
-import org.apache.http.HttpResponse;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 public class PermissionServletIntegrationTest extends CinnamonIntegrationTest {
-    
-    
+
     @Test
     public void listPermissions() throws IOException {
-        HttpResponse response = sendAdminRequest(UrlMapping.PERMISSION__LIST, new ListPermissionRequest());
-        assertResponseOkay(response);
-        PermissionWrapper wrapper = mapper.readValue(response.getEntity().getContent(),PermissionWrapper.class);
-        assertThat(wrapper.getPermissions().size(), equalTo(17));
+        List<Permission> permissions = client.listPermissions();
+        assertEquals(17, permissions.size());
     }
-    
+
     @Test
-    public void getUsersPermissions() throws IOException{
+    public void getUsersPermissions() throws IOException {
         // user doe @ default acl: should have browse and browse_folder as well as 
         // delete_object and delete_folder permission
-        UserPermissionRequest permissionRequest = new UserPermissionRequest(2L,1L);
-        HttpResponse response = sendAdminRequest(UrlMapping.PERMISSION__GET_USER_PERMISSIONS, permissionRequest);
-        List<Permission> permissions = unwrapPermissions(response, 4);
-        Optional<Permission> browse = permissions.stream().filter(s -> s.getName().equals("_browse")).findFirst();
-        assertTrue(browse.isPresent());  
+        List<Permission>     permissions = client.getUserPermissions(2L, 1L);
+        Optional<Permission> browse      = permissions.stream().filter(s -> s.getName().equals("_browse")).findFirst();
+        assertTrue(browse.isPresent());
         Optional<Permission> browseFolder = permissions.stream().filter(s -> s.getName().equals("_browse_folder")).findFirst();
         assertTrue(browseFolder.isPresent());
 
@@ -56,29 +49,44 @@ public class PermissionServletIntegrationTest extends CinnamonIntegrationTest {
         - version
         - delete_object
          */
-        UserPermissionRequest reviewerPermissionRequest = new UserPermissionRequest(2L,2L);
-        HttpResponse reviewerResponse = sendAdminRequest(UrlMapping.PERMISSION__GET_USER_PERMISSIONS, reviewerPermissionRequest);
-        unwrapPermissions(reviewerResponse, 13);
-    }    
-    
-    @Test
-    public void getUsersPermissionsForMissingAcl() throws IOException{
-        // user doe @ rename.me.acl: should have no permissions
-        UserPermissionRequest permissionRequest = new UserPermissionRequest(2L,4L);
-        HttpResponse response = sendAdminRequest(UrlMapping.PERMISSION__GET_USER_PERMISSIONS, permissionRequest);
-        List<Permission> permissions = unwrapPermissions(response, null);
-        assertNull(permissions);
+        List<Permission> reviewerPermissions = client.getUserPermissions(2L, 2L);
+        assertEquals(13, reviewerPermissions.size());
     }
 
-    private List<Permission> unwrapPermissions(HttpResponse response, Integer expectedSize) throws IOException {
-        assertResponseOkay(response);
-        List<Permission> permissions = mapper.readValue(response.getEntity().getContent(),PermissionWrapper.class).getPermissions();
-        if (expectedSize != null) {
-            assertNotNull(permissions);
-            assertFalse(permissions.isEmpty());
-            assertThat(permissions.size(), equalTo(expectedSize));
-        }
-        return permissions;
+    @Test
+    public void getUsersPermissionsForMissingAcl() throws IOException {
+        // user doe @ rename.me.acl: should have no permissions
+        List<Permission> permissions = client.getUserPermissions(2L, 4L);
+        assertTrue(permissions.isEmpty());
     }
-    
+
+    @Test
+    public void addAndRemovePermissions() throws IOException {
+        Acl              acl         = adminClient.createAcl(List.of("add-and-remove-permission-acl")).get(0);
+        Group            group       = adminClient.createGroups(List.of("add-and-remove-permission-group")).get(0);
+        AclGroup         aclGroup    = adminClient.createAclGroups(List.of(new AclGroup(acl.getId(), group.getId()))).get(0);
+        Long             aclGroupId  = aclGroup.getId();
+        List<Permission> permissions = client.listPermissions();
+        assertTrue(aclGroup.getPermissionIds().isEmpty(), "new AclGroup should have no permissions");
+
+        // add permission
+        adminClient.addAndRemovePermissions(aclGroup.getId(), List.of(permissions.get(0).getId()), List.of());
+        List<AclGroup>     aclGroups          = client.listAclGroups();
+        Optional<AclGroup> updatedAclGroupOpt = aclGroups.stream().filter(aGroup -> aGroup.getId().equals(aclGroupId)).findFirst();
+        assertTrue(updatedAclGroupOpt.isPresent());
+        AclGroup updatedGroup = updatedAclGroupOpt.get();
+        assertEquals(1, updatedGroup.getPermissionIds().size());
+        assertEquals(1, updatedGroup.getPermissionIds().get(0));
+
+        // remove permission:
+        adminClient.addAndRemovePermissions(aclGroup.getId(), List.of(), List.of(permissions.get(0).getId()));
+        updatedAclGroupOpt = client.listAclGroups().stream().filter(aGroup -> aGroup.getId().equals(aclGroupId)).findFirst();
+        assertTrue(updatedAclGroupOpt.isPresent());
+        assertEquals(0, updatedAclGroupOpt.get().getPermissionIds().size());
+    }
+
+    @Test
+    public void addAndRemovePermissionsNonAdmin() {
+        assertClientError(() -> client.addAndRemovePermissions(1L, List.of(1L), List.of(2L)), ErrorCode.REQUIRES_SUPERUSER_STATUS);
+    }
 }

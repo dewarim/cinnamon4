@@ -15,6 +15,12 @@
         FROM permissions
     </select>
 
+    <select id="getAclGroupPermissionsForAclGroup" parameterType="long" resultMap="permissionMap">
+        SELECT p.*
+        FROM permissions p JOIN acl_group_permissions agp on p.id = agp.permission_id
+        WHERE agp.acl_group_id=#{aclGroupId}
+    </select>
+
     <select id="getPermissionByName" resultMap="permissionMap">
         SELECT *
         FROM permissions

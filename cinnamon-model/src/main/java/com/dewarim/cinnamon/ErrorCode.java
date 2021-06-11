@@ -9,6 +9,7 @@ import java.util.function.Supplier;
 
 public enum ErrorCode {
 
+    ACL_GROUP_NOT_FOUND("the requested acl group was not found in the database", HttpServletResponse.SC_NOT_FOUND),
     ACL_NOT_FOUND("error.acl.not_found", HttpServletResponse.SC_NOT_FOUND),
     AUTHENTICATION_FAIL_NO_TICKET_GIVEN("empty or null ticket given", HttpServletResponse.SC_FORBIDDEN),
     AUTHENTICATION_FAIL_NO_SESSION_FOUND("no session found", HttpServletResponse.SC_FORBIDDEN),
@@ -97,7 +98,8 @@ public enum ErrorCode {
     STATIC__NO_PATH_TRAVERSAL("no path traversal allowed", HttpServletResponse.SC_FORBIDDEN),
     UNAUTHORIZED("access not allowed", HttpServletResponse.SC_UNAUTHORIZED),
     USER_INFO_REQUEST_WITHOUT_NAME_OR_ID("userInfoRequest missing id or name", HttpServletResponse.SC_BAD_REQUEST),
-    USER_ACCOUNT_NOT_FOUND("userInfoRequest invalid id or name", HttpServletResponse.SC_NOT_FOUND);
+    USER_ACCOUNT_NOT_FOUND("userInfoRequest invalid id or name", HttpServletResponse.SC_NOT_FOUND)
+    ;
 
     private static final Map<String, ErrorCode> codeMapping = new ConcurrentHashMap<>();
     String                           description;

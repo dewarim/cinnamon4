@@ -6,10 +6,12 @@ import com.dewarim.cinnamon.model.AclGroup;
 import com.dewarim.cinnamon.model.Group;
 import org.apache.ibatis.session.SqlSession;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class AclGroupDao implements CrudDao<AclGroup> {
 
@@ -23,13 +25,23 @@ public class AclGroupDao implements CrudDao<AclGroup> {
 
     public List<AclGroup> getAclGroupsByAclId(long aclId) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        return sqlSession.selectList("com.dewarim.cinnamon.model.AclGroup.getAclGroupsByAclId", aclId);
+        List<AclGroup> aclGroups= sqlSession.selectList("com.dewarim.cinnamon.model.AclGroup.getAclGroupsByAclId", aclId);
+        addPermissionsToAclGroups(aclGroups);
+        return aclGroups;
     }
     public List<AclGroup> getAclGroupsByGroupId(long groupId) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        return sqlSession.selectList("com.dewarim.cinnamon.model.AclGroup.getAclGroupsByGroupId", groupId);
+        List<AclGroup> aclGroups  = sqlSession.selectList("com.dewarim.cinnamon.model.AclGroup.getAclGroupsByGroupId", groupId);
+        addPermissionsToAclGroups(aclGroups);
+        return aclGroups;
     }
-    
+
+    public void addPermissionsToAclGroups(List<AclGroup> aclGroups) {
+        AclGroupPermissionDao agpDao = new AclGroupPermissionDao();
+        Map<Long, List<Long>> aclGroupToPermissionIds = agpDao.listPermissionsOfAclGroups(aclGroups.stream().map(AclGroup::getId).collect(Collectors.toList()));
+        aclGroups.forEach(aclGroup -> aclGroup.setPermissionIds(aclGroupToPermissionIds.getOrDefault(aclGroup.getId(),new ArrayList<>())));
+    }
+
     public List<AclGroup> getAclGroupsByGroup(Group group) {
         return getAclGroupsByGroupId(group.getId());
     }
@@ -47,7 +59,11 @@ public class AclGroupDao implements CrudDao<AclGroup> {
         Map<String, Object> params = new HashMap<>();
         params.put("groupName", name);
         params.put("aclId", aclId);
-        return Optional.ofNullable(sqlSession.selectOne("com.dewarim.cinnamon.model.AclGroup.getAclGroupByAclAndGroupName", params));
+        AclGroup aclGroup = sqlSession.selectOne("com.dewarim.cinnamon.model.AclGroup.getAclGroupByAclAndGroupName", params);
+        if(aclGroup != null){
+            addPermissionsToAclGroups(List.of(aclGroup));
+        }
+        return Optional.ofNullable(aclGroup);
     }
 
     @Override

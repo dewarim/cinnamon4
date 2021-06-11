@@ -10,6 +10,14 @@ public class AclGroupPermission implements Identifiable {
     private long aclGroupId;
     private long permissionId;
 
+    public AclGroupPermission() {
+    }
+
+    public AclGroupPermission(long aclGroupId, long permissionId) {
+        this.aclGroupId = aclGroupId;
+        this.permissionId = permissionId;
+    }
+
     @Override
     public Long getId() {
         return id;

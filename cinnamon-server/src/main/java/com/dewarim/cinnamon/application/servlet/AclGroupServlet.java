@@ -35,23 +35,25 @@ public class AclGroupServlet extends HttpServlet implements CruddyServlet<AclGro
 
         UrlMapping mapping = UrlMapping.getByPath(request.getRequestURI());
         switch (mapping) {
-            case ACL_ENTRY__LIST_ACL_ENTRIES_BY_GROUP_OR_ACL:
+            case ACL_GROUP__LIST_BY_GROUP_OR_ACL:
                 listAclGroups(request, cinnamonResponse, aclGroupDao);
                 break;
-            case ACL_ENTRY__LIST:
+            case ACL_GROUP__LIST:
                 list(convertListRequest(request, ListAclGroupRequest.class), aclGroupDao, cinnamonResponse);
+                aclGroupDao.addPermissionsToAclGroups(((AclGroupWrapper) cinnamonResponse.getWrapper()).list());
                 break;
-            case ACL_ENTRY__CREATE:
+            case ACL_GROUP__CREATE:
                 superuserCheck();
                 create(convertCreateRequest(request, CreateAclGroupRequest.class), aclGroupDao, cinnamonResponse);
                 break;
-            case ACL_ENTRY__DELETE:
+            case ACL_GROUP__DELETE:
                 superuserCheck();
                 delete(convertDeleteRequest(request, DeleteAclGroupRequest.class), aclGroupDao, cinnamonResponse);
                 break;
-            case ACL_ENTRY__UPDATE:
+            case ACL_GROUP__UPDATE:
                 superuserCheck();
                 update(convertUpdateRequest(request, UpdateAclGroupRequest.class), aclGroupDao, cinnamonResponse);
+                aclGroupDao.addPermissionsToAclGroups(((AclGroupWrapper) cinnamonResponse.getWrapper()).list());
                 break;
             default:
                 ErrorCode.RESOURCE_NOT_FOUND.throwUp();

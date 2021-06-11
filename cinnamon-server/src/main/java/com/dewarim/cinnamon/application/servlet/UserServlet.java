@@ -2,6 +2,7 @@ package com.dewarim.cinnamon.application.servlet;
 
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
+import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.configuration.SecurityConfig;
@@ -11,7 +12,6 @@ import com.dewarim.cinnamon.model.request.DefaultListRequest;
 import com.dewarim.cinnamon.model.request.user.ListUserInfoRequest;
 import com.dewarim.cinnamon.model.request.user.SetPasswordRequest;
 import com.dewarim.cinnamon.model.request.user.UserInfoRequest;
-import com.dewarim.cinnamon.model.response.GenericResponse;
 import com.dewarim.cinnamon.model.response.UserInfo;
 import com.dewarim.cinnamon.model.response.UserWrapper;
 import com.dewarim.cinnamon.security.HashMaker;
@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Optional;
 
-import static com.dewarim.cinnamon.api.Constants.CONTENT_TYPE_XML;
 import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
 import static com.dewarim.cinnamon.application.ResponseUtil.responseIsOkayAndXml;
 
@@ -39,31 +38,32 @@ public class UserServlet extends HttpServlet {
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
+        CinnamonResponse cinnamonResponse = (CinnamonResponse) response;
+        UserAccountDao        userAccountDao = new UserAccountDao();
+
         UrlMapping mapping = UrlMapping.getByPath(request.getRequestURI());
         switch (mapping) {
             case USER__USER_INFO:
-                showUserInfo(xmlMapper.readValue(request.getReader(), UserInfoRequest.class), response);
+                showUserInfo(xmlMapper.readValue(request.getReader(), UserInfoRequest.class),userAccountDao, cinnamonResponse);
                 break;
             case USER__LIST_USERS:
-                listUsers(request, response);
+                listUsers(request, userAccountDao,cinnamonResponse);
                 break;
             case USER__SET_PASSWORD:
-                setPassword(request, response);
+                setPassword(request,userAccountDao, cinnamonResponse);
                 break;
             default:
                 ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
     }
 
-    private void setPassword(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    private void setPassword(HttpServletRequest request, UserAccountDao userDao,CinnamonResponse response) throws IOException {
         SetPasswordRequest    passwordRequest = xmlMapper.readValue(request.getInputStream(), SetPasswordRequest.class);
-        UserAccountDao        userDao         = new UserAccountDao();
         UserAccount           currentUser     = ThreadLocalSqlSession.getCurrentUser();
         SecurityConfig        config          = CinnamonServer.config.getSecurityConfig();
         Optional<UserAccount> userOpt         = userDao.getUserAccountById(passwordRequest.getUserId());
 
         if (!passwordRequest.getUserId().equals(currentUser.getId())) {
-
             if (!userDao.isSuperuser(currentUser)) {
                 ErrorCode.FORBIDDEN.throwUp();
             }
@@ -82,22 +82,17 @@ public class UserServlet extends HttpServlet {
         user.setPassword(pwdHash);
         userDao.updateUser(user);
         responseIsOkayAndXml(response);
-        xmlMapper.writeValue(response.getWriter(), new GenericResponse(true));
     }
 
-    private void listUsers(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    private void listUsers(HttpServletRequest request,UserAccountDao userAccountDao, CinnamonResponse response) throws IOException {
         // ignore listRequest for now, just make sure it's valid xml:
         DefaultListRequest listRequest    = xmlMapper.readValue(request.getInputStream(), ListUserInfoRequest.class);
-        UserAccountDao     userAccountDao = new UserAccountDao();
         UserWrapper        wrapper        = new UserWrapper();
         wrapper.setUsers(userAccountDao.listUserAccountsAsUserInfo());
-        response.setContentType(CONTENT_TYPE_XML);
-        response.setStatus(HttpServletResponse.SC_OK);
-        xmlMapper.writeValue(response.getWriter(), wrapper);
+        response.setWrapper(wrapper);
     }
 
-    private void showUserInfo(UserInfoRequest userInfoRequest, HttpServletResponse response) throws IOException {
-        UserAccountDao        userAccountDao = new UserAccountDao();
+    private void showUserInfo(UserInfoRequest userInfoRequest,UserAccountDao userAccountDao, CinnamonResponse response) throws IOException {
         Optional<UserAccount> userOpt;
         if (userInfoRequest.byId()) {
             userOpt = userAccountDao.getUserAccountById(userInfoRequest.getUserId());
@@ -114,11 +109,9 @@ public class UserServlet extends HttpServlet {
         UserAccount user = userOpt.get();
         UserInfo userInfo = new UserInfo(user.getId(), user.getName(), user.getLoginType(),
                 user.isActivated(), user.isLocked(), user.getUiLanguageId(), user.getEmail(), user.getFullname(), user.isChangeTracking(),
-                user.isPasswordExpired());
+                user.isPasswordExpired(), user.getGroupIds());
         UserWrapper wrapper = new UserWrapper();
         wrapper.setUsers(Collections.singletonList(userInfo));
-        response.setContentType(CONTENT_TYPE_XML);
-        response.setStatus(HttpServletResponse.SC_OK);
-        xmlMapper.writeValue(response.getWriter(), wrapper);
+        response.setWrapper(wrapper);
     }
 }

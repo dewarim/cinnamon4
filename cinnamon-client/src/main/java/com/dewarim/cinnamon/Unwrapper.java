@@ -9,6 +9,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.dewarim.cinnamon.api.Constants.*;
@@ -35,6 +36,9 @@ public class Unwrapper<T, W extends Wrapper<T>> {
                 String message = String.format("Unexpected number of objects found: %s instead of %s ", list.size(), expectedSize);
                 throw new CinnamonClientException(message);
             }
+        }
+        if(list == null){
+            return new ArrayList<>();
         }
         return list;
     }

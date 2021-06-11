@@ -4,12 +4,14 @@ import com.dewarim.cinnamon.api.Identifiable;
 import com.dewarim.cinnamon.api.login.LoginUser;
 
 import java.security.Principal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 /**
  */
 public class UserAccount implements Principal, LoginUser, Identifiable {
-    
+
     private Long id;
     private String name;
     private String loginType;
@@ -22,7 +24,8 @@ public class UserAccount implements Principal, LoginUser, Identifiable {
     private boolean changeTracking;
     private String token;
     private int tokensToday;
-    private boolean passwordExpired;
+    private boolean    passwordExpired;
+    private List<Long> groupIds = new ArrayList<>();
 
     @Override
     public String getName() {
@@ -56,7 +59,7 @@ public class UserAccount implements Principal, LoginUser, Identifiable {
     public void setPassword(String password) {
         this.password = password;
     }
-    
+
     public boolean isActivated() {
         return activated;
     }
@@ -139,6 +142,14 @@ public class UserAccount implements Principal, LoginUser, Identifiable {
         this.passwordExpired = passwordExpired;
     }
 
+    public List<Long> getGroupIds() {
+        return groupIds;
+    }
+
+    public void setGroupIds(List<Long> groupIds) {
+        this.groupIds = groupIds;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -148,7 +159,12 @@ public class UserAccount implements Principal, LoginUser, Identifiable {
             return false;
         }
         UserAccount that = (UserAccount) o;
-        return activated == that.activated && locked == that.locked && changeTracking == that.changeTracking && tokensToday == that.tokensToday && passwordExpired == that.passwordExpired && id.equals(that.id) && name.equals(that.name) && loginType.equals(that.loginType) && password.equals(that.password) && Objects.equals(uiLanguageId, that.uiLanguageId) && Objects.equals(fullname, that.fullname) && Objects.equals(email, that.email) && Objects.equals(token, that.token);
+        return activated == that.activated && locked == that.locked && changeTracking == that.changeTracking
+                && tokensToday == that.tokensToday && passwordExpired == that.passwordExpired
+                && id.equals(that.id) && name.equals(that.name) && loginType.equals(that.loginType)
+                && password.equals(that.password) && Objects.equals(uiLanguageId, that.uiLanguageId)
+                && Objects.equals(fullname, that.fullname) && Objects.equals(email, that.email)
+                && Objects.equals(token, that.token) && Objects.equals(groupIds,that.groupIds);
     }
 
     @Override

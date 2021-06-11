@@ -1,6 +1,7 @@
 package com.dewarim.cinnamon.application;
 
 import com.dewarim.cinnamon.CinnamonClientException;
+import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.Unwrapper;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.model.Acl;
@@ -10,10 +11,12 @@ import com.dewarim.cinnamon.model.FolderType;
 import com.dewarim.cinnamon.model.Group;
 import com.dewarim.cinnamon.model.Meta;
 import com.dewarim.cinnamon.model.ObjectSystemData;
+import com.dewarim.cinnamon.model.Permission;
 import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.links.LinkType;
 import com.dewarim.cinnamon.model.request.CreateMetaRequest;
 import com.dewarim.cinnamon.model.request.CreateNewVersionRequest;
+import com.dewarim.cinnamon.model.request.acl.AclInfoRequest;
 import com.dewarim.cinnamon.model.request.acl.CreateAclRequest;
 import com.dewarim.cinnamon.model.request.acl.DeleteAclRequest;
 import com.dewarim.cinnamon.model.request.aclGroup.CreateAclGroupRequest;
@@ -29,6 +32,8 @@ import com.dewarim.cinnamon.model.request.group.CreateGroupRequest;
 import com.dewarim.cinnamon.model.request.group.DeleteGroupRequest;
 import com.dewarim.cinnamon.model.request.group.ListGroupRequest;
 import com.dewarim.cinnamon.model.request.group.UpdateGroupRequest;
+import com.dewarim.cinnamon.model.request.groupUser.AddUserToGroupsRequest;
+import com.dewarim.cinnamon.model.request.groupUser.RemoveUserFromGroupsRequest;
 import com.dewarim.cinnamon.model.request.link.CreateLinkRequest;
 import com.dewarim.cinnamon.model.request.link.DeleteLinkRequest;
 import com.dewarim.cinnamon.model.request.link.GetLinksRequest;
@@ -36,7 +41,10 @@ import com.dewarim.cinnamon.model.request.link.LinkWrapper;
 import com.dewarim.cinnamon.model.request.link.UpdateLinkRequest;
 import com.dewarim.cinnamon.model.request.osd.DeleteOsdRequest;
 import com.dewarim.cinnamon.model.request.osd.OsdRequest;
+import com.dewarim.cinnamon.model.request.permission.ChangePermissionsRequest;
+import com.dewarim.cinnamon.model.request.permission.ListPermissionRequest;
 import com.dewarim.cinnamon.model.request.user.UserInfoRequest;
+import com.dewarim.cinnamon.model.request.user.UserPermissionRequest;
 import com.dewarim.cinnamon.model.response.AclGroupWrapper;
 import com.dewarim.cinnamon.model.response.AclWrapper;
 import com.dewarim.cinnamon.model.response.CinnamonConnection;
@@ -51,6 +59,7 @@ import com.dewarim.cinnamon.model.response.LinkResponse;
 import com.dewarim.cinnamon.model.response.LinkResponseWrapper;
 import com.dewarim.cinnamon.model.response.MetaWrapper;
 import com.dewarim.cinnamon.model.response.OsdWrapper;
+import com.dewarim.cinnamon.model.response.PermissionWrapper;
 import com.dewarim.cinnamon.model.response.UserInfo;
 import com.dewarim.cinnamon.model.response.UserWrapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -97,6 +106,7 @@ public class CinnamonClient {
     private final Unwrapper<Link, LinkWrapper>                   linkUnwrapper         = new Unwrapper<>(LinkWrapper.class);
     // LinkResponse contains full OSD/Folder objects, Link itself contains only ids.
     private final Unwrapper<LinkResponse, LinkResponseWrapper>   linkResponseUnwrapper = new Unwrapper<>(LinkResponseWrapper.class);
+    private final Unwrapper<Permission, PermissionWrapper>       permissionUnwrapper   = new Unwrapper<>(PermissionWrapper.class);
 
     public CinnamonClient() {
     }
@@ -190,6 +200,11 @@ public class CinnamonClient {
 //    }
 
     private void verifyResponseIsOkay(HttpResponse response) throws IOException {
+        if (response.containsHeader(HEADER_FIELD_CINNAMON_ERROR)) {
+            CinnamonErrorWrapper wrapper = mapper.readValue(response.getEntity().getContent(), CinnamonErrorWrapper.class);
+            // TODO: handle multi-errors / extend CCE with list of errors; only relevant for deleteOsd at the moment.
+            throw new CinnamonClientException(ErrorCode.getErrorCode(wrapper.getErrors().get(0).getCode()));
+        }
         if (response.getStatusLine().getStatusCode() != SC_OK) {
             log.error(new String(response.getEntity().getContent().readAllBytes()));
             throw new CinnamonClientException(response.getStatusLine().getReasonPhrase());
@@ -271,25 +286,35 @@ public class CinnamonClient {
         return verifyDeleteResponse(response);
     }
 
+    public Acl getAclByName(String name) throws IOException {
+        var response = sendStandardRequest(UrlMapping.ACL__ACL_INFO, new AclInfoRequest(null, name));
+        return aclUnwrapper.unwrap(response, 1).get(0);
+    }
+
+    public Acl getAclById(Long id) throws IOException {
+        var response = sendStandardRequest(UrlMapping.ACL__ACL_INFO, new AclInfoRequest(id, null));
+        return aclUnwrapper.unwrap(response, 1).get(0);
+    }
+
     // AclGroups
     public List<AclGroup> listAclGroups() throws IOException {
-        HttpResponse response = sendStandardRequest(UrlMapping.ACL_ENTRY__LIST, new ListAclGroupRequest());
+        HttpResponse response = sendStandardRequest(UrlMapping.ACL_GROUP__LIST, new ListAclGroupRequest());
         return aclGroupUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
     public List<AclGroup> createAclGroups(List<AclGroup> aclGroups) throws IOException {
         CreateAclGroupRequest request  = new CreateAclGroupRequest(aclGroups);
-        HttpResponse          response = sendStandardRequest(UrlMapping.ACL_ENTRY__CREATE, request);
+        HttpResponse          response = sendStandardRequest(UrlMapping.ACL_GROUP__CREATE, request);
         return aclGroupUnwrapper.unwrap(response, aclGroups.size());
     }
 
     public List<AclGroup> updateAclGroups(UpdateAclGroupRequest request) throws IOException {
-        HttpResponse response = sendStandardRequest(UrlMapping.ACL_ENTRY__UPDATE, request);
+        HttpResponse response = sendStandardRequest(UrlMapping.ACL_GROUP__UPDATE, request);
         return aclGroupUnwrapper.unwrap(response, request.list().size());
     }
 
     public boolean deleteAclGroups(List<Long> ids) throws IOException {
-        HttpResponse response = sendStandardRequest(UrlMapping.ACL_ENTRY__DELETE, new DeleteAclGroupRequest(ids));
+        HttpResponse response = sendStandardRequest(UrlMapping.ACL_GROUP__DELETE, new DeleteAclGroupRequest(ids));
         return verifyDeleteResponse(response);
     }
 
@@ -318,6 +343,19 @@ public class CinnamonClient {
         return groupUnwrapper.unwrap(response, groups.size());
     }
 
+    // GroupUsers
+    public void addUserToGroups(List<Long> ids) throws IOException{
+        var request = new AddUserToGroupsRequest(ids);
+        var response = sendStandardRequest(UrlMapping.GROUP__ADD_USER_TO_GROUPS,request);
+        verifyResponseIsOkay(response);
+    }
+
+    public void removeUserFromGroups(List<Long> ids) throws IOException{
+        var request = new RemoveUserFromGroupsRequest(ids);
+        var response = sendStandardRequest(UrlMapping.GROUP__REMOVE_USER_FROM_GROUPS,request);
+        verifyResponseIsOkay(response);
+    }
+
     // Links
     public List<Link> updateLinks(List<Link> links) throws IOException {
         var updateRequest = new UpdateLinkRequest(links);
@@ -332,16 +370,16 @@ public class CinnamonClient {
     }
 
     public Link createLink(Long parentId, LinkType type, Long aclId, Long ownerId, Long folderId, Long objectId) throws IOException {
-        var link = new Link(type, ownerId,aclId, parentId, folderId,objectId);
+        var link              = new Link(type, ownerId, aclId, parentId, folderId, objectId);
         var createLinkRequest = new CreateLinkRequest(List.of(link));
         var response          = sendStandardRequest(UrlMapping.LINK__CREATE, createLinkRequest);
         return linkUnwrapper.unwrap(response, 1).get(0);
     }
 
-    public Link updateLink(Link link) throws IOException{
+    public Link updateLink(Link link) throws IOException {
         var updateLinkRequest = new UpdateLinkRequest(List.of(link));
-        var response= sendStandardRequest(UrlMapping.LINK__UPDATE, updateLinkRequest);
-        return linkUnwrapper.unwrap(response,1).get(0);
+        var response          = sendStandardRequest(UrlMapping.LINK__UPDATE, updateLinkRequest);
+        return linkUnwrapper.unwrap(response, 1).get(0);
     }
 
     public boolean deleteLinks(List<Long> ids) throws IOException {
@@ -355,10 +393,29 @@ public class CinnamonClient {
         var response = sendStandardRequest(UrlMapping.LINK__GET_LINKS_BY_ID, request);
         return linkResponseUnwrapper.unwrap(response, ids.size());
     }
+
     public LinkResponse getLinkById(Long id, boolean includeSummary) throws IOException {
         var request  = new GetLinksRequest(List.of(id), includeSummary);
         var response = sendStandardRequest(UrlMapping.LINK__GET_LINKS_BY_ID, request);
         return linkResponseUnwrapper.unwrap(response, 1).get(0);
+    }
+
+    // permissions
+    public List<Permission> getUserPermissions(Long userId, Long aclId) throws IOException {
+        var request  = new UserPermissionRequest(userId, aclId);
+        var response = sendStandardRequest(UrlMapping.PERMISSION__GET_USER_PERMISSIONS, request);
+        return permissionUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
+    }
+
+    public List<Permission> listPermissions() throws IOException {
+        var response = sendStandardRequest(UrlMapping.PERMISSION__LIST, new ListPermissionRequest());
+        return permissionUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
+    }
+
+    public void addAndRemovePermissions(Long aclGroupId, List<Long> permissionsToAdd, List<Long> permissionsToRemove) throws IOException {
+        var request  = new ChangePermissionsRequest(aclGroupId, permissionsToAdd, permissionsToRemove);
+        var response = sendStandardRequest(UrlMapping.PERMISSION__CHANGE_PERMISSIONS, request);
+        verifyResponseIsOkay(response);
     }
 
     private HttpEntity createSimpleMultipartEntity(String fieldname, Object contentRequest) throws IOException {

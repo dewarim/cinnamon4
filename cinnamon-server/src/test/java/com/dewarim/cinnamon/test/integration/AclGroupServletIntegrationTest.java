@@ -36,7 +36,7 @@ public class AclGroupServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void testListAclGroupByAclId() throws IOException {
         AclGroupListRequest listRequest  = new AclGroupListRequest(1L, AclGroupListRequest.IdType.ACL);
-        HttpResponse        httpResponse = sendStandardRequest(UrlMapping.ACL_ENTRY__LIST_ACL_ENTRIES_BY_GROUP_OR_ACL, listRequest);
+        HttpResponse        httpResponse = sendStandardRequest(UrlMapping.ACL_GROUP__LIST_BY_GROUP_OR_ACL, listRequest);
         List<AclGroup>      aclGroups   = unwrapAclGroups(httpResponse, 3);
         aclGroups.forEach(entry -> assertEquals(Long.valueOf(1), entry.getAclId()));
     }
@@ -44,7 +44,7 @@ public class AclGroupServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void testListAclGroupByGroupId() throws IOException {
         AclGroupListRequest listRequest  = new AclGroupListRequest(4L, AclGroupListRequest.IdType.GROUP);
-        HttpResponse        httpResponse = sendStandardRequest(UrlMapping.ACL_ENTRY__LIST_ACL_ENTRIES_BY_GROUP_OR_ACL, listRequest);
+        HttpResponse        httpResponse = sendStandardRequest(UrlMapping.ACL_GROUP__LIST_BY_GROUP_OR_ACL, listRequest);
         List<AclGroup>      aclGroups   = unwrapAclGroups(httpResponse, 5);
         aclGroups.forEach(entry -> assertEquals(Long.valueOf(4), entry.getGroupId()));
     }
@@ -52,7 +52,7 @@ public class AclGroupServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void invalidAclGroupListRequest() throws IOException {
         AclGroupListRequest listRequest  = new AclGroupListRequest();
-        HttpResponse        httpResponse = sendStandardRequest(UrlMapping.ACL_ENTRY__LIST_ACL_ENTRIES_BY_GROUP_OR_ACL, listRequest);
+        HttpResponse        httpResponse = sendStandardRequest(UrlMapping.ACL_GROUP__LIST_BY_GROUP_OR_ACL, listRequest);
         assertCinnamonError(httpResponse, ErrorCode.INVALID_REQUEST);
     }
 

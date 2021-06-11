@@ -5,10 +5,14 @@ import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.application.ErrorResponseGenerator;
 import com.dewarim.cinnamon.dao.AclDao;
+import com.dewarim.cinnamon.dao.AclGroupDao;
+import com.dewarim.cinnamon.dao.AclGroupPermissionDao;
 import com.dewarim.cinnamon.dao.PermissionDao;
 import com.dewarim.cinnamon.model.Acl;
+import com.dewarim.cinnamon.model.AclGroup;
 import com.dewarim.cinnamon.model.Permission;
-import com.dewarim.cinnamon.model.request.ListPermissionRequest;
+import com.dewarim.cinnamon.model.request.permission.ChangePermissionsRequest;
+import com.dewarim.cinnamon.model.request.permission.ListPermissionRequest;
 import com.dewarim.cinnamon.model.request.user.UserPermissionRequest;
 import com.dewarim.cinnamon.model.response.PermissionWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -44,9 +48,28 @@ public class PermissionServlet extends HttpServlet implements CruddyServlet<Perm
             case PERMISSION__GET_USER_PERMISSIONS:
                 getUserPermissions(request, cinnamonResponse);
                 break;
+            case PERMISSION__CHANGE_PERMISSIONS:
+                superuserCheck();
+                changePermissions(request, cinnamonResponse);
+                break;
             default:
                 ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
+    }
+
+    private void changePermissions(HttpServletRequest request, CinnamonResponse cinnamonResponse) throws IOException {
+        ChangePermissionsRequest changeRequest = getMapper().readValue(request.getReader(), ChangePermissionsRequest.class)
+                .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
+        var            aclGroupDao = new AclGroupDao();
+        List<AclGroup> aclGroups   = aclGroupDao.getObjectsById(List.of(changeRequest.getAclGroupId()));
+        if (aclGroups.isEmpty()) {
+            ErrorCode.ACL_GROUP_NOT_FOUND.throwUp();
+        }
+        var aclGroup              = aclGroups.get(0);
+        var aclGroupPermissionDao = new AclGroupPermissionDao();
+        aclGroupPermissionDao.addPermissions(aclGroup, changeRequest.getAdd());
+        aclGroupPermissionDao.removePermissions(aclGroup, changeRequest.getRemove());
+        cinnamonResponse.responseIsGenericOkay();
     }
 
     private void getUserPermissions(HttpServletRequest request, CinnamonResponse response) throws IOException {

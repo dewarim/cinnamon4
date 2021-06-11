@@ -10,7 +10,7 @@ CREATE TABLE users (
   pwd VARCHAR(255) NOT NULL,
   obj_version int NOT NULL DEFAULT 0,
   login_type VARCHAR(64) NOT NULL DEFAULT 'CINNAMON',
-  activated BOOLEAN NOT NULL DEFAULT TRUE, 
+  activated BOOLEAN NOT NULL DEFAULT TRUE,
   locked BOOLEAN NOT NULL DEFAULT FALSE,
   ui_language_id BIGINT,
   fullname varchar(255) NOT NULL,
@@ -193,7 +193,7 @@ create table lifecycle_states
     references lifecycles
 );
 
-alter table lifecycles add constraint fk_default_state_id FOREIGN KEY 
+alter table lifecycles add constraint fk_default_state_id FOREIGN KEY
   (default_state_id) references lifecycle_states(id);
 
 drop sequence if exists seq_lifecycle_state_id;
@@ -343,13 +343,16 @@ create sequence seq_acl_group_id start with 1;
 -- group_users --
 drop table if exists group_users cascade ;
 create table group_users(
+  id BIGINT NOT NULL,
   user_id BIGINT NOT NULL ,
-  group_id BIGINT NOT NULL 
+  group_id BIGINT NOT NULL
 );
 
+drop sequence if exists seq_group_user_id;
+create sequence seq_group_user_id start with 1;
+
 create UNIQUE INDEX  group_users_user_group
-  on group_users(user_id,group_id)
-  ;
+  on group_users(user_id,group_id);
 
 -- permissions --
 drop table if exists permissions cascade ;
@@ -565,13 +568,13 @@ insert into groups(id,name) values (nextval('seq_group_id'),'_everyone'); -- #6
 insert into groups(id,name) values (nextval('seq_group_id'),'_owner'); -- #7
 
 -- #1 admin is member of superuser group:
-insert into group_users VALUES(1,1);
+insert into group_users VALUES(nextval('seq_group_user_id'),1,1);
 -- #2 admin is member of admin group:
-insert into group_users VALUES(1,2);
+insert into group_users VALUES(nextval('seq_group_user_id'),1,2);
 -- #3 doe is member of his own group:
-insert into group_users VALUES (2,4);
+insert into group_users VALUES (nextval('seq_group_user_id'),2,4);
 -- #4 doe is member of reviewers:
-insert into group_users values (2,5);
+insert into group_users values (nextval('seq_group_user_id'),2,5);
 
 -- #1 link superusers group to default acl:
 insert into acl_groups(id,acl_id,group_id) values (nextval('seq_acl_group_id'),1,1);
@@ -1100,11 +1103,11 @@ values (nextval('seq_object_id'), now(), true, true, now(), 'delete-me', 1, 1, 1
 
 
 -- #1 link to osd #1 with default acl (#1)
-insert into links(id, type,owner_id,acl_id,parent_id,osd_id) 
+insert into links(id, type,owner_id,acl_id,parent_id,osd_id)
 values (nextval('seq_link_id'), 'OBJECT',  1,1,1,1);
 
 -- #2 link to folder #2 with default acl (#1)
-insert into links(id, type,owner_id,acl_id,parent_id,folder_id) 
+insert into links(id, type,owner_id,acl_id,parent_id,folder_id)
 values (nextval('seq_link_id'), 'FOLDER',  1,1,1,2);
 
 -- #3 link to osd #1 with no permission except owner acl (#1)
@@ -1112,7 +1115,7 @@ insert into links(id, type,owner_id,acl_id,parent_id,osd_id)
 values (nextval('seq_link_id'), 'OBJECT',  1,5,1,1);
 
 -- #4 link to osd #7 with no-permission.acl (#7)
-insert into links(id, type,owner_id,acl_id,parent_id,osd_id)    
+insert into links(id, type,owner_id,acl_id,parent_id,osd_id)
 values (nextval('seq_link_id'), 'OBJECT',  1,1,1,7);
 
 -- #5 link to folder #3 with no-permission. acl (#7)
@@ -1202,8 +1205,8 @@ insert into links(id, type,owner_id,acl_id,parent_id,osd_id)
 values (nextval('seq_link_id'), 'OBJECT', 1, 11, 1, 13);
 
 -- #1 add format: xml
-insert into formats(id, contenttype, extension, name, default_object_type_id) 
-VALUES (nextval('seq_format_id'),'application/xml','xml', 'xml', 1); 
+insert into formats(id, contenttype, extension, name, default_object_type_id)
+VALUES (nextval('seq_format_id'),'application/xml','xml', 'xml', 1);
 
 -- #2 format: text/plain
 insert into formats(id, contenttype, extension, name, default_object_type_id)
@@ -1213,13 +1216,13 @@ VALUES (nextval('seq_format_id'),'text/plain','txt', 'plaintext', 1);
 insert into relationtypes (id, leftobjectprotected, name, rightobjectprotected,
                            clone_on_right_copy, clone_on_left_copy, clone_on_left_version, clone_on_right_version                           )
 VALUES (nextval('seq_relationtype_id'), true, 'all-protector', true,
-        true, true, true, true); 
+        true, true, true, true);
 
 -- #2 relationType: protect nothing & clone never
 insert into relationtypes (id, leftobjectprotected, name, rightobjectprotected,
                            clone_on_right_copy, clone_on_left_copy, clone_on_left_version, clone_on_right_version                           )
 VALUES (nextval('seq_relationtype_id'), true, 'unprotected', true,
-        false, false, false, false);    
+        false, false, false, false);
 
 -- #1 uiLanguage: de
 insert into ui_languages (id,iso_code) values (nextval('seq_ui_language_id'), 'DE');
@@ -1231,7 +1234,7 @@ insert into ui_languages (id,iso_code) values (nextval('seq_ui_language_id'), 'E
 insert into index_items(id, fieldname, for_content, for_metadata, for_sys_meta, multiple_results,
    name, search_string, va_params, search_condition, index_type_name, store_field)
 values (nextval('seq_index_item_id'), 'acl', false,false,true,false,'index.acl',
-  '/sysMeta/object/aclId', '<vaParams type="client.acl.id"/>','true()','DEFAULT_STRING_INDEXER',true 
+  '/sysMeta/object/aclId', '<vaParams type="client.acl.id"/>','true()','DEFAULT_STRING_INDEXER',true
 );
 
 -- #1 relation: type 1 relation

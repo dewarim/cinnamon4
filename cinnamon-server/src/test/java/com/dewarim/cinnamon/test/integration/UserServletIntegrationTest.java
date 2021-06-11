@@ -54,8 +54,8 @@ public class UserServletIntegrationTest extends CinnamonIntegrationTest {
         List<String>   names = Arrays.asList("admin", "doe", "deactivated user", "locked user");
         List<UserInfo> users = unwrapUsers(userInfoResponse, 4);
         users.forEach(user -> assertTrue(names.contains(user.getName())));
-        assertTrue(users.contains(new UserInfo(3L, "deactivated user", "CINNAMON", false, false, 1L, null, "inactive", true, false)));
-        assertTrue(users.contains(new UserInfo(4L, "locked user", "CINNAMON", true, true, 1L, null, "locked", true, false)));
+        assertFalse(client.getUser("deactivated user").isActivated());
+        assertTrue(client.getUser("locked user").isLocked());
     }
 
     @Test

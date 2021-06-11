@@ -1,7 +1,11 @@
 package com.dewarim.cinnamon.model.response;
 
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 @JacksonXmlRootElement(localName = "user")
@@ -18,11 +22,15 @@ public class UserInfo {
     private boolean changeTracking;
     private boolean passwordExpired;
 
+    @JacksonXmlElementWrapper(localName = "groups")
+    @JacksonXmlProperty(localName = "groupId")
+    private List<Long> groupIds = new ArrayList<>();
+
     public UserInfo() {
     }
 
     public UserInfo(Long id, String name, String loginType, boolean activated, boolean locked, Long uiLanguageId, String email, String fullname,
-                    boolean changeTracking, boolean passwordExpired) {
+                    boolean changeTracking, boolean passwordExpired, List<Long> groupIds) {
         this.id = id;
         this.name = name;
         this.loginType = loginType;
@@ -33,6 +41,9 @@ public class UserInfo {
         this.fullname = fullname;
         this.changeTracking = changeTracking;
         this.passwordExpired = passwordExpired;
+        if(groupIds != null){
+            this.groupIds=groupIds;
+        }
     }
 
     public Long getId() {
@@ -107,6 +118,22 @@ public class UserInfo {
         this.changeTracking = changeTracking;
     }
 
+    public boolean isPasswordExpired() {
+        return passwordExpired;
+    }
+
+    public void setPasswordExpired(boolean passwordExpired) {
+        this.passwordExpired = passwordExpired;
+    }
+
+    public List<Long> getGroupIds() {
+        return groupIds;
+    }
+
+    public void setGroupIds(List<Long> groupIds) {
+        this.groupIds = groupIds;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -123,12 +150,12 @@ public class UserInfo {
                 Objects.equals(fullname, userInfo.fullname) &&
                 Objects.equals(loginType, userInfo.loginType) &&
                 Objects.equals(uiLanguageId, userInfo.uiLanguageId) &&
-                Objects.equals(email, userInfo.email);
+                Objects.equals(email, userInfo.email) &&
+                Objects.equals(groupIds, userInfo.groupIds);
     }
 
     @Override
     public int hashCode() {
-
         return Objects.hash(name, loginType, activated, locked, uiLanguageId);
     }
 
@@ -137,13 +164,15 @@ public class UserInfo {
         return "UserInfo{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
-                ", fullname='" + fullname + '\'' +
                 ", loginType='" + loginType + '\'' +
                 ", activated=" + activated +
                 ", locked=" + locked +
                 ", uiLanguageId=" + uiLanguageId +
+                ", fullname='" + fullname + '\'' +
                 ", email='" + email + '\'' +
                 ", changeTracking=" + changeTracking +
+                ", passwordExpired=" + passwordExpired +
+                ", groupIds=" + groupIds +
                 '}';
     }
 }
