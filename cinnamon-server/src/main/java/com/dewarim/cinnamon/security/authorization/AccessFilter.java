@@ -34,31 +34,33 @@ public class AccessFilter {
 
     static Logger log = LogManager.getLogger(AccessFilter.class);
 
-    private static List<Acl> acls;
+    private static List<Acl>  acls;
     private static Permission browsePermission;
     private static Permission folderBrowsePermission;
     private static Group      ownerGroup;
 
-    private final Set<Long> objectAclsWithBrowsePermissions;
-    private final Set<Long> ownerAclsWithBrowsePermissions;
-    private final Set<Long> folderAclsWithBrowsePermissions;
-    private final Map<AclPermission, Boolean> checkedOwnerPermissions = new ConcurrentHashMap<>();
-    private final Map<AclPermission, Boolean> checkedPermissions      = new ConcurrentHashMap<>();
-    private final UserAccount                 user;
-    private static final Map<Long, Set<Long>>        userAclsWithBrowsePermissionCache = new ConcurrentHashMap<>();
-    private static final Map<Long, Set<Long>> userAclsWithFolderBrowsePermissionCache = new ConcurrentHashMap<>();
-    private static final Map<Long, Set<Long>> ownerAclsWithBrowsePermissionCache = new ConcurrentHashMap<>();
-    private static final Map<String, Permission> nameToPermissionMapping = new ConcurrentHashMap<>();
-    private static final Map<Long, Acl>          idToAclMapping          = new ConcurrentHashMap<>();
+    private final        Set<Long>                   objectAclsWithBrowsePermissions;
+    private final        Set<Long>                   ownerAclsWithBrowsePermissions;
+    private final        Set<Long>                   folderAclsWithBrowsePermissions;
+    private final        Map<AclPermission, Boolean> checkedOwnerPermissions                 = new ConcurrentHashMap<>();
+    private final        Map<AclPermission, Boolean> checkedPermissions                      = new ConcurrentHashMap<>();
+    private final        UserAccount                 user;
+    private final        boolean                     superuser;
+    private static final Map<Long, Set<Long>>        userAclsWithBrowsePermissionCache       = new ConcurrentHashMap<>();
+    private static final Map<Long, Set<Long>>        userAclsWithFolderBrowsePermissionCache = new ConcurrentHashMap<>();
+    private static final Map<Long, Set<Long>>        ownerAclsWithBrowsePermissionCache      = new ConcurrentHashMap<>();
+    private static final Map<String, Permission>     nameToPermissionMapping                 = new ConcurrentHashMap<>();
+    private static final Map<Long, Acl>              idToAclMapping                          = new ConcurrentHashMap<>();
 
-    private static final Object INITIALIZING = new Object();
-    private static Boolean initialized = false;
+    private static final Object  INITIALIZING = new Object();
+    private static       Boolean initialized  = false;
 
     private AccessFilter(UserAccount user) {
         this.user = user;
         objectAclsWithBrowsePermissions = getUserAclsWithBrowsePermissions(user);
         ownerAclsWithBrowsePermissions = getOwnerAclsWithBrowsePermissions(user);
         folderAclsWithBrowsePermissions = getFolderAclsWithBrowsePermissions(user);
+        superuser = new UserAccountDao().isSuperuser(user);
     }
 
     public static AccessFilter getInstance(UserAccount user) {
@@ -88,15 +90,24 @@ public class AccessFilter {
      * Check if the user has browse permission for a given thing, either through the object's acl or as owner.
      */
     public boolean hasBrowsePermissionForOwnable(Ownable ownable) {
+        if(superuser){
+            return true;
+        }
         long aclId = ownable.getAclId();
         return hasUserBrowsePermission(aclId) || (ownable.getOwnerId().equals(user.getId()) && hasOwnerBrowsePermission(aclId));
     }
 
     public boolean hasPermission(long aclId, DefaultPermission permission) {
+        if(superuser){
+            return true;
+        }
         return hasPermission(aclId, permission, false);
     }
 
     public boolean hasPermission(long aclId, DefaultPermission defaultPermission, boolean checkOwnerPermission) {
+        if(superuser){
+            return true;
+        }
         Permission permission = nameToPermissionMapping.get(defaultPermission.getName());
         if (permission == null) {
             throw new IllegalStateException("unknown permission name was used.");
@@ -219,10 +230,10 @@ public class AccessFilter {
     private static boolean checkAclGroups(Acl acl, Permission permission, UserAccount user) {
         // create Union of Sets: user.groups and acl.groups => iterate over each group for permitlevel.
 
-        Set<Group>  userGroups  = new GroupDao().getGroupsWithAncestorsOfUserById(user.getId());
-        List<Long>  groupIds    = userGroups.stream().map(Group::getId).collect(Collectors.toList());
-        AclGroupDao aclGroupDao = new AclGroupDao();
-        List<AclGroup> aclGroups = aclGroupDao.getAclGroupsByGroupIdsAndAcl(groupIds, acl.getId());
+        Set<Group>     userGroups  = new GroupDao().getGroupsWithAncestorsOfUserById(user.getId());
+        List<Long>     groupIds    = userGroups.stream().map(Group::getId).collect(Collectors.toList());
+        AclGroupDao    aclGroupDao = new AclGroupDao();
+        List<AclGroup> aclGroups   = aclGroupDao.getAclGroupsByGroupIdsAndAcl(groupIds, acl.getId());
 
         Optional<AclGroup> everyoneAclGroup = aclGroupDao.getAclGroupForEveryoneGroup(acl.getId());
         everyoneAclGroup.ifPresent(aclGroups::add);
@@ -245,16 +256,19 @@ public class AccessFilter {
                 .map(AclGroup::getAclId)
                 .collect(Collectors.toSet());
     }
-    
+
     public void verifyHasPermissionOnOwnable(Accessible accessible, DefaultPermission permission, Ownable ownable, ErrorCode errorCode) {
-        if(! hasPermissionOnOwnable(accessible,permission,ownable)){
+        if (!hasPermissionOnOwnable(accessible, permission, ownable)) {
             errorCode.throwUp();
         }
     }
-    
+
     public boolean hasPermissionOnOwnable(Accessible accessible, DefaultPermission permission, Ownable ownable) {
+        if(superuser){
+            return true;
+        }
         Long aclId = accessible.getAclId();
-        if(aclId == null){
+        if (aclId == null) {
             throw new IllegalArgumentException("Cannot check permissions without the accessible providing an AclId!");
         }
         if (ownable.getOwnerId() != null && user.getId().equals(ownable.getOwnerId())) {
