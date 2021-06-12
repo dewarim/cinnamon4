@@ -21,6 +21,7 @@ import com.dewarim.cinnamon.model.response.MetaWrapper;
 import com.dewarim.cinnamon.model.response.OsdWrapper;
 import com.dewarim.cinnamon.model.response.Summary;
 import com.dewarim.cinnamon.model.response.SummaryWrapper;
+import com.dewarim.cinnamon.test.TestObjectHolder;
 import nu.xom.Builder;
 import nu.xom.Document;
 import nu.xom.Node;
@@ -46,7 +47,7 @@ import java.nio.file.Files;
 import java.util.Collections;
 import java.util.List;
 
-import static com.dewarim.cinnamon.ErrorCode.NOT_MULTIPART_UPLOAD;
+import static com.dewarim.cinnamon.ErrorCode.*;
 import static com.dewarim.cinnamon.api.Constants.CREATE_NEW_VERSION;
 import static org.apache.http.HttpHeaders.CONTENT_TYPE;
 import static org.apache.http.entity.ContentType.APPLICATION_XML;
@@ -1025,13 +1026,17 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         assertTrue(client.deleteOsd(49L));
     }
 
-//    @Test
-//    public void deleteOsdsNoDeletePermission() throws IOException{
-//
-//        DeleteOsdRequest deleteRequest = new DeleteOsdRequest(Collections.singletonList(49L));
-//        HttpResponse           response = sendStandardRequest(UrlMapping.OSD__DELETE_OSDS, deleteRequest);
-//        assertCinnamonError(response, ErrorCode.NO_DELETE_PERMISSION);
-//    }
+    @Test
+    public void deleteOsdsNoDeletePermission() throws IOException{
+        var holder = new TestObjectHolder(adminClient);
+        holder.createAcl("no-delete-perm-acl").createGroup("no-delete-group-acl").createAclGroup()
+                .setUser(userId)
+                .setFolder(createFolderId)
+                .createOsd("U-no-delete-me");
+        ObjectSystemData osd = holder.osd;
+
+        assertClientError(() -> client.deleteOsd(osd.getId()),CANNOT_DELETE_DUE_TO_ERRORS, NO_DELETE_PERMISSION );
+    }
 
     // TODO: deleteOsdWithDescendantsHappyPath
     // TODO: deleteOsdWithDescendantsFails

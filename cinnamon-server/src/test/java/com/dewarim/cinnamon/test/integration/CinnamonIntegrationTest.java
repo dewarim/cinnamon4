@@ -33,6 +33,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
+import java.util.Arrays;
+import java.util.List;
 
 import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -61,7 +63,7 @@ public class CinnamonIntegrationTest {
     /**
      * id of folder where the standard test user can create test objects
      */
-    static long           createFolderId   = 6;
+    static long           createFolderId   = 6L;
 
     @BeforeAll
     public static void setUpServer() throws Exception {
@@ -142,9 +144,13 @@ public class CinnamonIntegrationTest {
         assertThat(cinnamonError.getCode(), equalTo(errorCode.getCode()));
     }
 
-    protected void assertClientError(Executable executable, ErrorCode errorCode) {
+    protected void assertClientError(Executable executable, ErrorCode... errorCode) {
         CinnamonClientException ex = assertThrows(CinnamonClientException.class, executable);
-        assertEquals(errorCode, ex.getErrorCode());
+        List<CinnamonError>     errors = ex.getErrorWrapper().getErrors();
+        boolean allErrorsFound = Arrays.stream(errorCode).allMatch(code ->
+                errors.stream().anyMatch(error -> error.getCode().equals(code.getCode()))
+        );
+        assertTrue(allErrorsFound);
     }
 
     /**

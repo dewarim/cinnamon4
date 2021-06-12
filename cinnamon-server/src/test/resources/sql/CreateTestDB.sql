@@ -125,15 +125,15 @@ drop sequence if exists seq_folder_id;
 create sequence seq_folder_id start with 1;
 
 
--- objtypes --
-drop table if exists objtypes cascade ;
-create table objtypes
+-- object_types --
+drop table if exists object_types cascade ;
+create table object_types
 (
   id bigint not null
-    constraint objtypes_pkey
+    constraint object_types_pkey
     primary key,
   name varchar(255)
-    constraint objtypes_name_key
+    constraint object_types_name_key
     unique,
   config varchar(10241024) default '<meta />' not null
 );
@@ -155,7 +155,7 @@ create table formats
   obj_version bigint default 0 not null,
   default_object_type_id bigint
     constraint defaultobjecttype
-    references objtypes
+    references object_types
 );
 drop sequence if exists seq_format_id;
 create sequence seq_format_id start with 1;
@@ -254,7 +254,7 @@ create table objects
     references objects,
   type_id bigint not null
     constraint fk9d13c51426408304
-    references objtypes,
+    references object_types,
   state_id bigint
     constraint lifecycle_state
     references lifecycle_states,
@@ -557,7 +557,7 @@ insert into acls(id,name) values(nextval('seq_acl_id'),'no.set.acl.allowed'); --
 
 
 -- #1
-insert into objtypes(id,name) values(nextval('seq_obj_type_id'),'_default_objtype');
+insert into object_types(id,name) values(nextval('seq_obj_type_id'),'_default_objtype');
 
 insert into groups(id,name) VALUES(nextval('seq_group_id'),'_superusers'); -- #1
 insert into groups(id,name) VALUES(nextval('seq_group_id'),'_1_admin'); -- #2

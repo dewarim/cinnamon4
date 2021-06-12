@@ -54,13 +54,13 @@ public class ConfigServlet extends HttpServlet {
         ConfigWrapper wrapper = new ConfigWrapper();
         wrapper.setAcls(new AclDao().list());
         wrapper.setFolderTypes(new FolderTypeDao().list());
-        wrapper.setFormats(new FormatDao().listFormats());
+        wrapper.setFormats(new FormatDao().list());
         wrapper.setGroups(new GroupDao().list());
         wrapper.setIndexItems(new IndexItemDao().listIndexItems());
         wrapper.setLanguages(new LanguageDao().listLanguages());
         wrapper.setLifecycles(new LifecycleDao().listLifecycles());
         wrapper.setMetasetTypes(new MetasetTypeDao().listMetasetTypes());
-        wrapper.setObjectTypes(new ObjectTypeDao().listObjectTypes());
+        wrapper.setObjectTypes(new ObjectTypeDao().list());
         wrapper.setPermissions(new PermissionDao().list());
         wrapper.setRelationTypes(new RelationTypeDao().listRelationTypes());
         wrapper.setUiLanguages(new UiLanguageDao().listUiLanguages());

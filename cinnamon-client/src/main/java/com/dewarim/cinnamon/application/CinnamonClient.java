@@ -1,7 +1,6 @@
 package com.dewarim.cinnamon.application;
 
 import com.dewarim.cinnamon.CinnamonClientException;
-import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.Unwrapper;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.model.Acl;
@@ -12,6 +11,7 @@ import com.dewarim.cinnamon.model.Format;
 import com.dewarim.cinnamon.model.Group;
 import com.dewarim.cinnamon.model.Meta;
 import com.dewarim.cinnamon.model.ObjectSystemData;
+import com.dewarim.cinnamon.model.ObjectType;
 import com.dewarim.cinnamon.model.Permission;
 import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.links.LinkType;
@@ -41,6 +41,7 @@ import com.dewarim.cinnamon.model.request.link.DeleteLinkRequest;
 import com.dewarim.cinnamon.model.request.link.GetLinksRequest;
 import com.dewarim.cinnamon.model.request.link.LinkWrapper;
 import com.dewarim.cinnamon.model.request.link.UpdateLinkRequest;
+import com.dewarim.cinnamon.model.request.objectType.ListObjectTypeRequest;
 import com.dewarim.cinnamon.model.request.osd.CreateOsdRequest;
 import com.dewarim.cinnamon.model.request.osd.DeleteOsdRequest;
 import com.dewarim.cinnamon.model.request.osd.OsdRequest;
@@ -62,6 +63,7 @@ import com.dewarim.cinnamon.model.response.GroupWrapper;
 import com.dewarim.cinnamon.model.response.LinkResponse;
 import com.dewarim.cinnamon.model.response.LinkResponseWrapper;
 import com.dewarim.cinnamon.model.response.MetaWrapper;
+import com.dewarim.cinnamon.model.response.ObjectTypeWrapper;
 import com.dewarim.cinnamon.model.response.OsdWrapper;
 import com.dewarim.cinnamon.model.response.PermissionWrapper;
 import com.dewarim.cinnamon.model.response.UserInfo;
@@ -82,6 +84,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static com.dewarim.cinnamon.api.Constants.*;
+import static com.dewarim.cinnamon.api.UrlMapping.OSD__CREATE_OSD;
 import static org.apache.http.HttpStatus.SC_OK;
 import static org.apache.http.entity.ContentType.APPLICATION_XML;
 
@@ -99,6 +102,7 @@ public class CinnamonClient {
 
     private final Unwrapper<ObjectSystemData, OsdWrapper>        osdUnwrapper          = new Unwrapper<>(OsdWrapper.class);
     private final Unwrapper<FolderType, FolderTypeWrapper>       folderTypeUnwrapper   = new Unwrapper<>(FolderTypeWrapper.class);
+    private final Unwrapper<ObjectType, ObjectTypeWrapper>       objectTypeUnwrapper   = new Unwrapper<>(ObjectTypeWrapper.class);
     private final Unwrapper<Folder, FolderWrapper>               folderUnwrapper       = new Unwrapper<>(FolderWrapper.class);
     private final Unwrapper<Format, FormatWrapper>               formatUnwrapper       = new Unwrapper<>(FormatWrapper.class);
     private final Unwrapper<Meta, MetaWrapper>                   metaUnwrapper         = new Unwrapper<>(MetaWrapper.class);
@@ -207,8 +211,7 @@ public class CinnamonClient {
     private void verifyResponseIsOkay(HttpResponse response) throws IOException {
         if (response.containsHeader(HEADER_FIELD_CINNAMON_ERROR)) {
             CinnamonErrorWrapper wrapper = mapper.readValue(response.getEntity().getContent(), CinnamonErrorWrapper.class);
-            // TODO: handle multi-errors / extend CCE with list of errors; only relevant for deleteOsd at the moment.
-            throw new CinnamonClientException(ErrorCode.getErrorCode(wrapper.getErrors().get(0).getCode()));
+            throw new CinnamonClientException(wrapper);
         }
         if (response.getStatusLine().getStatusCode() != SC_OK) {
             log.error(new String(response.getEntity().getContent().readAllBytes()));
@@ -238,11 +241,12 @@ public class CinnamonClient {
     public boolean deleteOsd(Long id) throws IOException {
         DeleteOsdRequest deleteRequest = new DeleteOsdRequest(Collections.singletonList(id));
         HttpResponse     response      = sendStandardRequest(UrlMapping.OSD__DELETE_OSDS, deleteRequest);
-        return parseGenericResponse(response).isSuccessful();
+        return verifyDeleteResponse(response);
     }
 
     public ObjectSystemData createOsd(CreateOsdRequest createOsdRequest) throws IOException {
-        HttpResponse response = sendStandardRequest(UrlMapping.OSD__CREATE_OSD, createOsdRequest);
+        HttpEntity request = createSimpleMultipartEntity(CREATE_NEW_OSD, createOsdRequest);
+        HttpResponse response = sendStandardMultipartRequest(OSD__CREATE_OSD, request);
         return osdUnwrapper.unwrap(response, 1).get(0);
     }
 
@@ -414,6 +418,13 @@ public class CinnamonClient {
         var request  = new GetLinksRequest(List.of(id), includeSummary);
         var response = sendStandardRequest(UrlMapping.LINK__GET_LINKS_BY_ID, request);
         return linkResponseUnwrapper.unwrap(response, 1).get(0);
+    }
+
+    // ObjectTypes
+
+    public List<ObjectType> listObjectTypes() throws IOException {
+        var response = sendStandardRequest(UrlMapping.OBJECT_TYPE__LIST, new ListObjectTypeRequest());
+        return objectTypeUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
     // permissions

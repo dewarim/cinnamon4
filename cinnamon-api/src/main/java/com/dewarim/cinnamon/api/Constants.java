@@ -39,5 +39,6 @@ public class Constants {
      * Name of the field of the multipart-entity request which contains the XML request data.
      */
     public static final String CREATE_NEW_VERSION = "createNewVersionRequest";
+    public static final String CREATE_NEW_OSD     = "createOsdRequest";
 
 }

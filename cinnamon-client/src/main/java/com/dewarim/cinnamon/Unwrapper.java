@@ -46,8 +46,7 @@ public class Unwrapper<T, W extends Wrapper<T>> {
     public List<T> unwrap(HttpResponse response, Integer expectedSize) throws IOException {
         if (response.containsHeader(HEADER_FIELD_CINNAMON_ERROR)) {
             CinnamonErrorWrapper wrapper = mapper.readValue(response.getEntity().getContent(), CinnamonErrorWrapper.class);
-            // TODO: handle multi-errors / extend CCE with list of errors; only relevant for deleteOsd at the moment.
-            throw new CinnamonClientException(ErrorCode.getErrorCode(wrapper.getErrors().get(0).getCode()));
+            throw new CinnamonClientException(wrapper);
         }
         if (response.getStatusLine().getStatusCode() != SC_OK) {
             StatusLine statusLine = response.getStatusLine();

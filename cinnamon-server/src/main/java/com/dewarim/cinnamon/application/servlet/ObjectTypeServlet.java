@@ -1,11 +1,14 @@
 package com.dewarim.cinnamon.application.servlet;
 
 import com.dewarim.cinnamon.ErrorCode;
+import com.dewarim.cinnamon.api.UrlMapping;
+import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.dao.ObjectTypeDao;
 import com.dewarim.cinnamon.model.ObjectType;
-import com.dewarim.cinnamon.model.request.ListRequest;
+import com.dewarim.cinnamon.model.request.objectType.CreateObjectTypeRequest;
+import com.dewarim.cinnamon.model.request.objectType.DeleteObjectTypeRequest;
 import com.dewarim.cinnamon.model.request.objectType.ListObjectTypeRequest;
-import com.dewarim.cinnamon.model.response.ObjectTypeWrapper;
+import com.dewarim.cinnamon.model.request.objectType.UpdateObjectTypeRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -13,41 +16,43 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
-import java.util.List;
 
-import static com.dewarim.cinnamon.api.Constants.CONTENT_TYPE_XML;
 import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
 
 @WebServlet(name = "ObjectType", urlPatterns = "/")
-public class ObjectTypeServlet extends HttpServlet {
+public class ObjectTypeServlet extends HttpServlet implements CruddyServlet<ObjectType> {
 
     private final ObjectMapper xmlMapper = XML_MAPPER;
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
-        String pathInfo = request.getPathInfo();
-        if (pathInfo == null) {
-            pathInfo = "";
-        }
-        switch (pathInfo) {
-            case "/listObjectTypes":
-                listObjectTypes(request, response);
+        CinnamonResponse cinnamonResponse = (CinnamonResponse) response;
+        ObjectTypeDao    objectTypeDao    = new ObjectTypeDao();
+        UrlMapping       mapping          = UrlMapping.getByPath(request.getRequestURI());
+
+        switch (mapping) {
+            case OBJECT_TYPE__LIST:
+                list(convertListRequest(request, ListObjectTypeRequest.class), objectTypeDao, cinnamonResponse);
+                break;
+            case OBJECT_TYPE__CREATE:
+                superuserCheck();
+                create(convertCreateRequest(request, CreateObjectTypeRequest.class), objectTypeDao, cinnamonResponse);
+                break;
+            case OBJECT_TYPE__UPDATE:
+                superuserCheck();
+                update(convertUpdateRequest(request, UpdateObjectTypeRequest.class), objectTypeDao, cinnamonResponse);
+                break;
+            case OBJECT_TYPE__DELETE:
+                superuserCheck();
+                delete(convertDeleteRequest(request, DeleteObjectTypeRequest.class), objectTypeDao, cinnamonResponse);
                 break;
             default:
                 ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
     }
 
-    private void listObjectTypes(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        // ignore listRequest for now, just make sure it's valid xml:
-        ListRequest       listRequest   = xmlMapper.readValue(request.getInputStream(), ListObjectTypeRequest.class);
-        ObjectTypeDao     objectTypeDao = new ObjectTypeDao();
-        List<ObjectType>  objectTypes   = objectTypeDao.listObjectTypes();
-        ObjectTypeWrapper wrapper       = new ObjectTypeWrapper();
-        wrapper.setObjectTypes(objectTypes);
-        response.setContentType(CONTENT_TYPE_XML);
-        response.setStatus(HttpServletResponse.SC_OK);
-        xmlMapper.writeValue(response.getWriter(), wrapper);
+    @Override
+    public ObjectMapper getMapper() {
+        return xmlMapper;
     }
-
 }

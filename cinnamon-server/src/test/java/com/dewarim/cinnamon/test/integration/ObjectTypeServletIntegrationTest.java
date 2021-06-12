@@ -1,10 +1,6 @@
 package com.dewarim.cinnamon.test.integration;
 
-import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.model.ObjectType;
-import com.dewarim.cinnamon.model.request.objectType.ListObjectTypeRequest;
-import com.dewarim.cinnamon.model.response.ObjectTypeWrapper;
-import org.apache.http.HttpResponse;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -19,8 +15,7 @@ public class ObjectTypeServletIntegrationTest extends CinnamonIntegrationTest{
     
     @Test
     public void listObjectTypes() throws IOException {
-        HttpResponse response = sendStandardRequest(UrlMapping.OBJECT_TYPE__LIST_OBJECT_TYPES, new ListObjectTypeRequest());
-        List<ObjectType> objectTypes = parseResponse(response);
+        List<ObjectType> objectTypes = client.listObjectTypes();
         
         assertNotNull(objectTypes);
         assertFalse(objectTypes.isEmpty());
@@ -30,13 +25,7 @@ public class ObjectTypeServletIntegrationTest extends CinnamonIntegrationTest{
         assertTrue(xmlOpt.isPresent());
         assertThat(xmlOpt.get().getId(), equalTo(1L));
     }
-    
-    private List<ObjectType> parseResponse(HttpResponse response) throws IOException{
-        assertResponseOkay(response);
-        ObjectTypeWrapper objectTypeWrapper = mapper.readValue(response.getEntity().getContent(), ObjectTypeWrapper.class);
-        assertNotNull(objectTypeWrapper);
-        return objectTypeWrapper.getObjectTypes();
-    }
-    
+
+    // TODO: implement other CRUD tests
     
 }

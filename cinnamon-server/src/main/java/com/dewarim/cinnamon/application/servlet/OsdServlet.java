@@ -44,6 +44,7 @@ import com.dewarim.cinnamon.model.request.osd.OsdByFolderRequest;
 import com.dewarim.cinnamon.model.request.osd.OsdRequest;
 import com.dewarim.cinnamon.model.request.osd.SetContentRequest;
 import com.dewarim.cinnamon.model.response.CinnamonError;
+import com.dewarim.cinnamon.model.response.DeleteResponse;
 import com.dewarim.cinnamon.model.response.OsdWrapper;
 import com.dewarim.cinnamon.model.response.Summary;
 import com.dewarim.cinnamon.model.response.SummaryWrapper;
@@ -167,8 +168,9 @@ public class OsdServlet extends BaseServlet {
         new RelationDao().deleteAllUnprotectedRelationsOfObjects(osdIdsToToDelete);
         new LinkDao().deleteAllLinksToObjects(osdIdsToToDelete);
         osdDao.deleteOsds(osdIdsToToDelete);
-        // TODO: deleteContent? -> cleanup process?
-        cinnamonResponse.responseIsGenericOkay();
+        // TODO: deleteContent? -> cleanup process? #199
+        var deleteResponse = new DeleteResponse(true);
+        cinnamonResponse.setWrapper(deleteResponse);
     }
 
     private List<CinnamonError> delete(List<ObjectSystemData> osds, boolean deleteDescendants, UserAccount user, OsdDao osdDao, Set<Long> osdIds) {

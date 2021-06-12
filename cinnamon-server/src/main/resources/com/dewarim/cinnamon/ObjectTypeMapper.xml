@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.dewarim.cinnamon.ObjectTypeMapper">
+<mapper namespace="com.dewarim.cinnamon.model.ObjectType">
 
     <resultMap id="objectTypeMap" type="com.dewarim.cinnamon.model.ObjectType">
         <id property="id" column="id"/>
@@ -12,13 +12,46 @@
 
     <select id="list" parameterType="map" resultMap="objectTypeMap">
         SELECT *
-        FROM objtypes
+        FROM object_types
     </select>
 
     <select id="getObjectTypeById" parameterType="long" resultMap="objectTypeMap">
         SELECT *
-        FROM objtypes
+        FROM object_types
         WHERE id = #{id}
+    </select>
+    
+    <update id="update" parameterType="com.dewarim.cinnamon.model.ObjectType">
+        UPDATE object_types
+        SET name = #{name}
+        WHERE id = #{id}
+    </update>
+
+    <insert id="insert" parameterType="com.dewarim.cinnamon.model.ObjectType">
+        <selectKey keyProperty="id" resultType="long" order="BEFORE">
+            select nextval('seq_object_type_id')
+        </selectKey>
+        INSERT INTO object_types (id,name) VALUES (#{id}, #{name})
+    </insert>
+
+    <delete id="delete" parameterType="list">
+        DELETE
+        FROM object_types
+        WHERE id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <select id="getAllById" parameterType="list" resultMap="objectTypeMap">
+        SELECT *
+        FROM object_types
+        WHERE id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
     </select>
 
 

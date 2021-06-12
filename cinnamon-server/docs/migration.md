@@ -244,3 +244,5 @@
     alter table group_users drop column obj_version;
 
     alter table acl_groups drop column obj_version;
+
+    alter table objtypes rename to object_types;

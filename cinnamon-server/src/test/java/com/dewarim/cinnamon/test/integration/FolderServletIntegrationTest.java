@@ -33,6 +33,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.dewarim.cinnamon.ErrorCode.*;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -233,41 +234,25 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void createMetaObjectNotWritable() throws IOException {
         CreateMetaRequest request = new CreateMetaRequest(15L, "foo", 1L);
-        try {
-            client.createFolderMeta(request);
-        } catch (CinnamonClientException e) {
-            assertEquals(e.getErrorCode(), ErrorCode.NO_WRITE_CUSTOM_METADATA_PERMISSION);
-        }
+        assertClientError(() -> client.createFolderMeta(request), NO_WRITE_CUSTOM_METADATA_PERMISSION);
     }
 
     @Test
     public void createMetaMetasetTypeByIdNotFound() throws IOException {
         CreateMetaRequest request = new CreateMetaRequest(17L, "foo", Long.MAX_VALUE);
-        try {
-            client.createFolderMeta(request);
-        } catch (CinnamonClientException e) {
-            assertEquals(e.getErrorCode(), ErrorCode.METASET_TYPE_NOT_FOUND);
-        }
+        assertClientError(() -> client.createFolderMeta(request), METASET_TYPE_NOT_FOUND);
     }
 
     @Test
     public void createMetaMetasetTypeByNameNotFound() throws IOException {
         CreateMetaRequest request = new CreateMetaRequest(17L, "foo", "unknown");
-        try {
-            client.createFolderMeta(request);
-        } catch (CinnamonClientException e) {
-            assertEquals(e.getErrorCode(), ErrorCode.METASET_TYPE_NOT_FOUND);
-        }
+        assertClientError(() -> client.createFolderMeta(request), METASET_TYPE_NOT_FOUND);
     }
 
     @Test
     public void createMetaMetasetIsUniqueAndExists() throws IOException {
         CreateMetaRequest request = new CreateMetaRequest(18L, "duplicate license", "license");
-        try {
-            client.createFolderMeta(request);
-        } catch (CinnamonClientException e) {
-            assertEquals(e.getErrorCode(), ErrorCode.METASET_IS_UNIQUE_AND_ALREADY_EXISTS);
-        }
+        assertClientError(() -> client.createFolderMeta(request), METASET_IS_UNIQUE_AND_ALREADY_EXISTS);
     }
 
     @Test
@@ -313,7 +298,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     public void deleteMetaWithoutPermission() throws IOException {
         DeleteMetaRequest deleteRequest = new DeleteMetaRequest(20L, "comment");
         HttpResponse      metaResponse  = sendStandardRequest(UrlMapping.FOLDER__DELETE_META, deleteRequest);
-        assertCinnamonError(metaResponse, ErrorCode.NO_WRITE_CUSTOM_METADATA_PERMISSION);
+        assertCinnamonError(metaResponse, NO_WRITE_CUSTOM_METADATA_PERMISSION);
     }
 
     @Test

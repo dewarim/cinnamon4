@@ -4,19 +4,18 @@ import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.model.ObjectType;
 import org.apache.ibatis.session.SqlSession;
 
-import java.util.List;
 import java.util.Optional;
 
-public class ObjectTypeDao {
-
-    public List<ObjectType> listObjectTypes() {
-        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        return sqlSession.selectList("com.dewarim.cinnamon.ObjectTypeMapper.list");
-    }
+public class ObjectTypeDao implements CrudDao<ObjectType>{
 
     public Optional<ObjectType> getObjectTypeById(Long typeId) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        ObjectType type       = sqlSession.selectOne("com.dewarim.cinnamon.ObjectTypeMapper.getObjectTypeById", typeId);
+        ObjectType type       = sqlSession.selectOne("com.dewarim.cinnamon.model.ObjectType.getObjectTypeById", typeId);
         return Optional.ofNullable(type);
+    }
+
+    @Override
+    public String getTypeClassName() {
+        return ObjectType.class.getName();
     }
 }
