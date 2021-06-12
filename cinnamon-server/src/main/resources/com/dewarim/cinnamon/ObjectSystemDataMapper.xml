@@ -65,33 +65,32 @@
 
         FROM objects
         WHERE id IN
-        <foreach item="item" index="index" collection="idList"
-                 open="(" separator="," close=")">
-            #{item}
+        <foreach item="item" index="index" collection="ids" open="(" separator="," close=")">
+            #{item,jdbcType=BIGINT}
         </foreach>
     </select>
 
 
-    <select id="getOsdIdByIdWithDescendants" parameterType="map" resultMap="osdMap">
+    <select id="getOsdIdByIdWithDescendants" parameterType="map" resultType="Long">
         SELECT id
         FROM objects
         WHERE id in (
-            with recursive osdId (id, predecessor_id, root_id)
-                               as (
-                    select o.id, o.predecessor_id, o.root_id
-                    from objects o
-                    where o.predecessor_id =
-                    <foreach item="item" index="index" collection="ids" open="(" separator="," close=")">
-                        #{item}
-                    </foreach>
+        with recursive osdId (id, predecessor_id, root_id)
+        as (
+        select o.id, o.predecessor_id, o.root_id
+        from objects o
+        where o.predecessor_id =
+        <foreach item="item" index="index" collection="ids" open="(" separator="," close=")">
+            #{item}
+        </foreach>
         union
-                    select child.id, child.predecessor_id, child.root_id
-                    from osdId parent,
-                         objects child
-                    WHERE child.predecessor_id = parent.id
-                )
-            SELECT id
-            FROM osdId
+        select child.id, child.predecessor_id, child.root_id
+        from osdId parent,
+        objects child
+        WHERE child.predecessor_id = parent.id
+        )
+        SELECT id
+        FROM osdId
         )
     </select>
 

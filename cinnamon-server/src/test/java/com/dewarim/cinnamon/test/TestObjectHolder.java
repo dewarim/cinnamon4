@@ -53,6 +53,11 @@ public class TestObjectHolder {
 
     }
 
+    public TestObjectHolder setAcl(Acl acl){
+        this.acl = acl;
+        return this;
+    }
+
     public TestObjectHolder createOsd(String name) throws IOException {
         CreateOsdRequest request = new CreateOsdRequest(name, folder.getId(), user.getId(), acl.getId(),
                 objectType.getId(),

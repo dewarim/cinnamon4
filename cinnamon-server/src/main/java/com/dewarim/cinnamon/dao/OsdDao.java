@@ -34,7 +34,7 @@ public class OsdDao {
                 lastIndex = requestSize;
             }
             List<Long> partialList = ids.subList(rowCount, lastIndex);
-            params.put("idList", partialList);
+            params.put("ids", partialList);
             results.addAll(sqlSession.selectList("com.dewarim.cinnamon.ObjectSystemDataMapper.getOsdsById", params));
             rowCount += BATCH_SIZE;
         }

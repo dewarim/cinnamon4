@@ -628,6 +628,7 @@ insert into permissions values (nextval('seq_permission_id'),'_write_object_cont
 insert into permissions values (nextval('seq_permission_id'),'_write_object_custom_metadata'); -- #16
 insert into permissions values (nextval('seq_permission_id'),'_write_object_sysmeta'); -- #17
 
+-- note: personal user groups are deprecated. Add user to normal groups instead.
 -- #1 browse permission for doe's group + default_acl:
 insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),6,1);
 -- #2 browse_folder permission for doe's group + default_acl:: 

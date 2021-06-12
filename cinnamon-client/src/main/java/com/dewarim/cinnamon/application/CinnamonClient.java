@@ -233,9 +233,16 @@ public class CinnamonClient {
     }
 
     // OSDs
-    public List<ObjectSystemData> version(CreateNewVersionRequest versionRequest) throws IOException {
+    public ObjectSystemData version(CreateNewVersionRequest versionRequest) throws IOException {
         HttpEntity request = createSimpleMultipartEntity(CREATE_NEW_VERSION, versionRequest);
-        return unwrapOsds(sendStandardMultipartRequest(UrlMapping.OSD__VERSION, request), 1);
+        return unwrapOsds(sendStandardMultipartRequest(UrlMapping.OSD__VERSION, request), 1).get(0);
+    }
+
+    public boolean deleteOsd(Long id, boolean deleteDescendants) throws IOException {
+        DeleteOsdRequest deleteRequest = new DeleteOsdRequest(Collections.singletonList(id));
+        deleteRequest.setDeleteDescendants(deleteDescendants);
+        HttpResponse     response      = sendStandardRequest(UrlMapping.OSD__DELETE_OSDS, deleteRequest);
+        return verifyDeleteResponse(response);
     }
 
     public boolean deleteOsd(Long id) throws IOException {

@@ -1027,19 +1027,40 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void deleteOsdsNoDeletePermission() throws IOException{
+    public void deleteOsdsNoDeletePermission() throws IOException {
         var holder = new TestObjectHolder(adminClient);
         holder.createAcl("no-delete-perm-acl").createGroup("no-delete-group-acl").createAclGroup()
                 .setUser(userId)
                 .setFolder(createFolderId)
                 .createOsd("U-no-delete-me");
         ObjectSystemData osd = holder.osd;
-
-        assertClientError(() -> client.deleteOsd(osd.getId()),CANNOT_DELETE_DUE_TO_ERRORS, NO_DELETE_PERMISSION );
+        assertClientError(() -> client.deleteOsd(osd.getId()), CANNOT_DELETE_DUE_TO_ERRORS, NO_DELETE_PERMISSION);
     }
 
-    // TODO: deleteOsdWithDescendantsHappyPath
-    // TODO: deleteOsdWithDescendantsFails
+    @Test
+    public void deleteOsdWithDescendantsFailsWithoutDeleteDescendantsFlag() throws IOException {
+        var holder = new TestObjectHolder(adminClient);
+        holder.setAcl(client.getAclByName("reviewers.acl"))
+                .setUser(userId)
+                .setFolder(createFolderId)
+                .createOsd("version-me-for-descendant");
+        ObjectSystemData version1 = client.version(new CreateNewVersionRequest(holder.osd.getId()));
+        ObjectSystemData version2 = client.version(new CreateNewVersionRequest(version1.getId()));
+        assertClientError(() -> client.deleteOsd(holder.osd.getId()), CANNOT_DELETE_DUE_TO_ERRORS, OBJECT_HAS_DESCENDANTS);
+    }
+
+    @Test
+    public void deleteOsdWithDescendantsHappyPath() throws IOException {
+        var holder = new TestObjectHolder(adminClient);
+        holder.setAcl(client.getAclByName("reviewers.acl"))
+                .setUser(userId)
+                .setFolder(createFolderId)
+                .createOsd("version-me-for-descendant");
+        ObjectSystemData version1 = client.version(new CreateNewVersionRequest(holder.osd.getId()));
+        ObjectSystemData version2 = client.version(new CreateNewVersionRequest(version1.getId()));
+        assertTrue(client.deleteOsd(holder.osd.getId(), true));
+    }
+
     // TODO: deleteOsdWithProtectedRelations
 
     private HttpResponse sendAdminMultipartRequest(UrlMapping url, HttpEntity multipartEntity) throws IOException {
