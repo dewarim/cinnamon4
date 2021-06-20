@@ -1,8 +1,10 @@
 package com.dewarim.cinnamon.model.relations;
 
+import com.dewarim.cinnamon.api.Identifiable;
+
 import java.util.Objects;
 
-public class Relation {
+public class Relation implements Identifiable {
     
     private Long id;
     private Long leftId;

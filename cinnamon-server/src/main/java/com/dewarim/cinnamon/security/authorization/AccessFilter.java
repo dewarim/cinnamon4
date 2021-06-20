@@ -276,4 +276,8 @@ public class AccessFilter {
         }
         return hasPermission(aclId, permission);
     }
+
+    public boolean isSuperuser() {
+        return superuser;
+    }
 }

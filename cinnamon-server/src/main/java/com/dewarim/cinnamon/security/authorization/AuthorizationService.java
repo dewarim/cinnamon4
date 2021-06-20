@@ -3,6 +3,7 @@ package com.dewarim.cinnamon.security.authorization;
 import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.Ownable;
+import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.model.Folder;
 import com.dewarim.cinnamon.model.ObjectSystemData;
@@ -58,6 +59,10 @@ public class AuthorizationService {
         if (!hasUserOrOwnerPermission(ownable, permission, user)) {
             errorCode.throwUp();
         }
+    }
+
+    public boolean currentUserIsSuperuser(){
+        return AccessFilter.getInstance(ThreadLocalSqlSession.getCurrentUser()).isSuperuser();
     }
 
     public boolean hasUserOrOwnerPermission(Ownable ownable, DefaultPermission permission, UserAccount user) {

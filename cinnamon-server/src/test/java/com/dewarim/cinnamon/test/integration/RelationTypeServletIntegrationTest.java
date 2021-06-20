@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.test.integration;
 
+import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.model.relations.RelationType;
 import com.dewarim.cinnamon.model.request.relationType.ListRelationTypeRequest;
@@ -19,7 +20,7 @@ public class RelationTypeServletIntegrationTest extends CinnamonIntegrationTest 
 
     @Test
     public void listRelationTypes() throws IOException {
-        HttpResponse       response      = sendStandardRequest(UrlMapping.RELATION_TYPE__LIST_RELATION_TYPES, new ListRelationTypeRequest());
+        HttpResponse       response      = sendStandardRequest(UrlMapping.RELATION_TYPE__LIST, new ListRelationTypeRequest());
         List<RelationType> relationTypes = parseResponse(response);
 
         assertNotNull(relationTypes);
@@ -37,6 +38,49 @@ public class RelationTypeServletIntegrationTest extends CinnamonIntegrationTest 
         assertThat(type.isCloneOnRightVersion(), equalTo(true));
         assertThat(type.isLeftObjectProtected(), equalTo(true));
         assertThat(type.isRightObjectProtected(), equalTo(true));
+    }
+
+    @Test
+    public void createRelationTypes() throws IOException {
+        var rt = new RelationType("left-rt-create",
+                true, false,
+                false, false, false, false);
+        var newRt = adminClient.createRelationTypes(List.of(rt)).get(0);
+        assertEquals(rt,newRt);
+    }
+
+    // TODO: add tests for updateRelationType
+    // TODO: add tests for createWithInvalidName
+    // TODO: add test with createWithExistingName
+
+    @Test
+    public void deleteRelationTypes() throws IOException{
+        var rt = new RelationType("left-rt-delete",
+                true, false,
+                false, false, false, false);
+        var rtToDelete = adminClient.createRelationTypes(List.of(rt)).get(0);
+        adminClient.deleteRelationTypes(List.of(rtToDelete.getId()));
+    }
+
+    @Test
+    public void createRequiresSuperuser(){
+        RelationType relationType = new RelationType();
+        assertClientError(() -> client.createRelationTypes(List.of(relationType)), ErrorCode.REQUIRES_SUPERUSER_STATUS);
+    }
+    
+    @Test
+    public void deleteRequiresSuperuser() {
+        assertClientError(() -> client.deleteRelationTypes(List.of(Long.MAX_VALUE)), ErrorCode.REQUIRES_SUPERUSER_STATUS);
+    }
+
+    @Test
+    public void deleteUnknownRelationType() {
+        assertClientError(() -> adminClient.deleteRelationTypes(List.of(Long.MAX_VALUE)), ErrorCode.OBJECT_NOT_FOUND);
+    }
+
+    @Test
+    public void deleteInvalidRelationType() {
+        assertClientError(() -> adminClient.deleteRelationTypes(List.of(0L)), ErrorCode.INVALID_REQUEST);
     }
 
     private List<RelationType> parseResponse(HttpResponse response) throws IOException {

@@ -51,6 +51,7 @@ public class CinnamonError {
         return "CinnamonError{" +
                 "code='" + code + '\'' +
                 ", message='" + message + '\'' +
+                ", id=" + id +
                 '}';
     }
 }

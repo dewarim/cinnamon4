@@ -387,25 +387,25 @@ create table acl_group_permissions
 drop sequence if exists seq_acl_group_permission_id;
 create sequence seq_acl_group_permission_id start with 1;
 
-drop table if exists relationtypes cascade ;
-create table relationtypes
+drop table if exists relation_types cascade ;
+create table relation_types
 (
   id bigint not null
-    constraint relationtypes_pkey
+    constraint relation_types_pkey
     primary key,
-  leftobjectprotected boolean not null,
+  left_object_protected boolean not null,
   name varchar(128) not null
-    constraint relationtypes_name_key
+    constraint relation_types_name_key
     unique,
-  rightobjectprotected boolean not null,
+  right_object_protected boolean not null,
   clone_on_right_copy boolean default false not null,
   clone_on_left_copy boolean default false not null,
   clone_on_left_version boolean default false not null,
   clone_on_right_version boolean default false not null
 )
 ;
-drop sequence if exists seq_relationtype_id;
-create sequence seq_relationtype_id start with 1;
+drop sequence if exists seq_relation_type_id;
+create sequence seq_relation_type_id start with 1;
 
 drop table if exists relations cascade ;
 create table relations
@@ -421,7 +421,7 @@ create table relations
     references objects,
   type_id bigint
     constraint fkff8b45f78121f481
-    references relationtypes,
+    references relation_types,
   metadata text default '<meta/>' not null,
   constraint unique_left_id
   unique (type_id, right_id, left_id)
@@ -1213,16 +1213,16 @@ VALUES (nextval('seq_format_id'),'application/xml','xml', 'xml', 1);
 insert into formats(id, contenttype, extension, name, default_object_type_id)
 VALUES (nextval('seq_format_id'),'text/plain','txt', 'plaintext', 1);
 
--- #1 relationType: protect all & clone always
-insert into relationtypes (id, leftobjectprotected, name, rightobjectprotected,
+-- #1 relation_type: protect all & clone always
+insert into relation_types (id, left_object_protected, name, right_object_protected,
                            clone_on_right_copy, clone_on_left_copy, clone_on_left_version, clone_on_right_version                           )
-VALUES (nextval('seq_relationtype_id'), true, 'all-protector', true,
+VALUES (nextval('seq_relation_type_id'), true, 'all-protector', true,
         true, true, true, true);
 
--- #2 relationType: protect nothing & clone never
-insert into relationtypes (id, leftobjectprotected, name, rightobjectprotected,
+-- #2 relation_type: protect nothing & clone never
+insert into relation_types (id, left_object_protected, name, right_object_protected,
                            clone_on_right_copy, clone_on_left_copy, clone_on_left_version, clone_on_right_version                           )
-VALUES (nextval('seq_relationtype_id'), true, 'unprotected', true,
+VALUES (nextval('seq_relation_type_id'), true, 'unprotected', true,
         false, false, false, false);
 
 -- #1 uiLanguage: de

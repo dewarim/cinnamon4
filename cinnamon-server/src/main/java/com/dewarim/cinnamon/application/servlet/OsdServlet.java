@@ -21,6 +21,7 @@ import com.dewarim.cinnamon.dao.ObjectTypeDao;
 import com.dewarim.cinnamon.dao.OsdDao;
 import com.dewarim.cinnamon.dao.OsdMetaDao;
 import com.dewarim.cinnamon.dao.RelationDao;
+import com.dewarim.cinnamon.dao.RelationTypeDao;
 import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.model.Folder;
 import com.dewarim.cinnamon.model.Format;
@@ -31,6 +32,7 @@ import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.relations.Relation;
+import com.dewarim.cinnamon.model.relations.RelationType;
 import com.dewarim.cinnamon.model.request.CreateMetaRequest;
 import com.dewarim.cinnamon.model.request.CreateNewVersionRequest;
 import com.dewarim.cinnamon.model.request.DeleteMetaRequest;
@@ -70,7 +72,9 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -159,13 +163,72 @@ public class OsdServlet extends BaseServlet {
         boolean   deleteDescendants = deleteRequest.isDeleteDescendants();
         Set<Long> osdIds            = osds.stream().map(ObjectSystemData::getId).collect(Collectors.toSet());
 
-        List<CinnamonError> errors = delete(osds, deleteDescendants, user, osdDao, osdIds);
+        Set<Long> descendants = new HashSet<>();
+
+        List<CinnamonError> errors = new ArrayList<>();
+
+        /*
+         * Add all descendants to list of OSDs we want to delete.
+         * Verify that previously unknown descendants are only added if deleteDescendants is true.
+         * It's okay for the user to manually specify an osd and all its descendants for deletion
+         * in one request without setting deleteDescendants to true.
+         */
+        osdIds.forEach(id -> {
+                    Set<Long> osdAndDescendants = osdDao.getOsdIdByIdWithDescendants(id);
+                    if (deleteDescendants) {
+                        osdAndDescendants.remove(id);
+                        descendants.addAll(osdAndDescendants);
+                    } else if (!osdIds.containsAll(osdAndDescendants)) {
+                        CinnamonError error = new CinnamonError(ErrorCode.OBJECT_HAS_DESCENDANTS.getCode(), id);
+                        errors.add(error);
+                    }
+                }
+        );
+        osds.addAll(osdDao.getObjectsById(new ArrayList<>(descendants), false));
+        osdIds.addAll(descendants);
+
+        /*
+         * Check for protected relations.
+         * It's okay to delete an object with a protected relation if the protected target objects are
+         * also included in the list of osdIds.
+         * Challenge: we cannot call getProtectedRelations in batch mode since then id from batch1 may
+         * be related to an id from batch2.
+         * Solution: fetch all relations for those ids (in batch mode) and check manually.
+         */
+
+        List<Relation>          protectedRelations = new RelationDao().getProtectedRelations(new ArrayList<>(osdIds));
+        Map<Long, RelationType> relationTypes      = new RelationTypeDao().getRelationTypeMap(protectedRelations.stream().map(Relation::getTypeId).collect(Collectors.toSet()));
+        if (protectedRelations.size() > 0) {
+            protectedRelations.forEach(relation -> {
+                var leftId       = relation.getLeftId();
+                var rightId      = relation.getRightId();
+                var relationType = relationTypes.get(relation.getTypeId());
+                if (
+                    // if both related  objects will be deleted, ignore their protections vs each other
+                        (osdIds.contains(leftId) && osdIds.contains(rightId)) ||
+                                // if only left is protected and will be deleted, that's okay too.
+                                (osdIds.contains(leftId) && !relationType.isLeftObjectProtected()) ||
+                                // and finally, if only right is protected and will be deleted, continue.
+                                (osdIds.contains(rightId) && !relationType.isRightObjectProtected())
+                ) {
+                    return;
+                }
+                // maybe: add serialized relation for client side error handling?
+                CinnamonError error = new CinnamonError(ErrorCode.OBJECT_HAS_PROTECTED_RELATIONS.getCode(), relation.toString());
+                errors.add(error);
+            });
+        }
+
+        errors.addAll(delete(osds, user, osdDao, osdIds));
+
         if (errors.size() > 0) {
             throw new FailedRequestException(ErrorCode.CANNOT_DELETE_DUE_TO_ERRORS, errors);
         }
         List<Long> osdIdsToToDelete = new ArrayList<>(osdIds);
         log.debug("delete " + Strings.join(",", osdIdsToToDelete.stream().map(String::valueOf).collect(Collectors.toList())));
-        new RelationDao().deleteAllUnprotectedRelationsOfObjects(osdIdsToToDelete);
+        var relationDao = new RelationDao();
+        relationDao.deleteAllUnprotectedRelationsOfObjects(osdIdsToToDelete);
+        relationDao.delete(protectedRelations.stream().map(Relation::getId).collect(Collectors.toList()));
         new LinkDao().deleteAllLinksToObjects(osdIdsToToDelete);
         osdDao.deleteOsds(osdIdsToToDelete);
         // TODO: deleteContent? -> cleanup process? #199
@@ -173,48 +236,28 @@ public class OsdServlet extends BaseServlet {
         cinnamonResponse.setWrapper(deleteResponse);
     }
 
-    private List<CinnamonError> delete(List<ObjectSystemData> osds, boolean deleteDescendants, UserAccount user, OsdDao osdDao, Set<Long> osdIds) {
+    private List<CinnamonError> delete(List<ObjectSystemData> osds, UserAccount user, OsdDao osdDao, Set<Long> osdIds) {
         AuthorizationService authorizationService = new AuthorizationService();
         List<CinnamonError>  errors               = new ArrayList<>();
         for (ObjectSystemData osd : osds) {
             Long osdId = osd.getId();
-            // 1. check permission for delete
+            // - check permission for delete
             boolean deleteAllowed = authorizationService.userHasPermission(osd.getAclId(), DefaultPermission.DELETE_OBJECT, user);
             if (!deleteAllowed) {
                 CinnamonError error = new CinnamonError(ErrorCode.NO_DELETE_PERMISSION.getCode(), osdId);
                 errors.add(error);
             }
-            if (osd.getLockerId() != null && !user.getId().equals(osd.getLockerId())) {
+            // - check for locked objects; superusers may delete locked objects:
+            if (osd.getLockerId() != null &&  (!user.getId().equals(osd.getLockerId()) && !authorizationService.currentUserIsSuperuser()) ) {
                 CinnamonError error = new CinnamonError(ErrorCode.OBJECT_LOCKED_BY_OTHER_USER.getCode(), osdId);
-                errors.add(error);
-            }
-
-            // 2. check for descendants
-            // Note: this has potential for N sub-requests if an object has N later versions. Perhaps let
-            // Postgres do a recursive fetch for all descendants?
-            List<ObjectSystemData> descendants = osdDao.getObjectsById(osdDao.getOsdIdByIdWithDescendants(osdId), false);
-            if (descendants.size() > 0) {
-                Set<Long> descendantIds = descendants.stream().map(ObjectSystemData::getId).collect(Collectors.toSet());
-                if (deleteDescendants || osdIds.containsAll(descendantIds)) {
-                    osdIds.addAll(descendantIds);
-                    errors.addAll(delete(descendants, deleteDescendants, user, osdDao, osdIds));
-                } else {
-                    CinnamonError error = new CinnamonError(ErrorCode.OBJECT_HAS_DESCENDANTS.getCode(), osdId);
-                    errors.add(error);
-                }
-            }
-
-            // 3. check for protected relations
-            List<Relation> protectedRelations = new RelationDao().getProtectedRelations(Collections.singletonList(osdId));
-            if (protectedRelations.size() > 0) {
-                CinnamonError error = new CinnamonError(ErrorCode.OBJECT_HAS_PROTECTED_RELATIONS.getCode(), osdId);
                 errors.add(error);
             }
         }
         return errors;
     }
 
-    private void createOsd(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws IOException, ServletException {
+    private void createOsd(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws
+            IOException, ServletException {
         verifyIsMultipart(request);
         Part contentRequest = request.getPart("createOsdRequest");
         if (contentRequest == null) {
@@ -287,7 +330,8 @@ public class OsdServlet extends BaseServlet {
         response.setWrapper(osdWrapper);
     }
 
-    private void deleteMeta(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws IOException {
+    private void deleteMeta(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws
+            IOException {
         DeleteMetaRequest metaRequest = xmlMapper.readValue(request.getInputStream(), DeleteMetaRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         Long             osdId = metaRequest.getId();
@@ -320,7 +364,8 @@ public class OsdServlet extends BaseServlet {
      * This requires assembling a new DOM tree in memory for each request to getMeta, which is not something you
      * want to see with large metasets.
      */
-    private void getMeta(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws IOException {
+    private void getMeta(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws
+            IOException {
         MetaRequest metaRequest = xmlMapper.readValue(request.getInputStream(), MetaRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
@@ -338,7 +383,8 @@ public class OsdServlet extends BaseServlet {
         createMetaResponse(metaRequest, response, metaList);
     }
 
-    private void createMeta(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws IOException {
+    private void createMeta(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws
+            IOException {
         CreateMetaRequest metaRequest = xmlMapper.readValue(request.getInputStream(), CreateMetaRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
@@ -368,7 +414,8 @@ public class OsdServlet extends BaseServlet {
         }
     }
 
-    private void lock(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws IOException {
+    private void lock(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws
+            IOException {
         IdRequest idRequest = xmlMapper.readValue(request.getInputStream(), IdRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
@@ -393,7 +440,8 @@ public class OsdServlet extends BaseServlet {
     }
 
 
-    private void unlock(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws IOException {
+    private void unlock(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws
+            IOException {
         IdRequest idRequest = xmlMapper.readValue(request.getInputStream(), IdRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         ObjectSystemData osd = osdDao.getObjectById(idRequest.getId()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
@@ -418,7 +466,8 @@ public class OsdServlet extends BaseServlet {
         }
     }
 
-    private void getContent(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws ServletException, IOException {
+    private void getContent(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws
+            ServletException, IOException {
         IdRequest idRequest = xmlMapper.readValue(request.getInputStream(), IdRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         ObjectSystemData osd = osdDao.getObjectById(idRequest.getId()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
@@ -439,7 +488,8 @@ public class OsdServlet extends BaseServlet {
         contentStream.transferTo(response.getOutputStream());
     }
 
-    private void setContent(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws ServletException, IOException {
+    private void setContent(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws
+            ServletException, IOException {
         verifyIsMultipart(request);
         Part contentRequest = request.getPart("setContentRequest");
         if (contentRequest == null) {
@@ -492,7 +542,8 @@ public class OsdServlet extends BaseServlet {
         deleteTempFile(tempOutputFile);
     }
 
-    private void setSummary(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws IOException {
+    private void setSummary(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws
+            IOException {
         SetSummaryRequest summaryRequest = xmlMapper.readValue(request.getInputStream(), SetSummaryRequest.class);
         ObjectSystemData  osd            = osdDao.getObjectById(summaryRequest.getId()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
         authorizationService.throwUpUnlessUserOrOwnerHasPermission(osd, DefaultPermission.WRITE_OBJECT_SYS_METADATA, user,
@@ -502,7 +553,8 @@ public class OsdServlet extends BaseServlet {
         response.responseIsGenericOkay();
     }
 
-    private void getSummaries(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws IOException {
+    private void getSummaries(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao
+            osdDao) throws IOException {
         IdListRequest          idListRequest = xmlMapper.readValue(request.getInputStream(), IdListRequest.class);
         SummaryWrapper         wrapper       = new SummaryWrapper();
         List<ObjectSystemData> osds          = osdDao.getObjectsById(idListRequest.getIdList(), true);
@@ -514,7 +566,8 @@ public class OsdServlet extends BaseServlet {
         response.setWrapper(wrapper);
     }
 
-    private void getObjectsById(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws IOException {
+    private void getObjectsById(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao
+            osdDao) throws IOException {
         OsdRequest             osdRequest   = xmlMapper.readValue(request.getInputStream(), OsdRequest.class);
         List<ObjectSystemData> osds         = osdDao.getObjectsById(osdRequest.getIds(), osdRequest.isIncludeSummary());
         List<ObjectSystemData> filteredOsds = authorizationService.filterObjectsByBrowsePermission(osds, user);
@@ -524,7 +577,8 @@ public class OsdServlet extends BaseServlet {
         response.setWrapper(wrapper);
     }
 
-    private void getObjectsByFolderId(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws IOException {
+    private void getObjectsByFolderId(HttpServletRequest request, CinnamonResponse response, UserAccount
+            user, OsdDao osdDao) throws IOException {
         OsdByFolderRequest     osdRequest     = xmlMapper.readValue(request.getInputStream(), OsdByFolderRequest.class);
         long                   folderId       = osdRequest.getFolderId();
         boolean                includeSummary = osdRequest.isIncludeSummary();
@@ -541,7 +595,8 @@ public class OsdServlet extends BaseServlet {
         response.setWrapper(wrapper);
     }
 
-    private void newVersion(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws ServletException, IOException {
+    private void newVersion(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws
+            ServletException, IOException {
         verifyIsMultipart(request);
         Part contentRequest = request.getPart("createNewVersionRequest");
         CreateNewVersionRequest versionRequest = xmlMapper.readValue(contentRequest.getInputStream(), CreateNewVersionRequest.class)

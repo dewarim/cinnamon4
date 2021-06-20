@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.dewarim.cinnamon.RelationMapper">
+<mapper namespace="com.dewarim.cinnamon.model.relations.Relation">
 
     <resultMap id="relationMap" type="com.dewarim.cinnamon.model.relations.Relation">
         <id property="id" column="id"/>
@@ -19,15 +19,15 @@
         r.left_id,
         r.right_id,
         r.type_id
-        FROM relations r join relationtypes rt on r.type_id = rt.id
+        FROM relations r join relation_types rt on r.type_id = rt.id
         WHERE
-        ( rt.leftobjectprotected = true and r.left_id in
+        ( rt.left_object_protected = true and r.left_id in
         <foreach item="item" index="index" collection="ids"
                  open="(" separator="," close=")">
             #{item}
         </foreach>
         )
-        OR (rt.rightobjectprotected = true and r.right_id in
+        OR (rt.right_object_protected = true and r.right_id in
         <foreach item="item" index="index" collection="ids"
                  open="(" separator="," close=")">
             #{item}
@@ -65,7 +65,7 @@
         r.type_id,
 
         CASE WHEN #{includeMetadata} THEN metadata ELSE null END AS metadata
-        FROM relations r join relationtypes rt on r.type_id = rt.id
+        FROM relations r join relation_types rt on r.type_id = rt.id
         <where>
             <if test="leftIds != null">
                 r.left_id IN
@@ -94,7 +94,7 @@
 
     </select>
 
-    <insert id="createRelation" parameterType="com.dewarim.cinnamon.model.relations.Relation">
+    <insert id="insert" parameterType="com.dewarim.cinnamon.model.relations.Relation">
         <selectKey keyProperty="id" resultType="long" order="BEFORE">
             select nextval('seq_relation_id')
         </selectKey>
@@ -102,14 +102,23 @@
         ( #{id},#{leftId},#{rightId},#{typeId},#{metadata} )
     </insert>
 
-    <delete id="deleteRelation" parameterType="map">
+    <delete id="deleteRelationByExample" parameterType="map">
         DELETE
         FROM relations
         WHERE left_id = #{leftId}
           AND right_id = #{rightId}
           AND type_id IN (select id
-                          from relationtypes
+                          from relation_types
                           where name = #{name})
+    </delete>
+    <delete id="delete" parameterType="list">
+        DELETE
+        FROM relations
+        WHERE id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
     </delete>
 
     <delete id="deleteAllUnprotectedRelationsOfObjects" parameterType="map">
@@ -118,15 +127,15 @@
         WHERE id in (
         SELECT
         r.id
-        FROM relations r join relationtypes rt on r.type_id = rt.id
+        FROM relations r join relation_types rt on r.type_id = rt.id
         WHERE
-        ( rt.leftobjectprotected = false and r.left_id in
+        ( rt.left_object_protected = false and r.left_id in
         <foreach item="item" index="index" collection="ids"
                  open="(" separator="," close=")">
             #{item}
         </foreach>
         )
-        OR (rt.rightobjectprotected = false and r.right_id in
+        OR (rt.right_object_protected = false and r.right_id in
         <foreach item="item" index="index" collection="ids"
                  open="(" separator="," close=")">
             #{item}

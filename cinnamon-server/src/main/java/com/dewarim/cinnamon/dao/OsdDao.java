@@ -10,9 +10,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 public class OsdDao {
 
@@ -104,10 +106,10 @@ public class OsdDao {
         sqlSession.delete("com.dewarim.cinnamon.ObjectSystemDataMapper.deleteOsds", params);
     }
 
-    public List<Long> getOsdIdByIdWithDescendants(Long id) {
+    public Set<Long> getOsdIdByIdWithDescendants(Long id) {
         SqlSession          sqlSession = ThreadLocalSqlSession.getSqlSession();
         Map<String, Object> params     = new HashMap<>();
         params.put("ids", Collections.singletonList(id));
-        return sqlSession.selectList("com.dewarim.cinnamon.ObjectSystemDataMapper.getOsdIdByIdWithDescendants", params);
+        return new HashSet<Long>(sqlSession.selectList("com.dewarim.cinnamon.ObjectSystemDataMapper.getOsdIdByIdWithDescendants", params));
     }
 }

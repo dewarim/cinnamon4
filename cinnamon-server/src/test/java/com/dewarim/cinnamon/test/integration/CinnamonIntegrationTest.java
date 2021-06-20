@@ -35,6 +35,7 @@ import java.nio.file.Path;
 import java.sql.Connection;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -145,10 +146,15 @@ public class CinnamonIntegrationTest {
     }
 
     protected void assertClientError(Executable executable, ErrorCode... errorCode) {
-        CinnamonClientException ex = assertThrows(CinnamonClientException.class, executable);
+        CinnamonClientException ex     = assertThrows(CinnamonClientException.class, executable);
         List<CinnamonError>     errors = ex.getErrorWrapper().getErrors();
-        boolean allErrorsFound = Arrays.stream(errorCode).allMatch(code ->
-                errors.stream().anyMatch(error -> error.getCode().equals(code.getCode()))
+        boolean allErrorsFound = Arrays.stream(errorCode).allMatch(code -> {
+                    boolean found = errors.stream().anyMatch(error -> error.getCode().equals(code.getCode()));
+                    if (!found) {
+                        log.error("missing expected error: " + code + "; got: " + errors.stream().map(CinnamonError::getCode).collect(Collectors.joining(",")));
+                    }
+                    return found;
+                }
         );
         assertTrue(allErrorsFound);
     }

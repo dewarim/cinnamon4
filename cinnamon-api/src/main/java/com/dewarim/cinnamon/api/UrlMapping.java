@@ -88,16 +88,18 @@ public enum UrlMapping {
     PERMISSION__CHANGE_PERMISSIONS("permission", "changePermissions", "/api"),
     PERMISSION__GET_USER_PERMISSIONS("permission", "getUserPermissions", "/api"),
     PERMISSION__LIST("permission", "list", "/api"),
-    RELATION_TYPE__LIST_RELATION_TYPES("relationType", "listRelationTypes", "/api"),
-    RELATION__CREATE_RELATION("relation", "createRelation", "/api"),
-    RELATION__DELETE_RELATION("relation", "deleteRelation", "/api"),
-    RELATION__GET_RELATIONS("relation", "getRelations", "/api"),
+    RELATION_TYPE__LIST("relationType", "list", "/api"),
+    RELATION_TYPE__CREATE("relationType", "create", "/api"),
+    RELATION_TYPE__UPDATE("relationType", "update", "/api"),
+    RELATION_TYPE__DELETE("relationType", "delete", "/api"),
+    RELATION__CREATE("relation", "create", "/api"),
+    RELATION__DELETE("relation", "delete", "/api"),
+    RELATION__LIST("relation", "list", "/api"),
     STATIC__ROOT("static", "", ""),
     UI_LANGUAGE__LIST_UI_LANGUAGES("uiLanguage", "listUiLanguages", "/api"),
     USER__LIST_USERS("user", "list", "/api"),
     USER__SET_PASSWORD("user", "setPassword", "/api"),
-    USER__USER_INFO("user", "userInfo", "/api"),
-    ;
+    USER__USER_INFO("user", "userInfo", "/api");
 
 
     private static final Map<String, UrlMapping> pathMapping = new ConcurrentHashMap<>();

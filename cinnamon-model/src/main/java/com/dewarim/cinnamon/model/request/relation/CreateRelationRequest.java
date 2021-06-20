@@ -1,18 +1,20 @@
-package com.dewarim.cinnamon.model.request;
+package com.dewarim.cinnamon.model.request.relation;
 
-public class DeleteRelationRequest {
-    
-    private Long leftId;
-    private Long rightId;
+public class CreateRelationRequest {
+
+    private Long   leftId;
+    private Long   rightId;
     private String typeName;
+    private String metadata;
 
-    public DeleteRelationRequest() {
+    public CreateRelationRequest() {
     }
 
-    public DeleteRelationRequest(Long leftId, Long rightId, String typeName) {
+    public CreateRelationRequest(Long leftId, Long rightId, String typeName, String metadata) {
         this.leftId = leftId;
         this.rightId = rightId;
         this.typeName = typeName;
+        this.metadata = metadata;
     }
 
     public Long getLeftId() {
@@ -39,8 +41,20 @@ public class DeleteRelationRequest {
         this.typeName = typeName;
     }
 
+    public String getMetadata() {
+        if(metadata == null){
+            return "<meta/>";
+        }
+        return metadata;
+    }
+
+    public void setMetadata(String metadata) {
+        this.metadata = metadata;
+    }
+
     public boolean validated() {
-        return leftId != null && rightId != null && typeName != null &&
+        return leftId != null && rightId != null && typeName != null && 
                leftId > 0 && rightId > 0 && typeName.trim().length() > 0;
     }
+
 }

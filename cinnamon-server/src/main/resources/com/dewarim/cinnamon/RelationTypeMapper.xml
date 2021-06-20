@@ -3,14 +3,13 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.dewarim.cinnamon.RelationTypeMapper">
+<mapper namespace="com.dewarim.cinnamon.model.relations.RelationType">
 
     <resultMap id="relationTypeMap" type="com.dewarim.cinnamon.model.relations.RelationType">
         <id property="id" column="id"/>
         <result property="name" column="name"/>
-        <!-- TODO: rename columns to use snake_case -->
-        <result property="rightObjectProtected" column="rightobjectprotected"/>
-        <result property="leftObjectProtected" column="leftobjectprotected"/>
+        <result property="rightObjectProtected" column="right_object_protected"/>
+        <result property="leftObjectProtected" column="left_object_protected"/>
         <result property="cloneOnRightCopy" column="clone_on_right_copy"/>
         <result property="cloneOnLeftCopy" column="clone_on_left_copy"/>
         <result property="cloneOnRightVersion" column="clone_on_right_version"/>
@@ -19,20 +18,67 @@
 
     <select id="list" parameterType="map" resultMap="relationTypeMap">
         SELECT *
-        FROM relationtypes
+        FROM relation_types
     </select>
 
     <select id="getRelationTypeById" parameterType="Long" resultMap="relationTypeMap">
         SELECT *
-        FROM relationtypes
+        FROM relation_types
         WHERE id = #{id}
     </select>
-    
+
     <select id="getRelationTypeByName" parameterType="String" resultMap="relationTypeMap">
         SELECT *
-        FROM relationtypes
+        FROM relation_types
         WHERE name = #{name}
     </select>
 
+    <update id="update" parameterType="com.dewarim.cinnamon.model.relations.RelationType">
+        UPDATE relation_types
+        SET name                   = #{name},
+            left_object_protected  = #{leftObjectProtected},
+            right_object_protected = #{rightObjectProtected},
+            clone_on_left_copy     = #{cloneOnLeftCopy},
+            clone_on_right_copy    = #{cloneOnRightCopy},
+            clone_on_left_version  = #{cloneOnLeftVersion},
+            clone_on_right_version = #{cloneOnRightVersion}
+        WHERE id = #{id}
+    </update>
+
+    <insert id="insert" parameterType="com.dewarim.cinnamon.model.relations.RelationType">
+        <selectKey keyProperty="id" resultType="long" order="BEFORE">
+            select nextval('seq_relation_type_id')
+        </selectKey>
+        INSERT INTO relation_types (id,name,
+        left_object_protected,right_object_protected,
+        clone_on_left_copy,clone_on_right_copy,
+        clone_on_left_version ,clone_on_right_version
+        )
+        VALUES (#{id}, #{name},
+        #{leftObjectProtected}, #{rightObjectProtected},
+        #{cloneOnLeftCopy}, #{cloneOnRightCopy},
+        #{cloneOnLeftVersion}, #{cloneOnRightVersion}
+        )
+    </insert>
+
+    <delete id="delete" parameterType="list">
+        DELETE
+        FROM relation_types
+        WHERE id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <select id="getAllById" parameterType="list" resultMap="relationTypeMap">
+        SELECT *
+        FROM relation_types
+        WHERE id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
 
 </mapper>

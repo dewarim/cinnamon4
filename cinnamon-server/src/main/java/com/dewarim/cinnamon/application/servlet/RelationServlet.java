@@ -1,15 +1,17 @@
 package com.dewarim.cinnamon.application.servlet;
 
 import com.dewarim.cinnamon.ErrorCode;
+import com.dewarim.cinnamon.api.UrlMapping;
+import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.application.ErrorResponseGenerator;
 import com.dewarim.cinnamon.application.ResponseUtil;
 import com.dewarim.cinnamon.dao.RelationDao;
 import com.dewarim.cinnamon.dao.RelationTypeDao;
 import com.dewarim.cinnamon.model.relations.Relation;
 import com.dewarim.cinnamon.model.relations.RelationType;
-import com.dewarim.cinnamon.model.request.CreateRelationRequest;
-import com.dewarim.cinnamon.model.request.DeleteRelationRequest;
 import com.dewarim.cinnamon.model.request.RelationRequest;
+import com.dewarim.cinnamon.model.request.relation.CreateRelationRequest;
+import com.dewarim.cinnamon.model.request.relation.DeleteRelationRequest;
 import com.dewarim.cinnamon.model.response.GenericResponse;
 import com.dewarim.cinnamon.model.response.RelationWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -31,31 +33,29 @@ public class RelationServlet extends HttpServlet {
     private final ObjectMapper xmlMapper = XML_MAPPER;
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        CinnamonResponse cinnamonResponse = (CinnamonResponse) response;
+        RelationDao      relationDao      = new RelationDao();
 
-        String pathInfo = request.getPathInfo();
-        if (pathInfo == null) {
-            pathInfo = "";
-        }
-        switch (pathInfo) {
-            case "/getRelations":
-                listRelations(request, response);
+        UrlMapping mapping = UrlMapping.getByPath(request.getRequestURI());
+        switch (mapping) {
+            case RELATION__LIST:
+                listRelations(request, relationDao, cinnamonResponse);
                 break;
-            case "/createRelation":
-                createRelation(request, response);
+            case RELATION__CREATE:
+                createRelation(request, relationDao, cinnamonResponse);
                 break;
-            case "/deleteRelation":
-                deleteRelation(request, response);
+            case RELATION__DELETE:
+                deleteRelation(request, relationDao, cinnamonResponse);
                 break;
             default:
                 ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
     }
 
-    private void deleteRelation(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    private void deleteRelation(HttpServletRequest request, RelationDao relationDao, HttpServletResponse response) throws IOException {
         DeleteRelationRequest deleteRequest = xmlMapper.readValue(request.getInputStream(), DeleteRelationRequest.class);
         if (deleteRequest.validated()) {
-            RelationDao dao          = new RelationDao();
-            int         affectedRows = dao.deleteRelation(deleteRequest.getLeftId(), deleteRequest.getRightId(), deleteRequest.getTypeName());
+            int affectedRows = relationDao.deleteRelation(deleteRequest.getLeftId(), deleteRequest.getRightId(), deleteRequest.getTypeName());
             switch (affectedRows) {
                 case 0:
                     ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.OBJECT_NOT_FOUND_OR_GONE);
@@ -72,38 +72,34 @@ public class RelationServlet extends HttpServlet {
         ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.INVALID_REQUEST);
     }
 
-    private void createRelation(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    private void createRelation(HttpServletRequest request, RelationDao relationDao, CinnamonResponse response) throws IOException {
         CreateRelationRequest createRequest = xmlMapper.readValue(request.getInputStream(), CreateRelationRequest.class);
         if (createRequest.validated()) {
             Optional<RelationType> relationTypeOpt = new RelationTypeDao().getRelationTypeByName(createRequest.getTypeName());
             if (relationTypeOpt.isPresent()) {
-                RelationDao relationDao = new RelationDao();
-                Relation    newRelation = new Relation(createRequest.getLeftId(), createRequest.getRightId(), relationTypeOpt.get().getId(), createRequest.getMetadata());
-                relationDao.createRelation(newRelation);
-                ResponseUtil.responseIsOkayAndXml(response);
-                xmlMapper.writeValue(response.getWriter(), new GenericResponse(true));
+                List<Relation> newRelation = List.of(new Relation(createRequest.getLeftId(), createRequest.getRightId(), relationTypeOpt.get().getId(), createRequest.getMetadata()));
+                relationDao.create(newRelation);
+                var relationWrapper = new RelationWrapper(newRelation);
+                response.setWrapper(relationWrapper);
                 return;
             } else {
-                ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.RELATION_TYPE_NOT_FOUND);
+                ErrorCode.RELATION_TYPE_NOT_FOUND.throwUp();
             }
             return;
         }
-        ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.INVALID_REQUEST);
+        ErrorCode.INVALID_REQUEST.throwUp();
     }
 
-    private void listRelations(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    private void listRelations(HttpServletRequest request, RelationDao relationDao, CinnamonResponse response) throws IOException {
         RelationRequest relationRequest = xmlMapper.readValue(request.getInputStream(), RelationRequest.class);
         if (relationRequest.validated()) {
-            RelationDao relationDao = new RelationDao();
-            List<Relation> types = relationDao.getRelations(relationRequest.getLeftIds(), relationRequest.getRightIds(),
+            List<Relation> relations = relationDao.getRelations(relationRequest.getLeftIds(), relationRequest.getRightIds(),
                     relationRequest.getNames(), relationRequest.isIncludeMetadata());
-            RelationWrapper wrapper = new RelationWrapper();
-            wrapper.setRelations(types);
-            ResponseUtil.responseIsOkayAndXml(response);
-            xmlMapper.writeValue(response.getWriter(), wrapper);
+            RelationWrapper wrapper = new RelationWrapper(relations);
+            response.setWrapper(wrapper);
             return;
         }
-        ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.INVALID_REQUEST);
+        ErrorCode.INVALID_REQUEST.throwUp();
 
     }
 

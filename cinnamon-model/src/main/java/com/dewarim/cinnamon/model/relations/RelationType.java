@@ -1,19 +1,34 @@
 package com.dewarim.cinnamon.model.relations;
 
+import com.dewarim.cinnamon.api.Identifiable;
+
 import java.util.Objects;
 
-public class RelationType {
-    
-    private Long id;
+public class RelationType implements Identifiable {
+
+    private Long    id;
     private boolean leftObjectProtected;
     private boolean rightObjectProtected;
-    private String name;
+    private String  name;
     private boolean cloneOnRightCopy;
     private boolean cloneOnLeftCopy;
     private boolean cloneOnLeftVersion;
     private boolean cloneOnRightVersion;
 
     public RelationType() {
+    }
+
+    public RelationType(String name,
+                        boolean leftObjectProtected, boolean rightObjectProtected,
+                        boolean cloneOnRightCopy, boolean cloneOnLeftCopy,
+                        boolean cloneOnLeftVersion, boolean cloneOnRightVersion) {
+        this.leftObjectProtected = leftObjectProtected;
+        this.rightObjectProtected = rightObjectProtected;
+        this.name = name;
+        this.cloneOnRightCopy = cloneOnRightCopy;
+        this.cloneOnLeftCopy = cloneOnLeftCopy;
+        this.cloneOnLeftVersion = cloneOnLeftVersion;
+        this.cloneOnRightVersion = cloneOnRightVersion;
     }
 
     public Long getId() {
@@ -90,12 +105,12 @@ public class RelationType {
         }
         RelationType that = (RelationType) o;
         return leftObjectProtected == that.leftObjectProtected &&
-               rightObjectProtected == that.rightObjectProtected &&
-               cloneOnRightCopy == that.cloneOnRightCopy &&
-               cloneOnLeftCopy == that.cloneOnLeftCopy &&
-               cloneOnLeftVersion == that.cloneOnLeftVersion &&
-               cloneOnRightVersion == that.cloneOnRightVersion &&
-               Objects.equals(name, that.name);
+                rightObjectProtected == that.rightObjectProtected &&
+                cloneOnRightCopy == that.cloneOnRightCopy &&
+                cloneOnLeftCopy == that.cloneOnLeftCopy &&
+                cloneOnLeftVersion == that.cloneOnLeftVersion &&
+                cloneOnRightVersion == that.cloneOnRightVersion &&
+                Objects.equals(name, that.name);
     }
 
     @Override

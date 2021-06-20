@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class RelationDao {
+public class RelationDao implements CrudDao<Relation>{
 
     public List<Relation> getRelations(Collection<Long> leftIds, Collection<Long> rightIds, Collection<String> names, boolean includeMetadata) {
         Map<String, Object> params = new HashMap<>();
@@ -19,12 +19,7 @@ public class RelationDao {
         params.put("includeMetadata", includeMetadata);
 
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        return sqlSession.selectList("com.dewarim.cinnamon.RelationMapper.getRelationsWithCriteria", params);
-    }
-
-    public void createRelation(Relation relation) {
-        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        sqlSession.insert("com.dewarim.cinnamon.RelationMapper.createRelation", relation);
+        return sqlSession.selectList("com.dewarim.cinnamon.model.relations.Relation.getRelationsWithCriteria", params);
     }
 
     public int deleteRelation(Long leftId, Long rightId, String name) {
@@ -33,28 +28,32 @@ public class RelationDao {
         params.put("rightId", rightId);
         params.put("name", name);
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        return sqlSession.delete("com.dewarim.cinnamon.RelationMapper.deleteRelation", params);
+        return sqlSession.delete("com.dewarim.cinnamon.model.relations.Relation.deleteRelationByExample", params);
     }
 
     public List<Relation> getProtectedRelations(List<Long> osdIds) {
-        // TODO: allow deletions of over 32K Objects at once.
         Map<String, Object> params = new HashMap<>();
         params.put("ids", osdIds);
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        return sqlSession.selectList("com.dewarim.cinnamon.RelationMapper.getProtectedRelations", params);
+        return sqlSession.selectList("com.dewarim.cinnamon.model.relations.Relation.getProtectedRelations", params);
     }
 
     public List<Relation> getAllRelationsOfObjects(List<Long> osdIds) {
         Map<String, Object> params = new HashMap<>();
         params.put("ids", osdIds);
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        return sqlSession.selectList("com.dewarim.cinnamon.RelationMapper.getAllRelationsOfObjects", params);
+        return sqlSession.selectList("com.dewarim.cinnamon.model.relations.Relation.getAllRelationsOfObjects", params);
     }
 
     public void deleteAllUnprotectedRelationsOfObjects(List<Long> osdIds) {
         Map<String, Object> params = new HashMap<>();
         params.put("ids", osdIds);
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        sqlSession.delete("com.dewarim.cinnamon.RelationMapper.deleteAllUnprotectedRelationsOfObjects", params);
+        sqlSession.delete("com.dewarim.cinnamon.model.relations.Relation.deleteAllUnprotectedRelationsOfObjects", params);
+    }
+
+    @Override
+    public String getTypeClassName() {
+        return Relation.class.getName();
     }
 }

@@ -7,14 +7,15 @@ import java.util.Optional;
 
 public class DeleteOsdRequest {
 
-    private List<Long> ids = new ArrayList<>();
-    private boolean deleteDescendants = false;
+    private List<Long> ids               = new ArrayList<>();
+    private boolean    deleteDescendants = false;
 
     public DeleteOsdRequest() {
     }
 
-    public DeleteOsdRequest(List<Long> ids) {
+    public DeleteOsdRequest(List<Long> ids, boolean deleteDescendants) {
         this.ids = ids;
+        this.deleteDescendants = deleteDescendants;
     }
 
     public List<Long> getIds() {
@@ -34,11 +35,11 @@ public class DeleteOsdRequest {
     }
 
     private boolean validated() {
-        return ids != null && ids.stream().allMatch( id -> Objects.nonNull(id) && id > 0);
+        return ids != null && ids.stream().allMatch(id -> Objects.nonNull(id) && id > 0);
     }
 
-    public Optional<DeleteOsdRequest> validateRequest(){
-        if(validated()){
+    public Optional<DeleteOsdRequest> validateRequest() {
+        if (validated()) {
             return Optional.of(this);
         }
         return Optional.empty();

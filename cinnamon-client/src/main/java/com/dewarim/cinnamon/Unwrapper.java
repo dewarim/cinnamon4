@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon;
 
+import com.dewarim.cinnamon.model.response.CinnamonError;
 import com.dewarim.cinnamon.model.response.CinnamonErrorWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -11,6 +12,7 @@ import org.apache.logging.log4j.Logger;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.dewarim.cinnamon.api.Constants.*;
 import static org.apache.http.HttpStatus.SC_OK;
@@ -46,6 +48,7 @@ public class Unwrapper<T, W extends Wrapper<T>> {
     public List<T> unwrap(HttpResponse response, Integer expectedSize) throws IOException {
         if (response.containsHeader(HEADER_FIELD_CINNAMON_ERROR)) {
             CinnamonErrorWrapper wrapper = mapper.readValue(response.getEntity().getContent(), CinnamonErrorWrapper.class);
+            log.warn("Found errors: "+wrapper.getErrors().stream().map(CinnamonError::toString).collect(Collectors.joining(",")));
             throw new CinnamonClientException(wrapper);
         }
         if (response.getStatusLine().getStatusCode() != SC_OK) {

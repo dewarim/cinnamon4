@@ -6,6 +6,7 @@ import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.model.Meta;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.links.Link;
+import com.dewarim.cinnamon.model.relations.RelationType;
 import com.dewarim.cinnamon.model.request.CreateMetaRequest;
 import com.dewarim.cinnamon.model.request.CreateNewVersionRequest;
 import com.dewarim.cinnamon.model.request.DeleteMetaRequest;
@@ -1058,10 +1059,200 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
                 .createOsd("version-me-for-descendant");
         ObjectSystemData version1 = client.version(new CreateNewVersionRequest(holder.osd.getId()));
         ObjectSystemData version2 = client.version(new CreateNewVersionRequest(version1.getId()));
-        assertTrue(client.deleteOsd(holder.osd.getId(), true));
+        client.deleteOsd(holder.osd.getId(), true);
     }
 
-    // TODO: deleteOsdWithProtectedRelations
+    @Test
+    public void deleteOsdWithUnprotectedRelations() throws IOException {
+        var holder = new TestObjectHolder(adminClient);
+        holder.setAcl(client.getAclByName("reviewers.acl"))
+                .setUser(userId)
+                .setFolder(createFolderId)
+                .createOsd("left-osd-unprotected");
+        ObjectSystemData leftOsd = holder.osd;
+        holder.createOsd("right-osd-protected");
+        ObjectSystemData rightOsd = holder.osd;
+
+        RelationType rt = new RelationType("left-rt-protected", true, false, false, false, false, false);
+        rt = adminClient.createRelationTypes(List.of(rt)).get(0);
+        client.createRelation(leftOsd.getId(), rightOsd.getId(), rt.getName(), "<meta/>");
+        client.deleteOsd(rightOsd.getId(), false);
+    }
+
+    @Test
+    public void deleteTwoOsdsWhoseRelationsProtectEachOther() throws IOException {
+        var holder = new TestObjectHolder(adminClient);
+        holder.setAcl(client.getAclByName("reviewers.acl"))
+                .setUser(userId)
+                .setFolder(createFolderId)
+                .createOsd("has-only-protected-relations");
+        ObjectSystemData leftOsd = holder.osd;
+        holder.createOsd("right-osd-protected-all");
+        ObjectSystemData rightOsd = holder.osd;
+
+        RelationType rt = new RelationType("all-protected-delete", true, true, false, false, false, false);
+        rt = adminClient.createRelationTypes(List.of(rt)).get(0);
+        client.createRelation(leftOsd.getId(), rightOsd.getId(), rt.getName(), "<meta/>");
+        client.deleteOsds(List.of(rightOsd.getId(), leftOsd.getId()), false);
+    }
+
+    @Test
+    public void deleteTwoOsdsThatAreProtectedByLeftObject() throws IOException {
+        var holder = new TestObjectHolder(adminClient);
+        holder.setAcl(client.getAclByName("reviewers.acl"))
+                .setUser(userId)
+                .setFolder(createFolderId)
+                .createOsd("has-left-protected-relations");
+        ObjectSystemData leftOsd = holder.osd;
+        holder.createOsd("right-osd");
+        ObjectSystemData rightOsd = holder.osd;
+
+        RelationType rt = new RelationType("left-protected-delete", true, false, false, false, false, false);
+        rt = adminClient.createRelationTypes(List.of(rt)).get(0);
+        client.createRelation(leftOsd.getId(), rightOsd.getId(), rt.getName(), "<meta/>");
+        client.deleteOsds(List.of(rightOsd.getId(), leftOsd.getId()), false);
+    }
+
+    @Test
+    public void deleteTwoOsdsThatAreProtectedByRightObject() throws IOException {
+        var holder = new TestObjectHolder(adminClient);
+        holder.setAcl(client.getAclByName("reviewers.acl"))
+                .setUser(userId)
+                .setFolder(createFolderId)
+                .createOsd("has-right-protected-relations");
+        ObjectSystemData leftOsd = holder.osd;
+        holder.createOsd("right-osd");
+        ObjectSystemData rightOsd = holder.osd;
+
+        RelationType rt = new RelationType("right-protected-delete", false, true, false, false, false, false);
+        rt = adminClient.createRelationTypes(List.of(rt)).get(0);
+        client.createRelation(leftOsd.getId(), rightOsd.getId(), rt.getName(), "<meta/>");
+        client.deleteOsds(List.of(rightOsd.getId(), leftOsd.getId()), false);
+    }
+    @Test
+    public void deleteTwoOsdsWithUnprotectedRelation() throws IOException {
+        var holder = new TestObjectHolder(adminClient);
+        holder.setAcl(client.getAclByName("reviewers.acl"))
+                .setUser(userId)
+                .setFolder(createFolderId)
+                .createOsd("has-right-unprotected-relations");
+        ObjectSystemData leftOsd = holder.osd;
+        holder.createOsd("right-osd");
+        ObjectSystemData rightOsd = holder.osd;
+
+        RelationType rt = new RelationType("un-protected-delete", false, false, false, false, false, false);
+        rt = adminClient.createRelationTypes(List.of(rt)).get(0);
+        client.createRelation(leftOsd.getId(), rightOsd.getId(), rt.getName(), "<meta/>");
+        client.deleteOsds(List.of(rightOsd.getId(), leftOsd.getId()), false);
+    }
+
+    @Test
+    public void deleteOsdThatIsProtectedByRightObject() throws IOException {
+        var holder = new TestObjectHolder(adminClient);
+        holder.setAcl(client.getAclByName("reviewers.acl"))
+                .setUser(userId)
+                .setFolder(createFolderId)
+                .createOsd("protects-right");
+        ObjectSystemData leftOsd = holder.osd;
+        holder.createOsd("right-osd-protected-by-left");
+        ObjectSystemData rightOsd = holder.osd;
+
+        RelationType rt = new RelationType("right-only-protected-delete",false,true,false,false,false,false);
+        rt = adminClient.createRelationTypes(List.of(rt)).get(0);
+        client.createRelation(leftOsd.getId(), rightOsd.getId(), rt.getName(),"<meta/>");
+        assertClientError(() -> client.deleteOsds(List.of(rightOsd.getId()), false),
+                CANNOT_DELETE_DUE_TO_ERRORS, OBJECT_HAS_PROTECTED_RELATIONS);
+    }
+
+
+    @Test
+    public void deleteOsdThatIsNotProtectedByRightObject() throws IOException {
+        var holder = new TestObjectHolder(adminClient);
+        holder.setAcl(client.getAclByName("reviewers.acl"))
+                .setUser(userId)
+                .setFolder(createFolderId)
+                .createOsd("protects-right");
+        ObjectSystemData leftOsd = holder.osd;
+        holder.createOsd("right-osd-protected-by-left");
+        ObjectSystemData rightOsd = holder.osd;
+
+        RelationType rt = new RelationType("right-only-protected-delete2",true,false,false,false,false,false);
+        rt = adminClient.createRelationTypes(List.of(rt)).get(0);
+        client.createRelation(leftOsd.getId(), rightOsd.getId(), rt.getName(),"<meta/>");
+        client.deleteOsds(List.of(rightOsd.getId()), false);
+    }
+
+    @Test
+    public void deleteOsdThatIsNotProtectedByLeftObject() throws IOException {
+        var holder = new TestObjectHolder(adminClient);
+        holder.setAcl(client.getAclByName("reviewers.acl"))
+                .setUser(userId)
+                .setFolder(createFolderId)
+                .createOsd("protects-right");
+        ObjectSystemData leftOsd = holder.osd;
+        holder.createOsd("right-osd-protected-by-left");
+        ObjectSystemData rightOsd = holder.osd;
+
+        RelationType rt = new RelationType("left-only-protected-delete2",false,true,false,false,false,false);
+        rt = adminClient.createRelationTypes(List.of(rt)).get(0);
+        client.createRelation(leftOsd.getId(), rightOsd.getId(), rt.getName(),"<meta/>");
+        client.deleteOsds(List.of(leftOsd.getId()), false);
+    }
+
+    @Test
+    public void deleteLeftOsdThatIsProtectedByLeftObject() throws IOException {
+        var holder = new TestObjectHolder(adminClient);
+        holder.setAcl(client.getAclByName("reviewers.acl"))
+                .setUser(userId)
+                .setFolder(createFolderId)
+                .createOsd("protects-right");
+        ObjectSystemData leftOsd = holder.osd;
+        holder.createOsd("right-osd-protected-by-left");
+        ObjectSystemData rightOsd = holder.osd;
+
+        RelationType rt = new RelationType("left-only-protected-delete",true,false,false,false,false,false);
+        rt = adminClient.createRelationTypes(List.of(rt)).get(0);
+        client.createRelation(leftOsd.getId(), rightOsd.getId(), rt.getName(),"<meta/>");
+        assertClientError(() -> client.deleteOsds(List.of(leftOsd.getId()), false),
+                CANNOT_DELETE_DUE_TO_ERRORS, OBJECT_HAS_PROTECTED_RELATIONS);
+    }
+
+    @Test
+    public void deleteWithLockedObject() throws IOException {
+        var holder = new TestObjectHolder(adminClient);
+        holder.setAcl(client.getAclByName("reviewers.acl"))
+                .setUser(userId)
+                .setFolder(createFolderId)
+                .createOsd("protects-right");
+        var osd = holder.osd;
+        adminClient.lockOsd(osd.getId());
+        assertClientError(() -> client.deleteOsds(List.of(osd.getId()), false),
+                CANNOT_DELETE_DUE_TO_ERRORS, OBJECT_LOCKED_BY_OTHER_USER);
+    }
+
+    @Test
+    public void deleteWithLockedObjectsAsAdmin() throws IOException {
+        var holder = new TestObjectHolder(adminClient);
+        holder.setAcl(client.getAclByName("reviewers.acl"))
+                .setUser(userId)
+                .setFolder(createFolderId)
+                .createOsd("protects-right");
+        var osd = holder.osd;
+        adminClient.lockOsd(osd.getId());
+        adminClient.deleteOsds(List.of(osd.getId()), false);
+    }
+
+    @Test
+    public void deleteWithLockedObjectByCurrentUser() throws IOException {
+        var holder = new TestObjectHolder(adminClient);
+        holder.setAcl(client.getAclByName("reviewers.acl"))
+                .setUser(userId)
+                .setFolder(createFolderId)
+                .createOsd("protects-right");
+        var osd = holder.osd;
+        client.lockOsd(osd.getId());
+        client.deleteOsds(List.of(osd.getId()), false);
+    }
 
     private HttpResponse sendAdminMultipartRequest(UrlMapping url, HttpEntity multipartEntity) throws IOException {
         return Request.Post("http://localhost:" + cinnamonTestPort + url.getPath())

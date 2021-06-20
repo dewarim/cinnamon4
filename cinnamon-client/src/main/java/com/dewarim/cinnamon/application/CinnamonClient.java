@@ -15,8 +15,11 @@ import com.dewarim.cinnamon.model.ObjectType;
 import com.dewarim.cinnamon.model.Permission;
 import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.links.LinkType;
+import com.dewarim.cinnamon.model.relations.Relation;
+import com.dewarim.cinnamon.model.relations.RelationType;
 import com.dewarim.cinnamon.model.request.CreateMetaRequest;
 import com.dewarim.cinnamon.model.request.CreateNewVersionRequest;
+import com.dewarim.cinnamon.model.request.IdRequest;
 import com.dewarim.cinnamon.model.request.acl.AclInfoRequest;
 import com.dewarim.cinnamon.model.request.acl.CreateAclRequest;
 import com.dewarim.cinnamon.model.request.acl.DeleteAclRequest;
@@ -47,6 +50,9 @@ import com.dewarim.cinnamon.model.request.osd.DeleteOsdRequest;
 import com.dewarim.cinnamon.model.request.osd.OsdRequest;
 import com.dewarim.cinnamon.model.request.permission.ChangePermissionsRequest;
 import com.dewarim.cinnamon.model.request.permission.ListPermissionRequest;
+import com.dewarim.cinnamon.model.request.relation.CreateRelationRequest;
+import com.dewarim.cinnamon.model.request.relationType.CreateRelationTypeRequest;
+import com.dewarim.cinnamon.model.request.relationType.DeleteRelationTypeRequest;
 import com.dewarim.cinnamon.model.request.user.UserInfoRequest;
 import com.dewarim.cinnamon.model.request.user.UserPermissionRequest;
 import com.dewarim.cinnamon.model.response.AclGroupWrapper;
@@ -66,6 +72,8 @@ import com.dewarim.cinnamon.model.response.MetaWrapper;
 import com.dewarim.cinnamon.model.response.ObjectTypeWrapper;
 import com.dewarim.cinnamon.model.response.OsdWrapper;
 import com.dewarim.cinnamon.model.response.PermissionWrapper;
+import com.dewarim.cinnamon.model.response.RelationTypeWrapper;
+import com.dewarim.cinnamon.model.response.RelationWrapper;
 import com.dewarim.cinnamon.model.response.UserInfo;
 import com.dewarim.cinnamon.model.response.UserWrapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -115,6 +123,8 @@ public class CinnamonClient {
     private final Unwrapper<Link, LinkWrapper>                   linkUnwrapper         = new Unwrapper<>(LinkWrapper.class);
     // LinkResponse contains full OSD/Folder objects, Link itself contains only ids.
     private final Unwrapper<LinkResponse, LinkResponseWrapper>   linkResponseUnwrapper = new Unwrapper<>(LinkResponseWrapper.class);
+    private final Unwrapper<Relation, RelationWrapper>           relationUnwrapper     = new Unwrapper<>(RelationWrapper.class);
+    private final Unwrapper<RelationType, RelationTypeWrapper>   relationTypeUnwrapper = new Unwrapper<>(RelationTypeWrapper.class);
     private final Unwrapper<Permission, PermissionWrapper>       permissionUnwrapper   = new Unwrapper<>(PermissionWrapper.class);
 
     public CinnamonClient() {
@@ -238,23 +248,32 @@ public class CinnamonClient {
         return unwrapOsds(sendStandardMultipartRequest(UrlMapping.OSD__VERSION, request), 1).get(0);
     }
 
+    public boolean deleteOsd(Long id) throws IOException {
+        return deleteOsd(id,false);
+    }
+
     public boolean deleteOsd(Long id, boolean deleteDescendants) throws IOException {
-        DeleteOsdRequest deleteRequest = new DeleteOsdRequest(Collections.singletonList(id));
-        deleteRequest.setDeleteDescendants(deleteDescendants);
-        HttpResponse     response      = sendStandardRequest(UrlMapping.OSD__DELETE_OSDS, deleteRequest);
+        DeleteOsdRequest deleteRequest = new DeleteOsdRequest(Collections.singletonList(id), deleteDescendants);
+        HttpResponse response = sendStandardRequest(UrlMapping.OSD__DELETE_OSDS, deleteRequest);
         return verifyDeleteResponse(response);
     }
 
-    public boolean deleteOsd(Long id) throws IOException {
-        DeleteOsdRequest deleteRequest = new DeleteOsdRequest(Collections.singletonList(id));
+    public boolean deleteOsds(List<Long> id, boolean deleteDescendants) throws IOException {
+        DeleteOsdRequest deleteRequest = new DeleteOsdRequest(id, deleteDescendants);
         HttpResponse     response      = sendStandardRequest(UrlMapping.OSD__DELETE_OSDS, deleteRequest);
         return verifyDeleteResponse(response);
     }
 
     public ObjectSystemData createOsd(CreateOsdRequest createOsdRequest) throws IOException {
-        HttpEntity request = createSimpleMultipartEntity(CREATE_NEW_OSD, createOsdRequest);
+        HttpEntity   request  = createSimpleMultipartEntity(CREATE_NEW_OSD, createOsdRequest);
         HttpResponse response = sendStandardMultipartRequest(OSD__CREATE_OSD, request);
         return osdUnwrapper.unwrap(response, 1).get(0);
+    }
+
+    public GenericResponse lockOsd(Long id) throws IOException{
+        IdRequest idRequest = new IdRequest(id);
+        var response = sendStandardRequest(UrlMapping.OSD__LOCK, idRequest);
+        return parseGenericResponse(response);
     }
 
     // Folders
@@ -434,7 +453,7 @@ public class CinnamonClient {
         return objectTypeUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
-    // permissions
+    // Permissions
     public List<Permission> getUserPermissions(Long userId, Long aclId) throws IOException {
         var request  = new UserPermissionRequest(userId, aclId);
         var response = sendStandardRequest(UrlMapping.PERMISSION__GET_USER_PERMISSIONS, request);
@@ -450,6 +469,27 @@ public class CinnamonClient {
         var request  = new ChangePermissionsRequest(aclGroupId, permissionsToAdd, permissionsToRemove);
         var response = sendStandardRequest(UrlMapping.PERMISSION__CHANGE_PERMISSIONS, request);
         verifyResponseIsOkay(response);
+    }
+
+    // Relations
+    public Relation createRelation(Long leftId, Long rightId, String name, String metadata) throws IOException {
+        // create
+        var createRequest = new CreateRelationRequest(leftId, rightId, name, metadata);
+        var response      = sendStandardRequest(UrlMapping.RELATION__CREATE, createRequest);
+        return relationUnwrapper.unwrap(response, 1).get(0);
+    }
+
+    public boolean deleteRelationTypes(List<Long> ids) throws IOException {
+        var deleteRequest = new DeleteRelationTypeRequest(ids);
+        var response = sendStandardRequest(UrlMapping.RELATION_TYPE__DELETE, deleteRequest);
+        return verifyDeleteResponse(response);
+    }
+
+    // RelationTypes
+    public List<RelationType> createRelationTypes(List<RelationType> relationTypes) throws IOException {
+        var createRequest = new CreateRelationTypeRequest(relationTypes);
+        var response      = sendStandardRequest(UrlMapping.RELATION_TYPE__CREATE, createRequest);
+        return relationTypeUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
     private HttpEntity createSimpleMultipartEntity(String fieldname, Object contentRequest) throws IOException {

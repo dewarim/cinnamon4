@@ -246,3 +246,9 @@
     alter table acl_groups drop column obj_version;
 
     alter table objtypes rename to object_types;
+
+    -- update relationtypes table for consistency
+    alter table relationtypes rename to relation_types;
+    alter table relation_types rename leftobjectprotected to left_object_protected;
+    alter table relation_types rename rightobjectprotected to right_object_protected;
+    
