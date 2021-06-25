@@ -2,7 +2,7 @@ package com.dewarim.cinnamon.test;
 
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.Constants;
-import com.dewarim.cinnamon.application.CinnamonClient;
+import com.dewarim.cinnamon.client.CinnamonClient;
 import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.AclGroup;
 import com.dewarim.cinnamon.model.Folder;

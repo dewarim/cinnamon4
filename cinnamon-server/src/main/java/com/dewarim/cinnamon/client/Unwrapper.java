@@ -1,4 +1,4 @@
-package com.dewarim.cinnamon;
+package com.dewarim.cinnamon.client;
 
 import com.dewarim.cinnamon.model.response.CinnamonError;
 import com.dewarim.cinnamon.model.response.CinnamonErrorWrapper;

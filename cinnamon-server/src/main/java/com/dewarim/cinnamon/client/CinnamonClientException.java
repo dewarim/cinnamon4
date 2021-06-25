@@ -1,5 +1,6 @@
-package com.dewarim.cinnamon;
+package com.dewarim.cinnamon.client;
 
+import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.model.response.CinnamonErrorWrapper;
 
 public class CinnamonClientException extends RuntimeException {

@@ -15,7 +15,13 @@ Try to implement the core features of the Cinnamon CMS in Java,
 * improved API
 * removing obsolete code
 * minimizing dependencies on huge frameworks which are hard to understand
-* opinionated implementation (using Jetty, PostgreSQL, MyBatis). 
+* opinionated implementation (using Jetty, PostgreSQL, MyBatis).
+
+## Build
+
+## Run
+
+## Configure
 
 ## License
 

@@ -1,11 +1,11 @@
 package com.dewarim.cinnamon.test.integration;
 
-import com.dewarim.cinnamon.CinnamonClientException;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
-import com.dewarim.cinnamon.application.CinnamonClient;
 import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.application.DbSessionFactory;
+import com.dewarim.cinnamon.client.CinnamonClient;
+import com.dewarim.cinnamon.client.CinnamonClientException;
 import com.dewarim.cinnamon.model.response.CinnamonConnection;
 import com.dewarim.cinnamon.model.response.CinnamonError;
 import com.dewarim.cinnamon.model.response.CinnamonErrorWrapper;

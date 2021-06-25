@@ -1,10 +1,10 @@
 package com.dewarim.cinnamon.test.integration;
 
-import com.dewarim.cinnamon.CinnamonClientException;
 import com.dewarim.cinnamon.ErrorCode;
-import com.dewarim.cinnamon.Unwrapper;
 import com.dewarim.cinnamon.api.Constants;
 import com.dewarim.cinnamon.api.UrlMapping;
+import com.dewarim.cinnamon.client.CinnamonClientException;
+import com.dewarim.cinnamon.client.Unwrapper;
 import com.dewarim.cinnamon.model.FolderType;
 import com.dewarim.cinnamon.model.request.folderType.ListFolderTypeRequest;
 import com.dewarim.cinnamon.model.response.FolderTypeWrapper;

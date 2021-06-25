@@ -1,7 +1,5 @@
-package com.dewarim.cinnamon.application;
+package com.dewarim.cinnamon.client;
 
-import com.dewarim.cinnamon.CinnamonClientException;
-import com.dewarim.cinnamon.Unwrapper;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.AclGroup;

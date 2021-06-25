@@ -1,8 +1,8 @@
 package com.dewarim.cinnamon.test.integration;
 
-import com.dewarim.cinnamon.CinnamonClientException;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
+import com.dewarim.cinnamon.client.CinnamonClientException;
 import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.AclGroup;
 import com.dewarim.cinnamon.model.Group;

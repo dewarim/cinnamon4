@@ -1,10 +1,10 @@
 package com.dewarim.cinnamon.test.integration;
 
-import com.dewarim.cinnamon.CinnamonClientException;
 import com.dewarim.cinnamon.ErrorCode;
-import com.dewarim.cinnamon.Unwrapper;
 import com.dewarim.cinnamon.api.Constants;
 import com.dewarim.cinnamon.api.UrlMapping;
+import com.dewarim.cinnamon.client.CinnamonClientException;
+import com.dewarim.cinnamon.client.Unwrapper;
 import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.request.IdRequest;
 import com.dewarim.cinnamon.model.request.acl.AclInfoRequest;
