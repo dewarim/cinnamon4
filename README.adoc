@@ -1,0 +1,64 @@
+= Cinnamon 4
+
+A new implementation of the Cinnamon 3 CMS server in Java.
+
+Current status: pre-alpha.
+
+== Goal
+
+Try to implement the core features of the Cinnamon CMS in Java,
+
+* using modern language features
+* with unit tests
+* with integration tests
+* with documentation
+* improved API
+* removing obsolete code
+* minimizing dependencies on huge frameworks which are hard to understand
+* opinionated implementation (using Jetty, PostgreSQL, MyBatis).
+
+== Dependencies
+
+Before you start: this project needs the following dependencies to build & run:
+
+* https://maven.apache.org/download.cgi[Apache Maven] (as build system)
+* https://adoptopenjdk.net/[Java 11]
+
+== Build
+
+In the top level project directory, run:
+
+    mvn clean package
+
+to build target/cinnamon-server.jar which includes all dependencies.
+
+== Run
+
+    java -jar target/cinnamon-server.jar
+
+will start the server with default settings.
+
+Run
+
+    java -jar target/cinnamon-server.jar --help
+
+to show the command line options.
+
+    # write the default config to a file:
+    java -jar target/cinnamon-server.jar --write-config default-config.xml
+
+    # load a custom config file:
+    java -jar target/cinnamon-server.jar --config default-config.xml
+
+    # start on port 8080:
+    java -jar target/cinnamon-server.jar --port 8080
+
+== Configure
+
+== License
+
+[Apache 2.0](LICENSE.txt)
+
+== Author
+
+Ingo Wiarda - ingo_wiarda@dewarim.de

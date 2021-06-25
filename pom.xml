@@ -4,10 +4,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.dewarim.cinnamon</groupId>
-    <artifactId>cinnamon-server</artifactId>
+    <artifactId>cinnamon-cms</artifactId>
     <packaging>jar</packaging>
-    <version>0.1</version>
-    <name>cinnamon-server</name>
+    <version>0.2</version>
+    <name>Cinnamon CMS</name>
 
     <properties>
         <jetty.version>11.0.2</jetty.version>
@@ -26,25 +26,6 @@
     </scm>
 
     <dependencies>
-
-        <dependency>
-            <groupId>com.dewarim.cinnamon</groupId>
-            <artifactId>cinnamon-api</artifactId>
-            <version>0.1</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.dewarim.cinnamon</groupId>
-            <artifactId>cinnamon-model</artifactId>
-            <version>0.1</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.dewarim.cinnamon</groupId>
-            <artifactId>cinnamon-client</artifactId>
-            <version>0.1</version>
-            <scope>test</scope>
-        </dependency>
 
         <!-- jetty server -->
         <dependency>

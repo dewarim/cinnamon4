@@ -203,7 +203,7 @@ public class CinnamonServer {
         @Parameter(names = {"--port", "-p"}, description = "Port on which the server listens. Default is 9090.")
         Integer port;
 
-        @Parameter(names = "--write-config", description = "Write the default configuration to this file")
+        @Parameter(names = "--write-config", description = "Write the default configuration to the filename given.")
         String writeConfigFile;
 
         @Parameter(names = {"--config", "-c"}, description = "Where to load the configuration file from")
