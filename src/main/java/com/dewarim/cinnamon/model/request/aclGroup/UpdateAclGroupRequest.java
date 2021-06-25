@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.model.request.aclGroup;
 
+import com.dewarim.cinnamon.api.ApiRequest;
 import com.dewarim.cinnamon.model.AclGroup;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.response.AclGroupWrapper;
@@ -10,7 +11,7 @@ import java.util.List;
 
 import static java.util.Objects.isNull;
 
-public class UpdateAclGroupRequest implements UpdateRequest<AclGroup> {
+public class UpdateAclGroupRequest implements UpdateRequest<AclGroup>, ApiRequest {
 
     private List<AclGroup> aclGroups = new ArrayList<>();
 

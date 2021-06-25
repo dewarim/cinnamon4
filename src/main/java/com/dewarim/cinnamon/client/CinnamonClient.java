@@ -59,6 +59,7 @@ import com.dewarim.cinnamon.model.response.CinnamonConnection;
 import com.dewarim.cinnamon.model.response.CinnamonError;
 import com.dewarim.cinnamon.model.response.CinnamonErrorWrapper;
 import com.dewarim.cinnamon.model.response.DeleteResponse;
+import com.dewarim.cinnamon.model.response.DisconnectResponse;
 import com.dewarim.cinnamon.model.response.FolderTypeWrapper;
 import com.dewarim.cinnamon.model.response.FolderWrapper;
 import com.dewarim.cinnamon.model.response.FormatWrapper;
@@ -123,7 +124,9 @@ public class CinnamonClient {
     private final Unwrapper<LinkResponse, LinkResponseWrapper>   linkResponseUnwrapper = new Unwrapper<>(LinkResponseWrapper.class);
     private final Unwrapper<Relation, RelationWrapper>           relationUnwrapper     = new Unwrapper<>(RelationWrapper.class);
     private final Unwrapper<RelationType, RelationTypeWrapper>   relationTypeUnwrapper = new Unwrapper<>(RelationTypeWrapper.class);
-    private final Unwrapper<Permission, PermissionWrapper>       permissionUnwrapper   = new Unwrapper<>(PermissionWrapper.class);
+    private final Unwrapper<Permission, PermissionWrapper>         permissionUnwrapper = new Unwrapper<>(PermissionWrapper.class);
+    private final Unwrapper<DisconnectResponse, DisconnectResponse> disconnectUnwrapper = new Unwrapper<>(DisconnectResponse.class);
+    private boolean generateTicketIfNull = true;
 
     public CinnamonClient() {
     }
@@ -172,11 +175,13 @@ public class CinnamonClient {
     }
 
     protected String getTicket(boolean newTicket) throws IOException {
-        if (ticket == null || newTicket) {
+        if ((ticket == null && generateTicketIfNull) || newTicket) {
             String url = "http://localhost:" + port + UrlMapping.CINNAMON__CONNECT.getPath();
-            String tokenRequestResult = Request.Post(url)
+            var response = Request.Post(url)
                     .bodyForm(Form.form().add("user", username).add("password", password).build())
-                    .execute().returnContent().asString();
+                    .execute().returnResponse();
+            verifyResponseIsOkay(response);
+            String tokenRequestResult = new String(response.getEntity().getContent().readAllBytes());
             CinnamonConnection cinnamonConnection = mapper.readValue(tokenRequestResult, CinnamonConnection.class);
             ticket = cinnamonConnection.getTicket();
         }
@@ -497,11 +502,27 @@ public class CinnamonClient {
         return entityBuilder.build();
     }
 
+    public String getTicket() {
+        return ticket;
+    }
+
+    public void setGenerateTicketIfNull(boolean generateTicketIfNull) {
+        this.generateTicketIfNull = generateTicketIfNull;
+    }
+
     public static void main(String[] args) throws IOException {
         CinnamonClient client = new CinnamonClient();
         client.ticket = client.getTicket(true);
         log.debug(client.getOsdById(1, false));
     }
 
+    public boolean disconnect() throws IOException {
+        HttpResponse response = sendStandardRequest(UrlMapping.CINNAMON__DISCONNECT, null);
+        return disconnectUnwrapper.unwrap(response,1).get(0).isDisconnectSuccessful();
+    }
+
+    public void connect() throws IOException {
+        getTicket(true);
+    }
 }
 

@@ -3,104 +3,64 @@ package com.dewarim.cinnamon.test.integration;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.servlet.CinnamonServlet;
-import com.dewarim.cinnamon.model.response.CinnamonError;
-import com.dewarim.cinnamon.model.response.CinnamonErrorWrapper;
-import com.dewarim.cinnamon.model.response.DisconnectResponse;
+import com.dewarim.cinnamon.client.CinnamonClient;
 import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.client.fluent.Form;
 import org.apache.http.client.fluent.Request;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.util.Objects;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.MatcherAssert.assertThat;
+import static com.dewarim.cinnamon.ErrorCode.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class CinnamonServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
-    public void connectFailsWithoutValidUsername() throws IOException {
-        String url = "http://localhost:" + cinnamonTestPort + UrlMapping.CINNAMON__CONNECT.getPath();
-        HttpResponse response = Request.Post(url)
-                .bodyForm(Form.form().add("user", "invalid-user").add(PASSWORD_PARAMETER_NAME, "admin").build())
-                .execute().returnResponse();
-        assertThat(response.getStatusLine().getStatusCode(), equalTo(HttpStatus.SC_UNAUTHORIZED));
-
-        CinnamonError error = mapper.readValue(response.getEntity().getContent(), CinnamonErrorWrapper.class).getErrors().get(0);
-        assertThat(error.getCode(), equalTo(ErrorCode.CONNECTION_FAIL_INVALID_USERNAME.getCode()));
+    public void connectFailsWithoutValidUsername() {
+        CinnamonClient aClient = new CinnamonClient(cinnamonTestPort, "localhost", "http", "invalid-user", "admin");
+        assertClientError(aClient::connect, CONNECTION_FAIL_INVALID_USERNAME);
     }
 
     @Test
-    public void connectFailsWithWrongPassword() throws IOException {
-        String url = "http://localhost:" + cinnamonTestPort + UrlMapping.CINNAMON__CONNECT.getPath();
-        HttpResponse response = Request.Post(url)
-                .bodyForm(Form.form().add("user", "admin").add(PASSWORD_PARAMETER_NAME, "invalid").build())
-                .execute().returnResponse();
-        assertThat(response.getStatusLine().getStatusCode(), equalTo(HttpStatus.SC_UNAUTHORIZED));
-
-        CinnamonError error = mapper.readValue(response.getEntity().getContent(), CinnamonErrorWrapper.class).getErrors().get(0);
-        assertThat(error.getCode(), equalTo(ErrorCode.CONNECTION_FAIL_WRONG_PASSWORD.getCode()));
+    public void connectFailsWithWrongPassword() {
+        CinnamonClient aClient = new CinnamonClient(cinnamonTestPort, "localhost", "http", "admin", "invalid-password");
+        assertClientError(aClient::connect, CONNECTION_FAIL_WRONG_PASSWORD);
     }
 
     @Test
-    public void connectFailsWithLockedUser() throws IOException {
-        String url = "http://localhost:" + cinnamonTestPort + UrlMapping.CINNAMON__CONNECT.getPath();
-        HttpResponse response = Request.Post(url)
-                .bodyForm(Form.form().add("user", "locked user").add(PASSWORD_PARAMETER_NAME, "admin").build())
-                .execute().returnResponse();
-        assertThat(response.getStatusLine().getStatusCode(), equalTo(HttpStatus.SC_UNAUTHORIZED));
-
-        CinnamonError error = mapper.readValue(response.getEntity().getContent(), CinnamonErrorWrapper.class).getErrors().get(0);
-        assertThat(error.getCode(), equalTo(ErrorCode.CONNECTION_FAIL_ACCOUNT_LOCKED.getCode()));
+    public void connectFailsWithLockedUser() {
+        CinnamonClient aClient = new CinnamonClient(cinnamonTestPort, "localhost", "http", "locked user", "admin");
+        assertClientError(aClient::connect, CONNECTION_FAIL_ACCOUNT_LOCKED);
     }
 
     @Test
-    public void connectFailsWithInactiveUser() throws IOException {
-        String url = "http://localhost:" + cinnamonTestPort + UrlMapping.CINNAMON__CONNECT.getPath();
-        HttpResponse response = Request.Post(url)
-                .bodyForm(Form.form().add("user", "deactivated user").add(PASSWORD_PARAMETER_NAME, "admin").build())
-                .execute().returnResponse();
-        assertThat(response.getStatusLine().getStatusCode(), equalTo(HttpStatus.SC_UNAUTHORIZED));
-
-        CinnamonError error = mapper.readValue(response.getEntity().getContent(), CinnamonErrorWrapper.class).getErrors().get(0);
-        assertThat(error.getCode(), equalTo(ErrorCode.CONNECTION_FAIL_ACCOUNT_INACTIVE.getCode()));
+    public void connectFailsWithInactiveUser() {
+        CinnamonClient aClient = new CinnamonClient(cinnamonTestPort, "localhost", "http", "deactivated user", "admin");
+        assertClientError(aClient::connect, CONNECTION_FAIL_ACCOUNT_INACTIVE);
     }
 
     @Test
     public void disconnectHappyPath() throws IOException {
-        HttpResponse response = sendAdminRequest(UrlMapping.CINNAMON__DISCONNECT);
-        assertResponseOkay(response);
-        DisconnectResponse disconnectResponse = mapper.readValue(response.getEntity().getContent(), DisconnectResponse.class);
-        assertTrue(disconnectResponse.isDisconnectSuccessful());
-
-        HttpResponse verifyDisconnect = sendAdminRequest(UrlMapping.ACL__LIST);
-        assertCinnamonError(verifyDisconnect, ErrorCode.AUTHENTICATION_FAIL_NO_SESSION_FOUND);
-
-        ticket = getAdminTicket();
+        CinnamonClient myAdminClient = new CinnamonClient(cinnamonTestPort, "localhost", "http", "admin", "admin");
+        assertTrue(myAdminClient.disconnect());
+        assertClientError(myAdminClient::listObjectTypes, ErrorCode.AUTHENTICATION_FAIL_NO_SESSION_FOUND);
     }
 
     @Test
-    public void disconnectNoTicket() throws IOException {
-        String adminTicket = ticket;
-        ticket = null;
-        String       url      = "http://localhost:" + cinnamonTestPort + UrlMapping.CINNAMON__DISCONNECT.getPath();
-        HttpResponse response = Request.Post(url).execute().returnResponse();
-        assertCinnamonError(response, ErrorCode.SESSION_NOT_FOUND);
-        ticket = adminTicket;
+    public void disconnectNoTicket() {
+        CinnamonClient myAdminClient = new CinnamonClient(cinnamonTestPort, "localhost", "http", "admin", "admin");
+        myAdminClient.setTicket(null);
+        myAdminClient.setGenerateTicketIfNull(false);
+        assertClientError(myAdminClient::disconnect, ErrorCode.AUTHENTICATION_FAIL_NO_TICKET_GIVEN);
     }
 
     @Test
-    public void disconnectInvalidTicket() throws IOException {
-        String adminTicket = ticket;
-        ticket = "totally invalid ticket";
-        String       url      = "http://localhost:" + cinnamonTestPort + UrlMapping.CINNAMON__DISCONNECT.getPath();
-        HttpResponse response = Request.Post(url).execute().returnResponse();
-        assertCinnamonError(response, ErrorCode.SESSION_NOT_FOUND);
-        ticket = adminTicket;
+    public void disconnectInvalidTicket() {
+        CinnamonClient myAdminClient = new CinnamonClient(cinnamonTestPort, "localhost", "http", "admin", "admin");
+        myAdminClient.setTicket("totally invalid ticket");
+        assertClientError(myAdminClient::disconnect, ErrorCode.SESSION_NOT_FOUND);
     }
 
 
@@ -110,7 +70,7 @@ public class CinnamonServletIntegrationTest extends CinnamonIntegrationTest {
      */
     @Test
     public void connectSucceedsWithValidUsernameAndPassword() {
-        assertThat(ticket, notNullValue());
+        Objects.requireNonNull(ticket);
     }
 
     @Test

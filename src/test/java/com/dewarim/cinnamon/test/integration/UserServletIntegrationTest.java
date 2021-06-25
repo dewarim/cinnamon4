@@ -99,7 +99,7 @@ public class UserServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void setTooShortPassword() throws IOException {
-        SetPasswordRequest setPasswordRequest = new SetPasswordRequest(2L, "test");
+        SetPasswordRequest setPasswordRequest = new SetPasswordRequest(2L, "x");
         HttpResponse       response           = sendStandardRequest(UrlMapping.USER__SET_PASSWORD, setPasswordRequest);
         assertCinnamonError(response, ErrorCode.PASSWORD_TOO_SHORT);
     }

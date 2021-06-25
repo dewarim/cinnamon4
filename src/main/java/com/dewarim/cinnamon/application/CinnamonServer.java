@@ -2,6 +2,9 @@ package com.dewarim.cinnamon.application;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
+import com.dewarim.cinnamon.api.ApiRequest;
+import com.dewarim.cinnamon.api.ApiResponse;
+import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.servlet.AclGroupServlet;
 import com.dewarim.cinnamon.application.servlet.AclServlet;
 import com.dewarim.cinnamon.application.servlet.CinnamonServlet;
@@ -34,6 +37,7 @@ import com.dewarim.cinnamon.model.UserAccount;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.dataformat.xml.deser.FromXmlParser;
 import jakarta.servlet.DispatcherType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -45,6 +49,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -57,12 +62,13 @@ public class CinnamonServer {
 
     private static final Logger log = LogManager.getLogger(CinnamonServer.class);
 
-    public static final String VERSION       = "0.1.0";
-    private final       int    port;
-    private             Server server;
-    private       DbSessionFactory dbSessionFactory;
-    private final WebAppContext    webAppContext = new WebAppContext();
-    public static CinnamonConfig   config        = new CinnamonConfig();
+    public static final String           VERSION       = "0.2.0";
+    private final       int              port;
+    private             Server           server;
+    private             DbSessionFactory dbSessionFactory;
+    private final       WebAppContext    webAppContext = new WebAppContext();
+    public static       CinnamonConfig   config        = new CinnamonConfig();
+
     public CinnamonServer(int port) {
         this.port = port;
     }
@@ -112,6 +118,7 @@ public class CinnamonServer {
         handler.addFilter(DbSessionFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
         handler.addFilter(AuthenticationFilter.class, "/api/*", EnumSet.of(DispatcherType.REQUEST));
         handler.addFilter(RequestResponseFilter.class, "/api/*", EnumSet.of(DispatcherType.REQUEST));
+        handler.addFilter(RequestResponseFilter.class, "/cinnamon/*", EnumSet.of(DispatcherType.REQUEST));
     }
 
     private void addServlets(WebAppContext handler) {
@@ -145,9 +152,14 @@ public class CinnamonServer {
         JCommander commander    = JCommander.newBuilder().addObject(cliArguments).build();
         commander.parse(args);
 
-        if ((cliArguments.help)) {
+        if (cliArguments.help) {
             commander.setColumnSize(80);
             commander.usage();
+            return;
+        }
+
+        if (cliArguments.api) {
+            printApi();
             return;
         }
 
@@ -167,6 +179,42 @@ public class CinnamonServer {
         CinnamonServer server = new CinnamonServer(config.getServerConfig().getPort());
         server.start();
         server.getServer().join();
+    }
+
+    private static void printApi() {
+        XmlMapper mapper = new XmlMapper();
+        mapper.configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL, true);
+        mapper.configure(SerializationFeature.INDENT_OUTPUT,true);
+        Arrays.stream(UrlMapping.values()).forEach(urlMapping -> {
+                    if (urlMapping.getRequestClass() != null) {
+                        try {
+                            ApiRequest  request  = urlMapping.getRequestClass().getConstructor().newInstance();
+                            ApiResponse response = urlMapping.getResponseClass().getConstructor().newInstance();
+
+                            String template = """
+                                    # __endpoint__
+                                    __description__
+                                    
+                                    # Request example
+                                    __request__
+                                    # Response example
+                                    __response__
+                                    
+                                    ---
+                                    """;
+                            String formatted = template
+                                    .replace("__endpoint__", urlMapping.getPath())
+                                    .replace("__description__", urlMapping.getDescription())
+                                    .replace("__request__", mapper.writeValueAsString(request))
+                                    .replace("__response__", mapper.writeValueAsString(response))
+                                    ;
+                            System.out.println(formatted);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+        );
     }
 
     public void setDbSessionFactory(DbSessionFactory dbSessionFactory) {
@@ -211,5 +259,8 @@ public class CinnamonServer {
 
         @Parameter(names = {"--help", "-h"}, help = true, description = "Display help text.")
         boolean help;
+
+        @Parameter(names = {"--api"}, description = "Print API documentation")
+        boolean api;
     }
 }

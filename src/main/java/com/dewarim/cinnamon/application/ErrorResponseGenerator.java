@@ -1,6 +1,7 @@
 package com.dewarim.cinnamon.application;
 
 import com.dewarim.cinnamon.ErrorCode;
+import com.dewarim.cinnamon.application.exception.CinnamonException;
 import com.dewarim.cinnamon.model.response.CinnamonError;
 import com.dewarim.cinnamon.model.response.CinnamonErrorWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -9,28 +10,29 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 
+import static com.dewarim.cinnamon.api.Constants.CONTENT_TYPE_XML;
+import static com.dewarim.cinnamon.api.Constants.HEADER_FIELD_CINNAMON_ERROR;
+
 public class ErrorResponseGenerator {
 
     private static final ObjectMapper xmlMapper = new XmlMapper();
 
     public static void generateErrorMessage(HttpServletResponse response, ErrorCode errorCode, String message) {
         CinnamonError error = new CinnamonError(errorCode.name(), message);
+        CinnamonErrorWrapper wrapper = new CinnamonErrorWrapper();
+        wrapper.getErrors().add(error);
         try {
             response.setStatus(errorCode.getHttpResponseCode());
-            response.setContentType("application/xml");
+            response.setContentType(CONTENT_TYPE_XML);
             response.setCharacterEncoding("UTF-8");
-            CinnamonErrorWrapper wrapper = new CinnamonErrorWrapper(error);
+            response.setHeader(HEADER_FIELD_CINNAMON_ERROR, errorCode.name());
             xmlMapper.writeValue(response.getWriter(), wrapper);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new CinnamonException("Failed to generate error message:", e);
         }
         finally {
             ThreadLocalSqlSession.setTransactionStatus(TransactionStatus.ROLLBACK);
         }
-    }
-
-    public static void superuserRequired(HttpServletResponse response) {
-        generateErrorMessage(response, ErrorCode.REQUIRES_SUPERUSER_STATUS, "");
     }
 
     public static void generateErrorMessage(HttpServletResponse response, ErrorCode errorCode) {

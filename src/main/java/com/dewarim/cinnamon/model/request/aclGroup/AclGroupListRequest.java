@@ -1,8 +1,10 @@
 package com.dewarim.cinnamon.model.request.aclGroup;
 
+import com.dewarim.cinnamon.api.ApiRequest;
+
 import java.util.Optional;
 
-public class AclGroupListRequest {
+public class AclGroupListRequest implements ApiRequest {
 
     public enum IdType{
         ACL,GROUP
