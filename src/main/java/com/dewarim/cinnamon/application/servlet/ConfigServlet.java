@@ -1,6 +1,8 @@
 package com.dewarim.cinnamon.application.servlet;
 
 import com.dewarim.cinnamon.ErrorCode;
+import com.dewarim.cinnamon.api.UrlMapping;
+import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.dao.AclDao;
 import com.dewarim.cinnamon.dao.FolderTypeDao;
 import com.dewarim.cinnamon.dao.FormatDao;
@@ -24,7 +26,6 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 
-import static com.dewarim.cinnamon.api.Constants.CONTENT_TYPE_XML;
 import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
 
 @WebServlet(name = "Config", urlPatterns = "/")
@@ -34,20 +35,16 @@ public class ConfigServlet extends HttpServlet {
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
-        String pathInfo = request.getPathInfo();
-        if (pathInfo == null) {
-            pathInfo = "";
-        }
-        switch (pathInfo) {
-            case "/listAllConfigurations":
-                listAllConfigurations(request, response);
-                break;
-            default:
-                ErrorCode.RESOURCE_NOT_FOUND.throwUp();
+        CinnamonResponse cinnamonResponse = (CinnamonResponse) response;
+
+        UrlMapping mapping = UrlMapping.getByPath(request.getRequestURI());
+        switch (mapping) {
+            case CONFIG__LIST_ALL_CONFIGURATIONS -> listAllConfigurations(request, cinnamonResponse);
+            default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
     }
 
-    private void listAllConfigurations(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    private void listAllConfigurations(HttpServletRequest request, CinnamonResponse response) throws IOException {
         // ignore listRequest for now, just make sure it's valid xml:
         xmlMapper.readValue(request.getInputStream(), ListConfigRequest.class);
 
@@ -66,9 +63,7 @@ public class ConfigServlet extends HttpServlet {
         wrapper.setUiLanguages(new UiLanguageDao().listUiLanguages());
         wrapper.setUsers(new UserAccountDao().listUserAccountsAsUserInfo());
 
-        response.setContentType(CONTENT_TYPE_XML);
-        response.setStatus(HttpServletResponse.SC_OK);
-        xmlMapper.writeValue(response.getWriter(), wrapper);
+        response.setWrapper(wrapper);
     }
 
 }

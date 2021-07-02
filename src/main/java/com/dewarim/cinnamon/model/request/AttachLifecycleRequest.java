@@ -1,6 +1,8 @@
 package com.dewarim.cinnamon.model.request;
 
-public class AttachLifecycleRequest {
+import com.dewarim.cinnamon.api.ApiRequest;
+
+public class AttachLifecycleRequest implements ApiRequest {
 
     private Long osdId;
     private Long lifecycleId;

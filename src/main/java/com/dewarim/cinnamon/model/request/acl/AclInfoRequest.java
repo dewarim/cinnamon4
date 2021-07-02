@@ -1,6 +1,10 @@
 package com.dewarim.cinnamon.model.request.acl;
 
-public class AclInfoRequest {
+import com.dewarim.cinnamon.api.ApiRequest;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+
+@JacksonXmlRootElement(localName = "aclInfoRequest")
+public class AclInfoRequest implements ApiRequest {
     
     private Long aclId;
     private String name;

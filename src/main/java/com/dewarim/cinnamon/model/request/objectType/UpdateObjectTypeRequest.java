@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.model.request.objectType;
 
+import com.dewarim.cinnamon.api.ApiRequest;
 import com.dewarim.cinnamon.model.ObjectType;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.response.ObjectTypeWrapper;
@@ -8,7 +9,7 @@ import com.dewarim.cinnamon.model.response.Wrapper;
 import java.util.ArrayList;
 import java.util.List;
 
-public class UpdateObjectTypeRequest implements UpdateRequest<ObjectType> {
+public class UpdateObjectTypeRequest implements UpdateRequest<ObjectType>, ApiRequest {
 
     private List<ObjectType> ObjectTypes = new ArrayList<>();
 

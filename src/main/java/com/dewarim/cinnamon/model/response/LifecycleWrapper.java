@@ -1,6 +1,7 @@
 package com.dewarim.cinnamon.model.response;
 
 
+import com.dewarim.cinnamon.api.ApiResponse;
 import com.dewarim.cinnamon.model.Lifecycle;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
@@ -10,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class LifecycleWrapper implements Wrapper<Lifecycle>{
+public class LifecycleWrapper implements Wrapper<Lifecycle>, ApiResponse {
 
     @JacksonXmlElementWrapper(localName = "lifecycles")
     @JacksonXmlProperty(localName = "lifecycle")

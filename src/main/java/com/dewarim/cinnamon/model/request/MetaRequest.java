@@ -1,9 +1,11 @@
 package com.dewarim.cinnamon.model.request;
 
+import com.dewarim.cinnamon.api.ApiRequest;
+
 import java.util.List;
 import java.util.Optional;
 
-public class MetaRequest {
+public class MetaRequest implements ApiRequest {
 
     private Long         id;
     private List<String> typeNames;

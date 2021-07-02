@@ -1,7 +1,9 @@
 package com.dewarim.cinnamon.model.request;
 
 
-public class DefaultListRequest {
+import com.dewarim.cinnamon.api.ApiRequest;
+
+public class DefaultListRequest implements ApiRequest {
 
     private ListType type = ListType.FULL;
 

@@ -1,12 +1,15 @@
 package com.dewarim.cinnamon.model.request.acl;
 
+import com.dewarim.cinnamon.api.ApiRequest;
 import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.request.DefaultListRequest;
 import com.dewarim.cinnamon.model.request.ListRequest;
 import com.dewarim.cinnamon.model.response.AclWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
-public class ListAclRequest extends DefaultListRequest implements ListRequest<Acl> {
+@JacksonXmlRootElement(localName = "listAclRequest")
+public class ListAclRequest extends DefaultListRequest implements ListRequest<Acl>, ApiRequest {
 
     @Override
     public Wrapper<Acl> fetchResponseWrapper() {

@@ -1,6 +1,8 @@
 package com.dewarim.cinnamon.model.request.osd;
 
-public class OsdByFolderRequest {
+import com.dewarim.cinnamon.api.ApiRequest;
+
+public class OsdByFolderRequest implements ApiRequest {
 
     private boolean includeSummary;
     private long folderId;

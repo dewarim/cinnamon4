@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.model.request.link;
 
+import com.dewarim.cinnamon.api.ApiRequest;
 import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.links.LinkType;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
@@ -10,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class UpdateLinkRequest implements UpdateRequest<Link> {
+public class UpdateLinkRequest implements UpdateRequest<Link>, ApiRequest {
 
     private List<Link> links = new ArrayList<>();
 

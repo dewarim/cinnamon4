@@ -1,6 +1,8 @@
 package com.dewarim.cinnamon.model.request.relation;
 
-public class CreateRelationRequest {
+import com.dewarim.cinnamon.api.ApiRequest;
+
+public class CreateRelationRequest implements ApiRequest {
 
     private Long   leftId;
     private Long   rightId;
@@ -42,7 +44,7 @@ public class CreateRelationRequest {
     }
 
     public String getMetadata() {
-        if(metadata == null){
+        if (metadata == null) {
             return "<meta/>";
         }
         return metadata;
@@ -53,8 +55,8 @@ public class CreateRelationRequest {
     }
 
     public boolean validated() {
-        return leftId != null && rightId != null && typeName != null && 
-               leftId > 0 && rightId > 0 && typeName.trim().length() > 0;
+        return leftId != null && rightId != null && typeName != null &&
+                leftId > 0 && rightId > 0 && typeName.trim().length() > 0;
     }
 
 }

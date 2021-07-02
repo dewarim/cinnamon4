@@ -4,10 +4,10 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 @JacksonXmlRootElement(localName = "error")
 public class CinnamonError {
-   
+
     private String code;
     private String message;
-    private Long id;
+    private Long   id;
 
     public CinnamonError() {
     }

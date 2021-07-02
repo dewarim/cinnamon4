@@ -269,7 +269,7 @@ public class FolderServlet extends BaseServlet {
         metas.forEach(meta -> {
             boolean deleteSuccess = metaDao.deleteById(meta.getId()) == 1;
             if (!deleteSuccess) {
-                generateErrorMessage(response, ErrorCode.DB_DELETE_FAILED);
+                ErrorCode.DB_DELETE_FAILED.throwUp();
             }
         });
         ResponseUtil.responseIsGenericOkay(response);

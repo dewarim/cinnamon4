@@ -1,6 +1,8 @@
 package com.dewarim.cinnamon.model.request.user;
 
-public class SetPasswordRequest {
+import com.dewarim.cinnamon.api.ApiRequest;
+
+public class SetPasswordRequest implements ApiRequest {
     
     private Long userId;
     private String password;

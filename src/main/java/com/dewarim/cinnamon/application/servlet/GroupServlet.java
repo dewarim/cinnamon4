@@ -37,31 +37,28 @@ public class GroupServlet extends HttpServlet implements CruddyServlet<Group> {
 
         UrlMapping mapping = UrlMapping.getByPath(request.getRequestURI());
         switch (mapping) {
-            case GROUP__ADD_USER_TO_GROUPS:
+            case GROUP__ADD_USER_TO_GROUPS -> {
                 superuserCheck();
                 addUserToGroups(request, user, cinnamonResponse);
-                break;
-            case GROUP__REMOVE_USER_FROM_GROUPS:
+            }
+            case GROUP__REMOVE_USER_FROM_GROUPS -> {
                 removeUserFromGroups(request, user, cinnamonResponse);
                 superuserCheck();
-                break;
-            case GROUP__CREATE:
+            }
+            case GROUP__CREATE -> {
                 superuserCheck();
                 create(convertCreateRequest(request, CreateGroupRequest.class), groupDao, cinnamonResponse);
-                break;
-            case GROUP__LIST:
-                list(convertListRequest(request, ListGroupRequest.class), groupDao, cinnamonResponse);
-                break;
-            case GROUP__DELETE:
+            }
+            case GROUP__LIST -> list(convertListRequest(request, ListGroupRequest.class), groupDao, cinnamonResponse);
+            case GROUP__DELETE -> {
                 superuserCheck();
                 delete(convertDeleteRequest(request, DeleteGroupRequest.class), groupDao, cinnamonResponse);
-                break;
-            case GROUP__UPDATE:
+            }
+            case GROUP__UPDATE -> {
                 superuserCheck();
                 update(convertUpdateRequest(request, UpdateGroupRequest.class), groupDao, cinnamonResponse);
-                break;
-            default:
-                ErrorCode.RESOURCE_NOT_FOUND.throwUp();
+            }
+            default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
     }
 

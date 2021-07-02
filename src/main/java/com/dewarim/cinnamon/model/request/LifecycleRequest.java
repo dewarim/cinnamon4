@@ -1,6 +1,8 @@
 package com.dewarim.cinnamon.model.request;
 
-public class LifecycleRequest {
+import com.dewarim.cinnamon.api.ApiRequest;
+
+public class LifecycleRequest implements ApiRequest {
 
     private Long id;
     private String name;

@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.model.request.relationType;
 
+import com.dewarim.cinnamon.api.ApiRequest;
 import com.dewarim.cinnamon.model.relations.RelationType;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.response.RelationTypeWrapper;
@@ -8,7 +9,7 @@ import com.dewarim.cinnamon.model.response.Wrapper;
 import java.util.ArrayList;
 import java.util.List;
 
-public class UpdateRelationTypeRequest implements UpdateRequest<RelationType> {
+public class UpdateRelationTypeRequest implements UpdateRequest<RelationType>, ApiRequest {
 
     private List<RelationType> types = new ArrayList<>();
 

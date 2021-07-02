@@ -1,6 +1,8 @@
 package com.dewarim.cinnamon.model.request.user;
 
-public class UserInfoRequest {
+import com.dewarim.cinnamon.api.ApiRequest;
+
+public class UserInfoRequest implements ApiRequest {
     
     private Long userId;
     private String username;

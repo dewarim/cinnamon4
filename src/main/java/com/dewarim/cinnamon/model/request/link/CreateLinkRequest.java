@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.model.request.link;
 
+import com.dewarim.cinnamon.api.ApiRequest;
 import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.links.LinkType;
 import com.dewarim.cinnamon.model.request.CreateRequest;
@@ -8,7 +9,7 @@ import com.dewarim.cinnamon.model.response.Wrapper;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CreateLinkRequest implements CreateRequest<Link> {
+public class CreateLinkRequest implements CreateRequest<Link>, ApiRequest {
 
     private List<Link> links = new ArrayList<>();
 

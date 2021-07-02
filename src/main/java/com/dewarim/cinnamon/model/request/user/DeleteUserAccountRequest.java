@@ -1,8 +1,10 @@
 package com.dewarim.cinnamon.model.request.user;
 
+import com.dewarim.cinnamon.api.ApiRequest;
+
 import java.util.Optional;
 
-public class DeleteUserAccountRequest {
+public class DeleteUserAccountRequest implements ApiRequest {
 
     private Long userId;
     /**

@@ -1,8 +1,10 @@
 package com.dewarim.cinnamon.model.request;
 
+import com.dewarim.cinnamon.api.ApiRequest;
+
 import java.util.List;
 
-public class IdListRequest {
+public class IdListRequest implements ApiRequest {
     
     private List<Long> idList;
 

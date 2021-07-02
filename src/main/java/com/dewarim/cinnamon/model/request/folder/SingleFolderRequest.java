@@ -1,12 +1,14 @@
 package com.dewarim.cinnamon.model.request.folder;
 
 
+import com.dewarim.cinnamon.api.ApiRequest;
+
 import java.util.Optional;
 
 /**
  * Request for a single folder and its ancestors.
  */
-public class SingleFolderRequest {
+public class SingleFolderRequest implements ApiRequest {
 
     private Long    id;
     private boolean includeSummary;

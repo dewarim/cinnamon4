@@ -1,6 +1,8 @@
 package com.dewarim.cinnamon.model.request.relation;
 
-public class DeleteRelationRequest {
+import com.dewarim.cinnamon.api.ApiRequest;
+
+public class DeleteRelationRequest implements ApiRequest {
     
     private Long leftId;
     private Long rightId;

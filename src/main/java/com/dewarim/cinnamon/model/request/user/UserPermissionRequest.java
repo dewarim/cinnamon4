@@ -1,8 +1,10 @@
 package com.dewarim.cinnamon.model.request.user;
 
+import com.dewarim.cinnamon.api.ApiRequest;
+
 import java.util.Optional;
 
-public class UserPermissionRequest {
+public class UserPermissionRequest implements ApiRequest {
 
     private Long userId;
     private Long aclId;

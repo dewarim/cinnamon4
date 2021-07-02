@@ -1,15 +1,18 @@
 package com.dewarim.cinnamon.model.request.acl;
 
+import com.dewarim.cinnamon.api.ApiRequest;
 import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.response.AclWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class CreateAclRequest implements CreateRequest<Acl> {
+@JacksonXmlRootElement(localName = "createAclRequest")
+public class CreateAclRequest implements CreateRequest<Acl>, ApiRequest {
 
     private List<String> names = new ArrayList<>();
 

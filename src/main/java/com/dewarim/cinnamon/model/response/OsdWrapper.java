@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.model.response;
 
+import com.dewarim.cinnamon.api.ApiResponse;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.links.Link;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
@@ -10,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class OsdWrapper implements Wrapper<ObjectSystemData>{
+public class OsdWrapper implements Wrapper<ObjectSystemData>, ApiResponse {
 
     @JacksonXmlElementWrapper(localName = "osds")
     @JacksonXmlProperty(localName = "osd")

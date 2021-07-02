@@ -27,8 +27,6 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
-import static com.dewarim.cinnamon.api.Constants.CONTENT_TYPE_XML;
-
 @WebServlet(name = "Acl", urlPatterns = "/")
 public class AclServlet extends HttpServlet implements CruddyServlet<Acl> {
 
@@ -43,33 +41,26 @@ public class AclServlet extends HttpServlet implements CruddyServlet<Acl> {
 
         UrlMapping mapping = UrlMapping.getByPath(request.getRequestURI());
         switch (mapping) {
-            case ACL__CREATE:
+            case ACL__CREATE -> {
                 superuserCheck();
                 create(convertCreateRequest(request, CreateAclRequest.class), aclDao, cinnamonResponse);
-                break;
-            case ACL__ACL_INFO:
-                getAclByNameOrId(request, response);
-                break;
-            case ACL__DELETE:
+            }
+            case ACL__ACL_INFO -> getAclByNameOrId(request, cinnamonResponse);
+            case ACL__DELETE -> {
                 superuserCheck();
                 delete(convertDeleteRequest(request, DeleteAclRequest.class), aclDao, cinnamonResponse);
-                break;
-            case ACL__LIST:
-                list(convertListRequest(request, ListAclRequest.class), aclDao, cinnamonResponse);
-                break;
-            case ACL__GET_USER_ACLS:
-                getUserAcls(request, response);
-                break;
-            case ACL__UPDATE:
+            }
+            case ACL__LIST -> list(convertListRequest(request, ListAclRequest.class), aclDao, cinnamonResponse);
+            case ACL__GET_USER_ACLS -> getUserAcls(request, cinnamonResponse);
+            case ACL__UPDATE -> {
                 superuserCheck();
                 update(convertUpdateRequest(request, UpdateAclRequest.class), aclDao, cinnamonResponse);
-                break;
-            default:
-                ErrorCode.RESOURCE_NOT_FOUND.throwUp();
+            }
+            default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
     }
 
-    private void getAclByNameOrId(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    private void getAclByNameOrId(HttpServletRequest request, CinnamonResponse response) throws IOException {
         AclInfoRequest aclInfoRequest = xmlMapper.readValue(request.getInputStream(), AclInfoRequest.class);
         AclDao         aclDao         = new AclDao();
         Acl            acl;
@@ -84,7 +75,7 @@ public class AclServlet extends HttpServlet implements CruddyServlet<Acl> {
         sendWrappedAcls(response, Collections.singletonList(acl));
     }
 
-    private void getUserAcls(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    private void getUserAcls(HttpServletRequest request, CinnamonResponse response) throws IOException {
         IdRequest idRequest = xmlMapper.readValue(request.getInputStream(), IdRequest.class);
         Long      userId    = idRequest.getId();
         if (userId == null || userId < 1) {
@@ -95,13 +86,11 @@ public class AclServlet extends HttpServlet implements CruddyServlet<Acl> {
         sendWrappedAcls(response, userAcls);
     }
 
-    private void sendWrappedAcls(HttpServletResponse response, List<Acl> acls) throws IOException {
+    private void sendWrappedAcls(CinnamonResponse response, List<Acl> acls) {
         AclWrapper aclWrapper = new AclWrapper();
         aclWrapper.getAcls().addAll(acls);
         aclWrapper.getAcls().removeAll(Collections.singleton(null));
-        response.setContentType(CONTENT_TYPE_XML);
-        response.setStatus(HttpServletResponse.SC_OK);
-        xmlMapper.writeValue(response.getWriter(), aclWrapper);
+        response.setWrapper(aclWrapper);
     }
 
     public ObjectMapper getMapper() {

@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.model.response;
 
+import com.dewarim.cinnamon.api.ApiResponse;
 import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.FolderType;
 import com.dewarim.cinnamon.model.Format;
@@ -17,10 +18,11 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class ConfigWrapper {
+public class ConfigWrapper implements ApiResponse, Wrapper<ConfigWrapper> {
 
     @JacksonXmlElementWrapper(localName = "acls")
     @JacksonXmlProperty(localName = "acl")
@@ -177,4 +179,15 @@ public class ConfigWrapper {
     public void setUsers(List<UserInfo> users) {
         this.users = users;
     }
+
+    @Override
+    public List<ConfigWrapper> list() {
+        return Collections.singletonList(this);
+    }
+
+    @Override
+    public Wrapper<ConfigWrapper> setList(List<ConfigWrapper> configWrappers) {
+        throw new IllegalStateException("Cannot set list of configWrappers");
+    }
+
 }

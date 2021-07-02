@@ -1,9 +1,11 @@
 package com.dewarim.cinnamon.model.request;
 
+import com.dewarim.cinnamon.api.ApiRequest;
+
 import java.util.Collection;
 import java.util.Objects;
 
-public class RelationRequest {
+public class RelationRequest implements ApiRequest {
 
     private Collection<Long>   leftIds;
     private Collection<Long>   rightIds;

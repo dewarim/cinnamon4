@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.model.request.link;
 
+import com.dewarim.cinnamon.api.ApiResponse;
 import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.response.Wrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
@@ -10,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class LinkWrapper implements Wrapper<Link> {
+public class LinkWrapper implements Wrapper<Link>, ApiResponse {
 
     @JacksonXmlElementWrapper(localName = "links")
     @JacksonXmlProperty(localName = "link")

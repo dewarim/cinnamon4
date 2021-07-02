@@ -24,7 +24,7 @@ public class ConfigEntryServletIntegrationTest extends CinnamonIntegrationTest {
 
         // must be admin to create config entry
         HttpResponse failedCreate = sendStandardRequest(UrlMapping.CONFIG_ENTRY__SET_CONFIG_ENTRY, createRequest);
-        assertCinnamonError(failedCreate, ErrorCode.UNAUTHORIZED);
+        assertCinnamonError(failedCreate, ErrorCode.REQUIRES_SUPERUSER_STATUS);
 
         HttpResponse validCreate = sendAdminRequest(UrlMapping.CONFIG_ENTRY__SET_CONFIG_ENTRY, createRequest);
         assertResponseOkay(validCreate);
@@ -32,7 +32,7 @@ public class ConfigEntryServletIntegrationTest extends CinnamonIntegrationTest {
         // non-admin cannot read non-public config entry:
         ConfigEntryRequest configEntryRequest = new ConfigEntryRequest("test-config");
         HttpResponse       failedRequest      = sendStandardRequest(UrlMapping.CONFIG_ENTRY__GET_CONFIG_ENTRY, configEntryRequest);
-        assertCinnamonError(failedRequest, ErrorCode.UNAUTHORIZED);
+        assertCinnamonError(failedRequest, ErrorCode.REQUIRES_SUPERUSER_STATUS);
 
         // must be admin to get non-public config entry
         HttpResponse okayRequest = sendAdminRequest(UrlMapping.CONFIG_ENTRY__GET_CONFIG_ENTRY, configEntryRequest);
@@ -57,6 +57,7 @@ public class ConfigEntryServletIntegrationTest extends CinnamonIntegrationTest {
         assertThat(configEntry.getConfig(), equalTo("<pub>1</pub>"));
         
         // admin may update config entry:
+        // TODO: check create/update response contains actual wrapped ConfigEntry
         CreateConfigEntryRequest updatedEntryRequest  = new CreateConfigEntryRequest("public-test", "<pub>2</pub>", false);
         HttpResponse             updateResponse      = sendAdminRequest(UrlMapping.CONFIG_ENTRY__SET_CONFIG_ENTRY, updatedEntryRequest);
         assertResponseOkay(updateResponse);

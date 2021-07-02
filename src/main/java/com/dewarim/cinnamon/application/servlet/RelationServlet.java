@@ -61,6 +61,7 @@ public class RelationServlet extends HttpServlet {
                     ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.OBJECT_NOT_FOUND_OR_GONE);
                     break;
                 case 1:
+                    // TODO: use CinnamonResponse
                     ResponseUtil.responseIsOkayAndXml(response);
                     xmlMapper.writeValue(response.getWriter(), new GenericResponse(false));
                     break;

@@ -1,10 +1,11 @@
 package com.dewarim.cinnamon.model.request.user;
 
+import com.dewarim.cinnamon.api.ApiRequest;
 import com.dewarim.cinnamon.model.response.UserInfo;
 
 import java.util.Optional;
 
-public class UpdateUserAccountRequest extends UserInfo {
+public class UpdateUserAccountRequest extends UserInfo implements ApiRequest {
 
     private String password;
 

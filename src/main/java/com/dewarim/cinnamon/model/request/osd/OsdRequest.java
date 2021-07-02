@@ -1,9 +1,11 @@
 package com.dewarim.cinnamon.model.request.osd;
 
+import com.dewarim.cinnamon.api.ApiRequest;
+
 import java.util.ArrayList;
 import java.util.List;
 
-public class OsdRequest {
+public class OsdRequest implements ApiRequest {
 
     private List<Long> ids = new ArrayList<>();
 

@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.model.response;
 
+import com.dewarim.cinnamon.api.ApiResponse;
 import com.dewarim.cinnamon.model.Group;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
@@ -10,7 +11,7 @@ import java.util.List;
 
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class GroupWrapper implements Wrapper<Group>{
+public class GroupWrapper implements Wrapper<Group>, ApiResponse {
 
     @JacksonXmlElementWrapper(localName = "groups")
     @JacksonXmlProperty(localName = "group")

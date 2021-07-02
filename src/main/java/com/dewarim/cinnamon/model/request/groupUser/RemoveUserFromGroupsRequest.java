@@ -1,9 +1,11 @@
 package com.dewarim.cinnamon.model.request.groupUser;
 
+import com.dewarim.cinnamon.api.ApiRequest;
+
 import java.util.List;
 import java.util.Optional;
 
-public class RemoveUserFromGroupsRequest {
+public class RemoveUserFromGroupsRequest implements ApiRequest {
 
     private List<Long> ids;
 

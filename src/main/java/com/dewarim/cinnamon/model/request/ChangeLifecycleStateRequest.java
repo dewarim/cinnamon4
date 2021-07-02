@@ -1,8 +1,10 @@
 package com.dewarim.cinnamon.model.request;
 
+import com.dewarim.cinnamon.api.ApiRequest;
+
 import java.util.Optional;
 
-public class ChangeLifecycleStateRequest {
+public class ChangeLifecycleStateRequest implements ApiRequest {
 
     private Long   osdId;
     private String stateName;

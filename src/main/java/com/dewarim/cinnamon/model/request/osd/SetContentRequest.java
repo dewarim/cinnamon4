@@ -1,8 +1,10 @@
 package com.dewarim.cinnamon.model.request.osd;
 
+import com.dewarim.cinnamon.api.ApiRequest;
+
 import java.util.Optional;
 
-public class SetContentRequest {
+public class SetContentRequest implements ApiRequest {
 
     private Long id;
     private Long formatId;

@@ -34,6 +34,7 @@ import com.dewarim.cinnamon.filter.AuthenticationFilter;
 import com.dewarim.cinnamon.filter.DbSessionFilter;
 import com.dewarim.cinnamon.filter.RequestResponseFilter;
 import com.dewarim.cinnamon.model.UserAccount;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -49,6 +50,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
@@ -184,37 +186,74 @@ public class CinnamonServer {
     private static void printApi() {
         XmlMapper mapper = new XmlMapper();
         mapper.configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL, true);
-        mapper.configure(SerializationFeature.INDENT_OUTPUT,true);
+        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
         Arrays.stream(UrlMapping.values()).forEach(urlMapping -> {
+                    String formatted;
                     if (urlMapping.getRequestClass() != null) {
                         try {
-                            ApiRequest  request  = urlMapping.getRequestClass().getConstructor().newInstance();
-                            ApiResponse response = urlMapping.getResponseClass().getConstructor().newInstance();
 
                             String template = """
                                     # __endpoint__
                                     __description__
-                                    
-                                    # Request example
+                                                                        
+                                    ## Request
+                                    ```xml
                                     __request__
-                                    # Response example
+                                    ```
+                                    ## Response
+                                    ```xml
                                     __response__
-                                    
+                                    ```
                                     ---
                                     """;
-                            String formatted = template
+                            formatted = template
                                     .replace("__endpoint__", urlMapping.getPath())
                                     .replace("__description__", urlMapping.getDescription())
-                                    .replace("__request__", mapper.writeValueAsString(request))
-                                    .replace("__response__", mapper.writeValueAsString(response))
-                                    ;
-                            System.out.println(formatted);
+                                    .replace("__request__", requestToExample(mapper, urlMapping.getRequestClass()))
+                                    .replace("__response__", responseToExample(mapper, urlMapping.getResponseClass()))
+                            ;
                         } catch (Exception e) {
-                            e.printStackTrace();
+                            throw new IllegalStateException("Failed to format API template.", e);
                         }
+                    } else {
+                        String template = """
+                                # __endpoint__
+                                __description__
+                                                                    
+                                ---
+                                """;
+                        formatted = template
+                                .replace("__endpoint__", urlMapping.getPath())
+                                .replace("__description__", urlMapping.getDescription());
                     }
+                    System.out.println(formatted);
                 }
         );
+    }
+
+    private static String requestToExample(ObjectMapper mapper, Class<? extends ApiRequest> apiRequestClass) throws JsonProcessingException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+        if (apiRequestClass == null) {
+            return "";
+        }
+        ApiRequest request = apiRequestClass.getConstructor().newInstance();
+        return exampleToText(mapper, request.examples());
+    }
+
+    private static String responseToExample(ObjectMapper mapper, Class<? extends ApiResponse> apiResponseClass) throws JsonProcessingException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+        if (apiResponseClass == null) {
+            return "";
+        }
+        ApiResponse response = apiResponseClass.getConstructor().newInstance();
+        return exampleToText(mapper, response.examples());
+    }
+
+    private static String exampleToText(ObjectMapper mapper, List<Object> examples) throws JsonProcessingException {
+        StringBuilder builder = new StringBuilder();
+        for (Object example : examples) {
+            builder.append(mapper.writeValueAsString(example));
+            builder.append("\n");
+        }
+        return builder.toString();
     }
 
     public void setDbSessionFactory(DbSessionFactory dbSessionFactory) {

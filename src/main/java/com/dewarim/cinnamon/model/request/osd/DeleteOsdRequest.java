@@ -1,11 +1,13 @@
 package com.dewarim.cinnamon.model.request.osd;
 
+import com.dewarim.cinnamon.api.ApiRequest;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public class DeleteOsdRequest {
+public class DeleteOsdRequest implements ApiRequest {
 
     private List<Long> ids               = new ArrayList<>();
     private boolean    deleteDescendants = false;

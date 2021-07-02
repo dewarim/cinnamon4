@@ -1,10 +1,12 @@
 package com.dewarim.cinnamon.model.request.link;
 
+import com.dewarim.cinnamon.api.ApiRequest;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class GetLinksRequest {
+public class GetLinksRequest implements ApiRequest {
     
     private boolean includeSummary;
 

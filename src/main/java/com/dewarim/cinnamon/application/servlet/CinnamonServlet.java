@@ -45,17 +45,10 @@ public class CinnamonServlet extends HttpServlet {
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
-        String pathInfo = request.getPathInfo();
-        if (pathInfo == null) {
-            // prevent NPE
-            pathInfo = "/";
-        }
-        switch (pathInfo) {
-            case "/info":
-                info(request, response);
-                break;
-            default:
-                hello(response);
+        UrlMapping mapping = UrlMapping.getByPath(request.getRequestURI());
+        switch (mapping) {
+            case CINNAMON__INFO -> info(request, response);
+            default -> hello(response);
         }
 
     }
@@ -63,17 +56,11 @@ public class CinnamonServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         CinnamonResponse cinnamonResponse = (CinnamonResponse) response;
         UrlMapping       mapping          = UrlMapping.getByPath(request.getRequestURI());
-//        try {
-            switch (mapping) {
-                case CINNAMON__CONNECT -> connect(request, cinnamonResponse);
-                case CINNAMON__DISCONNECT -> disconnect(request, cinnamonResponse);
-                default -> hello(cinnamonResponse);
-            }
-//        }
-//        catch (Exception  e){
-//            log.error("Fail: ",e);
-//            throw new FailedRequestException(ErrorCode.INTERNAL_SERVER_ERROR_TRY_AGAIN_LATER);
-//        }
+        switch (mapping) {
+            case CINNAMON__CONNECT -> connect(request, cinnamonResponse);
+            case CINNAMON__DISCONNECT -> disconnect(request, cinnamonResponse);
+            default -> hello(cinnamonResponse);
+        }
     }
 
     private void info(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -125,8 +112,8 @@ public class CinnamonServlet extends HttpServlet {
     }
 
     private void disconnect(HttpServletRequest request, CinnamonResponse response) throws IOException {
-        String     ticket     = request.getHeader("ticket");
-        if(ticket == null || ticket.isBlank()){
+        String ticket = request.getHeader("ticket");
+        if (ticket == null || ticket.isBlank()) {
             ErrorCode.AUTHENTICATION_FAIL_NO_TICKET_GIVEN.throwUp();
         }
         SessionDao sessionDao = new SessionDao();

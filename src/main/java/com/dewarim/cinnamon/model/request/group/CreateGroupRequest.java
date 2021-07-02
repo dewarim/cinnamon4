@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.model.request.group;
 
+import com.dewarim.cinnamon.api.ApiRequest;
 import com.dewarim.cinnamon.model.Group;
 import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.response.GroupWrapper;
@@ -9,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class CreateGroupRequest implements CreateRequest<Group> {
+public class CreateGroupRequest implements CreateRequest<Group>, ApiRequest {
 
     private List<String> names = new ArrayList<>();
 

@@ -1,10 +1,12 @@
 package com.dewarim.cinnamon.model.request;
 
+import com.dewarim.cinnamon.api.ApiRequest;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class CreateNewVersionRequest {
+public class CreateNewVersionRequest implements ApiRequest {
 
     private Long           id;
     private List<Metadata> metaRequests = new ArrayList<>();

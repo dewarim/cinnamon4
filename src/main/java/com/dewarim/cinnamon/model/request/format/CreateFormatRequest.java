@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.model.request.format;
 
+import com.dewarim.cinnamon.api.ApiRequest;
 import com.dewarim.cinnamon.model.Format;
 import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.response.FormatWrapper;
@@ -9,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class CreateFormatRequest implements CreateRequest<Format> {
+public class CreateFormatRequest implements CreateRequest<Format>, ApiRequest {
 
     private List<Format> formats = new ArrayList<>();
 

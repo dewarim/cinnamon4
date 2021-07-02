@@ -1,8 +1,10 @@
 package com.dewarim.cinnamon.model.request.folder;
 
+import com.dewarim.cinnamon.api.ApiRequest;
+
 import java.util.Optional;
 
-public class UpdateFolderRequest {
+public class UpdateFolderRequest implements ApiRequest {
 
     private Long   id;
     private Long   parentId;

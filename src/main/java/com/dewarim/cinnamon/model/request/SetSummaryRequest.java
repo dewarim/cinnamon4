@@ -1,6 +1,8 @@
 package com.dewarim.cinnamon.model.request;
 
-public class SetSummaryRequest {
+import com.dewarim.cinnamon.api.ApiRequest;
+
+public class SetSummaryRequest implements ApiRequest {
     
     private Long id;
     private String summary;

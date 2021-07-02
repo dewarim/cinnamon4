@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.model.request.folderType;
 
+import com.dewarim.cinnamon.api.ApiRequest;
 import com.dewarim.cinnamon.model.FolderType;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.response.FolderTypeWrapper;
@@ -8,7 +9,7 @@ import com.dewarim.cinnamon.model.response.Wrapper;
 import java.util.ArrayList;
 import java.util.List;
 
-public class UpdateFolderTypeRequest implements UpdateRequest<FolderType> {
+public class UpdateFolderTypeRequest implements UpdateRequest<FolderType>, ApiRequest {
 
     private List<FolderType> FolderTypes = new ArrayList<>();
 

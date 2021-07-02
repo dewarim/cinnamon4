@@ -1,6 +1,8 @@
 package com.dewarim.cinnamon.model.request.folder;
 
-public class FolderPathRequest {
+import com.dewarim.cinnamon.api.ApiRequest;
+
+public class FolderPathRequest implements ApiRequest {
 
     private String path;
     private boolean includeSummary;

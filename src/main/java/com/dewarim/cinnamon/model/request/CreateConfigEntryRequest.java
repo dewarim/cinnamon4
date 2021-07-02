@@ -1,6 +1,8 @@
 package com.dewarim.cinnamon.model.request;
 
-public class CreateConfigEntryRequest {
+import com.dewarim.cinnamon.api.ApiRequest;
+
+public class CreateConfigEntryRequest implements ApiRequest {
     
     private String  name;
     private String  config;

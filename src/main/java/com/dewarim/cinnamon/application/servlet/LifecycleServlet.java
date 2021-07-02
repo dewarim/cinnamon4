@@ -7,7 +7,6 @@ import com.dewarim.cinnamon.dao.LifecycleStateDao;
 import com.dewarim.cinnamon.model.Lifecycle;
 import com.dewarim.cinnamon.model.LifecycleState;
 import com.dewarim.cinnamon.model.request.LifecycleRequest;
-import com.dewarim.cinnamon.model.request.ListRequest;
 import com.dewarim.cinnamon.model.request.lifecycle.ListLifecycleRequest;
 import com.dewarim.cinnamon.model.response.LifecycleWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -72,10 +71,10 @@ public class LifecycleServlet extends HttpServlet {
 
     private void listLifecycles(HttpServletRequest request, HttpServletResponse response) throws IOException {
         // ignore listRequest for now, just make sure it's valid xml:
-        ListRequest      listRequest  = xmlMapper.readValue(request.getInputStream(), ListLifecycleRequest.class);
-        LifecycleDao     lifecycleDao = new LifecycleDao();
-        List<Lifecycle>  lifecycles   = lifecycleDao.listLifecycles();
-        LifecycleWrapper wrapper      = new LifecycleWrapper();
+        ListLifecycleRequest listRequest  = xmlMapper.readValue(request.getInputStream(), ListLifecycleRequest.class);
+        LifecycleDao         lifecycleDao = new LifecycleDao();
+        List<Lifecycle>      lifecycles   = lifecycleDao.listLifecycles();
+        LifecycleWrapper     wrapper      = new LifecycleWrapper();
         wrapper.setLifecycles(lifecycles);
         ResponseUtil.responseIsOkayAndXml(response);
         xmlMapper.writeValue(response.getWriter(), wrapper);

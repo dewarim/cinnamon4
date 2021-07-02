@@ -1,12 +1,13 @@
 package com.dewarim.cinnamon.model.response;
 
+import com.dewarim.cinnamon.api.ApiResponse;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.Collections;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "connection")
-public class CinnamonConnection implements Wrapper<CinnamonConnection> {
+public class CinnamonConnection implements Wrapper<CinnamonConnection>, ApiResponse {
 
     private String ticket;
 

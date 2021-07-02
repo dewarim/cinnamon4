@@ -1,11 +1,13 @@
 package com.dewarim.cinnamon.model.request.permission;
 
+import com.dewarim.cinnamon.api.ApiRequest;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public class ChangePermissionsRequest {
+public class ChangePermissionsRequest implements ApiRequest {
 
     private Long aclGroupId;
     private List<Long> add = new ArrayList<>();

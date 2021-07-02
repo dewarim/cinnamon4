@@ -1,6 +1,7 @@
 package com.dewarim.cinnamon.model.response;
 
 
+import com.dewarim.cinnamon.api.ApiResponse;
 import com.dewarim.cinnamon.model.FolderType;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
@@ -10,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class FolderTypeWrapper implements Wrapper<FolderType> {
+public class FolderTypeWrapper implements Wrapper<FolderType>, ApiResponse {
 
     @JacksonXmlElementWrapper(localName = "folderTypes")
     @JacksonXmlProperty(localName = "folderType")
