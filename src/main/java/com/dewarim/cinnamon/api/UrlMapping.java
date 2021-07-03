@@ -110,7 +110,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public enum UrlMapping {
 
-    ACL_GROUP__CREATE("aclGroup", "create", "/api", "", CreateAclGroupRequest.class, AclGroupWrapper.class),
+    ACL_GROUP__CREATE("aclGroup", "create", "/api", "Create a new ACL group. Note: permissions parameter is not yet implemented.", CreateAclGroupRequest.class, AclGroupWrapper.class),
     ACL_GROUP__DELETE("aclGroup", "delete", "/api", "", DeleteAclGroupRequest.class, DeleteResponse.class),
     ACL_GROUP__LIST("aclGroup", "list", "/api", "", ListAclGroupRequest.class, AclGroupWrapper.class),
     ACL_GROUP__LIST_BY_GROUP_OR_ACL("aclGroup", "listByGroupOrAcl", "/api", "", AclGroupListRequest.class, AclGroupWrapper.class),

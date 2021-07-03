@@ -1,5 +1,5 @@
 # /api/aclGroup/create
-
+Create a new ACL group. Note: permissions parameter is not yet implemented.
 
 ## Request
 ```xml
