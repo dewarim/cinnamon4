@@ -197,13 +197,13 @@ public class CinnamonServer {
                                     __description__
                                                                         
                                     ## Request
-                                    ```xml
+                                    
                                     __request__
-                                    ```
+                                    
                                     ## Response
-                                    ```xml
+
                                     __response__
-                                    ```
+
                                     ---
                                     """;
                             formatted = template
@@ -250,8 +250,9 @@ public class CinnamonServer {
     private static String exampleToText(ObjectMapper mapper, List<Object> examples) throws JsonProcessingException {
         StringBuilder builder = new StringBuilder();
         for (Object example : examples) {
+            builder.append("```xml\n");
             builder.append(mapper.writeValueAsString(example));
-            builder.append("\n");
+            builder.append("\n```\n");
         }
         return builder.toString();
     }

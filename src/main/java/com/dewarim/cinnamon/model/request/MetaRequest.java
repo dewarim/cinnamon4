@@ -1,6 +1,8 @@
 package com.dewarim.cinnamon.model.request;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
 import java.util.List;
 import java.util.Optional;
@@ -8,7 +10,11 @@ import java.util.Optional;
 public class MetaRequest implements ApiRequest {
 
     private Long         id;
+
+    @JacksonXmlElementWrapper(localName = "typeNames")
+    @JacksonXmlProperty(localName = "typeName")
     private List<String> typeNames;
+
     /**
      * Expects the XML content of each metaset to be an XML DOM element in the response XML,
      * not a
@@ -57,5 +63,10 @@ public class MetaRequest implements ApiRequest {
         } else {
             return Optional.empty();
         }
+    }
+
+    @Override
+    public List<Object> examples() {
+        return List.of(new MetaRequest(null, List.of("copyright", "thumbnail")), new MetaRequest(1L, null));
     }
 }
