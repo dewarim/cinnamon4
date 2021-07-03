@@ -26,15 +26,15 @@ Create a new ACL group. Note: permissions parameter is not yet implemented.
 ```xml
 <AclGroup>
   <id>1</id>
-  <aclId>2</aclId>
-  <groupId>3</groupId>
+  <aclId>1</aclId>
+  <groupId>2</groupId>
   <permissions/>
 </AclGroup>
 
 <AclGroup>
   <id>2</id>
-  <aclId>3</aclId>
-  <groupId>4</groupId>
+  <aclId>1</aclId>
+  <groupId>3</groupId>
   <permissions/>
 </AclGroup>
 
@@ -79,15 +79,15 @@ Create a new ACL group. Note: permissions parameter is not yet implemented.
 ```xml
 <AclGroup>
   <id>1</id>
-  <aclId>2</aclId>
-  <groupId>3</groupId>
+  <aclId>1</aclId>
+  <groupId>2</groupId>
   <permissions/>
 </AclGroup>
 
 <AclGroup>
   <id>2</id>
-  <aclId>3</aclId>
-  <groupId>4</groupId>
+  <aclId>1</aclId>
+  <groupId>3</groupId>
   <permissions/>
 </AclGroup>
 
@@ -111,15 +111,15 @@ Create a new ACL group. Note: permissions parameter is not yet implemented.
 ```xml
 <AclGroup>
   <id>1</id>
-  <aclId>2</aclId>
-  <groupId>3</groupId>
+  <aclId>1</aclId>
+  <groupId>2</groupId>
   <permissions/>
 </AclGroup>
 
 <AclGroup>
   <id>2</id>
-  <aclId>3</aclId>
-  <groupId>4</groupId>
+  <aclId>1</aclId>
+  <groupId>3</groupId>
   <permissions/>
 </AclGroup>
 
@@ -142,15 +142,15 @@ Create a new ACL group. Note: permissions parameter is not yet implemented.
 ```xml
 <AclGroup>
   <id>1</id>
-  <aclId>2</aclId>
-  <groupId>3</groupId>
+  <aclId>1</aclId>
+  <groupId>2</groupId>
   <permissions/>
 </AclGroup>
 
 <AclGroup>
   <id>2</id>
-  <aclId>3</aclId>
-  <groupId>4</groupId>
+  <aclId>1</aclId>
+  <groupId>3</groupId>
   <permissions/>
 </AclGroup>
 

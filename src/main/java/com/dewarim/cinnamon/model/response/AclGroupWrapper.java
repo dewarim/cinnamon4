@@ -45,6 +45,6 @@ public class AclGroupWrapper implements Wrapper<AclGroup>, ApiResponse {
 
     @Override
     public List<Object> examples() {
-        return List.of(new AclGroup(1L, 2L, 3L), new AclGroup(2L, 3L, 4L));
+        return List.of(new AclGroup(1L, 1L, 2L), new AclGroup(2L, 1L, 3L));
     }
 }
