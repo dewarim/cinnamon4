@@ -49,9 +49,8 @@ You need to have the Java and Maven executables on your PATH. Look at this https
 If you use Linux, adopt the following to your needs and add it to the file .bash_rc (or whatever your shell's configuration is):
 
     export JAVA_HOME=/home/${USER}/bin/jdk-16
-    export PATH=${JAVA_HOME}/bin:$PATH
-
-Same goes for MAVEN_HOME.
+    export MAVEN_HOME=/home/${USER}/bin/maven
+    export PATH=${JAVA_HOME}/bin:${MAVEN_HOME}/bin:$PATH
 
 You may have to restart / re-login to have this take effect.
 
@@ -61,7 +60,13 @@ In the top level project directory, run:
 
     mvn clean package
 
-to build target/cinnamon-server.jar which includes all dependencies.
+to build target/cinnamon-server.jar which includes all dependencies. This will also run a full integration
+test and create a lot of basic objects in the cinnamon_test database. If this succeeds, the system is okay.
+
+Note: at the moment, this will use the default file paths in /opt/cinnamon.
+
+TODO: default setup should not use /opt/cinnamon but a temp folder for tests (or at least allow an environment var).
+(See: https://github.com/dewarim/cinnamon4/issues/214[issue 214] )
 
 == Run
 
@@ -76,18 +81,17 @@ Run
 to show the command line options.
 
     # write the default config to a file:
-    java -jar target/cinnamon-server.jar --write-config default-config.xml
+    java -jar target/cinnamon-server.jar --write-config my-default-config.xml
 
     # load a custom config file:
-    java -jar target/cinnamon-server.jar --config default-config.xml
+    java -jar target/cinnamon-server.jar --config my-default-config.xml
 
     # start on port 8080:
     java -jar target/cinnamon-server.jar --port 8080
 
 == Configure
 
-// TODO: explain configuration settings
-(TODO)
+TODO: explain/document configuration settings https://github.com/dewarim/cinnamon4/issues/215[issue #125]
 
 See the file default-config.xml[default-config.xml] for the default values.
 
