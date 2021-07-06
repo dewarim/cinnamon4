@@ -184,7 +184,7 @@ public enum UrlMapping {
             """,
             CreateOsdRequest.class, OsdWrapper.class),
     OSD__DELETE_META("osd", "deleteMeta", "/api", "", DeleteMetaRequest.class, GenericResponse.class),
-    OSD__DELETE_OSDS("osd", "deleteOsds", "/api", "", DeleteOsdRequest.class, DeleteResponse.class),
+    OSD__DELETE("osd", "delete", "/api", "", DeleteOsdRequest.class, DeleteResponse.class),
     OSD__GET_CONTENT("osd", "getContent", "/api", "Returns an OSD's content according to it's format's content type.", IdRequest.class, null),
     OSD__GET_META("osd", "getMeta", "/api", "", MetaRequest.class, MetaWrapper.class),
     OSD__GET_OBJECTS_BY_FOLDER_ID("osd", "getObjectsByFolderId", "/api", "", OsdByFolderRequest.class, OsdWrapper.class),

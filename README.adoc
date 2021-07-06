@@ -21,8 +21,39 @@ Try to implement the core features of the Cinnamon CMS in Java,
 
 Before you start: this project needs the following dependencies to build & run:
 
-* https://maven.apache.org/download.cgi[Apache Maven] (as build system)
-* https://adoptopenjdk.net/[Java 11]
+* https://maven.apache.org/download.cgi[Apache Maven 3.8.1] (as build system)
+* https://adoptopenjdk.net/[Java 16]
+* https://www.postgresql.org/download/[PostgreSQL 12]
+
+Version numbers describe the minimum version. You can either download them directly and install them manually (recommended for Java) or use your system's package manager (Linux) or the Windows installer.
+
+=== Initial Setup
+
+* Download and install PostgreSQL.
+* Create a database "cinnamon_test", owned by user "cinnamon" with password "cinnamon"
+ either with pgAdmin or https://medium.com/coding-blocks/creating-user-database-and-adding-access-on-postgresql-8bfcd2f4a91e[directly with postgres]
+
+    sudo -u postgres psql
+    postgres=# create database cinnamon_test;
+    postgres=# create user cinnamon_test with encrypted password 'cinnamon';
+    postgres=# grant all privileges on database cinnamon_test to cinnamon;
+
+// TODO: add a test database for initial production setup
+
+==== Windows
+
+You need to have the Java and Maven executables on your PATH. Look at this https://stackoverflow.com/a/41895179[Stackoverflow answer].
+
+===== Linux
+
+If you use Linux, adopt the following to your needs and add it to the file .bash_rc (or whatever your shell's configuration is):
+
+    export JAVA_HOME=/home/${USER}/bin/jdk-16
+    export PATH=${JAVA_HOME}/bin:$PATH
+
+Same goes for MAVEN_HOME.
+
+You may have to restart / re-login to have this take effect.
 
 == Build
 
@@ -54,6 +85,11 @@ to show the command line options.
     java -jar target/cinnamon-server.jar --port 8080
 
 == Configure
+
+// TODO: explain configuration settings
+(TODO)
+
+See the file default-config.xml[default-config.xml] for the default values.
 
 == License
 

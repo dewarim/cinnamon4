@@ -4,5 +4,5 @@
     <entry key="username">cinnamon</entry>
     <entry key="password">cinnamon</entry>
     <entry key="driver">org.postgresql.Driver</entry>
-    <entry key="url">jdbc:postgresql://localhost:5432/demo</entry>
+    <entry key="url">jdbc:postgresql://localhost:5432/cinnamon_test</entry>
 </properties>

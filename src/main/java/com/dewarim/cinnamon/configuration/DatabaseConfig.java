@@ -5,7 +5,7 @@ public class DatabaseConfig {
     private String driver = "org.postgresql.Driver";
     private String host = "127.0.0.1";
     private String port = "5432";
-    private String database = "cinnamon4";
+    private String database = "cinnamon_test";
     private String user = "cinnamon";
     private String password = "cinnamon";
 

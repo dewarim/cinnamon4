@@ -1,0 +1,34 @@
+<CinnamonConfig>
+  <serverConfig>
+    <port>9090</port>
+    <systemRoot>/opt/cinnamon/cinnamon-system</systemRoot>
+    <dataRoot>/opt/cinnamon/cinnamon-data</dataRoot>
+    <luceneIndexPath>/opt/cinnamon/cinnamon-data/index</luceneIndexPath>
+    <verifyExistence>true</verifyExistence>
+    <ignoreNopUpdates>false</ignoreNopUpdates>
+  </serverConfig>
+  <logbackLoggingConfigPath>/opt/cinnamon/logback.xml</logbackLoggingConfigPath>
+  <systemAdministratorEmail/>
+  <mailConfig>
+    <smtpHost/>
+    <smtpUser/>
+    <smtpPassword/>
+  </mailConfig>
+  <securityConfig>
+    <passwordRounds>10</passwordRounds>
+    <minimumPasswordLength>8</minimumPasswordLength>
+    <transferAssetsAllowed>true</transferAssetsAllowed>
+    <deleteUserAllowed>true</deleteUserAllowed>
+    <sessionLengthInMillis>3600000</sessionLengthInMillis>
+  </securityConfig>
+  <databaseConfig>
+    <driver>org.postgresql.Driver</driver>
+    <host>127.0.0.1</host>
+    <port>5432</port>
+    <database>cinnamon4</database>
+    <user>cinnamon</user>
+    <password>cinnamon</password>
+    <databaseUrl>jdbc:postgresql://127.0.0.1:5432/cinnamon_test</databaseUrl>
+  </databaseConfig>
+  <loginProviders/>
+</CinnamonConfig>

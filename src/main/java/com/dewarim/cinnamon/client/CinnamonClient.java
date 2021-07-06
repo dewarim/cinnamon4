@@ -256,14 +256,14 @@ public class CinnamonClient {
     }
 
     public boolean deleteOsd(Long id, boolean deleteDescendants) throws IOException {
-        DeleteOsdRequest deleteRequest = new DeleteOsdRequest(Collections.singletonList(id), deleteDescendants);
-        HttpResponse response = sendStandardRequest(UrlMapping.OSD__DELETE_OSDS, deleteRequest);
+        DeleteOsdRequest deleteRequest = new DeleteOsdRequest(Collections.singletonList(id), deleteDescendants, false);
+        HttpResponse response = sendStandardRequest(UrlMapping.OSD__DELETE, deleteRequest);
         return verifyDeleteResponse(response);
     }
 
     public boolean deleteOsds(List<Long> id, boolean deleteDescendants) throws IOException {
-        DeleteOsdRequest deleteRequest = new DeleteOsdRequest(id, deleteDescendants);
-        HttpResponse     response      = sendStandardRequest(UrlMapping.OSD__DELETE_OSDS, deleteRequest);
+        DeleteOsdRequest deleteRequest = new DeleteOsdRequest(id, deleteDescendants, false);
+        HttpResponse     response      = sendStandardRequest(UrlMapping.OSD__DELETE, deleteRequest);
         return verifyDeleteResponse(response);
     }
 
