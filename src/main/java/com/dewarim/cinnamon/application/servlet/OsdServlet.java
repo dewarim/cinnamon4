@@ -4,6 +4,7 @@ import com.beust.jcommander.Strings;
 import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.FailedRequestException;
+import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.api.content.ContentMetadata;
 import com.dewarim.cinnamon.api.content.ContentProvider;
 import com.dewarim.cinnamon.api.lifecycle.State;
@@ -75,6 +76,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -103,54 +105,27 @@ public class OsdServlet extends BaseServlet {
         if (pathInfo == null) {
             pathInfo = "";
         }
-        UserAccount      user             = ThreadLocalSqlSession.getCurrentUser();
-        OsdDao           osdDao           = new OsdDao();
+        UserAccount user   = ThreadLocalSqlSession.getCurrentUser();
+        OsdDao      osdDao = new OsdDao();
+
         CinnamonResponse cinnamonResponse = (CinnamonResponse) response;
-        switch (pathInfo) {
-            case "/createOsd":
-                createOsd(request, cinnamonResponse, user, osdDao);
-                break;
-            case "/createMeta":
-                createMeta(request, cinnamonResponse, user, osdDao);
-                break;
-            case "/deleteOsds":
-                deleteOsds(request, cinnamonResponse, user, osdDao);
-                break;
-            case "/deleteMeta":
-                deleteMeta(request, cinnamonResponse, user, osdDao);
-                break;
-            case "/getContent":
-                getContent(request, cinnamonResponse, user, osdDao);
-                break;
-            case "/getMeta":
-                getMeta(request, cinnamonResponse, user, osdDao);
-                break;
-            case "/getObjectsByFolderId":
-                getObjectsByFolderId(request, cinnamonResponse, user, osdDao);
-                break;
-            case "/getObjectsById":
-                getObjectsById(request, cinnamonResponse, user, osdDao);
-                break;
-            case "/getSummaries":
-                getSummaries(request, cinnamonResponse, user, osdDao);
-                break;
-            case "/lock":
-                lock(request, cinnamonResponse, user, osdDao);
-                break;
-            case "/setContent":
-                setContent(request, cinnamonResponse, user, osdDao);
-                break;
-            case "/setSummary":
-                setSummary(request, cinnamonResponse, user, osdDao);
-                break;
-            case "/unlock":
-                unlock(request, cinnamonResponse, user, osdDao);
-                break;
-            case "/version":
-                newVersion(request, cinnamonResponse, user, osdDao);
-                break;
-            default:
-                ErrorCode.RESOURCE_NOT_FOUND.throwUp();
+        UrlMapping       mapping          = UrlMapping.getByPath(request.getRequestURI());
+        switch (mapping) {
+            case OSD__CREATE_OSD -> createOsd(request, cinnamonResponse, user, osdDao);
+            case OSD__CREATE_META -> createMeta(request, cinnamonResponse, user, osdDao);
+            case OSD__DELETE -> deleteOsds(request, cinnamonResponse, user, osdDao);
+            case OSD__DELETE_META -> deleteMeta(request, cinnamonResponse, user, osdDao);
+            case OSD__GET_CONTENT -> getContent(request, cinnamonResponse, user, osdDao);
+            case OSD__GET_META -> getMeta(request, cinnamonResponse, user, osdDao);
+            case OSD__GET_OBJECTS_BY_FOLDER_ID -> getObjectsByFolderId(request, cinnamonResponse, user, osdDao);
+            case OSD__GET_OBJECTS_BY_ID -> getObjectsById(request, cinnamonResponse, user, osdDao);
+            case OSD__GET_SUMMARIES -> getSummaries(request, cinnamonResponse, user, osdDao);
+            case OSD__LOCK -> lock(request, cinnamonResponse, user, osdDao);
+            case OSD__SET_CONTENT -> setContent(request, cinnamonResponse, user, osdDao);
+            case OSD__SET_SUMMARY -> setSummary(request, cinnamonResponse, user, osdDao);
+            case OSD__UNLOCK -> unlock(request, cinnamonResponse, user, osdDao);
+            case OSD__VERSION -> newVersion(request, cinnamonResponse, user, osdDao);
+            default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
     }
 
@@ -160,8 +135,17 @@ public class OsdServlet extends BaseServlet {
         List<ObjectSystemData> osds = osdDao.getObjectsById(deleteRequest.getIds(), false);
         // reverse sort by id, so we try to delete descendants first.
         osds.sort(Comparator.comparingLong(ObjectSystemData::getId).reversed());
-        boolean   deleteDescendants = deleteRequest.isDeleteDescendants();
-        Set<Long> osdIds            = osds.stream().map(ObjectSystemData::getId).collect(Collectors.toSet());
+        boolean deleteDescendants = deleteRequest.isDeleteDescendants();
+        boolean deleteAllVersions = deleteRequest.isDeleteAllVersions();
+        Set<Long> osdIds = osds.stream().map(osd -> {
+                    if (deleteAllVersions) {
+                        // TODO: should the DB just return osd.id if osd.rootId is null?
+                        return Objects.requireNonNullElse(osd.getRootId(), osd.getId());
+                    } else {
+                        return osd.getId();
+                    }
+                }
+        ).collect(Collectors.toSet());
 
         Set<Long> descendants = new HashSet<>();
 
@@ -248,7 +232,7 @@ public class OsdServlet extends BaseServlet {
                 errors.add(error);
             }
             // - check for locked objects; superusers may delete locked objects:
-            if (osd.getLockerId() != null &&  (!user.getId().equals(osd.getLockerId()) && !authorizationService.currentUserIsSuperuser()) ) {
+            if (osd.getLockerId() != null && (!user.getId().equals(osd.getLockerId()) && !authorizationService.currentUserIsSuperuser())) {
                 CinnamonError error = new CinnamonError(ErrorCode.OBJECT_LOCKED_BY_OTHER_USER.getCode(), osdId);
                 errors.add(error);
             }

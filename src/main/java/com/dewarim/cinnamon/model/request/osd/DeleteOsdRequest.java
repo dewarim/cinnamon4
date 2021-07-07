@@ -11,13 +11,15 @@ public class DeleteOsdRequest implements ApiRequest {
 
     private List<Long> ids               = new ArrayList<>();
     private boolean    deleteDescendants = false;
+    private boolean    deleteAllVersions = false;
 
     public DeleteOsdRequest() {
     }
 
-    public DeleteOsdRequest(List<Long> ids, boolean deleteDescendants) {
+    public DeleteOsdRequest(List<Long> ids, boolean deleteDescendants, boolean deleteAllVersions) {
         this.ids = ids;
         this.deleteDescendants = deleteDescendants;
+        this.deleteAllVersions = deleteAllVersions;
     }
 
     public List<Long> getIds() {
@@ -34,6 +36,14 @@ public class DeleteOsdRequest implements ApiRequest {
 
     public void setDeleteDescendants(boolean deleteDescendants) {
         this.deleteDescendants = deleteDescendants;
+    }
+
+    public boolean isDeleteAllVersions() {
+        return deleteAllVersions;
+    }
+
+    public void setDeleteAllVersions(boolean deleteAllVersions) {
+        this.deleteAllVersions = deleteAllVersions;
     }
 
     private boolean validated() {
