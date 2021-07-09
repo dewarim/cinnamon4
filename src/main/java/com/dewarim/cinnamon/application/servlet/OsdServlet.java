@@ -135,7 +135,7 @@ public class OsdServlet extends BaseServlet {
         List<ObjectSystemData> osds = osdDao.getObjectsById(deleteRequest.getIds(), false);
         // reverse sort by id, so we try to delete descendants first.
         osds.sort(Comparator.comparingLong(ObjectSystemData::getId).reversed());
-        boolean deleteDescendants = deleteRequest.isDeleteDescendants();
+        boolean deleteDescendants = deleteRequest.isDeleteDescendants() || deleteRequest.isDeleteAllVersions();
         boolean deleteAllVersions = deleteRequest.isDeleteAllVersions();
         Set<Long> osdIds = osds.stream().map(osd -> {
                     if (deleteAllVersions) {

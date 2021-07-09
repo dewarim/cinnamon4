@@ -601,6 +601,20 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
+    public void deleteAllVersionsHappyPath() throws IOException{
+        var holder = new TestObjectHolder(client);
+        holder.setAcl(client.getAclByName("reviewers.acl"))
+                .setUser(userId)
+                .setFolder(createFolderId)
+                .createOsd("delete-all-versions-root");
+        ObjectSystemData version1 = client.version(new CreateNewVersionRequest(holder.osd.getId()));
+        ObjectSystemData version2 = client.version(new CreateNewVersionRequest(version1.getId()));
+        ObjectSystemData branch = client.version(new CreateNewVersionRequest(holder.osd.getId()));
+        client.deleteOsd(version2.getId(), true, true);
+        assertTrue(client.getOsds(List.of(holder.osd.getId(), version1.getId(), version2.getId(), branch.getId()), false).isEmpty());
+    }
+
+    @Test
     public void createOsdNoContentTypeInHeader() throws IOException {
         Request      request  = createStandardRequestHeader(UrlMapping.OSD__CREATE_OSD);
         HttpResponse response = request.execute().returnResponse();

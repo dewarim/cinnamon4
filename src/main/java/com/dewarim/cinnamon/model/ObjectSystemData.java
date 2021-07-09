@@ -78,7 +78,7 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject, Identi
         nextVersion.setLockerId(null);
         nextVersion.setName(name);
         nextVersion.setParentId(parentId);
-        nextVersion.setRootId(rootId);
+        nextVersion.setRootId(Objects.requireNonNullElse(rootId, this.getId()));
         nextVersion.setPredecessorId(id);
         nextVersion.setTypeId(typeId);
         String nextVersionLabel = createNewVersionLabel(lastDescendantVersion);
@@ -501,5 +501,38 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject, Identi
     public int hashCode() {
 
         return Objects.hash(name, ownerId, created, parentId, cmnVersion);
+    }
+
+    @Override
+    public String toString() {
+        return "ObjectSystemData{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", contentPath='" + contentPath + '\'' +
+                ", contentSize=" + contentSize +
+                ", predecessorId=" + predecessorId +
+                ", rootId=" + rootId +
+                ", creatorId=" + creatorId +
+                ", modifierId=" + modifierId +
+                ", ownerId=" + ownerId +
+                ", lockerId=" + lockerId +
+                ", created=" + created +
+                ", modified=" + modified +
+                ", languageId=" + languageId +
+                ", aclId=" + aclId +
+                ", parentId=" + parentId +
+                ", formatId=" + formatId +
+                ", typeId=" + typeId +
+                ", latestHead=" + latestHead +
+                ", latestBranch=" + latestBranch +
+                ", contentChanged=" + contentChanged +
+                ", metadataChanged=" + metadataChanged +
+                ", cmnVersion='" + cmnVersion + '\'' +
+                ", lifecycleStateId=" + lifecycleStateId +
+                ", summary='" + summary + '\'' +
+                ", objVersion=" + objVersion +
+                ", contentHash='" + contentHash + '\'' +
+                ", contentProvider='" + contentProvider + '\'' +
+                '}';
     }
 }

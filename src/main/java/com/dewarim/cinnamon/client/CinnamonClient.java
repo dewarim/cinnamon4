@@ -194,6 +194,15 @@ public class CinnamonClient {
         return unwrapOsds(response, 1).get(0);
     }
 
+    /**
+     * Get a list of OSDs. Do not check if all requested OSDs are returned.
+     */
+    public List<ObjectSystemData> getOsds(List<Long> ids, boolean includeSummary) throws IOException {
+        OsdRequest   osdRequest = new OsdRequest(ids, includeSummary);
+        HttpResponse response   = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
+        return unwrapOsds(response, EXPECTED_SIZE_ANY);
+    }
+
     private List<ObjectSystemData> unwrapOsds(HttpResponse response, Integer expectedSize) throws IOException {
         verifyResponseIsOkay(response);
         return osdUnwrapper.unwrap(response, expectedSize);
@@ -256,7 +265,11 @@ public class CinnamonClient {
     }
 
     public boolean deleteOsd(Long id, boolean deleteDescendants) throws IOException {
-        DeleteOsdRequest deleteRequest = new DeleteOsdRequest(Collections.singletonList(id), deleteDescendants, false);
+        return deleteOsd(id,deleteDescendants,false);
+    }
+
+    public boolean deleteOsd(Long id, boolean deleteDescendants, boolean deleteAllVersions) throws IOException {
+        DeleteOsdRequest deleteRequest = new DeleteOsdRequest(Collections.singletonList(id), deleteDescendants, deleteAllVersions);
         HttpResponse response = sendStandardRequest(UrlMapping.OSD__DELETE, deleteRequest);
         return verifyDeleteResponse(response);
     }
