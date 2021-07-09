@@ -21,6 +21,10 @@ public class OsdWrapper implements Wrapper<ObjectSystemData>, ApiResponse {
     @JacksonXmlProperty(localName = "link")
     private List<Link> links = new ArrayList<>();
 
+    @JacksonXmlElementWrapper(localName = "references")
+    @JacksonXmlProperty(localName = "reference")
+    private List<ObjectSystemData> references = new ArrayList<>();
+
     public OsdWrapper() {
     }
 
@@ -37,11 +41,25 @@ public class OsdWrapper implements Wrapper<ObjectSystemData>, ApiResponse {
     }
 
     public List<Link> getLinks() {
+        if(links == null){
+            links = new ArrayList<>();
+        }
         return links;
     }
 
     public void setLinks(List<Link> links) {
         this.links = links;
+    }
+
+    public List<ObjectSystemData> getReferences() {
+        if(references == null){
+            references = new ArrayList<>();
+        }
+        return references;
+    }
+
+    public void setReferences(List<ObjectSystemData> references) {
+        this.references = references;
     }
 
     @Override

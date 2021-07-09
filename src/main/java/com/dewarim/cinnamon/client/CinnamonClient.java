@@ -45,6 +45,7 @@ import com.dewarim.cinnamon.model.request.link.UpdateLinkRequest;
 import com.dewarim.cinnamon.model.request.objectType.ListObjectTypeRequest;
 import com.dewarim.cinnamon.model.request.osd.CreateOsdRequest;
 import com.dewarim.cinnamon.model.request.osd.DeleteOsdRequest;
+import com.dewarim.cinnamon.model.request.osd.OsdByFolderRequest;
 import com.dewarim.cinnamon.model.request.osd.OsdRequest;
 import com.dewarim.cinnamon.model.request.permission.ChangePermissionsRequest;
 import com.dewarim.cinnamon.model.request.permission.ListPermissionRequest;
@@ -201,6 +202,13 @@ public class CinnamonClient {
         OsdRequest   osdRequest = new OsdRequest(ids, includeSummary);
         HttpResponse response   = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
         return unwrapOsds(response, EXPECTED_SIZE_ANY);
+    }
+
+    public OsdWrapper getOsdsInFolder(Long folderId, boolean includeSummary, boolean linksAsOsd) throws IOException {
+        OsdByFolderRequest osdRequest = new OsdByFolderRequest(folderId, includeSummary, linksAsOsd);
+        HttpResponse response = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_FOLDER_ID, osdRequest);
+        verifyResponseIsOkay(response);
+        return mapper.readValue(response.getEntity().getContent(), OsdWrapper.class);
     }
 
     private List<ObjectSystemData> unwrapOsds(HttpResponse response, Integer expectedSize) throws IOException {

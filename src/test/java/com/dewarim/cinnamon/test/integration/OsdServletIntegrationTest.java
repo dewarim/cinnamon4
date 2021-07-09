@@ -127,13 +127,22 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getObjectsByFolderId() throws IOException {
-        OsdByFolderRequest     osdRequest = new OsdByFolderRequest(4L, true);
+        OsdByFolderRequest     osdRequest = new OsdByFolderRequest(4L, true, false);
         HttpResponse           response   = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_FOLDER_ID, osdRequest);
         List<ObjectSystemData> dataList   = unwrapOsds(response, 2);
         List<Link>             links      = unwrapLinks(response, 1);
         assertTrue(dataList.stream().anyMatch(osd -> osd.getSummary().equals("<summary>child@archive</summary>")));
         // link.objectId is #10, because it's yet unresolved (latest_head would be osd#11).
         assertThat(links.get(0).getObjectId(), equalTo(10L));
+    }
+
+    @Test
+    public void getObjectsByFolderIdWithLinksAsOsds() throws IOException {
+        OsdWrapper             wrapper    = client.getOsdsInFolder(4L, true, true);
+        List<Link>             links      = wrapper.getLinks();
+        List<ObjectSystemData> linkedOsds = wrapper.getReferences();
+        assertEquals(1, links.size());
+        links.forEach(link -> assertTrue(linkedOsds.stream().anyMatch(osd -> osd.getId().equals(link.getObjectId()))));
     }
 
     @Test
@@ -601,7 +610,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void deleteAllVersionsHappyPath() throws IOException{
+    public void deleteAllVersionsHappyPath() throws IOException {
         var holder = new TestObjectHolder(client);
         holder.setAcl(client.getAclByName("reviewers.acl"))
                 .setUser(userId)
@@ -609,7 +618,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
                 .createOsd("delete-all-versions-root");
         ObjectSystemData version1 = client.version(new CreateNewVersionRequest(holder.osd.getId()));
         ObjectSystemData version2 = client.version(new CreateNewVersionRequest(version1.getId()));
-        ObjectSystemData branch = client.version(new CreateNewVersionRequest(holder.osd.getId()));
+        ObjectSystemData branch   = client.version(new CreateNewVersionRequest(holder.osd.getId()));
         client.deleteOsd(version2.getId(), true, true);
         assertTrue(client.getOsds(List.of(holder.osd.getId(), version1.getId(), version2.getId(), branch.getId()), false).isEmpty());
     }
@@ -1143,6 +1152,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         client.createRelation(leftOsd.getId(), rightOsd.getId(), rt.getName(), "<meta/>");
         client.deleteOsds(List.of(rightOsd.getId(), leftOsd.getId()), false);
     }
+
     @Test
     public void deleteTwoOsdsWithUnprotectedRelation() throws IOException {
         var holder = new TestObjectHolder(adminClient);
@@ -1171,9 +1181,9 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         holder.createOsd("right-osd-protected-by-left");
         ObjectSystemData rightOsd = holder.osd;
 
-        RelationType rt = new RelationType("right-only-protected-delete",false,true,false,false,false,false);
+        RelationType rt = new RelationType("right-only-protected-delete", false, true, false, false, false, false);
         rt = adminClient.createRelationTypes(List.of(rt)).get(0);
-        client.createRelation(leftOsd.getId(), rightOsd.getId(), rt.getName(),"<meta/>");
+        client.createRelation(leftOsd.getId(), rightOsd.getId(), rt.getName(), "<meta/>");
         assertClientError(() -> client.deleteOsds(List.of(rightOsd.getId()), false),
                 CANNOT_DELETE_DUE_TO_ERRORS, OBJECT_HAS_PROTECTED_RELATIONS);
     }
@@ -1190,9 +1200,9 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         holder.createOsd("right-osd-protected-by-left");
         ObjectSystemData rightOsd = holder.osd;
 
-        RelationType rt = new RelationType("right-only-protected-delete2",true,false,false,false,false,false);
+        RelationType rt = new RelationType("right-only-protected-delete2", true, false, false, false, false, false);
         rt = adminClient.createRelationTypes(List.of(rt)).get(0);
-        client.createRelation(leftOsd.getId(), rightOsd.getId(), rt.getName(),"<meta/>");
+        client.createRelation(leftOsd.getId(), rightOsd.getId(), rt.getName(), "<meta/>");
         client.deleteOsds(List.of(rightOsd.getId()), false);
     }
 
@@ -1207,9 +1217,9 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         holder.createOsd("right-osd-protected-by-left");
         ObjectSystemData rightOsd = holder.osd;
 
-        RelationType rt = new RelationType("left-only-protected-delete2",false,true,false,false,false,false);
+        RelationType rt = new RelationType("left-only-protected-delete2", false, true, false, false, false, false);
         rt = adminClient.createRelationTypes(List.of(rt)).get(0);
-        client.createRelation(leftOsd.getId(), rightOsd.getId(), rt.getName(),"<meta/>");
+        client.createRelation(leftOsd.getId(), rightOsd.getId(), rt.getName(), "<meta/>");
         client.deleteOsds(List.of(leftOsd.getId()), false);
     }
 
@@ -1224,9 +1234,9 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         holder.createOsd("right-osd-protected-by-left");
         ObjectSystemData rightOsd = holder.osd;
 
-        RelationType rt = new RelationType("left-only-protected-delete",true,false,false,false,false,false);
+        RelationType rt = new RelationType("left-only-protected-delete", true, false, false, false, false, false);
         rt = adminClient.createRelationTypes(List.of(rt)).get(0);
-        client.createRelation(leftOsd.getId(), rightOsd.getId(), rt.getName(),"<meta/>");
+        client.createRelation(leftOsd.getId(), rightOsd.getId(), rt.getName(), "<meta/>");
         assertClientError(() -> client.deleteOsds(List.of(leftOsd.getId()), false),
                 CANNOT_DELETE_DUE_TO_ERRORS, OBJECT_HAS_PROTECTED_RELATIONS);
     }

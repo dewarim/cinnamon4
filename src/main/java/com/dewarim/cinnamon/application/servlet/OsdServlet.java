@@ -576,6 +576,9 @@ public class OsdServlet extends BaseServlet {
         OsdWrapper wrapper = new OsdWrapper();
         wrapper.setOsds(filteredOsds);
         wrapper.setLinks(filteredLinks);
+        if (osdRequest.isLinksAsOsd()) {
+            wrapper.setReferences(osdDao.getObjectsById(filteredLinks.stream().map(Link::getObjectId).filter(Objects::nonNull).collect(Collectors.toList()), includeSummary));
+        }
         response.setWrapper(wrapper);
     }
 

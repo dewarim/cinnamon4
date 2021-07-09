@@ -2,6 +2,7 @@ package com.dewarim.cinnamon.model.request.link;
 
 import com.dewarim.cinnamon.api.ApiResponse;
 import com.dewarim.cinnamon.model.links.Link;
+import com.dewarim.cinnamon.model.links.LinkType;
 import com.dewarim.cinnamon.model.response.Wrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
@@ -41,5 +42,13 @@ public class LinkWrapper implements Wrapper<Link>, ApiResponse {
     public Wrapper<Link> setList(List<Link> links) {
         setLinks(links);
         return this;
+    }
+
+    @Override
+    public List<Object> examples() {
+        return List.of(
+                new Link(1L, LinkType.OBJECT, 2L, 3L, 4L, null, 123L),
+                new Link(1L, LinkType.FOLDER, 2L, 3L, 4L, 321L, null)
+        );
     }
 }
