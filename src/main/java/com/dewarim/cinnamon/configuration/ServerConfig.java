@@ -3,9 +3,9 @@ package com.dewarim.cinnamon.configuration;
 public class ServerConfig {
     
     private int port = 9090;
-    private String systemRoot = "/opt/cinnamon/cinnamon-system";
-    private String dataRoot = "/opt/cinnamon/cinnamon-data";
-    private String luceneIndexPath = "/opt/cinnamon/cinnamon-data/index";
+    private String systemRoot = "data/config";
+    private String dataRoot = "data";
+    private String luceneIndexPath = "data/index";
 
     /**
      * If true, check if an object exists in the database before trying to update it.

@@ -31,7 +31,7 @@ public class FileSystemContentProvider implements ContentProvider {
     }
 
     @Override
-    public InputStream getContentStream(ContentMetadata metadata) throws IOException{
+    public InputStream getContentStream(ContentMetadata metadata) throws IOException {
         String path = dataRootPath + SEP + metadata.getContentPath();
         return new FileInputStream(path);
     }
@@ -52,13 +52,13 @@ public class FileSystemContentProvider implements ContentProvider {
         // we could just update the existing metadata, but that's bad style.
         ContentMetadata lightMeta = new ContentMetadataLight();
         lightMeta.setContentSize(bytesWritten);
-        lightMeta.setContentPath(subfolderName+SEP+targetName);
+        lightMeta.setContentPath(subfolderName + SEP + targetName);
 
         // calculate hash:
         String sha256Hex = DigestUtils.sha256Hex(new FileInputStream(contentFile.toFile()));
         lightMeta.setContentHash(sha256Hex);
 
-        log.info("Stored new content @ {}",contentFile.toAbsolutePath());
+        log.info("Stored new content @ {}", contentFile.toAbsolutePath());
 
         return lightMeta;
     }

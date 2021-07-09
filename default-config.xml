@@ -28,7 +28,7 @@
     <database>cinnamon4</database>
     <user>cinnamon</user>
     <password>cinnamon</password>
-    <databaseUrl>jdbc:postgresql://127.0.0.1:5432/cinnamon_test</databaseUrl>
+    <databaseUrl>jdbc:postgresql://127.0.0.1:5432/cinnamon4</databaseUrl>
   </databaseConfig>
   <loginProviders/>
 </CinnamonConfig>

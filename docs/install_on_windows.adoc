@@ -1,0 +1,35 @@
+== Install Cinnamon on a Windows Machine
+
+=== Database
+
+* Download the current stable version of https://www.postgresql.org/download/[PostgreSQL]
+* Run the installer
+* Start the pgadmin tool
+* Add a user "cinnamon" with password "cinnamon" (you may use any username and password, but need to set it later in the configuration file if you do not use these default values )
+* Grand login privileges to user cinnamon
+* Create a database "cinnamon_test", owned by user "cinnamon"
+
+TODO: describe a production installation
+
+=== Java
+
+* Download https://adoptopenjdk.net/[Java 16] (or 17, once available)
+* Run the installer
+* If the installer offers to add Java to the PATH variable, activate this option.
+* Continue with configuration
+
+=== Development
+
+* Download and install Git: https://git-scm.com/downloads[Git]
+* Download https://maven.apache.org/download.cgi[Apache Maven 3.8.1] (just use the zip archive)
+* Unpack Maven to a folder.
+* Add the Java and Maven executables on your PATH. Look at this https://stackoverflow.com/a/41895179[Stackoverflow answer]. (It's possible that the adopt-jdk install already did this for Java)
+* Start the command line interface and check that both Java and Apache Maven have been installed correctly:
+
+    java -version
+    mvn -version
+
+* Checkout the project via git shell:
+
+    git clone git@github.com:dewarim/cinnamon4.git
+

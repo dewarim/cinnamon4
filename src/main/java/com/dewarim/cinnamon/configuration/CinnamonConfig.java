@@ -7,9 +7,6 @@ public class CinnamonConfig {
     
     private ServerConfig serverConfig = new ServerConfig();
 
-    @Deprecated(forRemoval = true)
-    private String logbackLoggingConfigPath = "/opt/cinnamon/logback.xml";
-        
     private String systemAdministratorEmail;
     private MailConfig mailConfig = new MailConfig();
 
@@ -19,14 +16,6 @@ public class CinnamonConfig {
     
     private List<LoginProviderConfig> loginProviders = new ArrayList<>();
     
-    public String getLogbackLoggingConfigPath() {
-        return logbackLoggingConfigPath;
-    }
-
-    public void setLogbackLoggingConfigPath(String logbackLoggingConfigPath) {
-        this.logbackLoggingConfigPath = logbackLoggingConfigPath;
-    }
-
     public String getSystemAdministratorEmail() {
         return systemAdministratorEmail;
     }

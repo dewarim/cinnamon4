@@ -6,53 +6,40 @@ Current status: pre-alpha.
 
 == Goal
 
-Try to implement the core features of the Cinnamon CMS in Java,
+Implement the core features of the Cinnamon CMS in Java,
 
-* using modern language features
-* with unit tests
-* with integration tests
-* with documentation
-* improved API
-* removing obsolete code
-* minimizing dependencies on huge frameworks which are hard to understand
-* opinionated implementation (using Jetty, PostgreSQL, MyBatis).
+* using modern language features,
+* with unit tests,
+* with integration tests,
+* with documentation,
+* improved API,
+* removing obsolete code,
+* minimizing dependencies on huge frameworks which are hard to understand and difficult to update.
 
 == Dependencies
 
-Before you start: this project needs the following dependencies to build & run:
+Version numbers describe the minimum version. You can either download them directly and install them manually (recommended for Java) or use your system's package manager (Linux) or the Windows installer.
 
-* https://maven.apache.org/download.cgi[Apache Maven 3.8.1] (as build system)
+=== Run the binary version
+
+To run the binary release (not available yet, you have to build from source), you just need
+
 * https://adoptopenjdk.net/[Java 16]
 * https://www.postgresql.org/download/[PostgreSQL 12]
 
-Version numbers describe the minimum version. You can either download them directly and install them manually (recommended for Java) or use your system's package manager (Linux) or the Windows installer.
+=== Build & run from source
 
-=== Initial Setup
+* https://adoptopenjdk.net/[Java 16]
+* https://www.postgresql.org/download/[PostgreSQL 12]
+* https://git-scm.com/downloads[Git] (optional for build, required for developers)
+* https://maven.apache.org/download.cgi[Apache Maven 3.8.1] (as build system)
 
-* Download and install PostgreSQL.
-* Create a database "cinnamon_test", owned by user "cinnamon" with password "cinnamon"
- either with pgAdmin or https://medium.com/coding-blocks/creating-user-database-and-adding-access-on-postgresql-8bfcd2f4a91e[directly with postgres]
+== Initial Setup
 
-    sudo -u postgres psql
-    postgres=# create database cinnamon_test;
-    postgres=# create user cinnamon_test with encrypted password 'cinnamon';
-    postgres=# grant all privileges on database cinnamon_test to cinnamon;
+* link:docs/install_on_windows.adoc[Installation on Windows]
+* link:docs/install_on_linux.adoc[Installation on Linux]
 
-// TODO: add a test database for initial production setup
-
-==== Windows
-
-You need to have the Java and Maven executables on your PATH. Look at this https://stackoverflow.com/a/41895179[Stackoverflow answer].
-
-===== Linux
-
-If you use Linux, adopt the following to your needs and add it to the file .bash_rc (or whatever your shell's configuration is):
-
-    export JAVA_HOME=/home/${USER}/bin/jdk-16
-    export MAVEN_HOME=/home/${USER}/bin/maven
-    export PATH=${JAVA_HOME}/bin:${MAVEN_HOME}/bin:$PATH
-
-You may have to restart / re-login to have this take effect.
+TODO: add a test database for initial production setup
 
 == Build
 
@@ -62,11 +49,6 @@ In the top level project directory, run:
 
 to build target/cinnamon-server.jar which includes all dependencies. This will also run a full integration
 test and create a lot of basic objects in the cinnamon_test database. If this succeeds, the system is okay.
-
-Note: at the moment, this will use the default file paths in /opt/cinnamon.
-
-TODO: default setup should not use /opt/cinnamon but a temp folder for tests (or at least allow an environment var).
-(See: https://github.com/dewarim/cinnamon4/issues/214[issue 214] )
 
 == Run
 
@@ -81,10 +63,10 @@ Run
 to show the command line options.
 
     # write the default config to a file:
-    java -jar target/cinnamon-server.jar --write-config my-default-config.xml
+    java -jar target/cinnamon-server.jar --write-config my-config.xml
 
     # load a custom config file:
-    java -jar target/cinnamon-server.jar --config my-default-config.xml
+    java -jar target/cinnamon-server.jar --config my-config.xml
 
     # start on port 8080:
     java -jar target/cinnamon-server.jar --port 8080
@@ -98,6 +80,14 @@ See the file default-config.xml[default-config.xml] for the default values.
 == License
 
 [Apache 2.0](LICENSE.txt)
+
+  Copyright 2018 Ingo Wiarda
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
 
 == Author
 
