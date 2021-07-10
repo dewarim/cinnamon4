@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.client;
 
+import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.model.response.CinnamonError;
 import com.dewarim.cinnamon.model.response.CinnamonErrorWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
@@ -32,7 +33,7 @@ public class Unwrapper<T, W extends Wrapper<T>> {
     private List<T> checkList(List<T> list, Integer expectedSize) {
         if (expectedSize != null && expectedSize > EXPECTED_SIZE_ANY) {
             if (list == null || list.isEmpty()) {
-                throw new CinnamonClientException("No objects found in response");
+                throw new CinnamonClientException("No objects found in response", ErrorCode.OBJECT_NOT_FOUND);
             }
             if (!expectedSize.equals(list.size())) {
                 String message = String.format("Unexpected number of objects found: %s instead of %s ", list.size(), expectedSize);

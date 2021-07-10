@@ -17,7 +17,7 @@ public class MetaRequest implements ApiRequest {
 
     /**
      * Expects the XML content of each metaset to be an XML DOM element in the response XML,
-     * not a
+     * instead of an encoded String.
      */
     private boolean      version3CompatibilityRequired;
 

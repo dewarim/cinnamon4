@@ -127,7 +127,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getObjectsByFolderId() throws IOException {
-        OsdByFolderRequest     osdRequest = new OsdByFolderRequest(4L, true, false);
+        OsdByFolderRequest     osdRequest = new OsdByFolderRequest(4L, true, false, false);
         HttpResponse           response   = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_FOLDER_ID, osdRequest);
         List<ObjectSystemData> dataList   = unwrapOsds(response, 2);
         List<Link>             links      = unwrapLinks(response, 1);
@@ -138,11 +138,49 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getObjectsByFolderIdWithLinksAsOsds() throws IOException {
-        OsdWrapper             wrapper    = client.getOsdsInFolder(4L, true, true);
+        OsdWrapper             wrapper    = client.getOsdsInFolder(4L, true, true, false);
         List<Link>             links      = wrapper.getLinks();
         List<ObjectSystemData> linkedOsds = wrapper.getReferences();
         assertEquals(1, links.size());
         links.forEach(link -> assertTrue(linkedOsds.stream().anyMatch(osd -> osd.getId().equals(link.getObjectId()))));
+    }
+
+    @Test
+    public void createObjectWithCustomMetadata() throws IOException {
+        var holder = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
+
+        var metasetType = TestObjectHolder.getMetasetType("comment");
+        var metas = List.of(new Meta(null,metasetType.getId(), "<meta>some data</meta>"));
+        var osd = holder.setMetas(metas).createOsd("object#1 with custom meta").osd;
+        assertEquals(osd.getMetas().get(0).getContent(), holder.metas.get(0).getContent());
+        var osdWithMeta = client.getOsdById(osd.getId(),false,true);
+        assertEquals(1, osdWithMeta.getMetas().size());
+        assertEquals(osd.getMetas().get(0), osdWithMeta.getMetas().get(0));
+    }
+
+    @Test
+    public void createObjectWithNonUniqueMetasets() throws IOException {
+        var holder = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
+
+        var metasetType = TestObjectHolder.getMetasetType("comment");
+        var metas = List.of(new Meta(null,metasetType.getId(), "<meta><comment>first post</comment></meta>"),
+                new Meta(null, metasetType.getId(), "<meta><comment>second post</comment></meta>"));
+        var osd = holder.setMetas(metas).createOsd("object#2 with custom meta").osd;
+        assertEquals(osd.getMetas().get(0).getContent(), holder.metas.get(0).getContent());
+        var osdWithMeta = client.getOsdById(osd.getId(),false,true);
+        assertEquals(2, osdWithMeta.getMetas().size());
+        assertEquals(osd.getMetas().get(0), osdWithMeta.getMetas().get(0));
+        assertEquals(osd.getMetas().get(1), osdWithMeta.getMetas().get(1));
+    }
+
+    @Test
+    public void createObjectWithMultipelUniqueMetasets() throws IOException {
+        var holder = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
+        // license is a unique metaset in our test database
+        var metasetType = TestObjectHolder.getMetasetType("license");
+        var metas = List.of(new Meta(null,metasetType.getId(), "<gpl/>"),
+                new Meta(null, metasetType.getId(), "<proprietaryLicense/>"));
+        assertClientError(() -> holder.setMetas(metas).createOsd("object#3 with custom meta"), METASET_UNIQUE_CHECK_FAILED);
     }
 
     @Test
@@ -209,7 +247,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         fos.close();
         String sha256Hex = DigestUtils.sha256Hex(new FileInputStream(tempFile));
 
-        OsdRequest             osdRequest       = new OsdRequest(List.of(22L), false);
+        OsdRequest             osdRequest       = new OsdRequest(List.of(22L), false, false);
         HttpResponse           osdResponse      = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
         List<ObjectSystemData> objectSystemData = unwrapOsds(osdResponse, 1);
         ObjectSystemData       osd              = objectSystemData.get(0);
@@ -620,7 +658,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         ObjectSystemData version2 = client.version(new CreateNewVersionRequest(version1.getId()));
         ObjectSystemData branch   = client.version(new CreateNewVersionRequest(holder.osd.getId()));
         client.deleteOsd(version2.getId(), true, true);
-        assertTrue(client.getOsds(List.of(holder.osd.getId(), version1.getId(), version2.getId(), branch.getId()), false).isEmpty());
+        assertTrue(client.getOsds(List.of(holder.osd.getId(), version1.getId(), version2.getId(), branch.getId()), false, false).isEmpty());
     }
 
     @Test
@@ -646,7 +684,6 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         assertCinnamonError(response, ErrorCode.MISSING_REQUEST_PAYLOAD);
     }
 
-    // TODO: create tests from PARENT_FOLDER_NOT_FOUND onwards
     @Test
     public void createOsdInvalidRequest() throws IOException {
         CreateOsdRequest request = new CreateOsdRequest();
@@ -1030,7 +1067,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         SetSummaryRequest summaryRequest = new SetSummaryRequest(osd.getId(), "a summary");
         response = sendAdminRequest(UrlMapping.OSD__SET_SUMMARY, summaryRequest);
         assertResponseOkay(response);
-        OsdRequest osdRequest = new OsdRequest(Collections.singletonList(osd.getId()), false);
+        OsdRequest osdRequest = new OsdRequest(Collections.singletonList(osd.getId()), false, false);
         response = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
         ObjectSystemData updatedOsd = unwrapOsds(response, 1).get(0);
         assertThat(updatedOsd.getModifierId(), equalTo(osd.getModifierId()));
@@ -1048,6 +1085,17 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void deleteOsdHappyPath() throws IOException {
         assertTrue(client.deleteOsd(49L));
+    }
+
+    @Test
+    public void deleteOsdWithCustomMetadata() throws IOException{
+        var holder = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
+
+        var metasetType = TestObjectHolder.getMetasetType("comment");
+        var metas = List.of(new Meta(null,metasetType.getId(), "<meta>some data</meta>"));
+        var osd = holder.setMetas(metas).createOsd("object#1 with custom meta").osd;
+        client.deleteOsd(osd.getId());
+        assertClientError(() -> client.getOsdById(osd.getId(), false,false), OBJECT_NOT_FOUND);
     }
 
     @Test
@@ -1278,6 +1326,21 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         client.deleteOsds(List.of(osd.getId()), false);
     }
 
+    @Test
+    public void getOsdWithCustomMetadata() throws IOException {
+
+    }
+
+    @Test
+    public void getOsdWithUnbrowsableCustomMetadata() throws IOException {
+
+    }
+
+    @Test
+    public void getOsdByFolderWithCustomMetadata() throws IOException {
+
+    }
+
     private HttpResponse sendAdminMultipartRequest(UrlMapping url, HttpEntity multipartEntity) throws IOException {
         return Request.Post("http://localhost:" + cinnamonTestPort + url.getPath())
                 .addHeader("ticket", getAdminTicket())
@@ -1369,7 +1432,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     public ObjectSystemData fetchSingleOsd(Long id) throws IOException {
-        OsdRequest   osdRequest  = new OsdRequest(Collections.singletonList(id), true);
+        OsdRequest   osdRequest  = new OsdRequest(Collections.singletonList(id), true, false);
         HttpResponse osdResponse = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
         assertResponseOkay(osdResponse);
         return unwrapOsds(osdResponse, 1).get(0);

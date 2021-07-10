@@ -171,7 +171,7 @@ public enum UrlMapping {
     LINK__DELETE("link", "delete", "/api", "", DeleteLinkRequest.class, DeleteResponse.class),
     LINK__GET_LINKS_BY_ID("link", "getLinksById", "/api", "", GetLinksRequest.class, LinkResponseWrapper.class),
     LINK__UPDATE("link", "update", "/api", "", UpdateLinkRequest.class, LinkWrapper.class),
-    METASET_TYPE__LIST_METASET_TYPES("metasetType", "listMetasetTypes", "/api", "", ListMetasetTypeRequest.class, MetasetTypeWrapper.class),
+    METASET_TYPE__LIST("metasetType", "listMetasetTypes", "/api", "", ListMetasetTypeRequest.class, MetasetTypeWrapper.class),
     NULL_MAPPING("", "", "/api", "", null, null),
     OBJECT_TYPE__LIST("objectType", "list", "/api", "", ListObjectTypeRequest.class, ObjectTypeWrapper.class),
     OBJECT_TYPE__CREATE("objectType", "create", "/api", "", CreateObjectTypeRequest.class, ObjectTypeWrapper.class),

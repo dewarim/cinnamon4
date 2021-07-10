@@ -56,7 +56,7 @@ public class ConfigServlet extends HttpServlet {
         wrapper.setIndexItems(new IndexItemDao().listIndexItems());
         wrapper.setLanguages(new LanguageDao().listLanguages());
         wrapper.setLifecycles(new LifecycleDao().listLifecycles());
-        wrapper.setMetasetTypes(new MetasetTypeDao().listMetasetTypes());
+        wrapper.setMetasetTypes(new MetasetTypeDao().list());
         wrapper.setObjectTypes(new ObjectTypeDao().list());
         wrapper.setPermissions(new PermissionDao().list());
         wrapper.setRelationTypes(new RelationTypeDao().list());

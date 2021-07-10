@@ -10,12 +10,14 @@ public class OsdRequest implements ApiRequest {
     private List<Long> ids = new ArrayList<>();
 
     private boolean includeSummary;
+    private boolean includeCustomMetadata;
 
     public OsdRequest() {
     }
 
-    public OsdRequest(List<Long> ids, boolean includeSummary) {
+    public OsdRequest(List<Long> ids, boolean includeSummary, boolean includeCustomMetadata) {
         this.includeSummary = includeSummary;
+        this.includeCustomMetadata = includeCustomMetadata;
         this.ids = ids;
     }
 
@@ -33,5 +35,22 @@ public class OsdRequest implements ApiRequest {
 
     public void setIncludeSummary(boolean includeSummary) {
         this.includeSummary = includeSummary;
+    }
+
+    public boolean isIncludeCustomMetadata() {
+        return includeCustomMetadata;
+    }
+
+    public void setIncludeCustomMetadata(boolean includeCustomMetadata) {
+        this.includeCustomMetadata = includeCustomMetadata;
+    }
+
+    @Override
+    public String toString() {
+        return "OsdRequest{" +
+                "ids=" + ids +
+                ", includeSummary=" + includeSummary +
+                ", includeCustomMetadata=" + includeCustomMetadata +
+                '}';
     }
 }

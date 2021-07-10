@@ -63,7 +63,7 @@ public class BaseServlet extends HttpServlet {
 
         if (metaRequest.isVersion3CompatibilityRequired()) {
             // render traditional metaset
-            Map<Long, MetasetType> metasetTypes = new MetasetTypeDao().listMetasetTypes().stream().collect(Collectors.toMap(MetasetType::getId, m -> m));
+            Map<Long, MetasetType> metasetTypes = new MetasetTypeDao().list().stream().collect(Collectors.toMap(MetasetType::getId, m -> m));
 
             Element  root     = new Element("meta");
             Document document = new Document(root);

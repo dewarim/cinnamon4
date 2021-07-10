@@ -1,20 +1,24 @@
 package com.dewarim.cinnamon.model.request.osd;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.dewarim.cinnamon.model.Meta;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public class CreateOsdRequest implements ApiRequest {
 
-    private String name;
-    private Long   parentId;
-    private Long   ownerId;
-    private Long   aclId;
-    private Long   typeId;
-    private Long   formatId;
-    private Long   languageId;
-    private Long   lifecycleStateId;
-    private String summary = "<summary />";
+    private String     name;
+    private Long       parentId;
+    private Long       ownerId;
+    private Long       aclId;
+    private Long       typeId;
+    private Long       formatId;
+    private Long       languageId;
+    private Long       lifecycleStateId;
+    private String     summary = "<summary />";
+    private List<Meta> metas;
 
     public CreateOsdRequest() {
     }
@@ -31,6 +35,17 @@ public class CreateOsdRequest implements ApiRequest {
         this.languageId = languageId;
         this.lifecycleStateId = lifecycleStateId;
         this.summary = summary;
+    }
+
+    public List<Meta> getMetas() {
+        if (metas == null) {
+            metas = new ArrayList<>();
+        }
+        return metas;
+    }
+
+    public void setMetas(List<Meta> metas) {
+        this.metas = metas;
     }
 
     public String getName() {
@@ -111,10 +126,17 @@ public class CreateOsdRequest implements ApiRequest {
                 && (typeId == null || typeId > 0)
                 && (aclId == null || aclId > 0)
                 && (ownerId == null || ownerId > 0)
-                && (formatId == null ||  formatId > 0)
+                && (formatId == null || formatId > 0)
                 && (languageId == null || languageId > 0)
+                && metaIsValid()
                 && summary != null
                 && summary.trim().length() > 0;
+    }
+
+    private boolean metaIsValid() {
+        return getMetas().stream().allMatch(meta ->
+                meta.getTypeId() != null && meta.getTypeId() > 0 && meta.getContent() != null
+        );
     }
 
     public Optional<CreateOsdRequest> validateRequest() {
@@ -137,6 +159,7 @@ public class CreateOsdRequest implements ApiRequest {
                 ", languageId=" + languageId +
                 ", lifecycleStateId=" + lifecycleStateId +
                 ", summary='" + summary + '\'' +
+                ", metas=" + getMetas() +
                 '}';
     }
 }

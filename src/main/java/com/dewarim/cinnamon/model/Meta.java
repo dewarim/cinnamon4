@@ -1,8 +1,10 @@
 package com.dewarim.cinnamon.model;
 
+import com.dewarim.cinnamon.api.Identifiable;
+
 import java.util.Objects;
 
-public class Meta {
+public class Meta implements Identifiable {
 
     private Long   id;
     private Long   objectId;
@@ -66,7 +68,7 @@ public class Meta {
 
     @Override
     public int hashCode() {
-        return Objects.hash(objectId, typeId, content);
+        return Objects.hash(objectId, typeId);
     }
 
     @Override

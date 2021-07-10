@@ -256,7 +256,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void createMetaMetasetHappyWithExistingMeta() throws IOException {
+    public void createFolderMetasetHappyWithExistingMeta() throws IOException {
         CreateMetaRequest request      = new CreateMetaRequest(19L, "duplicate comment", "comment");
         HttpResponse      metaResponse = sendStandardRequest(UrlMapping.FOLDER__CREATE_META, request);
         assertResponseOkay(metaResponse);
@@ -268,7 +268,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void createMetaMetasetHappyPath() throws IOException {
+    public void createOsdMetasetHappyPath() throws IOException {
         CreateMetaRequest request      = new CreateMetaRequest(17L, "new license meta", "license");
         HttpResponse      metaResponse = sendStandardRequest(UrlMapping.OSD__CREATE_META, request);
         assertResponseOkay(metaResponse);

@@ -214,6 +214,7 @@ public class OsdServlet extends BaseServlet {
         relationDao.deleteAllUnprotectedRelationsOfObjects(osdIdsToToDelete);
         relationDao.delete(protectedRelations.stream().map(Relation::getId).collect(Collectors.toList()));
         new LinkDao().deleteAllLinksToObjects(osdIdsToToDelete);
+        new OsdMetaDao().deleteByOsdIds(osdIdsToToDelete);
         osdDao.deleteOsds(osdIdsToToDelete);
         // TODO: deleteContent? -> cleanup process? #199
         var deleteResponse = new DeleteResponse(true);
@@ -305,6 +306,12 @@ public class OsdServlet extends BaseServlet {
 
         osd = osdDao.saveOsd(osd);
 
+        // handle custom metadata
+        if (!createRequest.getMetas().isEmpty()) {
+            var metas = createMetas(createRequest.getMetas(), osd.getId());
+            osd.setMetas(metas);
+        }
+
         Part file = request.getPart("file");
         if (file != null) {
             storeFileUpload(file.getInputStream(), osd, createRequest.getFormatId());
@@ -312,6 +319,23 @@ public class OsdServlet extends BaseServlet {
         }
         OsdWrapper osdWrapper = new OsdWrapper(Collections.singletonList(osd));
         response.setWrapper(osdWrapper);
+    }
+
+    private List<Meta> createMetas(List<Meta> metas, Long id) {
+        var dao = new OsdMetaDao();
+        checkMetaUniqueness(metas);
+        dao.create(metas.stream().peek(meta -> meta.setObjectId(id)).collect(Collectors.toList()));
+        return dao.listByOsd(id);
+    }
+
+    private void checkMetaUniqueness(List<Meta> metas) {
+        Set<Long> uniqueTypes = new MetasetTypeDao().list().stream().filter(MetasetType::getUnique).map(MetasetType::getId).collect(Collectors.toSet());
+        boolean multipleUniques = metas.stream().map(Meta::getTypeId).anyMatch(typeId ->
+                uniqueTypes.contains(typeId) && metas.stream().filter(meta -> meta.getTypeId().equals(typeId)).count() > 1
+        );
+        if (multipleUniques) {
+            throw ErrorCode.METASET_UNIQUE_CHECK_FAILED.exception();
+        }
     }
 
     private void deleteMeta(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws
@@ -322,22 +346,21 @@ public class OsdServlet extends BaseServlet {
         ObjectSystemData osd   = osdDao.getObjectById(osdId).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
         throwUnlessCustomMetaIsWritable(osd, user);
 
-        List<Meta> metas;
+        List<Long> metaIds;
         OsdMetaDao metaDao = new OsdMetaDao();
         if (metaRequest.getMetaId() != null) {
-            metas = Collections.singletonList(metaDao.getOsdMetaById(metaRequest.getMetaId()));
+            metaIds = Collections.singletonList(metaRequest.getMetaId());
         } else {
-            metas = metaDao.getMetaByNamesAndOsd(Collections.singletonList(metaRequest.getTypeName()), osdId);
+            metaIds = metaDao.getMetaByNamesAndOsd(Collections.singletonList(metaRequest.getTypeName()), osdId)
+                    .stream().map(Meta::getId).collect(Collectors.toList());
         }
-        if (metas.isEmpty()) {
+        if (metaIds.isEmpty()) {
             throw ErrorCode.METASET_NOT_FOUND.exception();
         }
-        metas.forEach(meta -> {
-            boolean deleteSuccess = metaDao.deleteById(meta.getId()) == 1;
-            if (!deleteSuccess) {
-                throw new FailedRequestException(ErrorCode.DB_DELETE_FAILED, "Failed to delete metaSet #" + meta.getId());
-            }
-        });
+        int deleteCount = metaDao.delete(metaIds);
+        if (deleteCount != metaIds.size()) {
+            ErrorCode.DB_DELETE_FAILED.throwUp();
+        }
         response.responseIsGenericOkay();
     }
 
@@ -383,9 +406,9 @@ public class OsdServlet extends BaseServlet {
         if (metaType.getUnique() && metas.size() > 0) {
             throw ErrorCode.METASET_IS_UNIQUE_AND_ALREADY_EXISTS.exception();
         }
-
-        Meta meta = metaDao.createMeta(metaRequest, metaType);
-        createMetaResponse(new MetaRequest(), response, Collections.singletonList(meta));
+        Meta       meta     = new Meta(metaRequest.getId(), metaType.getId(), metaRequest.getContent());
+        List<Meta> newMetas = metaDao.create(List.of(meta));
+        createMetaResponse(new MetaRequest(), response, newMetas);
     }
 
     private MetasetType determineMetasetType(Long typeId, String typeName) {
@@ -556,6 +579,11 @@ public class OsdServlet extends BaseServlet {
         List<ObjectSystemData> osds         = osdDao.getObjectsById(osdRequest.getIds(), osdRequest.isIncludeSummary());
         List<ObjectSystemData> filteredOsds = authorizationService.filterObjectsByBrowsePermission(osds, user);
 
+        if (osdRequest.isIncludeCustomMetadata()) {
+            OsdMetaDao metaDao = new OsdMetaDao();
+            filteredOsds.forEach(osd -> osd.setMetas(metaDao.listByOsd(osd.getId())));
+        }
+
         OsdWrapper wrapper = new OsdWrapper();
         wrapper.setOsds(filteredOsds);
         response.setWrapper(wrapper);
@@ -566,9 +594,13 @@ public class OsdServlet extends BaseServlet {
         OsdByFolderRequest     osdRequest     = xmlMapper.readValue(request.getInputStream(), OsdByFolderRequest.class);
         long                   folderId       = osdRequest.getFolderId();
         boolean                includeSummary = osdRequest.isIncludeSummary();
+        boolean                includeMeta    = osdRequest.isIncludeCustomMetadata();
         List<ObjectSystemData> osds           = osdDao.getObjectsByFolderId(folderId, includeSummary);
         List<ObjectSystemData> filteredOsds   = authorizationService.filterObjectsByBrowsePermission(osds, user);
-
+        OsdMetaDao             metaDao        = new OsdMetaDao();
+        if (includeMeta) {
+            filteredOsds.forEach(osd -> osd.setMetas(metaDao.listByOsd(osd.getId())));
+        }
         LinkDao    linkDao       = new LinkDao();
         List<Link> links         = linkDao.getLinksByFolderId(folderId);
         List<Link> filteredLinks = authorizationService.filterLinksByBrowsePermission(links, user);
@@ -577,8 +609,13 @@ public class OsdServlet extends BaseServlet {
         wrapper.setOsds(filteredOsds);
         wrapper.setLinks(filteredLinks);
         if (osdRequest.isLinksAsOsd()) {
-            wrapper.setReferences(osdDao.getObjectsById(filteredLinks.stream().map(Link::getObjectId).filter(Objects::nonNull).collect(Collectors.toList()), includeSummary));
+            List<ObjectSystemData> references = osdDao.getObjectsById(filteredLinks.stream().map(Link::getObjectId).filter(Objects::nonNull).collect(Collectors.toList()), includeSummary);
+            if (includeMeta) {
+                references.forEach(osd -> osd.setMetas(metaDao.listByOsd(osd.getId())));
+            }
+            wrapper.setReferences(references);
         }
+
         response.setWrapper(wrapper);
     }
 
@@ -621,6 +658,7 @@ public class OsdServlet extends BaseServlet {
                         } catch (FailedRequestException e) {
                             errorCodes.add(e.getErrorCode());
                         } catch (Exception e) {
+                            // TODO: should not handle unknown exceptions - those are probably bugs.
                             errorCodes.add(ErrorCode.INTERNAL_SERVER_ERROR_TRY_AGAIN_LATER);
                         }
                     }

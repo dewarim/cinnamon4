@@ -53,6 +53,7 @@ public enum ErrorCode {
     METASET_IS_UNIQUE_AND_ALREADY_EXISTS("The metaset is already exists and is unique", HttpServletResponse.SC_BAD_REQUEST),
     METASET_NOT_FOUND("The Metaset was not found.", HttpServletResponse.SC_NOT_FOUND),
     METASET_TYPE_NOT_FOUND("metaset type was not found", HttpServletResponse.SC_NOT_FOUND),
+    METASET_UNIQUE_CHECK_FAILED("Cannot create multiple unique metasets", HttpServletResponse.SC_BAD_REQUEST),
     MISSING_FILE_PARAMETER("parameter 'file' for uploaded content is missing", HttpServletResponse.SC_BAD_REQUEST),
     MISSING_SET_ACL_PERMISSION("missing set_acl permission", HttpServletResponse.SC_UNAUTHORIZED),
     MISSING_WRITE_OBJECT_SYS_METADATA("missing write_object_sys_metadata", HttpServletResponse.SC_UNAUTHORIZED),

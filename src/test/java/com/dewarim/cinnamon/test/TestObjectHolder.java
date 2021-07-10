@@ -10,6 +10,8 @@ import com.dewarim.cinnamon.model.Format;
 import com.dewarim.cinnamon.model.Group;
 import com.dewarim.cinnamon.model.Language;
 import com.dewarim.cinnamon.model.LifecycleState;
+import com.dewarim.cinnamon.model.Meta;
+import com.dewarim.cinnamon.model.MetasetType;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.ObjectType;
 import com.dewarim.cinnamon.model.Permission;
@@ -22,8 +24,14 @@ import java.util.stream.Collectors;
 
 public class TestObjectHolder {
 
-    CinnamonClient client;
+    static        Object            SYNC_OBJECT = new Object();
+    static        boolean           initialized = false;
+    static public List<Permission>  permissions;
+    static public List<Format>      formats;
+    static public List<ObjectType>  objectTypes;
+    static public List<MetasetType> metasetTypes;
 
+    CinnamonClient client;
     public ObjectSystemData osd;
     public Acl              acl;
     public Group            group;
@@ -34,26 +42,42 @@ public class TestObjectHolder {
     public Format           format;
     public Language         language;
     public LifecycleState   lifecycleState;
-    public List<Permission> permissions;
-    public List<Format>     formats;
-    public List<ObjectType> objectTypes;
-    public String           summary = "<summary/>";
+
+    public List<Meta> metas;
+    public String     summary = "<summary/>";
 
     public TestObjectHolder(CinnamonClient client) {
         this.client = client;
-        try {
-            permissions = client.listPermissions();
-            formats = client.listFormats();
-            objectTypes = client.listObjectTypes();
-            objectType = objectTypes.stream().filter(type ->
-                    type.getName().equals(Constants.OBJTYPE_DEFAULT)).findFirst().orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
-        } catch (IOException e) {
-            throw new IllegalStateException("Failed to initialize test object holder", e);
-        }
+        initialize();
+    }
+
+    public TestObjectHolder(CinnamonClient client, String aclName, Long userId, Long createFolderId) throws IOException {
+        this.client = client;
+        this.acl = client.getAclByName(aclName);
+        setUser(userId);
+        setFolder(createFolderId);
+        initialize();
 
     }
 
-    public TestObjectHolder setAcl(Acl acl){
+    private void initialize() {
+        synchronized (SYNC_OBJECT) {
+            if (!initialized) {
+                try {
+                    permissions = client.listPermissions();
+                    formats = client.listFormats();
+                    objectTypes = client.listObjectTypes();
+                    metasetTypes = client.listMetasetTypes();
+                    objectType = objectTypes.stream().filter(type ->
+                            type.getName().equals(Constants.OBJTYPE_DEFAULT)).findFirst().orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
+                } catch (IOException e) {
+                    throw new IllegalStateException("Failed to initialize test object holder", e);
+                }
+            }
+        }
+    }
+
+    public TestObjectHolder setAcl(Acl acl) {
         this.acl = acl;
         return this;
     }
@@ -65,6 +89,9 @@ public class TestObjectHolder {
                 language != null ? language.getId() : null,
                 lifecycleState != null ? lifecycleState.getId() : null,
                 summary);
+        if (metas != null) {
+            request.setMetas(metas);
+        }
         osd = client.createOsd(request);
         return this;
     }
@@ -98,5 +125,17 @@ public class TestObjectHolder {
         folder = client.getFolders(List.of(id), true).get(0);
         return this;
     }
+
+    public TestObjectHolder setMetas(List<Meta> metas) {
+        this.metas = metas;
+        return this;
+    }
+
+    public static MetasetType getMetasetType(String name) {
+        return metasetTypes.stream().filter(type ->
+                type.getName().equals(name)).findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Metaset with name " + name + " is unknown."));
+    }
+
 
 }

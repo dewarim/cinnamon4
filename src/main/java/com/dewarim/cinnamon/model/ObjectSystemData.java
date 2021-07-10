@@ -4,9 +4,14 @@ import com.dewarim.cinnamon.api.CinnamonObject;
 import com.dewarim.cinnamon.api.Identifiable;
 import com.dewarim.cinnamon.api.content.ContentMetadata;
 import com.dewarim.cinnamon.provider.DefaultContentProvider;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -15,23 +20,27 @@ import java.util.Objects;
  */
 public class ObjectSystemData implements ContentMetadata, CinnamonObject, Identifiable {
 
-    private Long   id;
-    private String name;
-    private String contentPath;
-    private Long   contentSize;
-    private Long   predecessorId;
-    private Long   rootId;
-    private Long   creatorId;
-    private Long   modifierId;
-    private Long   ownerId;
-    private Long   lockerId;
-    private Date   created  = new Date();
-    private Date   modified = new Date();
-    private Long   languageId;
-    private Long   aclId;
-    private Long   parentId;
-    private Long   formatId;
-    private Long   typeId;
+    private Long       id;
+    private String     name;
+    private String     contentPath;
+    private Long       contentSize;
+    private Long       predecessorId;
+    private Long       rootId;
+    private Long       creatorId;
+    private Long       modifierId;
+    private Long       ownerId;
+    private Long       lockerId;
+    private Date       created  = new Date();
+    private Date       modified = new Date();
+    private Long       languageId;
+    private Long       aclId;
+    private Long       parentId;
+    private Long       formatId;
+    private Long       typeId;
+
+    @JacksonXmlElementWrapper(localName = "metasets")
+    @JacksonXmlProperty(localName = "meta")
+    private List<Meta> metas;
 
     /**
      * An object is latestHead, if it is not of part of a branch and has no
@@ -61,7 +70,6 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject, Identi
      * Create a new version of the current object.
      * <br/>
      * Does not copy lifecycle state or content.
-     *
      */
     public ObjectSystemData createNewVersion(UserAccount user, String lastDescendantVersion) {
         ObjectSystemData nextVersion = new ObjectSystemData();
@@ -238,8 +246,8 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject, Identi
          * - new branch version should be 2-1 of v2 -> 2.2-1
          */
         String newestDescendantBranch = lastDescBranches[lastDescBranches.length - 1];
-        String currentBranchVersion          = newestDescendantBranch.split("-")[0];
-        String newBranchVersion = String.valueOf(Integer.parseInt(currentBranchVersion) + 1);
+        String currentBranchVersion   = newestDescendantBranch.split("-")[0];
+        String newBranchVersion       = String.valueOf(Integer.parseInt(currentBranchVersion) + 1);
         return predecessorVersion + "." + newBranchVersion + "-1";
     }
 
@@ -463,6 +471,21 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject, Identi
         this.contentProvider = contentProvider;
     }
 
+    public void setAclId(Long aclId) {
+        this.aclId = aclId;
+    }
+
+    public List<Meta> getMetas() {
+        if(metas == null){
+            metas = new ArrayList<>();
+        }
+        return metas;
+    }
+
+    public void setMetas(List<Meta> metas) {
+        this.metas = metas;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -494,7 +517,17 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject, Identi
                 Objects.equals(summary, that.summary) &&
                 Objects.equals(objVersion, that.objVersion) &&
                 Objects.equals(contentHash, that.contentHash) &&
-                Objects.equals(contentProvider, that.contentProvider);
+                Objects.equals(contentProvider, that.contentProvider) &&
+                compareMetas(getMetas(), that.getMetas());
+    }
+
+    private boolean compareMetas(List<Meta> metas, List<Meta> thatMetas) {
+        if(metas.size() != thatMetas.size()){
+            return false;
+        }
+        metas.sort(Comparator.comparingLong(Meta::getId));
+        thatMetas.sort(Comparator.comparingLong(Meta::getId));
+        return metas.equals(thatMetas);
     }
 
     @Override

@@ -42,7 +42,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
         assertThat(link.getFolderId(), nullValue());
         assertThat(link.getType(), equalTo(LinkType.OBJECT));
         assertNotNull(link.getObjectId());
-        ObjectSystemData osd = client.getOsdById(link.getObjectId(), true);
+        ObjectSystemData osd = client.getOsdById(link.getObjectId(), true, false);
         assertThat(osd.getSummary(), equalTo("<summary>sum of sum</summary>"));
     }
 
@@ -51,7 +51,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
         // request the first link, which points to the first test object with default acl:
         var              linkResponse = client.getLinkById(1L, false);
         Link             link         = new Link(linkResponse);
-        ObjectSystemData osd          = client.getOsdById(link.getObjectId(), false);
+        ObjectSystemData osd          = client.getOsdById(link.getObjectId(), false, false);
         assertThat(osd.getSummary(), equalTo("<summary/>"));
     }
 
@@ -83,10 +83,10 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void getLinkWhereOnlyOwnerHasBrowsePermission() throws IOException {
         // request link #14, which points to the "home" folder with default acl:
-        var linkResponse = client.getLinkById(14L,false);
-        var link = new Link(linkResponse);
+        var linkResponse = client.getLinkById(14L, false);
+        var link         = new Link(linkResponse);
         assertThat(link.getType(), equalTo(LinkType.OBJECT));
-        ObjectSystemData osd = client.getOsdById(link.getObjectId(), true);
+        ObjectSystemData osd = client.getOsdById(link.getObjectId(), true, false);
         assertThat(osd.getSummary(), equalTo("<summary/>"));
     }
 

@@ -8,6 +8,7 @@ import com.dewarim.cinnamon.model.FolderType;
 import com.dewarim.cinnamon.model.Format;
 import com.dewarim.cinnamon.model.Group;
 import com.dewarim.cinnamon.model.Meta;
+import com.dewarim.cinnamon.model.MetasetType;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.ObjectType;
 import com.dewarim.cinnamon.model.Permission;
@@ -42,6 +43,7 @@ import com.dewarim.cinnamon.model.request.link.DeleteLinkRequest;
 import com.dewarim.cinnamon.model.request.link.GetLinksRequest;
 import com.dewarim.cinnamon.model.request.link.LinkWrapper;
 import com.dewarim.cinnamon.model.request.link.UpdateLinkRequest;
+import com.dewarim.cinnamon.model.request.metasetType.ListMetasetTypeRequest;
 import com.dewarim.cinnamon.model.request.objectType.ListObjectTypeRequest;
 import com.dewarim.cinnamon.model.request.osd.CreateOsdRequest;
 import com.dewarim.cinnamon.model.request.osd.DeleteOsdRequest;
@@ -69,6 +71,7 @@ import com.dewarim.cinnamon.model.response.GroupWrapper;
 import com.dewarim.cinnamon.model.response.LinkResponse;
 import com.dewarim.cinnamon.model.response.LinkResponseWrapper;
 import com.dewarim.cinnamon.model.response.MetaWrapper;
+import com.dewarim.cinnamon.model.response.MetasetTypeWrapper;
 import com.dewarim.cinnamon.model.response.ObjectTypeWrapper;
 import com.dewarim.cinnamon.model.response.OsdWrapper;
 import com.dewarim.cinnamon.model.response.PermissionWrapper;
@@ -108,25 +111,27 @@ public class CinnamonClient {
     private       String    ticket;
     private final XmlMapper mapper   = XML_MAPPER;
 
-    private final Unwrapper<ObjectSystemData, OsdWrapper>        osdUnwrapper          = new Unwrapper<>(OsdWrapper.class);
-    private final Unwrapper<FolderType, FolderTypeWrapper>       folderTypeUnwrapper   = new Unwrapper<>(FolderTypeWrapper.class);
-    private final Unwrapper<ObjectType, ObjectTypeWrapper>       objectTypeUnwrapper   = new Unwrapper<>(ObjectTypeWrapper.class);
-    private final Unwrapper<Folder, FolderWrapper>               folderUnwrapper       = new Unwrapper<>(FolderWrapper.class);
-    private final Unwrapper<Format, FormatWrapper>               formatUnwrapper       = new Unwrapper<>(FormatWrapper.class);
-    private final Unwrapper<Meta, MetaWrapper>                   metaUnwrapper         = new Unwrapper<>(MetaWrapper.class);
-    private final Unwrapper<UserInfo, UserWrapper>               userUnwrapper         = new Unwrapper<>(UserWrapper.class);
-    private final Unwrapper<DeleteResponse, DeleteResponse>      deleteResponseWrapper = new Unwrapper<>(DeleteResponse.class);
-    private final Unwrapper<CinnamonError, CinnamonErrorWrapper> errorUnwrapper        = new Unwrapper<>(CinnamonErrorWrapper.class);
-    private final Unwrapper<Acl, AclWrapper>                     aclUnwrapper          = new Unwrapper<>(AclWrapper.class);
-    private final Unwrapper<AclGroup, AclGroupWrapper>           aclGroupUnwrapper     = new Unwrapper<>(AclGroupWrapper.class);
-    private final Unwrapper<Group, GroupWrapper>                 groupUnwrapper        = new Unwrapper<>(GroupWrapper.class);
-    private final Unwrapper<Link, LinkWrapper>                   linkUnwrapper         = new Unwrapper<>(LinkWrapper.class);
+    private final Unwrapper<ObjectSystemData, OsdWrapper>           osdUnwrapper          = new Unwrapper<>(OsdWrapper.class);
+    private final Unwrapper<FolderType, FolderTypeWrapper>          folderTypeUnwrapper   = new Unwrapper<>(FolderTypeWrapper.class);
+    private final Unwrapper<ObjectType, ObjectTypeWrapper>          objectTypeUnwrapper   = new Unwrapper<>(ObjectTypeWrapper.class);
+    private final Unwrapper<Folder, FolderWrapper>                  folderUnwrapper       = new Unwrapper<>(FolderWrapper.class);
+    private final Unwrapper<Format, FormatWrapper>                  formatUnwrapper       = new Unwrapper<>(FormatWrapper.class);
+    private final Unwrapper<Meta, MetaWrapper>                      metaUnwrapper         = new Unwrapper<>(MetaWrapper.class);
+    private final Unwrapper<UserInfo, UserWrapper>                  userUnwrapper         = new Unwrapper<>(UserWrapper.class);
+    private final Unwrapper<DeleteResponse, DeleteResponse>         deleteResponseWrapper = new Unwrapper<>(DeleteResponse.class);
+    private final Unwrapper<CinnamonError, CinnamonErrorWrapper>    errorUnwrapper        = new Unwrapper<>(CinnamonErrorWrapper.class);
+    private final Unwrapper<Acl, AclWrapper>                        aclUnwrapper          = new Unwrapper<>(AclWrapper.class);
+    private final Unwrapper<AclGroup, AclGroupWrapper>              aclGroupUnwrapper     = new Unwrapper<>(AclGroupWrapper.class);
+    private final Unwrapper<Group, GroupWrapper>                    groupUnwrapper        = new Unwrapper<>(GroupWrapper.class);
+    private final Unwrapper<Link, LinkWrapper>                      linkUnwrapper         = new Unwrapper<>(LinkWrapper.class);
     // LinkResponse contains full OSD/Folder objects, Link itself contains only ids.
-    private final Unwrapper<LinkResponse, LinkResponseWrapper>   linkResponseUnwrapper = new Unwrapper<>(LinkResponseWrapper.class);
-    private final Unwrapper<Relation, RelationWrapper>           relationUnwrapper     = new Unwrapper<>(RelationWrapper.class);
-    private final Unwrapper<RelationType, RelationTypeWrapper>   relationTypeUnwrapper = new Unwrapper<>(RelationTypeWrapper.class);
-    private final Unwrapper<Permission, PermissionWrapper>         permissionUnwrapper = new Unwrapper<>(PermissionWrapper.class);
-    private final Unwrapper<DisconnectResponse, DisconnectResponse> disconnectUnwrapper = new Unwrapper<>(DisconnectResponse.class);
+    private final Unwrapper<LinkResponse, LinkResponseWrapper>      linkResponseUnwrapper = new Unwrapper<>(LinkResponseWrapper.class);
+    private final Unwrapper<Relation, RelationWrapper>              relationUnwrapper     = new Unwrapper<>(RelationWrapper.class);
+    private final Unwrapper<RelationType, RelationTypeWrapper>      relationTypeUnwrapper = new Unwrapper<>(RelationTypeWrapper.class);
+    private final Unwrapper<Permission, PermissionWrapper>          permissionUnwrapper   = new Unwrapper<>(PermissionWrapper.class);
+    private final Unwrapper<DisconnectResponse, DisconnectResponse> disconnectUnwrapper   = new Unwrapper<>(DisconnectResponse.class);
+    private final Unwrapper<MetasetType, MetasetTypeWrapper>        metasetTypeUnwrapper  = new Unwrapper<>(MetasetTypeWrapper.class);
+
     private boolean generateTicketIfNull = true;
 
     public CinnamonClient() {
@@ -182,15 +187,15 @@ public class CinnamonClient {
                     .bodyForm(Form.form().add("user", username).add("password", password).build())
                     .execute().returnResponse();
             verifyResponseIsOkay(response);
-            String tokenRequestResult = new String(response.getEntity().getContent().readAllBytes());
+            String             tokenRequestResult = new String(response.getEntity().getContent().readAllBytes());
             CinnamonConnection cinnamonConnection = mapper.readValue(tokenRequestResult, CinnamonConnection.class);
             ticket = cinnamonConnection.getTicket();
         }
         return ticket;
     }
 
-    public ObjectSystemData getOsdById(long id, boolean includeSummary) throws IOException {
-        OsdRequest   osdRequest = new OsdRequest(Collections.singletonList(id), includeSummary);
+    public ObjectSystemData getOsdById(long id, boolean includeSummary, boolean includeCustomMetadata) throws IOException {
+        OsdRequest   osdRequest = new OsdRequest(Collections.singletonList(id), includeSummary, includeCustomMetadata);
         HttpResponse response   = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
         return unwrapOsds(response, 1).get(0);
     }
@@ -198,15 +203,15 @@ public class CinnamonClient {
     /**
      * Get a list of OSDs. Do not check if all requested OSDs are returned.
      */
-    public List<ObjectSystemData> getOsds(List<Long> ids, boolean includeSummary) throws IOException {
-        OsdRequest   osdRequest = new OsdRequest(ids, includeSummary);
+    public List<ObjectSystemData> getOsds(List<Long> ids, boolean includeSummary, boolean includeCustomMetadata) throws IOException {
+        OsdRequest   osdRequest = new OsdRequest(ids, includeSummary, includeCustomMetadata);
         HttpResponse response   = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
         return unwrapOsds(response, EXPECTED_SIZE_ANY);
     }
 
-    public OsdWrapper getOsdsInFolder(Long folderId, boolean includeSummary, boolean linksAsOsd) throws IOException {
-        OsdByFolderRequest osdRequest = new OsdByFolderRequest(folderId, includeSummary, linksAsOsd);
-        HttpResponse response = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_FOLDER_ID, osdRequest);
+    public OsdWrapper getOsdsInFolder(Long folderId, boolean includeSummary, boolean linksAsOsd, boolean includeCustomMetadata) throws IOException {
+        OsdByFolderRequest osdRequest = new OsdByFolderRequest(folderId, includeSummary, linksAsOsd, includeCustomMetadata);
+        HttpResponse       response   = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_FOLDER_ID, osdRequest);
         verifyResponseIsOkay(response);
         return mapper.readValue(response.getEntity().getContent(), OsdWrapper.class);
     }
@@ -214,6 +219,12 @@ public class CinnamonClient {
     private List<ObjectSystemData> unwrapOsds(HttpResponse response, Integer expectedSize) throws IOException {
         verifyResponseIsOkay(response);
         return osdUnwrapper.unwrap(response, expectedSize);
+    }
+
+    public List<MetasetType> listMetasetTypes() throws IOException {
+        var request  = new ListMetasetTypeRequest();
+        var response = sendStandardRequest(UrlMapping.METASET_TYPE__LIST, request);
+        return metasetTypeUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
 //    public ObjectSystemData createOsdWithoutContent(long aclId, ){
@@ -269,16 +280,16 @@ public class CinnamonClient {
     }
 
     public boolean deleteOsd(Long id) throws IOException {
-        return deleteOsd(id,false);
+        return deleteOsd(id, false);
     }
 
     public boolean deleteOsd(Long id, boolean deleteDescendants) throws IOException {
-        return deleteOsd(id,deleteDescendants,false);
+        return deleteOsd(id, deleteDescendants, false);
     }
 
     public boolean deleteOsd(Long id, boolean deleteDescendants, boolean deleteAllVersions) throws IOException {
         DeleteOsdRequest deleteRequest = new DeleteOsdRequest(Collections.singletonList(id), deleteDescendants, deleteAllVersions);
-        HttpResponse response = sendStandardRequest(UrlMapping.OSD__DELETE, deleteRequest);
+        HttpResponse     response      = sendStandardRequest(UrlMapping.OSD__DELETE, deleteRequest);
         return verifyDeleteResponse(response);
     }
 
@@ -294,9 +305,9 @@ public class CinnamonClient {
         return osdUnwrapper.unwrap(response, 1).get(0);
     }
 
-    public GenericResponse lockOsd(Long id) throws IOException{
+    public GenericResponse lockOsd(Long id) throws IOException {
         IdRequest idRequest = new IdRequest(id);
-        var response = sendStandardRequest(UrlMapping.OSD__LOCK, idRequest);
+        var       response  = sendStandardRequest(UrlMapping.OSD__LOCK, idRequest);
         return parseGenericResponse(response);
     }
 
@@ -505,7 +516,7 @@ public class CinnamonClient {
 
     public boolean deleteRelationTypes(List<Long> ids) throws IOException {
         var deleteRequest = new DeleteRelationTypeRequest(ids);
-        var response = sendStandardRequest(UrlMapping.RELATION_TYPE__DELETE, deleteRequest);
+        var response      = sendStandardRequest(UrlMapping.RELATION_TYPE__DELETE, deleteRequest);
         return verifyDeleteResponse(response);
     }
 
@@ -534,12 +545,12 @@ public class CinnamonClient {
     public static void main(String[] args) throws IOException {
         CinnamonClient client = new CinnamonClient();
         client.ticket = client.getTicket(true);
-        log.debug(client.getOsdById(1, false));
+        log.debug(client.getOsdById(1, false, false));
     }
 
     public boolean disconnect() throws IOException {
         HttpResponse response = sendStandardRequest(UrlMapping.CINNAMON__DISCONNECT, null);
-        return disconnectUnwrapper.unwrap(response,1).get(0).isDisconnectSuccessful();
+        return disconnectUnwrapper.unwrap(response, 1).get(0).isDisconnectSuccessful();
     }
 
     public void connect() throws IOException {

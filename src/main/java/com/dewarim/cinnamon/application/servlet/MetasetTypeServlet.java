@@ -42,7 +42,7 @@ public class MetasetTypeServlet extends HttpServlet {
         // ignore listRequest for now, just make sure it's valid xml:
         ListRequest        listRequest = xmlMapper.readValue(request.getInputStream(), ListMetasetTypeRequest.class);
         MetasetTypeDao     typeDao     = new MetasetTypeDao();
-        List<MetasetType>  types       = typeDao.listMetasetTypes();
+        List<MetasetType>  types       = typeDao.list();
         MetasetTypeWrapper wrapper     = new MetasetTypeWrapper();
         wrapper.setMetasetTypes(types);
         response.setContentType(CONTENT_TYPE_XML);

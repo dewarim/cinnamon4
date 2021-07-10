@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.dewarim.cinnamon.MetasetTypeMapper">
+<mapper namespace="com.dewarim.cinnamon.model.MetasetType">
 
     <resultMap id="metasetTypeMap" type="com.dewarim.cinnamon.model.MetasetType">
         <id property="id" column="id"/>

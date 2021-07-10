@@ -19,7 +19,7 @@ public class MetasetTypeServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void listMetasetTypes() throws IOException {
-        HttpResponse      response     = sendStandardRequest(UrlMapping.METASET_TYPE__LIST_METASET_TYPES, new ListMetasetTypeRequest());
+        HttpResponse      response     = sendStandardRequest(UrlMapping.METASET_TYPE__LIST, new ListMetasetTypeRequest());
         List<MetasetType> metasetTypes = parseResponse(response);
 
         assertNotNull(metasetTypes);

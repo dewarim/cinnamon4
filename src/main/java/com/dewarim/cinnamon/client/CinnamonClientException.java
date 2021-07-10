@@ -1,6 +1,7 @@
 package com.dewarim.cinnamon.client;
 
 import com.dewarim.cinnamon.ErrorCode;
+import com.dewarim.cinnamon.model.response.CinnamonError;
 import com.dewarim.cinnamon.model.response.CinnamonErrorWrapper;
 
 public class CinnamonClientException extends RuntimeException {
@@ -14,6 +15,10 @@ public class CinnamonClientException extends RuntimeException {
 
     public CinnamonClientException(ErrorCode errorCode) {
         super(errorCode.getCode());
+        this.errorCode = errorCode;
+    }
+    public CinnamonClientException(String message, ErrorCode errorCode) {
+        super(message);
         this.errorCode = errorCode;
     }
 
@@ -34,6 +39,10 @@ public class CinnamonClientException extends RuntimeException {
     }
 
     public CinnamonErrorWrapper getErrorWrapper() {
+        if(errorWrapper == null && errorCode != null){
+            // generate a CinnamonErrorWrapper so the client can add errors.
+            return new CinnamonErrorWrapper(new CinnamonError(errorCode.getCode(), getMessage()));
+        }
         return errorWrapper;
     }
 }
