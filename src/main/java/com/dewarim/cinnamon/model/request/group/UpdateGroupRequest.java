@@ -5,10 +5,12 @@ import com.dewarim.cinnamon.model.Group;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.response.GroupWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@JacksonXmlRootElement(localName = "updateGroupRequest")
 public class UpdateGroupRequest implements UpdateRequest<Group>, ApiRequest {
 
     private List<Group> groups = new ArrayList<>();

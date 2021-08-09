@@ -1,7 +1,9 @@
 package com.dewarim.cinnamon.model.request.relation;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
+@JacksonXmlRootElement(localName = "createRelationRequest")
 public class CreateRelationRequest implements ApiRequest {
 
     private Long   leftId;

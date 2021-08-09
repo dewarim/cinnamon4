@@ -5,12 +5,14 @@ import com.dewarim.cinnamon.model.AclGroup;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.response.AclGroupWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.Objects.isNull;
 
+@JacksonXmlRootElement(localName = "updateAclGroupRequest")
 public class UpdateAclGroupRequest implements UpdateRequest<AclGroup>, ApiRequest {
 
     private List<AclGroup> aclGroups = new ArrayList<>();

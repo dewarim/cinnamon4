@@ -5,10 +5,12 @@ import com.dewarim.cinnamon.model.relations.RelationType;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.response.RelationTypeWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@JacksonXmlRootElement(localName = "updateRelationTypeRequest")
 public class UpdateRelationTypeRequest implements UpdateRequest<RelationType>, ApiRequest {
 
     private List<RelationType> types = new ArrayList<>();

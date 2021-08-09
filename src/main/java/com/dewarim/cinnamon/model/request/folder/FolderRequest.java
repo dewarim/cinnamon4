@@ -1,11 +1,13 @@
 package com.dewarim.cinnamon.model.request.folder;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@JacksonXmlRootElement(localName = "folderRequest")
 public class FolderRequest implements ApiRequest {
 
     private List<Long> ids = new ArrayList<>();

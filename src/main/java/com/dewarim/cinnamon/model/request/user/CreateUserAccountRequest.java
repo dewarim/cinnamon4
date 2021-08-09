@@ -1,9 +1,11 @@
 package com.dewarim.cinnamon.model.request.user;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.Optional;
 
+@JacksonXmlRootElement(localName = "createUserAccountRequest")
 public class CreateUserAccountRequest implements ApiRequest {
 
     private String name;

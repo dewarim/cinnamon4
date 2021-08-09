@@ -6,7 +6,9 @@ import com.dewarim.cinnamon.model.request.DefaultListRequest;
 import com.dewarim.cinnamon.model.request.ListRequest;
 import com.dewarim.cinnamon.model.response.RelationTypeWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
+@JacksonXmlRootElement(localName = "listRelationTypeRequest")
 public class ListRelationTypeRequest extends DefaultListRequest implements ListRequest<RelationType>, ApiRequest {
 
     @Override

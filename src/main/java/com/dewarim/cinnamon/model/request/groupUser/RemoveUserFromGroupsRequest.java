@@ -1,10 +1,12 @@
 package com.dewarim.cinnamon.model.request.groupUser;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.List;
 import java.util.Optional;
 
+@JacksonXmlRootElement(localName = "removeUserFromGroupsRequest")
 public class RemoveUserFromGroupsRequest implements ApiRequest {
 
     private List<Long> ids;

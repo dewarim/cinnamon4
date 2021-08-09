@@ -6,11 +6,13 @@ import com.dewarim.cinnamon.model.links.LinkType;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.response.LinkResponse;
 import com.dewarim.cinnamon.model.response.Wrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@JacksonXmlRootElement(localName = "updateLinkRequest")
 public class UpdateLinkRequest implements UpdateRequest<Link>, ApiRequest {
 
     private List<Link> links = new ArrayList<>();

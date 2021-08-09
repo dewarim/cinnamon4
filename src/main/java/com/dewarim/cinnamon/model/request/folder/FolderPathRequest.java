@@ -1,7 +1,9 @@
 package com.dewarim.cinnamon.model.request.folder;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
+@JacksonXmlRootElement(localName = "folderPathRequest")
 public class FolderPathRequest implements ApiRequest {
 
     private String path;

@@ -1,7 +1,9 @@
 package com.dewarim.cinnamon.model.request.user;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
+@JacksonXmlRootElement(localName = "setPasswordRequest")
 public class SetPasswordRequest implements ApiRequest {
     
     private Long userId;

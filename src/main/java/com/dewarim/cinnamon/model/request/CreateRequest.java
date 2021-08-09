@@ -1,6 +1,7 @@
 package com.dewarim.cinnamon.model.request;
 
 import com.dewarim.cinnamon.model.response.Wrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.List;
 import java.util.Optional;

@@ -2,11 +2,13 @@ package com.dewarim.cinnamon.model.request.osd;
 
 import com.dewarim.cinnamon.api.ApiRequest;
 import com.dewarim.cinnamon.model.Meta;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@JacksonXmlRootElement(localName = "createOsdRequest")
 public class CreateOsdRequest implements ApiRequest {
 
     private String     name;

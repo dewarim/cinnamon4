@@ -5,11 +5,13 @@ import com.dewarim.cinnamon.model.ObjectType;
 import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.response.ObjectTypeWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@JacksonXmlRootElement(localName = "createObjectTypeRequest")
 public class CreateObjectTypeRequest implements CreateRequest<ObjectType>, ApiRequest {
 
     private List<String> names = new ArrayList<>();

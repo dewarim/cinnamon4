@@ -1,7 +1,9 @@
 package com.dewarim.cinnamon.model.request.osd;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
+@JacksonXmlRootElement(localName = "osdByFolderRequest")
 public class OsdByFolderRequest implements ApiRequest {
 
     private boolean includeSummary;

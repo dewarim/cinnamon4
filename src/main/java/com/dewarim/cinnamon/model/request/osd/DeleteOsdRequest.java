@@ -1,12 +1,14 @@
 package com.dewarim.cinnamon.model.request.osd;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+@JacksonXmlRootElement(localName = "deleteOsdRequest")
 public class DeleteOsdRequest implements ApiRequest {
 
     private List<Long> ids               = new ArrayList<>();

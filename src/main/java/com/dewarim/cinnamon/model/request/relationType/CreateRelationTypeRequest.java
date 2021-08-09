@@ -5,11 +5,13 @@ import com.dewarim.cinnamon.model.relations.RelationType;
 import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.response.RelationTypeWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+@JacksonXmlRootElement(localName = "createRelationTypeRequest")
 public class CreateRelationTypeRequest implements CreateRequest<RelationType>, ApiRequest {
 
     private List<RelationType> types = new ArrayList<>();
