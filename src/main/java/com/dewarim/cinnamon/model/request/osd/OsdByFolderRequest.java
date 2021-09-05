@@ -4,20 +4,37 @@ import com.dewarim.cinnamon.api.ApiRequest;
 
 public class OsdByFolderRequest implements ApiRequest {
 
-    private boolean includeSummary;
-    private long    folderId;
-    private boolean linksAsOsd = true;
-    private boolean includeCustomMetadata;
+    private boolean          includeSummary;
+    private long             folderId;
+    private boolean          linksAsOsd       = true;
+    private boolean          includeCustomMetadata;
+
+    /**
+     * Select whether to return all, the newest versions or the most recent branch objects.
+     * Default is HEAD for compatibility with Cinnamon 3
+     */
+    private VersionPredicate versionPredicate = VersionPredicate.HEAD;
 
 
     public OsdByFolderRequest() {
     }
 
-    public OsdByFolderRequest(long folderId, boolean includeSummary, boolean linksAsOsd, boolean includeCustomMetadata) {
+    public OsdByFolderRequest(long folderId, boolean includeSummary, boolean linksAsOsd, boolean includeCustomMetadata,
+                              VersionPredicate versionPredicate) {
         this.includeSummary = includeSummary;
         this.folderId = folderId;
         this.linksAsOsd = linksAsOsd;
         this.includeCustomMetadata = includeCustomMetadata;
+        this.versionPredicate = versionPredicate;
+
+    }
+
+    public VersionPredicate getVersionPredicate() {
+        return versionPredicate;
+    }
+
+    public void setVersionPredicate(VersionPredicate versionPredicate) {
+        this.versionPredicate = versionPredicate;
     }
 
     public boolean isIncludeSummary() {

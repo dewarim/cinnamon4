@@ -26,10 +26,12 @@ import com.dewarim.cinnamon.model.request.aclGroup.CreateAclGroupRequest;
 import com.dewarim.cinnamon.model.request.aclGroup.DeleteAclGroupRequest;
 import com.dewarim.cinnamon.model.request.aclGroup.ListAclGroupRequest;
 import com.dewarim.cinnamon.model.request.aclGroup.UpdateAclGroupRequest;
+import com.dewarim.cinnamon.model.request.folder.CreateFolderRequest;
 import com.dewarim.cinnamon.model.request.folder.FolderRequest;
 import com.dewarim.cinnamon.model.request.folder.UpdateFolderRequest;
 import com.dewarim.cinnamon.model.request.folderType.CreateFolderTypeRequest;
 import com.dewarim.cinnamon.model.request.folderType.DeleteFolderTypeRequest;
+import com.dewarim.cinnamon.model.request.folderType.ListFolderTypeRequest;
 import com.dewarim.cinnamon.model.request.folderType.UpdateFolderTypeRequest;
 import com.dewarim.cinnamon.model.request.format.ListFormatRequest;
 import com.dewarim.cinnamon.model.request.group.CreateGroupRequest;
@@ -49,6 +51,7 @@ import com.dewarim.cinnamon.model.request.osd.CreateOsdRequest;
 import com.dewarim.cinnamon.model.request.osd.DeleteOsdRequest;
 import com.dewarim.cinnamon.model.request.osd.OsdByFolderRequest;
 import com.dewarim.cinnamon.model.request.osd.OsdRequest;
+import com.dewarim.cinnamon.model.request.osd.VersionPredicate;
 import com.dewarim.cinnamon.model.request.permission.ChangePermissionsRequest;
 import com.dewarim.cinnamon.model.request.permission.ListPermissionRequest;
 import com.dewarim.cinnamon.model.request.relation.CreateRelationRequest;
@@ -96,6 +99,7 @@ import java.util.List;
 
 import static com.dewarim.cinnamon.api.Constants.*;
 import static com.dewarim.cinnamon.api.UrlMapping.OSD__CREATE_OSD;
+import static com.dewarim.cinnamon.model.request.osd.VersionPredicate.ALL;
 import static org.apache.http.HttpStatus.SC_OK;
 import static org.apache.http.entity.ContentType.APPLICATION_XML;
 
@@ -210,7 +214,15 @@ public class CinnamonClient {
     }
 
     public OsdWrapper getOsdsInFolder(Long folderId, boolean includeSummary, boolean linksAsOsd, boolean includeCustomMetadata) throws IOException {
-        OsdByFolderRequest osdRequest = new OsdByFolderRequest(folderId, includeSummary, linksAsOsd, includeCustomMetadata);
+        OsdByFolderRequest osdRequest = new OsdByFolderRequest(folderId, includeSummary, linksAsOsd, includeCustomMetadata, ALL);
+        HttpResponse       response   = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_FOLDER_ID, osdRequest);
+        verifyResponseIsOkay(response);
+        return mapper.readValue(response.getEntity().getContent(), OsdWrapper.class);
+    }
+
+    public OsdWrapper getOsdsInFolder(Long folderId, boolean includeSummary, boolean linksAsOsd, boolean includeCustomMetadata,
+                                      VersionPredicate versionPredicate) throws IOException {
+        OsdByFolderRequest osdRequest = new OsdByFolderRequest(folderId, includeSummary, linksAsOsd, includeCustomMetadata, versionPredicate);
         HttpResponse       response   = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_FOLDER_ID, osdRequest);
         verifyResponseIsOkay(response);
         return mapper.readValue(response.getEntity().getContent(), OsdWrapper.class);
@@ -225,6 +237,11 @@ public class CinnamonClient {
         var request  = new ListMetasetTypeRequest();
         var response = sendStandardRequest(UrlMapping.METASET_TYPE__LIST, request);
         return metasetTypeUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
+    }
+
+    public List<FolderType> listFolderTypes() throws IOException{
+        var response = sendStandardRequest(UrlMapping.FOLDER_TYPE__LIST, new ListFolderTypeRequest());
+        return folderTypeUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
 //    public ObjectSystemData createOsdWithoutContent(long aclId, ){
@@ -314,6 +331,12 @@ public class CinnamonClient {
     // Folders
     public Folder getFolderById(Long id, boolean includeSummary) throws IOException {
         return getFolders(Collections.singletonList(id), includeSummary).get(0);
+    }
+
+    public Folder createFolder(Long parentId, String name, Long ownerId, Long aclId, Long typeId) throws IOException{
+        var request = new CreateFolderRequest(name, parentId, null, ownerId, aclId, typeId);
+        var response = sendStandardRequest(UrlMapping.FOLDER__CREATE_FOLDER, request);
+        return folderUnwrapper.unwrap(response,1).get(0);
     }
 
     public List<Folder> getFolders(List<Long> ids, boolean includeSummary) throws IOException {

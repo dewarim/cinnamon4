@@ -20,23 +20,23 @@ import java.util.Objects;
  */
 public class ObjectSystemData implements ContentMetadata, CinnamonObject, Identifiable {
 
-    private Long       id;
-    private String     name;
-    private String     contentPath;
-    private Long       contentSize;
-    private Long       predecessorId;
-    private Long       rootId;
-    private Long       creatorId;
-    private Long       modifierId;
-    private Long       ownerId;
-    private Long       lockerId;
-    private Date       created  = new Date();
-    private Date       modified = new Date();
-    private Long       languageId;
-    private Long       aclId;
-    private Long       parentId;
-    private Long       formatId;
-    private Long       typeId;
+    private Long   id;
+    private String name;
+    private String contentPath;
+    private Long   contentSize;
+    private Long   predecessorId;
+    private Long   rootId;
+    private Long   creatorId;
+    private Long   modifierId;
+    private Long   ownerId;
+    private Long   lockerId;
+    private Date   created  = new Date();
+    private Date   modified = new Date();
+    private Long   languageId;
+    private Long   aclId;
+    private Long   parentId;
+    private Long   formatId;
+    private Long   typeId;
 
     @JacksonXmlElementWrapper(localName = "metasets")
     @JacksonXmlProperty(localName = "meta")
@@ -59,7 +59,7 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject, Identi
     private Long    lifecycleStateId;
     private String  summary         = "<summary/>";
 
-    private Long   objVersion;
+    private Long   objVersion      = 0L;
     private String contentHash;
     private String contentProvider = DefaultContentProvider.FILE_SYSTEM.name();
 
@@ -82,7 +82,7 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject, Identi
         nextVersion.setOwnerId(user.getId());
         nextVersion.setLanguageId(languageId);
         nextVersion.setLatestHead(latestHead);
-        nextVersion.setLatestBranch(latestBranch);
+        nextVersion.setLatestBranch(true);
         nextVersion.setLockerId(null);
         nextVersion.setName(name);
         nextVersion.setParentId(parentId);
@@ -476,7 +476,7 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject, Identi
     }
 
     public List<Meta> getMetas() {
-        if(metas == null){
+        if (metas == null) {
             metas = new ArrayList<>();
         }
         return metas;
@@ -515,14 +515,19 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject, Identi
                 Objects.equals(cmnVersion, that.cmnVersion) &&
                 Objects.equals(lifecycleStateId, that.lifecycleStateId) &&
                 Objects.equals(summary, that.summary) &&
-                Objects.equals(objVersion, that.objVersion) &&
+                // objVersion was originally used to detect database level changes for Hibernate in Cinnamon 3.
+                // It will change even by osdDao.update() though the object's other fields may remain unchanged.
+                // So, change osd.name, change it back, fetch osd anew -> you have two non-equal objects if you compare
+                // objVersion.
+                // TODO: do we still need objVersion?
+                // Objects.equals(objVersion, that.objVersion) &&
                 Objects.equals(contentHash, that.contentHash) &&
                 Objects.equals(contentProvider, that.contentProvider) &&
                 compareMetas(getMetas(), that.getMetas());
     }
 
     private boolean compareMetas(List<Meta> metas, List<Meta> thatMetas) {
-        if(metas.size() != thatMetas.size()){
+        if (metas.size() != thatMetas.size()) {
             return false;
         }
         metas.sort(Comparator.comparingLong(Meta::getId));

@@ -4,6 +4,7 @@ import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.UserAccount;
+import com.dewarim.cinnamon.model.request.osd.VersionPredicate;
 import org.apache.ibatis.session.SqlSession;
 
 import java.util.ArrayList;
@@ -48,11 +49,17 @@ public class OsdDao {
         return sqlSession.selectOne("com.dewarim.cinnamon.ObjectSystemDataMapper.getLatestHead", id);
     }
 
-    public List<ObjectSystemData> getObjectsByFolderId(long folderId, boolean includeSummary) {
+    public List<ObjectSystemData> getObjectsByFolderId(long folderId, boolean includeSummary, VersionPredicate versionPredicate) {
         SqlSession          sqlSession = ThreadLocalSqlSession.getSqlSession();
         Map<String, Object> params     = new HashMap<>();
         params.put("includeSummary", includeSummary);
         params.put("folderId", folderId);
+
+        switch (versionPredicate) {
+            case ALL -> params.put("versionPredicate", "");
+            case HEAD -> params.put("versionPredicate", " AND latest_head=true ");
+            case BRANCH -> params.put("versionPredicate", " AND latest_branch=true ");
+        }
         return new ArrayList<>(sqlSession.selectList("com.dewarim.cinnamon.ObjectSystemDataMapper.getOsdsByFolderId", params));
     }
 
@@ -69,7 +76,7 @@ public class OsdDao {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
         if (updateModifier) {
             UserAccount currentUser = ThreadLocalSqlSession.getCurrentUser();
-            if(currentUser.isChangeTracking()) {
+            if (currentUser.isChangeTracking()) {
                 osd.setModified(new Date());
                 osd.setModifierId(currentUser.getId());
             }

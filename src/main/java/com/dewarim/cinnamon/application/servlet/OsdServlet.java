@@ -595,7 +595,7 @@ public class OsdServlet extends BaseServlet {
         long                   folderId       = osdRequest.getFolderId();
         boolean                includeSummary = osdRequest.isIncludeSummary();
         boolean                includeMeta    = osdRequest.isIncludeCustomMetadata();
-        List<ObjectSystemData> osds           = osdDao.getObjectsByFolderId(folderId, includeSummary);
+        List<ObjectSystemData> osds           = osdDao.getObjectsByFolderId(folderId, includeSummary, osdRequest.getVersionPredicate());
         List<ObjectSystemData> filteredOsds   = authorizationService.filterObjectsByBrowsePermission(osds, user);
         OsdMetaDao             metaDao        = new OsdMetaDao();
         if (includeMeta) {

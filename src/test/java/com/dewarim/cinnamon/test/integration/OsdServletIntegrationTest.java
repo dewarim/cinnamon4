@@ -50,6 +50,7 @@ import java.util.List;
 
 import static com.dewarim.cinnamon.ErrorCode.*;
 import static com.dewarim.cinnamon.api.Constants.CREATE_NEW_VERSION;
+import static com.dewarim.cinnamon.model.request.osd.VersionPredicate.*;
 import static org.apache.http.HttpHeaders.CONTENT_TYPE;
 import static org.apache.http.entity.ContentType.APPLICATION_XML;
 import static org.hamcrest.CoreMatchers.*;
@@ -127,13 +128,45 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getObjectsByFolderId() throws IOException {
-        OsdByFolderRequest     osdRequest = new OsdByFolderRequest(4L, true, false, false);
+        OsdByFolderRequest     osdRequest = new OsdByFolderRequest(4L, true, false, false, ALL);
         HttpResponse           response   = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_FOLDER_ID, osdRequest);
         List<ObjectSystemData> dataList   = unwrapOsds(response, 2);
         List<Link>             links      = unwrapLinks(response, 1);
         assertTrue(dataList.stream().anyMatch(osd -> osd.getSummary().equals("<summary>child@archive</summary>")));
         // link.objectId is #10, because it's yet unresolved (latest_head would be osd#11).
         assertThat(links.get(0).getObjectId(), equalTo(10L));
+    }
+
+    @Test
+    public void getObjectsByFolderIdOnlyHead() throws IOException {
+        var holder = new TestObjectHolder(client);
+        holder.setAcl(client.getAclByName("creators.acl"))
+                .setUser(userId)
+                .createFolder("only-head", createFolderId)
+                .createOsd("get-objects-by-folder-only-head");
+        ObjectSystemData       version1     = client.version(new CreateNewVersionRequest(holder.osd.getId()));
+        ObjectSystemData       head         = client.version(new CreateNewVersionRequest(version1.getId()));
+        ObjectSystemData       branch       = client.version(new CreateNewVersionRequest(holder.osd.getId()));
+        List<ObjectSystemData> osdsInFolder = client.getOsdsInFolder(holder.folder.getId(), false, false, false, HEAD).getOsds();
+        assertEquals(1, osdsInFolder.size());
+        assertEquals(head, osdsInFolder.get(0));
+    }
+
+    @Test
+    public void getObjectsByFolderIdOnlyBranches() throws IOException {
+        var holder = new TestObjectHolder(client);
+        holder.setAcl(client.getAclByName("creators.acl"))
+                .setUser(userId)
+                .createFolder("getObjectsByFolderIdOnlyBranches", createFolderId)
+                .createOsd("get-objects-by-folder-branch");
+        ObjectSystemData       version1     = client.version(new CreateNewVersionRequest(holder.osd.getId()));
+        ObjectSystemData       head         = client.version(new CreateNewVersionRequest(version1.getId()));
+        ObjectSystemData       branch       = client.version(new CreateNewVersionRequest(holder.osd.getId()));
+        List<ObjectSystemData> osdsInFolder = client.getOsdsInFolder(holder.folder.getId(), false, false, false, BRANCH).getOsds();
+        assertEquals(2, osdsInFolder.size());
+        // head object is also considered a branch (for legacy reasons):
+        assertTrue(osdsInFolder.contains(head));
+        assertTrue(osdsInFolder.contains(branch));
     }
 
     @Test
@@ -150,10 +183,10 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var holder = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
 
         var metasetType = TestObjectHolder.getMetasetType("comment");
-        var metas = List.of(new Meta(null,metasetType.getId(), "<meta>some data</meta>"));
-        var osd = holder.setMetas(metas).createOsd("object#1 with custom meta").osd;
+        var metas       = List.of(new Meta(null, metasetType.getId(), "<meta>some data</meta>"));
+        var osd         = holder.setMetas(metas).createOsd("object#1 with custom meta").osd;
         assertEquals(osd.getMetas().get(0).getContent(), holder.metas.get(0).getContent());
-        var osdWithMeta = client.getOsdById(osd.getId(),false,true);
+        var osdWithMeta = client.getOsdById(osd.getId(), false, true);
         assertEquals(1, osdWithMeta.getMetas().size());
         assertEquals(osd.getMetas().get(0), osdWithMeta.getMetas().get(0));
     }
@@ -163,11 +196,11 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var holder = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
 
         var metasetType = TestObjectHolder.getMetasetType("comment");
-        var metas = List.of(new Meta(null,metasetType.getId(), "<meta><comment>first post</comment></meta>"),
+        var metas = List.of(new Meta(null, metasetType.getId(), "<meta><comment>first post</comment></meta>"),
                 new Meta(null, metasetType.getId(), "<meta><comment>second post</comment></meta>"));
         var osd = holder.setMetas(metas).createOsd("object#2 with custom meta").osd;
         assertEquals(osd.getMetas().get(0).getContent(), holder.metas.get(0).getContent());
-        var osdWithMeta = client.getOsdById(osd.getId(),false,true);
+        var osdWithMeta = client.getOsdById(osd.getId(), false, true);
         assertEquals(2, osdWithMeta.getMetas().size());
         assertEquals(osd.getMetas().get(0), osdWithMeta.getMetas().get(0));
         assertEquals(osd.getMetas().get(1), osdWithMeta.getMetas().get(1));
@@ -178,7 +211,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var holder = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
         // license is a unique metaset in our test database
         var metasetType = TestObjectHolder.getMetasetType("license");
-        var metas = List.of(new Meta(null,metasetType.getId(), "<gpl/>"),
+        var metas = List.of(new Meta(null, metasetType.getId(), "<gpl/>"),
                 new Meta(null, metasetType.getId(), "<proprietaryLicense/>"));
         assertClientError(() -> holder.setMetas(metas).createOsd("object#3 with custom meta"), METASET_UNIQUE_CHECK_FAILED);
     }
@@ -1088,14 +1121,14 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void deleteOsdWithCustomMetadata() throws IOException{
+    public void deleteOsdWithCustomMetadata() throws IOException {
         var holder = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
 
         var metasetType = TestObjectHolder.getMetasetType("comment");
-        var metas = List.of(new Meta(null,metasetType.getId(), "<meta>some data</meta>"));
-        var osd = holder.setMetas(metas).createOsd("object#1 with custom meta").osd;
+        var metas       = List.of(new Meta(null, metasetType.getId(), "<meta>some data</meta>"));
+        var osd         = holder.setMetas(metas).createOsd("object#1 with custom meta").osd;
         client.deleteOsd(osd.getId());
-        assertClientError(() -> client.getOsdById(osd.getId(), false,false), OBJECT_NOT_FOUND);
+        assertClientError(() -> client.getOsdById(osd.getId(), false, false), OBJECT_NOT_FOUND);
     }
 
     @Test

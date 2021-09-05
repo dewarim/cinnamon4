@@ -6,9 +6,11 @@ import java.util.Optional;
 
 public class CreateFolderRequest implements ApiRequest {
 
+    private static final String DEFAULT_SUMMARY = "<summary />";
+
     private String name;
     private Long   parentId;
-    private String summary = "<summary />";
+    private String summary = DEFAULT_SUMMARY;
     private Long   ownerId;
     private Long   aclId;
     private Long   typeId;
@@ -42,6 +44,9 @@ public class CreateFolderRequest implements ApiRequest {
     }
 
     public String getSummary() {
+        if (summary == null) {
+            summary = DEFAULT_SUMMARY;
+        }
         return summary;
     }
 
@@ -79,7 +84,7 @@ public class CreateFolderRequest implements ApiRequest {
                 && (typeId == null || typeId > 0)
                 && (aclId == null || aclId > 0)
                 && (ownerId == null || ownerId > 0)
-                && summary != null
+                && getSummary() != null
                 && summary.trim().length() > 0;
     }
 

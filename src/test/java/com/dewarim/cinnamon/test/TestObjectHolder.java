@@ -6,6 +6,7 @@ import com.dewarim.cinnamon.client.CinnamonClient;
 import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.AclGroup;
 import com.dewarim.cinnamon.model.Folder;
+import com.dewarim.cinnamon.model.FolderType;
 import com.dewarim.cinnamon.model.Format;
 import com.dewarim.cinnamon.model.Group;
 import com.dewarim.cinnamon.model.Language;
@@ -22,6 +23,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.dewarim.cinnamon.api.Constants.FOLDER_TYPE_DEFAULT;
+
 public class TestObjectHolder {
 
     static        Object            SYNC_OBJECT = new Object();
@@ -30,6 +33,7 @@ public class TestObjectHolder {
     static public List<Format>      formats;
     static public List<ObjectType>  objectTypes;
     static public List<MetasetType> metasetTypes;
+    static public List<FolderType>  folderTypes;
 
     CinnamonClient client;
     public ObjectSystemData osd;
@@ -68,6 +72,7 @@ public class TestObjectHolder {
                     formats = client.listFormats();
                     objectTypes = client.listObjectTypes();
                     metasetTypes = client.listMetasetTypes();
+                    folderTypes = client.listFolderTypes();
                     objectType = objectTypes.stream().filter(type ->
                             type.getName().equals(Constants.OBJTYPE_DEFAULT)).findFirst().orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
                 } catch (IOException e) {
@@ -93,6 +98,12 @@ public class TestObjectHolder {
             request.setMetas(metas);
         }
         osd = client.createOsd(request);
+        return this;
+    }
+
+    public TestObjectHolder createFolder(String name, Long parentId) throws IOException {
+        var defaultFolderType = folderTypes.stream().filter(ft -> ft.getName().equals(FOLDER_TYPE_DEFAULT)).findFirst().orElseThrow();
+        folder = client.createFolder(parentId, name, user.getId(), acl.getId(), defaultFolderType.getId());
         return this;
     }
 
