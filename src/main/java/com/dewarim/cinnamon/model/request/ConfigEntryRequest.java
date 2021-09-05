@@ -1,7 +1,9 @@
 package com.dewarim.cinnamon.model.request;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
+@JacksonXmlRootElement(localName = "configEntryRequest")
 public class ConfigEntryRequest implements ApiRequest {
     
     private String name;

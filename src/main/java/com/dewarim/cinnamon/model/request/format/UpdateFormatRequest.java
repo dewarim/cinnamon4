@@ -5,11 +5,13 @@ import com.dewarim.cinnamon.model.Format;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.response.FormatWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+@JacksonXmlRootElement(localName = "updateFormatRequest")
 public class UpdateFormatRequest implements UpdateRequest<Format>, ApiRequest {
 
     private List<Format> formats = new ArrayList<>();

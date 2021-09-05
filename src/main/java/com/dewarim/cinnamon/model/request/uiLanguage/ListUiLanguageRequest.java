@@ -6,7 +6,9 @@ import com.dewarim.cinnamon.model.request.DefaultListRequest;
 import com.dewarim.cinnamon.model.request.ListRequest;
 import com.dewarim.cinnamon.model.response.UiLanguageWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
+@JacksonXmlRootElement(localName = "listUiLanguageRequest")
 public class ListUiLanguageRequest extends DefaultListRequest implements ListRequest<UiLanguage>, ApiRequest {
 
     @Override

@@ -1,9 +1,11 @@
 package com.dewarim.cinnamon.model.request;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.Optional;
 
+@JacksonXmlRootElement(localName = "deleteMetaRequest")
 public class DeleteMetaRequest implements ApiRequest {
 
     private Long   id;

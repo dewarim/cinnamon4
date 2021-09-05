@@ -6,7 +6,9 @@ import com.dewarim.cinnamon.model.request.DefaultListRequest;
 import com.dewarim.cinnamon.model.request.ListRequest;
 import com.dewarim.cinnamon.model.response.IndexItemWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
+@JacksonXmlRootElement(localName = "listIndexItemRequest")
 public class ListIndexItemRequest extends DefaultListRequest implements ListRequest<IndexItem>, ApiRequest {
 
     @Override

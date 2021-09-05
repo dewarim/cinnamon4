@@ -1,9 +1,11 @@
 package com.dewarim.cinnamon.model.request.folder;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.Optional;
 
+@JacksonXmlRootElement(localName = "createFolderRequest")
 public class CreateFolderRequest implements ApiRequest {
 
     private static final String DEFAULT_SUMMARY = "<summary />";

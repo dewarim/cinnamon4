@@ -5,11 +5,13 @@ import com.dewarim.cinnamon.model.FolderType;
 import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.response.FolderTypeWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@JacksonXmlRootElement(localName = "createFolderTypeRequest")
 public class CreateFolderTypeRequest implements CreateRequest<FolderType>, ApiRequest {
 
     private List<String> names = new ArrayList<>();

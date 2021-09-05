@@ -1,9 +1,11 @@
 package com.dewarim.cinnamon.model.request.aclGroup;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.Optional;
 
+@JacksonXmlRootElement(localName = "aclGroupListRequest")
 public class AclGroupListRequest implements ApiRequest {
 
     public enum IdType{

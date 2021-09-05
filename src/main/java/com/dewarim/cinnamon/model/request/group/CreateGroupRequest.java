@@ -5,11 +5,13 @@ import com.dewarim.cinnamon.model.Group;
 import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.response.GroupWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@JacksonXmlRootElement(localName = "createGroupRequest")
 public class CreateGroupRequest implements CreateRequest<Group>, ApiRequest {
 
     private List<String> names = new ArrayList<>();

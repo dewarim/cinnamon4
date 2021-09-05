@@ -5,10 +5,12 @@ import com.dewarim.cinnamon.model.ObjectType;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.response.ObjectTypeWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@JacksonXmlRootElement(localName = "updateObjectTypeRequest")
 public class UpdateObjectTypeRequest implements UpdateRequest<ObjectType>, ApiRequest {
 
     private List<ObjectType> ObjectTypes = new ArrayList<>();

@@ -5,10 +5,12 @@ import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.links.LinkType;
 import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.response.Wrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@JacksonXmlRootElement(localName = "createLinkRequest")
 public class CreateLinkRequest implements CreateRequest<Link>, ApiRequest {
 
     private List<Link> links = new ArrayList<>();

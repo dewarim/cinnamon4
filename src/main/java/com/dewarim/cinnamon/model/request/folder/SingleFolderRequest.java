@@ -2,12 +2,14 @@ package com.dewarim.cinnamon.model.request.folder;
 
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.Optional;
 
 /**
  * Request for a single folder and its ancestors.
  */
+@JacksonXmlRootElement(localName = "singleFolderRequest")
 public class SingleFolderRequest implements ApiRequest {
 
     private Long    id;

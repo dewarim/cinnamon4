@@ -5,10 +5,12 @@ import com.dewarim.cinnamon.model.FolderType;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.response.FolderTypeWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@JacksonXmlRootElement(localName = "updateFolderTypeRequest")
 public class UpdateFolderTypeRequest implements UpdateRequest<FolderType>, ApiRequest {
 
     private List<FolderType> FolderTypes = new ArrayList<>();

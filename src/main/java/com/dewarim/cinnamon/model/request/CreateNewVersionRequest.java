@@ -1,11 +1,13 @@
 package com.dewarim.cinnamon.model.request;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@JacksonXmlRootElement(localName = "createNewVersionRequest")
 public class CreateNewVersionRequest implements ApiRequest {
 
     private Long           id;

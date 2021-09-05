@@ -6,7 +6,9 @@ import com.dewarim.cinnamon.model.request.DefaultListRequest;
 import com.dewarim.cinnamon.model.request.ListRequest;
 import com.dewarim.cinnamon.model.response.GroupWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
+@JacksonXmlRootElement(localName = "listGroupRequest")
 public class ListGroupRequest extends DefaultListRequest implements ListRequest<Group>, ApiRequest {
     @Override
     public Wrapper<Group> fetchResponseWrapper() {

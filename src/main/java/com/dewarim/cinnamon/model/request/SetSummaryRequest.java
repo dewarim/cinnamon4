@@ -1,7 +1,9 @@
 package com.dewarim.cinnamon.model.request;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
+@JacksonXmlRootElement(localName = "setSummaryRequest")
 public class SetSummaryRequest implements ApiRequest {
     
     private Long id;

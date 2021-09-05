@@ -1,9 +1,11 @@
 package com.dewarim.cinnamon.model.request.osd;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.Optional;
 
+@JacksonXmlRootElement(localName = "setContentRequest")
 public class SetContentRequest implements ApiRequest {
 
     private Long id;

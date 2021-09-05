@@ -1,12 +1,14 @@
 package com.dewarim.cinnamon.model.request.permission;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+@JacksonXmlRootElement(localName = "changePermissionsRequest")
 public class ChangePermissionsRequest implements ApiRequest {
 
     private Long aclGroupId;
