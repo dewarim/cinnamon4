@@ -2,6 +2,15 @@
 
 ## From Cinnamon 3.7
 
+### Changes in behavior
+
+* created & modified dates on OSDs are now formatted as yyyy-MM-dd'T'HH:mm:ssZ (2021-09-05T11:27:39+0000)
+
+### Database changes
+
+Make sure you have a complete backup of database & file system before starting the migration.
+It's recommended to use a copy of production for testing.
+
     ALTER TABLE users ADD login_type VARCHAR(64) DEFAULT 'CINNAMON' NOT NULL;
     ALTER TABLE users DROP COLUMN account_expired;
     ALTER TABLE users DROP COLUMN obj_version;

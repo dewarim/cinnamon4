@@ -4,6 +4,7 @@ import com.dewarim.cinnamon.api.CinnamonObject;
 import com.dewarim.cinnamon.api.Identifiable;
 import com.dewarim.cinnamon.api.content.ContentMetadata;
 import com.dewarim.cinnamon.provider.DefaultContentProvider;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
@@ -30,13 +31,17 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject, Identi
     private Long   modifierId;
     private Long   ownerId;
     private Long   lockerId;
-    private Date   created  = new Date();
-    private Date   modified = new Date();
-    private Long   languageId;
-    private Long   aclId;
-    private Long   parentId;
-    private Long   formatId;
-    private Long   typeId;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssZ")
+    private Date created  = new Date();
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssZ")
+    private Date modified = new Date();
+    private Long languageId;
+    private Long aclId;
+    private Long parentId;
+    private Long formatId;
+    private Long typeId;
 
     @JacksonXmlElementWrapper(localName = "metasets")
     @JacksonXmlProperty(localName = "meta")

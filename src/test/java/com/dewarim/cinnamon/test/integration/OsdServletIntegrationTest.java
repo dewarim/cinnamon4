@@ -36,6 +36,8 @@ import org.apache.http.client.fluent.Request;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.entity.mime.content.StringBody;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -43,9 +45,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import static com.dewarim.cinnamon.ErrorCode.*;
@@ -58,6 +64,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
+
+    private final static Logger log = LogManager.getLogger(OsdServletIntegrationTest.class);
 
     private static final Long CREATE_ACL_ID                     = 8L;
     /**
@@ -167,6 +175,30 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         // head object is also considered a branch (for legacy reasons):
         assertTrue(osdsInFolder.contains(head));
         assertTrue(osdsInFolder.contains(branch));
+    }
+
+    @Test
+    public void osdDateFieldsAreFormattedAsIso8601() throws IOException, ParseException {
+        var holder = new TestObjectHolder(client);
+        holder.setAcl(client.getAclByName("creators.acl"))
+                .setUser(userId)
+                .setFolder(createFolderId)
+                .createOsd("osdDateFieldsAreFormattedAsIso8601");
+        var osd = holder.osd;
+        var response = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID,
+                new OsdRequest(List.of(osd.getId()), false, false));
+        String           osdResponse      = new String(response.getEntity().getContent().readAllBytes(), Charset.defaultCharset());
+        String           createdTimestamp = osdResponse.split("</?created>")[1];
+        SimpleDateFormat df               = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
+        Date             created          = df.parse(createdTimestamp);
+        // and that's the reason we want to migrate to LocalDate/Time (#228): Java will happily parse the date in
+        // the _current_ timezone (so created vs osd.getCreated is off by 2 hours for CEST)
+         assertEquals(created.getTime(), osd.getCreated().getTime());
+        log.debug("createdTimestamp: " + createdTimestamp);
+        String modifiedTimestamp = osdResponse.split("</?modified>")[1];
+        Date   modified          = df.parse(modifiedTimestamp);
+          assertEquals(modified.getTime(), osd.getModified().getTime());
+        log.debug("modifiedTimestamp: " + modifiedTimestamp);
     }
 
     @Test
@@ -1361,17 +1393,17 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getOsdWithCustomMetadata() throws IOException {
-
+        // TODO: implement me
     }
 
     @Test
     public void getOsdWithUnbrowsableCustomMetadata() throws IOException {
-
+        // TODO: implement me
     }
 
     @Test
     public void getOsdByFolderWithCustomMetadata() throws IOException {
-
+        // TODO: implement me
     }
 
     private HttpResponse sendAdminMultipartRequest(UrlMapping url, HttpEntity multipartEntity) throws IOException {
