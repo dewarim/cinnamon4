@@ -1112,7 +1112,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void updateOsdWithChangeTracking() throws IOException {
+    public void updateOsdWithChangeTracking() throws IOException, InterruptedException {
         CreateOsdRequest request = new CreateOsdRequest();
         request.setAclId(CREATE_ACL_ID);
         request.setName("new osd");
@@ -1128,6 +1128,9 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         assertThat(osd.getModifierId(), notNullValue());
         assertThat(osd.getModified(), notNullValue());
 
+        // TODO: maybe configure tests with Thread.sleep() to only run on demand or for a "all tests" szenario
+        Thread.sleep(1000);
+
         // admin without changeTracking
         SetSummaryRequest summaryRequest = new SetSummaryRequest(osd.getId(), "a summary");
         response = sendAdminRequest(UrlMapping.OSD__SET_SUMMARY, summaryRequest);
@@ -1137,6 +1140,8 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         ObjectSystemData updatedOsd = unwrapOsds(response, 1).get(0);
         assertThat(updatedOsd.getModifierId(), equalTo(osd.getModifierId()));
         assertThat(updatedOsd.getModified(), equalTo(osd.getModified()));
+
+        Thread.sleep(1000);
 
         // standard user should have changeTracking
         response = sendStandardRequest(UrlMapping.OSD__SET_SUMMARY, summaryRequest);
