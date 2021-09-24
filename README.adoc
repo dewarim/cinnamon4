@@ -22,10 +22,11 @@ Version numbers describe the minimum version. You can either download them direc
 
 === Run the binary version
 
-To run the binary release (not available yet, you have to build from source), you just need
+To run the newest binary release, you just need
 
 * https://adoptopenjdk.net/[Java 16]
 * https://www.postgresql.org/download/[PostgreSQL 12]
+* https://github.com/dewarim/cinnamon4/releases[cinnamon-server.jar] (click on "Assets" to expand the file list, then download the jar file.)
 
 === Build & run from source
 
@@ -39,7 +40,12 @@ To run the binary release (not available yet, you have to build from source), yo
 * link:docs/install_on_windows.adoc[Installation on Windows]
 * link:docs/install_on_linux.adoc[Installation on Linux]
 
-TODO: add a test database for initial production setup
+After performing the operating system specific part, continue with:
+
+* link:docs/install_test_database.adoc[Installing the test database]
+* link:docs/configure_cinnamon_config.adoc[Configure Cinnamon Configuration File]
+
+TODO: add a database for initial production setup
 
 == Build
 

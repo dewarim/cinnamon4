@@ -1,0 +1,13 @@
+== Installing the test database
+
+After you have
+
+* installed PostgreSQL
+* added the cinnamon_test database
+* set the cinnamon user as owner of cinnamon_test database with login privileges
+
+you can now install the test database by running the link:../src/test/resources/sql/CreateTestDB.sql[CreateTestDB.sql] script.
+
+    # Command line example:
+    psql -f CreateTestDB.sql cinnamon_test
+

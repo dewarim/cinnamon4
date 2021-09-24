@@ -11,9 +11,9 @@
 either with pgAdmin or https://medium.com/coding-blocks/creating-user-database-and-adding-access-on-postgresql-8bfcd2f4a91e[directly with postgres].
 
     sudo -u postgres psql
-    postgres=# create database cinnamon_test;
     postgres=# create user cinnamon_test with encrypted password 'cinnamon';
-    postgre
+    postgres=# alter user cinnamon with LOGIN;
+    postgres=# create database cinnamon_test with owner cinnamon;
 
 * Make sure PostgreSQL runs as a service on startup.
 

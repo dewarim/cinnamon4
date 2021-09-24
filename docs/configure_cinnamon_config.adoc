@@ -1,0 +1,131 @@
+== Configuring Cinnamon
+
+=== The config file
+
+You can generate the current default config by running the server like this:
+
+    java -jar cinnamon-server.jar --write-config my-config.xml
+
+The result should look like this:
+
+  <CinnamonConfig>
+  <serverConfig>
+    <port>9090</port>
+    <systemRoot>target/cinnamon-system</systemRoot>
+    <dataRoot>target/cinnamon-data</dataRoot>
+    <luceneIndexPath>target/cinnamon-data/index</luceneIndexPath>
+    <verifyExistence>true</verifyExistence>
+    <ignoreNopUpdates>false</ignoreNopUpdates>
+  </serverConfig>
+  <systemAdministratorEmail/>
+  <mailConfig>
+    <smtpHost/>
+    <smtpUser/>
+    <smtpPassword/>
+  </mailConfig>
+  <securityConfig>
+    <passwordRounds>10</passwordRounds>
+    <minimumPasswordLength>8</minimumPasswordLength>
+    <transferAssetsAllowed>true</transferAssetsAllowed>
+    <deleteUserAllowed>true</deleteUserAllowed>
+    <sessionLengthInMillis>3600000</sessionLengthInMillis>
+  </securityConfig>
+  <databaseConfig>
+    <driver>org.postgresql.Driver</driver>
+    <host>127.0.0.1</host>
+    <port>5432</port>
+    <database>cinnamon_test</database>
+    <user>cinnamon</user>
+    <password>cinnamon</password>
+    <databaseUrl>jdbc:postgresql://127.0.0.1:5432/cinnamon_test</databaseUrl>
+  </databaseConfig>
+  <loginProviders/>
+</CinnamonConfig>
+
+You can adjust this file and then start the server with the new configuration:
+
+    java -jar cinnamon-server.jar --config my-config.xml
+
+==== ServerConfig
+
+The serverConfig section allows you to set up the core configuration of the server - where the Lucene index is stored, the port on which the server listens for connection and so on.
+
+  <serverConfig>
+    <port>9090</port>
+    <systemRoot>target/cinnamon-system</systemRoot>
+    <dataRoot>target/cinnamon-data</dataRoot>
+    <luceneIndexPath>target/cinnamon-data/index</luceneIndexPath>
+    <verifyExistence>true</verifyExistence>
+    <ignoreNopUpdates>false</ignoreNopUpdates>
+  </serverConfig>
+
+* port: the port the server listens on
+* systemRoot: where the server can expect to find extra files (for example, logging configuration)
+* dataRoot: path to where the server should store uploaded files
+* luceneIndexPath: where the Lucene index files are stored
+* verifyExistence: if true, the server will verify the existence of objects before executing SQL UPDATE statements on them. This feature allows for strict or non-strict updates.
++
+For example, if you update the owner of a long list of folders by having the client calling with one update request after another, the server can check if the folder you want to update is still there - or perhaps it has been deleted by another user.
++
+Pro: you will get a proper error message if this happens (OBJECT_NOT_FOUND).
++
+Con: it's a slight performance hit due to running another database query for each updated object.
+* ignoreNopUpdates: if false, the server will report an error if an update does not change any data.
++
+Setting this to false is useful during development and debugging of complex operations: you want to make sure the client is not issuing useless update commands or is updating in the wrong order (rename A to B to A, but a bad client may rename A to A to B)
+
+==== Email settings
+
+  <systemAdministratorEmail/>
+  <mailConfig>
+    <smtpHost/>
+    <smtpUser/>
+    <smtpPassword/>
+  </mailConfig>
+
+Currently unused, will be documented once email features are ready.
+
+==== Security
+
+  <securityConfig>
+    <passwordRounds>10</passwordRounds>
+    <minimumPasswordLength>8</minimumPasswordLength>
+    <transferAssetsAllowed>true</transferAssetsAllowed>
+    <deleteUserAllowed>true</deleteUserAllowed>
+    <sessionLengthInMillis>3600000</sessionLengthInMillis>
+  </securityConfig>
+
+Cinnamon uses the BCrypt algorithm to create hashes of passwords.
+
+* passwordRounds: the higher the number, the longer BCrypt takes to encode a password. It's a tradeoff between security and the time your users wait for their login to the system.
+* minimumPasswordLength: enforces the minimum length of passwords
+* transferAssetsAllowed: (not implemented yet): allow all objects owned by a user to be transferred in one operation to another user
+* sessionLengthInMillis: how long (in milliseconds) a Cinnamon session ticket is valid. After a period of inactivity longer than this value, the ticket is no longer valid.
+
+==== Database Config
+
+Note: at the moment, the fields host, port & database seem to be unused - the server relies on the databaseUrl property.
+
+TODO: check if we need those fields and/or if we should create the URL from their values
+
+  <databaseConfig>
+    <driver>org.postgresql.Driver</driver>
+    <host>127.0.0.1</host>
+    <port>5432</port>
+    <database>cinnamon_test</database>
+    <user>cinnamon</user>
+    <password>cinnamon</password>
+    <databaseUrl>jdbc:postgresql://127.0.0.1:5432/cinnamon_test</databaseUrl>
+  </databaseConfig>
+
+* driver: Java class name of the PostgreSQL driver class
+* host: IP address or hostname of the database server
+* port: port of the database server
+* database: the database to use
+* user: database username, must have LOGIN permission and permissions for CRUD operations on the database
+* password: the user's database password
+* databaseUrl: the JDBC connection string, including host + port of the database.
+
+==== Login Providers
+
+Currently not used, will be required for LDAP integration.

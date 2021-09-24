@@ -6,7 +6,7 @@
 * Run the installer
 * Start the pgadmin tool
 * Add a user "cinnamon" with password "cinnamon" (you may use any username and password, but need to set it later in the configuration file if you do not use these default values )
-* Grand login privileges to user cinnamon
+* Grant login privileges to user cinnamon
 * Create a database "cinnamon_test", owned by user "cinnamon"
 
 TODO: describe a production installation
