@@ -34,6 +34,7 @@ import com.dewarim.cinnamon.filter.AuthenticationFilter;
 import com.dewarim.cinnamon.filter.DbSessionFilter;
 import com.dewarim.cinnamon.filter.RequestResponseFilter;
 import com.dewarim.cinnamon.model.UserAccount;
+import com.dewarim.cinnamon.security.HashMaker;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -78,7 +79,9 @@ public class CinnamonServer {
     public void start() throws Exception {
 
         webAppContext.setContextPath("/");
-        webAppContext.setResourceBase(".");
+        webAppContext.setInitParameter("org.eclipse.jetty.servlet.Default.dirAllowed", "false");
+        // set the resource to a non-existent root directory
+        webAppContext.setResourceBase(HashMaker.createDigest("cinnamon"));
         webAppContext.getObjectFactory().addDecorator(new AnnotationDecorator(webAppContext));
 
         addFilters(webAppContext);
