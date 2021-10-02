@@ -104,10 +104,6 @@ Cinnamon uses the BCrypt algorithm to create hashes of passwords.
 
 ==== Database Config
 
-Note: at the moment, the fields host, port & database seem to be unused - the server relies on the databaseUrl property.
-
-TODO: check if we need those fields and/or if we should create the URL from their values
-
   <databaseConfig>
     <driver>org.postgresql.Driver</driver>
     <host>127.0.0.1</host>
@@ -115,7 +111,6 @@ TODO: check if we need those fields and/or if we should create the URL from thei
     <database>cinnamon_test</database>
     <user>cinnamon</user>
     <password>cinnamon</password>
-    <databaseUrl>jdbc:postgresql://127.0.0.1:5432/cinnamon_test</databaseUrl>
   </databaseConfig>
 
 * driver: Java class name of the PostgreSQL driver class
@@ -124,7 +119,6 @@ TODO: check if we need those fields and/or if we should create the URL from thei
 * database: the database to use
 * user: database username, must have LOGIN permission and permissions for CRUD operations on the database
 * password: the user's database password
-* databaseUrl: the JDBC connection string, including host + port of the database.
 
 ==== Login Providers
 

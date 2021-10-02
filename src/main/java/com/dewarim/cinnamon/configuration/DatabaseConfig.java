@@ -1,5 +1,7 @@
 package com.dewarim.cinnamon.configuration;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public class DatabaseConfig {
 
     private String driver = "org.postgresql.Driver";
@@ -57,6 +59,7 @@ public class DatabaseConfig {
         this.port = port;
     }
 
+    @JsonIgnore
     public String getDatabaseUrl(){
         return String.format("jdbc:postgresql://%s:%s/%s",host,port,database);
     }
