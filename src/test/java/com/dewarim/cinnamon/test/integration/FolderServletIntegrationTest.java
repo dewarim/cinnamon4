@@ -481,6 +481,8 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         );
         HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__UPDATE_FOLDER, request);
         parseGenericResponse(response);
+        Folder updatedFolder = adminClient.getFolderById(25L,false);
+        assertEquals(27L, updatedFolder.getParentId());
     }
 
     @Test

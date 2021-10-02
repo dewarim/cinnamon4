@@ -195,7 +195,7 @@ public class FolderServlet extends BaseServlet {
             if (!accessFilter.hasPermissionOnOwnable(folder, DefaultPermission.MOVE, folder)) {
                 ErrorCode.NO_MOVE_PERMISSION.throwUp();
             }
-            folder.setParentId(parentFolder.getParentId());
+            folder.setParentId(parentFolder.getId());
             changed = true;
         }
 
