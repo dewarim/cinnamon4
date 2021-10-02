@@ -578,4 +578,12 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject, Identi
                 ", contentProvider='" + contentProvider + '\'' +
                 '}';
     }
+
+    public boolean lockedByUser(UserAccount user) {
+        return user.getId().equals(lockerId);
+    }
+
+    public boolean lockedByOtherUser(UserAccount user) {
+        return lockerId != null && !user.getId().equals(lockerId);
+    }
 }

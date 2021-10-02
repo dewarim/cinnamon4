@@ -3,6 +3,7 @@ package com.dewarim.cinnamon.test.integration;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonServer;
+import com.dewarim.cinnamon.model.Language;
 import com.dewarim.cinnamon.model.Meta;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.links.Link;
@@ -18,6 +19,7 @@ import com.dewarim.cinnamon.model.request.osd.CreateOsdRequest;
 import com.dewarim.cinnamon.model.request.osd.OsdByFolderRequest;
 import com.dewarim.cinnamon.model.request.osd.OsdRequest;
 import com.dewarim.cinnamon.model.request.osd.SetContentRequest;
+import com.dewarim.cinnamon.model.request.osd.UpdateOsdRequest;
 import com.dewarim.cinnamon.model.response.MetaWrapper;
 import com.dewarim.cinnamon.model.response.OsdWrapper;
 import com.dewarim.cinnamon.model.response.Summary;
@@ -54,6 +56,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+import static com.dewarim.cinnamon.DefaultPermission.*;
 import static com.dewarim.cinnamon.ErrorCode.*;
 import static com.dewarim.cinnamon.api.Constants.CREATE_NEW_VERSION;
 import static com.dewarim.cinnamon.model.request.osd.VersionPredicate.*;
@@ -193,11 +196,11 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         Date             created          = df.parse(createdTimestamp);
         // and that's the reason we want to migrate to LocalDate/Time (#228): Java will happily parse the date in
         // the _current_ timezone (so created vs osd.getCreated is off by 2 hours for CEST)
-         assertEquals(created.getTime(), osd.getCreated().getTime());
+        assertEquals(created.getTime(), osd.getCreated().getTime());
         log.debug("createdTimestamp: " + createdTimestamp);
         String modifiedTimestamp = osdResponse.split("</?modified>")[1];
         Date   modified          = df.parse(modifiedTimestamp);
-          assertEquals(modified.getTime(), osd.getModified().getTime());
+        assertEquals(modified.getTime(), osd.getModified().getTime());
         log.debug("modifiedTimestamp: " + modifiedTimestamp);
     }
 
@@ -1150,6 +1153,276 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         updatedOsd = unwrapOsds(response, 1).get(0);
         assertThat(updatedOsd.getModifierId(), equalTo(osd.getModifierId()));
         assertThat(updatedOsd.getModified(), not(equalTo(osd.getModified())));
+    }
+
+    @Test
+    public void updateOsdInvalidRequest() {
+        UpdateOsdRequest request = new UpdateOsdRequest();
+        assertClientError(() -> client.updateOsd(request), INVALID_REQUEST);
+    }
+
+    @Test
+    public void updateOsdWithOsdNotFound() {
+        UpdateOsdRequest request = new UpdateOsdRequest(Long.MAX_VALUE, 1L, "-", 1L, 1L, 1L, 1L);
+        assertClientError(() -> client.updateOsd(request), OBJECT_NOT_FOUND);
+    }
+
+    @Test
+    public void updateOsdWithoutWriteSysMetaPermission() throws IOException {
+        var holder = new TestObjectHolder(adminClient, "no-permissions.acl", adminId, createFolderId);
+
+        holder.createAcl("updateOsdWithoutWriteSysMetaPermission")
+                .createGroup("test-updateOsdWithoutWriteSysMetaPermission")
+                .createAclGroup()
+                .addPermissions(List.of(BROWSE_OBJECT, LOCK))
+                .addUserToGroup(userId)
+                .createOsd("osd-update-forbidden");
+
+        var id = holder.osd.getId();
+        client.lockOsd(id);
+
+        UpdateOsdRequest request = new UpdateOsdRequest(id, 1L, "-", 1L, 1L, 1L, 1L);
+        assertClientError(() -> client.updateOsd(request), NO_WRITE_SYS_METADATA_PERMISSION);
+    }
+
+    @Test
+    public void updateOsdWithParentFolderNotFound() throws IOException {
+        var holder = new TestObjectHolder(adminClient, "no-permissions.acl", adminId, createFolderId);
+
+        holder.createAcl("updateOsdWithParentFolderNotFound")
+                .createGroup("test-updateOsdWithParentFolderNotFound")
+                .createAclGroup()
+                .addPermissions(List.of(BROWSE_OBJECT, LOCK, WRITE_OBJECT_SYS_METADATA))
+                .addUserToGroup(userId)
+                .createOsd("osd-new-parent-missing");
+
+        var id = holder.osd.getId();
+        client.lockOsd(id);
+
+        UpdateOsdRequest request = new UpdateOsdRequest(id, Long.MAX_VALUE, "-", 1L, 1L, 1L, 1L);
+        assertClientError(() -> client.updateOsd(request), PARENT_FOLDER_NOT_FOUND);
+    }
+
+    @Test
+    public void updateOsdWithoutCreateInFolderPermission() throws IOException {
+        var holder = new TestObjectHolder(adminClient, "no-permissions.acl", adminId, createFolderId);
+
+        holder.createAcl("updateOsdWithoutCreateInFolderPermission")
+                .createGroup("test-updateOsdWithoutCreateInFolderPermission")
+                .createAclGroup()
+                .addPermissions(List.of(BROWSE_OBJECT, LOCK, WRITE_OBJECT_SYS_METADATA))
+                .addUserToGroup(userId)
+                .createOsd("update-osd-no-create-permission");
+
+        var id = holder.osd.getId();
+        client.lockOsd(id);
+
+        UpdateOsdRequest request = new UpdateOsdRequest(id, 1L, "-", 1L, 1L, 1L, 1L);
+        assertClientError(() -> client.updateOsd(request), NO_CREATE_PERMISSION);
+    }
+
+    @Test
+    public void updateOsdWithoutMovePermission() throws IOException {
+        var holder = new TestObjectHolder(adminClient, "no-permissions.acl", adminId, createFolderId);
+
+        holder.createAcl("updateOsdWithoutMovePermission")
+                .createGroup("test-updateOsdWithoutMovePermission")
+                .createAclGroup()
+                .addPermissions(List.of(BROWSE_OBJECT, LOCK, WRITE_OBJECT_SYS_METADATA))
+                .addUserToGroup(userId)
+                .createOsd("update-osd-no-move-permission");
+
+        var id = holder.osd.getId();
+        client.lockOsd(id);
+
+        var request = new UpdateOsdRequest(id, createFolderId, "-", 1L, 1L, 1L, 1L);
+        assertClientError(() -> client.updateOsd(request), NO_MOVE_PERMISSION);
+    }
+
+    @Test
+    public void updateOsdWithMovePermission() throws IOException {
+        var holder = new TestObjectHolder(adminClient, "no-permissions.acl", adminId, createFolderId);
+
+        holder.createAcl("updateOsdWithMovePermission")
+                .createGroup("test-updateOsdWithMovePermission")
+                .createAclGroup()
+                .addPermissions(List.of(BROWSE_OBJECT, BROWSE_FOLDER, LOCK, WRITE_OBJECT_SYS_METADATA, MOVE, CREATE_OBJECT))
+                .addUserToGroup(userId)
+                .createOsd("update-osd-move-permission")
+                .createFolder("target-of-update-osd-by-move", createFolderId);
+
+        var id = holder.osd.getId();
+        client.lockOsd(id);
+
+        var request = new UpdateOsdRequest(id, holder.folder.getId(), null, null, null, null, null);
+        client.updateOsd(request);
+        var osd = client.getOsdById(id, false, false);
+        assertEquals(holder.folder.getId(), osd.getParentId());
+    }
+
+    @Test
+    public void updateOsdChangeName() throws IOException {
+        var holder = new TestObjectHolder(client, "reviewers.acl", adminId, createFolderId);
+
+        holder.createOsd("update-osd-rename")
+                .lockOsd();
+        var id = holder.osd.getId();
+
+        var request = new UpdateOsdRequest(id, null, "new name", null, null, null, null);
+        client.updateOsd(request);
+        var osd = client.getOsdById(id, false, false);
+        assertEquals("new name", osd.getName());
+    }
+
+    @Test
+    public void updateOsdChangeTypeNotFound() throws IOException {
+        var holder = new TestObjectHolder(client, "reviewers.acl", adminId, createFolderId);
+
+        holder.createOsd("update-osd-rename")
+                .lockOsd();
+        var id = holder.osd.getId();
+
+        var request = new UpdateOsdRequest(id, null, null, null, null, Long.MAX_VALUE, null);
+        assertClientError(() -> client.updateOsd(request), OBJECT_TYPE_NOT_FOUND);
+    }
+
+    @Test
+    public void updateOsdChangeType() throws IOException {
+        var holder = new TestObjectHolder(adminClient, "reviewers.acl", adminId, createFolderId);
+
+        holder.createOsd("update-osd-rename")
+                .createObjectType("update-osd-type");
+
+        var id = holder.osd.getId();
+        client.lockOsd(id);
+
+        var request = new UpdateOsdRequest(id, null, null, null, null,
+                holder.objectType.getId(), null);
+        client.updateOsd(request);
+        var osd = client.getOsdById(id, false, false);
+        assertEquals(holder.objectType.getId(), osd.getTypeId());
+    }
+
+    @Test
+    public void updateOsdChangeAclNoPermission() throws IOException {
+        var holder = new TestObjectHolder(adminClient, "reviewers.acl", adminId, createFolderId);
+
+        holder.createAcl("updateOsdChangeAclNoPermission")
+                .createGroup("test-updateOsdChangeAclNoPermission")
+                .createAclGroup()
+                .addPermissions(List.of(BROWSE_OBJECT, LOCK, WRITE_OBJECT_SYS_METADATA, MOVE, CREATE_OBJECT))
+                .addUserToGroup(userId)
+                .createOsd("update-osd-updateOsdChangeAclNoPermission");
+
+        holder.createOsd("updateOsdChangeAclNoPermission");
+        var id = holder.osd.getId();
+        client.lockOsd(id);
+
+        var request = new UpdateOsdRequest(id, null, null, null, holder.acl.getId(), null, null);
+        assertClientError(() -> client.updateOsd(request), MISSING_SET_ACL_PERMISSION);
+    }
+
+    @Test
+    public void updateOsdChangeAclNotFound() throws IOException {
+        var holder = new TestObjectHolder(client, "reviewers.acl",userId, createFolderId);
+        holder.createOsd("updateOsdChangeAclNoPermission");
+        var id = holder.osd.getId();
+        client.lockOsd(id);
+
+        var request = new UpdateOsdRequest(id, null, null, null, Long.MAX_VALUE, null, null);
+        assertClientError(() -> client.updateOsd(request), ACL_NOT_FOUND);
+    }
+
+    @Test
+    public void updateOsdChangeAcl() throws IOException {
+        var holder = new TestObjectHolder(adminClient, "reviewers.acl", adminId, createFolderId);
+
+        holder.createAcl("updateOsdChangeAcl")
+                .createGroup("test-updateOsdChangeAcl")
+                .createAclGroup()
+                .addPermissions(List.of(BROWSE_OBJECT, LOCK, SET_ACL, WRITE_OBJECT_SYS_METADATA, MOVE, CREATE_OBJECT))
+                .addUserToGroup(userId)
+                .createOsd("update-osd-updateOsdChangeAcl");
+
+        holder.createOsd("updateOsdChangeAclNoPermission");
+        var id = holder.osd.getId();
+        client.lockOsd(id);
+
+        var request = new UpdateOsdRequest(id, null, null, null, holder.acl.getId(), null, null);
+        client.updateOsd(request);
+        var osd = client.getOsdById(id, false, false);
+        assertEquals(holder.acl.getId(), osd.getAclId());
+    }
+
+    @Test
+    public void updateOsdChangeUserNotFound() throws IOException {
+        var holder = new TestObjectHolder(client, "reviewers.acl",userId, createFolderId);
+        holder.createOsd("updateOsdChangeUserNotFound");
+        var id = holder.osd.getId();
+        client.lockOsd(id);
+
+        var request = new UpdateOsdRequest(id, null, null, Long.MAX_VALUE, null, null, null);
+        assertClientError(() -> client.updateOsd(request), USER_ACCOUNT_NOT_FOUND);
+    }
+
+    @Test
+    public void updateOsdChangeUser() throws IOException {
+        var holder = new TestObjectHolder(client, "reviewers.acl",userId, createFolderId);
+        holder.createOsd("updateOsdChangeUserNotFound");
+        var id = holder.osd.getId();
+        client.lockOsd(id);
+
+        var request = new UpdateOsdRequest(id, null, null, adminId, null, null, null);
+        client.updateOsd(request);
+        var osd = client.getOsdById(id, false, false);
+        assertEquals(adminId, osd.getOwnerId());
+    }
+
+    @Test
+    public void updateOsdChangeLanguageNotFound() throws IOException {
+        var holder = new TestObjectHolder(client, "reviewers.acl",userId, createFolderId);
+        holder.createOsd("updateOsdChangeLanguageNotFound");
+        var id = holder.osd.getId();
+        client.lockOsd(id);
+
+        var request = new UpdateOsdRequest(id, null, null, null, null, null, Long.MAX_VALUE);
+        assertClientError(() -> client.updateOsd(request), LANGUAGE_NOT_FOUND);
+    }
+
+    @Test
+    public void updateOsdChangeLanguage() throws IOException {
+        var holder = new TestObjectHolder(client, "reviewers.acl",userId, createFolderId);
+        holder.createOsd("updateOsdChangeUserNotFound");
+        var id = holder.osd.getId();
+        client.lockOsd(id);
+
+        List<Language> languages = client.listLanguages();
+        var newLang = languages.get(1);
+        assertNotEquals(holder.osd.getLanguageId(), newLang.getId());
+
+        var request = new UpdateOsdRequest(id, null, null, null, null, null, newLang.getId());
+        client.updateOsd(request);
+        var osd = client.getOsdById(id, false, false);
+        assertEquals(newLang.getId(), osd.getLanguageId());
+    }
+
+    @Test
+    public void updateOsdLockedByOtherUser() throws IOException {
+        var holder = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
+        holder.createOsd("osd-update-forbidden");
+        var id = holder.osd.getId();
+        adminClient.lockOsd(id);
+        var request = new UpdateOsdRequest(id, 1L, "-", 1L, 1L, 1L, 1L);
+        assertClientError(() -> client.updateOsd(request), OBJECT_LOCKED_BY_OTHER_USER);
+    }
+
+    @Test
+    public void updateOsdWithoutLockingIt() throws IOException {
+        var holder = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
+        holder.createOsd("osd-update-forbidden");
+        var id      = holder.osd.getId();
+        var request = new UpdateOsdRequest(id, 1L, "-", 1L, 1L, 1L, 1L);
+        assertClientError(() -> client.updateOsd(request), OBJECT_MUST_BE_LOCKED_BY_USER);
     }
 
     @Test

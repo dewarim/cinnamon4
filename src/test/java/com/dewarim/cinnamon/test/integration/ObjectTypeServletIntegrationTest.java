@@ -20,8 +20,7 @@ public class ObjectTypeServletIntegrationTest extends CinnamonIntegrationTest{
         
         assertNotNull(objectTypes);
         assertFalse(objectTypes.isEmpty());
-        assertThat(objectTypes.size(), equalTo(1));
-        
+
         Optional<ObjectType> xmlOpt = objectTypes.stream().filter(objectType -> objectType.getName().equals("_default_objtype")).findFirst();
         assertTrue(xmlOpt.isPresent());
         assertThat(xmlOpt.get().getId(), equalTo(1L));

@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.test;
 
+import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.Constants;
 import com.dewarim.cinnamon.client.CinnamonClient;
@@ -16,6 +17,7 @@ import com.dewarim.cinnamon.model.MetasetType;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.ObjectType;
 import com.dewarim.cinnamon.model.Permission;
+import com.dewarim.cinnamon.model.request.folder.UpdateFolderRequest;
 import com.dewarim.cinnamon.model.request.osd.CreateOsdRequest;
 import com.dewarim.cinnamon.model.response.UserInfo;
 
@@ -64,21 +66,20 @@ public class TestObjectHolder {
 
     }
 
-    private void initialize() {
-        synchronized (SYNC_OBJECT) {
-            if (!initialized) {
-                try {
-                    permissions = client.listPermissions();
-                    formats = client.listFormats();
-                    objectTypes = client.listObjectTypes();
-                    metasetTypes = client.listMetasetTypes();
-                    folderTypes = client.listFolderTypes();
-                    objectType = objectTypes.stream().filter(type ->
-                            type.getName().equals(Constants.OBJTYPE_DEFAULT)).findFirst().orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
-                } catch (IOException e) {
-                    throw new IllegalStateException("Failed to initialize test object holder", e);
-                }
+    private synchronized void initialize() {
+        if (!initialized) {
+            try {
+                permissions = client.listPermissions();
+                formats = client.listFormats();
+                objectTypes = client.listObjectTypes();
+                metasetTypes = client.listMetasetTypes();
+                folderTypes = client.listFolderTypes();
+                objectType = objectTypes.stream().filter(type ->
+                        type.getName().equals(Constants.OBJTYPE_DEFAULT)).findFirst().orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
+            } catch (IOException e) {
+                throw new IllegalStateException("Failed to initialize test object holder", e);
             }
+            initialized = true;
         }
     }
 
@@ -122,8 +123,13 @@ public class TestObjectHolder {
         return this;
     }
 
-    public TestObjectHolder addPermissions(List<String> names) throws IOException {
+    public TestObjectHolder addPermissionsByName(List<String> names) throws IOException {
         client.addAndRemovePermissions(aclGroup.getId(), permissions.stream().filter(p -> names.contains(p.getName())).map(Permission::getId).collect(Collectors.toList()), List.of());
+        return this;
+    }
+
+    public TestObjectHolder addPermissions(List<DefaultPermission> permissionList) throws IOException {
+        addPermissionsByName(permissionList.stream().map(DefaultPermission::getName).toList());
         return this;
     }
 
@@ -144,9 +150,34 @@ public class TestObjectHolder {
 
     public static MetasetType getMetasetType(String name) {
         return metasetTypes.stream().filter(type ->
-                type.getName().equals(name)).findFirst()
+                        type.getName().equals(name)).findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Metaset with name " + name + " is unknown."));
     }
 
 
+    public TestObjectHolder lockOsd(Long id) throws IOException {
+        client.lockOsd(id);
+        return this;
+    }
+
+    public TestObjectHolder lockOsd() throws IOException {
+        client.lockOsd(osd.getId());
+        return this;
+    }
+
+    public TestObjectHolder addUserToGroup(long userId) throws IOException {
+        client.addUserToGroups(userId, List.of(group.getId()));
+        return this;
+    }
+
+    public TestObjectHolder setAclOnFolder(Long aclId, Long folderId) throws IOException {
+        UpdateFolderRequest request = new UpdateFolderRequest(folderId, null, null, null, null, aclId);
+        client.updateFolders(request);
+        return this;
+    }
+
+    public TestObjectHolder createObjectType(String name) throws IOException {
+        objectType = client.createObjectTypes(List.of(name)).get(0);
+        return this;
+    }
 }

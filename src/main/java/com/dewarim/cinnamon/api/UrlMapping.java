@@ -61,6 +61,7 @@ import com.dewarim.cinnamon.model.request.osd.DeleteOsdRequest;
 import com.dewarim.cinnamon.model.request.osd.OsdByFolderRequest;
 import com.dewarim.cinnamon.model.request.osd.OsdRequest;
 import com.dewarim.cinnamon.model.request.osd.SetContentRequest;
+import com.dewarim.cinnamon.model.request.osd.UpdateOsdRequest;
 import com.dewarim.cinnamon.model.request.permission.ChangePermissionsRequest;
 import com.dewarim.cinnamon.model.request.permission.ListPermissionRequest;
 import com.dewarim.cinnamon.model.request.relation.CreateRelationRequest;
@@ -197,6 +198,7 @@ public enum UrlMapping {
             SetContentRequest.class, GenericResponse.class),
     OSD__SET_SUMMARY("osd", "setSummary", "/api", "", SetSummaryRequest.class, GenericResponse.class),
     OSD__UNLOCK("osd", "unlock", "/api", "", IdRequest.class, GenericResponse.class),
+    OSD__UPDATE("osd", "update", "/api", "", UpdateOsdRequest.class, GenericResponse.class),
     OSD__VERSION("osd", "version", "/api", """
             Create a new version of an OSD. Requires a multipart-mime request, with part "createNewVersionRequest" and optional
             part "file", if the new version should contain data.
@@ -229,8 +231,6 @@ public enum UrlMapping {
      * @param servlet       the servlet handling the url
      * @param action        the action part of the url (the getUser part in /users/getUser?id=1234)
      * @param prefix        a prefix for the servlet - for example, all api servlets are prefixed with /api for
-     * @param requestClass
-     * @param responseClass
      */
     UrlMapping(String servlet, String action, String prefix, String description, Class<? extends ApiRequest> requestClass, Class<? extends ApiResponse> responseClass) {
         this.servlet = servlet;

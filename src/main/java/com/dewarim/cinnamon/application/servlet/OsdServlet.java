@@ -24,12 +24,15 @@ import com.dewarim.cinnamon.dao.OsdMetaDao;
 import com.dewarim.cinnamon.dao.RelationDao;
 import com.dewarim.cinnamon.dao.RelationTypeDao;
 import com.dewarim.cinnamon.dao.UserAccountDao;
+import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.Folder;
 import com.dewarim.cinnamon.model.Format;
+import com.dewarim.cinnamon.model.Language;
 import com.dewarim.cinnamon.model.LifecycleState;
 import com.dewarim.cinnamon.model.Meta;
 import com.dewarim.cinnamon.model.MetasetType;
 import com.dewarim.cinnamon.model.ObjectSystemData;
+import com.dewarim.cinnamon.model.ObjectType;
 import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.relations.Relation;
@@ -46,6 +49,7 @@ import com.dewarim.cinnamon.model.request.osd.DeleteOsdRequest;
 import com.dewarim.cinnamon.model.request.osd.OsdByFolderRequest;
 import com.dewarim.cinnamon.model.request.osd.OsdRequest;
 import com.dewarim.cinnamon.model.request.osd.SetContentRequest;
+import com.dewarim.cinnamon.model.request.osd.UpdateOsdRequest;
 import com.dewarim.cinnamon.model.response.CinnamonError;
 import com.dewarim.cinnamon.model.response.DeleteResponse;
 import com.dewarim.cinnamon.model.response.OsdWrapper;
@@ -53,6 +57,7 @@ import com.dewarim.cinnamon.model.response.Summary;
 import com.dewarim.cinnamon.model.response.SummaryWrapper;
 import com.dewarim.cinnamon.provider.ContentProviderService;
 import com.dewarim.cinnamon.provider.StateProviderService;
+import com.dewarim.cinnamon.security.authorization.AccessFilter;
 import com.dewarim.cinnamon.security.authorization.AuthorizationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletException;
@@ -124,6 +129,7 @@ public class OsdServlet extends BaseServlet {
             case OSD__SET_CONTENT -> setContent(request, cinnamonResponse, user, osdDao);
             case OSD__SET_SUMMARY -> setSummary(request, cinnamonResponse, user, osdDao);
             case OSD__UNLOCK -> unlock(request, cinnamonResponse, user, osdDao);
+            case OSD__UPDATE -> update(request, cinnamonResponse, user, osdDao);
             case OSD__VERSION -> newVersion(request, cinnamonResponse, user, osdDao);
             default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
@@ -571,6 +577,96 @@ public class OsdServlet extends BaseServlet {
             }
         });
         response.setWrapper(wrapper);
+    }
+
+    private void update(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao
+            osdDao) throws IOException {
+        UpdateOsdRequest updateRequest = xmlMapper.readValue(request.getInputStream(), UpdateOsdRequest.class)
+                .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
+
+        ObjectSystemData osd = osdDao.getObjectById(updateRequest.getId())
+                .orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
+        if(osd.lockedByOtherUser(user)){
+            ErrorCode.OBJECT_LOCKED_BY_OTHER_USER.throwUp();
+            return;
+        }
+        if(!osd.lockedByUser(user)){
+            ErrorCode.OBJECT_MUST_BE_LOCKED_BY_USER.throwUp();
+            return;
+        }
+        throwUnlessSysMetadataIsWritable(osd);
+
+        AccessFilter accessFilter = AccessFilter.getInstance(user);
+        FolderDao folderDao = new FolderDao();
+
+        boolean changed = false;
+        // change parent folder
+        Long parentId = updateRequest.getParentFolderId();
+        if (parentId != null) {
+            Folder parentFolder = folderDao.getFolderById(parentId)
+                    .orElseThrow(ErrorCode.PARENT_FOLDER_NOT_FOUND.getException());
+            if (!accessFilter.hasPermissionOnOwnable(parentFolder, DefaultPermission.CREATE_OBJECT, parentFolder)) {
+                ErrorCode.NO_CREATE_PERMISSION.throwUp();
+            }
+            if (!accessFilter.hasPermissionOnOwnable(osd, DefaultPermission.MOVE, osd)) {
+                ErrorCode.NO_MOVE_PERMISSION.throwUp();
+            }
+            osd.setParentId(parentFolder.getId());
+            changed = true;
+        }
+
+        // change name
+        String name = updateRequest.getName();
+        if (name != null) {
+            osd.setName(name);
+            changed = true;
+        }
+
+        // change type
+        Long typeId = updateRequest.getObjectTypeId();
+        if (typeId != null) {
+            ObjectType type = new ObjectTypeDao().getObjectTypeById(typeId)
+                    .orElseThrow(ErrorCode.OBJECT_TYPE_NOT_FOUND.getException());
+            osd.setTypeId(type.getId());
+            changed = true;
+        }
+
+        // change acl
+        Long aclId = updateRequest.getAclId();
+        if (aclId != null) {
+            if (!accessFilter.hasPermissionOnOwnable(osd, DefaultPermission.SET_ACL,osd)) {
+                ErrorCode.MISSING_SET_ACL_PERMISSION.throwUp();
+            }
+            Acl acl = new AclDao().getAclById(aclId)
+                    .orElseThrow(ErrorCode.ACL_NOT_FOUND.getException());
+            osd.setAclId(acl.getId());
+            changed = true;
+        }
+
+        // change owner
+        Long ownerId = updateRequest.getOwnerId();
+        if (ownerId != null) {
+            UserAccount owner = new UserAccountDao().getUserAccountById(ownerId)
+                    .orElseThrow(ErrorCode.USER_ACCOUNT_NOT_FOUND.getException());
+            osd.setOwnerId(owner.getId());
+            changed = true;
+        }
+
+        // change language
+        Long languageId = updateRequest.getLanguageId();
+        if (languageId != null) {
+            Language language = new LanguageDao().getLanguageById(languageId)
+                    .orElseThrow(ErrorCode.LANGUAGE_NOT_FOUND.getException());
+            osd.setLanguageId(language.getId());
+            changed = true;
+        }
+
+        // update osd:
+        if (changed) {
+            osdDao.updateOsd(osd, true);
+        }
+
+        response.responseIsGenericOkay();
     }
 
     private void getObjectsById(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao
