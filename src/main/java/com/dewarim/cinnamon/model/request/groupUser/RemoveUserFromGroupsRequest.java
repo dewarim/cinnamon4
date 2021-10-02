@@ -10,11 +10,13 @@ import java.util.Optional;
 public class RemoveUserFromGroupsRequest implements ApiRequest {
 
     private List<Long> ids;
+    private Long       userId;
 
     public RemoveUserFromGroupsRequest() {
     }
 
-    public RemoveUserFromGroupsRequest(List<Long> ids) {
+    public RemoveUserFromGroupsRequest(Long userId, List<Long> ids) {
+        this.userId = userId;
         this.ids = ids;
     }
 
@@ -22,12 +24,16 @@ public class RemoveUserFromGroupsRequest implements ApiRequest {
         return ids;
     }
 
-    private boolean validated(){
-        return ids != null && !ids.isEmpty() && ids.stream().allMatch(id -> id > 0);
+    public Long getUserId() {
+        return userId;
+    }
+
+    private boolean validated() {
+        return userId != null && userId > 0 && ids != null && !ids.isEmpty() && ids.stream().allMatch(id -> id > 0);
     }
 
     public Optional<RemoveUserFromGroupsRequest> validateRequest() {
-    if (validated()) {
+        if (validated()) {
             return Optional.of(this);
         } else {
             return Optional.empty();

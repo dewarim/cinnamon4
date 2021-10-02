@@ -15,6 +15,7 @@ import com.dewarim.cinnamon.model.request.permission.ChangePermissionsRequest;
 import com.dewarim.cinnamon.model.request.permission.ListPermissionRequest;
 import com.dewarim.cinnamon.model.request.user.UserPermissionRequest;
 import com.dewarim.cinnamon.model.response.PermissionWrapper;
+import com.dewarim.cinnamon.security.authorization.AccessFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -69,6 +70,7 @@ public class PermissionServlet extends HttpServlet implements CruddyServlet<Perm
         var aclGroupPermissionDao = new AclGroupPermissionDao();
         aclGroupPermissionDao.addPermissions(aclGroup, changeRequest.getAdd());
         aclGroupPermissionDao.removePermissions(aclGroup, changeRequest.getRemove());
+        AccessFilter.reload();
         cinnamonResponse.responseIsGenericOkay();
     }
 

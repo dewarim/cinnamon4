@@ -63,12 +63,10 @@ public class AccessFilter {
         superuser = new UserAccountDao().isSuperuser(user);
     }
 
-    public static AccessFilter getInstance(UserAccount user) {
-        if (!initialized) {
-            synchronized (INITIALIZING) {
-                if (!initialized) {
-                    initialize();
-                }
+    public static synchronized AccessFilter getInstance(UserAccount user) {
+        synchronized (INITIALIZING) {
+            if (!initialized) {
+                initialize();
             }
         }
         return new AccessFilter(user);
@@ -90,7 +88,7 @@ public class AccessFilter {
      * Check if the user has browse permission for a given thing, either through the object's acl or as owner.
      */
     public boolean hasBrowsePermissionForOwnable(Ownable ownable) {
-        if(superuser){
+        if (superuser) {
             return true;
         }
         long aclId = ownable.getAclId();
@@ -98,14 +96,14 @@ public class AccessFilter {
     }
 
     public boolean hasPermission(long aclId, DefaultPermission permission) {
-        if(superuser){
+        if (superuser) {
             return true;
         }
         return hasPermission(aclId, permission, false);
     }
 
     public boolean hasPermission(long aclId, DefaultPermission defaultPermission, boolean checkOwnerPermission) {
-        if(superuser){
+        if (superuser) {
             return true;
         }
         Permission permission = nameToPermissionMapping.get(defaultPermission.getName());
@@ -150,10 +148,10 @@ public class AccessFilter {
         }
     }
 
-    public static void reloadUser(UserAccount user) {
-        userAclsWithBrowsePermissionCache.remove(user.getId());
-        ownerAclsWithBrowsePermissionCache.remove(user.getId());
-        userAclsWithFolderBrowsePermissionCache.remove(user.getId());
+    public static void reloadUser(Long userId) {
+        userAclsWithBrowsePermissionCache.remove(userId);
+        ownerAclsWithBrowsePermissionCache.remove(userId);
+        userAclsWithFolderBrowsePermissionCache.remove(userId);
     }
 
     private static void initialize() {
@@ -167,6 +165,7 @@ public class AccessFilter {
             ownerGroup = new GroupDao().getOwnerGroup();
             List<Permission> permissions = permissionDao.list();
             permissions.forEach(permission -> nameToPermissionMapping.put(permission.getName(), permission));
+            initialized = true;
         }
 
     }
@@ -264,7 +263,7 @@ public class AccessFilter {
     }
 
     public boolean hasPermissionOnOwnable(Accessible accessible, DefaultPermission permission, Ownable ownable) {
-        if(superuser){
+        if (superuser) {
             return true;
         }
         Long aclId = accessible.getAclId();

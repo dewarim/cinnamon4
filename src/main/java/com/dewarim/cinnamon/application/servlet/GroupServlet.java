@@ -14,6 +14,7 @@ import com.dewarim.cinnamon.model.request.group.ListGroupRequest;
 import com.dewarim.cinnamon.model.request.group.UpdateGroupRequest;
 import com.dewarim.cinnamon.model.request.groupUser.AddUserToGroupsRequest;
 import com.dewarim.cinnamon.model.request.groupUser.RemoveUserFromGroupsRequest;
+import com.dewarim.cinnamon.security.authorization.AccessFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -39,7 +40,7 @@ public class GroupServlet extends HttpServlet implements CruddyServlet<Group> {
         switch (mapping) {
             case GROUP__ADD_USER_TO_GROUPS -> {
                 superuserCheck();
-                addUserToGroups(request, user, cinnamonResponse);
+                addUserToGroups(request, cinnamonResponse);
             }
             case GROUP__REMOVE_USER_FROM_GROUPS -> {
                 removeUserFromGroups(request, user, cinnamonResponse);
@@ -53,6 +54,7 @@ public class GroupServlet extends HttpServlet implements CruddyServlet<Group> {
             case GROUP__DELETE -> {
                 superuserCheck();
                 delete(convertDeleteRequest(request, DeleteGroupRequest.class), groupDao, cinnamonResponse);
+                AccessFilter.reload();
             }
             case GROUP__UPDATE -> {
                 superuserCheck();
@@ -66,15 +68,17 @@ public class GroupServlet extends HttpServlet implements CruddyServlet<Group> {
         RemoveUserFromGroupsRequest removeRequest = getMapper().readValue(request.getReader(), RemoveUserFromGroupsRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         GroupUserDao groupUserDao = new GroupUserDao();
-        groupUserDao.removeUserFromGroups(user.getId(), removeRequest.getIds());
+        groupUserDao.removeUserFromGroups(removeRequest.getUserId(), removeRequest.getIds());
+        AccessFilter.reloadUser(removeRequest.getUserId());
         cinnamonResponse.responseIsGenericOkay();
     }
 
-    private void addUserToGroups(HttpServletRequest request, UserAccount user, CinnamonResponse cinnamonResponse) throws IOException {
+    private void addUserToGroups(HttpServletRequest request, CinnamonResponse cinnamonResponse) throws IOException {
         AddUserToGroupsRequest addRequest = getMapper().readValue(request.getReader(), AddUserToGroupsRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         GroupUserDao groupUserDao = new GroupUserDao();
-        groupUserDao.addUserToGroups(user.getId(), addRequest.getIds());
+        groupUserDao.addUserToGroups(addRequest.getUserId(), addRequest.getIds());
+        AccessFilter.reloadUser(addRequest.getUserId());
         cinnamonResponse.responseIsGenericOkay();
     }
 

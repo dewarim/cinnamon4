@@ -34,7 +34,8 @@ public class Acl implements Identifiable {
     @Override
     public String toString() {
         return "Acl{" +
-                "name='" + name + '\'' +
+                "id=" + id +
+                ", name='" + name + '\'' +
                 '}';
     }
 

@@ -9,20 +9,27 @@ import java.util.Optional;
 @JacksonXmlRootElement(localName = "addUserToGroupsRequest")
 public class AddUserToGroupsRequest implements ApiRequest {
     private List<Long> ids;
+    private Long       userId;
 
     public AddUserToGroupsRequest() {
     }
 
-    public AddUserToGroupsRequest(List<Long> ids) {
+    public AddUserToGroupsRequest(List<Long> ids, Long userId) {
         this.ids = ids;
+        this.userId = userId;
     }
 
     public List<Long> getIds() {
         return ids;
     }
 
-    private boolean validated(){
-        return ids != null && !ids.isEmpty() && ids.stream().allMatch(id -> id > 0);
+    public Long getUserId() {
+        return userId;
+    }
+
+    private boolean validated() {
+        return ids != null && !ids.isEmpty() && ids.stream().allMatch(id -> id > 0)
+                && userId != null && userId > 0;
     }
 
     public Optional<AddUserToGroupsRequest> validateRequest() {

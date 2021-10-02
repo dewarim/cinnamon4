@@ -103,4 +103,7 @@ public class GroupServletIntegrationTest extends CinnamonIntegrationTest {
                 adminClient.updateGroups(Collections.singletonList(group)));
         assertEquals(ErrorCode.OBJECT_NOT_FOUND, ex.getErrorCode());
     }
+
+    // TODO: add tests for AddUserToGroup
+    // TODO: add tests for RemoveUserFromGroup
 }

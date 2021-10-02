@@ -13,6 +13,7 @@ import com.dewarim.cinnamon.model.request.acl.DeleteAclRequest;
 import com.dewarim.cinnamon.model.request.acl.ListAclRequest;
 import com.dewarim.cinnamon.model.request.acl.UpdateAclRequest;
 import com.dewarim.cinnamon.model.response.AclWrapper;
+import com.dewarim.cinnamon.security.authorization.AccessFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.dataformat.xml.deser.FromXmlParser;
@@ -44,11 +45,13 @@ public class AclServlet extends HttpServlet implements CruddyServlet<Acl> {
             case ACL__CREATE -> {
                 superuserCheck();
                 create(convertCreateRequest(request, CreateAclRequest.class), aclDao, cinnamonResponse);
+                AccessFilter.reload();
             }
             case ACL__ACL_INFO -> getAclByNameOrId(request, cinnamonResponse);
             case ACL__DELETE -> {
                 superuserCheck();
                 delete(convertDeleteRequest(request, DeleteAclRequest.class), aclDao, cinnamonResponse);
+                AccessFilter.reload();
             }
             case ACL__LIST -> list(convertListRequest(request, ListAclRequest.class), aclDao, cinnamonResponse);
             case ACL__GET_USER_ACLS -> getUserAcls(request, cinnamonResponse);
