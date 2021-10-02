@@ -29,7 +29,7 @@
 
     <insert id="insert" parameterType="com.dewarim.cinnamon.model.ObjectType">
         <selectKey keyProperty="id" resultType="long" order="BEFORE">
-            select nextval('seq_object_type_id')
+            select nextval('seq_obj_type_id')
         </selectKey>
         INSERT INTO object_types (id,name) VALUES (#{id}, #{name})
     </insert>
