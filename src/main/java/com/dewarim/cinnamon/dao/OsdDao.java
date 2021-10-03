@@ -117,6 +117,6 @@ public class OsdDao {
         SqlSession          sqlSession = ThreadLocalSqlSession.getSqlSession();
         Map<String, Object> params     = new HashMap<>();
         params.put("ids", Collections.singletonList(id));
-        return new HashSet<Long>(sqlSession.selectList("com.dewarim.cinnamon.ObjectSystemDataMapper.getOsdIdByIdWithDescendants", params));
+        return new HashSet<>(sqlSession.selectList("com.dewarim.cinnamon.ObjectSystemDataMapper.getOsdIdByIdWithDescendants", params));
     }
 }

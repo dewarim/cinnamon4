@@ -60,9 +60,7 @@ public interface CrudDao<T extends Identifiable> {
         List<List<Long>> partitions = partitionLongList(ids);
         SqlSession       sqlSession = ThreadLocalSqlSession.getSqlSession();
         List<T>          results    = new ArrayList<>(ids.size());
-        partitions.forEach(partition -> {
-            results.addAll(sqlSession.selectList(getMapperNamespace(GET_ALL_BY_ID), partition));
-        });
+        partitions.forEach(partition -> results.addAll(sqlSession.selectList(getMapperNamespace(GET_ALL_BY_ID), partition)));
         return results;
     }
 

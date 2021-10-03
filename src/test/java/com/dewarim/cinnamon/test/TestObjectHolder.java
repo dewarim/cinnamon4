@@ -29,7 +29,7 @@ import static com.dewarim.cinnamon.api.Constants.FOLDER_TYPE_DEFAULT;
 
 public class TestObjectHolder {
 
-    static        Object            SYNC_OBJECT = new Object();
+    static final  Object            SYNC_OBJECT = new Object();
     static        boolean           initialized = false;
     static public List<Permission>  permissions;
     static public List<Format>      formats;
@@ -55,6 +55,8 @@ public class TestObjectHolder {
     public TestObjectHolder(CinnamonClient client) {
         this.client = client;
         initialize();
+        objectType = objectTypes.stream().filter(type ->
+                type.getName().equals(Constants.OBJTYPE_DEFAULT)).findFirst().orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
     }
 
     public TestObjectHolder(CinnamonClient client, String aclName, Long userId, Long createFolderId) throws IOException {
@@ -63,23 +65,24 @@ public class TestObjectHolder {
         setUser(userId);
         setFolder(createFolderId);
         initialize();
-
+        objectType = objectTypes.stream().filter(type ->
+                type.getName().equals(Constants.OBJTYPE_DEFAULT)).findFirst().orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
     }
 
-    private synchronized void initialize() {
+    private void initialize() {
         if (!initialized) {
-            try {
-                permissions = client.listPermissions();
-                formats = client.listFormats();
-                objectTypes = client.listObjectTypes();
-                metasetTypes = client.listMetasetTypes();
-                folderTypes = client.listFolderTypes();
-                objectType = objectTypes.stream().filter(type ->
-                        type.getName().equals(Constants.OBJTYPE_DEFAULT)).findFirst().orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
-            } catch (IOException e) {
-                throw new IllegalStateException("Failed to initialize test object holder", e);
+            synchronized (SYNC_OBJECT) {
+                try {
+                    permissions = client.listPermissions();
+                    formats = client.listFormats();
+                    objectTypes = client.listObjectTypes();
+                    metasetTypes = client.listMetasetTypes();
+                    folderTypes = client.listFolderTypes();
+                } catch (IOException e) {
+                    throw new IllegalStateException("Failed to initialize test object holder", e);
+                }
+                initialized = true;
             }
-            initialized = true;
         }
     }
 

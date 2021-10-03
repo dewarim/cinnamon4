@@ -106,10 +106,6 @@ public class OsdServlet extends BaseServlet {
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
-        String pathInfo = request.getPathInfo();
-        if (pathInfo == null) {
-            pathInfo = "";
-        }
         UserAccount user   = ThreadLocalSqlSession.getCurrentUser();
         OsdDao      osdDao = new OsdDao();
 
