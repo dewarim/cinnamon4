@@ -176,7 +176,7 @@ public enum UrlMapping {
     NULL_MAPPING("", "", "/api", "", null, null),
     OBJECT_TYPE__LIST("objectType", "list", "/api", "", ListObjectTypeRequest.class, ObjectTypeWrapper.class),
     OBJECT_TYPE__CREATE("objectType", "create", "/api", "", CreateObjectTypeRequest.class, ObjectTypeWrapper.class),
-    OBJECT_TYPE__UPDATE("objectType", "udpate", "/api", "", UpdateObjectTypeRequest.class, ObjectTypeWrapper.class),
+    OBJECT_TYPE__UPDATE("objectType", "update", "/api", "", UpdateObjectTypeRequest.class, ObjectTypeWrapper.class),
     OBJECT_TYPE__DELETE("objectType", "delete", "/api", "", DeleteObjectTypeRequest.class, DeleteResponse.class),
     OSD__CREATE_META("osd", "createMeta", "/api", "", CreateMetaRequest.class, MetaWrapper.class),
     OSD__CREATE_OSD("osd", "createOsd", "/api", """
