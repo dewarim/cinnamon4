@@ -27,21 +27,21 @@ Create a new ACL group. Note: permissions parameter is not yet implemented.
 ## Response
 
 ```xml
-<AclGroup>
+<aclGroup>
   <id>1</id>
   <aclId>1</aclId>
   <groupId>2</groupId>
   <permissions/>
-</AclGroup>
+</aclGroup>
 
 ```
 ```xml
-<AclGroup>
+<aclGroup>
   <id>2</id>
   <aclId>1</aclId>
   <groupId>3</groupId>
   <permissions/>
-</AclGroup>
+</aclGroup>
 
 ```
 
@@ -54,10 +54,10 @@ Create a new ACL group. Note: permissions parameter is not yet implemented.
 ## Request
 
 ```xml
-<DeleteAclGroupRequest>
+<deleteAclGroupRequest>
   <ignoreNotFound>false</ignoreNotFound>
   <ids/>
-</DeleteAclGroupRequest>
+</deleteAclGroupRequest>
 
 ```
 
@@ -80,9 +80,9 @@ Create a new ACL group. Note: permissions parameter is not yet implemented.
 ## Request
 
 ```xml
-<ListAclGroupRequest>
+<listAclGroupRequest>
   <type>FULL</type>
-</ListAclGroupRequest>
+</listAclGroupRequest>
 
 ```
 
@@ -90,21 +90,21 @@ Create a new ACL group. Note: permissions parameter is not yet implemented.
 ## Response
 
 ```xml
-<AclGroup>
+<aclGroup>
   <id>1</id>
   <aclId>1</aclId>
   <groupId>2</groupId>
   <permissions/>
-</AclGroup>
+</aclGroup>
 
 ```
 ```xml
-<AclGroup>
+<aclGroup>
   <id>2</id>
   <aclId>1</aclId>
   <groupId>3</groupId>
   <permissions/>
-</AclGroup>
+</aclGroup>
 
 ```
 
@@ -117,10 +117,10 @@ Create a new ACL group. Note: permissions parameter is not yet implemented.
 ## Request
 
 ```xml
-<AclGroupListRequest>
+<aclGroupListRequest>
   <id/>
   <idType/>
-</AclGroupListRequest>
+</aclGroupListRequest>
 
 ```
 
@@ -128,21 +128,21 @@ Create a new ACL group. Note: permissions parameter is not yet implemented.
 ## Response
 
 ```xml
-<AclGroup>
+<aclGroup>
   <id>1</id>
   <aclId>1</aclId>
   <groupId>2</groupId>
   <permissions/>
-</AclGroup>
+</aclGroup>
 
 ```
 ```xml
-<AclGroup>
+<aclGroup>
   <id>2</id>
   <aclId>1</aclId>
   <groupId>3</groupId>
   <permissions/>
-</AclGroup>
+</aclGroup>
 
 ```
 
@@ -155,9 +155,9 @@ Create a new ACL group. Note: permissions parameter is not yet implemented.
 ## Request
 
 ```xml
-<UpdateAclGroupRequest>
+<updateAclGroupRequest>
   <aclGroups/>
-</UpdateAclGroupRequest>
+</updateAclGroupRequest>
 
 ```
 
@@ -165,21 +165,21 @@ Create a new ACL group. Note: permissions parameter is not yet implemented.
 ## Response
 
 ```xml
-<AclGroup>
+<aclGroup>
   <id>1</id>
   <aclId>1</aclId>
   <groupId>2</groupId>
   <permissions/>
-</AclGroup>
+</aclGroup>
 
 ```
 ```xml
-<AclGroup>
+<aclGroup>
   <id>2</id>
   <aclId>1</aclId>
   <groupId>3</groupId>
   <permissions/>
-</AclGroup>
+</aclGroup>
 
 ```
 
@@ -269,9 +269,9 @@ Create a new ACL group. Note: permissions parameter is not yet implemented.
 ## Request
 
 ```xml
-<IdRequest>
+<idRequest>
   <id/>
-</IdRequest>
+</idRequest>
 
 ```
 
@@ -362,9 +362,9 @@ Retrieve the server version and build number.
 ## Request
 
 ```xml
-<ConfigEntryRequest>
+<configEntryRequest>
   <name/>
-</ConfigEntryRequest>
+</configEntryRequest>
 
 ```
 
@@ -387,11 +387,11 @@ Retrieve the server version and build number.
 ## Request
 
 ```xml
-<CreateConfigEntryRequest>
+<createConfigEntryRequest>
   <name/>
   <config/>
   <publicVisibility>false</publicVisibility>
-</CreateConfigEntryRequest>
+</createConfigEntryRequest>
 
 ```
 
@@ -414,9 +414,9 @@ Retrieve the server version and build number.
 ## Request
 
 ```xml
-<ListConfigRequest>
+<listConfigRequest>
   <type>FULL</type>
-</ListConfigRequest>
+</listConfigRequest>
 
 ```
 
@@ -451,9 +451,9 @@ Retrieve the server version and build number.
 ## Request
 
 ```xml
-<CreateFolderTypeRequest>
+<createFolderTypeRequest>
   <names/>
-</CreateFolderTypeRequest>
+</createFolderTypeRequest>
 
 ```
 
@@ -476,10 +476,10 @@ Retrieve the server version and build number.
 ## Request
 
 ```xml
-<DeleteFolderTypeRequest>
+<deleteFolderTypeRequest>
   <ignoreNotFound>false</ignoreNotFound>
   <ids/>
-</DeleteFolderTypeRequest>
+</deleteFolderTypeRequest>
 
 ```
 
@@ -502,9 +502,9 @@ Retrieve the server version and build number.
 ## Request
 
 ```xml
-<ListFolderTypeRequest>
+<listFolderTypeRequest>
   <type>FULL</type>
-</ListFolderTypeRequest>
+</listFolderTypeRequest>
 
 ```
 
@@ -527,9 +527,9 @@ Retrieve the server version and build number.
 ## Request
 
 ```xml
-<UpdateFolderTypeRequest>
+<updateFolderTypeRequest>
   <folderTypes/>
-</UpdateFolderTypeRequest>
+</updateFolderTypeRequest>
 
 ```
 
@@ -552,14 +552,14 @@ Retrieve the server version and build number.
 ## Request
 
 ```xml
-<CreateFolderRequest>
+<createFolderRequest>
   <name/>
   <parentId/>
   <summary>&lt;summary /></summary>
   <ownerId/>
   <aclId/>
   <typeId/>
-</CreateFolderRequest>
+</createFolderRequest>
 
 ```
 
@@ -576,12 +576,12 @@ Retrieve the server version and build number.
 ## Request
 
 ```xml
-<CreateMetaRequest>
+<createMetaRequest>
   <id/>
   <content/>
   <typeId/>
   <typeName/>
-</CreateMetaRequest>
+</createMetaRequest>
 
 ```
 
@@ -604,11 +604,11 @@ Retrieve the server version and build number.
 ## Request
 
 ```xml
-<DeleteMetaRequest>
+<deleteMetaRequest>
   <id/>
   <metaId/>
   <typeName/>
-</DeleteMetaRequest>
+</deleteMetaRequest>
 
 ```
 
@@ -616,10 +616,10 @@ Retrieve the server version and build number.
 ## Response
 
 ```xml
-<GenericResponse>
+<genericResponse>
   <message/>
   <successful>false</successful>
-</GenericResponse>
+</genericResponse>
 
 ```
 
@@ -632,10 +632,10 @@ Fetch a single folder
 ## Request
 
 ```xml
-<SingleFolderRequest>
+<singleFolderRequest>
   <id/>
   <includeSummary>false</includeSummary>
-</SingleFolderRequest>
+</singleFolderRequest>
 
 ```
 
@@ -658,10 +658,10 @@ Fetch a single folder
 ## Request
 
 ```xml
-<FolderRequest>
+<folderRequest>
   <ids/>
   <includeSummary>false</includeSummary>
-</FolderRequest>
+</folderRequest>
 
 ```
 
@@ -684,10 +684,10 @@ Fetch a single folder
 ## Request
 
 ```xml
-<FolderPathRequest>
+<folderPathRequest>
   <path/>
   <includeSummary>false</includeSummary>
-</FolderPathRequest>
+</folderPathRequest>
 
 ```
 
@@ -710,21 +710,21 @@ Fetch a single folder
 ## Request
 
 ```xml
-<MetaRequest>
+<metaRequest>
   <id/>
   <version3CompatibilityRequired>false</version3CompatibilityRequired>
   <typeNames>
     <typeName>copyright</typeName>
     <typeName>thumbnail</typeName>
   </typeNames>
-</MetaRequest>
+</metaRequest>
 
 ```
 ```xml
-<MetaRequest>
+<metaRequest>
   <id>1</id>
   <version3CompatibilityRequired>false</version3CompatibilityRequired>
-</MetaRequest>
+</metaRequest>
 
 ```
 
@@ -747,10 +747,10 @@ Fetch a single folder
 ## Request
 
 ```xml
-<SingleFolderRequest>
+<singleFolderRequest>
   <id/>
   <includeSummary>false</includeSummary>
-</SingleFolderRequest>
+</singleFolderRequest>
 
 ```
 
@@ -773,7 +773,7 @@ Fetch a single folder
 ## Request
 
 ```xml
-<IdListRequest/>
+<idListRequest/>
 
 ```
 
@@ -796,10 +796,10 @@ Fetch a single folder
 ## Request
 
 ```xml
-<SetSummaryRequest>
+<setSummaryRequest>
   <id/>
   <summary/>
-</SetSummaryRequest>
+</setSummaryRequest>
 
 ```
 
@@ -807,10 +807,10 @@ Fetch a single folder
 ## Response
 
 ```xml
-<GenericResponse>
+<genericResponse>
   <message/>
   <successful>false</successful>
-</GenericResponse>
+</genericResponse>
 
 ```
 
@@ -823,14 +823,14 @@ Fetch a single folder
 ## Request
 
 ```xml
-<UpdateFolderRequest>
+<updateFolderRequest>
   <id/>
   <parentId/>
   <name/>
   <ownerId/>
   <typeId/>
   <aclId/>
-</UpdateFolderRequest>
+</updateFolderRequest>
 
 ```
 
@@ -838,10 +838,10 @@ Fetch a single folder
 ## Response
 
 ```xml
-<GenericResponse>
+<genericResponse>
   <message/>
   <successful>false</successful>
-</GenericResponse>
+</genericResponse>
 
 ```
 
@@ -854,9 +854,9 @@ Fetch a single folder
 ## Request
 
 ```xml
-<ListFormatRequest>
+<listFormatRequest>
   <type>FULL</type>
-</ListFormatRequest>
+</listFormatRequest>
 
 ```
 
@@ -879,9 +879,9 @@ Fetch a single folder
 ## Request
 
 ```xml
-<CreateFormatRequest>
+<createFormatRequest>
   <formats/>
-</CreateFormatRequest>
+</createFormatRequest>
 
 ```
 
@@ -904,9 +904,9 @@ Fetch a single folder
 ## Request
 
 ```xml
-<UpdateFormatRequest>
+<updateFormatRequest>
   <formats/>
-</UpdateFormatRequest>
+</updateFormatRequest>
 
 ```
 
@@ -929,10 +929,10 @@ Fetch a single folder
 ## Request
 
 ```xml
-<DeleteFormatRequest>
+<deleteFormatRequest>
   <ignoreNotFound>false</ignoreNotFound>
   <ids/>
-</DeleteFormatRequest>
+</deleteFormatRequest>
 
 ```
 
@@ -955,7 +955,9 @@ Fetch a single folder
 ## Request
 
 ```xml
-<AddUserToGroupsRequest/>
+<addUserToGroupsRequest>
+  <userId/>
+</addUserToGroupsRequest>
 
 ```
 
@@ -963,10 +965,10 @@ Fetch a single folder
 ## Response
 
 ```xml
-<GenericResponse>
+<genericResponse>
   <message/>
   <successful>false</successful>
-</GenericResponse>
+</genericResponse>
 
 ```
 
@@ -979,9 +981,9 @@ Fetch a single folder
 ## Request
 
 ```xml
-<CreateGroupRequest>
+<createGroupRequest>
   <names/>
-</CreateGroupRequest>
+</createGroupRequest>
 
 ```
 
@@ -1004,10 +1006,10 @@ Fetch a single folder
 ## Request
 
 ```xml
-<DeleteGroupRequest>
+<deleteGroupRequest>
   <ignoreNotFound>false</ignoreNotFound>
   <ids/>
-</DeleteGroupRequest>
+</deleteGroupRequest>
 
 ```
 
@@ -1030,9 +1032,9 @@ Fetch a single folder
 ## Request
 
 ```xml
-<ListGroupRequest>
+<listGroupRequest>
   <type>FULL</type>
-</ListGroupRequest>
+</listGroupRequest>
 
 ```
 
@@ -1055,7 +1057,9 @@ Fetch a single folder
 ## Request
 
 ```xml
-<RemoveUserFromGroupsRequest/>
+<removeUserFromGroupsRequest>
+  <userId/>
+</removeUserFromGroupsRequest>
 
 ```
 
@@ -1063,10 +1067,10 @@ Fetch a single folder
 ## Response
 
 ```xml
-<GenericResponse>
+<genericResponse>
   <message/>
   <successful>false</successful>
-</GenericResponse>
+</genericResponse>
 
 ```
 
@@ -1079,9 +1083,9 @@ Fetch a single folder
 ## Request
 
 ```xml
-<UpdateGroupRequest>
+<updateGroupRequest>
   <groups/>
-</UpdateGroupRequest>
+</updateGroupRequest>
 
 ```
 
@@ -1104,9 +1108,9 @@ Fetch a single folder
 ## Request
 
 ```xml
-<ListIndexItemRequest>
+<listIndexItemRequest>
   <type>FULL</type>
-</ListIndexItemRequest>
+</listIndexItemRequest>
 
 ```
 
@@ -1129,9 +1133,9 @@ Fetch a single folder
 ## Request
 
 ```xml
-<ListLanguageRequest>
+<listLanguageRequest>
   <type>FULL</type>
-</ListLanguageRequest>
+</listLanguageRequest>
 
 ```
 
@@ -1154,11 +1158,11 @@ Fetch a single folder
 ## Request
 
 ```xml
-<AttachLifecycleRequest>
+<attachLifecycleRequest>
   <osdId/>
   <lifecycleId/>
   <lifecycleStateId/>
-</AttachLifecycleRequest>
+</attachLifecycleRequest>
 
 ```
 
@@ -1166,10 +1170,10 @@ Fetch a single folder
 ## Response
 
 ```xml
-<GenericResponse>
+<genericResponse>
   <message/>
   <successful>false</successful>
-</GenericResponse>
+</genericResponse>
 
 ```
 
@@ -1182,11 +1186,11 @@ Fetch a single folder
 ## Request
 
 ```xml
-<ChangeLifecycleStateRequest>
+<changeLifecycleStateRequest>
   <osdId/>
   <stateName/>
   <stateId/>
-</ChangeLifecycleStateRequest>
+</changeLifecycleStateRequest>
 
 ```
 
@@ -1194,10 +1198,10 @@ Fetch a single folder
 ## Response
 
 ```xml
-<GenericResponse>
+<genericResponse>
   <message/>
   <successful>false</successful>
-</GenericResponse>
+</genericResponse>
 
 ```
 
@@ -1210,9 +1214,9 @@ Fetch a single folder
 ## Request
 
 ```xml
-<IdRequest>
+<idRequest>
   <id/>
-</IdRequest>
+</idRequest>
 
 ```
 
@@ -1220,10 +1224,10 @@ Fetch a single folder
 ## Response
 
 ```xml
-<GenericResponse>
+<genericResponse>
   <message/>
   <successful>false</successful>
-</GenericResponse>
+</genericResponse>
 
 ```
 
@@ -1236,9 +1240,9 @@ Fetch a single folder
 ## Request
 
 ```xml
-<IdRequest>
+<idRequest>
   <id/>
-</IdRequest>
+</idRequest>
 
 ```
 
@@ -1261,9 +1265,9 @@ Fetch a single folder
 ## Request
 
 ```xml
-<IdRequest>
+<idRequest>
   <id/>
-</IdRequest>
+</idRequest>
 
 ```
 
@@ -1286,10 +1290,10 @@ Fetch a single folder
 ## Request
 
 ```xml
-<LifecycleRequest>
+<lifecycleRequest>
   <id/>
   <name/>
-</LifecycleRequest>
+</lifecycleRequest>
 
 ```
 
@@ -1312,9 +1316,9 @@ List lifecycles
 ## Request
 
 ```xml
-<ListLifecycleRequest>
+<listLifecycleRequest>
   <type>FULL</type>
-</ListLifecycleRequest>
+</listLifecycleRequest>
 
 ```
 
@@ -1337,9 +1341,9 @@ List lifecycles
 ## Request
 
 ```xml
-<CreateLinkRequest>
+<createLinkRequest>
   <links/>
-</CreateLinkRequest>
+</createLinkRequest>
 
 ```
 
@@ -1347,9 +1351,27 @@ List lifecycles
 ## Response
 
 ```xml
-<cinnamon>
-  <links/>
-</cinnamon>
+<link>
+  <id>1</id>
+  <type>OBJECT</type>
+  <ownerId>2</ownerId>
+  <aclId>3</aclId>
+  <parentId>4</parentId>
+  <folderId/>
+  <objectId>123</objectId>
+</link>
+
+```
+```xml
+<link>
+  <id>1</id>
+  <type>FOLDER</type>
+  <ownerId>2</ownerId>
+  <aclId>3</aclId>
+  <parentId>4</parentId>
+  <folderId>321</folderId>
+  <objectId/>
+</link>
 
 ```
 
@@ -1362,10 +1384,10 @@ List lifecycles
 ## Request
 
 ```xml
-<DeleteLinkRequest>
+<deleteLinkRequest>
   <ignoreNotFound>false</ignoreNotFound>
   <ids/>
-</DeleteLinkRequest>
+</deleteLinkRequest>
 
 ```
 
@@ -1388,10 +1410,10 @@ List lifecycles
 ## Request
 
 ```xml
-<GetLinksRequest>
+<getLinksRequest>
   <includeSummary>false</includeSummary>
   <ids/>
-</GetLinksRequest>
+</getLinksRequest>
 
 ```
 
@@ -1414,9 +1436,9 @@ List lifecycles
 ## Request
 
 ```xml
-<UpdateLinkRequest>
+<updateLinkRequest>
   <links/>
-</UpdateLinkRequest>
+</updateLinkRequest>
 
 ```
 
@@ -1424,9 +1446,27 @@ List lifecycles
 ## Response
 
 ```xml
-<cinnamon>
-  <links/>
-</cinnamon>
+<link>
+  <id>1</id>
+  <type>OBJECT</type>
+  <ownerId>2</ownerId>
+  <aclId>3</aclId>
+  <parentId>4</parentId>
+  <folderId/>
+  <objectId>123</objectId>
+</link>
+
+```
+```xml
+<link>
+  <id>1</id>
+  <type>FOLDER</type>
+  <ownerId>2</ownerId>
+  <aclId>3</aclId>
+  <parentId>4</parentId>
+  <folderId>321</folderId>
+  <objectId/>
+</link>
 
 ```
 
@@ -1439,9 +1479,9 @@ List lifecycles
 ## Request
 
 ```xml
-<ListMetasetTypeRequest>
+<listMetasetTypeRequest>
   <type>FULL</type>
-</ListMetasetTypeRequest>
+</listMetasetTypeRequest>
 
 ```
 
@@ -1469,9 +1509,9 @@ List lifecycles
 ## Request
 
 ```xml
-<ListObjectTypeRequest>
+<listObjectTypeRequest>
   <type>FULL</type>
-</ListObjectTypeRequest>
+</listObjectTypeRequest>
 
 ```
 
@@ -1494,9 +1534,9 @@ List lifecycles
 ## Request
 
 ```xml
-<CreateObjectTypeRequest>
+<createObjectTypeRequest>
   <names/>
-</CreateObjectTypeRequest>
+</createObjectTypeRequest>
 
 ```
 
@@ -1513,15 +1553,20 @@ List lifecycles
 
 ---
 
-# /api/objectType/udpate
+# /api/objectType/update
 
 
 ## Request
 
 ```xml
-<UpdateObjectTypeRequest>
-  <objectTypes/>
-</UpdateObjectTypeRequest>
+<updateObjectTypeRequest>
+  <objectTypes>
+    <objectTypes>
+      <id>123</id>
+      <name>updated-object-type-name</name>
+    </objectTypes>
+  </objectTypes>
+</updateObjectTypeRequest>
 
 ```
 
@@ -1544,10 +1589,10 @@ List lifecycles
 ## Request
 
 ```xml
-<DeleteObjectTypeRequest>
+<deleteObjectTypeRequest>
   <ignoreNotFound>false</ignoreNotFound>
   <ids/>
-</DeleteObjectTypeRequest>
+</deleteObjectTypeRequest>
 
 ```
 
@@ -1570,12 +1615,12 @@ List lifecycles
 ## Request
 
 ```xml
-<CreateMetaRequest>
+<createMetaRequest>
   <id/>
   <content/>
   <typeId/>
   <typeName/>
-</CreateMetaRequest>
+</createMetaRequest>
 
 ```
 
@@ -1600,7 +1645,7 @@ should contain data.
 ## Request
 
 ```xml
-<CreateOsdRequest>
+<createOsdRequest>
   <name/>
   <parentId/>
   <ownerId/>
@@ -1610,7 +1655,8 @@ should contain data.
   <languageId/>
   <lifecycleStateId/>
   <summary>&lt;summary /></summary>
-</CreateOsdRequest>
+  <metas/>
+</createOsdRequest>
 
 ```
 
@@ -1621,6 +1667,7 @@ should contain data.
 <cinnamon>
   <osds/>
   <links/>
+  <references/>
 </cinnamon>
 
 ```
@@ -1634,11 +1681,11 @@ should contain data.
 ## Request
 
 ```xml
-<DeleteMetaRequest>
+<deleteMetaRequest>
   <id/>
   <metaId/>
   <typeName/>
-</DeleteMetaRequest>
+</deleteMetaRequest>
 
 ```
 
@@ -1646,26 +1693,27 @@ should contain data.
 ## Response
 
 ```xml
-<GenericResponse>
+<genericResponse>
   <message/>
   <successful>false</successful>
-</GenericResponse>
+</genericResponse>
 
 ```
 
 
 ---
 
-# /api/osd/deleteOsds
+# /api/osd/delete
 
 
 ## Request
 
 ```xml
-<DeleteOsdRequest>
+<deleteOsdRequest>
   <ids/>
   <deleteDescendants>false</deleteDescendants>
-</DeleteOsdRequest>
+  <deleteAllVersions>false</deleteAllVersions>
+</deleteOsdRequest>
 
 ```
 
@@ -1688,9 +1736,9 @@ Returns an OSD's content according to it's format's content type.
 ## Request
 
 ```xml
-<IdRequest>
+<idRequest>
   <id/>
-</IdRequest>
+</idRequest>
 
 ```
 
@@ -1707,21 +1755,21 @@ Returns an OSD's content according to it's format's content type.
 ## Request
 
 ```xml
-<MetaRequest>
+<metaRequest>
   <id/>
   <version3CompatibilityRequired>false</version3CompatibilityRequired>
   <typeNames>
     <typeName>copyright</typeName>
     <typeName>thumbnail</typeName>
   </typeNames>
-</MetaRequest>
+</metaRequest>
 
 ```
 ```xml
-<MetaRequest>
+<metaRequest>
   <id>1</id>
   <version3CompatibilityRequired>false</version3CompatibilityRequired>
-</MetaRequest>
+</metaRequest>
 
 ```
 
@@ -1744,10 +1792,13 @@ Returns an OSD's content according to it's format's content type.
 ## Request
 
 ```xml
-<OsdByFolderRequest>
+<osdByFolderRequest>
   <includeSummary>false</includeSummary>
   <folderId>0</folderId>
-</OsdByFolderRequest>
+  <linksAsOsd>true</linksAsOsd>
+  <includeCustomMetadata>false</includeCustomMetadata>
+  <versionPredicate>HEAD</versionPredicate>
+</osdByFolderRequest>
 
 ```
 
@@ -1758,6 +1809,7 @@ Returns an OSD's content according to it's format's content type.
 <cinnamon>
   <osds/>
   <links/>
+  <references/>
 </cinnamon>
 
 ```
@@ -1771,10 +1823,11 @@ Returns an OSD's content according to it's format's content type.
 ## Request
 
 ```xml
-<OsdRequest>
+<osdRequest>
   <ids/>
   <includeSummary>false</includeSummary>
-</OsdRequest>
+  <includeCustomMetadata>false</includeCustomMetadata>
+</osdRequest>
 
 ```
 
@@ -1785,6 +1838,7 @@ Returns an OSD's content according to it's format's content type.
 <cinnamon>
   <osds/>
   <links/>
+  <references/>
 </cinnamon>
 
 ```
@@ -1798,7 +1852,7 @@ Returns an OSD's content according to it's format's content type.
 ## Request
 
 ```xml
-<IdListRequest/>
+<idListRequest/>
 
 ```
 
@@ -1821,9 +1875,9 @@ Returns an OSD's content according to it's format's content type.
 ## Request
 
 ```xml
-<IdRequest>
+<idRequest>
   <id/>
-</IdRequest>
+</idRequest>
 
 ```
 
@@ -1831,10 +1885,10 @@ Returns an OSD's content according to it's format's content type.
 ## Response
 
 ```xml
-<GenericResponse>
+<genericResponse>
   <message/>
   <successful>false</successful>
-</GenericResponse>
+</genericResponse>
 
 ```
 
@@ -1848,10 +1902,10 @@ Set an OSD's content. Requires a multipart-mime request, with part "setContentRe
 ## Request
 
 ```xml
-<SetContentRequest>
+<setContentRequest>
   <id/>
   <formatId/>
-</SetContentRequest>
+</setContentRequest>
 
 ```
 
@@ -1859,10 +1913,10 @@ Set an OSD's content. Requires a multipart-mime request, with part "setContentRe
 ## Response
 
 ```xml
-<GenericResponse>
+<genericResponse>
   <message/>
   <successful>false</successful>
-</GenericResponse>
+</genericResponse>
 
 ```
 
@@ -1875,10 +1929,10 @@ Set an OSD's content. Requires a multipart-mime request, with part "setContentRe
 ## Request
 
 ```xml
-<SetSummaryRequest>
+<setSummaryRequest>
   <id/>
   <summary/>
-</SetSummaryRequest>
+</setSummaryRequest>
 
 ```
 
@@ -1886,10 +1940,10 @@ Set an OSD's content. Requires a multipart-mime request, with part "setContentRe
 ## Response
 
 ```xml
-<GenericResponse>
+<genericResponse>
   <message/>
   <successful>false</successful>
-</GenericResponse>
+</genericResponse>
 
 ```
 
@@ -1902,9 +1956,9 @@ Set an OSD's content. Requires a multipart-mime request, with part "setContentRe
 ## Request
 
 ```xml
-<IdRequest>
+<idRequest>
   <id/>
-</IdRequest>
+</idRequest>
 
 ```
 
@@ -1912,10 +1966,42 @@ Set an OSD's content. Requires a multipart-mime request, with part "setContentRe
 ## Response
 
 ```xml
-<GenericResponse>
+<genericResponse>
   <message/>
   <successful>false</successful>
-</GenericResponse>
+</genericResponse>
+
+```
+
+
+---
+
+# /api/osd/update
+
+
+## Request
+
+```xml
+<updateOsdRequest>
+  <id/>
+  <parentFolderId/>
+  <name/>
+  <ownerId/>
+  <aclId/>
+  <objectTypeId/>
+  <languageId/>
+</updateOsdRequest>
+
+```
+
+
+## Response
+
+```xml
+<genericResponse>
+  <message/>
+  <successful>false</successful>
+</genericResponse>
 
 ```
 
@@ -1930,11 +2016,11 @@ part "file", if the new version should contain data.
 ## Request
 
 ```xml
-<CreateNewVersionRequest>
+<createNewVersionRequest>
   <id/>
   <metaRequests/>
   <formatId/>
-</CreateNewVersionRequest>
+</createNewVersionRequest>
 
 ```
 
@@ -1945,6 +2031,7 @@ part "file", if the new version should contain data.
 <cinnamon>
   <osds/>
   <links/>
+  <references/>
 </cinnamon>
 
 ```
@@ -1958,11 +2045,11 @@ part "file", if the new version should contain data.
 ## Request
 
 ```xml
-<ChangePermissionsRequest>
+<changePermissionsRequest>
   <aclGroupId/>
   <add/>
   <remove/>
-</ChangePermissionsRequest>
+</changePermissionsRequest>
 
 ```
 
@@ -1970,10 +2057,10 @@ part "file", if the new version should contain data.
 ## Response
 
 ```xml
-<GenericResponse>
+<genericResponse>
   <message/>
   <successful>false</successful>
-</GenericResponse>
+</genericResponse>
 
 ```
 
@@ -1986,10 +2073,10 @@ part "file", if the new version should contain data.
 ## Request
 
 ```xml
-<UserPermissionRequest>
+<userPermissionRequest>
   <userId/>
   <aclId/>
-</UserPermissionRequest>
+</userPermissionRequest>
 
 ```
 
@@ -2012,9 +2099,9 @@ part "file", if the new version should contain data.
 ## Request
 
 ```xml
-<ListPermissionRequest>
+<listPermissionRequest>
   <type>FULL</type>
-</ListPermissionRequest>
+</listPermissionRequest>
 
 ```
 
@@ -2037,9 +2124,9 @@ part "file", if the new version should contain data.
 ## Request
 
 ```xml
-<ListRelationTypeRequest>
+<listRelationTypeRequest>
   <type>FULL</type>
-</ListRelationTypeRequest>
+</listRelationTypeRequest>
 
 ```
 
@@ -2062,9 +2149,9 @@ part "file", if the new version should contain data.
 ## Request
 
 ```xml
-<CreateRelationTypeRequest>
+<createRelationTypeRequest>
   <types/>
-</CreateRelationTypeRequest>
+</createRelationTypeRequest>
 
 ```
 
@@ -2087,9 +2174,9 @@ part "file", if the new version should contain data.
 ## Request
 
 ```xml
-<UpdateRelationTypeRequest>
+<updateRelationTypeRequest>
   <types/>
-</UpdateRelationTypeRequest>
+</updateRelationTypeRequest>
 
 ```
 
@@ -2112,10 +2199,10 @@ part "file", if the new version should contain data.
 ## Request
 
 ```xml
-<DeleteRelationTypeRequest>
+<deleteRelationTypeRequest>
   <ignoreNotFound>false</ignoreNotFound>
   <ids/>
-</DeleteRelationTypeRequest>
+</deleteRelationTypeRequest>
 
 ```
 
@@ -2138,12 +2225,12 @@ part "file", if the new version should contain data.
 ## Request
 
 ```xml
-<CreateRelationRequest>
+<createRelationRequest>
   <leftId/>
   <rightId/>
   <typeName/>
   <metadata>&lt;meta/></metadata>
-</CreateRelationRequest>
+</createRelationRequest>
 
 ```
 
@@ -2166,11 +2253,11 @@ part "file", if the new version should contain data.
 ## Request
 
 ```xml
-<DeleteRelationRequest>
+<deleteRelationRequest>
   <leftId/>
   <rightId/>
   <typeName/>
-</DeleteRelationRequest>
+</deleteRelationRequest>
 
 ```
 
@@ -2178,10 +2265,10 @@ part "file", if the new version should contain data.
 ## Response
 
 ```xml
-<GenericResponse>
+<genericResponse>
   <message/>
   <successful>false</successful>
-</GenericResponse>
+</genericResponse>
 
 ```
 
@@ -2194,9 +2281,9 @@ part "file", if the new version should contain data.
 ## Request
 
 ```xml
-<RelationRequest>
+<relationRequest>
   <includeMetadata>false</includeMetadata>
-</RelationRequest>
+</relationRequest>
 
 ```
 
@@ -2224,9 +2311,9 @@ Returns a static file from the server (for example, a favicon.ico if one exists)
 ## Request
 
 ```xml
-<ListUiLanguageRequest>
+<listUiLanguageRequest>
   <type>FULL</type>
-</ListUiLanguageRequest>
+</listUiLanguageRequest>
 
 ```
 
@@ -2249,9 +2336,9 @@ Returns a static file from the server (for example, a favicon.ico if one exists)
 ## Request
 
 ```xml
-<ListUserInfoRequest>
+<listUserInfoRequest>
   <type>FULL</type>
-</ListUserInfoRequest>
+</listUserInfoRequest>
 
 ```
 
@@ -2274,10 +2361,10 @@ Returns a static file from the server (for example, a favicon.ico if one exists)
 ## Request
 
 ```xml
-<SetPasswordRequest>
+<setPasswordRequest>
   <userId/>
   <password/>
-</SetPasswordRequest>
+</setPasswordRequest>
 
 ```
 
@@ -2285,10 +2372,10 @@ Returns a static file from the server (for example, a favicon.ico if one exists)
 ## Response
 
 ```xml
-<GenericResponse>
+<genericResponse>
   <message/>
   <successful>false</successful>
-</GenericResponse>
+</genericResponse>
 
 ```
 
@@ -2301,10 +2388,10 @@ Returns a static file from the server (for example, a favicon.ico if one exists)
 ## Request
 
 ```xml
-<UserInfoRequest>
+<userInfoRequest>
   <userId/>
   <username/>
-</UserInfoRequest>
+</userInfoRequest>
 
 ```
 

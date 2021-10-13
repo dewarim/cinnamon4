@@ -13,31 +13,31 @@ import java.util.List;
 @JacksonXmlRootElement(localName = "updateObjectTypeRequest")
 public class UpdateObjectTypeRequest implements UpdateRequest<ObjectType>, ApiRequest {
 
-    private List<ObjectType> ObjectTypes = new ArrayList<>();
+    private List<ObjectType> objectTypes = new ArrayList<>();
 
     @Override
     public List<ObjectType> list() {
-        return ObjectTypes;
+        return objectTypes;
     }
 
     public UpdateObjectTypeRequest() {
     }
 
     public UpdateObjectTypeRequest(Long id, String name) {
-        ObjectTypes.add(new ObjectType(id,name));
+        objectTypes.add(new ObjectType(id,name));
     }
 
     public UpdateObjectTypeRequest(List<ObjectType> ObjectTypes) {
-        this.ObjectTypes = ObjectTypes;
+        this.objectTypes = ObjectTypes;
     }
 
     public List<ObjectType> getObjectTypes() {
-        return ObjectTypes;
+        return objectTypes;
     }
 
     @Override
     public boolean validated() {
-        return ObjectTypes.stream().allMatch(ObjectType ->
+        return objectTypes.stream().allMatch(ObjectType ->
             ObjectType != null && ObjectType.getName() != null && !ObjectType.getName().trim().isEmpty()
                     && ObjectType.getId() != null && ObjectType.getId() > 0);
     }
@@ -46,4 +46,10 @@ public class UpdateObjectTypeRequest implements UpdateRequest<ObjectType>, ApiRe
     public Wrapper<ObjectType> fetchResponseWrapper() {
         return new ObjectTypeWrapper();
     }
+
+    @Override
+    public List<Object> examples() {
+        return List.of(new UpdateObjectTypeRequest(123L,"updated-object-type-name"));
+    }
+
 }

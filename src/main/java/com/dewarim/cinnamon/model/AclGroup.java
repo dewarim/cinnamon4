@@ -3,11 +3,13 @@ package com.dewarim.cinnamon.model;
 import com.dewarim.cinnamon.api.Identifiable;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+@JacksonXmlRootElement(localName = "aclGroup")
 public class AclGroup implements Identifiable {
 
     private Long id;

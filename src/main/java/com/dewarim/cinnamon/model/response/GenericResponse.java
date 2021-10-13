@@ -1,11 +1,13 @@
 package com.dewarim.cinnamon.model.response;
 
 import com.dewarim.cinnamon.api.ApiResponse;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 /**
  * A simple class to report the success or failure of an operation.
  * (Just using http status code 204 is a little ambiguous)
  */
+@JacksonXmlRootElement(localName = "genericResponse")
 public class GenericResponse implements ApiResponse {
 
     private String  message;
