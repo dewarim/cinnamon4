@@ -1,10 +1,8 @@
 package com.dewarim.cinnamon.test.integration;
 
-import com.dewarim.cinnamon.api.UrlMapping;
+import com.dewarim.cinnamon.ErrorCode;
+import com.dewarim.cinnamon.client.CinnamonClientException;
 import com.dewarim.cinnamon.model.UiLanguage;
-import com.dewarim.cinnamon.model.request.uiLanguage.ListUiLanguageRequest;
-import com.dewarim.cinnamon.model.response.UiLanguageWrapper;
-import org.apache.http.HttpResponse;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -19,13 +17,11 @@ public class UiLanguageServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void listUiLanguages() throws IOException {
-        HttpResponse       response      = sendStandardRequest(UrlMapping.UI_LANGUAGE__LIST, new ListUiLanguageRequest());
-        List<UiLanguage> uiLanguages = parseResponse(response);
+        List<UiLanguage> uiLanguages = client.listUiLanguages();
 
         assertNotNull(uiLanguages);
         assertFalse(uiLanguages.isEmpty());
-        assertEquals(2, uiLanguages.size());
-        
+
         Optional<UiLanguage> uiLanguageOpt = uiLanguages.stream().filter(uiLanguage -> uiLanguage.getIsoCode().equals("DE"))
                 .findFirst();
         assertTrue(uiLanguageOpt.isPresent());
@@ -34,11 +30,55 @@ public class UiLanguageServletIntegrationTest extends CinnamonIntegrationTest {
         assertThat(uiLanguage.getIsoCode(), equalTo("DE"));
     }
 
-    private List<UiLanguage> parseResponse(HttpResponse response) throws IOException {
-        assertResponseOkay(response);
-        UiLanguageWrapper uiLanguageWrapper = mapper.readValue(response.getEntity().getContent(), UiLanguageWrapper.class);
-        assertNotNull(uiLanguageWrapper);
-        return uiLanguageWrapper.getUiLanguages();
+    @Test
+    public void createUiLanguageHappyPath() throws IOException {
+        var language = adminClient.createUiLanguage("orc");
+        assertEquals("orc", language.getIsoCode());
+    }
+
+    @Test
+    public void createDuplicateUiLanguage() throws IOException {
+        var language = adminClient.createUiLanguage("elf");
+        var ex       = assertThrows(CinnamonClientException.class, () -> adminClient.createUiLanguage("elf"));
+        assertEquals(ErrorCode.DB_INSERT_FAILED, ex.getErrorCode());
+    }
+
+    @Test
+    public void createUiLanguageNonSuperuser() {
+        var ex = assertThrows(CinnamonClientException.class, () -> client.createUiLanguage("elf"));
+        assertEquals(ErrorCode.REQUIRES_SUPERUSER_STATUS, ex.getErrorCode());
+    }
+
+    @Test
+    public void updateUiLanguageHappyPath() throws IOException {
+        var language = adminClient.createUiLanguage("dwarf");
+        language.setIsoCode("gnome");
+        adminClient.updateUiLanguage(language);
+    }
+
+    @Test
+    public void updateUiLanguageNonSuperuser() throws IOException {
+        var language = adminClient.createUiLanguage("troll");
+        language.setIsoCode("gnome");
+        var ex = assertThrows(CinnamonClientException.class, () ->
+                client.updateUiLanguage(language));
+        assertEquals(ErrorCode.REQUIRES_SUPERUSER_STATUS, ex.getErrorCode());
+    }
+
+    @Test
+    public void deleteUiLanguageHappyPath() throws IOException {
+        var language = adminClient.createUiLanguage("goblin");
+        assertTrue(adminClient.deleteUiLanguage(language.getId()));
+        long remaining = client.listUiLanguages().stream().filter(lang -> lang.getIsoCode().equals("goblin")).count();
+        assertEquals(0, remaining);
+    }
+
+    @Test
+    public void deleteUiLanguageNonSuperuser() throws IOException {
+        var language = adminClient.createUiLanguage("client");
+        var ex = assertThrows(CinnamonClientException.class, () ->
+                client.deleteUiLanguage(language.getId()));
+        assertEquals(ErrorCode.REQUIRES_SUPERUSER_STATUS, ex.getErrorCode());
     }
 
 

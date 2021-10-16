@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.dewarim.cinnamon.UiLanguageMapper">
+<mapper namespace="com.dewarim.cinnamon.model.UiLanguage">
 
     <resultMap id="uiLanguageMap" type="com.dewarim.cinnamon.model.UiLanguage">
         <id property="id" column="id"/>
@@ -21,5 +21,44 @@
         WHERE id = #{id}
     </select>
 
+
+    <select id="getLanguageByIsoCode" parameterType="String" resultMap="uiLanguageMap">
+        SELECT *
+        FROM ui_languages
+        WHERE iso_code = #{isoCode}
+    </select>
+
+    <select id="getAllById" parameterType="list" resultMap="uiLanguageMap">
+        SELECT *
+        FROM ui_languages
+        WHERE id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <update id="update" parameterType="com.dewarim.cinnamon.model.UiLanguage">
+        UPDATE ui_languages
+        SET iso_code = #{isoCode}
+        WHERE id = #{id}
+    </update>
+
+    <insert id="insert" parameterType="com.dewarim.cinnamon.model.UiLanguage">
+        <selectKey keyProperty="id" resultType="long" order="BEFORE">
+            select nextval('seq_ui_language_id')
+        </selectKey>
+        INSERT INTO ui_languages(id,iso_code) VALUES (#{id}, #{isoCode})
+    </insert>
+
+    <delete id="delete" parameterType="list">
+        DELETE
+        FROM ui_languages
+        WHERE id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
 
 </mapper>

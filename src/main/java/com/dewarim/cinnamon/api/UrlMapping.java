@@ -73,7 +73,10 @@ import com.dewarim.cinnamon.model.request.relationType.CreateRelationTypeRequest
 import com.dewarim.cinnamon.model.request.relationType.DeleteRelationTypeRequest;
 import com.dewarim.cinnamon.model.request.relationType.ListRelationTypeRequest;
 import com.dewarim.cinnamon.model.request.relationType.UpdateRelationTypeRequest;
+import com.dewarim.cinnamon.model.request.uiLanguage.CreateUiLanguageRequest;
+import com.dewarim.cinnamon.model.request.uiLanguage.DeleteUiLanguageRequest;
 import com.dewarim.cinnamon.model.request.uiLanguage.ListUiLanguageRequest;
+import com.dewarim.cinnamon.model.request.uiLanguage.UpdateUiLanguageRequest;
 import com.dewarim.cinnamon.model.request.user.ListUserInfoRequest;
 import com.dewarim.cinnamon.model.request.user.SetPasswordRequest;
 import com.dewarim.cinnamon.model.request.user.UserInfoRequest;
@@ -221,6 +224,9 @@ public enum UrlMapping {
     RELATION__LIST("relation", "list", "/api", "", RelationRequest.class, RelationWrapper.class),
     STATIC__ROOT("static", "", "", "Returns a static file from the server (for example, a favicon.ico if one exists).", null, null),
     UI_LANGUAGE__LIST("uiLanguage", "list", "/api", "", ListUiLanguageRequest.class, UiLanguageWrapper.class),
+    UI_LANGUAGE__CREATE("uiLanguage", "create", "/api", "", CreateUiLanguageRequest.class, UiLanguageWrapper.class),
+    UI_LANGUAGE__UPDATE("uiLanguage", "update", "/api", "", UpdateUiLanguageRequest.class, UiLanguageWrapper.class),
+    UI_LANGUAGE__DELETE("uiLanguage", "delete", "/api", "", DeleteUiLanguageRequest.class, DeleteResponse.class),
     USER__LIST_USERS("user", "list", "/api", "", ListUserInfoRequest.class, UserWrapper.class),
     USER__SET_PASSWORD("user", "setPassword", "/api", "", SetPasswordRequest.class, GenericResponse.class),
     USER__USER_INFO("user", "userInfo", "/api", "", UserInfoRequest.class, UserWrapper.class);

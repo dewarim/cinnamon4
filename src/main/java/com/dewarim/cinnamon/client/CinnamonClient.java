@@ -13,6 +13,7 @@ import com.dewarim.cinnamon.model.MetasetType;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.ObjectType;
 import com.dewarim.cinnamon.model.Permission;
+import com.dewarim.cinnamon.model.UiLanguage;
 import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.links.LinkType;
 import com.dewarim.cinnamon.model.relations.Relation;
@@ -68,6 +69,10 @@ import com.dewarim.cinnamon.model.request.permission.ListPermissionRequest;
 import com.dewarim.cinnamon.model.request.relation.CreateRelationRequest;
 import com.dewarim.cinnamon.model.request.relationType.CreateRelationTypeRequest;
 import com.dewarim.cinnamon.model.request.relationType.DeleteRelationTypeRequest;
+import com.dewarim.cinnamon.model.request.uiLanguage.CreateUiLanguageRequest;
+import com.dewarim.cinnamon.model.request.uiLanguage.DeleteUiLanguageRequest;
+import com.dewarim.cinnamon.model.request.uiLanguage.ListUiLanguageRequest;
+import com.dewarim.cinnamon.model.request.uiLanguage.UpdateUiLanguageRequest;
 import com.dewarim.cinnamon.model.request.user.UserInfoRequest;
 import com.dewarim.cinnamon.model.request.user.UserPermissionRequest;
 import com.dewarim.cinnamon.model.response.AclGroupWrapper;
@@ -92,6 +97,7 @@ import com.dewarim.cinnamon.model.response.OsdWrapper;
 import com.dewarim.cinnamon.model.response.PermissionWrapper;
 import com.dewarim.cinnamon.model.response.RelationTypeWrapper;
 import com.dewarim.cinnamon.model.response.RelationWrapper;
+import com.dewarim.cinnamon.model.response.UiLanguageWrapper;
 import com.dewarim.cinnamon.model.response.UserInfo;
 import com.dewarim.cinnamon.model.response.UserWrapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -141,6 +147,7 @@ public class CinnamonClient {
     private final Unwrapper<AclGroup, AclGroupWrapper>              aclGroupUnwrapper     = new Unwrapper<>(AclGroupWrapper.class);
     private final Unwrapper<Group, GroupWrapper>                    groupUnwrapper        = new Unwrapper<>(GroupWrapper.class);
     private final Unwrapper<Language, LanguageWrapper>              languageUnwrapper     = new Unwrapper<>(LanguageWrapper.class);
+    private final Unwrapper<UiLanguage, UiLanguageWrapper>          uiLanguageUnwrapper   = new Unwrapper<>(UiLanguageWrapper.class);
     private final Unwrapper<Link, LinkWrapper>                      linkUnwrapper         = new Unwrapper<>(LinkWrapper.class);
     // LinkResponse contains full OSD/Folder objects, Link itself contains only ids.
     private final Unwrapper<LinkResponse, LinkResponseWrapper>      linkResponseUnwrapper = new Unwrapper<>(LinkResponseWrapper.class);
@@ -617,40 +624,63 @@ public class CinnamonClient {
     }
 
     public Format createFormat(String contentType, String extension, String name, long defaultObjectTypeId) throws IOException {
-        var request = new CreateFormatRequest(List.of(new Format(contentType,extension,name,defaultObjectTypeId)));
+        var request  = new CreateFormatRequest(List.of(new Format(contentType, extension, name, defaultObjectTypeId)));
         var response = sendStandardRequest(UrlMapping.FORMAT__CREATE, request);
         return formatUnwrapper.unwrap(response, 1).get(0);
     }
 
     public void updateFormat(Format format) throws IOException {
-        var request = new UpdateFormatRequest(List.of(format));
+        var request  = new UpdateFormatRequest(List.of(format));
         var response = sendStandardRequest(UrlMapping.FORMAT__UPDATE, request);
         verifyResponseIsOkay(response);
     }
 
     public void deleteFormat(Long id) throws IOException {
-        var request = new DeleteFormatRequest(List.of(id));
+        var request  = new DeleteFormatRequest(List.of(id));
         var response = sendStandardRequest(UrlMapping.FORMAT__DELETE, request);
         verifyResponseIsOkay(response);
     }
 
     public Language createLanguage(String isoCode) throws IOException {
-        var request = new CreateLanguageRequest(List.of(isoCode));
-        var response = sendStandardRequest(UrlMapping.LANGUAGE__CREATE,request);
-        return languageUnwrapper.unwrap(response,1).get(0);
+        var request  = new CreateLanguageRequest(List.of(isoCode));
+        var response = sendStandardRequest(UrlMapping.LANGUAGE__CREATE, request);
+        return languageUnwrapper.unwrap(response, 1).get(0);
     }
 
     public void updateLanguage(Language language) throws IOException {
-        var request = new UpdateLanguageRequest(List.of(language));
+        var request  = new UpdateLanguageRequest(List.of(language));
         var response = sendStandardRequest(UrlMapping.LANGUAGE__UPDATE, request);
         verifyResponseIsOkay(response);
     }
 
     public boolean deleteLanguage(Long id) throws IOException {
-        var request = new DeleteLanguageRequest(id);
-        var response = sendStandardRequest(UrlMapping.LANGUAGE__DELETE,request);
+        var request  = new DeleteLanguageRequest(id);
+        var response = sendStandardRequest(UrlMapping.LANGUAGE__DELETE, request);
         return verifyDeleteResponse(response);
     }
 
+    public UiLanguage createUiLanguage(String isoCode) throws IOException {
+        var request  = new CreateUiLanguageRequest(List.of(isoCode));
+        var response = sendStandardRequest(UrlMapping.UI_LANGUAGE__CREATE, request);
+        return uiLanguageUnwrapper.unwrap(response, 1).get(0);
+    }
+
+    public void updateUiLanguage(UiLanguage language) throws IOException {
+        var request  = new UpdateUiLanguageRequest(List.of(language));
+        var response = sendStandardRequest(UrlMapping.UI_LANGUAGE__UPDATE, request);
+        verifyResponseIsOkay(response);
+    }
+
+    public boolean deleteUiLanguage(Long id) throws IOException {
+        var request  = new DeleteUiLanguageRequest(id);
+        var response = sendStandardRequest(UrlMapping.UI_LANGUAGE__DELETE, request);
+        return verifyDeleteResponse(response);
+    }
+
+    public List<UiLanguage> listUiLanguages() throws IOException {
+        var request  = new ListUiLanguageRequest();
+        var response = sendStandardRequest(UrlMapping.UI_LANGUAGE__LIST, request);
+        return uiLanguageUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
+    }
 }
 
