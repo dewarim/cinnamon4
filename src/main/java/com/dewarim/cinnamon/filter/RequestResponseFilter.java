@@ -34,18 +34,17 @@ public class RequestResponseFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        CinnamonRequest  cinnamonRequest   = new CinnamonRequest((HttpServletRequest) request);
+        CinnamonRequest  cinnamonRequest  = new CinnamonRequest((HttpServletRequest) request);
         CinnamonResponse cinnamonResponse = new CinnamonResponse((HttpServletResponse) response);
         try {
             chain.doFilter(cinnamonRequest, cinnamonResponse);
             cinnamonResponse.renderResponseIfNecessary();
         } catch (FailedRequestException e) {
-            log.debug("Failed request: ",e);
+            log.debug("Failed request: ", e);
             ErrorCode errorCode = e.getErrorCode();
-            if(e.getErrors().isEmpty()){
+            if (e.getErrors().isEmpty()) {
                 cinnamonResponse.generateErrorMessage(errorCode.getHttpResponseCode(), errorCode, e.getMessage());
-            }
-            else{
+            } else {
                 cinnamonResponse.generateErrorMessage(errorCode.getHttpResponseCode(), errorCode, e.getMessage(), e.getErrors());
             }
         }

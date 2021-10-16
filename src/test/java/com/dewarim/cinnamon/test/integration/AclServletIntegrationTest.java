@@ -54,9 +54,9 @@ public class AclServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void createAclShouldFailOnInvalidName()  {
+    public void createAclShouldFailOnInvalidName() {
         CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> adminClient.createAcl(List.of("")));
-        assertEquals(ex.getErrorCode(),ErrorCode.INVALID_REQUEST );
+        assertEquals(ErrorCode.INVALID_REQUEST, ex.getErrorCode());
     }
 
     @Test
