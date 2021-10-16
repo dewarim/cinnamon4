@@ -17,7 +17,7 @@ public class LanguageServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void listLanguages() throws IOException {
-        HttpResponse   response  = sendStandardRequest(UrlMapping.LANGUAGE__LIST__LANGUAGES, new ListLanguageRequest());
+        HttpResponse   response  = sendStandardRequest(UrlMapping.LANGUAGE__LIST, new ListLanguageRequest());
         List<Language> languages = parseResponse(response);
 
         assertNotNull(languages);

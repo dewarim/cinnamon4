@@ -31,23 +31,20 @@ public class ObjectTypeServlet extends HttpServlet implements CruddyServlet<Obje
         UrlMapping       mapping          = UrlMapping.getByPath(request.getRequestURI());
 
         switch (mapping) {
-            case OBJECT_TYPE__LIST:
-                list(convertListRequest(request, ListObjectTypeRequest.class), objectTypeDao, cinnamonResponse);
-                break;
-            case OBJECT_TYPE__CREATE:
+            case OBJECT_TYPE__LIST -> list(convertListRequest(request, ListObjectTypeRequest.class), objectTypeDao, cinnamonResponse);
+            case OBJECT_TYPE__CREATE -> {
                 superuserCheck();
                 create(convertCreateRequest(request, CreateObjectTypeRequest.class), objectTypeDao, cinnamonResponse);
-                break;
-            case OBJECT_TYPE__UPDATE:
+            }
+            case OBJECT_TYPE__UPDATE -> {
                 superuserCheck();
                 update(convertUpdateRequest(request, UpdateObjectTypeRequest.class), objectTypeDao, cinnamonResponse);
-                break;
-            case OBJECT_TYPE__DELETE:
+            }
+            case OBJECT_TYPE__DELETE -> {
                 superuserCheck();
                 delete(convertDeleteRequest(request, DeleteObjectTypeRequest.class), objectTypeDao, cinnamonResponse);
-                break;
-            default:
-                ErrorCode.RESOURCE_NOT_FOUND.throwUp();
+            }
+            default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
     }
 

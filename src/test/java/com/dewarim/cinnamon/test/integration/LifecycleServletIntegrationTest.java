@@ -22,7 +22,7 @@ public class LifecycleServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void listLifecycles() throws IOException {
-        HttpResponse    response   = sendStandardRequest(UrlMapping.LIFECYCLE__LIST_LIFECYCLES, new ListLifecycleRequest());
+        HttpResponse    response   = sendStandardRequest(UrlMapping.LIFECYCLE__LIST, new ListLifecycleRequest());
         List<Lifecycle> lifecycles = parseResponse(response);
 
         assertNotNull(lifecycles);

@@ -2,6 +2,7 @@ package com.dewarim.cinnamon.application.servlet;
 
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.FailedRequestException;
+import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.api.lifecycle.State;
 import com.dewarim.cinnamon.api.lifecycle.StateChangeResult;
 import com.dewarim.cinnamon.application.ErrorResponseGenerator;
@@ -37,31 +38,18 @@ public class LifecycleStateServlet extends BaseServlet {
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
-        String pathInfo = request.getPathInfo();
-        if (pathInfo == null) {
-            pathInfo = "";
-        }
         OsdDao            osdDao       = new OsdDao();
         LifecycleDao      lifecycleDao = new LifecycleDao();
-        LifecycleStateDao stateDao     = new LifecycleStateDao();
-        switch (pathInfo) {
-            case "/attachLifecycle":
-                attachLifecycleState(request, response, osdDao, lifecycleDao, stateDao);
-                break;
-            case "/changeState":
-                changeState(request, response, osdDao, stateDao);
-                break;
-            case "/detachLifecycle":
-                detachLifecycleState(request, response, osdDao);
-                break;
-            case "/getLifecycleState":
-                getLifecycleState(request, response);
-                break;
-            case "/getNextStates":
-                getNextStates(request, response, osdDao, stateDao);
-                break;
-            default:
-                ErrorCode.RESOURCE_NOT_FOUND.throwUp();
+        LifecycleStateDao  stateDao = new LifecycleStateDao();
+        UrlMapping mapping  = UrlMapping.getByPath(request.getRequestURI());
+
+        switch (mapping) {
+            case LIFECYCLE_STATE__ATTACH_LIFECYCLE -> attachLifecycleState(request, response, osdDao, lifecycleDao, stateDao);
+            case LIFECYCLE_STATE__CHANGE_STATE -> changeState(request, response, osdDao, stateDao);
+            case LIFECYCLE_STATE__DETACH_LIFECYCLE -> detachLifecycleState(request, response, osdDao);
+            case LIFECYCLE_STATE__GET_LIFECYCLE_STATE -> getLifecycleState(request, response);
+            case LIFECYCLE_STATE__GET_NEXT_STATES -> getNextStates(request, response, osdDao, stateDao);
+            default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
     }
 

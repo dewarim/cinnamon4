@@ -34,23 +34,20 @@ public class FolderTypeServlet extends HttpServlet implements CruddyServlet<Fold
         UrlMapping       mapping          = UrlMapping.getByPath(request.getRequestURI());
 
         switch (mapping) {
-            case FOLDER_TYPE__LIST:
-                list(convertListRequest(request, ListFolderTypeRequest.class), folderTypeDao, cinnamonResponse);
-                break;
-            case FOLDER_TYPE__CREATE:
+            case FOLDER_TYPE__LIST -> list(convertListRequest(request, ListFolderTypeRequest.class), folderTypeDao, cinnamonResponse);
+            case FOLDER_TYPE__CREATE -> {
                 superuserCheck();
                 create(convertCreateRequest(request, CreateFolderTypeRequest.class), folderTypeDao, cinnamonResponse);
-                break;
-            case FOLDER_TYPE__DELETE:
+            }
+            case FOLDER_TYPE__DELETE -> {
                 superuserCheck();
                 delete(convertDeleteRequest(request, DeleteFolderTypeRequest.class), folderTypeDao, cinnamonResponse);
-                break;
-            case FOLDER_TYPE__UPDATE:
+            }
+            case FOLDER_TYPE__UPDATE -> {
                 superuserCheck();
                 update(convertUpdateRequest(request, UpdateFolderTypeRequest.class), folderTypeDao, cinnamonResponse);
-                break;
-            default:
-                ErrorCode.RESOURCE_NOT_FOUND.throwUp();
+            }
+            default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
 
     }

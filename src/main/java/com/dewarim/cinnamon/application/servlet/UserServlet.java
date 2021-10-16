@@ -43,17 +43,10 @@ public class UserServlet extends HttpServlet {
 
         UrlMapping mapping = UrlMapping.getByPath(request.getRequestURI());
         switch (mapping) {
-            case USER__USER_INFO:
-                showUserInfo(xmlMapper.readValue(request.getReader(), UserInfoRequest.class),userAccountDao, cinnamonResponse);
-                break;
-            case USER__LIST_USERS:
-                listUsers(request, userAccountDao,cinnamonResponse);
-                break;
-            case USER__SET_PASSWORD:
-                setPassword(request,userAccountDao, cinnamonResponse);
-                break;
-            default:
-                ErrorCode.RESOURCE_NOT_FOUND.throwUp();
+            case USER__USER_INFO -> showUserInfo(xmlMapper.readValue(request.getReader(), UserInfoRequest.class), userAccountDao, cinnamonResponse);
+            case USER__LIST_USERS -> listUsers(request, userAccountDao, cinnamonResponse);
+            case USER__SET_PASSWORD -> setPassword(request, userAccountDao, cinnamonResponse);
+            default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
     }
 
@@ -92,7 +85,7 @@ public class UserServlet extends HttpServlet {
         response.setWrapper(wrapper);
     }
 
-    private void showUserInfo(UserInfoRequest userInfoRequest,UserAccountDao userAccountDao, CinnamonResponse response) throws IOException {
+    private void showUserInfo(UserInfoRequest userInfoRequest,UserAccountDao userAccountDao, CinnamonResponse response) {
         Optional<UserAccount> userOpt;
         if (userInfoRequest.byId()) {
             userOpt = userAccountDao.getUserAccountById(userInfoRequest.getUserId());

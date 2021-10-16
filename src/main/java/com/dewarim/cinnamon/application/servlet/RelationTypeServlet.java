@@ -32,23 +32,20 @@ public class RelationTypeServlet extends HttpServlet implements CruddyServlet<Re
         UrlMapping       mapping          = UrlMapping.getByPath(request.getRequestURI());
 
         switch (mapping) {
-            case RELATION_TYPE__LIST:
-                list(convertListRequest(request, ListRelationTypeRequest.class), relationTypeDao, cinnamonResponse);
-                break;
-            case RELATION_TYPE__CREATE:
+            case RELATION_TYPE__LIST -> list(convertListRequest(request, ListRelationTypeRequest.class), relationTypeDao, cinnamonResponse);
+            case RELATION_TYPE__CREATE -> {
                 superuserCheck();
-                create(convertCreateRequest(request, CreateRelationTypeRequest.class),relationTypeDao,cinnamonResponse);
-                break;
-            case RELATION_TYPE__UPDATE:
+                create(convertCreateRequest(request, CreateRelationTypeRequest.class), relationTypeDao, cinnamonResponse);
+            }
+            case RELATION_TYPE__UPDATE -> {
                 superuserCheck();
-                update(convertUpdateRequest(request, UpdateRelationTypeRequest.class),relationTypeDao,cinnamonResponse);
-                break;
-            case RELATION_TYPE__DELETE:
+                update(convertUpdateRequest(request, UpdateRelationTypeRequest.class), relationTypeDao, cinnamonResponse);
+            }
+            case RELATION_TYPE__DELETE -> {
                 superuserCheck();
-                delete(convertDeleteRequest(request, DeleteRelationTypeRequest.class),relationTypeDao,cinnamonResponse);
-                break;
-            default:
-                ErrorCode.RESOURCE_NOT_FOUND.throwUp();
+                delete(convertDeleteRequest(request, DeleteRelationTypeRequest.class), relationTypeDao, cinnamonResponse);
+            }
+            default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
     }
 

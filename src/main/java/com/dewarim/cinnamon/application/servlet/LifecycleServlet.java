@@ -1,6 +1,7 @@
 package com.dewarim.cinnamon.application.servlet;
 
 import com.dewarim.cinnamon.ErrorCode;
+import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.ResponseUtil;
 import com.dewarim.cinnamon.dao.LifecycleDao;
 import com.dewarim.cinnamon.dao.LifecycleStateDao;
@@ -30,19 +31,12 @@ public class LifecycleServlet extends HttpServlet {
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
-        String pathInfo = request.getPathInfo();
-        if (pathInfo == null) {
-            pathInfo = "";
-        }
-        switch (pathInfo) {
-            case "/getLifecycle":
-                getLifecycle(request, response);
-                break;
-            case "/listLifecycles":
-                listLifecycles(request, response);
-                break;
-            default:
-                ErrorCode.RESOURCE_NOT_FOUND.throwUp();
+        UrlMapping mapping = UrlMapping.getByPath(request.getRequestURI());
+
+        switch (mapping) {
+            case LIFECYCLE__GET_LIFECYCLE -> getLifecycle(request, response);
+            case LIFECYCLE__LIST -> listLifecycles(request, response);
+            default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
     }
 

@@ -65,20 +65,11 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
 
         UrlMapping mapping = UrlMapping.getByPath(request.getRequestURI());
         switch (mapping) {
-            case LINK__CREATE:
-                create(request, linkDao, cinnamonResponse);
-                break;
-            case LINK__DELETE:
-                delete(request, linkDao, cinnamonResponse);
-                break;
-            case LINK__GET_LINKS_BY_ID:
-                getLinksById(request, linkDao, cinnamonResponse);
-                break;
-            case LINK__UPDATE:
-                update(request, linkDao, cinnamonResponse);
-                break;
-            default:
-                ErrorCode.RESOURCE_NOT_FOUND.throwUp();
+            case LINK__CREATE -> create(request, linkDao, cinnamonResponse);
+            case LINK__DELETE -> delete(request, linkDao, cinnamonResponse);
+            case LINK__GET_LINKS_BY_ID -> getLinksById(request, linkDao, cinnamonResponse);
+            case LINK__UPDATE -> update(request, linkDao, cinnamonResponse);
+            default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
     }
 
@@ -125,7 +116,7 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
         ObjectSystemData osd;
         OsdDao           osdDao = new OsdDao();
         switch (link.getType()) {
-            case FOLDER:
+            case FOLDER -> {
                 Optional<Folder> folderOpt = folderDao.getFolderById(link.getFolderId());
                 if (folderOpt.isPresent()) {
                     folder = folderOpt.get();
@@ -134,14 +125,13 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
                 } else {
                     ErrorCode.FOLDER_NOT_FOUND.throwUp();
                 }
-                break;
-            case OBJECT:
+            }
+            case OBJECT -> {
                 Optional<ObjectSystemData> osdOpt = osdDao.getObjectById(link.getObjectId());
                 osd = osdOpt.orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
                 accessFilter.verifyHasPermissionOnOwnable(osd, DefaultPermission.BROWSE_OBJECT, osd, ErrorCode.UNAUTHORIZED);
-                break;
-            default:
-                throw new IllegalStateException("invalid link type: " + link.getType());
+            }
+            default -> throw new IllegalStateException("invalid link type: " + link.getType());
         }
 
         return linkDao.create(Collections.singletonList(link)).get(0);
@@ -307,14 +297,9 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
         boolean            includeSummary = linkRequest.isIncludeSummary();
         filteredLinks.forEach(link -> {
             switch (link.getType()) {
-                case FOLDER:
-                    linkResponses.add(handleFolderLink(link, includeSummary));
-                    break;
-                case OBJECT:
-                    linkResponses.add(handleOsdLink(link, includeSummary));
-                    break;
-                default:
-                    throw new IllegalStateException("unknown link type");
+                case FOLDER -> linkResponses.add(handleFolderLink(link, includeSummary));
+                case OBJECT -> linkResponses.add(handleOsdLink(link, includeSummary));
+                default -> throw new IllegalStateException("unknown link type");
             }
         });
 

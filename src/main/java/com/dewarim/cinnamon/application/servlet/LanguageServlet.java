@@ -1,6 +1,7 @@
 package com.dewarim.cinnamon.application.servlet;
 
 import com.dewarim.cinnamon.ErrorCode;
+import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.dao.LanguageDao;
 import com.dewarim.cinnamon.model.Language;
 import com.dewarim.cinnamon.model.request.ListRequest;
@@ -25,16 +26,11 @@ public class LanguageServlet extends HttpServlet {
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
-        String pathInfo = request.getPathInfo();
-        if (pathInfo == null) {
-            pathInfo = "";
-        }
-        switch (pathInfo) {
-            case "/listLanguages":
-                listLanguages(request, response);
-                break;
-            default:
-                ErrorCode.RESOURCE_NOT_FOUND.throwUp();
+        UrlMapping mapping = UrlMapping.getByPath(request.getRequestURI());
+
+        switch (mapping) {
+            case LANGUAGE__LIST -> listLanguages(request, response);
+            default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
     }
 

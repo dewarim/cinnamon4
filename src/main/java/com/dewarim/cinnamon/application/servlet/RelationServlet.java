@@ -38,17 +38,10 @@ public class RelationServlet extends HttpServlet {
 
         UrlMapping mapping = UrlMapping.getByPath(request.getRequestURI());
         switch (mapping) {
-            case RELATION__LIST:
-                listRelations(request, relationDao, cinnamonResponse);
-                break;
-            case RELATION__CREATE:
-                createRelation(request, relationDao, cinnamonResponse);
-                break;
-            case RELATION__DELETE:
-                deleteRelation(request, relationDao, cinnamonResponse);
-                break;
-            default:
-                ErrorCode.RESOURCE_NOT_FOUND.throwUp();
+            case RELATION__LIST -> listRelations(request, relationDao, cinnamonResponse);
+            case RELATION__CREATE -> createRelation(request, relationDao, cinnamonResponse);
+            case RELATION__DELETE -> deleteRelation(request, relationDao, cinnamonResponse);
+            default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
     }
 
@@ -57,16 +50,13 @@ public class RelationServlet extends HttpServlet {
         if (deleteRequest.validated()) {
             int affectedRows = relationDao.deleteRelation(deleteRequest.getLeftId(), deleteRequest.getRightId(), deleteRequest.getTypeName());
             switch (affectedRows) {
-                case 0:
-                    ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.OBJECT_NOT_FOUND_OR_GONE);
-                    break;
-                case 1:
+                case 0 -> ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.OBJECT_NOT_FOUND_OR_GONE);
+                case 1 -> {
                     // TODO: use CinnamonResponse
                     ResponseUtil.responseIsOkayAndXml(response);
                     xmlMapper.writeValue(response.getWriter(), new GenericResponse(false));
-                    break;
-                default:
-                    ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.DELETE_AFFECTED_MULTIPLE_ROWS);
+                }
+                default -> ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.DELETE_AFFECTED_MULTIPLE_ROWS);
             }
             return;
         }

@@ -609,7 +609,7 @@ public class CinnamonClient {
 
     public List<Language> listLanguages() throws IOException {
         var request  = new ListLanguageRequest();
-        var response = sendStandardRequest(UrlMapping.LANGUAGE__LIST__LANGUAGES, request);
+        var response = sendStandardRequest(UrlMapping.LANGUAGE__LIST, request);
         return languageUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 

@@ -19,7 +19,7 @@ public class IndexItemServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void listIndexItems() throws IOException {
-        HttpResponse       response      = sendStandardRequest(UrlMapping.INDEX_ITEM__LIST_INDEX_ITEMS, new ListIndexItemRequest());
+        HttpResponse       response      = sendStandardRequest(UrlMapping.INDEX_ITEM__LIST, new ListIndexItemRequest());
         List<IndexItem> indexItems = parseResponse(response);
 
         assertNotNull(indexItems);

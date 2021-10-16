@@ -43,18 +43,13 @@ public class PermissionServlet extends HttpServlet implements CruddyServlet<Perm
 
         UrlMapping mapping = UrlMapping.getByPath(request.getRequestURI());
         switch (mapping) {
-            case PERMISSION__LIST:
-                list(convertListRequest(request, ListPermissionRequest.class), permissionDao, cinnamonResponse);
-                break;
-            case PERMISSION__GET_USER_PERMISSIONS:
-                getUserPermissions(request, cinnamonResponse);
-                break;
-            case PERMISSION__CHANGE_PERMISSIONS:
+            case PERMISSION__LIST -> list(convertListRequest(request, ListPermissionRequest.class), permissionDao, cinnamonResponse);
+            case PERMISSION__GET_USER_PERMISSIONS -> getUserPermissions(request, cinnamonResponse);
+            case PERMISSION__CHANGE_PERMISSIONS -> {
                 superuserCheck();
                 changePermissions(request, cinnamonResponse);
-                break;
-            default:
-                ErrorCode.RESOURCE_NOT_FOUND.throwUp();
+            }
+            default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
     }
 

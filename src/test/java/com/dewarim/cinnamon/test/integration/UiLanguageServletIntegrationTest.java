@@ -19,7 +19,7 @@ public class UiLanguageServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void listUiLanguages() throws IOException {
-        HttpResponse       response      = sendStandardRequest(UrlMapping.UI_LANGUAGE__LIST_UI_LANGUAGES, new ListUiLanguageRequest());
+        HttpResponse       response      = sendStandardRequest(UrlMapping.UI_LANGUAGE__LIST, new ListUiLanguageRequest());
         List<UiLanguage> uiLanguages = parseResponse(response);
 
         assertNotNull(uiLanguages);

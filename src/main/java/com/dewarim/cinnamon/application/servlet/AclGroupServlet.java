@@ -35,28 +35,25 @@ public class AclGroupServlet extends HttpServlet implements CruddyServlet<AclGro
 
         UrlMapping mapping = UrlMapping.getByPath(request.getRequestURI());
         switch (mapping) {
-            case ACL_GROUP__LIST_BY_GROUP_OR_ACL:
-                listAclGroups(request, cinnamonResponse, aclGroupDao);
-                break;
-            case ACL_GROUP__LIST:
+            case ACL_GROUP__LIST_BY_GROUP_OR_ACL -> listAclGroups(request, cinnamonResponse, aclGroupDao);
+            case ACL_GROUP__LIST -> {
                 list(convertListRequest(request, ListAclGroupRequest.class), aclGroupDao, cinnamonResponse);
                 aclGroupDao.addPermissionsToAclGroups(((AclGroupWrapper) cinnamonResponse.getWrapper()).list());
-                break;
-            case ACL_GROUP__CREATE:
+            }
+            case ACL_GROUP__CREATE -> {
                 superuserCheck();
                 create(convertCreateRequest(request, CreateAclGroupRequest.class), aclGroupDao, cinnamonResponse);
-                break;
-            case ACL_GROUP__DELETE:
+            }
+            case ACL_GROUP__DELETE -> {
                 superuserCheck();
                 delete(convertDeleteRequest(request, DeleteAclGroupRequest.class), aclGroupDao, cinnamonResponse);
-                break;
-            case ACL_GROUP__UPDATE:
+            }
+            case ACL_GROUP__UPDATE -> {
                 superuserCheck();
                 update(convertUpdateRequest(request, UpdateAclGroupRequest.class), aclGroupDao, cinnamonResponse);
                 aclGroupDao.addPermissionsToAclGroups(((AclGroupWrapper) cinnamonResponse.getWrapper()).list());
-                break;
-            default:
-                ErrorCode.RESOURCE_NOT_FOUND.throwUp();
+            }
+            default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
     }
 
@@ -64,17 +61,10 @@ public class AclGroupServlet extends HttpServlet implements CruddyServlet<AclGro
         AclGroupListRequest listRequest = xmlMapper.readValue(request.getInputStream(), AclGroupListRequest.class)
                 .validateRequest().orElseThrow(() -> new FailedRequestException(ErrorCode.INVALID_REQUEST));
 
-        List<AclGroup> entries;
-        switch (listRequest.getIdType()) {
-            case ACL:
-                entries = aclGroupDao.getAclGroupsByAclId(listRequest.getId());
-                break;
-            case GROUP:
-                entries = aclGroupDao.getAclGroupsByGroupId(listRequest.getId());
-                break;
-            default:
-                throw new FailedRequestException(ErrorCode.INVALID_ID_TYPE);
-        }
+        List<AclGroup> entries = switch (listRequest.getIdType()) {
+            case ACL -> aclGroupDao.getAclGroupsByAclId(listRequest.getId());
+            case GROUP -> aclGroupDao.getAclGroupsByGroupId(listRequest.getId());
+        };
         response.setWrapper(new AclGroupWrapper(entries));
     }
 
