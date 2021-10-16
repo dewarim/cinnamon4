@@ -313,7 +313,7 @@ Create a new ACL group. Note: permissions parameter is not yet implemented.
 
 ---
 
-# /api/acl/updateAcl
+# /api/acl/update
 
 
 ## Request
@@ -546,7 +546,7 @@ Retrieve the server version and build number.
 
 ---
 
-# /api/folder/createFolder
+# /api/folder/create
 
 
 ## Request
@@ -817,7 +817,7 @@ Fetch a single folder
 
 ---
 
-# /api/folder/updateFolder
+# /api/folder/update
 
 
 ## Request
@@ -1102,7 +1102,7 @@ Fetch a single folder
 
 ---
 
-# /api/indexItem/listIndexItems
+# /api/indexItem/list
 
 
 ## Request
@@ -1127,7 +1127,7 @@ Fetch a single folder
 
 ---
 
-# /api/language/listLanguages
+# /api/language/list
 
 
 ## Request
@@ -1310,7 +1310,7 @@ Fetch a single folder
 
 ---
 
-# /api/lifecycle/listLifecycles
+# /api/lifecycle/list
 List lifecycles 
 
 ## Request
@@ -1473,7 +1473,7 @@ List lifecycles
 
 ---
 
-# /api/metasetType/listMetasetTypes
+# /api/metasetType/list
 
 
 ## Request
@@ -2305,7 +2305,7 @@ Returns a static file from the server (for example, a favicon.ico if one exists)
 
 ---
 
-# /api/uiLanguage/listUiLanguages
+# /api/uiLanguage/list
 
 
 ## Request
