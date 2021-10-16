@@ -1152,6 +1152,82 @@ Fetch a single folder
 
 ---
 
+# /api/language/create
+
+
+## Request
+
+```xml
+<createLanguageRequest>
+  <isoCode/>
+</createLanguageRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <languages/>
+</cinnamon>
+
+```
+
+
+---
+
+# /api/language/update
+
+
+## Request
+
+```xml
+<updateLanguageRequest>
+  <languages/>
+</updateLanguageRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <languages/>
+</cinnamon>
+
+```
+
+
+---
+
+# /api/language/delete
+
+
+## Request
+
+```xml
+<deleteLanguageRequest>
+  <ignoreNotFound>false</ignoreNotFound>
+  <ids/>
+</deleteLanguageRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <success>false</success>
+</cinnamon>
+
+```
+
+
+---
+
 # /api/lifecycleState/attachLifecycle
 
 
@@ -1473,6 +1549,57 @@ List lifecycles
 
 ---
 
+# /api/metasetType/create
+
+
+## Request
+
+```xml
+<createMetasetTypeRequest>
+  <metasetTypes/>
+</createMetasetTypeRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <metasetTypes/>
+</cinnamon>
+
+```
+
+
+---
+
+# /api/metasetType/delete
+
+
+## Request
+
+```xml
+<deleteMetasetTypeRequest>
+  <ignoreNotFound>false</ignoreNotFound>
+  <ids/>
+</deleteMetasetTypeRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <success>false</success>
+</cinnamon>
+
+```
+
+
+---
+
 # /api/metasetType/list
 
 
@@ -1482,6 +1609,31 @@ List lifecycles
 <listMetasetTypeRequest>
   <type>FULL</type>
 </listMetasetTypeRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <metasetTypes/>
+</cinnamon>
+
+```
+
+
+---
+
+# /api/metasetType/update
+
+
+## Request
+
+```xml
+<updateMetasetTypeRequest>
+  <metasetTypes/>
+</updateMetasetTypeRequest>
 
 ```
 
@@ -2323,6 +2475,82 @@ Returns a static file from the server (for example, a favicon.ico if one exists)
 ```xml
 <cinnamon>
   <uiLanguages/>
+</cinnamon>
+
+```
+
+
+---
+
+# /api/uiLanguage/create
+
+
+## Request
+
+```xml
+<createUiLanguageRequest>
+  <isoCode/>
+</createUiLanguageRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <uiLanguages/>
+</cinnamon>
+
+```
+
+
+---
+
+# /api/uiLanguage/update
+
+
+## Request
+
+```xml
+<updateUiLanguageRequest>
+  <languages/>
+</updateUiLanguageRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <uiLanguages/>
+</cinnamon>
+
+```
+
+
+---
+
+# /api/uiLanguage/delete
+
+
+## Request
+
+```xml
+<deleteUiLanguageRequest>
+  <ignoreNotFound>false</ignoreNotFound>
+  <ids/>
+</deleteUiLanguageRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <success>false</success>
 </cinnamon>
 
 ```
