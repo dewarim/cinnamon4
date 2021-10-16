@@ -4,6 +4,7 @@ import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.FailedRequestException;
 import com.dewarim.cinnamon.api.Constants;
+import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.application.ResponseUtil;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
@@ -58,49 +59,24 @@ public class FolderServlet extends BaseServlet {
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
-        String pathInfo = request.getPathInfo();
-        if (pathInfo == null) {
-            pathInfo = "";
-        }
         UserAccount      user             = ThreadLocalSqlSession.getCurrentUser();
         FolderDao        folderDao        = new FolderDao();
         CinnamonResponse cinnamonResponse = (CinnamonResponse) response;
-        switch (pathInfo) {
-            case "/createFolder":
-                createFolder(request, response, user, folderDao);
-                break;
-            case "/createMeta":
-                createMeta(request, cinnamonResponse, user, folderDao);
-                break;
-            case "/deleteMeta":
-                deleteMeta(request, response, user, folderDao);
-                break;
-            case "/getFolder":
-                getFolder(request, response, user, folderDao);
-                break;
-            case "/getFolderByPath":
-                getFolderByPath(request, response, user, folderDao);
-                break;
-            case "/getFolders":
-                getFolders(request, response, user, folderDao);
-                break;
-            case "/getMeta":
-                getMeta(request, cinnamonResponse, user, folderDao);
-                break;
-            case "/getSubFolders":
-                getSubFolders(request, response, user, folderDao);
-                break;
-            case "/setSummary":
-                setSummary(request, response, user, folderDao);
-                break;
-            case "/getSummaries":
-                getSummaries(request, response, user, folderDao);
-                break;
-            case "/updateFolder":
-                updateFolder(request, response, user, folderDao);
-                break;
-            default:
-                ErrorCode.RESOURCE_NOT_FOUND.throwUp();
+        UrlMapping       mapping          = UrlMapping.getByPath(request.getRequestURI());
+
+        switch (mapping) {
+            case FOLDER__CREATE -> createFolder(request, response, user, folderDao);
+            case FOLDER__CREATE_META -> createMeta(request, cinnamonResponse, user, folderDao);
+            case FOLDER__DELETE_META -> deleteMeta(request, response, user, folderDao);
+            case FOLDER__GET_FOLDER -> getFolder(request, response, user, folderDao);
+            case FOLDER__GET_FOLDER_BY_PATH -> getFolderByPath(request, response, user, folderDao);
+            case FOLDER__GET_FOLDERS -> getFolders(request, response, user, folderDao);
+            case FOLDER__GET_META -> getMeta(request, cinnamonResponse, user, folderDao);
+            case FOLDER__GET_SUBFOLDERS -> getSubFolders(request, response, user, folderDao);
+            case FOLDER__SET_SUMMARY -> setSummary(request, response, user, folderDao);
+            case FOLDER__GET_SUMMARIES -> getSummaries(request, response, user, folderDao);
+            case FOLDER__UPDATE -> updateFolder(request, response, user, folderDao);
+            default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
     }
 

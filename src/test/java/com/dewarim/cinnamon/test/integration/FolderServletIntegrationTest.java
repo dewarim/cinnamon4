@@ -232,25 +232,25 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void createMetaObjectNotWritable() throws IOException {
+    public void createMetaObjectNotWritable() {
         CreateMetaRequest request = new CreateMetaRequest(15L, "foo", 1L);
         assertClientError(() -> client.createFolderMeta(request), NO_WRITE_CUSTOM_METADATA_PERMISSION);
     }
 
     @Test
-    public void createMetaMetasetTypeByIdNotFound() throws IOException {
+    public void createMetaMetasetTypeByIdNotFound() {
         CreateMetaRequest request = new CreateMetaRequest(17L, "foo", Long.MAX_VALUE);
         assertClientError(() -> client.createFolderMeta(request), METASET_TYPE_NOT_FOUND);
     }
 
     @Test
-    public void createMetaMetasetTypeByNameNotFound() throws IOException {
+    public void createMetaMetasetTypeByNameNotFound() {
         CreateMetaRequest request = new CreateMetaRequest(17L, "foo", "unknown");
         assertClientError(() -> client.createFolderMeta(request), METASET_TYPE_NOT_FOUND);
     }
 
     @Test
-    public void createMetaMetasetIsUniqueAndExists() throws IOException {
+    public void createMetaMetasetIsUniqueAndExists() {
         CreateMetaRequest request = new CreateMetaRequest(18L, "duplicate license", "license");
         assertClientError(() -> client.createFolderMeta(request), METASET_IS_UNIQUE_AND_ALREADY_EXISTS);
     }
@@ -479,7 +479,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         UpdateFolderRequest request = new UpdateFolderRequest(
                 25L, 27L, "new-name-for-happy-folder", 1L, 2L, 13L
         );
-        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__UPDATE_FOLDER, request);
+        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__UPDATE, request);
         parseGenericResponse(response);
         Folder updatedFolder = adminClient.getFolderById(25L,false);
         assertEquals(27L, updatedFolder.getParentId());
@@ -514,14 +514,14 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void createFolderInvalidRequest() throws IOException {
         CreateFolderRequest request  = new CreateFolderRequest();
-        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__CREATE_FOLDER, request);
+        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__CREATE, request);
         assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
     }
 
     @Test
     public void createFolderNoParentFolder() throws IOException {
         CreateFolderRequest request  = new CreateFolderRequest("foo", Long.MAX_VALUE, "<sum/>", null, null, null);
-        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__CREATE_FOLDER, request);
+        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__CREATE, request);
         assertCinnamonError(response, ErrorCode.PARENT_FOLDER_NOT_FOUND);
     }
 
@@ -529,42 +529,42 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     public void createFolderWithoutPermission() throws IOException {
         // trying to create a folder in root folder#1
         CreateFolderRequest request  = new CreateFolderRequest("foo", 1L, "<sum/>", null, null, null);
-        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__CREATE_FOLDER, request);
+        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__CREATE, request);
         assertCinnamonError(response, ErrorCode.NO_CREATE_PERMISSION);
     }
 
     @Test
     public void createFolderDuplicateName() throws IOException {
         CreateFolderRequest request  = new CreateFolderRequest("duplicate name", 6L, "<sum/>", null, null, null);
-        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__CREATE_FOLDER, request);
+        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__CREATE, request);
         assertCinnamonError(response, ErrorCode.DUPLICATE_FOLDER_NAME_FORBIDDEN);
     }
 
     @Test
     public void createFolderWithTypeNotFound() throws IOException {
         CreateFolderRequest request  = new CreateFolderRequest("untyped folder", 6L, "<sum/>", null, null, Long.MAX_VALUE);
-        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__CREATE_FOLDER, request);
+        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__CREATE, request);
         assertCinnamonError(response, ErrorCode.FOLDER_TYPE_NOT_FOUND);
     }
 
     @Test
     public void createFolderWithoutValidUserAccount() throws IOException {
         CreateFolderRequest request  = new CreateFolderRequest("folder without owner", 6L, "<sum/>", Long.MAX_VALUE, null, null);
-        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__CREATE_FOLDER, request);
+        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__CREATE, request);
         assertCinnamonError(response, ErrorCode.USER_ACCOUNT_NOT_FOUND);
     }
 
     @Test
     public void createFolderWithoutValidAcl() throws IOException {
         CreateFolderRequest request  = new CreateFolderRequest("folder without acl", 6L, "<sum/>", null, Long.MAX_VALUE, null);
-        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__CREATE_FOLDER, request);
+        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__CREATE, request);
         assertCinnamonError(response, ErrorCode.ACL_NOT_FOUND);
     }
 
     @Test
     public void createFolderHappyPathInheriting() throws IOException {
         CreateFolderRequest request  = new CreateFolderRequest("create happy folder inherit", 6L, "<sum/>", null, null, null);
-        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__CREATE_FOLDER, request);
+        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__CREATE, request);
         List<Folder>        folders  = unwrapFolders(response, 1);
         Folder              folder   = folders.get(0);
         assertEquals("create happy folder inherit", folder.getName());
@@ -574,7 +574,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void createFolderHappyPath() throws IOException {
         CreateFolderRequest request  = new CreateFolderRequest("create happy folder", 6L, "<sum/>", 2L, 2L, 2L);
-        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__CREATE_FOLDER, request);
+        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__CREATE, request);
         List<Folder>        folders  = unwrapFolders(response, 1);
         Folder              folder   = folders.get(0);
         assertEquals("create happy folder", folder.getName());

@@ -351,7 +351,7 @@ public class CinnamonClient {
 
     public Folder createFolder(Long parentId, String name, Long ownerId, Long aclId, Long typeId) throws IOException {
         var request  = new CreateFolderRequest(name, parentId, null, ownerId, aclId, typeId);
-        var response = sendStandardRequest(UrlMapping.FOLDER__CREATE_FOLDER, request);
+        var response = sendStandardRequest(UrlMapping.FOLDER__CREATE, request);
         return folderUnwrapper.unwrap(response, 1).get(0);
     }
 
@@ -367,7 +367,7 @@ public class CinnamonClient {
     }
 
     public void updateFolders(UpdateFolderRequest updateFolderRequest) throws IOException {
-        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__UPDATE_FOLDER, updateFolderRequest);
+        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__UPDATE, updateFolderRequest);
         verifyResponseIsOkay(response);
     }
 
