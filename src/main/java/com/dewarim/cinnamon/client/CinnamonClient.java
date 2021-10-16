@@ -45,7 +45,10 @@ import com.dewarim.cinnamon.model.request.group.ListGroupRequest;
 import com.dewarim.cinnamon.model.request.group.UpdateGroupRequest;
 import com.dewarim.cinnamon.model.request.groupUser.AddUserToGroupsRequest;
 import com.dewarim.cinnamon.model.request.groupUser.RemoveUserFromGroupsRequest;
+import com.dewarim.cinnamon.model.request.language.CreateLanguageRequest;
+import com.dewarim.cinnamon.model.request.language.DeleteLanguageRequest;
 import com.dewarim.cinnamon.model.request.language.ListLanguageRequest;
+import com.dewarim.cinnamon.model.request.language.UpdateLanguageRequest;
 import com.dewarim.cinnamon.model.request.link.CreateLinkRequest;
 import com.dewarim.cinnamon.model.request.link.DeleteLinkRequest;
 import com.dewarim.cinnamon.model.request.link.GetLinksRequest;
@@ -630,5 +633,24 @@ public class CinnamonClient {
         var response = sendStandardRequest(UrlMapping.FORMAT__DELETE, request);
         verifyResponseIsOkay(response);
     }
+
+    public Language createLanguage(String isoCode) throws IOException {
+        var request = new CreateLanguageRequest(List.of(isoCode));
+        var response = sendStandardRequest(UrlMapping.LANGUAGE__CREATE,request);
+        return languageUnwrapper.unwrap(response,1).get(0);
+    }
+
+    public void updateLanguage(Language language) throws IOException {
+        var request = new UpdateLanguageRequest(List.of(language));
+        var response = sendStandardRequest(UrlMapping.LANGUAGE__UPDATE, request);
+        verifyResponseIsOkay(response);
+    }
+
+    public boolean deleteLanguage(Long id) throws IOException {
+        var request = new DeleteLanguageRequest(id);
+        var response = sendStandardRequest(UrlMapping.LANGUAGE__DELETE,request);
+        return verifyDeleteResponse(response);
+    }
+
 }
 

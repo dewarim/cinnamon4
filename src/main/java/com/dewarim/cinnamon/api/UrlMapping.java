@@ -44,7 +44,10 @@ import com.dewarim.cinnamon.model.request.group.UpdateGroupRequest;
 import com.dewarim.cinnamon.model.request.groupUser.AddUserToGroupsRequest;
 import com.dewarim.cinnamon.model.request.groupUser.RemoveUserFromGroupsRequest;
 import com.dewarim.cinnamon.model.request.index.ListIndexItemRequest;
+import com.dewarim.cinnamon.model.request.language.CreateLanguageRequest;
+import com.dewarim.cinnamon.model.request.language.DeleteLanguageRequest;
 import com.dewarim.cinnamon.model.request.language.ListLanguageRequest;
+import com.dewarim.cinnamon.model.request.language.UpdateLanguageRequest;
 import com.dewarim.cinnamon.model.request.lifecycle.ListLifecycleRequest;
 import com.dewarim.cinnamon.model.request.link.CreateLinkRequest;
 import com.dewarim.cinnamon.model.request.link.DeleteLinkRequest;
@@ -161,6 +164,9 @@ public enum UrlMapping {
     GROUP__UPDATE("group", "update", "/api", "", UpdateGroupRequest.class, GroupWrapper.class),
     INDEX_ITEM__LIST("indexItem", "list", "/api", "", ListIndexItemRequest.class, IndexItemWrapper.class),
     LANGUAGE__LIST("language", "list", "/api", "", ListLanguageRequest.class, LanguageWrapper.class),
+    LANGUAGE__CREATE("language", "create", "/api", "", CreateLanguageRequest.class, LanguageWrapper.class),
+    LANGUAGE__UPDATE("language", "update", "/api", "", UpdateLanguageRequest.class, LanguageWrapper.class),
+    LANGUAGE__DELETE("language", "delete", "/api", "", DeleteLanguageRequest.class, DeleteResponse.class),
     LIFECYCLE_STATE__ATTACH_LIFECYCLE("lifecycleState", "attachLifecycle", "/api", "", AttachLifecycleRequest.class, GenericResponse.class),
     LIFECYCLE_STATE__CHANGE_STATE("lifecycleState", "changeState", "/api", "", ChangeLifecycleStateRequest.class, GenericResponse.class),
     LIFECYCLE_STATE__DETACH_LIFECYCLE("lifecycleState", "detachLifecycle", "/api", "", IdRequest.class, GenericResponse.class),

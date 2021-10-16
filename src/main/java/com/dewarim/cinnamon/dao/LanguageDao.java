@@ -4,25 +4,24 @@ import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.model.Language;
 import org.apache.ibatis.session.SqlSession;
 
-import java.util.List;
 import java.util.Optional;
 
-public class LanguageDao {
+public class LanguageDao implements CrudDao<Language> {
 
-    public List<Language> listLanguages() {
-        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        return sqlSession.selectList("com.dewarim.cinnamon.LanguageMapper.list");
+    @Override
+    public String getTypeClassName() {
+        return Language.class.getName();
     }
 
     public Optional<Language> getLanguageById(long id) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        Language   Language   = sqlSession.selectOne("com.dewarim.cinnamon.LanguageMapper.getLanguageById", id);
+        Language   Language   = sqlSession.selectOne("com.dewarim.cinnamon.model.Language.getLanguageById", id);
         return Optional.ofNullable(Language);
     }
 
     public Optional<Language> getLanguageByIsoCode(String isoCode) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        Language   Language   = sqlSession.selectOne("com.dewarim.cinnamon.LanguageMapper.getLanguageByIsoCode", isoCode);
+        Language   Language   = sqlSession.selectOne("com.dewarim.cinnamon.model.Language.getLanguageByIsoCode", isoCode);
         return Optional.ofNullable(Language);
     }
 

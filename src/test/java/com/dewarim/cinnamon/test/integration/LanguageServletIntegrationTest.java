@@ -1,10 +1,10 @@
 package com.dewarim.cinnamon.test.integration;
 
-import com.dewarim.cinnamon.api.UrlMapping;
+import com.dewarim.cinnamon.ErrorCode;
+import com.dewarim.cinnamon.client.CinnamonClientException;
 import com.dewarim.cinnamon.model.Language;
-import com.dewarim.cinnamon.model.request.language.ListLanguageRequest;
-import com.dewarim.cinnamon.model.response.LanguageWrapper;
-import org.apache.http.HttpResponse;
+import com.dewarim.cinnamon.model.request.osd.UpdateOsdRequest;
+import com.dewarim.cinnamon.test.TestObjectHolder;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -17,12 +17,10 @@ public class LanguageServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void listLanguages() throws IOException {
-        HttpResponse   response  = sendStandardRequest(UrlMapping.LANGUAGE__LIST, new ListLanguageRequest());
-        List<Language> languages = parseResponse(response);
+        List<Language> languages = client.listLanguages();
 
         assertNotNull(languages);
         assertFalse(languages.isEmpty());
-        assertEquals(5, languages.size());
 
         String[] isoCodes = {"de_DE", "en_EN", "zxx", "und", "mul"};
 
@@ -33,12 +31,67 @@ public class LanguageServletIntegrationTest extends CinnamonIntegrationTest {
 
     }
 
-    private List<Language> parseResponse(HttpResponse response) throws IOException {
-        assertResponseOkay(response);
-        LanguageWrapper LanguageWrapper = mapper.readValue(response.getEntity().getContent(), LanguageWrapper.class);
-        assertNotNull(LanguageWrapper);
-        return LanguageWrapper.getLanguages();
+    @Test
+    public void createLanguageHappyPath() throws IOException {
+        var language = adminClient.createLanguage("orc");
+        assertEquals("orc", language.getIsoCode());
     }
 
+    @Test
+    public void createDuplicateLanguage() throws IOException {
+        var language = adminClient.createLanguage("elf");
+        var ex       = assertThrows(CinnamonClientException.class, () -> adminClient.createLanguage("elf"));
+        assertEquals(ErrorCode.DB_INSERT_FAILED, ex.getErrorCode());
+    }
+
+    @Test
+    public void createLanguageNonSuperuser() {
+        var ex = assertThrows(CinnamonClientException.class, () -> client.createLanguage("elf"));
+        assertEquals(ErrorCode.REQUIRES_SUPERUSER_STATUS, ex.getErrorCode());
+    }
+
+    @Test
+    public void updateLanguageHappyPath() throws IOException {
+        var language = adminClient.createLanguage("dwarf");
+        language.setIsoCode("gnome");
+        adminClient.updateLanguage(language);
+    }
+
+    @Test
+    public void updateLanguageNonSuperuser() throws IOException {
+        var language = adminClient.createLanguage("troll");
+        language.setIsoCode("gnome");
+        var ex = assertThrows(CinnamonClientException.class, () ->
+                client.updateLanguage(language));
+        assertEquals(ErrorCode.REQUIRES_SUPERUSER_STATUS, ex.getErrorCode());
+    }
+
+    @Test
+    public void deleteLanguageHappyPath() throws IOException {
+        var language = adminClient.createLanguage("goblin");
+        assertTrue(adminClient.deleteLanguage(language.getId()));
+        long remaining = client.listLanguages().stream().filter(lang -> lang.getIsoCode().equals("goblin")).count();
+        assertEquals(0, remaining);
+    }
+
+    @Test
+    public void deleteLanguageWhichIsInUse() throws IOException {
+        var toh = new TestObjectHolder(adminClient,"reviewers.acl",userId, createFolderId);
+        var osd = toh.createOsd("delete-language-in-use-test").osd;
+        var language = adminClient.createLanguage("test");
+        var updateRequest = new UpdateOsdRequest(osd.getId(), null,null,null,null,null,language.getId());
+        client.lockOsd(osd.getId());
+        assertTrue(client.updateOsd(updateRequest));
+        var ex = assertThrows(CinnamonClientException.class, () -> adminClient.deleteLanguage(language.getId()));
+        assertEquals(ErrorCode.DB_DELETE_FAILED, ex.getErrorCode());
+    }
+
+    @Test
+    public void deleteLanguageNonSuperuser() throws IOException {
+        var language = adminClient.createLanguage("client");
+        var ex = assertThrows(CinnamonClientException.class, () ->
+                client.deleteLanguage(language.getId()));
+        assertEquals(ErrorCode.REQUIRES_SUPERUSER_STATUS, ex.getErrorCode());
+    }
 
 }
