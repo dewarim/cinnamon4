@@ -35,7 +35,7 @@ public class ChangeAclState implements State {
         }
         String aclName = aclNames.get(0);
         AclDao aclDao = new AclDao();
-        Acl acl = aclDao.getAclByName(aclName);
+        Acl acl = aclDao.getAclByName(aclName).orElse(null);
         if (acl == null) {
             return new StateChangeResult(false, Arrays.asList(ErrorCode.ACL_NOT_FOUND.getCode(), aclName));
         }

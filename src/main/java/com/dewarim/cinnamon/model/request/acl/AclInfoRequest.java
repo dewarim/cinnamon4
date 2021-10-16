@@ -3,6 +3,8 @@ package com.dewarim.cinnamon.model.request.acl;
 import com.dewarim.cinnamon.api.ApiRequest;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
+import java.util.Optional;
+
 @JacksonXmlRootElement(localName = "aclInfoRequest")
 public class AclInfoRequest implements ApiRequest {
     
@@ -40,4 +42,17 @@ public class AclInfoRequest implements ApiRequest {
     public boolean byName(){
         return name != null;
     }
+
+    public boolean validated(){
+        return (aclId != null && aclId > 0) || (name != null && name.trim().length() > 0);
+    }
+
+    public Optional<AclInfoRequest> validateRequest(){
+        if (validated()) {
+            return Optional.of(this);
+        } else {
+            return Optional.empty();
+        }
+    }
+
 }

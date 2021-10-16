@@ -18,9 +18,9 @@ public class AclDao implements CrudDao<Acl> {
         return Optional.ofNullable(acl);
     }
 
-    public Acl getAclByName(String name) {
+    public Optional<Acl> getAclByName(String name) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        return sqlSession.selectOne("com.dewarim.cinnamon.model.Acl.getAclByName", name);
+        return Optional.ofNullable(sqlSession.selectOne("com.dewarim.cinnamon.model.Acl.getAclByName", name));
     }
 
     public List<Acl> getUserAcls(Long userId) {

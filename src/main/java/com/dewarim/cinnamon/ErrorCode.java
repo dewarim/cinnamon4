@@ -37,7 +37,6 @@ public enum ErrorCode {
     FORMAT_NOT_FOUND("format object was not found for given id", HttpServletResponse.SC_NOT_FOUND),
     ID_PARAM_IS_INVALID("id param is missing or invalid", HttpServletResponse.SC_BAD_REQUEST),
     ILLEGAL_STATE("reached illegal state, please contact administrator", HttpServletResponse.SC_INTERNAL_SERVER_ERROR),
-    INFO_REQUEST_WITHOUT_NAME_OR_ID("request needs id or name parameter", HttpServletResponse.SC_BAD_REQUEST),
     INTERNAL_SERVER_ERROR_TRY_AGAIN_LATER("internal server  please retry later", HttpServletResponse.SC_INTERNAL_SERVER_ERROR),
     INVALID_FOLDER_PATH_STRUCTURE("Invalid folder path structure.", HttpServletResponse.SC_BAD_REQUEST),
     INVALID_LINK_RESOLVER("Links to folders must have LinkResolver.FIXED.", HttpServletResponse.SC_BAD_REQUEST),

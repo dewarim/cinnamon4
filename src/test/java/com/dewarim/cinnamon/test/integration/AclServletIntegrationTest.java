@@ -111,12 +111,12 @@ public class AclServletIntegrationTest extends CinnamonIntegrationTest {
     public void invalidRequestForAcl() throws IOException {
         AclInfoRequest aclInfoRequest  = new AclInfoRequest(null, null);
         HttpResponse   aclListResponse = sendAdminRequest(UrlMapping.ACL__ACL_INFO, aclInfoRequest);
-        assertCinnamonError(aclListResponse, ErrorCode.INFO_REQUEST_WITHOUT_NAME_OR_ID);
+        assertCinnamonError(aclListResponse, ErrorCode.INVALID_REQUEST);
     }
 
     @Test
     public void requestForNonExistentAclShouldFail() throws IOException {
-        HttpResponse aclListResponse = sendAdminRequest(UrlMapping.ACL__ACL_INFO, new AclInfoRequest(0L, null));
+        HttpResponse aclListResponse = sendAdminRequest(UrlMapping.ACL__ACL_INFO, new AclInfoRequest(null, "unkown acl"));
         assertCinnamonError(aclListResponse, ErrorCode.ACL_NOT_FOUND);
     }
 
@@ -165,7 +165,7 @@ public class AclServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void getUserAclsShouldFailWithoutValidId() throws IOException {
         HttpResponse response = sendAdminRequest(UrlMapping.ACL__GET_USER_ACLS, new IdRequest(-1L));
-        assertCinnamonError(response, ErrorCode.ID_PARAM_IS_INVALID);
+        assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
     }
 
     private List<Acl> unwrapAcls(HttpResponse response, Integer expectedSize) throws IOException {
