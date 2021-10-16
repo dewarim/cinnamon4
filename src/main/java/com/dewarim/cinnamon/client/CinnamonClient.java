@@ -35,7 +35,10 @@ import com.dewarim.cinnamon.model.request.folderType.CreateFolderTypeRequest;
 import com.dewarim.cinnamon.model.request.folderType.DeleteFolderTypeRequest;
 import com.dewarim.cinnamon.model.request.folderType.ListFolderTypeRequest;
 import com.dewarim.cinnamon.model.request.folderType.UpdateFolderTypeRequest;
+import com.dewarim.cinnamon.model.request.format.CreateFormatRequest;
+import com.dewarim.cinnamon.model.request.format.DeleteFormatRequest;
 import com.dewarim.cinnamon.model.request.format.ListFormatRequest;
+import com.dewarim.cinnamon.model.request.format.UpdateFormatRequest;
 import com.dewarim.cinnamon.model.request.group.CreateGroupRequest;
 import com.dewarim.cinnamon.model.request.group.DeleteGroupRequest;
 import com.dewarim.cinnamon.model.request.group.ListGroupRequest;
@@ -608,6 +611,24 @@ public class CinnamonClient {
         var request  = new ListLanguageRequest();
         var response = sendStandardRequest(UrlMapping.LANGUAGE__LIST__LANGUAGES, request);
         return languageUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
+    }
+
+    public Format createFormat(String contentType, String extension, String name, long defaultObjectTypeId) throws IOException {
+        var request = new CreateFormatRequest(List.of(new Format(contentType,extension,name,defaultObjectTypeId)));
+        var response = sendStandardRequest(UrlMapping.FORMAT__CREATE, request);
+        return formatUnwrapper.unwrap(response, 1).get(0);
+    }
+
+    public void updateFormat(Format format) throws IOException {
+        var request = new UpdateFormatRequest(List.of(format));
+        var response = sendStandardRequest(UrlMapping.FORMAT__UPDATE, request);
+        verifyResponseIsOkay(response);
+    }
+
+    public void deleteFormat(Long id) throws IOException {
+        var request = new DeleteFormatRequest(List.of(id));
+        var response = sendStandardRequest(UrlMapping.FORMAT__DELETE, request);
+        verifyResponseIsOkay(response);
     }
 }
 
