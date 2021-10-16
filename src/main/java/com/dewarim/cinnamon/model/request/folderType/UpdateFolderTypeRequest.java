@@ -5,6 +5,8 @@ import com.dewarim.cinnamon.model.FolderType;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.response.FolderTypeWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
@@ -13,6 +15,8 @@ import java.util.List;
 @JacksonXmlRootElement(localName = "updateFolderTypeRequest")
 public class UpdateFolderTypeRequest implements UpdateRequest<FolderType>, ApiRequest {
 
+    @JacksonXmlElementWrapper(localName = "folderTypes")
+    @JacksonXmlProperty(localName = "folderType")
     private List<FolderType> folderTypes = new ArrayList<>();
 
     @Override

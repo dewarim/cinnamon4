@@ -6,8 +6,10 @@ import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.client.CinnamonClientException;
 import com.dewarim.cinnamon.client.Unwrapper;
 import com.dewarim.cinnamon.model.FolderType;
+import com.dewarim.cinnamon.model.request.folder.UpdateFolderRequest;
 import com.dewarim.cinnamon.model.request.folderType.ListFolderTypeRequest;
 import com.dewarim.cinnamon.model.response.FolderTypeWrapper;
+import com.dewarim.cinnamon.test.TestObjectHolder;
 import org.apache.http.HttpResponse;
 import org.junit.jupiter.api.Test;
 
@@ -84,6 +86,18 @@ public class FolderTypeServletIntegrationTest extends CinnamonIntegrationTest {
         } catch (CinnamonClientException e) {
             assertEquals(e.getErrorCode(), ErrorCode.REQUIRES_SUPERUSER_STATUS);
         }
+    }
+
+    @Test
+    public void deleteFolderTypeWhichIsInUse() throws IOException{
+        var folderType = adminClient.createFolderTypes(List.of("in-use-folder-type")).get(0);
+        var toh = new TestObjectHolder(client, "reviewers.acl",userId,createFolderId);
+        toh.createFolder("in-use-folder-type-test", createFolderId);
+        var folder = toh.folder;
+        client.updateFolders(new UpdateFolderRequest(folder.getId(), null,null,null,folderType.getId(), null));
+        var ex = assertThrows(CinnamonClientException.class,
+                () -> adminClient.deleteFolderTypes(List.of(folderType.getId())));
+        assertEquals(ErrorCode.DB_DELETE_FAILED, ex.getErrorCode());
     }
 
 
