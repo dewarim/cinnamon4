@@ -8,10 +8,6 @@ import java.util.Optional;
 
 public class MetasetTypeDao implements CrudDao<MetasetType>{
 
-    /**
-     * @deprecated migrate to CrudDao
-     */
-    @Deprecated
     public Optional<MetasetType> getMetasetTypeById(long id) {
         SqlSession   sqlSession   = ThreadLocalSqlSession.getSqlSession();
         MetasetType metasetType = sqlSession.selectOne("com.dewarim.cinnamon.model.MetasetType.getMetasetTypeById", id);
@@ -23,7 +19,6 @@ public class MetasetTypeDao implements CrudDao<MetasetType>{
         MetasetType metasetType = sqlSession.selectOne("com.dewarim.cinnamon.model.MetasetType.getMetasetTypeByName", name);
         return Optional.ofNullable(metasetType);
     }
-
 
     @Override
     public String getTypeClassName() {

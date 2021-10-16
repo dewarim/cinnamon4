@@ -5,17 +5,22 @@ import com.dewarim.cinnamon.api.Identifiable;
 import java.util.Objects;
 
 public class MetasetType implements Identifiable {
-    
-    private Long id;
-    private String name;
-    private Boolean unique;
-    
+
+    private Long    id;
+    private String  name;
+    private Boolean unique = false;
+
     public MetasetType() {
     }
 
     public MetasetType(Long id, String name) {
         this.id = id;
         this.name = name;
+    }
+
+    public MetasetType(String name, boolean unique) {
+        this.name = name;
+        this.unique = unique;
     }
 
     public Long getId() {
@@ -57,7 +62,6 @@ public class MetasetType implements Identifiable {
 
     @Override
     public int hashCode() {
-
         return Objects.hash(name);
     }
 

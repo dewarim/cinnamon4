@@ -13,31 +13,27 @@ import java.util.List;
 @JacksonXmlRootElement(localName = "updateFolderTypeRequest")
 public class UpdateFolderTypeRequest implements UpdateRequest<FolderType>, ApiRequest {
 
-    private List<FolderType> FolderTypes = new ArrayList<>();
+    private List<FolderType> folderTypes = new ArrayList<>();
 
     @Override
     public List<FolderType> list() {
-        return FolderTypes;
+        return folderTypes;
     }
 
     public UpdateFolderTypeRequest() {
     }
 
     public UpdateFolderTypeRequest(Long id, String name) {
-        FolderTypes.add(new FolderType(id,name));
+        folderTypes.add(new FolderType(id,name));
     }
 
-    public UpdateFolderTypeRequest(List<FolderType> FolderTypes) {
-        this.FolderTypes = FolderTypes;
-    }
-
-    public List<FolderType> getFolderTypes() {
-        return FolderTypes;
+    public UpdateFolderTypeRequest(List<FolderType> folderTypes) {
+        this.folderTypes = folderTypes;
     }
 
     @Override
     public boolean validated() {
-        return FolderTypes.stream().allMatch(FolderType ->
+        return folderTypes.stream().allMatch(FolderType ->
             FolderType != null && FolderType.getName() != null && !FolderType.getName().trim().isEmpty()
                     && FolderType.getId() != null && FolderType.getId() > 0);
     }

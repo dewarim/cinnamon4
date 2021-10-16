@@ -54,7 +54,10 @@ import com.dewarim.cinnamon.model.request.link.DeleteLinkRequest;
 import com.dewarim.cinnamon.model.request.link.GetLinksRequest;
 import com.dewarim.cinnamon.model.request.link.LinkWrapper;
 import com.dewarim.cinnamon.model.request.link.UpdateLinkRequest;
+import com.dewarim.cinnamon.model.request.metasetType.CreateMetasetTypeRequest;
+import com.dewarim.cinnamon.model.request.metasetType.DeleteMetasetTypeRequest;
 import com.dewarim.cinnamon.model.request.metasetType.ListMetasetTypeRequest;
+import com.dewarim.cinnamon.model.request.metasetType.UpdateMetasetTypeRequest;
 import com.dewarim.cinnamon.model.request.objectType.CreateObjectTypeRequest;
 import com.dewarim.cinnamon.model.request.objectType.DeleteObjectTypeRequest;
 import com.dewarim.cinnamon.model.request.objectType.ListObjectTypeRequest;
@@ -181,7 +184,10 @@ public enum UrlMapping {
     LINK__DELETE("link", "delete", "/api", "", DeleteLinkRequest.class, DeleteResponse.class),
     LINK__GET_LINKS_BY_ID("link", "getLinksById", "/api", "", GetLinksRequest.class, LinkResponseWrapper.class),
     LINK__UPDATE("link", "update", "/api", "", UpdateLinkRequest.class, LinkWrapper.class),
+    METASET_TYPE__CREATE("metasetType", "create", "/api", "", CreateMetasetTypeRequest.class, MetasetTypeWrapper.class),
+    METASET_TYPE__DELETE("metasetType", "delete", "/api", "", DeleteMetasetTypeRequest.class, DeleteResponse.class),
     METASET_TYPE__LIST("metasetType", "list", "/api", "", ListMetasetTypeRequest.class, MetasetTypeWrapper.class),
+    METASET_TYPE__UPDATE("metasetType", "update", "/api", "", UpdateMetasetTypeRequest.class, MetasetTypeWrapper.class),
     NULL_MAPPING("", "", "/api", "", null, null),
     OBJECT_TYPE__LIST("objectType", "list", "/api", "", ListObjectTypeRequest.class, ObjectTypeWrapper.class),
     OBJECT_TYPE__CREATE("objectType", "create", "/api", "", CreateObjectTypeRequest.class, ObjectTypeWrapper.class),

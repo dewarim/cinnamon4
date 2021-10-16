@@ -28,5 +28,39 @@
         WHERE name = #{name}
     </select>
 
+    <select id="getAllById" parameterType="list" resultMap="metasetTypeMap">
+        SELECT *
+        FROM metaset_types
+        WHERE id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <update id="update" parameterType="com.dewarim.cinnamon.model.MetasetType">
+        UPDATE metaset_types
+        SET name = #{name},
+            is_unique = #{unique}
+        WHERE id = #{id}
+    </update>
+
+    <insert id="insert" parameterType="com.dewarim.cinnamon.model.MetasetType">
+        <selectKey keyProperty="id" resultType="long" order="BEFORE">
+            select nextval('seq_metaset_type_id')
+        </selectKey>
+        INSERT INTO metaset_types(id, name, is_unique) VALUES (#{id}, #{name}, #{unique})
+    </insert>
+
+    <delete id="delete" parameterType="list">
+        DELETE
+        FROM metaset_types
+        WHERE id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
 
 </mapper>

@@ -55,7 +55,10 @@ import com.dewarim.cinnamon.model.request.link.DeleteLinkRequest;
 import com.dewarim.cinnamon.model.request.link.GetLinksRequest;
 import com.dewarim.cinnamon.model.request.link.LinkWrapper;
 import com.dewarim.cinnamon.model.request.link.UpdateLinkRequest;
+import com.dewarim.cinnamon.model.request.metasetType.CreateMetasetTypeRequest;
+import com.dewarim.cinnamon.model.request.metasetType.DeleteMetasetTypeRequest;
 import com.dewarim.cinnamon.model.request.metasetType.ListMetasetTypeRequest;
+import com.dewarim.cinnamon.model.request.metasetType.UpdateMetasetTypeRequest;
 import com.dewarim.cinnamon.model.request.objectType.CreateObjectTypeRequest;
 import com.dewarim.cinnamon.model.request.objectType.ListObjectTypeRequest;
 import com.dewarim.cinnamon.model.request.osd.CreateOsdRequest;
@@ -376,6 +379,11 @@ public class CinnamonClient {
         return metaUnwrapper.unwrap(response, 1);
     }
 
+    public List<Meta> createOsdMeta(CreateMetaRequest metaRequest) throws IOException {
+        HttpResponse response = sendStandardRequest(UrlMapping.OSD__CREATE_META, metaRequest);
+        return metaUnwrapper.unwrap(response, 1);
+    }
+
     public void updateFolders(UpdateFolderRequest updateFolderRequest) throws IOException {
         HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__UPDATE, updateFolderRequest);
         verifyResponseIsOkay(response);
@@ -681,6 +689,24 @@ public class CinnamonClient {
         var request  = new ListUiLanguageRequest();
         var response = sendStandardRequest(UrlMapping.UI_LANGUAGE__LIST, request);
         return uiLanguageUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
+    }
+
+    public MetasetType createMetasetType(String name, boolean unique) throws IOException {
+        var request  = new CreateMetasetTypeRequest(name, unique);
+        var response = sendStandardRequest(UrlMapping.METASET_TYPE__CREATE, request);
+        return metasetTypeUnwrapper.unwrap(response, 1).get(0);
+    }
+
+    public void updateMetasetType(MetasetType metasetType) throws IOException {
+        var request  = new UpdateMetasetTypeRequest(List.of(metasetType));
+        var response = sendStandardRequest(UrlMapping.METASET_TYPE__UPDATE, request);
+        verifyResponseIsOkay(response);
+    }
+
+    public boolean deleteMetasetType(Long id) throws IOException {
+        var request  = new DeleteMetasetTypeRequest(id);
+        var response = sendStandardRequest(UrlMapping.METASET_TYPE__DELETE, request);
+        return verifyDeleteResponse(response);
     }
 }
 
