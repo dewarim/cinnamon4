@@ -110,7 +110,7 @@ public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createRelationWithUnknownRelationType() throws IOException {
-        CreateRelationRequest createRequest = new CreateRelationRequest(1L, 1L, "unknown", null);
+        CreateRelationRequest createRequest = new CreateRelationRequest(1L, 1L, Long.MAX_VALUE, "<meta/>");
         HttpResponse          response      = sendStandardRequest(UrlMapping.RELATION__CREATE, createRequest);
         assertCinnamonError(response, ErrorCode.RELATION_TYPE_NOT_FOUND);
     }
@@ -132,7 +132,7 @@ public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void happyPathCreateAndDeleteRelation() throws IOException {
         // create
-        CreateRelationRequest createRequest  = new CreateRelationRequest(21L, 20L, firstRelationTypeName, "<meta>m</meta>");
+        CreateRelationRequest createRequest  = new CreateRelationRequest(21L, 20L, 1L, "<meta>m</meta>");
         HttpResponse          createResponse = sendStandardRequest(UrlMapping.RELATION__CREATE, createRequest);
         assertResponseOkay(createResponse);
 

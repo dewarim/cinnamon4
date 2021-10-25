@@ -5,6 +5,8 @@ import com.dewarim.cinnamon.model.AclGroup;
 import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.response.AclGroupWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
@@ -15,6 +17,8 @@ import static java.util.Objects.isNull;
 @JacksonXmlRootElement(localName = "createAclGroupRequest")
 public class CreateAclGroupRequest implements CreateRequest<AclGroup>, ApiRequest {
 
+    @JacksonXmlElementWrapper(localName = "aclGroups")
+    @JacksonXmlProperty(localName = "aclGroup")
     private List<AclGroup> aclGroups = new ArrayList<>();
 
     @Override

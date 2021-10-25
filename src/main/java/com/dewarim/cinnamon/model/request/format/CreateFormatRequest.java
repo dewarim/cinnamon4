@@ -5,6 +5,8 @@ import com.dewarim.cinnamon.model.Format;
 import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.response.FormatWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
@@ -14,6 +16,8 @@ import java.util.Objects;
 @JacksonXmlRootElement(localName = "createFormatRequest")
 public class CreateFormatRequest implements CreateRequest<Format>, ApiRequest {
 
+    @JacksonXmlElementWrapper(localName = "formats")
+    @JacksonXmlProperty(localName = "format")
     private List<Format> formats = new ArrayList<>();
 
     public CreateFormatRequest() {

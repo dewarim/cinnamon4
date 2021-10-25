@@ -5,6 +5,8 @@ import com.dewarim.cinnamon.model.Language;
 import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.response.LanguageWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
@@ -14,31 +16,38 @@ import java.util.stream.Collectors;
 @JacksonXmlRootElement(localName = "createLanguageRequest")
 public class CreateLanguageRequest implements CreateRequest<Language>, ApiRequest {
 
-    private List<String> isoCode = new ArrayList<>();
+    @JacksonXmlElementWrapper(localName = "isoCodes")
+    @JacksonXmlProperty(localName = "isoCode")
+    private List<String> isoCodes = new ArrayList<>();
 
     @Override
     public List<Language> list() {
-        return isoCode.stream().map(name -> new Language(null, name)).collect(Collectors.toList());
+        return isoCodes.stream().map(name -> new Language(null, name)).collect(Collectors.toList());
     }
 
     public CreateLanguageRequest() {
     }
 
-    public CreateLanguageRequest(List<String> isoCode) {
-        this.isoCode = isoCode;
+    public CreateLanguageRequest(List<String> isoCodes) {
+        this.isoCodes = isoCodes;
     }
 
-    public List<String> getIsoCode() {
-        return isoCode;
+    public List<String> getIsoCodes() {
+        return isoCodes;
     }
 
     @Override
     public boolean validated() {
-        return isoCode.stream().noneMatch(name -> name == null || name.trim().isEmpty());
+        return isoCodes.stream().noneMatch(name -> name == null || name.trim().isEmpty());
     }
 
     @Override
     public Wrapper<Language> fetchResponseWrapper() {
         return new LanguageWrapper();
+    }
+
+    @Override
+    public List<Object> examples() {
+        return List.of(new CreateLanguageRequest(List.of("en", "de", "fr")));
     }
 }

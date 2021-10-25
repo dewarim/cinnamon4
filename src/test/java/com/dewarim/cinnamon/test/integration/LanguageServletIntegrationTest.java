@@ -45,6 +45,12 @@ public class LanguageServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
+    public void createTwoLanguages() throws IOException{
+        var languages = adminClient.createLanguages(List.of("bicorn", "unicorn"));
+        assertEquals(2, languages.size());
+    }
+
+    @Test
     public void createLanguageNonSuperuser() {
         var ex = assertThrows(CinnamonClientException.class, () -> client.createLanguage("elf"));
         assertEquals(ErrorCode.REQUIRES_SUPERUSER_STATUS, ex.getErrorCode());

@@ -1159,7 +1159,11 @@ Fetch a single folder
 
 ```xml
 <createLanguageRequest>
-  <isoCode/>
+  <isoCodes>
+    <isoCode>en</isoCode>
+    <isoCode>de</isoCode>
+    <isoCode>fr</isoCode>
+  </isoCodes>
 </createLanguageRequest>
 
 ```
@@ -1687,7 +1691,10 @@ List lifecycles
 
 ```xml
 <createObjectTypeRequest>
-  <names/>
+  <names>
+    <name>default type</name>
+    <name>other type</name>
+  </names>
 </createObjectTypeRequest>
 
 ```
@@ -2378,10 +2385,29 @@ part "file", if the new version should contain data.
 
 ```xml
 <createRelationRequest>
-  <leftId/>
-  <rightId/>
-  <typeName/>
-  <metadata>&lt;meta/></metadata>
+  <relations>
+    <relation>
+      <id/>
+      <leftId>1</leftId>
+      <rightId>2</rightId>
+      <typeId>3</typeId>
+      <metadata>&lt;meta/></metadata>
+    </relation>
+  </relations>
+</createRelationRequest>
+
+```
+```xml
+<createRelationRequest>
+  <relations>
+    <relation>
+      <id/>
+      <leftId>2</leftId>
+      <rightId>1</rightId>
+      <typeId>10</typeId>
+      <metadata>&lt;xml>test&lt;/xml></metadata>
+    </relation>
+  </relations>
 </createRelationRequest>
 
 ```
@@ -2489,7 +2515,11 @@ Returns a static file from the server (for example, a favicon.ico if one exists)
 
 ```xml
 <createUiLanguageRequest>
-  <isoCode/>
+  <isoCodes>
+    <isoCode>en</isoCode>
+    <isoCode>de</isoCode>
+    <isoCode>fr</isoCode>
+  </isoCodes>
 </createUiLanguageRequest>
 
 ```

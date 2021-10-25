@@ -5,6 +5,8 @@ import com.dewarim.cinnamon.model.Group;
 import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.response.GroupWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
@@ -14,6 +16,8 @@ import java.util.stream.Collectors;
 @JacksonXmlRootElement(localName = "createGroupRequest")
 public class CreateGroupRequest implements CreateRequest<Group>, ApiRequest {
 
+    @JacksonXmlElementWrapper(localName = "names")
+    @JacksonXmlProperty(localName = "name")
     private List<String> names = new ArrayList<>();
 
     @Override
@@ -40,5 +44,10 @@ public class CreateGroupRequest implements CreateRequest<Group>, ApiRequest {
     @Override
     public Wrapper<Group> fetchResponseWrapper() {
         return new GroupWrapper();
+    }
+
+    @Override
+    public List<Object> examples() {
+        return List.of(new CreateGroupRequest(List.of("authors", "reviewers", "admins")));
     }
 }

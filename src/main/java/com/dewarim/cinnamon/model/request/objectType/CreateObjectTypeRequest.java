@@ -5,6 +5,8 @@ import com.dewarim.cinnamon.model.ObjectType;
 import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.response.ObjectTypeWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
@@ -14,6 +16,8 @@ import java.util.stream.Collectors;
 @JacksonXmlRootElement(localName = "createObjectTypeRequest")
 public class CreateObjectTypeRequest implements CreateRequest<ObjectType>, ApiRequest {
 
+    @JacksonXmlElementWrapper(localName = "names")
+    @JacksonXmlProperty(localName = "name")
     private List<String> names = new ArrayList<>();
 
     @Override
@@ -41,4 +45,10 @@ public class CreateObjectTypeRequest implements CreateRequest<ObjectType>, ApiRe
     public Wrapper<ObjectType> fetchResponseWrapper() {
         return new ObjectTypeWrapper();
     }
+
+    @Override
+    public List<Object> examples() {
+        return List.of(new CreateObjectTypeRequest(List.of("default type", "other type")));
+    }
+
 }

@@ -569,9 +569,9 @@ public class CinnamonClient {
     }
 
     // Relations
-    public Relation createRelation(Long leftId, Long rightId, String name, String metadata) throws IOException {
+    public Relation createRelation(Long leftId, Long rightId, Long typeId, String metadata) throws IOException {
         // create
-        var createRequest = new CreateRelationRequest(leftId, rightId, name, metadata);
+        var createRequest = new CreateRelationRequest(leftId, rightId, typeId, metadata);
         var response      = sendStandardRequest(UrlMapping.RELATION__CREATE, createRequest);
         return relationUnwrapper.unwrap(response, 1).get(0);
     }
@@ -653,6 +653,12 @@ public class CinnamonClient {
         var request  = new CreateLanguageRequest(List.of(isoCode));
         var response = sendStandardRequest(UrlMapping.LANGUAGE__CREATE, request);
         return languageUnwrapper.unwrap(response, 1).get(0);
+    }
+
+    public List<Language> createLanguages(List<String> isoCodes) throws IOException {
+        var request  = new CreateLanguageRequest(isoCodes);
+        var response = sendStandardRequest(UrlMapping.LANGUAGE__CREATE, request);
+        return languageUnwrapper.unwrap(response, isoCodes.size());
     }
 
     public void updateLanguage(Language language) throws IOException {

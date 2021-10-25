@@ -11,7 +11,9 @@ import org.apache.ibatis.session.SqlSession;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.dewarim.cinnamon.dao.SqlAction.*;
@@ -84,20 +86,13 @@ public interface CrudDao<T extends Identifiable> {
 
     default String getMapperNamespace(SqlAction action) {
         String name = getTypeClassName();
-        switch (action) {
-            case INSERT:
-                return name + INSERT.getSuffix();
-            case DELETE:
-                return name + DELETE.getSuffix();
-            case GET_ALL_BY_ID:
-                return name + GET_ALL_BY_ID.getSuffix();
-            case LIST:
-                return name + LIST.getSuffix();
-            case UPDATE:
-                return name + UPDATE.getSuffix();
-            default:
-                throw new IllegalArgumentException("Unmapped SqlAction " + action);
-        }
+        return switch (action) {
+            case INSERT -> name + INSERT.getSuffix();
+            case DELETE -> name + DELETE.getSuffix();
+            case GET_ALL_BY_ID -> name + GET_ALL_BY_ID.getSuffix();
+            case LIST -> name + LIST.getSuffix();
+            case UPDATE -> name + UPDATE.getSuffix();
+        };
     }
 
     static List<List<Long>> partitionLongList(List<Long> ids) {
@@ -143,6 +138,14 @@ public interface CrudDao<T extends Identifiable> {
             updatedItems.add(item);
         });
         return updatedItems;
+    }
+
+    /**
+     * Check if all objects from a list of ids actually exist.
+     */
+    default boolean verifyAllObjectsFromSetExist(List<Long> ids){
+        Set<Long> idSet = new HashSet<>(ids);
+        return getObjectsById(ids).size() == idSet.size();
     }
 
     default boolean verifyExistence() {
