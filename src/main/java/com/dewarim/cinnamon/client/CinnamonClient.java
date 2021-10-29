@@ -30,8 +30,11 @@ import com.dewarim.cinnamon.model.request.aclGroup.CreateAclGroupRequest;
 import com.dewarim.cinnamon.model.request.aclGroup.DeleteAclGroupRequest;
 import com.dewarim.cinnamon.model.request.aclGroup.ListAclGroupRequest;
 import com.dewarim.cinnamon.model.request.aclGroup.UpdateAclGroupRequest;
+import com.dewarim.cinnamon.model.request.configEntry.ConfigEntryRequest;
 import com.dewarim.cinnamon.model.request.configEntry.CreateConfigEntryRequest;
+import com.dewarim.cinnamon.model.request.configEntry.DeleteConfigEntryRequest;
 import com.dewarim.cinnamon.model.request.configEntry.ListConfigEntryRequest;
+import com.dewarim.cinnamon.model.request.configEntry.UpdateConfigEntryRequest;
 import com.dewarim.cinnamon.model.request.folder.CreateFolderRequest;
 import com.dewarim.cinnamon.model.request.folder.FolderRequest;
 import com.dewarim.cinnamon.model.request.folder.UpdateFolderRequest;
@@ -724,7 +727,7 @@ public class CinnamonClient {
 
     public ConfigEntry createConfigEntry(ConfigEntry configEntry) throws IOException {
         var request  = new CreateConfigEntryRequest(configEntry.getName(), configEntry.getConfig(), configEntry.isPublicVisibility());
-        var response = sendStandardRequest(UrlMapping.CONFIG_ENTRY__SET, request);
+        var response = sendStandardRequest(UrlMapping.CONFIG_ENTRY__CREATE, request);
         return configEntryUnwrapper.unwrap(response, 1).get(0);
     }
 
@@ -732,6 +735,36 @@ public class CinnamonClient {
         var request = new ListConfigEntryRequest();
         var response = sendStandardRequest(UrlMapping.CONFIG_ENTRY__LIST, request);
         return configEntryUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
+    }
+
+    public ConfigEntry updateConfigEntry(ConfigEntry entry) throws IOException {
+        var request = new UpdateConfigEntryRequest(List.of(entry));
+        var response = sendStandardRequest(UrlMapping.CONFIG_ENTRY__UPDATE, request);
+        return configEntryUnwrapper.unwrap(response, 1).get(0);
+    }
+
+    public void deleteConfigEntry(Long id) throws IOException{
+        var request = new DeleteConfigEntryRequest(id);
+        var response = sendStandardRequest(UrlMapping.CONFIG_ENTRY__DELETE, request);
+        verifyDeleteResponse(response);
+    }
+
+    public ConfigEntry getConfigEntry(String name) throws IOException{
+        var request = new ConfigEntryRequest(name);
+        var response = sendStandardRequest(UrlMapping.CONFIG_ENTRY__GET, request);
+        return configEntryUnwrapper.unwrap(response,1).get(0);
+    }
+
+    public List<ConfigEntry> getConfigEntries(List<Long> ids) throws IOException{
+        var request = new ConfigEntryRequest().getIds().addAll(ids);
+        var response = sendStandardRequest(UrlMapping.CONFIG_ENTRY__GET, request);
+        return configEntryUnwrapper.unwrap(response,EXPECTED_SIZE_ANY);
+    }
+
+    public ConfigEntry getConfigEntry(Long id) throws IOException{
+        var request = new ConfigEntryRequest(id);
+        var response = sendStandardRequest(UrlMapping.CONFIG_ENTRY__GET, request);
+        return configEntryUnwrapper.unwrap(response,1).get(0);
     }
 }
 

@@ -23,7 +23,10 @@ import com.dewarim.cinnamon.model.request.aclGroup.ListAclGroupRequest;
 import com.dewarim.cinnamon.model.request.aclGroup.UpdateAclGroupRequest;
 import com.dewarim.cinnamon.model.request.config.ListConfigRequest;
 import com.dewarim.cinnamon.model.request.configEntry.ConfigEntryRequest;
+import com.dewarim.cinnamon.model.request.configEntry.CreateConfigEntryRequest;
+import com.dewarim.cinnamon.model.request.configEntry.DeleteConfigEntryRequest;
 import com.dewarim.cinnamon.model.request.configEntry.ListConfigEntryRequest;
+import com.dewarim.cinnamon.model.request.configEntry.UpdateConfigEntryRequest;
 import com.dewarim.cinnamon.model.request.folder.CreateFolderRequest;
 import com.dewarim.cinnamon.model.request.folder.FolderPathRequest;
 import com.dewarim.cinnamon.model.request.folder.FolderRequest;
@@ -140,10 +143,13 @@ public enum UrlMapping {
     CINNAMON__INFO("cinnamon", "info", "", """
             Retrieve the server version and build number.
             """, null, null),
-    CONFIG_ENTRY__GET("configEntry", "get", "/api", "", ConfigEntryRequest.class, ConfigEntryWrapper.class),
-    CONFIG_ENTRY__LIST("configEntry", "list", "/api", "List all config entries the current user is allowed to see (superuser: all, normal users: only those with public visibility)",
+    CONFIG_ENTRY__GET("configEntry", "get", "/api", "Retrieve a single config entry by name or id", ConfigEntryRequest.class, ConfigEntryWrapper.class),
+    CONFIG_ENTRY__CREATE("configEntry", "create", "/api", "", CreateConfigEntryRequest.class, ConfigEntryWrapper.class),
+    CONFIG_ENTRY__LIST("configEntry", "list", "/api",
+            "List all config entries the current user is allowed to see (superuser: all, normal users: only those with public visibility)",
             ListConfigEntryRequest.class, ConfigEntryWrapper.class),
-    CONFIG_ENTRY__SET("configEntry", "set", "/api", "", ListConfigEntryRequest.class, ConfigEntryWrapper.class),
+    CONFIG_ENTRY__UPDATE("configEntry", "update", "/api", "", UpdateConfigEntryRequest.class, ConfigEntryWrapper.class),
+    CONFIG_ENTRY__DELETE("configEntry", "delete", "/api", "", DeleteConfigEntryRequest.class, DeleteResponse.class),
     CONFIG__LIST_ALL_CONFIGURATIONS("config", "listAllConfigurations", "/api", "", ListConfigRequest.class, ConfigWrapper.class),
     FOLDER_TYPE__CREATE("folderType", "create", "/api", "", CreateFolderTypeRequest.class, FolderTypeWrapper.class),
     FOLDER_TYPE__DELETE("folderType", "delete", "/api", "", DeleteFolderTypeRequest.class, DeleteResponse.class),

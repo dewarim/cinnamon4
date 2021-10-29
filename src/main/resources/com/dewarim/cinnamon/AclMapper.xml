@@ -42,7 +42,7 @@
         <selectKey keyProperty="id" resultType="long" order="BEFORE">
             select nextval('seq_acl_id')
         </selectKey>
-        INSERT INTO acls (id,name) VALUES (#{id}, #{name})
+        INSERT INTO acls (id, name) VALUES (#{id}, #{name})
     </insert>
 
     <delete id="delete" parameterType="list">
