@@ -45,4 +45,13 @@ public class ConfigEntryWrapper implements ApiResponse, Wrapper<ConfigEntry> {
         setConfigEntries(configEntries);
         return this;
     }
+
+    @Override
+    public List<Object> examples() {
+        return List.of(
+                new ConfigEntryWrapper(List.of(
+                        new ConfigEntry(1L, "default-ui-settings", "<xml><show-logo>true</show-logo></xml>", true))
+                )
+        );
+    }
 }

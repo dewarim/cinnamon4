@@ -369,14 +369,20 @@ Retrieve the server version and build number.
 
 ---
 
-# /api/configEntry/getConfigEntry
+# /api/configEntry/get
 
 
 ## Request
 
 ```xml
 <configEntryRequest>
-  <name/>
+  <name>company-name</name>
+</configEntryRequest>
+
+```
+```xml
+<configEntryRequest>
+  <name>default-ui-settings</name>
 </configEntryRequest>
 
 ```
@@ -386,7 +392,14 @@ Retrieve the server version and build number.
 
 ```xml
 <cinnamon>
-  <configEntries/>
+  <configEntries>
+    <configEntry>
+      <id>1</id>
+      <name>default-ui-settings</name>
+      <config>&lt;xml>&lt;show-logo>true&lt;/show-logo>&lt;/xml></config>
+      <publicVisibility>true</publicVisibility>
+    </configEntry>
+  </configEntries>
 </cinnamon>
 
 ```
@@ -394,17 +407,15 @@ Retrieve the server version and build number.
 
 ---
 
-# /api/configEntry/setConfigEntry
-
+# /api/configEntry/list
+List all config entries the current user is allowed to see (superuser: all, normal users: only those with public visibility)
 
 ## Request
 
 ```xml
-<createConfigEntryRequest>
-  <name/>
-  <config/>
-  <publicVisibility>false</publicVisibility>
-</createConfigEntryRequest>
+<listConfigEntryRequest>
+  <type>FULL</type>
+</listConfigEntryRequest>
 
 ```
 
@@ -413,7 +424,46 @@ Retrieve the server version and build number.
 
 ```xml
 <cinnamon>
-  <configEntries/>
+  <configEntries>
+    <configEntry>
+      <id>1</id>
+      <name>default-ui-settings</name>
+      <config>&lt;xml>&lt;show-logo>true&lt;/show-logo>&lt;/xml></config>
+      <publicVisibility>true</publicVisibility>
+    </configEntry>
+  </configEntries>
+</cinnamon>
+
+```
+
+
+---
+
+# /api/configEntry/set
+
+
+## Request
+
+```xml
+<listConfigEntryRequest>
+  <type>FULL</type>
+</listConfigEntryRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <configEntries>
+    <configEntry>
+      <id>1</id>
+      <name>default-ui-settings</name>
+      <config>&lt;xml>&lt;show-logo>true&lt;/show-logo>&lt;/xml></config>
+      <publicVisibility>true</publicVisibility>
+    </configEntry>
+  </configEntries>
 </cinnamon>
 
 ```

@@ -6,23 +6,25 @@ import org.apache.ibatis.session.SqlSession;
 
 import java.util.Optional;
 
-public class ConfigEntryDao {
+public class ConfigEntryDao implements CrudDao<ConfigEntry>{
 
     public Optional<ConfigEntry> getConfigEntryByName(String name) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        return Optional.ofNullable(sqlSession.selectOne("com.dewarim.cinnamon.ConfigEntryMapper.getConfigEntryByName", name));
+        return Optional.ofNullable(sqlSession.selectOne("com.dewarim.cinnamon.model.ConfigEntry.getConfigEntryByName", name));
     }
     
     public void insertConfigEntry(ConfigEntry configEntry) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        sqlSession.insert("com.dewarim.cinnamon.ConfigEntryMapper.insertConfigEntry", configEntry);
+        sqlSession.insert("com.dewarim.cinnamon.model.ConfigEntry.insertConfigEntry", configEntry);
     }
     
     public void updateConfigEntry(ConfigEntry configEntry) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        sqlSession.insert("com.dewarim.cinnamon.ConfigEntryMapper.updateConfigEntry", configEntry);
+        sqlSession.insert("com.dewarim.cinnamon.model.ConfigEntry.updateConfigEntry", configEntry);
     }
-    
-    
 
+    @Override
+    public String getTypeClassName() {
+        return ConfigEntry.class.getName();
+    }
 }

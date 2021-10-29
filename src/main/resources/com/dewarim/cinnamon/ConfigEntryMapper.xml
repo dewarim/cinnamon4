@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.dewarim.cinnamon.ConfigEntryMapper">
+<mapper namespace="com.dewarim.cinnamon.model.ConfigEntry">
 
     <resultMap id="configEntryMap" type="com.dewarim.cinnamon.model.ConfigEntry">
         <id property="id" column="id"/>
@@ -32,5 +32,11 @@
             public_visibility = #{publicVisibility}
         WHERE name = #{name}
     </update>
+
+    <select id="list" resultMap="configEntryMap">
+        SELECT *
+        FROM config_entries
+    </select>
+
 
 </mapper>

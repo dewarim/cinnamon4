@@ -3,6 +3,7 @@ package com.dewarim.cinnamon.client;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.AclGroup;
+import com.dewarim.cinnamon.model.ConfigEntry;
 import com.dewarim.cinnamon.model.Folder;
 import com.dewarim.cinnamon.model.FolderType;
 import com.dewarim.cinnamon.model.Format;
@@ -29,6 +30,8 @@ import com.dewarim.cinnamon.model.request.aclGroup.CreateAclGroupRequest;
 import com.dewarim.cinnamon.model.request.aclGroup.DeleteAclGroupRequest;
 import com.dewarim.cinnamon.model.request.aclGroup.ListAclGroupRequest;
 import com.dewarim.cinnamon.model.request.aclGroup.UpdateAclGroupRequest;
+import com.dewarim.cinnamon.model.request.configEntry.CreateConfigEntryRequest;
+import com.dewarim.cinnamon.model.request.configEntry.ListConfigEntryRequest;
 import com.dewarim.cinnamon.model.request.folder.CreateFolderRequest;
 import com.dewarim.cinnamon.model.request.folder.FolderRequest;
 import com.dewarim.cinnamon.model.request.folder.UpdateFolderRequest;
@@ -83,6 +86,7 @@ import com.dewarim.cinnamon.model.response.AclWrapper;
 import com.dewarim.cinnamon.model.response.CinnamonConnection;
 import com.dewarim.cinnamon.model.response.CinnamonError;
 import com.dewarim.cinnamon.model.response.CinnamonErrorWrapper;
+import com.dewarim.cinnamon.model.response.ConfigEntryWrapper;
 import com.dewarim.cinnamon.model.response.DeleteResponse;
 import com.dewarim.cinnamon.model.response.DisconnectResponse;
 import com.dewarim.cinnamon.model.response.FolderTypeWrapper;
@@ -138,6 +142,7 @@ public class CinnamonClient {
     private       String    ticket;
     private final XmlMapper mapper   = XML_MAPPER;
 
+    private final Unwrapper<ConfigEntry, ConfigEntryWrapper>        configEntryUnwrapper  = new Unwrapper<>(ConfigEntryWrapper.class);
     private final Unwrapper<ObjectSystemData, OsdWrapper>           osdUnwrapper          = new Unwrapper<>(OsdWrapper.class);
     private final Unwrapper<FolderType, FolderTypeWrapper>          folderTypeUnwrapper   = new Unwrapper<>(FolderTypeWrapper.class);
     private final Unwrapper<ObjectType, ObjectTypeWrapper>          objectTypeUnwrapper   = new Unwrapper<>(ObjectTypeWrapper.class);
@@ -392,8 +397,8 @@ public class CinnamonClient {
 
     // FolderTypes
     public List<FolderType> createFolderTypes(List<String> names) throws IOException {
-        var folderTypes = names.stream().map(FolderType::new).collect(Collectors.toList());
-        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER_TYPE__CREATE, new CreateFolderTypeRequest(folderTypes));
+        var          folderTypes = names.stream().map(FolderType::new).collect(Collectors.toList());
+        HttpResponse response    = sendStandardRequest(UrlMapping.FOLDER_TYPE__CREATE, new CreateFolderTypeRequest(folderTypes));
         return folderTypeUnwrapper.unwrap(response, names.size());
     }
 
@@ -715,6 +720,18 @@ public class CinnamonClient {
         var request  = new DeleteMetasetTypeRequest(id);
         var response = sendStandardRequest(UrlMapping.METASET_TYPE__DELETE, request);
         return verifyDeleteResponse(response);
+    }
+
+    public ConfigEntry createConfigEntry(ConfigEntry configEntry) throws IOException {
+        var request  = new CreateConfigEntryRequest(configEntry.getName(), configEntry.getConfig(), configEntry.isPublicVisibility());
+        var response = sendStandardRequest(UrlMapping.CONFIG_ENTRY__SET, request);
+        return configEntryUnwrapper.unwrap(response, 1).get(0);
+    }
+
+    public List<ConfigEntry> listConfigEntries() throws IOException{
+        var request = new ListConfigEntryRequest();
+        var response = sendStandardRequest(UrlMapping.CONFIG_ENTRY__LIST, request);
+        return configEntryUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 }
 

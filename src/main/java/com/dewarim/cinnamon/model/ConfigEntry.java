@@ -20,6 +20,13 @@ public class ConfigEntry implements Identifiable {
         this.publicVisibility = publicVisibility;
     }
 
+    public ConfigEntry(Long id, String name, String config, boolean publicVisibility) {
+        this.id = id;
+        this.name = name;
+        this.config = config;
+        this.publicVisibility = publicVisibility;
+    }
+
     public Long getId() {
         return id;
     }
