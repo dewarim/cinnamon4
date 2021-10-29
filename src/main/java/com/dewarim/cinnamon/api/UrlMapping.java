@@ -143,13 +143,13 @@ public enum UrlMapping {
     CINNAMON__INFO("cinnamon", "info", "", """
             Retrieve the server version and build number.
             """, null, null),
-    CONFIG_ENTRY__GET("configEntry", "get", "/api", "Retrieve a single config entry by name or id", ConfigEntryRequest.class, ConfigEntryWrapper.class),
-    CONFIG_ENTRY__CREATE("configEntry", "create", "/api", "", CreateConfigEntryRequest.class, ConfigEntryWrapper.class),
+    CONFIG_ENTRY__GET("configEntry", "get", "/api", "Retrieve a config entries by names or ids", ConfigEntryRequest.class, ConfigEntryWrapper.class),
+    CONFIG_ENTRY__CREATE("configEntry", "create", "/api", "Create a new config entry", CreateConfigEntryRequest.class, ConfigEntryWrapper.class),
     CONFIG_ENTRY__LIST("configEntry", "list", "/api",
             "List all config entries the current user is allowed to see (superuser: all, normal users: only those with public visibility)",
             ListConfigEntryRequest.class, ConfigEntryWrapper.class),
-    CONFIG_ENTRY__UPDATE("configEntry", "update", "/api", "", UpdateConfigEntryRequest.class, ConfigEntryWrapper.class),
-    CONFIG_ENTRY__DELETE("configEntry", "delete", "/api", "", DeleteConfigEntryRequest.class, DeleteResponse.class),
+    CONFIG_ENTRY__UPDATE("configEntry", "update", "/api", "Update a list of config entries", UpdateConfigEntryRequest.class, ConfigEntryWrapper.class),
+    CONFIG_ENTRY__DELETE("configEntry", "delete", "/api", "Delete a list of config entries", DeleteConfigEntryRequest.class, DeleteResponse.class),
     CONFIG__LIST_ALL_CONFIGURATIONS("config", "listAllConfigurations", "/api", "", ListConfigRequest.class, ConfigWrapper.class),
     FOLDER_TYPE__CREATE("folderType", "create", "/api", "", CreateFolderTypeRequest.class, FolderTypeWrapper.class),
     FOLDER_TYPE__DELETE("folderType", "delete", "/api", "", DeleteFolderTypeRequest.class, DeleteResponse.class),

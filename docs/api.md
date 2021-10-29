@@ -370,20 +370,78 @@ Retrieve the server version and build number.
 ---
 
 # /api/configEntry/get
-
+Retrieve a config entries by names or ids
 
 ## Request
 
 ```xml
 <configEntryRequest>
-  <name>company-name</name>
+  <names/>
+  <ids>
+    <id>123</id>
+  </ids>
 </configEntryRequest>
 
 ```
 ```xml
 <configEntryRequest>
-  <name>default-ui-settings</name>
+  <names>
+    <name>default-ui-settings</name>
+  </names>
+  <ids/>
 </configEntryRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <configEntries>
+    <configEntry>
+      <id>1</id>
+      <name>default-ui-settings</name>
+      <config>&lt;xml>&lt;show-logo>true&lt;/show-logo>&lt;/xml></config>
+      <publicVisibility>true</publicVisibility>
+    </configEntry>
+  </configEntries>
+</cinnamon>
+
+```
+
+
+---
+
+# /api/configEntry/create
+Create a new config entry
+
+## Request
+
+```xml
+<createConfigEntryRequest>
+  <configEntries>
+    <configEntry>
+      <id/>
+      <name>default-ui-settings</name>
+      <config>&lt;xml>&lt;show-logo>true&lt;/show-logo>&lt;/xml></config>
+      <publicVisibility>true</publicVisibility>
+    </configEntry>
+  </configEntries>
+</createConfigEntryRequest>
+
+```
+```xml
+<createConfigEntryRequest>
+  <configEntries>
+    <configEntry>
+      <id/>
+      <name>render-server-password</name>
+      <config>xxx</config>
+      <publicVisibility>false</publicVisibility>
+    </configEntry>
+  </configEntries>
+</createConfigEntryRequest>
 
 ```
 
@@ -439,15 +497,35 @@ List all config entries the current user is allowed to see (superuser: all, norm
 
 ---
 
-# /api/configEntry/set
-
+# /api/configEntry/update
+Update a list of config entries
 
 ## Request
 
 ```xml
-<listConfigEntryRequest>
-  <type>FULL</type>
-</listConfigEntryRequest>
+<createConfigEntryRequest>
+  <configEntries>
+    <configEntry>
+      <id>321</id>
+      <name>default-ui-settings</name>
+      <config>&lt;xml>&lt;show-logo>true&lt;/show-logo>&lt;/xml></config>
+      <publicVisibility>true</publicVisibility>
+    </configEntry>
+  </configEntries>
+</createConfigEntryRequest>
+
+```
+```xml
+<createConfigEntryRequest>
+  <configEntries>
+    <configEntry>
+      <id>444</id>
+      <name>render-server-password</name>
+      <config>xxx</config>
+      <publicVisibility>false</publicVisibility>
+    </configEntry>
+  </configEntries>
+</createConfigEntryRequest>
 
 ```
 
@@ -464,6 +542,32 @@ List all config entries the current user is allowed to see (superuser: all, norm
       <publicVisibility>true</publicVisibility>
     </configEntry>
   </configEntries>
+</cinnamon>
+
+```
+
+
+---
+
+# /api/configEntry/delete
+Delete a list of config entries
+
+## Request
+
+```xml
+<DeleteConfigEntryRequest>
+  <ignoreNotFound>false</ignoreNotFound>
+  <ids/>
+</DeleteConfigEntryRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <success>false</success>
 </cinnamon>
 
 ```
