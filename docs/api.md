@@ -6,18 +6,18 @@ Create a new ACL group. Note: permissions parameter is not yet implemented.
 ```xml
 <createAclGroupRequest>
   <aclGroups>
-    <aclGroups>
+    <aclGroup>
       <id/>
       <aclId>1</aclId>
       <groupId>2</groupId>
       <permissions/>
-    </aclGroups>
-    <aclGroups>
+    </aclGroup>
+    <aclGroup>
       <id/>
       <aclId>1</aclId>
       <groupId>3</groupId>
       <permissions/>
-    </aclGroups>
+    </aclGroup>
   </aclGroups>
 </createAclGroupRequest>
 
@@ -219,7 +219,20 @@ Create a new ACL group. Note: permissions parameter is not yet implemented.
 
 ```xml
 <createAclRequest>
-  <names/>
+  <acls>
+    <acl>
+      <id/>
+      <name>default acl</name>
+    </acl>
+    <acl>
+      <id/>
+      <name>reviewers</name>
+    </acl>
+    <acl>
+      <id/>
+      <name>authors</name>
+    </acl>
+  </acls>
 </createAclRequest>
 
 ```
@@ -452,7 +465,27 @@ Retrieve the server version and build number.
 
 ```xml
 <createFolderTypeRequest>
-  <names/>
+  <folderTypes>
+    <folderType>
+      <id/>
+      <name>source</name>
+    </folderType>
+  </folderTypes>
+</createFolderTypeRequest>
+
+```
+```xml
+<createFolderTypeRequest>
+  <folderTypes>
+    <folderType>
+      <id/>
+      <name>temp</name>
+    </folderType>
+    <folderType>
+      <id/>
+      <name>bin</name>
+    </folderType>
+  </folderTypes>
 </createFolderTypeRequest>
 
 ```
@@ -982,7 +1015,23 @@ Fetch a single folder
 
 ```xml
 <createGroupRequest>
-  <names/>
+  <groups>
+    <group>
+      <id/>
+      <name>authors</name>
+      <parentId>1</parentId>
+    </group>
+    <group>
+      <id/>
+      <name>reviewers</name>
+      <parentId>1</parentId>
+    </group>
+    <group>
+      <id/>
+      <name>admins</name>
+      <parentId/>
+    </group>
+  </groups>
 </createGroupRequest>
 
 ```
@@ -1159,11 +1208,20 @@ Fetch a single folder
 
 ```xml
 <createLanguageRequest>
-  <isoCodes>
-    <isoCode>en</isoCode>
-    <isoCode>de</isoCode>
-    <isoCode>fr</isoCode>
-  </isoCodes>
+  <languages>
+    <language>
+      <id/>
+      <isoCode>en</isoCode>
+    </language>
+    <language>
+      <id/>
+      <isoCode>de</isoCode>
+    </language>
+    <language>
+      <id/>
+      <isoCode>fr</isoCode>
+    </language>
+  </languages>
 </createLanguageRequest>
 
 ```
@@ -1691,10 +1749,16 @@ List lifecycles
 
 ```xml
 <createObjectTypeRequest>
-  <names>
-    <name>default type</name>
-    <name>other type</name>
-  </names>
+  <objectTypes>
+    <objectType>
+      <id/>
+      <name>default type</name>
+    </objectType>
+    <objectType>
+      <id/>
+      <name>other type</name>
+    </objectType>
+  </objectTypes>
 </createObjectTypeRequest>
 
 ```
@@ -2515,11 +2579,20 @@ Returns a static file from the server (for example, a favicon.ico if one exists)
 
 ```xml
 <createUiLanguageRequest>
-  <isoCodes>
-    <isoCode>en</isoCode>
-    <isoCode>de</isoCode>
-    <isoCode>fr</isoCode>
-  </isoCodes>
+  <uiLanguages>
+    <uiLanguage>
+      <id/>
+      <isoCode>en</isoCode>
+    </uiLanguage>
+    <uiLanguage>
+      <id/>
+      <isoCode>de</isoCode>
+    </uiLanguage>
+    <uiLanguage>
+      <id/>
+      <isoCode>fr</isoCode>
+    </uiLanguage>
+  </uiLanguages>
 </createUiLanguageRequest>
 
 ```
