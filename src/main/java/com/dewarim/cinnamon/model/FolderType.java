@@ -17,6 +17,10 @@ public class FolderType implements Identifiable {
         this.name = name;
     }
 
+    public FolderType(String name) {
+        this.name = name;
+    }
+
     public Long getId() {
         return id;
     }

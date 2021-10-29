@@ -104,6 +104,7 @@ public class GroupServletIntegrationTest extends CinnamonIntegrationTest {
         assertEquals(ErrorCode.OBJECT_NOT_FOUND, ex.getErrorCode());
     }
 
+    // TODO: add tests for group with parent (create,update,delete with existing / new parent)
     // TODO: add tests for AddUserToGroup
     // TODO: add tests for RemoveUserFromGroup
 }

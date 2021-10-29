@@ -11,34 +11,39 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @JacksonXmlRootElement(localName = "createObjectTypeRequest")
 public class CreateObjectTypeRequest implements CreateRequest<ObjectType>, ApiRequest {
 
-    @JacksonXmlElementWrapper(localName = "names")
-    @JacksonXmlProperty(localName = "name")
-    private List<String> names = new ArrayList<>();
+    @JacksonXmlElementWrapper(localName = "objectTypes")
+    @JacksonXmlProperty(localName = "objectType")
+    private List<ObjectType> objectTypes = new ArrayList<>();
 
     @Override
     public List<ObjectType> list() {
-        return names.stream().map(name -> new ObjectType(null, name)).collect(Collectors.toList());
+        return objectTypes;
     }
 
     public CreateObjectTypeRequest() {
     }
 
-    public CreateObjectTypeRequest(List<String> names) {
-        this.names = names;
+    public CreateObjectTypeRequest(String name) {
+        this.objectTypes.add(new ObjectType(name));
     }
 
-    public List<String> getNames() {
-        return names;
+    public CreateObjectTypeRequest(List<ObjectType> objectTypes) {
+        this.objectTypes = objectTypes;
+    }
+
+    public List<ObjectType> getObjectTypes() {
+        return objectTypes;
     }
 
     @Override
     public boolean validated() {
-        return names.stream().noneMatch(name -> name == null || name.trim().isEmpty());
+        return objectTypes.stream().noneMatch(type -> type == null ||
+                type.getName() == null ||
+                type.getName().trim().isEmpty());
     }
 
     @Override
@@ -48,7 +53,9 @@ public class CreateObjectTypeRequest implements CreateRequest<ObjectType>, ApiRe
 
     @Override
     public List<Object> examples() {
-        return List.of(new CreateObjectTypeRequest(List.of("default type", "other type")));
+        return List.of(new CreateObjectTypeRequest(
+                List.of(new ObjectType("default type"), new ObjectType("other type"))
+        ));
     }
 
 }

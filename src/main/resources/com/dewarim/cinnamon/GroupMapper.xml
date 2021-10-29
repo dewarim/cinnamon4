@@ -42,7 +42,7 @@
         <selectKey keyProperty="id" resultType="long" order="BEFORE">
             select nextval('seq_group_id')
         </selectKey>
-        INSERT INTO groups (id,name) VALUES (#{id}, #{name})
+        INSERT INTO groups (id,name, parent_id) VALUES (#{id}, #{name}, #{parentId})
     </insert>
 
     <delete id="delete" parameterType="list">

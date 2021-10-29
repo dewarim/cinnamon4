@@ -14,6 +14,10 @@ public class Acl implements Identifiable {
     public Acl() {
     }
 
+    public Acl(String name) {
+        this.name = name;
+    }
+
     public Acl(Long id, String name) {
         this.id = id;
         this.name = name;

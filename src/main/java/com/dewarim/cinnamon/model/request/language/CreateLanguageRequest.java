@@ -11,34 +11,39 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @JacksonXmlRootElement(localName = "createLanguageRequest")
 public class CreateLanguageRequest implements CreateRequest<Language>, ApiRequest {
 
-    @JacksonXmlElementWrapper(localName = "isoCodes")
-    @JacksonXmlProperty(localName = "isoCode")
-    private List<String> isoCodes = new ArrayList<>();
+    @JacksonXmlElementWrapper(localName = "languages")
+    @JacksonXmlProperty(localName = "language")
+    private List<Language> languages = new ArrayList<>();
 
     @Override
     public List<Language> list() {
-        return isoCodes.stream().map(name -> new Language(null, name)).collect(Collectors.toList());
+        return languages;
     }
 
     public CreateLanguageRequest() {
     }
 
-    public CreateLanguageRequest(List<String> isoCodes) {
-        this.isoCodes = isoCodes;
+    public CreateLanguageRequest(String isoCode) {
+        this.languages.add(new Language(isoCode));
     }
 
-    public List<String> getIsoCodes() {
-        return isoCodes;
+    public CreateLanguageRequest(List<Language> languages) {
+        this.languages = languages;
+    }
+
+    public List<Language> getLanguages() {
+        return languages;
     }
 
     @Override
     public boolean validated() {
-        return isoCodes.stream().noneMatch(name -> name == null || name.trim().isEmpty());
+        return languages.stream().noneMatch(language -> language == null ||
+                language.getIsoCode() == null ||
+                language.getIsoCode().trim().isEmpty());
     }
 
     @Override
@@ -48,6 +53,8 @@ public class CreateLanguageRequest implements CreateRequest<Language>, ApiReques
 
     @Override
     public List<Object> examples() {
-        return List.of(new CreateLanguageRequest(List.of("en", "de", "fr")));
+        return List.of(new CreateLanguageRequest(List.of(
+                new Language("en"), new Language("de"), new Language("fr"))
+        ));
     }
 }

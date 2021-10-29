@@ -11,38 +11,49 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @JacksonXmlRootElement(localName = "createFolderTypeRequest")
 public class CreateFolderTypeRequest implements CreateRequest<FolderType>, ApiRequest {
 
-    @JacksonXmlElementWrapper(localName = "names")
-    @JacksonXmlProperty(localName = "name")
-    private List<String> names = new ArrayList<>();
+    @JacksonXmlElementWrapper(localName = "folderTypes")
+    @JacksonXmlProperty(localName = "folderType")
+    private List<FolderType> folderTypes = new ArrayList<>();
 
     @Override
     public List<FolderType> list() {
-        return names.stream().map(name -> new FolderType(null, name)).collect(Collectors.toList());
+        return folderTypes;
     }
 
     public CreateFolderTypeRequest() {
     }
 
-    public CreateFolderTypeRequest(List<String> names) {
-        this.names = names;
+    public CreateFolderTypeRequest(List<FolderType> folderTypes) {
+        this.folderTypes = folderTypes;
     }
 
-    public List<String> getNames() {
-        return names;
+    public CreateFolderTypeRequest(String name) {
+        this.folderTypes.add(new FolderType(name));
+    }
+
+    public List<FolderType> getFolderTypes() {
+        return folderTypes;
     }
 
     @Override
     public boolean validated() {
-        return names.stream().noneMatch(name -> name == null || name.trim().isEmpty());
+        return folderTypes.stream().noneMatch(folderType -> folderType == null ||
+                folderType.getName() == null || folderType.getName().trim().isEmpty());
     }
 
     @Override
     public Wrapper<FolderType> fetchResponseWrapper() {
         return new FolderTypeWrapper();
+    }
+
+    @Override
+    public List<Object> examples() {
+        return List.of(new CreateFolderTypeRequest("source"), new CreateFolderTypeRequest(List.of(
+                new FolderType("temp"), new FolderType("bin")
+        )));
     }
 }

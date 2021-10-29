@@ -5,8 +5,8 @@ import com.dewarim.cinnamon.api.Identifiable;
 import java.util.Objects;
 
 public class ObjectType implements Identifiable {
-    
-    private Long id;
+
+    private Long   id;
     private String name;
 
     public ObjectType() {
@@ -14,6 +14,10 @@ public class ObjectType implements Identifiable {
 
     public ObjectType(Long id, String name) {
         this.id = id;
+        this.name = name;
+    }
+
+    public ObjectType(String name) {
         this.name = name;
     }
 
@@ -54,8 +58,8 @@ public class ObjectType implements Identifiable {
     @Override
     public String toString() {
         return "ObjectType{" +
-               "id=" + id +
-               ", name='" + name + '\'' +
-               '}';
+                "id=" + id +
+                ", name='" + name + '\'' +
+                '}';
     }
 }

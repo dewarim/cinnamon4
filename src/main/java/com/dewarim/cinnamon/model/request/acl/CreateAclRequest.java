@@ -11,39 +11,35 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @JacksonXmlRootElement(localName = "createAclRequest")
 public class CreateAclRequest implements CreateRequest<Acl>, ApiRequest {
 
-    @JacksonXmlElementWrapper(localName = "names")
-    @JacksonXmlProperty(localName = "name")
-    private List<String> names = new ArrayList<>();
+    @JacksonXmlElementWrapper(localName = "acls")
+    @JacksonXmlProperty(localName = "acl")
+    private List<Acl> acls = new ArrayList<>();
 
     @Override
     public List<Acl> list() {
-        return names.stream().map(name -> new Acl(null, name)).collect(Collectors.toList());
+        return acls;
     }
 
     public CreateAclRequest() {
     }
 
     public CreateAclRequest(String name) {
-        names.add(name);
+        acls.add(new Acl(name));
     }
 
-    public CreateAclRequest(List<String> names) {
-        this.names = names;
+    public CreateAclRequest(List<Acl> acls) {
+        this.acls = acls;
     }
 
-    public List<String> getNames() {
-        return names;
-    }
 
     @Override
     public boolean validated() {
-        return names.stream().noneMatch(name ->
-                name == null || name.trim().isEmpty());
+        return acls.stream().noneMatch(acl ->
+                acl == null || acl.getName() == null || acl.getName().trim().isEmpty());
     }
 
     @Override
@@ -53,6 +49,6 @@ public class CreateAclRequest implements CreateRequest<Acl>, ApiRequest {
 
     @Override
     public List<Object> examples() {
-        return List.of(new CreateAclRequest(List.of("default acl", "reviewers", "authors")));
+        return List.of(new CreateAclRequest(List.of(new Acl("default acl"), new Acl( "reviewers"), new Acl("authors"))));
     }
 }

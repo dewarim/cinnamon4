@@ -11,34 +11,43 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @JacksonXmlRootElement(localName = "createGroupRequest")
 public class CreateGroupRequest implements CreateRequest<Group>, ApiRequest {
 
-    @JacksonXmlElementWrapper(localName = "names")
-    @JacksonXmlProperty(localName = "name")
-    private List<String> names = new ArrayList<>();
+    @JacksonXmlElementWrapper(localName = "groups")
+    @JacksonXmlProperty(localName = "group")
+    private List<Group> groups = new ArrayList<>();
 
     @Override
     public List<Group> list() {
-        return names.stream().map(Group::new).collect(Collectors.toList());
+        return groups;
     }
 
     public CreateGroupRequest() {
     }
 
-    public CreateGroupRequest(List<String> names) {
-        this.names = names;
+    public CreateGroupRequest(String name) {
+        this.groups.add(new Group(name));
+    }
+    public CreateGroupRequest(String name, Long parentId) {
+        this.groups.add(new Group(name, parentId));
     }
 
-    public List<String> getNames() {
-        return names;
+    public CreateGroupRequest(List<Group> groups) {
+        this.groups = groups;
+    }
+
+    public List<Group> getGroups() {
+        return groups;
     }
 
     @Override
     public boolean validated() {
-        return names.stream().noneMatch(name -> name == null || name.trim().isEmpty());
+        return groups.stream().noneMatch(group -> group == null ||
+                (group.getParentId() != null && group.getParentId() < 1) ||
+                group.getName() == null ||
+                group.getName().trim().isEmpty());
     }
 
     @Override
@@ -48,6 +57,6 @@ public class CreateGroupRequest implements CreateRequest<Group>, ApiRequest {
 
     @Override
     public List<Object> examples() {
-        return List.of(new CreateGroupRequest(List.of("authors", "reviewers", "admins")));
+        return List.of(new CreateGroupRequest(List.of(new Group("authors", 1L), new Group("reviewers", 1L), new Group("admins"))));
     }
 }

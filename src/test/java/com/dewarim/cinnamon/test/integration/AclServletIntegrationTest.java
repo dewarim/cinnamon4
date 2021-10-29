@@ -8,7 +8,6 @@ import com.dewarim.cinnamon.client.Unwrapper;
 import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.request.IdRequest;
 import com.dewarim.cinnamon.model.request.acl.AclInfoRequest;
-import com.dewarim.cinnamon.model.request.acl.CreateAclRequest;
 import com.dewarim.cinnamon.model.request.acl.DeleteAclRequest;
 import com.dewarim.cinnamon.model.request.acl.ListAclRequest;
 import com.dewarim.cinnamon.model.request.acl.UpdateAclRequest;
@@ -46,10 +45,9 @@ public class AclServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createAclTest() throws IOException {
-        String        aclName         = "test_acl_" + Math.random();
-        HttpResponse  aclListResponse = sendAdminRequest(UrlMapping.ACL__CREATE, new CreateAclRequest(Collections.singletonList(aclName)));
-        List<Acl>     acls            = unwrapAcls(aclListResponse, 1);
-        Optional<Acl> testAcl         = acls.stream().filter(acl -> acl.getName().equals(aclName)).findFirst();
+        String        aclName = "test_acl_" + Math.random();
+        List<Acl>     acls    = adminClient.createAcl(List.of(aclName));
+        Optional<Acl> testAcl = acls.stream().filter(acl -> acl.getName().equals(aclName)).findFirst();
         assertTrue(testAcl.isPresent());
     }
 

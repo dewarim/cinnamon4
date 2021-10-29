@@ -11,34 +11,35 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @JacksonXmlRootElement(localName = "createUiLanguageRequest")
 public class CreateUiLanguageRequest implements CreateRequest<UiLanguage>, ApiRequest {
 
-    @JacksonXmlElementWrapper(localName = "isoCodes")
-    @JacksonXmlProperty(localName = "isoCode")
-    private List<String> isoCodes = new ArrayList<>();
+    @JacksonXmlElementWrapper(localName = "uiLanguages")
+    @JacksonXmlProperty(localName = "uiLanguage")
+    private List<UiLanguage> uiLanguages = new ArrayList<>();
 
     @Override
     public List<UiLanguage> list() {
-        return isoCodes.stream().map(name -> new UiLanguage(null, name)).collect(Collectors.toList());
+        return uiLanguages;
     }
 
     public CreateUiLanguageRequest() {
     }
 
-    public CreateUiLanguageRequest(List<String> isoCodes) {
-        this.isoCodes = isoCodes;
+    public CreateUiLanguageRequest(List<UiLanguage> uiLanguages) {
+        this.uiLanguages = uiLanguages;
     }
 
-    public List<String> getIsoCodes() {
-        return isoCodes;
+    public List<UiLanguage> getUiLanguages() {
+        return uiLanguages;
     }
 
     @Override
     public boolean validated() {
-        return isoCodes.stream().noneMatch(name -> name == null || name.trim().isEmpty());
+        return uiLanguages.stream().noneMatch(uiLanguage -> uiLanguage == null ||
+                uiLanguage.getIsoCode() == null ||
+                uiLanguage.getIsoCode().trim().isEmpty());
     }
 
     @Override
@@ -48,6 +49,7 @@ public class CreateUiLanguageRequest implements CreateRequest<UiLanguage>, ApiRe
 
     @Override
     public List<Object> examples() {
-        return List.of(new CreateUiLanguageRequest(List.of("en", "de", "fr")));
+        return List.of(new CreateUiLanguageRequest(List.of(
+                new UiLanguage("en"), new UiLanguage("de"), new UiLanguage("fr"))));
     }
 }

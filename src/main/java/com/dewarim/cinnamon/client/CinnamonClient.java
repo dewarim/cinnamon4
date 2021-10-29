@@ -117,6 +117,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.dewarim.cinnamon.api.Constants.*;
 import static com.dewarim.cinnamon.api.UrlMapping.OSD__CREATE_OSD;
@@ -391,7 +392,8 @@ public class CinnamonClient {
 
     // FolderTypes
     public List<FolderType> createFolderTypes(List<String> names) throws IOException {
-        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER_TYPE__CREATE, new CreateFolderTypeRequest(names));
+        var folderTypes = names.stream().map(FolderType::new).collect(Collectors.toList());
+        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER_TYPE__CREATE, new CreateFolderTypeRequest(folderTypes));
         return folderTypeUnwrapper.unwrap(response, names.size());
     }
 
@@ -407,7 +409,7 @@ public class CinnamonClient {
 
     // Acls
     public List<Acl> createAcl(List<String> names) throws IOException {
-        CreateAclRequest aclRequest = new CreateAclRequest(names);
+        CreateAclRequest aclRequest = new CreateAclRequest(names.stream().map(Acl::new).collect(Collectors.toList()));
         HttpResponse     response   = sendStandardRequest(UrlMapping.ACL__CREATE, aclRequest);
         return aclUnwrapper.unwrap(response, aclRequest.list().size());
     }
@@ -463,7 +465,7 @@ public class CinnamonClient {
 
     // Groups
     public List<Group> createGroups(List<String> groupNames) throws IOException {
-        var request  = new CreateGroupRequest(groupNames);
+        var request  = new CreateGroupRequest(groupNames.stream().map(Group::new).collect(Collectors.toList()));
         var response = sendStandardRequest(UrlMapping.GROUP__CREATE, request);
         return groupUnwrapper.unwrap(response, groupNames.size());
     }
@@ -620,7 +622,7 @@ public class CinnamonClient {
     }
 
     public List<ObjectType> createObjectTypes(List<String> names) throws IOException {
-        var createRequest = new CreateObjectTypeRequest(names);
+        var createRequest = new CreateObjectTypeRequest(names.stream().map(ObjectType::new).collect(Collectors.toList()));
         var response      = sendStandardRequest(UrlMapping.OBJECT_TYPE__CREATE, createRequest);
         return objectTypeUnwrapper.unwrap(response, names.size());
     }
@@ -650,13 +652,13 @@ public class CinnamonClient {
     }
 
     public Language createLanguage(String isoCode) throws IOException {
-        var request  = new CreateLanguageRequest(List.of(isoCode));
+        var request  = new CreateLanguageRequest(List.of(new Language(isoCode)));
         var response = sendStandardRequest(UrlMapping.LANGUAGE__CREATE, request);
         return languageUnwrapper.unwrap(response, 1).get(0);
     }
 
     public List<Language> createLanguages(List<String> isoCodes) throws IOException {
-        var request  = new CreateLanguageRequest(isoCodes);
+        var request  = new CreateLanguageRequest(isoCodes.stream().map(Language::new).collect(Collectors.toList()));
         var response = sendStandardRequest(UrlMapping.LANGUAGE__CREATE, request);
         return languageUnwrapper.unwrap(response, isoCodes.size());
     }
@@ -674,7 +676,7 @@ public class CinnamonClient {
     }
 
     public UiLanguage createUiLanguage(String isoCode) throws IOException {
-        var request  = new CreateUiLanguageRequest(List.of(isoCode));
+        var request  = new CreateUiLanguageRequest(List.of(new UiLanguage(isoCode)));
         var response = sendStandardRequest(UrlMapping.UI_LANGUAGE__CREATE, request);
         return uiLanguageUnwrapper.unwrap(response, 1).get(0);
     }

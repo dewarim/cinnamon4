@@ -5,8 +5,8 @@ import com.dewarim.cinnamon.api.Identifiable;
 import java.util.Objects;
 
 public class UiLanguage implements Identifiable {
-    
-    private Long id;
+
+    private Long   id;
     private String isoCode;
 
     public UiLanguage() {
@@ -14,6 +14,10 @@ public class UiLanguage implements Identifiable {
 
     public UiLanguage(Long id, String isoCode) {
         this.id = id;
+        this.isoCode = isoCode;
+    }
+
+    public UiLanguage(String isoCode) {
         this.isoCode = isoCode;
     }
 
@@ -54,8 +58,8 @@ public class UiLanguage implements Identifiable {
     @Override
     public String toString() {
         return "UiLanguage{" +
-               "id=" + id +
-               ", isoCode='" + isoCode + '\'' +
-               '}';
+                "id=" + id +
+                ", isoCode='" + isoCode + '\'' +
+                '}';
     }
 }
