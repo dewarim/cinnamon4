@@ -1,120 +1,68 @@
 package com.dewarim.cinnamon.model.request.user;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.dewarim.cinnamon.model.LoginType;
+import com.dewarim.cinnamon.model.UserAccount;
+import com.dewarim.cinnamon.model.request.CreateRequest;
+import com.dewarim.cinnamon.model.response.UserAccountWrapper;
+import com.dewarim.cinnamon.model.response.Wrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
-import java.util.Optional;
+import java.util.ArrayList;
+import java.util.List;
 
 @JacksonXmlRootElement(localName = "createUserAccountRequest")
-public class CreateUserAccountRequest implements ApiRequest {
+public class CreateUserAccountRequest implements CreateRequest<UserAccount>, ApiRequest {
 
-    private String name;
-    private String password;
-    private String fullname;
-    private String email;
-    private Long languageId;
-    private String loginType;
-    private Boolean changeTracking;
+    @JacksonXmlElementWrapper(localName = "userAccounts")
+    @JacksonXmlProperty(localName = "userAccount")
+    private List<UserAccount> userAccounts = new ArrayList<>();
 
     public CreateUserAccountRequest() {
     }
 
-    public CreateUserAccountRequest(String name, String password, String fullname, String email, Long languageId, String loginType, Boolean changeTracking) {
-        this.name = name;
-        this.password = password;
-        this.fullname = fullname;
-        this.email = email;
-        this.languageId = languageId;
-        this.loginType = loginType;
-        this.changeTracking = changeTracking;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getFullname() {
-        return fullname;
-    }
-
-    public void setFullname(String fullname) {
-        this.fullname = fullname;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public Long getLanguageId() {
-        return languageId;
-    }
-
-    public void setLanguageId(Long languageId) {
-        this.languageId = languageId;
-    }
-
-    public String getLoginType() {
-        return loginType;
-    }
-
-    public void setLoginType(String loginType) {
-        this.loginType = loginType;
-    }
-
-    public boolean isChangeTracking() {
-        return changeTracking;
-    }
-
-    public void setChangeTracking(boolean changeTracking) {
-        this.changeTracking = changeTracking;
+    public CreateUserAccountRequest(String name, String password, String fullname, String email, Long uiLanguageId,
+                                    String loginType, Boolean changeTracking, Boolean activated) {
+        UserAccount userAccount = new UserAccount(name, password, fullname, email, uiLanguageId,
+                loginType, changeTracking, activated);
+        userAccount.setLocked(false);
+        userAccount.setPasswordExpired(false);
+        userAccounts.add(userAccount);
     }
 
     @Override
-    public String toString() {
-        return "CreateUserAccountRequest{" +
-                "name='" + name + '\'' +
-                ", password='" + password + '\'' +
-                ", fullname='" + fullname + '\'' +
-                ", email='" + email + '\'' +
-                ", languageId=" + languageId +
-                ", loginType='" + loginType + '\'' +
-                ", changeTracking=" + changeTracking +
-                '}';
+    public boolean validated() {
+        return userAccounts.stream().allMatch(user -> {
+            boolean nonNull = user.getName() != null && user.getPassword() != null && user.getFullname() != null
+                    && user.getEmail() != null && user.getUiLanguageId() != null
+                    && user.getLoginType() != null;
+            if (!nonNull) {
+                return false;
+            }
+            boolean empty = user.getName().isEmpty() || user.getPassword().isEmpty() || user.getFullname().isEmpty()
+                    || user.getEmail().isEmpty() || user.getLoginType().isEmpty();
+            if (empty) {
+                return false;
+            }
+            return user.getUiLanguageId() > 0;
+        });
     }
 
-    private boolean validated(){
-        boolean nonNull =  name != null && password != null && fullname != null && email != null && languageId != null && loginType != null && changeTracking != null;
-        if(!nonNull){
-            return false;
-        }
-        boolean empty = name.isEmpty() || password.isEmpty() || fullname.isEmpty() || email.isEmpty() || loginType.isEmpty();
-        if(empty){
-            return false;
-        }
-        return languageId > 0;
+    @Override
+    public List<UserAccount> list() {
+        return userAccounts;
     }
 
-    public Optional<CreateUserAccountRequest> validateRequest() {
-        if (validated()) {
-            return Optional.of(this);
-        } else {
-            return Optional.empty();
-        }
+    @Override
+    public Wrapper<UserAccount> fetchResponseWrapper() {
+        return new UserAccountWrapper();
+    }
+
+    @Override
+    public List<Object> examples() {
+        return List.of(new CreateUserAccountRequest("jane", "super-secret", "Jane Doe", "jane@example.com", 1L,
+                LoginType.CINNAMON.name(), false, true));
     }
 }

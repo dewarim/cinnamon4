@@ -27,7 +27,7 @@ import com.dewarim.cinnamon.application.servlet.RelationServlet;
 import com.dewarim.cinnamon.application.servlet.RelationTypeServlet;
 import com.dewarim.cinnamon.application.servlet.StaticServlet;
 import com.dewarim.cinnamon.application.servlet.UiLanguageServlet;
-import com.dewarim.cinnamon.application.servlet.UserServlet;
+import com.dewarim.cinnamon.application.servlet.UserAccountServlet;
 import com.dewarim.cinnamon.configuration.CinnamonConfig;
 import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.filter.AuthenticationFilter;
@@ -149,7 +149,7 @@ public class CinnamonServer {
         handler.addServlet(RelationTypeServlet.class, "/api/relationType/*");
         handler.addServlet(StaticServlet.class, "/static/*");
         handler.addServlet(UiLanguageServlet.class, "/api/uiLanguage/*");
-        handler.addServlet(UserServlet.class, "/api/user/*");
+        handler.addServlet(UserAccountServlet.class, "/api/user/*");
     }
 
     public static void main(String[] args) throws Exception {

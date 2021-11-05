@@ -83,9 +83,11 @@ import com.dewarim.cinnamon.model.request.uiLanguage.CreateUiLanguageRequest;
 import com.dewarim.cinnamon.model.request.uiLanguage.DeleteUiLanguageRequest;
 import com.dewarim.cinnamon.model.request.uiLanguage.ListUiLanguageRequest;
 import com.dewarim.cinnamon.model.request.uiLanguage.UpdateUiLanguageRequest;
-import com.dewarim.cinnamon.model.request.user.ListUserInfoRequest;
+import com.dewarim.cinnamon.model.request.user.CreateUserAccountRequest;
+import com.dewarim.cinnamon.model.request.user.GetUserAccountRequest;
+import com.dewarim.cinnamon.model.request.user.ListUserAccountRequest;
 import com.dewarim.cinnamon.model.request.user.SetPasswordRequest;
-import com.dewarim.cinnamon.model.request.user.UserInfoRequest;
+import com.dewarim.cinnamon.model.request.user.UpdateUserAccountRequest;
 import com.dewarim.cinnamon.model.request.user.UserPermissionRequest;
 import com.dewarim.cinnamon.model.response.AclGroupWrapper;
 import com.dewarim.cinnamon.model.response.AclWrapper;
@@ -111,7 +113,7 @@ import com.dewarim.cinnamon.model.response.RelationTypeWrapper;
 import com.dewarim.cinnamon.model.response.RelationWrapper;
 import com.dewarim.cinnamon.model.response.SummaryWrapper;
 import com.dewarim.cinnamon.model.response.UiLanguageWrapper;
-import com.dewarim.cinnamon.model.response.UserWrapper;
+import com.dewarim.cinnamon.model.response.UserAccountWrapper;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -241,9 +243,11 @@ public enum UrlMapping {
     UI_LANGUAGE__CREATE("uiLanguage", "create", "/api", "", CreateUiLanguageRequest.class, UiLanguageWrapper.class),
     UI_LANGUAGE__UPDATE("uiLanguage", "update", "/api", "", UpdateUiLanguageRequest.class, UiLanguageWrapper.class),
     UI_LANGUAGE__DELETE("uiLanguage", "delete", "/api", "", DeleteUiLanguageRequest.class, DeleteResponse.class),
-    USER__LIST_USERS("user", "list", "/api", "", ListUserInfoRequest.class, UserWrapper.class),
+    USER__CREATE("user", "create", "/api", "", CreateUserAccountRequest.class, UserAccountWrapper.class),
+    USER__UPDATE("user", "update", "/api", "", UpdateUserAccountRequest.class, UserAccountWrapper.class),
+    USER__LIST("user", "list", "/api", "", ListUserAccountRequest.class, UserAccountWrapper.class),
     USER__SET_PASSWORD("user", "setPassword", "/api", "", SetPasswordRequest.class, GenericResponse.class),
-    USER__USER_INFO("user", "userInfo", "/api", "", UserInfoRequest.class, UserWrapper.class);
+    USER__GET("user", "get", "/api", "", GetUserAccountRequest.class, UserAccountWrapper.class);
 
     private static final Map<String, UrlMapping>      pathMapping = new ConcurrentHashMap<>();
     private final        String                       servlet;

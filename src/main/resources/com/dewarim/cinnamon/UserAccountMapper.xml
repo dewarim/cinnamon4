@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.dewarim.cinnamon.UserAccountMapper">
+<mapper namespace="com.dewarim.cinnamon.model.UserAccount">
 
     <resultMap id="userAccountMap" type="com.dewarim.cinnamon.model.UserAccount">
         <id property="id" column="id"/>
@@ -60,12 +60,12 @@
           and locked = false
     </select>
 
-    <select id="listUserAccounts" resultMap="userAccountMap">
+    <select id="list" resultMap="userAccountMap">
         SELECT *
         FROM users
     </select>
 
-    <update id="updateUser">
+    <update id="update">
         UPDATE users
         SET name             = #{name},
             login_type       = #{loginType},
@@ -81,5 +81,25 @@
             password_expired = #{passwordExpired}
         WHERE id = #{id}
     </update>
+
+    <insert id="insert" parameterType="com.dewarim.cinnamon.model.UserAccount" >
+        <selectKey keyProperty="id" resultType="long" order="BEFORE">
+            select nextval('seq_user_id')
+        </selectKey>
+        INSERT INTO users (id, name, login_type, pwd, activated, locked,
+        ui_language_id, fullname, email, change_tracking, tokens_today, password_expired)
+        VALUES(#{id}, #{name}, #{loginType}, #{password}, #{activated}, #{locked}, #{uiLanguageId},
+               #{fullname}, #{email}, #{changeTracking}, 0, false)
+    </insert>
+
+    <select id="getAllById" parameterType="list" resultMap="userAccountMap">
+        SELECT *
+        FROM users
+        WHERE id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
 
 </mapper>

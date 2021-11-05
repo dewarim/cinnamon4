@@ -2,6 +2,7 @@ package com.dewarim.cinnamon.model;
 
 import com.dewarim.cinnamon.api.Identifiable;
 import com.dewarim.cinnamon.api.login.LoginUser;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.security.Principal;
 import java.util.ArrayList;
@@ -9,23 +10,40 @@ import java.util.List;
 import java.util.Objects;
 
 /**
+ *
  */
 public class UserAccount implements Principal, LoginUser, Identifiable {
 
-    private Long id;
-    private String name;
-    private String loginType;
-    private String password;
-    private boolean activated;
-    private boolean locked;
-    private Long uiLanguageId;
-    private String fullname;
-    private String email;
-    private boolean changeTracking;
-    private String token;
-    private int tokensToday;
+    private Long       id;
+    private String     name;
+    private String     loginType;
+    private String     password;
+    private boolean    activated;
+    private boolean    locked;
+    private Long       uiLanguageId;
+    private String     fullname;
+    private String     email;
+    private boolean    changeTracking;
+    @JsonIgnore
+    private String     token;
+    @JsonIgnore
+    private int        tokensToday;
     private boolean    passwordExpired;
     private List<Long> groupIds = new ArrayList<>();
+
+    public UserAccount() {
+    }
+
+    public UserAccount(String name, String password, String fullname, String email, Long uiLanguageId, String loginType, Boolean changeTracking, Boolean activated) {
+        this.name = name;
+        this.password = password;
+        this.fullname = fullname;
+        this.email = email;
+        this.uiLanguageId = uiLanguageId;
+        this.loginType = loginType;
+        this.changeTracking = changeTracking;
+        this.activated = activated;
+    }
 
     @Override
     public String getName() {
@@ -77,11 +95,13 @@ public class UserAccount implements Principal, LoginUser, Identifiable {
     }
 
     @Override
+    @JsonIgnore
     public String getUsername() {
         return name;
     }
 
     @Override
+    @JsonIgnore
     public String getPasswordHash() {
         return password;
     }
@@ -164,7 +184,7 @@ public class UserAccount implements Principal, LoginUser, Identifiable {
                 && id.equals(that.id) && name.equals(that.name) && loginType.equals(that.loginType)
                 && password.equals(that.password) && Objects.equals(uiLanguageId, that.uiLanguageId)
                 && Objects.equals(fullname, that.fullname) && Objects.equals(email, that.email)
-                && Objects.equals(token, that.token) && Objects.equals(groupIds,that.groupIds);
+                && Objects.equals(token, that.token) && Objects.equals(groupIds, that.groupIds);
     }
 
     @Override
@@ -189,5 +209,10 @@ public class UserAccount implements Principal, LoginUser, Identifiable {
                 ", tokensToday=" + tokensToday +
                 ", passwordExpired=" + passwordExpired +
                 '}';
+    }
+
+    public void filterInfo() {
+        setPassword(null);
+        setToken(null);
     }
 }

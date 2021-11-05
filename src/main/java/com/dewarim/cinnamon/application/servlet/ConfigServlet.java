@@ -61,8 +61,7 @@ public class ConfigServlet extends HttpServlet {
         wrapper.setPermissions(new PermissionDao().list());
         wrapper.setRelationTypes(new RelationTypeDao().list());
         wrapper.setUiLanguages(new UiLanguageDao().list());
-        wrapper.setUsers(new UserAccountDao().listUserAccountsAsUserInfo());
-
+        wrapper.setUsers(new UserAccountDao().list());
         response.setWrapper(wrapper);
     }
 

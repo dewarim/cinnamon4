@@ -15,6 +15,7 @@ import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.ObjectType;
 import com.dewarim.cinnamon.model.Permission;
 import com.dewarim.cinnamon.model.UiLanguage;
+import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.links.LinkType;
 import com.dewarim.cinnamon.model.relations.Relation;
@@ -82,7 +83,10 @@ import com.dewarim.cinnamon.model.request.uiLanguage.CreateUiLanguageRequest;
 import com.dewarim.cinnamon.model.request.uiLanguage.DeleteUiLanguageRequest;
 import com.dewarim.cinnamon.model.request.uiLanguage.ListUiLanguageRequest;
 import com.dewarim.cinnamon.model.request.uiLanguage.UpdateUiLanguageRequest;
-import com.dewarim.cinnamon.model.request.user.UserInfoRequest;
+import com.dewarim.cinnamon.model.request.user.CreateUserAccountRequest;
+import com.dewarim.cinnamon.model.request.user.GetUserAccountRequest;
+import com.dewarim.cinnamon.model.request.user.ListUserAccountRequest;
+import com.dewarim.cinnamon.model.request.user.UpdateUserAccountRequest;
 import com.dewarim.cinnamon.model.request.user.UserPermissionRequest;
 import com.dewarim.cinnamon.model.response.AclGroupWrapper;
 import com.dewarim.cinnamon.model.response.AclWrapper;
@@ -108,8 +112,7 @@ import com.dewarim.cinnamon.model.response.PermissionWrapper;
 import com.dewarim.cinnamon.model.response.RelationTypeWrapper;
 import com.dewarim.cinnamon.model.response.RelationWrapper;
 import com.dewarim.cinnamon.model.response.UiLanguageWrapper;
-import com.dewarim.cinnamon.model.response.UserInfo;
-import com.dewarim.cinnamon.model.response.UserWrapper;
+import com.dewarim.cinnamon.model.response.UserAccountWrapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -152,7 +155,7 @@ public class CinnamonClient {
     private final Unwrapper<Folder, FolderWrapper>                  folderUnwrapper       = new Unwrapper<>(FolderWrapper.class);
     private final Unwrapper<Format, FormatWrapper>                  formatUnwrapper       = new Unwrapper<>(FormatWrapper.class);
     private final Unwrapper<Meta, MetaWrapper>                      metaUnwrapper         = new Unwrapper<>(MetaWrapper.class);
-    private final Unwrapper<UserInfo, UserWrapper>                  userUnwrapper         = new Unwrapper<>(UserWrapper.class);
+    private final Unwrapper<UserAccount, UserAccountWrapper>        userUnwrapper         = new Unwrapper<>(UserAccountWrapper.class);
     private final Unwrapper<DeleteResponse, DeleteResponse>         deleteResponseWrapper = new Unwrapper<>(DeleteResponse.class);
     private final Unwrapper<CinnamonError, CinnamonErrorWrapper>    errorUnwrapper        = new Unwrapper<>(CinnamonErrorWrapper.class);
     private final Unwrapper<Acl, AclWrapper>                        aclUnwrapper          = new Unwrapper<>(AclWrapper.class);
@@ -205,16 +208,16 @@ public class CinnamonClient {
                 .execute().returnResponse();
     }
 
-    public UserInfo getUser(String name) throws IOException {
-        UserInfoRequest userInfoRequest  = new UserInfoRequest(null, name);
-        HttpResponse    userInfoResponse = sendStandardRequest(UrlMapping.USER__USER_INFO, userInfoRequest);
-        return userUnwrapper.unwrap(userInfoResponse, 1).get(0);
+    public UserAccount getUser(String name) throws IOException {
+        GetUserAccountRequest userInfoRequest = new GetUserAccountRequest(null, name);
+        HttpResponse          response        = sendStandardRequest(UrlMapping.USER__GET, userInfoRequest);
+        return userUnwrapper.unwrap(response, 1).get(0);
     }
 
-    public UserInfo getUser(Long id) throws IOException {
-        UserInfoRequest userInfoRequest  = new UserInfoRequest(id, null);
-        HttpResponse    userInfoResponse = sendStandardRequest(UrlMapping.USER__USER_INFO, userInfoRequest);
-        return userUnwrapper.unwrap(userInfoResponse, 1).get(0);
+    public UserAccount getUser(Long id) throws IOException {
+        GetUserAccountRequest request  = new GetUserAccountRequest(id, null);
+        HttpResponse          response = sendStandardRequest(UrlMapping.USER__GET, request);
+        return userUnwrapper.unwrap(response, 1).get(0);
     }
 
     protected String getTicket(boolean newTicket) throws IOException {
@@ -731,40 +734,83 @@ public class CinnamonClient {
         return configEntryUnwrapper.unwrap(response, 1).get(0);
     }
 
-    public List<ConfigEntry> listConfigEntries() throws IOException{
-        var request = new ListConfigEntryRequest();
+    public List<ConfigEntry> listConfigEntries() throws IOException {
+        var request  = new ListConfigEntryRequest();
         var response = sendStandardRequest(UrlMapping.CONFIG_ENTRY__LIST, request);
         return configEntryUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
     public ConfigEntry updateConfigEntry(ConfigEntry entry) throws IOException {
-        var request = new UpdateConfigEntryRequest(List.of(entry));
+        var request  = new UpdateConfigEntryRequest(List.of(entry));
         var response = sendStandardRequest(UrlMapping.CONFIG_ENTRY__UPDATE, request);
         return configEntryUnwrapper.unwrap(response, 1).get(0);
     }
 
-    public void deleteConfigEntry(Long id) throws IOException{
-        var request = new DeleteConfigEntryRequest(id);
+    public void deleteConfigEntry(Long id) throws IOException {
+        var request  = new DeleteConfigEntryRequest(id);
         var response = sendStandardRequest(UrlMapping.CONFIG_ENTRY__DELETE, request);
         verifyDeleteResponse(response);
     }
 
-    public ConfigEntry getConfigEntry(String name) throws IOException{
-        var request = new ConfigEntryRequest(name);
+    public ConfigEntry getConfigEntry(String name) throws IOException {
+        var request  = new ConfigEntryRequest(name);
         var response = sendStandardRequest(UrlMapping.CONFIG_ENTRY__GET, request);
-        return configEntryUnwrapper.unwrap(response,1).get(0);
+        return configEntryUnwrapper.unwrap(response, 1).get(0);
     }
 
-    public List<ConfigEntry> getConfigEntries(List<Long> ids) throws IOException{
-        var request = new ConfigEntryRequest().getIds().addAll(ids);
+    public List<ConfigEntry> getConfigEntries(List<Long> ids) throws IOException {
+        var request  = new ConfigEntryRequest().getIds().addAll(ids);
         var response = sendStandardRequest(UrlMapping.CONFIG_ENTRY__GET, request);
-        return configEntryUnwrapper.unwrap(response,EXPECTED_SIZE_ANY);
+        return configEntryUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
-    public ConfigEntry getConfigEntry(Long id) throws IOException{
-        var request = new ConfigEntryRequest(id);
+    public ConfigEntry getConfigEntry(Long id) throws IOException {
+        var request  = new ConfigEntryRequest(id);
         var response = sendStandardRequest(UrlMapping.CONFIG_ENTRY__GET, request);
-        return configEntryUnwrapper.unwrap(response,1).get(0);
+        return configEntryUnwrapper.unwrap(response, 1).get(0);
+    }
+
+    public List<UserAccount> listUsers() throws IOException {
+        var request = new ListUserAccountRequest();
+        var response = sendStandardRequest(UrlMapping.USER__LIST, request);
+        return userUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
+    }
+
+    public UserAccount createUser(UserAccount user) throws IOException {
+        var request = new CreateUserAccountRequest();
+        request.list().add(user);
+        var response = sendStandardRequest(UrlMapping.USER__CREATE, request);
+        return userUnwrapper.unwrap(response,1).get(0);
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
+    }
+
+    public String getHost() {
+        return host;
+    }
+
+    public void setHost(String host) {
+        this.host = host;
+    }
+
+    public String getProtocol() {
+        return protocol;
+    }
+
+    public void setProtocol(String protocol) {
+        this.protocol = protocol;
+    }
+
+    public UserAccount updateUser(UserAccount user) throws IOException {
+        var request = new UpdateUserAccountRequest(List.of(user));
+        var response = sendStandardRequest(UrlMapping.USER__UPDATE,request);
+        return userUnwrapper.unwrap(response, 1).get(0);
     }
 }
 

@@ -1,39 +1,59 @@
 package com.dewarim.cinnamon.model.request.user;
 
 import com.dewarim.cinnamon.api.ApiRequest;
-import com.dewarim.cinnamon.model.response.UserInfo;
+import com.dewarim.cinnamon.model.UserAccount;
+import com.dewarim.cinnamon.model.request.UpdateRequest;
+import com.dewarim.cinnamon.model.response.UserAccountWrapper;
+import com.dewarim.cinnamon.model.response.Wrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
-import java.util.Optional;
+import java.util.ArrayList;
+import java.util.List;
 
 @JacksonXmlRootElement(localName = "updateUserAccountRequest")
-public class UpdateUserAccountRequest extends UserInfo implements ApiRequest {
+public class UpdateUserAccountRequest implements UpdateRequest<UserAccount>, ApiRequest {
 
-    private String password;
+    @JacksonXmlElementWrapper(localName = "userAccounts")
+    @JacksonXmlProperty(localName = "userAccount")
+    private List<UserAccount> userAccounts = new ArrayList<>();
 
-    public String getPassword() {
-        return password;
+    public UpdateUserAccountRequest() {
     }
 
-    public void setPassword(String password) {
-        this.password = password;
+    public UpdateUserAccountRequest(List<UserAccount> userAccounts) {
+        this.userAccounts = userAccounts;
     }
 
-    private boolean validated(){
-        boolean hasValue = getName() != null ||
-                getLoginType() != null ||
-                (getUiLanguageId() != null && getUiLanguageId() > 0) ||
-                getEmail() != null ||
-                getFullname() != null;
-        return getId() != null && getId() > 0 && hasValue;
+    public List<UserAccount> getUserAccounts() {
+        return userAccounts;
     }
 
-    public Optional<UpdateUserAccountRequest> validateRequest() {
-        if (validated()) {
-            return Optional.of(this);
-        } else {
-            return Optional.empty();
-        }
+    public void setUserAccounts(List<UserAccount> userAccounts) {
+        this.userAccounts = userAccounts;
     }
 
+    @Override
+    public List<UserAccount> list() {
+        return userAccounts;
+    }
+
+    @Override
+    public boolean validated() {
+        return userAccounts.stream().allMatch(user -> {
+            boolean hasValue = user.getName() != null ||
+                    user.getLoginType() != null ||
+                    (user.getUiLanguageId() != null && user.getUiLanguageId() > 0) ||
+                    user.getEmail() != null ||
+                    user.getFullname() != null ||
+                    (user.getPassword() != null && !user.getPassword().trim().isEmpty());
+            return user.getId() != null && user.getId() > 0 && hasValue;
+        });
+    }
+
+    @Override
+    public Wrapper<UserAccount> fetchResponseWrapper() {
+        return new UserAccountWrapper();
+    }
 }

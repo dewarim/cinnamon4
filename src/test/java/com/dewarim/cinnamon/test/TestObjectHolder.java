@@ -17,9 +17,9 @@ import com.dewarim.cinnamon.model.MetasetType;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.ObjectType;
 import com.dewarim.cinnamon.model.Permission;
+import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.request.folder.UpdateFolderRequest;
 import com.dewarim.cinnamon.model.request.osd.CreateOsdRequest;
-import com.dewarim.cinnamon.model.response.UserInfo;
 
 import java.io.IOException;
 import java.util.List;
@@ -42,7 +42,7 @@ public class TestObjectHolder {
     public Acl              acl;
     public Group            group;
     public AclGroup         aclGroup;
-    public UserInfo         user;
+    public UserAccount      user;
     public Folder           folder;
     public ObjectType       objectType;
     public Format           format;

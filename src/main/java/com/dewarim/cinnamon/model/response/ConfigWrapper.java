@@ -12,6 +12,7 @@ import com.dewarim.cinnamon.model.MetasetType;
 import com.dewarim.cinnamon.model.ObjectType;
 import com.dewarim.cinnamon.model.Permission;
 import com.dewarim.cinnamon.model.UiLanguage;
+import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.relations.RelationType;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
@@ -74,7 +75,7 @@ public class ConfigWrapper implements ApiResponse, Wrapper<ConfigWrapper> {
 
     @JacksonXmlElementWrapper(localName = "users")
     @JacksonXmlProperty(localName = "user")
-    List<UserInfo> users = new ArrayList<>();
+    List<UserAccount> users = new ArrayList<>();
     
     public List<Acl> getAcls() {
         return acls;
@@ -172,11 +173,11 @@ public class ConfigWrapper implements ApiResponse, Wrapper<ConfigWrapper> {
         this.uiLanguages = uiLanguages;
     }
 
-    public List<UserInfo> getUsers() {
+    public List<UserAccount> getUsers() {
         return users;
     }
 
-    public void setUsers(List<UserInfo> users) {
+    public void setUsers(List<UserAccount> users) {
         this.users = users;
     }
 
