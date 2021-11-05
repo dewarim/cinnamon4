@@ -46,9 +46,7 @@ create table ui_languages
   id bigint not null
     constraint ui_languages_pkey
     primary key,
-  iso_code varchar(32) not null
-    constraint ui_languages_iso_code_key
-    unique
+  iso_code varchar(32) not null unique
 );
 drop sequence if exists seq_ui_language_id;
 create SEQUENCE seq_ui_language_id start with 1;

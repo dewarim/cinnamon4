@@ -66,6 +66,16 @@ public class UiLanguageServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
+    public void updateUiLanguageDuplicateName() throws IOException {
+        var language1 = adminClient.createUiLanguage("AA");
+        var language2 = adminClient.createUiLanguage("ZZ");
+        language2.setIsoCode("AA");
+        var ex = assertThrows(CinnamonClientException.class, () ->
+                adminClient.updateUiLanguage(language2));
+        assertEquals(ErrorCode.DB_UPDATE_FAILED, ex.getErrorCode());
+    }
+
+    @Test
     public void deleteUiLanguageHappyPath() throws IOException {
         var language = adminClient.createUiLanguage("goblin");
         assertTrue(adminClient.deleteUiLanguage(language.getId()));
