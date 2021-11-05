@@ -5,6 +5,8 @@ import com.dewarim.cinnamon.model.Language;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.response.LanguageWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
@@ -13,6 +15,8 @@ import java.util.List;
 @JacksonXmlRootElement(localName = "updateLanguageRequest")
 public class UpdateLanguageRequest implements UpdateRequest<Language>, ApiRequest {
 
+    @JacksonXmlElementWrapper(localName = "languages")
+    @JacksonXmlProperty(localName = "language")
     private List<Language> languages = new ArrayList<>();
 
     @Override
@@ -45,5 +49,10 @@ public class UpdateLanguageRequest implements UpdateRequest<Language>, ApiReques
     @Override
     public Wrapper<Language> fetchResponseWrapper() {
         return new LanguageWrapper();
+    }
+
+    @Override
+    public List<Object> examples() {
+        return List.of(new UpdateLanguageRequest(53L,"new-isoCode-for-language"));
     }
 }

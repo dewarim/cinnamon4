@@ -5,6 +5,8 @@ import com.dewarim.cinnamon.model.MetasetType;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.response.MetasetTypeWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
@@ -13,6 +15,8 @@ import java.util.List;
 @JacksonXmlRootElement(localName = "updateMetasetTypeRequest")
 public class UpdateMetasetTypeRequest implements UpdateRequest<MetasetType>, ApiRequest {
 
+    @JacksonXmlElementWrapper(localName = "metasetTypes")
+    @JacksonXmlProperty(localName = "metasetType")
     private List<MetasetType> metasetTypes = new ArrayList<>();
 
     @Override

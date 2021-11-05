@@ -16,33 +16,33 @@ import java.util.Objects;
 @JacksonXmlRootElement(localName = "createRelationTypeRequest")
 public class CreateRelationTypeRequest implements CreateRequest<RelationType>, ApiRequest {
 
-    @JacksonXmlElementWrapper(localName = "types")
-    @JacksonXmlProperty(localName = "type")
-    private List<RelationType> types = new ArrayList<>();
+    @JacksonXmlElementWrapper(localName = "relationTypes")
+    @JacksonXmlProperty(localName = "relationType")
+    private List<RelationType> relationTypes = new ArrayList<>();
 
     @Override
     public List<RelationType> list() {
-        return types;
+        return relationTypes;
     }
 
     public CreateRelationTypeRequest() {
     }
 
-    public CreateRelationTypeRequest(List<RelationType> types) {
-        this.types = types;
+    public CreateRelationTypeRequest(List<RelationType> relationTypes) {
+        this.relationTypes = relationTypes;
     }
 
-    public List<RelationType> getTypes() {
-        return types;
+    public List<RelationType> getRelationTypes() {
+        return relationTypes;
     }
 
-    public void setTypes(List<RelationType> types) {
-        this.types = types;
+    public void setRelationTypes(List<RelationType> relationTypes) {
+        this.relationTypes = relationTypes;
     }
 
     @Override
     public boolean validated() {
-        return types.stream().allMatch(type ->
+        return relationTypes.stream().allMatch(type ->
                 Objects.nonNull(type) &&
                         Objects.nonNull(type.getName()) &&
                         !type.getName().isBlank()
@@ -52,5 +52,10 @@ public class CreateRelationTypeRequest implements CreateRequest<RelationType>, A
     @Override
     public Wrapper<RelationType> fetchResponseWrapper() {
         return new RelationTypeWrapper();
+    }
+
+    @Override
+    public List<Object> examples() {
+        return List.of(new CreateRelationTypeRequest(List.of(new RelationType("thumbnail-relation", true, false, true, false, true, false))));
     }
 }

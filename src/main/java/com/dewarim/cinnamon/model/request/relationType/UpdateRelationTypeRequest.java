@@ -5,6 +5,8 @@ import com.dewarim.cinnamon.model.relations.RelationType;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.response.RelationTypeWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
@@ -13,11 +15,13 @@ import java.util.List;
 @JacksonXmlRootElement(localName = "updateRelationTypeRequest")
 public class UpdateRelationTypeRequest implements UpdateRequest<RelationType>, ApiRequest {
 
-    private List<RelationType> types = new ArrayList<>();
+    @JacksonXmlElementWrapper(localName = "relationTypes")
+    @JacksonXmlProperty(localName = "relationType")
+    private List<RelationType> relationTypes = new ArrayList<>();
 
     @Override
     public List<RelationType> list() {
-        return types;
+        return relationTypes;
     }
 
     public UpdateRelationTypeRequest() {
@@ -27,16 +31,16 @@ public class UpdateRelationTypeRequest implements UpdateRequest<RelationType>, A
     }
 
     public UpdateRelationTypeRequest(List<RelationType> RelationTypes) {
-        this.types = RelationTypes;
+        this.relationTypes = RelationTypes;
     }
 
-    public List<RelationType> getTypes() {
-        return types;
+    public List<RelationType> getRelationTypes() {
+        return relationTypes;
     }
 
     @Override
     public boolean validated() {
-        return types.stream().allMatch(type ->
+        return relationTypes.stream().allMatch(type ->
             type != null && type.getName() != null && !type.getName().trim().isEmpty()
                     && type.getId() != null && type.getId() > 0);
     }
@@ -44,5 +48,10 @@ public class UpdateRelationTypeRequest implements UpdateRequest<RelationType>, A
     @Override
     public Wrapper<RelationType> fetchResponseWrapper() {
         return new RelationTypeWrapper();
+    }
+
+    @Override
+    public List<Object> examples() {
+        return List.of(new UpdateRelationTypeRequest(List.of(new RelationType("updated-type",true,true,true,true,true,true))));
     }
 }

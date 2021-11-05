@@ -5,6 +5,8 @@ import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.response.AclWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
@@ -13,6 +15,8 @@ import java.util.List;
 @JacksonXmlRootElement(localName = "updateAclRequest")
 public class UpdateAclRequest implements UpdateRequest<Acl>, ApiRequest {
 
+    @JacksonXmlElementWrapper(localName = "acls")
+    @JacksonXmlProperty(localName = "acl")
     private List<Acl> acls = new ArrayList<>();
 
     @Override
@@ -45,5 +49,10 @@ public class UpdateAclRequest implements UpdateRequest<Acl>, ApiRequest {
     @Override
     public Wrapper<Acl> fetchResponseWrapper() {
         return new AclWrapper();
+    }
+
+    @Override
+    public List<Object> examples() {
+        return List.of(new UpdateAclRequest(1L, "updated-name"));
     }
 }

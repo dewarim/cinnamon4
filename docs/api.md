@@ -156,7 +156,14 @@ Create a new ACL group. Note: permissions parameter is not yet implemented.
 
 ```xml
 <updateAclGroupRequest>
-  <aclGroups/>
+  <aclGroups>
+    <aclGroup>
+      <id>1345</id>
+      <aclId>54</aclId>
+      <groupId>4</groupId>
+      <permissions/>
+    </aclGroup>
+  </aclGroups>
 </updateAclGroupRequest>
 
 ```
@@ -333,7 +340,12 @@ Create a new ACL group. Note: permissions parameter is not yet implemented.
 
 ```xml
 <updateAclRequest>
-  <acls/>
+  <acls>
+    <acl>
+      <id>1</id>
+      <name>updated-name</name>
+    </acl>
+  </acls>
 </updateAclRequest>
 
 ```
@@ -1449,7 +1461,12 @@ Fetch a single folder
 
 ```xml
 <updateLanguageRequest>
-  <languages/>
+  <languages>
+    <language>
+      <id>53</id>
+      <isoCode>new-isoCode-for-language</isoCode>
+    </language>
+  </languages>
 </updateLanguageRequest>
 
 ```
@@ -1778,7 +1795,17 @@ List lifecycles
 
 ```xml
 <updateLinkRequest>
-  <links/>
+  <links>
+    <link>
+      <id>1</id>
+      <type>OBJECT</type>
+      <ownerId>2</ownerId>
+      <aclId>3</aclId>
+      <parentId>4</parentId>
+      <folderId>5</folderId>
+      <objectId>6</objectId>
+    </link>
+  </links>
 </updateLinkRequest>
 
 ```
@@ -2576,7 +2603,18 @@ part "file", if the new version should contain data.
 
 ```xml
 <createRelationTypeRequest>
-  <types/>
+  <relationTypes>
+    <relationType>
+      <id/>
+      <leftObjectProtected>true</leftObjectProtected>
+      <rightObjectProtected>false</rightObjectProtected>
+      <name>thumbnail-relation</name>
+      <cloneOnRightCopy>true</cloneOnRightCopy>
+      <cloneOnLeftCopy>false</cloneOnLeftCopy>
+      <cloneOnLeftVersion>true</cloneOnLeftVersion>
+      <cloneOnRightVersion>false</cloneOnRightVersion>
+    </relationType>
+  </relationTypes>
 </createRelationTypeRequest>
 
 ```
@@ -2601,7 +2639,18 @@ part "file", if the new version should contain data.
 
 ```xml
 <updateRelationTypeRequest>
-  <types/>
+  <relationTypes>
+    <relationType>
+      <id/>
+      <leftObjectProtected>true</leftObjectProtected>
+      <rightObjectProtected>true</rightObjectProtected>
+      <name>updated-type</name>
+      <cloneOnRightCopy>true</cloneOnRightCopy>
+      <cloneOnLeftCopy>true</cloneOnLeftCopy>
+      <cloneOnLeftVersion>true</cloneOnLeftVersion>
+      <cloneOnRightVersion>true</cloneOnRightVersion>
+    </relationType>
+  </relationTypes>
 </updateRelationTypeRequest>
 
 ```
