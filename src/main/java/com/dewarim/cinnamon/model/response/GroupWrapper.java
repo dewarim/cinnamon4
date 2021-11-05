@@ -17,6 +17,13 @@ public class GroupWrapper implements Wrapper<Group>, ApiResponse {
     @JacksonXmlProperty(localName = "group")
     List<Group> groups = new ArrayList<>();
 
+    public GroupWrapper() {
+    }
+
+    public GroupWrapper(List<Group> groups) {
+        this.groups = groups;
+    }
+
     public List<Group> getGroups() {
         return groups;
     }
@@ -34,5 +41,10 @@ public class GroupWrapper implements Wrapper<Group>, ApiResponse {
     public Wrapper<Group> setList(List<Group> groups) {
         setGroups(groups);
         return this;
+    }
+
+    @Override
+    public List<Object> examples() {
+        return List.of(new GroupWrapper(List.of(new Group(1L,"group with parent", 2L), new Group(2L, "group without parent", null))));
     }
 }

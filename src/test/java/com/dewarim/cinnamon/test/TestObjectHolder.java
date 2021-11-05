@@ -117,7 +117,7 @@ public class TestObjectHolder {
     }
 
     public TestObjectHolder createGroup(String name) throws IOException {
-        group = client.createGroups(List.of(name)).get(0);
+        group = client.createGroupsByName(List.of(name)).get(0);
         return this;
     }
 

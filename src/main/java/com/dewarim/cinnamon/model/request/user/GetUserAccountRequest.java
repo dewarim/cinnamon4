@@ -3,6 +3,8 @@ package com.dewarim.cinnamon.model.request.user;
 import com.dewarim.cinnamon.api.ApiRequest;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
+import java.util.List;
+
 @JacksonXmlRootElement(localName = "getUserAccountRequest")
 public class GetUserAccountRequest implements ApiRequest {
     
@@ -39,5 +41,10 @@ public class GetUserAccountRequest implements ApiRequest {
     
     public boolean byName(){
         return username != null;
+    }
+
+    @Override
+    public List<Object> examples() {
+        return List.of(new GetUserAccountRequest(1L,null),new GetUserAccountRequest(null, "by-name") );
     }
 }

@@ -34,7 +34,8 @@
 
     <update id="update" parameterType="com.dewarim.cinnamon.model.Group">
         UPDATE groups
-        SET name = #{name}
+        SET name     = #{name},
+            parent_id= #{parentId}
         WHERE id = #{id}
     </update>
 

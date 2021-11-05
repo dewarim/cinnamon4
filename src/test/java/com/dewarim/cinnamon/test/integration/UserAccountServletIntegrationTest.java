@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -53,7 +54,8 @@ public class UserAccountServletIntegrationTest extends CinnamonIntegrationTest {
     public void listUsers() throws IOException {
         List<UserAccount> users = client.listUsers();
         List<String>      names = Arrays.asList("admin", "doe", "deactivated user", "locked user");
-        users.forEach(user -> assertTrue(names.contains(user.getName())));
+        List<String> userNames = users.stream().map(UserAccount::getName).collect(Collectors.toList());
+        assertTrue(userNames.containsAll(names));
         assertFalse(client.getUser("deactivated user").isActivated());
         assertTrue(client.getUser("locked user").isLocked());
     }

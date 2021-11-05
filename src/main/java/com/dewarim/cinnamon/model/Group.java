@@ -11,6 +11,12 @@ public class Group implements Identifiable {
     private String name;
     private Long   parentId;
 
+    public Group(Long id, String name, Long parentId) {
+        this.id = id;
+        this.name = name;
+        this.parentId = parentId;
+    }
+
     public Group(String name) {
         this.name = name;
     }

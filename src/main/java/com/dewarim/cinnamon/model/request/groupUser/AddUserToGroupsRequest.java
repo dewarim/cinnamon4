@@ -1,6 +1,8 @@
 package com.dewarim.cinnamon.model.request.groupUser;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.List;
@@ -8,19 +10,22 @@ import java.util.Optional;
 
 @JacksonXmlRootElement(localName = "addUserToGroupsRequest")
 public class AddUserToGroupsRequest implements ApiRequest {
-    private List<Long> ids;
+
+    @JacksonXmlElementWrapper(localName = "groupIds")
+    @JacksonXmlProperty(localName = "groupId")
+    private List<Long> groupIds;
     private Long       userId;
 
     public AddUserToGroupsRequest() {
     }
 
-    public AddUserToGroupsRequest(List<Long> ids, Long userId) {
-        this.ids = ids;
+    public AddUserToGroupsRequest(Long userId, List<Long> groupIds) {
+        this.groupIds = groupIds;
         this.userId = userId;
     }
 
-    public List<Long> getIds() {
-        return ids;
+    public List<Long> getGroupIds() {
+        return groupIds;
     }
 
     public Long getUserId() {
@@ -28,7 +33,7 @@ public class AddUserToGroupsRequest implements ApiRequest {
     }
 
     private boolean validated() {
-        return ids != null && !ids.isEmpty() && ids.stream().allMatch(id -> id > 0)
+        return groupIds != null && !groupIds.isEmpty() && groupIds.stream().allMatch(id -> id > 0)
                 && userId != null && userId > 0;
     }
 
@@ -38,5 +43,10 @@ public class AddUserToGroupsRequest implements ApiRequest {
         } else {
             return Optional.empty();
         }
+    }
+
+    @Override
+    public List<Object> examples() {
+        return List.of(new AddUserToGroupsRequest(33L, List.of(1L, 2L, 3L)));
     }
 }

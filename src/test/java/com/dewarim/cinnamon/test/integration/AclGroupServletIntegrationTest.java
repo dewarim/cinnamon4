@@ -68,7 +68,7 @@ public class AclGroupServletIntegrationTest extends CinnamonIntegrationTest {
         acls = adminClient.createAcl(List.of("a1", "a2"));
         Acl a1 = acls.get(0);
         Acl a2 = acls.get(1);
-        groups = adminClient.createGroups(List.of("g1", "g2"));
+        groups = adminClient.createGroupsByName(List.of("g1", "g2"));
         var            g1      = groups.get(0);
         var            g2      = groups.get(1);
         List<AclGroup> entries = new ArrayList<>();

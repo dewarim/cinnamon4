@@ -1,6 +1,7 @@
 package com.dewarim.cinnamon.model.response;
 
 import com.dewarim.cinnamon.api.ApiResponse;
+import com.dewarim.cinnamon.model.LoginType;
 import com.dewarim.cinnamon.model.UserAccount;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
@@ -14,6 +15,13 @@ public class UserAccountWrapper implements Wrapper<UserAccount>, ApiResponse {
     @JacksonXmlElementWrapper(localName = "users")
     @JacksonXmlProperty(localName = "user")
     private List<UserAccount> users = new ArrayList<>();
+
+    public UserAccountWrapper() {
+    }
+
+    public UserAccountWrapper(List<UserAccount> users) {
+        this.users = users;
+    }
 
     public List<UserAccount> getUsers() {
         return users;
@@ -34,4 +42,9 @@ public class UserAccountWrapper implements Wrapper<UserAccount>, ApiResponse {
         return this;
     }
 
+    @Override
+    public List<Object> examples() {
+        return List.of(new UserAccountWrapper(List.of(
+                new UserAccount("user-wrapper-example", "see-creta", "U.W.Example", "user@example.com", 1L, LoginType.CINNAMON.name(), true, true))));
+    }
 }

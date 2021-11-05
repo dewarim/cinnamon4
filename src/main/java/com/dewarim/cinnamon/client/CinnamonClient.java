@@ -475,10 +475,21 @@ public class CinnamonClient {
     }
 
     // Groups
-    public List<Group> createGroups(List<String> groupNames) throws IOException {
+    public List<Group> createGroupsByName(List<String> groupNames) throws IOException {
         var request  = new CreateGroupRequest(groupNames.stream().map(Group::new).collect(Collectors.toList()));
         var response = sendStandardRequest(UrlMapping.GROUP__CREATE, request);
         return groupUnwrapper.unwrap(response, groupNames.size());
+    }
+
+    public List<Group> createGroups(List<Group> groups) throws IOException{
+        var request  = new CreateGroupRequest(groups);
+        var response = sendStandardRequest(UrlMapping.GROUP__CREATE, request);
+        return groupUnwrapper.unwrap(response, groups.size());
+    }
+    public Group createGroup(Group group) throws IOException{
+        var request  = new CreateGroupRequest(List.of(group));
+        var response = sendStandardRequest(UrlMapping.GROUP__CREATE, request);
+        return groupUnwrapper.unwrap(response, 1).get(0);
     }
 
     public List<Group> listGroups() throws IOException {
@@ -501,7 +512,7 @@ public class CinnamonClient {
 
     // GroupUsers
     public void addUserToGroups(Long userId, List<Long> ids) throws IOException {
-        var request  = new AddUserToGroupsRequest(ids, userId);
+        var request  = new AddUserToGroupsRequest(userId, ids);
         var response = sendStandardRequest(UrlMapping.GROUP__ADD_USER_TO_GROUPS, request);
         verifyResponseIsOkay(response);
     }

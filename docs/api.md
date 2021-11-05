@@ -1143,7 +1143,12 @@ Fetch a single folder
 
 ```xml
 <addUserToGroupsRequest>
-  <userId/>
+  <userId>33</userId>
+  <groupIds>
+    <groupId>1</groupId>
+    <groupId>2</groupId>
+    <groupId>3</groupId>
+  </groupIds>
 </addUserToGroupsRequest>
 
 ```
@@ -1195,7 +1200,18 @@ Fetch a single folder
 
 ```xml
 <cinnamon>
-  <groups/>
+  <groups>
+    <group>
+      <id>1</id>
+      <name>group with parent</name>
+      <parentId>2</parentId>
+    </group>
+    <group>
+      <id>2</id>
+      <name>group without parent</name>
+      <parentId/>
+    </group>
+  </groups>
 </cinnamon>
 
 ```
@@ -1246,7 +1262,18 @@ Fetch a single folder
 
 ```xml
 <cinnamon>
-  <groups/>
+  <groups>
+    <group>
+      <id>1</id>
+      <name>group with parent</name>
+      <parentId>2</parentId>
+    </group>
+    <group>
+      <id>2</id>
+      <name>group without parent</name>
+      <parentId/>
+    </group>
+  </groups>
 </cinnamon>
 
 ```
@@ -1261,7 +1288,12 @@ Fetch a single folder
 
 ```xml
 <removeUserFromGroupsRequest>
-  <userId/>
+  <userId>33</userId>
+  <groupIds>
+    <groupId>1</groupId>
+    <groupId>2</groupId>
+    <groupId>3</groupId>
+  </groupIds>
 </removeUserFromGroupsRequest>
 
 ```
@@ -1287,7 +1319,13 @@ Fetch a single folder
 
 ```xml
 <updateGroupRequest>
-  <groups/>
+  <groups>
+    <group>
+      <id>11</id>
+      <name>updated-group-name</name>
+      <parentId>2</parentId>
+    </group>
+  </groups>
 </updateGroupRequest>
 
 ```
@@ -1297,7 +1335,18 @@ Fetch a single folder
 
 ```xml
 <cinnamon>
-  <groups/>
+  <groups>
+    <group>
+      <id>1</id>
+      <name>group with parent</name>
+      <parentId>2</parentId>
+    </group>
+    <group>
+      <id>2</id>
+      <name>group without parent</name>
+      <parentId/>
+    </group>
+  </groups>
 </cinnamon>
 
 ```
@@ -2771,7 +2820,16 @@ Returns a static file from the server (for example, a favicon.ico if one exists)
 
 ```xml
 <updateUiLanguageRequest>
-  <languages/>
+  <uiLanguages>
+    <uiLanguage>
+      <id>69</id>
+      <isoCode>FR</isoCode>
+    </uiLanguage>
+    <uiLanguage>
+      <id>96</id>
+      <isoCode>GR</isoCode>
+    </uiLanguage>
+  </uiLanguages>
 </updateUiLanguageRequest>
 
 ```
@@ -2815,15 +2873,30 @@ Returns a static file from the server (for example, a favicon.ico if one exists)
 
 ---
 
-# /api/user/list
+# /api/user/create
 
 
 ## Request
 
 ```xml
-<listUserInfoRequest>
-  <type>FULL</type>
-</listUserInfoRequest>
+<createUserAccountRequest>
+  <userAccounts>
+    <userAccount>
+      <id/>
+      <name>jane</name>
+      <loginType>CINNAMON</loginType>
+      <password>super-secret</password>
+      <activated>true</activated>
+      <locked>false</locked>
+      <uiLanguageId>1</uiLanguageId>
+      <fullname>Jane Doe</fullname>
+      <email>jane@example.com</email>
+      <changeTracking>false</changeTracking>
+      <passwordExpired>false</passwordExpired>
+      <groupIds/>
+    </userAccount>
+  </userAccounts>
+</createUserAccountRequest>
 
 ```
 
@@ -2831,9 +2904,104 @@ Returns a static file from the server (for example, a favicon.ico if one exists)
 ## Response
 
 ```xml
-<cinnamon>
-  <users/>
-</cinnamon>
+<UserAccountWrapper>
+  <users>
+    <user>
+      <id/>
+      <name>user-wrapper-example</name>
+      <loginType>CINNAMON</loginType>
+      <password>see-creta</password>
+      <activated>true</activated>
+      <locked>false</locked>
+      <uiLanguageId>1</uiLanguageId>
+      <fullname>U.W.Example</fullname>
+      <email>user@example.com</email>
+      <changeTracking>true</changeTracking>
+      <passwordExpired>false</passwordExpired>
+      <groupIds/>
+    </user>
+  </users>
+</UserAccountWrapper>
+
+```
+
+
+---
+
+# /api/user/update
+
+
+## Request
+
+```xml
+<updateUserAccountRequest>
+  <userAccounts/>
+</updateUserAccountRequest>
+
+```
+
+
+## Response
+
+```xml
+<UserAccountWrapper>
+  <users>
+    <user>
+      <id/>
+      <name>user-wrapper-example</name>
+      <loginType>CINNAMON</loginType>
+      <password>see-creta</password>
+      <activated>true</activated>
+      <locked>false</locked>
+      <uiLanguageId>1</uiLanguageId>
+      <fullname>U.W.Example</fullname>
+      <email>user@example.com</email>
+      <changeTracking>true</changeTracking>
+      <passwordExpired>false</passwordExpired>
+      <groupIds/>
+    </user>
+  </users>
+</UserAccountWrapper>
+
+```
+
+
+---
+
+# /api/user/list
+
+
+## Request
+
+```xml
+<listUserAccountRequest>
+  <type>FULL</type>
+</listUserAccountRequest>
+
+```
+
+
+## Response
+
+```xml
+<UserAccountWrapper>
+  <users>
+    <user>
+      <id/>
+      <name>user-wrapper-example</name>
+      <loginType>CINNAMON</loginType>
+      <password>see-creta</password>
+      <activated>true</activated>
+      <locked>false</locked>
+      <uiLanguageId>1</uiLanguageId>
+      <fullname>U.W.Example</fullname>
+      <email>user@example.com</email>
+      <changeTracking>true</changeTracking>
+      <passwordExpired>false</passwordExpired>
+      <groupIds/>
+    </user>
+  </users>
+</UserAccountWrapper>
 
 ```
 
@@ -2867,16 +3035,23 @@ Returns a static file from the server (for example, a favicon.ico if one exists)
 
 ---
 
-# /api/user/userInfo
+# /api/user/get
 
 
 ## Request
 
 ```xml
-<userInfoRequest>
-  <userId/>
+<getUserAccountRequest>
+  <userId>1</userId>
   <username/>
-</userInfoRequest>
+</getUserAccountRequest>
+
+```
+```xml
+<getUserAccountRequest>
+  <userId/>
+  <username>by-name</username>
+</getUserAccountRequest>
 
 ```
 
@@ -2884,9 +3059,24 @@ Returns a static file from the server (for example, a favicon.ico if one exists)
 ## Response
 
 ```xml
-<cinnamon>
-  <users/>
-</cinnamon>
+<UserAccountWrapper>
+  <users>
+    <user>
+      <id/>
+      <name>user-wrapper-example</name>
+      <loginType>CINNAMON</loginType>
+      <password>see-creta</password>
+      <activated>true</activated>
+      <locked>false</locked>
+      <uiLanguageId>1</uiLanguageId>
+      <fullname>U.W.Example</fullname>
+      <email>user@example.com</email>
+      <changeTracking>true</changeTracking>
+      <passwordExpired>false</passwordExpired>
+      <groupIds/>
+    </user>
+  </users>
+</UserAccountWrapper>
 
 ```
 

@@ -63,7 +63,7 @@ public class PermissionServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void addAndRemovePermissions() throws IOException {
         Acl              acl         = adminClient.createAcl(List.of("add-and-remove-permission-acl")).get(0);
-        Group            group       = adminClient.createGroups(List.of("add-and-remove-permission-group")).get(0);
+        Group            group       = adminClient.createGroupsByName(List.of("add-and-remove-permission-group")).get(0);
         AclGroup         aclGroup    = adminClient.createAclGroups(List.of(new AclGroup(acl.getId(), group.getId()))).get(0);
         Long             aclGroupId  = aclGroup.getId();
         List<Permission> permissions = client.listPermissions();
