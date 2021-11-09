@@ -659,6 +659,11 @@ insert into acl_group_permissions(id,acl_group_id,permission_id) values (nextval
 insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),5,17);
 -- #16 add version permission to reviewers.acl
 insert into acl_group_permissions values(nextval('seq_acl_group_permission_id'), 5,14);
+-- #17 write-sys-metadata for doe's group + creation.acl#8
+insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),10,17);
+-- #18 version for doe's group + creation.acl#8
+insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),10,14);
+
 
 ---- set.acl.allowed acl#11
 -- #16 add write_object_sysmeta to set.acl.allowed acl #11 with reviewers group

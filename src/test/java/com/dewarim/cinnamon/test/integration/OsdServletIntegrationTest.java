@@ -3,6 +3,7 @@ package com.dewarim.cinnamon.test.integration;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonServer;
+import com.dewarim.cinnamon.client.CinnamonClientException;
 import com.dewarim.cinnamon.model.Language;
 import com.dewarim.cinnamon.model.Meta;
 import com.dewarim.cinnamon.model.ObjectSystemData;
@@ -1324,7 +1325,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateOsdChangeAclNotFound() throws IOException {
-        var holder = new TestObjectHolder(client, "reviewers.acl",userId, createFolderId);
+        var holder = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
         holder.createOsd("updateOsdChangeAclNoPermission");
         var id = holder.osd.getId();
         client.lockOsd(id);
@@ -1336,7 +1337,6 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void updateOsdChangeAcl() throws IOException {
         var holder = new TestObjectHolder(adminClient, "reviewers.acl", adminId, createFolderId);
-
         holder.createAcl("updateOsdChangeAcl")
                 .createGroup("test-updateOsdChangeAcl")
                 .createAclGroup()
@@ -1356,7 +1356,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateOsdChangeUserNotFound() throws IOException {
-        var holder = new TestObjectHolder(client, "reviewers.acl",userId, createFolderId);
+        var holder = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
         holder.createOsd("updateOsdChangeUserNotFound");
         var id = holder.osd.getId();
         client.lockOsd(id);
@@ -1367,7 +1367,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateOsdChangeUser() throws IOException {
-        var holder = new TestObjectHolder(client, "reviewers.acl",userId, createFolderId);
+        var holder = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
         holder.createOsd("updateOsdChangeUserNotFound");
         var id = holder.osd.getId();
         client.lockOsd(id);
@@ -1380,7 +1380,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateOsdChangeLanguageNotFound() throws IOException {
-        var holder = new TestObjectHolder(client, "reviewers.acl",userId, createFolderId);
+        var holder = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
         holder.createOsd("updateOsdChangeLanguageNotFound");
         var id = holder.osd.getId();
         client.lockOsd(id);
@@ -1391,13 +1391,13 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateOsdChangeLanguage() throws IOException {
-        var holder = new TestObjectHolder(client, "reviewers.acl",userId, createFolderId);
+        var holder = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
         holder.createOsd("updateOsdChangeUserNotFound");
         var id = holder.osd.getId();
         client.lockOsd(id);
 
         List<Language> languages = client.listLanguages();
-        var newLang = languages.get(1);
+        var            newLang   = languages.get(1);
         assertNotEquals(holder.osd.getLanguageId(), newLang.getId());
 
         var request = new UpdateOsdRequest(id, null, null, null, null, null, newLang.getId());
@@ -1671,11 +1671,30 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getOsdWithCustomMetadata() throws IOException {
-        // TODO: implement me
+        var toh     = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
+        var content = "<xml>test</xml>";
+        toh.createOsd("with-custom-meta").createOsdMeta(content);
+        ObjectSystemData osd = client.getOsdById(toh.osd.getId(), false, true);
+        assertEquals(content, osd.getMetas().get(0).getContent());
     }
 
     @Test
     public void getOsdWithUnbrowsableCustomMetadata() throws IOException {
+        var toh = new TestObjectHolder(adminClient, "reviewers.acl", userId, createFolderId);
+        toh.createAcl("no-browse-custom-meta");
+        toh.createGroup("unbrowsable-meta");
+        toh.createAclGroup();
+        toh.addPermissionsByName(List.of(BROWSE_OBJECT.getName()));
+        toh.addUserToGroup(toh.user.getId());
+        var content = "<xml>test</xml>";
+        toh.createOsd("with-custom-meta").createOsdMeta(content);
+        var ex = assertThrows(CinnamonClientException.class,
+                () -> client.getOsdMetas(toh.osd.getId()));
+        assertEquals(NO_READ_CUSTOM_METADATA_PERMISSION, ex.getErrorCode());
+    }
+
+    @Test
+    public void getObjectsByIdWithoutCustomMetadataPermission() throws IOException {
         // TODO: implement me
     }
 
@@ -1683,6 +1702,12 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     public void getOsdByFolderWithCustomMetadata() throws IOException {
         // TODO: implement me
     }
+
+    @Test
+    public void copyWithInvalidRequest() throws IOException {
+        // TODO: implement me
+    }
+
 
     private HttpResponse sendAdminMultipartRequest(UrlMapping url, HttpEntity multipartEntity) throws IOException {
         return Request.Post("http://localhost:" + cinnamonTestPort + url.getPath())

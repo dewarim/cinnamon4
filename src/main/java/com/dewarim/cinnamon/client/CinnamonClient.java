@@ -23,6 +23,7 @@ import com.dewarim.cinnamon.model.relations.RelationType;
 import com.dewarim.cinnamon.model.request.CreateMetaRequest;
 import com.dewarim.cinnamon.model.request.CreateNewVersionRequest;
 import com.dewarim.cinnamon.model.request.IdRequest;
+import com.dewarim.cinnamon.model.request.MetaRequest;
 import com.dewarim.cinnamon.model.request.acl.AclInfoRequest;
 import com.dewarim.cinnamon.model.request.acl.CreateAclRequest;
 import com.dewarim.cinnamon.model.request.acl.DeleteAclRequest;
@@ -394,6 +395,10 @@ public class CinnamonClient {
     public List<Meta> createOsdMeta(CreateMetaRequest metaRequest) throws IOException {
         HttpResponse response = sendStandardRequest(UrlMapping.OSD__CREATE_META, metaRequest);
         return metaUnwrapper.unwrap(response, 1);
+    }
+
+    public Meta createOsdMeta(Long osdId, String content, Long metaTpeId) throws IOException{
+        return createOsdMeta(new CreateMetaRequest(osdId, content, metaTpeId)).get(0);
     }
 
     public void updateFolders(UpdateFolderRequest updateFolderRequest) throws IOException {
@@ -792,6 +797,12 @@ public class CinnamonClient {
         request.list().add(user);
         var response = sendStandardRequest(UrlMapping.USER__CREATE, request);
         return userUnwrapper.unwrap(response,1).get(0);
+    }
+
+    public List<Meta> getOsdMetas(Long id) throws IOException{
+        var request = new MetaRequest(id, null);
+        var response = sendStandardRequest(UrlMapping.OSD__GET_META, request);
+        return metaUnwrapper.unwrap(response,EXPECTED_SIZE_ANY);
     }
 
     public int getPort() {

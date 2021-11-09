@@ -75,8 +75,7 @@ public class AuthorizationService {
             return true;
         }
         if (ownable.getOwnerId().equals(user.getId())) {
-            userHasOwnerPermission(aclId, permission, user);
-            return true;
+            return userHasOwnerPermission(aclId, permission, user);
         }
         return false;
     }

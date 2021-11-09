@@ -48,6 +48,7 @@ public class TestObjectHolder {
     public Format           format;
     public Language         language;
     public LifecycleState   lifecycleState;
+    public Meta             meta;
 
     public List<Meta> metas;
     public String     summary = "<summary/>";
@@ -181,6 +182,11 @@ public class TestObjectHolder {
 
     public TestObjectHolder createObjectType(String name) throws IOException {
         objectType = client.createObjectTypes(List.of(name)).get(0);
+        return this;
+    }
+
+    public TestObjectHolder createOsdMeta(String content) throws IOException {
+        meta = client.createOsdMeta(osd.getId(), content, metasetTypes.get(0).getId());
         return this;
     }
 }
