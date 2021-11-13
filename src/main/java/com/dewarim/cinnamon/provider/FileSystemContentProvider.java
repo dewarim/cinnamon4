@@ -37,7 +37,7 @@ public class FileSystemContentProvider implements ContentProvider {
     }
 
     @Override
-    public ContentMetadata writeContentStream(ContentMetadata metadata, FileInputStream inputStream) throws IOException {
+    public ContentMetadata writeContentStream(ContentMetadata metadata, InputStream inputStream) throws IOException {
         String targetName    = UUID.randomUUID().toString();
         String subfolderName = getSubFolderName(targetName);
         String subfolderPath = dataRootPath + SEP + subfolderName;

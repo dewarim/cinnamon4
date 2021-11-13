@@ -131,8 +131,7 @@ public class CreateOsdRequest implements ApiRequest {
                 && (formatId == null || formatId > 0)
                 && (languageId == null || languageId > 0)
                 && metaIsValid()
-                && summary != null
-                && summary.trim().length() > 0;
+                && (summary == null || summary.trim().length() > 0);
     }
 
     private boolean metaIsValid() {

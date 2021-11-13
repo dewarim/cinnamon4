@@ -36,4 +36,13 @@ public class AclPermission {
     public int hashCode() {
         return Objects.hash(aclId, permissionId, ownerPermission);
     }
+
+    @Override
+    public String toString() {
+        return "AclPermission{" +
+                "aclId=" + aclId +
+                ", permissionId=" + permissionId +
+                ", ownerPermission=" + ownerPermission +
+                '}';
+    }
 }

@@ -69,8 +69,10 @@ import com.dewarim.cinnamon.model.request.metasetType.ListMetasetTypeRequest;
 import com.dewarim.cinnamon.model.request.metasetType.UpdateMetasetTypeRequest;
 import com.dewarim.cinnamon.model.request.objectType.CreateObjectTypeRequest;
 import com.dewarim.cinnamon.model.request.objectType.ListObjectTypeRequest;
+import com.dewarim.cinnamon.model.request.osd.CopyOsdRequest;
 import com.dewarim.cinnamon.model.request.osd.CreateOsdRequest;
 import com.dewarim.cinnamon.model.request.osd.DeleteOsdRequest;
+import com.dewarim.cinnamon.model.request.osd.GetRelationRequest;
 import com.dewarim.cinnamon.model.request.osd.OsdByFolderRequest;
 import com.dewarim.cinnamon.model.request.osd.OsdRequest;
 import com.dewarim.cinnamon.model.request.osd.UpdateOsdRequest;
@@ -250,11 +252,18 @@ public class CinnamonClient {
         return unwrapOsds(response, EXPECTED_SIZE_ANY);
     }
 
-    public OsdWrapper getOsdsInFolder(Long folderId, boolean includeSummary, boolean linksAsOsd, boolean includeCustomMetadata) throws IOException {
+    public OsdWrapper getOsdsInFolderWrapped(Long folderId, boolean includeSummary, boolean linksAsOsd, boolean includeCustomMetadata) throws IOException {
         OsdByFolderRequest osdRequest = new OsdByFolderRequest(folderId, includeSummary, linksAsOsd, includeCustomMetadata, ALL);
         HttpResponse       response   = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_FOLDER_ID, osdRequest);
         verifyResponseIsOkay(response);
         return mapper.readValue(response.getEntity().getContent(), OsdWrapper.class);
+    }
+
+    public List<ObjectSystemData> getOsdsInFolder(Long folderId, boolean includeSummary, boolean linksAsOsd, boolean includeCustomMetadata) throws IOException {
+        OsdByFolderRequest osdRequest = new OsdByFolderRequest(folderId, includeSummary, linksAsOsd, includeCustomMetadata, ALL);
+        HttpResponse       response   = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_FOLDER_ID, osdRequest);
+        verifyResponseIsOkay(response);
+        return unwrapOsds(response, EXPECTED_SIZE_ANY);
     }
 
     public OsdWrapper getOsdsInFolder(Long folderId, boolean includeSummary, boolean linksAsOsd, boolean includeCustomMetadata,
@@ -397,8 +406,8 @@ public class CinnamonClient {
         return metaUnwrapper.unwrap(response, 1);
     }
 
-    public Meta createOsdMeta(Long osdId, String content, Long metaTpeId) throws IOException{
-        return createOsdMeta(new CreateMetaRequest(osdId, content, metaTpeId)).get(0);
+    public Meta createOsdMeta(Long osdId, String content, Long metaTypeId) throws IOException{
+        return createOsdMeta(new CreateMetaRequest(osdId, content, metaTypeId)).get(0);
     }
 
     public void updateFolders(UpdateFolderRequest updateFolderRequest) throws IOException {
@@ -833,6 +842,18 @@ public class CinnamonClient {
         var request = new UpdateUserAccountRequest(List.of(user));
         var response = sendStandardRequest(UrlMapping.USER__UPDATE,request);
         return userUnwrapper.unwrap(response, 1).get(0);
+    }
+
+    public List<ObjectSystemData> copyOsds(long targetFolderId, List<Long> ids) throws IOException{
+        var copyOsdRequest = new CopyOsdRequest(ids, targetFolderId, null);
+        var response = sendStandardRequest(UrlMapping.OSD__COPY, copyOsdRequest);
+        return osdUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
+    }
+
+    public List<Relation> getRelations(List<Long> ids) throws IOException {
+        var request = new GetRelationRequest(ids, true);
+        var response = sendStandardRequest(UrlMapping.OSD__GET_RELATIONS, request);
+        return relationUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 }
 

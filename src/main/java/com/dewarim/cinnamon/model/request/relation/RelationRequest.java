@@ -1,10 +1,11 @@
-package com.dewarim.cinnamon.model.request;
+package com.dewarim.cinnamon.model.request.relation;
 
 import com.dewarim.cinnamon.api.ApiRequest;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.Collection;
 import java.util.Objects;
+import java.util.Optional;
 
 @JacksonXmlRootElement(localName = "relationRequest")
 public class RelationRequest implements ApiRequest {
@@ -13,6 +14,7 @@ public class RelationRequest implements ApiRequest {
     private Collection<Long>   rightIds;
     private Collection<String> names;
     private boolean            includeMetadata;
+    private boolean            orMode = false;
 
     public RelationRequest() {
     }
@@ -60,13 +62,27 @@ public class RelationRequest implements ApiRequest {
         return longCollectionIsValid(leftIds) || longCollectionIsValid(rightIds) || stringCollectionIsValid(names);
     }
 
-    private boolean longCollectionIsValid(Collection<Long> objects) {
-        return Objects.nonNull(objects) && !objects.isEmpty() && objects.stream().noneMatch(o -> Objects.isNull(o) || o < 1);
+    private boolean longCollectionIsValid(Collection<Long> ids) {
+        return Objects.nonNull(ids) && !ids.isEmpty() && ids.stream().noneMatch(o -> Objects.isNull(o) || o < 1);
     }
 
-    private boolean stringCollectionIsValid(Collection<String> objects) {
-        return Objects.nonNull(objects) && !objects.isEmpty() && objects.stream().noneMatch(o -> Objects.isNull(o) || o.trim().length() == 0);
-
+    private boolean stringCollectionIsValid(Collection<String> names) {
+        return Objects.nonNull(names) && !names.isEmpty() && names.stream().noneMatch(o -> Objects.isNull(o) || o.trim().length() == 0);
     }
 
+    public boolean isOrMode() {
+        return orMode;
+    }
+
+    public void setOrMode(boolean orMode) {
+        this.orMode = orMode;
+    }
+
+    public Optional<RelationRequest> validateRequest(){
+        if (validated()) {
+            return Optional.of(this);
+        } else {
+            return Optional.empty();
+        }
+    }
 }
