@@ -10,7 +10,11 @@
     <name>Cinnamon CMS</name>
 
     <properties>
-        <jetty.version>11.0.6</jetty.version>
+        <jetty.version>11.0.7</jetty.version>
+        <jackson.version>2.13.0</jackson.version>
+        <junit.version>5.8.2</junit.version>
+        <mybatis.version>3.5.7</mybatis.version>
+        <postgresql.version>42.3.1</postgresql.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.plugin.version>3.8.1</maven.compiler.plugin.version>
         <log4j.version>2.14.1</log4j.version>
@@ -24,6 +28,16 @@
         <connection>scm:git:https://github.com/dewarim/cinnamon4.git</connection>
         <url>https://github.com/dewarim/cinnamon4</url>
     </scm>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>2.0.0-alpha5</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
 
@@ -65,20 +79,20 @@
         <dependency>
             <groupId>org.mybatis</groupId>
             <artifactId>mybatis</artifactId>
-            <version>3.5.6</version>
+            <version>${mybatis.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <version>42.2.20</version>
+            <version>${postgresql.version}</version>
         </dependency>
 
         <!-- xml handling -->
         <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>
             <artifactId>jackson-dataformat-xml</artifactId>
-            <version>2.12.3</version>
+            <version>${jackson.version}</version>
         </dependency>
 
         <dependency>
@@ -133,13 +147,13 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
-            <version>5.7.1</version>
+            <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
-            <version>5.7.1</version>
+            <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
 
@@ -155,7 +169,7 @@
         <dependency>
             <groupId>com.beust</groupId>
             <artifactId>jcommander</artifactId>
-            <version>1.78</version>
+            <version>1.81</version>
         </dependency>
 
         <dependency>
