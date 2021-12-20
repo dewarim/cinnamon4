@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.dewarim.cinnamon.LifecycleMapper">
+<mapper namespace="com.dewarim.cinnamon.model.Lifecycle">
 
     <resultMap id="lifecycleMap" type="com.dewarim.cinnamon.model.Lifecycle">
         <id property="id" column="id"/>
@@ -28,5 +28,38 @@
         WHERE name = #{name}
     </select>
 
+    <update id="update" parameterType="com.dewarim.cinnamon.model.Lifecycle">
+        UPDATE lifecycles
+        SET name = #{name},
+            default_state_id = #{defaultStateId}
+        WHERE id = #{id}
+    </update>
+
+    <insert id="insert" parameterType="com.dewarim.cinnamon.model.Lifecycle">
+        <selectKey keyProperty="id" resultType="long" order="BEFORE">
+            select nextval('seq_lifecycle_id')
+        </selectKey>
+        INSERT INTO lifecycles(id,name, default_state_id) VALUES (#{id}, #{name}, #{defaultStateId})
+    </insert>
+
+    <delete id="delete" parameterType="list">
+        DELETE
+        FROM lifecycles
+        WHERE id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <select id="getAllById" parameterType="list" resultMap="lifecycleMap">
+        SELECT *
+        FROM lifecycles
+        WHERE id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
 
 </mapper>

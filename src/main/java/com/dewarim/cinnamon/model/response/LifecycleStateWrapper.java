@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class LifecycleStateWrapper implements ApiResponse {
+public class LifecycleStateWrapper implements Wrapper<LifecycleState>, ApiResponse {
 
     @JacksonXmlElementWrapper(localName = "lifecycleStates")
     @JacksonXmlProperty(localName = "lifecycleState")
@@ -30,5 +30,16 @@ public class LifecycleStateWrapper implements ApiResponse {
 
     public void setLifecycleStates(List<LifecycleState> lifecycleStates) {
         this.lifecycleStates = lifecycleStates;
+    }
+
+    @Override
+    public List<LifecycleState> list() {
+        return lifecycleStates;
+    }
+
+    @Override
+    public Wrapper<LifecycleState> setList(List<LifecycleState> lifecycleStates) {
+        this.lifecycleStates=lifecycleStates;
+        return this;
     }
 }

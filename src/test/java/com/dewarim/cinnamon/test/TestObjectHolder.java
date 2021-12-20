@@ -33,6 +33,7 @@ public class TestObjectHolder {
     static        boolean           initialized = false;
     static public List<Permission>  permissions;
     static public List<Format>      formats;
+    static public List<Language>    languages;
     static public List<ObjectType>  objectTypes;
     static public List<MetasetType> metasetTypes;
     static public List<FolderType>  folderTypes;
@@ -79,12 +80,14 @@ public class TestObjectHolder {
                     objectTypes = client.listObjectTypes();
                     metasetTypes = client.listMetasetTypes();
                     folderTypes = client.listFolderTypes();
+                    languages = client.listLanguages();
                 } catch (IOException e) {
                     throw new IllegalStateException("Failed to initialize test object holder", e);
                 }
                 initialized = true;
             }
         }
+        language = languages.get(0);
     }
 
     public TestObjectHolder setAcl(Acl acl) {

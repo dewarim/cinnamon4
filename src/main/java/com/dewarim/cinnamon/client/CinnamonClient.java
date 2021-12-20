@@ -9,6 +9,8 @@ import com.dewarim.cinnamon.model.FolderType;
 import com.dewarim.cinnamon.model.Format;
 import com.dewarim.cinnamon.model.Group;
 import com.dewarim.cinnamon.model.Language;
+import com.dewarim.cinnamon.model.Lifecycle;
+import com.dewarim.cinnamon.model.LifecycleState;
 import com.dewarim.cinnamon.model.Meta;
 import com.dewarim.cinnamon.model.MetasetType;
 import com.dewarim.cinnamon.model.ObjectSystemData;
@@ -20,6 +22,7 @@ import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.links.LinkType;
 import com.dewarim.cinnamon.model.relations.Relation;
 import com.dewarim.cinnamon.model.relations.RelationType;
+import com.dewarim.cinnamon.model.request.AttachLifecycleRequest;
 import com.dewarim.cinnamon.model.request.CreateMetaRequest;
 import com.dewarim.cinnamon.model.request.CreateNewVersionRequest;
 import com.dewarim.cinnamon.model.request.IdRequest;
@@ -58,6 +61,9 @@ import com.dewarim.cinnamon.model.request.language.CreateLanguageRequest;
 import com.dewarim.cinnamon.model.request.language.DeleteLanguageRequest;
 import com.dewarim.cinnamon.model.request.language.ListLanguageRequest;
 import com.dewarim.cinnamon.model.request.language.UpdateLanguageRequest;
+import com.dewarim.cinnamon.model.request.lifecycle.CreateLifecycleRequest;
+import com.dewarim.cinnamon.model.request.lifecycle.ListLifecycleRequest;
+import com.dewarim.cinnamon.model.request.lifecycleState.CreateLifecycleStateRequest;
 import com.dewarim.cinnamon.model.request.link.CreateLinkRequest;
 import com.dewarim.cinnamon.model.request.link.DeleteLinkRequest;
 import com.dewarim.cinnamon.model.request.link.GetLinksRequest;
@@ -69,10 +75,13 @@ import com.dewarim.cinnamon.model.request.metasetType.ListMetasetTypeRequest;
 import com.dewarim.cinnamon.model.request.metasetType.UpdateMetasetTypeRequest;
 import com.dewarim.cinnamon.model.request.objectType.CreateObjectTypeRequest;
 import com.dewarim.cinnamon.model.request.objectType.ListObjectTypeRequest;
+import com.dewarim.cinnamon.model.request.osd.CopyOsdRequest;
 import com.dewarim.cinnamon.model.request.osd.CreateOsdRequest;
 import com.dewarim.cinnamon.model.request.osd.DeleteOsdRequest;
+import com.dewarim.cinnamon.model.request.osd.GetRelationRequest;
 import com.dewarim.cinnamon.model.request.osd.OsdByFolderRequest;
 import com.dewarim.cinnamon.model.request.osd.OsdRequest;
+import com.dewarim.cinnamon.model.request.osd.SetContentRequest;
 import com.dewarim.cinnamon.model.request.osd.UpdateOsdRequest;
 import com.dewarim.cinnamon.model.request.osd.VersionPredicate;
 import com.dewarim.cinnamon.model.request.permission.ChangePermissionsRequest;
@@ -103,6 +112,8 @@ import com.dewarim.cinnamon.model.response.FormatWrapper;
 import com.dewarim.cinnamon.model.response.GenericResponse;
 import com.dewarim.cinnamon.model.response.GroupWrapper;
 import com.dewarim.cinnamon.model.response.LanguageWrapper;
+import com.dewarim.cinnamon.model.response.LifecycleStateWrapper;
+import com.dewarim.cinnamon.model.response.LifecycleWrapper;
 import com.dewarim.cinnamon.model.response.LinkResponse;
 import com.dewarim.cinnamon.model.response.LinkResponseWrapper;
 import com.dewarim.cinnamon.model.response.MetaWrapper;
@@ -121,10 +132,13 @@ import org.apache.http.client.fluent.Form;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.entity.mime.content.FileBody;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
@@ -149,29 +163,31 @@ public class CinnamonClient {
     private       String    ticket;
     private final XmlMapper mapper   = XML_MAPPER;
 
-    private final Unwrapper<ConfigEntry, ConfigEntryWrapper>        configEntryUnwrapper  = new Unwrapper<>(ConfigEntryWrapper.class);
-    private final Unwrapper<ObjectSystemData, OsdWrapper>           osdUnwrapper          = new Unwrapper<>(OsdWrapper.class);
-    private final Unwrapper<FolderType, FolderTypeWrapper>          folderTypeUnwrapper   = new Unwrapper<>(FolderTypeWrapper.class);
-    private final Unwrapper<ObjectType, ObjectTypeWrapper>          objectTypeUnwrapper   = new Unwrapper<>(ObjectTypeWrapper.class);
-    private final Unwrapper<Folder, FolderWrapper>                  folderUnwrapper       = new Unwrapper<>(FolderWrapper.class);
-    private final Unwrapper<Format, FormatWrapper>                  formatUnwrapper       = new Unwrapper<>(FormatWrapper.class);
-    private final Unwrapper<Meta, MetaWrapper>                      metaUnwrapper         = new Unwrapper<>(MetaWrapper.class);
-    private final Unwrapper<UserAccount, UserAccountWrapper>        userUnwrapper         = new Unwrapper<>(UserAccountWrapper.class);
-    private final Unwrapper<DeleteResponse, DeleteResponse>         deleteResponseWrapper = new Unwrapper<>(DeleteResponse.class);
-    private final Unwrapper<CinnamonError, CinnamonErrorWrapper>    errorUnwrapper        = new Unwrapper<>(CinnamonErrorWrapper.class);
-    private final Unwrapper<Acl, AclWrapper>                        aclUnwrapper          = new Unwrapper<>(AclWrapper.class);
-    private final Unwrapper<AclGroup, AclGroupWrapper>              aclGroupUnwrapper     = new Unwrapper<>(AclGroupWrapper.class);
-    private final Unwrapper<Group, GroupWrapper>                    groupUnwrapper        = new Unwrapper<>(GroupWrapper.class);
-    private final Unwrapper<Language, LanguageWrapper>              languageUnwrapper     = new Unwrapper<>(LanguageWrapper.class);
-    private final Unwrapper<UiLanguage, UiLanguageWrapper>          uiLanguageUnwrapper   = new Unwrapper<>(UiLanguageWrapper.class);
-    private final Unwrapper<Link, LinkWrapper>                      linkUnwrapper         = new Unwrapper<>(LinkWrapper.class);
+    private final Unwrapper<ConfigEntry, ConfigEntryWrapper>        configEntryUnwrapper    = new Unwrapper<>(ConfigEntryWrapper.class);
+    private final Unwrapper<ObjectSystemData, OsdWrapper>           osdUnwrapper            = new Unwrapper<>(OsdWrapper.class);
+    private final Unwrapper<FolderType, FolderTypeWrapper>          folderTypeUnwrapper     = new Unwrapper<>(FolderTypeWrapper.class);
+    private final Unwrapper<ObjectType, ObjectTypeWrapper>          objectTypeUnwrapper     = new Unwrapper<>(ObjectTypeWrapper.class);
+    private final Unwrapper<Folder, FolderWrapper>                  folderUnwrapper         = new Unwrapper<>(FolderWrapper.class);
+    private final Unwrapper<Format, FormatWrapper>                  formatUnwrapper         = new Unwrapper<>(FormatWrapper.class);
+    private final Unwrapper<Meta, MetaWrapper>                      metaUnwrapper           = new Unwrapper<>(MetaWrapper.class);
+    private final Unwrapper<UserAccount, UserAccountWrapper>        userUnwrapper           = new Unwrapper<>(UserAccountWrapper.class);
+    private final Unwrapper<DeleteResponse, DeleteResponse>         deleteResponseWrapper   = new Unwrapper<>(DeleteResponse.class);
+    private final Unwrapper<CinnamonError, CinnamonErrorWrapper>    errorUnwrapper          = new Unwrapper<>(CinnamonErrorWrapper.class);
+    private final Unwrapper<Acl, AclWrapper>                        aclUnwrapper            = new Unwrapper<>(AclWrapper.class);
+    private final Unwrapper<AclGroup, AclGroupWrapper>              aclGroupUnwrapper       = new Unwrapper<>(AclGroupWrapper.class);
+    private final Unwrapper<Group, GroupWrapper>                    groupUnwrapper          = new Unwrapper<>(GroupWrapper.class);
+    private final Unwrapper<Language, LanguageWrapper>              languageUnwrapper       = new Unwrapper<>(LanguageWrapper.class);
+    private final Unwrapper<UiLanguage, UiLanguageWrapper>          uiLanguageUnwrapper     = new Unwrapper<>(UiLanguageWrapper.class);
+    private final Unwrapper<Link, LinkWrapper>                      linkUnwrapper           = new Unwrapper<>(LinkWrapper.class);
+    private final Unwrapper<Lifecycle, LifecycleWrapper>            lifecycleUnwrapper      = new Unwrapper<>(LifecycleWrapper.class);
+    private final Unwrapper<LifecycleState, LifecycleStateWrapper>  lifecycleStateUnwrapper = new Unwrapper<>(LifecycleStateWrapper.class);
     // LinkResponse contains full OSD/Folder objects, Link itself contains only ids.
-    private final Unwrapper<LinkResponse, LinkResponseWrapper>      linkResponseUnwrapper = new Unwrapper<>(LinkResponseWrapper.class);
-    private final Unwrapper<Relation, RelationWrapper>              relationUnwrapper     = new Unwrapper<>(RelationWrapper.class);
-    private final Unwrapper<RelationType, RelationTypeWrapper>      relationTypeUnwrapper = new Unwrapper<>(RelationTypeWrapper.class);
-    private final Unwrapper<Permission, PermissionWrapper>          permissionUnwrapper   = new Unwrapper<>(PermissionWrapper.class);
-    private final Unwrapper<DisconnectResponse, DisconnectResponse> disconnectUnwrapper   = new Unwrapper<>(DisconnectResponse.class);
-    private final Unwrapper<MetasetType, MetasetTypeWrapper>        metasetTypeUnwrapper  = new Unwrapper<>(MetasetTypeWrapper.class);
+    private final Unwrapper<LinkResponse, LinkResponseWrapper>      linkResponseUnwrapper   = new Unwrapper<>(LinkResponseWrapper.class);
+    private final Unwrapper<Relation, RelationWrapper>              relationUnwrapper       = new Unwrapper<>(RelationWrapper.class);
+    private final Unwrapper<RelationType, RelationTypeWrapper>      relationTypeUnwrapper   = new Unwrapper<>(RelationTypeWrapper.class);
+    private final Unwrapper<Permission, PermissionWrapper>          permissionUnwrapper     = new Unwrapper<>(PermissionWrapper.class);
+    private final Unwrapper<DisconnectResponse, DisconnectResponse> disconnectUnwrapper     = new Unwrapper<>(DisconnectResponse.class);
+    private final Unwrapper<MetasetType, MetasetTypeWrapper>        metasetTypeUnwrapper    = new Unwrapper<>(MetasetTypeWrapper.class);
 
     private boolean generateTicketIfNull = true;
 
@@ -250,11 +266,18 @@ public class CinnamonClient {
         return unwrapOsds(response, EXPECTED_SIZE_ANY);
     }
 
-    public OsdWrapper getOsdsInFolder(Long folderId, boolean includeSummary, boolean linksAsOsd, boolean includeCustomMetadata) throws IOException {
+    public OsdWrapper getOsdsInFolderWrapped(Long folderId, boolean includeSummary, boolean linksAsOsd, boolean includeCustomMetadata) throws IOException {
         OsdByFolderRequest osdRequest = new OsdByFolderRequest(folderId, includeSummary, linksAsOsd, includeCustomMetadata, ALL);
         HttpResponse       response   = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_FOLDER_ID, osdRequest);
         verifyResponseIsOkay(response);
         return mapper.readValue(response.getEntity().getContent(), OsdWrapper.class);
+    }
+
+    public List<ObjectSystemData> getOsdsInFolder(Long folderId, boolean includeSummary, boolean linksAsOsd, boolean includeCustomMetadata) throws IOException {
+        OsdByFolderRequest osdRequest = new OsdByFolderRequest(folderId, includeSummary, linksAsOsd, includeCustomMetadata, ALL);
+        HttpResponse       response   = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_FOLDER_ID, osdRequest);
+        verifyResponseIsOkay(response);
+        return unwrapOsds(response, EXPECTED_SIZE_ANY);
     }
 
     public OsdWrapper getOsdsInFolder(Long folderId, boolean includeSummary, boolean linksAsOsd, boolean includeCustomMetadata,
@@ -359,6 +382,24 @@ public class CinnamonClient {
         return osdUnwrapper.unwrap(response, 1).get(0);
     }
 
+    public boolean setContentOnLockedOsd(Long osdId, Long formatId, File content) throws IOException {
+        FileBody fileBody = new FileBody(content);
+        HttpEntity entity = MultipartEntityBuilder.create()
+                .addTextBody("setContentRequest", mapper.writeValueAsString(new SetContentRequest(osdId, formatId)),
+                        APPLICATION_XML.withCharset(StandardCharsets.UTF_8))
+                .addPart("file", fileBody)
+                .build();
+        var response = sendStandardMultipartRequest(UrlMapping.OSD__SET_CONTENT, entity);
+        return parseGenericResponse(response).isSuccessful();
+    }
+
+    public InputStream getContent(Long osdId) throws IOException {
+        IdRequest    idRequest = new IdRequest(osdId);
+        HttpResponse response  = sendStandardRequest(UrlMapping.OSD__GET_CONTENT, idRequest);
+        verifyResponseIsOkay(response);
+        return response.getEntity().getContent();
+    }
+
     public boolean lockOsd(Long id) throws IOException {
         IdRequest idRequest = new IdRequest(id);
         var       response  = sendStandardRequest(UrlMapping.OSD__LOCK, idRequest);
@@ -397,8 +438,8 @@ public class CinnamonClient {
         return metaUnwrapper.unwrap(response, 1);
     }
 
-    public Meta createOsdMeta(Long osdId, String content, Long metaTpeId) throws IOException{
-        return createOsdMeta(new CreateMetaRequest(osdId, content, metaTpeId)).get(0);
+    public Meta createOsdMeta(Long osdId, String content, Long metaTypeId) throws IOException {
+        return createOsdMeta(new CreateMetaRequest(osdId, content, metaTypeId)).get(0);
     }
 
     public void updateFolders(UpdateFolderRequest updateFolderRequest) throws IOException {
@@ -486,12 +527,13 @@ public class CinnamonClient {
         return groupUnwrapper.unwrap(response, groupNames.size());
     }
 
-    public List<Group> createGroups(List<Group> groups) throws IOException{
+    public List<Group> createGroups(List<Group> groups) throws IOException {
         var request  = new CreateGroupRequest(groups);
         var response = sendStandardRequest(UrlMapping.GROUP__CREATE, request);
         return groupUnwrapper.unwrap(response, groups.size());
     }
-    public Group createGroup(Group group) throws IOException{
+
+    public Group createGroup(Group group) throws IOException {
         var request  = new CreateGroupRequest(List.of(group));
         var response = sendStandardRequest(UrlMapping.GROUP__CREATE, request);
         return groupUnwrapper.unwrap(response, 1).get(0);
@@ -636,7 +678,7 @@ public class CinnamonClient {
     public static void main(String[] args) throws IOException {
         CinnamonClient client = new CinnamonClient();
         client.ticket = client.getTicket(true);
-        log.debug(client.getOsdById(1, false, false));
+        log.debug(client.getOsdById(1, false, false).toString());
     }
 
     public boolean disconnect() throws IOException {
@@ -787,7 +829,7 @@ public class CinnamonClient {
     }
 
     public List<UserAccount> listUsers() throws IOException {
-        var request = new ListUserAccountRequest();
+        var request  = new ListUserAccountRequest();
         var response = sendStandardRequest(UrlMapping.USER__LIST, request);
         return userUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
@@ -796,13 +838,13 @@ public class CinnamonClient {
         var request = new CreateUserAccountRequest();
         request.list().add(user);
         var response = sendStandardRequest(UrlMapping.USER__CREATE, request);
-        return userUnwrapper.unwrap(response,1).get(0);
+        return userUnwrapper.unwrap(response, 1).get(0);
     }
 
-    public List<Meta> getOsdMetas(Long id) throws IOException{
-        var request = new MetaRequest(id, null);
+    public List<Meta> getOsdMetas(Long id) throws IOException {
+        var request  = new MetaRequest(id, null);
         var response = sendStandardRequest(UrlMapping.OSD__GET_META, request);
-        return metaUnwrapper.unwrap(response,EXPECTED_SIZE_ANY);
+        return metaUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
     public int getPort() {
@@ -830,9 +872,51 @@ public class CinnamonClient {
     }
 
     public UserAccount updateUser(UserAccount user) throws IOException {
-        var request = new UpdateUserAccountRequest(List.of(user));
-        var response = sendStandardRequest(UrlMapping.USER__UPDATE,request);
+        var request  = new UpdateUserAccountRequest(List.of(user));
+        var response = sendStandardRequest(UrlMapping.USER__UPDATE, request);
         return userUnwrapper.unwrap(response, 1).get(0);
+    }
+
+    public List<ObjectSystemData> copyOsds(long targetFolderId, List<Long> ids) throws IOException {
+        var copyOsdRequest = new CopyOsdRequest(ids, targetFolderId, null);
+        var response       = sendStandardRequest(UrlMapping.OSD__COPY, copyOsdRequest);
+        return osdUnwrapper.unwrap(response, ids.size());
+    }
+
+    public List<ObjectSystemData> copyOsds(long targetFolderId, List<Long> ids, List<Long> metasetTypeIds) throws IOException {
+        var copyOsdRequest = new CopyOsdRequest(ids, targetFolderId, metasetTypeIds);
+        var response       = sendStandardRequest(UrlMapping.OSD__COPY, copyOsdRequest);
+        return osdUnwrapper.unwrap(response, ids.size());
+    }
+
+    public List<Relation> getRelations(List<Long> ids) throws IOException {
+        var request  = new GetRelationRequest(ids, true);
+        var response = sendStandardRequest(UrlMapping.OSD__GET_RELATIONS, request);
+        return relationUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
+    }
+
+    public Lifecycle createLifecycle(String name) throws IOException {
+        var request  = new CreateLifecycleRequest(List.of(new Lifecycle(name, null)));
+        var response = sendStandardRequest(UrlMapping.LIFECYCLE__CREATE, request);
+        return lifecycleUnwrapper.unwrap(response, 1).get(0);
+    }
+
+    public LifecycleState createLifecycleState(LifecycleState lifecycleState) throws IOException {
+        var request  = new CreateLifecycleStateRequest(List.of(lifecycleState));
+        var response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__CREATE, request);
+        return lifecycleStateUnwrapper.unwrap(response, 1).get(0);
+    }
+
+    public void attachLifecycle(Long osdId, Long lifecycleId, Long lifecycleStateId) throws IOException {
+        var request = new AttachLifecycleRequest(osdId,lifecycleId,lifecycleStateId);
+        var response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__ATTACH_LIFECYCLE, request);
+        verifyResponseIsOkay(response);
+    }
+
+    public List<Lifecycle> listLifecycles() throws IOException {
+        var request = new ListLifecycleRequest();
+        var response = sendStandardRequest(UrlMapping.LIFECYCLE__LIST, request);
+        return lifecycleUnwrapper.unwrap(response,EXPECTED_SIZE_ANY);
     }
 }
 

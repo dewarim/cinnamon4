@@ -1,6 +1,5 @@
 package com.dewarim.cinnamon.api.content;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -16,6 +15,6 @@ public interface ContentProvider {
      * @return new ContentMetadata with unique contentPath which can be used to retrieve the data
      * by using getContentStream. Also: contentHash and contentSize.
      */
-    ContentMetadata writeContentStream(ContentMetadata metadata, FileInputStream inputStream) throws IOException;
+    ContentMetadata writeContentStream(ContentMetadata metadata, InputStream inputStream) throws IOException;
 
 }

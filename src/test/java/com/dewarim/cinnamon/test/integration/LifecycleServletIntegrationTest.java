@@ -5,7 +5,6 @@ import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.model.Lifecycle;
 import com.dewarim.cinnamon.model.LifecycleState;
 import com.dewarim.cinnamon.model.request.LifecycleRequest;
-import com.dewarim.cinnamon.model.request.lifecycle.ListLifecycleRequest;
 import com.dewarim.cinnamon.model.response.LifecycleWrapper;
 import org.apache.http.HttpResponse;
 import org.junit.jupiter.api.Test;
@@ -22,8 +21,7 @@ public class LifecycleServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void listLifecycles() throws IOException {
-        HttpResponse    response   = sendStandardRequest(UrlMapping.LIFECYCLE__LIST, new ListLifecycleRequest());
-        List<Lifecycle> lifecycles = parseResponse(response);
+        List<Lifecycle> lifecycles = client.listLifecycles();
 
         assertNotNull(lifecycles);
         assertFalse(lifecycles.isEmpty());
@@ -38,7 +36,7 @@ public class LifecycleServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getLifecycleHappyPathWithId() throws IOException {
-        HttpResponse    response   = sendStandardRequest(UrlMapping.LIFECYCLE__GET_LIFECYCLE, new LifecycleRequest(1L, null));
+        HttpResponse    response   = sendStandardRequest(UrlMapping.LIFECYCLE__GET, new LifecycleRequest(1L, null));
         List<Lifecycle> lifecycles = parseResponse(response);
         assertEquals(1, lifecycles.size());
         Lifecycle lifecycle = lifecycles.get(0);
@@ -47,7 +45,7 @@ public class LifecycleServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getLifecycleHappyPathWithName() throws IOException {
-        HttpResponse    response   = sendStandardRequest(UrlMapping.LIFECYCLE__GET_LIFECYCLE, new LifecycleRequest(null, "render.lc"));
+        HttpResponse    response   = sendStandardRequest(UrlMapping.LIFECYCLE__GET, new LifecycleRequest(null, "render.lc"));
         List<Lifecycle> lifecycles = parseResponse(response);
         assertEquals(1, lifecycles.size());
         Lifecycle lifecycle = lifecycles.get(0);
@@ -57,27 +55,27 @@ public class LifecycleServletIntegrationTest extends CinnamonIntegrationTest {
         assertEquals(1, lifecycleStates.size());
         LifecycleState newRenderTaskState = lifecycleStates.get(0);
         assertEquals("newRenderTask",newRenderTaskState.getName());
-        assertEquals("NopState",newRenderTaskState.getStateClass());
+        assertEquals("com.dewarim.cinnamon.lifecycle.NopState",newRenderTaskState.getStateClass());
     }
 
     @Test
     public void getLifecycleFailOnNotFound() throws IOException {
-        HttpResponse response = sendStandardRequest(UrlMapping.LIFECYCLE__GET_LIFECYCLE, new LifecycleRequest(Long.MAX_VALUE, null));
+        HttpResponse response = sendStandardRequest(UrlMapping.LIFECYCLE__GET, new LifecycleRequest(Long.MAX_VALUE, null));
         assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND);
 
-        HttpResponse nameNotFoundResponse = sendStandardRequest(UrlMapping.LIFECYCLE__GET_LIFECYCLE, new LifecycleRequest(null, "does-not-exist"));
+        HttpResponse nameNotFoundResponse = sendStandardRequest(UrlMapping.LIFECYCLE__GET, new LifecycleRequest(null, "does-not-exist"));
         assertCinnamonError(nameNotFoundResponse, ErrorCode.OBJECT_NOT_FOUND);
     }
 
     @Test
     public void getLifecycleFailOnInvalidRequest() throws IOException {
-        HttpResponse response = sendStandardRequest(UrlMapping.LIFECYCLE__GET_LIFECYCLE, new LifecycleRequest(null, null));
+        HttpResponse response = sendStandardRequest(UrlMapping.LIFECYCLE__GET, new LifecycleRequest(null, null));
         assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
 
-        response = sendStandardRequest(UrlMapping.LIFECYCLE__GET_LIFECYCLE, new LifecycleRequest(-1L, null));
+        response = sendStandardRequest(UrlMapping.LIFECYCLE__GET, new LifecycleRequest(-1L, null));
         assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
 
-        response = sendStandardRequest(UrlMapping.LIFECYCLE__GET_LIFECYCLE, new LifecycleRequest(null, ""));
+        response = sendStandardRequest(UrlMapping.LIFECYCLE__GET, new LifecycleRequest(null, ""));
         assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
     }
 

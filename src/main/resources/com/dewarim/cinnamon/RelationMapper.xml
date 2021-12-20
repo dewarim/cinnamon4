@@ -73,17 +73,62 @@
                          open="(" separator="," close=")">
                     #{item}
                 </foreach>
+                <if test="rightIds != null or names != null">
+                    AND
+                </if>
             </if>
             <if test="rightIds != null">
-                AND
                 r.right_id IN
                 <foreach item="item" index="index" collection="rightIds"
                          open="(" separator="," close=")">
                     #{item}
                 </foreach>
+                <if test="names != null">
+                    AND
+                </if>
             </if>
             <if test="names != null">
-                AND
+                rt.name IN
+                <foreach item="item" index="index" collection="names"
+                         open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+
+    </select>
+
+    <select id="getRelationsWithCriteriaOr" parameterType="map" resultMap="relationMap">
+        SELECT
+        r.id,
+        r.left_id,
+        r.right_id,
+        r.type_id,
+
+        CASE WHEN #{includeMetadata} THEN metadata ELSE null END AS metadata
+        FROM relations r join relation_types rt on r.type_id = rt.id
+        <where>
+            <if test="leftIds != null">
+                r.left_id IN
+                <foreach item="item" index="index" collection="leftIds"
+                         open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+                <if test="rightIds != null or names != null">
+                    OR
+                </if>
+            </if>
+            <if test="rightIds != null">
+                r.right_id IN
+                <foreach item="item" index="index" collection="rightIds"
+                         open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+                <if test="names != null">
+                    OR
+                </if>
+            </if>
+            <if test="names != null">
                 rt.name IN
                 <foreach item="item" index="index" collection="names"
                          open="(" separator="," close=")">
@@ -143,5 +188,13 @@
         )
         )
     </delete>
+
+    <select id="getRelationsToCopy" parameterType="long" resultMap="relationMap">
+        SELECT r.*
+        FROM relations r
+                 join relation_types rt on r.type_id = rt.id
+        WHERE (r.left_id = #{id} and rt.clone_on_left_copy = true)
+           or (r.right_id = #{id} and rt.clone_on_right_copy = true)
+    </select>
 
 </mapper>

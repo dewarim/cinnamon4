@@ -41,7 +41,7 @@ public class OsdWrapper implements Wrapper<ObjectSystemData>, ApiResponse {
     }
 
     public List<Link> getLinks() {
-        if(links == null){
+        if (links == null) {
             links = new ArrayList<>();
         }
         return links;
@@ -52,7 +52,7 @@ public class OsdWrapper implements Wrapper<ObjectSystemData>, ApiResponse {
     }
 
     public List<ObjectSystemData> getReferences() {
-        if(references == null){
+        if (references == null) {
             references = new ArrayList<>();
         }
         return references;

@@ -8,9 +8,9 @@ import com.dewarim.cinnamon.dao.RelationDao;
 import com.dewarim.cinnamon.dao.RelationTypeDao;
 import com.dewarim.cinnamon.model.relations.Relation;
 import com.dewarim.cinnamon.model.request.CreateRequest;
-import com.dewarim.cinnamon.model.request.RelationRequest;
 import com.dewarim.cinnamon.model.request.relation.CreateRelationRequest;
 import com.dewarim.cinnamon.model.request.relation.DeleteRelationRequest;
+import com.dewarim.cinnamon.model.request.relation.RelationRequest;
 import com.dewarim.cinnamon.model.response.RelationWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.annotation.WebServlet;
@@ -65,18 +65,21 @@ public class RelationServlet extends HttpServlet implements CruddyServlet<Relati
         ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.INVALID_REQUEST);
     }
 
-
     private void listRelations(HttpServletRequest request, RelationDao relationDao, CinnamonResponse response) throws IOException {
-        RelationRequest relationRequest = xmlMapper.readValue(request.getInputStream(), RelationRequest.class);
-        if (relationRequest.validated()) {
-            List<Relation> relations = relationDao.getRelations(relationRequest.getLeftIds(), relationRequest.getRightIds(),
-                    relationRequest.getNames(), relationRequest.isIncludeMetadata());
-            RelationWrapper wrapper = new RelationWrapper(relations);
-            response.setWrapper(wrapper);
-            return;
-        }
-        ErrorCode.INVALID_REQUEST.throwUp();
+        RelationRequest relationRequest = xmlMapper.readValue(request.getInputStream(), RelationRequest.class)
+                .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
+        List<Relation> relations;
+        if(relationRequest.isOrMode()) {
+            relations = relationDao.getRelationsOrMode(relationRequest.getLeftIds(), relationRequest.getRightIds(),
+                    relationRequest.getNames(), relationRequest.isIncludeMetadata());
+        }
+        else{
+            relations = relationDao.getRelations(relationRequest.getLeftIds(), relationRequest.getRightIds(),
+                    relationRequest.getNames(), relationRequest.isIncludeMetadata());
+        }
+        RelationWrapper wrapper = new RelationWrapper(relations);
+        response.setWrapper(wrapper);
     }
 
     @Override

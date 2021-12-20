@@ -5,11 +5,12 @@ import com.dewarim.cinnamon.model.relations.RelationType;
 import org.apache.ibatis.session.SqlSession;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class RelationTypeDao implements CrudDao<RelationType> {
 
@@ -32,9 +33,7 @@ public class RelationTypeDao implements CrudDao<RelationType> {
 
     public Map<Long, RelationType> getRelationTypeMap(Set<Long> ids) {
         List<RelationType> relationTypes = getObjectsById(new ArrayList<>(ids));
-        Map<Long,RelationType> relationTypeMap = new HashMap<>();
-        relationTypes.stream().forEach(relationType -> relationTypeMap.put(relationType.getId(), relationType));
-        return relationTypeMap;
+        return relationTypes.stream().collect(Collectors.toMap(RelationType::getId, Function.identity()));
     }
 
 }

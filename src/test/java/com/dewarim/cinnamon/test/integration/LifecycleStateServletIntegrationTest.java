@@ -22,27 +22,27 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
     @Test
     public void getLifecycleStateWithInvalidRequest() throws IOException {
         IdRequest    idRequest = new IdRequest(-1L);
-        HttpResponse response  = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__GET_LIFECYCLE_STATE, idRequest);
+        HttpResponse response  = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__GET, idRequest);
         assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
     }
 
     @Test
     public void getLifecycleStateWhichDoesNotExist() throws IOException {
         IdRequest    idRequest = new IdRequest(Long.MAX_VALUE);
-        HttpResponse response  = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__GET_LIFECYCLE_STATE, idRequest);
+        HttpResponse response  = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__GET, idRequest);
         assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND);
     }
 
     @Test
     public void getLifecycleState() throws IOException {
         IdRequest            idRequest       = new IdRequest(1L);
-        HttpResponse         response        = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__GET_LIFECYCLE_STATE, idRequest);
+        HttpResponse         response        = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__GET, idRequest);
         List<LifecycleState> lifecycleStates = parseResponse(response);
         assertNotNull(lifecycleStates);
         LifecycleState state = lifecycleStates.get(0);
         assertEquals(1L, (long) state.getId());
         assertEquals("newRenderTask", state.getName());
-        assertEquals("NopState", state.getStateClass());
+        assertEquals("com.dewarim.cinnamon.lifecycle.NopState", state.getStateClass());
         assertEquals(2L, (long) state.getLifecycleId());
         assertEquals(1L, (long) state.getLifecycleStateForCopyId());
 

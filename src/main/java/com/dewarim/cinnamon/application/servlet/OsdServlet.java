@@ -44,8 +44,10 @@ import com.dewarim.cinnamon.model.request.IdListRequest;
 import com.dewarim.cinnamon.model.request.IdRequest;
 import com.dewarim.cinnamon.model.request.MetaRequest;
 import com.dewarim.cinnamon.model.request.SetSummaryRequest;
+import com.dewarim.cinnamon.model.request.osd.CopyOsdRequest;
 import com.dewarim.cinnamon.model.request.osd.CreateOsdRequest;
 import com.dewarim.cinnamon.model.request.osd.DeleteOsdRequest;
+import com.dewarim.cinnamon.model.request.osd.GetRelationRequest;
 import com.dewarim.cinnamon.model.request.osd.OsdByFolderRequest;
 import com.dewarim.cinnamon.model.request.osd.OsdRequest;
 import com.dewarim.cinnamon.model.request.osd.SetContentRequest;
@@ -53,6 +55,7 @@ import com.dewarim.cinnamon.model.request.osd.UpdateOsdRequest;
 import com.dewarim.cinnamon.model.response.CinnamonError;
 import com.dewarim.cinnamon.model.response.DeleteResponse;
 import com.dewarim.cinnamon.model.response.OsdWrapper;
+import com.dewarim.cinnamon.model.response.RelationWrapper;
 import com.dewarim.cinnamon.model.response.Summary;
 import com.dewarim.cinnamon.model.response.SummaryWrapper;
 import com.dewarim.cinnamon.provider.ContentProviderService;
@@ -78,6 +81,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -112,6 +116,7 @@ public class OsdServlet extends BaseServlet {
         CinnamonResponse cinnamonResponse = (CinnamonResponse) response;
         UrlMapping       mapping          = UrlMapping.getByPath(request.getRequestURI());
         switch (mapping) {
+            case OSD__COPY -> copyOsd(request, cinnamonResponse, user, osdDao);
             case OSD__CREATE_OSD -> createOsd(request, cinnamonResponse, user, osdDao);
             case OSD__CREATE_META -> createMeta(request, cinnamonResponse, user, osdDao);
             case OSD__DELETE -> deleteOsds(request, cinnamonResponse, user, osdDao);
@@ -120,6 +125,7 @@ public class OsdServlet extends BaseServlet {
             case OSD__GET_META -> getMeta(request, cinnamonResponse, user, osdDao);
             case OSD__GET_OBJECTS_BY_FOLDER_ID -> getObjectsByFolderId(request, cinnamonResponse, user, osdDao);
             case OSD__GET_OBJECTS_BY_ID -> getObjectsById(request, cinnamonResponse, user, osdDao);
+            case OSD__GET_RELATIONS -> getRelations(request, cinnamonResponse, user, osdDao);
             case OSD__GET_SUMMARIES -> getSummaries(request, cinnamonResponse, user, osdDao);
             case OSD__LOCK -> lock(request, cinnamonResponse, user, osdDao);
             case OSD__SET_CONTENT -> setContent(request, cinnamonResponse, user, osdDao);
@@ -130,6 +136,145 @@ public class OsdServlet extends BaseServlet {
             default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
     }
+
+    private void getRelations(HttpServletRequest request, CinnamonResponse cinnamonResponse, UserAccount user, OsdDao osdDao) throws IOException {
+        GetRelationRequest relationRequest = xmlMapper.readValue(request.getInputStream(), GetRelationRequest.class)
+                .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
+
+        var                    accessFilter = AccessFilter.getInstance(user);
+        List<ObjectSystemData> osds         = osdDao.getObjectsById(relationRequest.getIds(), false);
+        boolean hasReadSysMetaPermission = osds.stream().allMatch(osd ->
+                accessFilter.hasPermissionOnOwnable(osd, DefaultPermission.READ_OBJECT_SYS_METADATA, osd));
+        if (!hasReadSysMetaPermission) {
+            ErrorCode.NO_READ_OBJECT_SYS_METADATA_PERMISSION.throwUp();
+            return;
+        }
+        List<Long>      ids             = osds.stream().map(ObjectSystemData::getId).collect(Collectors.toList());
+        List<Relation>  relations       = new RelationDao().getRelationsOrMode(ids, ids, null, relationRequest.isIncludeMetadata());
+        RelationWrapper relationWrapper = new RelationWrapper(relations);
+        cinnamonResponse.setWrapper(relationWrapper);
+    }
+
+    private void copyOsd(HttpServletRequest request, CinnamonResponse cinnamonResponse, UserAccount user, OsdDao osdDao) throws IOException {
+        CopyOsdRequest copyOsdRequest = xmlMapper.readValue(request.getInputStream(), CopyOsdRequest.class)
+                .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
+        AccessFilter accessFilter = AccessFilter.getInstance(user);
+
+        // get OSDs
+        List<ObjectSystemData> sourceOsds = osdDao.getObjectsById(copyOsdRequest.getSourceIds(), true);
+        boolean hasContentPermission = sourceOsds.stream().allMatch(osd ->
+                accessFilter.hasPermissionOnOwnable(osd, DefaultPermission.READ_OBJECT_CONTENT, osd));
+        if (!hasContentPermission) {
+            ErrorCode.NO_READ_PERMISSION.throwUp();
+            return;
+        }
+        boolean hasCustomMetadataPermission = sourceOsds.stream().allMatch(osd ->
+                accessFilter.hasPermissionOnOwnable(osd, DefaultPermission.READ_OBJECT_CUSTOM_METADATA, osd));
+        if (!hasCustomMetadataPermission) {
+            ErrorCode.NO_READ_CUSTOM_METADATA_PERMISSION.throwUp();
+            return;
+        }
+        boolean hasReadSysMetaPermission = sourceOsds.stream().allMatch(osd ->
+                accessFilter.hasPermissionOnOwnable(osd, DefaultPermission.READ_OBJECT_SYS_METADATA, osd));
+        if (!hasReadSysMetaPermission) {
+            ErrorCode.NO_READ_OBJECT_SYS_METADATA_PERMISSION.throwUp();
+            return;
+        }
+
+        // get target folder
+        FolderDao folderDao = new FolderDao();
+        Folder targetFolder = folderDao.getFolderById(copyOsdRequest.getTargetFolderId())
+                .orElseThrow(ErrorCode.FOLDER_NOT_FOUND.getException());
+        if (!accessFilter.hasPermissionOnOwnable(targetFolder, DefaultPermission.CREATE_OBJECT, targetFolder)) {
+            ErrorCode.NO_CREATE_PERMISSION.throwUp();
+            return;
+        }
+
+        // create copy
+        var                    relationDao       = new RelationDao();
+        var                    lifecycleStateDao = new LifecycleStateDao();
+        List<ObjectSystemData> copies            = new ArrayList<>();
+        for (ObjectSystemData osd : sourceOsds) {
+            long id     = osd.getId();
+            long userId = user.getId();
+            var  copy   = new ObjectSystemData();
+            copy.setAclId(targetFolder.getAclId());
+            copy.setParentId(targetFolder.getId());
+            copy.setName("Copy_" + osd.getName());
+            copy.setPredecessorId(null);
+            copy.setOwnerId(userId);
+            copy.setCmnVersion("1");
+            copy.setLatestBranch(true);
+            copy.setLatestHead(true);
+            copy.setRootId(null);
+            copy.setModifierId(userId);
+            copy.setModified(new Date());
+            copy.setCreatorId(userId);
+            copy.setCreated(new Date());
+            copy.setLockerId(null);
+            copy.setLatestHead(true);
+            copy.setLatestBranch(true);
+            copy.setTypeId(osd.getTypeId());
+            copy.setLanguageId(osd.getLanguageId());
+            copy.setSummary(osd.getSummary());
+            osdDao.saveOsd(copy);
+
+            // copy relations
+            List<Relation> relations = relationDao.getRelationsToCopy(osd.getId());
+            Map<Long, RelationType> relationTypes = new RelationTypeDao()
+                    .getRelationTypeMap(relations.stream().map(Relation::getTypeId).collect(Collectors.toSet()));
+            List<Relation> relationCopies = new ArrayList<>();
+            for (Relation relation : relations) {
+                RelationType relationType = relationTypes.get(relation.getTypeId());
+                if (relationType.isCloneOnLeftCopy() && relation.getLeftId().equals(id)) {
+                    Relation rel = new Relation(copy.getId(), relation.getRightId(), relation.getTypeId(), relation.getMetadata());
+                    relationCopies.add(rel);
+                }
+                if (relationType.isCloneOnRightCopy() && relation.getRightId().equals(id)) {
+                    Relation rel = new Relation(relation.getLeftId(), copy.getId(), relation.getTypeId(), relation.getMetadata());
+                    relationCopies.add(rel);
+                }
+            }
+            relationDao.create(relationCopies);
+
+            // check lifecycle_state_on_copy
+            if (osd.getLifecycleStateId() != null) {
+                LifecycleState state = lifecycleStateDao.getLifecycleStateById(osd.getLifecycleStateId())
+                        .orElseThrow(ErrorCode.LIFECYCLE_STATE_NOT_FOUND.getException());
+                copy.setLifecycleStateId(state.getLifecycleStateForCopyId());
+            }
+
+            // copy metasets
+            if (copyOsdRequest.getMetasetTypeIds().size() > 0) {
+                var        metasetDao = new OsdMetaDao();
+                List<Meta> metas      = metasetDao.listByOsd(osd.getId());
+                var metaCopies = metas.stream()
+                        .filter(meta -> copyOsdRequest.getMetasetTypeIds().contains(meta.getTypeId()))
+                        .map(meta -> new Meta(copy.getId(), meta.getTypeId(), meta.getContent()))
+                        .collect(Collectors.toList());
+                metasetDao.create(metaCopies);
+            }
+
+            // copy content
+            if (osd.getContentHash() != null) {
+                log.debug("copy content for osd#" + id);
+                ContentProvider contentProvider = ContentProviderService.getInstance().getContentProvider(osd.getContentProvider());
+                try (InputStream contentStream = contentProvider.getContentStream(osd)) {
+                    ContentMetadata metadata = contentProvider.writeContentStream(copy, contentStream);
+                    copy.setContentHash(metadata.getContentHash());
+                    copy.setContentPath(metadata.getContentPath());
+                    copy.setContentSize(metadata.getContentSize());
+                    copy.setContentProvider(contentProvider.getName());
+                    copy.setFormatId(osd.getFormatId());
+                    osdDao.updateOsd(copy, false);
+                }
+            }
+            copies.add(copy);
+        }
+
+        cinnamonResponse.setWrapper(new OsdWrapper(copies));
+    }
+
 
     private void deleteOsds(HttpServletRequest request, CinnamonResponse cinnamonResponse, UserAccount user, OsdDao osdDao) throws IOException {
         DeleteOsdRequest deleteRequest = xmlMapper.readValue(request.getInputStream(), DeleteOsdRequest.class)
@@ -304,7 +449,7 @@ public class OsdServlet extends BaseServlet {
 
         osd.setCreatorId(user.getId());
         osd.setModifierId(user.getId());
-        osd.setSummary(createRequest.getSummary());
+        osd.setSummary(Objects.requireNonNullElse(createRequest.getSummary(), "<summary/>"));
 
         osd = osdDao.saveOsd(osd);
 
@@ -582,18 +727,18 @@ public class OsdServlet extends BaseServlet {
 
         ObjectSystemData osd = osdDao.getObjectById(updateRequest.getId())
                 .orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
-        if(osd.lockedByOtherUser(user)){
+        if (osd.lockedByOtherUser(user)) {
             ErrorCode.OBJECT_LOCKED_BY_OTHER_USER.throwUp();
             return;
         }
-        if(!osd.lockedByUser(user)){
+        if (!osd.lockedByUser(user)) {
             ErrorCode.OBJECT_MUST_BE_LOCKED_BY_USER.throwUp();
             return;
         }
         throwUnlessSysMetadataIsWritable(osd);
 
         AccessFilter accessFilter = AccessFilter.getInstance(user);
-        FolderDao folderDao = new FolderDao();
+        FolderDao    folderDao    = new FolderDao();
 
         boolean changed = false;
         // change parent folder
@@ -630,7 +775,7 @@ public class OsdServlet extends BaseServlet {
         // change acl
         Long aclId = updateRequest.getAclId();
         if (aclId != null) {
-            if (!accessFilter.hasPermissionOnOwnable(osd, DefaultPermission.SET_ACL,osd)) {
+            if (!accessFilter.hasPermissionOnOwnable(osd, DefaultPermission.SET_ACL, osd)) {
                 ErrorCode.MISSING_SET_ACL_PERMISSION.throwUp();
             }
             Acl acl = new AclDao().getAclById(aclId)
@@ -673,6 +818,13 @@ public class OsdServlet extends BaseServlet {
 
         if (osdRequest.isIncludeCustomMetadata()) {
             OsdMetaDao metaDao = new OsdMetaDao();
+            boolean hasReadMetaPermission = filteredOsds.stream().allMatch(osd ->
+                    authorizationService.hasUserOrOwnerPermission(osd, DefaultPermission.READ_OBJECT_CUSTOM_METADATA, user)
+            );
+            if (!hasReadMetaPermission) {
+                ErrorCode.NO_READ_CUSTOM_METADATA_PERMISSION.throwUp();
+                return;
+            }
             filteredOsds.forEach(osd -> osd.setMetas(metaDao.listByOsd(osd.getId())));
         }
 

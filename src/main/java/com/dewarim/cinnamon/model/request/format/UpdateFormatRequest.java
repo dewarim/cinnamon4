@@ -44,7 +44,7 @@ public class UpdateFormatRequest implements UpdateRequest<Format>, ApiRequest {
                         Objects.isNull(format.getContentType()) ||
                         Objects.isNull(format.getExtension()) ||
                         Objects.isNull(format.getDefaultObjectTypeId()) ||
-                        format.getId() < 0 ||
+                        format.getId() < 1 ||
                         format.getName().isBlank() ||
                         format.getContentType().isBlank() ||
                         format.getExtension().isBlank() ||

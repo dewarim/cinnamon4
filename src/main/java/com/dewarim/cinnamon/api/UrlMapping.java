@@ -9,7 +9,6 @@ import com.dewarim.cinnamon.model.request.IdListRequest;
 import com.dewarim.cinnamon.model.request.IdRequest;
 import com.dewarim.cinnamon.model.request.LifecycleRequest;
 import com.dewarim.cinnamon.model.request.MetaRequest;
-import com.dewarim.cinnamon.model.request.RelationRequest;
 import com.dewarim.cinnamon.model.request.SetSummaryRequest;
 import com.dewarim.cinnamon.model.request.acl.AclInfoRequest;
 import com.dewarim.cinnamon.model.request.acl.CreateAclRequest;
@@ -51,7 +50,12 @@ import com.dewarim.cinnamon.model.request.language.CreateLanguageRequest;
 import com.dewarim.cinnamon.model.request.language.DeleteLanguageRequest;
 import com.dewarim.cinnamon.model.request.language.ListLanguageRequest;
 import com.dewarim.cinnamon.model.request.language.UpdateLanguageRequest;
+import com.dewarim.cinnamon.model.request.lifecycle.DeleteLifecycleRequest;
 import com.dewarim.cinnamon.model.request.lifecycle.ListLifecycleRequest;
+import com.dewarim.cinnamon.model.request.lifecycle.UpdateLifecycleRequest;
+import com.dewarim.cinnamon.model.request.lifecycleState.DeleteLifecycleStateRequest;
+import com.dewarim.cinnamon.model.request.lifecycleState.ListLifecycleStateRequest;
+import com.dewarim.cinnamon.model.request.lifecycleState.UpdateLifecycleStateRequest;
 import com.dewarim.cinnamon.model.request.link.CreateLinkRequest;
 import com.dewarim.cinnamon.model.request.link.DeleteLinkRequest;
 import com.dewarim.cinnamon.model.request.link.GetLinksRequest;
@@ -65,8 +69,10 @@ import com.dewarim.cinnamon.model.request.objectType.CreateObjectTypeRequest;
 import com.dewarim.cinnamon.model.request.objectType.DeleteObjectTypeRequest;
 import com.dewarim.cinnamon.model.request.objectType.ListObjectTypeRequest;
 import com.dewarim.cinnamon.model.request.objectType.UpdateObjectTypeRequest;
+import com.dewarim.cinnamon.model.request.osd.CopyOsdRequest;
 import com.dewarim.cinnamon.model.request.osd.CreateOsdRequest;
 import com.dewarim.cinnamon.model.request.osd.DeleteOsdRequest;
+import com.dewarim.cinnamon.model.request.osd.GetRelationRequest;
 import com.dewarim.cinnamon.model.request.osd.OsdByFolderRequest;
 import com.dewarim.cinnamon.model.request.osd.OsdRequest;
 import com.dewarim.cinnamon.model.request.osd.SetContentRequest;
@@ -75,6 +81,7 @@ import com.dewarim.cinnamon.model.request.permission.ChangePermissionsRequest;
 import com.dewarim.cinnamon.model.request.permission.ListPermissionRequest;
 import com.dewarim.cinnamon.model.request.relation.CreateRelationRequest;
 import com.dewarim.cinnamon.model.request.relation.DeleteRelationRequest;
+import com.dewarim.cinnamon.model.request.relation.RelationRequest;
 import com.dewarim.cinnamon.model.request.relationType.CreateRelationTypeRequest;
 import com.dewarim.cinnamon.model.request.relationType.DeleteRelationTypeRequest;
 import com.dewarim.cinnamon.model.request.relationType.ListRelationTypeRequest;
@@ -183,12 +190,19 @@ public enum UrlMapping {
     LANGUAGE__CREATE("language", "create", "/api", "", CreateLanguageRequest.class, LanguageWrapper.class),
     LANGUAGE__UPDATE("language", "update", "/api", "", UpdateLanguageRequest.class, LanguageWrapper.class),
     LANGUAGE__DELETE("language", "delete", "/api", "", DeleteLanguageRequest.class, DeleteResponse.class),
+    LIFECYCLE_STATE__CREATE("lifecycleState", "create", "/api", "", AttachLifecycleRequest.class, LifecycleStateWrapper.class),
+    LIFECYCLE_STATE__DELETE("lifecycleState", "delete", "/api", "", DeleteLifecycleStateRequest.class, DeleteResponse.class),
+    LIFECYCLE_STATE__LIST("lifecycleState", "list", "/api", "", ListLifecycleStateRequest.class, LifecycleStateWrapper.class),
+    LIFECYCLE_STATE__UPDATE("lifecycleState", "update", "/api", "", UpdateLifecycleStateRequest.class, LifecycleStateWrapper.class),
     LIFECYCLE_STATE__ATTACH_LIFECYCLE("lifecycleState", "attachLifecycle", "/api", "", AttachLifecycleRequest.class, GenericResponse.class),
     LIFECYCLE_STATE__CHANGE_STATE("lifecycleState", "changeState", "/api", "", ChangeLifecycleStateRequest.class, GenericResponse.class),
     LIFECYCLE_STATE__DETACH_LIFECYCLE("lifecycleState", "detachLifecycle", "/api", "", IdRequest.class, GenericResponse.class),
-    LIFECYCLE_STATE__GET_LIFECYCLE_STATE("lifecycleState", "getLifecycleState", "/api", "", IdRequest.class, LifecycleStateWrapper.class),
+    LIFECYCLE_STATE__GET("lifecycleState", "get", "/api", "", IdRequest.class, LifecycleStateWrapper.class),
     LIFECYCLE_STATE__GET_NEXT_STATES("lifecycleState", "getNextStates", "/api", "", IdRequest.class, LifecycleStateWrapper.class),
-    LIFECYCLE__GET_LIFECYCLE("lifecycle", "getLifecycle", "/api", "", LifecycleRequest.class, LifecycleWrapper.class),
+    LIFECYCLE__GET("lifecycle", "get", "/api", "", LifecycleRequest.class, LifecycleWrapper.class),
+    LIFECYCLE__CREATE("lifecycle", "create", "/api", "Create lifecycles. Note: does not create lifecycle states", ListLifecycleRequest.class, LifecycleWrapper.class),
+    LIFECYCLE__DELETE("lifecycle", "delete", "/api", "Delete lifecycles ", DeleteLifecycleRequest.class, DeleteResponse.class),
+    LIFECYCLE__UPDATE("lifecycle", "update", "/api", "Update lifecycles. Note: does not update lifecycle states ", UpdateLifecycleRequest.class, LifecycleWrapper.class),
     LIFECYCLE__LIST("lifecycle", "list", "/api", "List lifecycles ", ListLifecycleRequest.class, LifecycleWrapper.class),
     LINK__CREATE("link", "create", "/api", "", CreateLinkRequest.class, LinkWrapper.class),
     LINK__DELETE("link", "delete", "/api", "", DeleteLinkRequest.class, DeleteResponse.class),
@@ -203,6 +217,7 @@ public enum UrlMapping {
     OBJECT_TYPE__CREATE("objectType", "create", "/api", "", CreateObjectTypeRequest.class, ObjectTypeWrapper.class),
     OBJECT_TYPE__UPDATE("objectType", "update", "/api", "", UpdateObjectTypeRequest.class, ObjectTypeWrapper.class),
     OBJECT_TYPE__DELETE("objectType", "delete", "/api", "", DeleteObjectTypeRequest.class, DeleteResponse.class),
+    OSD__COPY("osd", "copy", "/api", "", CopyOsdRequest.class, OsdWrapper.class),
     OSD__CREATE_META("osd", "createMeta", "/api", "", CreateMetaRequest.class, MetaWrapper.class),
     OSD__CREATE_OSD("osd", "createOsd", "/api", """
             Create a new OSD. Requires: this must be a multipart-mime request, with part "createOsdRequest" and optional part "file" if this object
@@ -215,6 +230,7 @@ public enum UrlMapping {
     OSD__GET_META("osd", "getMeta", "/api", "", MetaRequest.class, MetaWrapper.class),
     OSD__GET_OBJECTS_BY_FOLDER_ID("osd", "getObjectsByFolderId", "/api", "", OsdByFolderRequest.class, OsdWrapper.class),
     OSD__GET_OBJECTS_BY_ID("osd", "getObjectsById", "/api", "", OsdRequest.class, OsdWrapper.class),
+    OSD__GET_RELATIONS("osd", "getRelations", "/api", "", GetRelationRequest.class, RelationWrapper.class),
     OSD__GET_SUMMARIES("osd", "getSummaries", "/api", "", IdListRequest.class, SummaryWrapper.class),
     OSD__LOCK("osd", "lock", "/api", "", IdRequest.class, GenericResponse.class),
     OSD__SET_CONTENT("osd", "setContent", "/api", """

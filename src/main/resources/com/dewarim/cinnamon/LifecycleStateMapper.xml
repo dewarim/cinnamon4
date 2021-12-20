@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.dewarim.cinnamon.LifecycleStateMapper">
+<mapper namespace="com.dewarim.cinnamon.model.LifecycleState">
 
     <resultMap id="LifecycleStateMap" type="com.dewarim.cinnamon.model.LifecycleState">
         <id property="id" column="id"/>
@@ -11,43 +11,41 @@
         <result property="config" column="config"/>
         <result property="stateClass" column="state_class"/>
         <result property="lifecycleId" column="life_cycle_id"/>
-        <result property="lifecycleStateForCopyId" column="lifecycle_state_for_copy_id"/>
+        <result property="lifecycleStateForCopyId" column="copy_state_id"/>
     </resultMap>
 
     <select id="getLifecycleStateById" parameterType="Long" resultMap="LifecycleStateMap">
-        SELECT
-            id,
-            name,
-            config,
-            state_class,
-            life_cycle_id,
-            (select copy_state_id from lifecycle_state_to_copy_state where lifecycle_state_id = #{id}) as lifecycle_state_for_copy_id
+        SELECT id,
+               name,
+               config,
+               state_class,
+               life_cycle_id,
+               copy_state_id
         FROM lifecycle_states
         WHERE id = #{id}
     </select>
 
     <select id="getLifecycleStateByName" parameterType="String" resultMap="LifecycleStateMap">
-        SELECT
-            l.id,
-            l.name,
-            l.config,
-            l.state_class,
-            l.life_cycle_id,
-            (select copy_state_id from lifecycle_state_to_copy_state c where c.lifecycle_state_id = l.id) as lifecycle_state_for_copy_id
-        FROM lifecycle_states l
+        SELECT id,
+               name,
+               config,
+               state_class,
+               life_cycle_id,
+               copy_state_id
+        FROM lifecycle_states
         WHERE name = #{name}
     </select>
 
     <select id="getLifecycleStatesByNameList" resultMap="LifecycleStateMap">
         SELECT
-            l.id,
-            l.name,
-            l.config,
-            l.state_class,
-            l.life_cycle_id,
-            (select copy_state_id from lifecycle_state_to_copy_state c where c.lifecycle_state_id = l.id) as lifecycle_state_for_copy_id
-        FROM lifecycle_states l
-        WHERE l.name in
+        id,
+        name,
+        config,
+        state_class,
+        life_cycle_id,
+        copy_state_id
+        FROM lifecycle_states
+        WHERE name in
         <foreach item="item" index="index" collection="list"
                  open="(" separator="," close=")">
             #{item}
@@ -55,16 +53,57 @@
     </select>
 
     <select id="getLifecycleStatesByLifecycleId" parameterType="Long" resultMap="LifecycleStateMap">
-        SELECT
-            l.id,
-            l.name,
-            l.config,
-            l.state_class,
-            l.life_cycle_id,
-            (select c.copy_state_id from lifecycle_state_to_copy_state c where c.lifecycle_state_id = l.id) as lifecycle_state_for_copy_id
-        FROM lifecycle_states l
+        SELECT id,
+               name,
+               config,
+               state_class,
+               life_cycle_id,
+               copy_state_id
+        FROM lifecycle_states
         WHERE life_cycle_id = #{id}
     </select>
 
+    <update id="update" parameterType="com.dewarim.cinnamon.model.LifecycleState">
+        UPDATE lifecycle_states
+        SET name          = #{name},
+            config        = #{config},
+            state_class   = #{stateClass},
+            life_cycle_id = #{lifecycleId},
+            copy_state_id = #{lifecycleStateForCopyId}
+        WHERE id = #{id}
+    </update>
+
+    <insert id="insert" parameterType="com.dewarim.cinnamon.model.LifecycleState">
+        <selectKey keyProperty="id" resultType="long" order="BEFORE">
+            select nextval('seq_lifecycle_state_id')
+        </selectKey>
+        INSERT INTO lifecycle_states(id,name, config, state_class, life_cycle_id,copy_state_id)
+        VALUES (#{id}, #{name}, #{config},#{stateClass},#{lifecycleId},#{lifecycleStateForCopyId})
+    </insert>
+
+    <delete id="delete" parameterType="list">
+        DELETE
+        FROM lifecycle_states
+        WHERE id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <select id="getAllById" parameterType="list" resultMap="LifecycleStateMap">
+        SELECT *
+        FROM lifecycle_states
+        WHERE id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="list" parameterType="map" resultMap="LifecycleStateMap">
+        SELECT *
+        FROM lifecycle_states
+    </select>
 
 </mapper>

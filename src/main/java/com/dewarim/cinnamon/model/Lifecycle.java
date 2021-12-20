@@ -2,6 +2,7 @@ package com.dewarim.cinnamon.model;
 
 import com.dewarim.cinnamon.api.Identifiable;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -45,6 +46,9 @@ public class Lifecycle implements Identifiable {
     }
 
     public List<LifecycleState> getLifecycleStates() {
+        if(lifecycleStates == null){
+            lifecycleStates = new ArrayList<>();
+        }
         return lifecycleStates;
     }
 
@@ -70,5 +74,15 @@ public class Lifecycle implements Identifiable {
     public int hashCode() {
 
         return Objects.hash(name, defaultStateId);
+    }
+
+    @Override
+    public String toString() {
+        return "Lifecycle{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", defaultStateId=" + defaultStateId +
+                ", lifecycleStates=" + lifecycleStates +
+                '}';
     }
 }

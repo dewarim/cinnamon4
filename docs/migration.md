@@ -260,4 +260,8 @@ It's recommended to use a copy of production for testing.
     alter table relationtypes rename to relation_types;
     alter table relation_types rename leftobjectprotected to left_object_protected;
     alter table relation_types rename rightobjectprotected to right_object_protected;
-    
+
+    -- 
+    alter table lifecycle_states add column copy_state_id bigint references lifecycle_states;
+    update lifecycle_states ls set copy_state_id=(select copy_state_id from lifecycle_state_to_copy_state where lifecycle_state_id=ls.id);
+    drop table if exists lifecycle_state_to_copy_state;

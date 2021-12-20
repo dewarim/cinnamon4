@@ -1,2 +1,3 @@
 com.dewarim.cinnamon.provider.state.NopStateProvider
 com.dewarim.cinnamon.provider.state.ChangeAclStateProvider
+com.dewarim.cinnamon.provider.state.FailStateProvider

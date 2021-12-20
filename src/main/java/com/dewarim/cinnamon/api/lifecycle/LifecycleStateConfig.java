@@ -17,7 +17,7 @@ public class LifecycleStateConfig {
 
 
     @JacksonXmlElementWrapper(localName = "nextStates")
-    @JacksonXmlProperty(localName = "name")
+    @JacksonXmlProperty(localName = "nextState")
     private List<String> nextStates = new ArrayList<>();
 
     public List<String> getPropertyValues(String propertyName){

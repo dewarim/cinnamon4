@@ -3,9 +3,9 @@ package com.dewarim.cinnamon.test.integration;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.model.relations.Relation;
-import com.dewarim.cinnamon.model.request.RelationRequest;
 import com.dewarim.cinnamon.model.request.relation.CreateRelationRequest;
 import com.dewarim.cinnamon.model.request.relation.DeleteRelationRequest;
+import com.dewarim.cinnamon.model.request.relation.RelationRequest;
 import com.dewarim.cinnamon.model.response.RelationWrapper;
 import org.apache.http.HttpResponse;
 import org.junit.jupiter.api.Test;
@@ -169,4 +169,6 @@ public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
         assertNotNull(wrapper);
         return wrapper;
     }
+
+    // TODO: add test for orMode
 }
