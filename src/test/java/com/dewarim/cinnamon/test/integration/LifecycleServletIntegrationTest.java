@@ -2,10 +2,11 @@ package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
+import com.dewarim.cinnamon.client.CinnamonClientException;
+import com.dewarim.cinnamon.lifecycle.NopState;
 import com.dewarim.cinnamon.model.Lifecycle;
 import com.dewarim.cinnamon.model.LifecycleState;
 import com.dewarim.cinnamon.model.request.LifecycleRequest;
-import com.dewarim.cinnamon.model.response.LifecycleWrapper;
 import org.apache.http.HttpResponse;
 import org.junit.jupiter.api.Test;
 
@@ -37,26 +38,20 @@ public class LifecycleServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getLifecycleHappyPathWithId() throws IOException {
-        HttpResponse    response   = sendStandardRequest(UrlMapping.LIFECYCLE__GET, new LifecycleRequest(1L, null));
-        List<Lifecycle> lifecycles = parseResponse(response);
-        assertEquals(1, lifecycles.size());
-        Lifecycle lifecycle = lifecycles.get(0);
+        Lifecycle lifecycle = client.getLifecycle(1L);
         assertEquals(Long.valueOf(1L), lifecycle.getId());
     }
 
     @Test
     public void getLifecycleHappyPathWithName() throws IOException {
-        HttpResponse    response   = sendStandardRequest(UrlMapping.LIFECYCLE__GET, new LifecycleRequest(null, "render.lc"));
-        List<Lifecycle> lifecycles = parseResponse(response);
-        assertEquals(1, lifecycles.size());
-        Lifecycle lifecycle = lifecycles.get(0);
+        Lifecycle lifecycle = client.getLifecycle("render.lc");
         assertEquals("render.lc", lifecycle.getName());
         assertEquals(Long.valueOf(2), lifecycle.getId());
         List<LifecycleState> lifecycleStates = lifecycle.getLifecycleStates();
         assertEquals(1, lifecycleStates.size());
         LifecycleState newRenderTaskState = lifecycleStates.get(0);
-        assertEquals("newRenderTask",newRenderTaskState.getName());
-        assertEquals("com.dewarim.cinnamon.lifecycle.NopState",newRenderTaskState.getStateClass());
+        assertEquals("newRenderTask", newRenderTaskState.getName());
+        assertEquals("com.dewarim.cinnamon.lifecycle.NopState", newRenderTaskState.getStateClass());
     }
 
     @Test
@@ -80,12 +75,71 @@ public class LifecycleServletIntegrationTest extends CinnamonIntegrationTest {
         assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
     }
 
-    private List<Lifecycle> parseResponse(HttpResponse response) throws IOException {
-        assertResponseOkay(response);
-        LifecycleWrapper lifecycleWrapper = mapper.readValue(response.getEntity().getContent(), LifecycleWrapper.class);
-        assertNotNull(lifecycleWrapper);
-        return lifecycleWrapper.getLifecycles();
+    @Test
+    public void createLifecycleTest() throws IOException {
+        Lifecycle lifecycle = adminClient.createLifecycle("foo-cycle");
+        assertNotNull(lifecycle.getId());
+        assertEquals("foo-cycle", lifecycle.getName());
+        Lifecycle fooCycle = client.getLifecycle("foo-cycle");
+        assertEquals(lifecycle, fooCycle);
     }
 
+    @Test
+    public void createLifecycleAsNormalUser() {
+        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> client.createLifecycle("failed-create"));
+        assertEquals(ErrorCode.REQUIRES_SUPERUSER_STATUS, ex.getErrorCode());
+    }
+
+    @Test
+    public void createLifecycleInvalidRequest() {
+        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> adminClient.createLifecycle(null));
+        assertEquals(ErrorCode.INVALID_REQUEST, ex.getErrorCode());
+    }
+
+    @Test
+    public void updateLifecycleTest() throws IOException {
+        var lifecycle = adminClient.createLifecycle("update-me-cycle");
+        var lifecycleState = adminClient.createLifecycleState(
+                new LifecycleState("some-state", "<config/>", NopState.class.getName(), lifecycle.getId(), null));
+        lifecycle.setDefaultStateId(lifecycleState.getId());
+        Lifecycle updatedCycle = adminClient.updateLifecycle(lifecycle);
+        assertEquals(1, updatedCycle.getLifecycleStates().size());
+        assertEquals(lifecycleState, updatedCycle.getLifecycleStates().get(0));
+        updatedCycle.getLifecycleStates().clear();
+        assertEquals(lifecycle, updatedCycle);
+    }
+
+    @Test
+    public void updateLifecycleTestAsNormalUser() throws IOException {
+        var                     lifecycle = adminClient.createLifecycle("update-me-cycle-fail");
+        CinnamonClientException ex        = assertThrows(CinnamonClientException.class, () -> client.updateLifecycle(lifecycle));
+        assertEquals(ErrorCode.REQUIRES_SUPERUSER_STATUS, ex.getErrorCode());
+    }
+
+    @Test
+    public void updateLifecycleTestInvalidRequest() {
+        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> adminClient.updateLifecycle(new Lifecycle()));
+        assertEquals(ErrorCode.INVALID_REQUEST, ex.getErrorCode());
+    }
+
+    @Test
+    public void deleteLifecycleTest() throws IOException {
+        var lifecycle = adminClient.createLifecycle("delete-me");
+        adminClient.deleteLifecycle(lifecycle.getId());
+        assertTrue(client.listLifecycles().stream().noneMatch(lc -> lc.getName().equals("delete-me")));
+    }
+
+    @Test
+    public void deleteLifecycleAsNormalUserTest() throws IOException {
+        var                     lifecycle = adminClient.createLifecycle("delete-me-cycle-fail");
+        CinnamonClientException ex        = assertThrows(CinnamonClientException.class, () -> client.deleteLifecycle(lifecycle.getId()));
+        assertEquals(ErrorCode.REQUIRES_SUPERUSER_STATUS, ex.getErrorCode());
+    }
+
+    @Test
+    public void deleteLifecycleInvalidRequest() {
+        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> adminClient.deleteLifecycle(-1L));
+        assertEquals(ErrorCode.INVALID_REQUEST, ex.getErrorCode());
+    }
 
 }

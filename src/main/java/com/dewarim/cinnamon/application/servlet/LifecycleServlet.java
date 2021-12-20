@@ -53,17 +53,24 @@ public class LifecycleServlet extends HttpServlet implements CruddyServlet<Lifec
             case LIFECYCLE__UPDATE -> {
                 superuserCheck();
                 update(convertUpdateRequest(request, UpdateLifecycleRequest.class), lifecycleDao, cinnamonResponse);
+                addLifecycleStates(cinnamonResponse);
             }
             case LIFECYCLE__LIST -> {
                 list(convertListRequest(request, ListLifecycleRequest.class), lifecycleDao, cinnamonResponse);
-                List<Lifecycle> lifecycles = (List<Lifecycle>) cinnamonResponse.getWrapper().list();
-                LifecycleStateDao stateDao = new LifecycleStateDao();
-                Map<Long,Lifecycle> lifecycleMap = lifecycles.stream().collect(Collectors.toMap(Lifecycle::getId, Function.identity()));
-                stateDao.list().forEach(state -> lifecycleMap.get(state.getLifecycleId()).getLifecycleStates().add(state));
+                addLifecycleStates(cinnamonResponse);
             }
             case LIFECYCLE__GET -> getLifecycle(request, response);
             default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
+    }
+
+    private void addLifecycleStates(CinnamonResponse cinnamonResponse) {
+        List<Lifecycle>      lifecycles   = (List<Lifecycle>) cinnamonResponse.getWrapper().list();
+        LifecycleStateDao    stateDao     = new LifecycleStateDao();
+        Map<Long, Lifecycle> lifecycleMap = lifecycles.stream().collect(Collectors.toMap(Lifecycle::getId, Function.identity()));
+        stateDao.list().stream()
+                .filter(state -> lifecycleMap.containsKey(state.getLifecycleId()))
+                .forEach(state -> lifecycleMap.get(state.getLifecycleId()).getLifecycleStates().add(state));
     }
 
     private void getLifecycle(HttpServletRequest request, HttpServletResponse response) throws IOException {
