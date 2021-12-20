@@ -6,7 +6,7 @@ import com.dewarim.cinnamon.client.CinnamonClientException;
 import com.dewarim.cinnamon.lifecycle.NopState;
 import com.dewarim.cinnamon.model.Lifecycle;
 import com.dewarim.cinnamon.model.LifecycleState;
-import com.dewarim.cinnamon.model.request.LifecycleRequest;
+import com.dewarim.cinnamon.model.request.lifecycle.LifecycleRequest;
 import org.apache.http.HttpResponse;
 import org.junit.jupiter.api.Test;
 
@@ -14,6 +14,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
+import static com.dewarim.cinnamon.test.integration.LifecycleStateServletIntegrationTest.CONFIG;
+import static com.dewarim.cinnamon.test.integration.LifecycleStateServletIntegrationTest.NOP_STATE;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -127,6 +129,15 @@ public class LifecycleServletIntegrationTest extends CinnamonIntegrationTest {
         var lifecycle = adminClient.createLifecycle("delete-me");
         adminClient.deleteLifecycle(lifecycle.getId());
         assertTrue(client.listLifecycles().stream().noneMatch(lc -> lc.getName().equals("delete-me")));
+    }
+
+    @Test
+    public void deleteShouldFailWhenInUse() throws IOException{
+        var lifecycle = adminClient.createLifecycle("delete-me-fail-in-use");
+        var lcs = adminClient.createLifecycleState(
+                new LifecycleState("delete-me-fail-lc-in-use",CONFIG,NOP_STATE,lifecycle.getId(),null));
+        var ex = assertThrows(CinnamonClientException.class, () -> adminClient.deleteLifecycle(lifecycle.getId()));
+        assertEquals(ErrorCode.DB_DELETE_FAILED, ex.getErrorCode() );
     }
 
     @Test

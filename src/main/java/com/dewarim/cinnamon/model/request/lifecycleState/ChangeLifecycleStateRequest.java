@@ -1,4 +1,4 @@
-package com.dewarim.cinnamon.model.request;
+package com.dewarim.cinnamon.model.request.lifecycleState;
 
 import com.dewarim.cinnamon.api.ApiRequest;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;

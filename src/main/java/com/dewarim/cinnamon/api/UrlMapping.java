@@ -1,13 +1,10 @@
 package com.dewarim.cinnamon.api;
 
-import com.dewarim.cinnamon.model.request.AttachLifecycleRequest;
-import com.dewarim.cinnamon.model.request.ChangeLifecycleStateRequest;
 import com.dewarim.cinnamon.model.request.CreateMetaRequest;
 import com.dewarim.cinnamon.model.request.CreateNewVersionRequest;
 import com.dewarim.cinnamon.model.request.DeleteMetaRequest;
 import com.dewarim.cinnamon.model.request.IdListRequest;
 import com.dewarim.cinnamon.model.request.IdRequest;
-import com.dewarim.cinnamon.model.request.LifecycleRequest;
 import com.dewarim.cinnamon.model.request.MetaRequest;
 import com.dewarim.cinnamon.model.request.SetSummaryRequest;
 import com.dewarim.cinnamon.model.request.acl.AclInfoRequest;
@@ -51,8 +48,11 @@ import com.dewarim.cinnamon.model.request.language.DeleteLanguageRequest;
 import com.dewarim.cinnamon.model.request.language.ListLanguageRequest;
 import com.dewarim.cinnamon.model.request.language.UpdateLanguageRequest;
 import com.dewarim.cinnamon.model.request.lifecycle.DeleteLifecycleRequest;
+import com.dewarim.cinnamon.model.request.lifecycle.LifecycleRequest;
 import com.dewarim.cinnamon.model.request.lifecycle.ListLifecycleRequest;
 import com.dewarim.cinnamon.model.request.lifecycle.UpdateLifecycleRequest;
+import com.dewarim.cinnamon.model.request.lifecycleState.AttachLifecycleRequest;
+import com.dewarim.cinnamon.model.request.lifecycleState.ChangeLifecycleStateRequest;
 import com.dewarim.cinnamon.model.request.lifecycleState.DeleteLifecycleStateRequest;
 import com.dewarim.cinnamon.model.request.lifecycleState.ListLifecycleStateRequest;
 import com.dewarim.cinnamon.model.request.lifecycleState.UpdateLifecycleStateRequest;

@@ -22,11 +22,9 @@ import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.links.LinkType;
 import com.dewarim.cinnamon.model.relations.Relation;
 import com.dewarim.cinnamon.model.relations.RelationType;
-import com.dewarim.cinnamon.model.request.AttachLifecycleRequest;
 import com.dewarim.cinnamon.model.request.CreateMetaRequest;
 import com.dewarim.cinnamon.model.request.CreateNewVersionRequest;
 import com.dewarim.cinnamon.model.request.IdRequest;
-import com.dewarim.cinnamon.model.request.LifecycleRequest;
 import com.dewarim.cinnamon.model.request.MetaRequest;
 import com.dewarim.cinnamon.model.request.acl.AclInfoRequest;
 import com.dewarim.cinnamon.model.request.acl.CreateAclRequest;
@@ -64,9 +62,12 @@ import com.dewarim.cinnamon.model.request.language.ListLanguageRequest;
 import com.dewarim.cinnamon.model.request.language.UpdateLanguageRequest;
 import com.dewarim.cinnamon.model.request.lifecycle.CreateLifecycleRequest;
 import com.dewarim.cinnamon.model.request.lifecycle.DeleteLifecycleRequest;
+import com.dewarim.cinnamon.model.request.lifecycle.LifecycleRequest;
 import com.dewarim.cinnamon.model.request.lifecycle.ListLifecycleRequest;
 import com.dewarim.cinnamon.model.request.lifecycle.UpdateLifecycleRequest;
+import com.dewarim.cinnamon.model.request.lifecycleState.AttachLifecycleRequest;
 import com.dewarim.cinnamon.model.request.lifecycleState.CreateLifecycleStateRequest;
+import com.dewarim.cinnamon.model.request.lifecycleState.UpdateLifecycleStateRequest;
 import com.dewarim.cinnamon.model.request.link.CreateLinkRequest;
 import com.dewarim.cinnamon.model.request.link.DeleteLinkRequest;
 import com.dewarim.cinnamon.model.request.link.GetLinksRequest;
@@ -944,6 +945,30 @@ public class CinnamonClient {
     public void deleteLifecycle(Long lifecycleId) throws IOException {
         var request = new DeleteLifecycleRequest(List.of(lifecycleId));
         var response = sendStandardRequest(UrlMapping.LIFECYCLE__DELETE,request);
+        verifyDeleteResponse(response);
+    }
+
+    public List<LifecycleState> getNextLifecycleStates(long lifecycleStateId) throws IOException {
+        var request = new IdRequest(lifecycleStateId);
+        var response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__GET_NEXT_STATES, request);
+        return lifecycleStateUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
+    }
+
+    public LifecycleState getLifecycleState(long lifecycleStateId) throws IOException {
+        var request = new IdRequest(lifecycleStateId);
+        var response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__GET, request);
+        return lifecycleStateUnwrapper.unwrap(response,1).get(0);
+    }
+
+    public LifecycleState updateLifecycleState(LifecycleState lcs) throws IOException {
+        var request = new UpdateLifecycleStateRequest(List.of(lcs));
+        var response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__UPDATE, request);
+        return lifecycleStateUnwrapper.unwrap(response,1).get(0);
+    }
+
+    public void deleteLifecycleState(Long lifecycleStateId) throws IOException {
+        var request = new DeleteLifecycleRequest(lifecycleStateId);
+        var response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__DELETE,request);
         verifyDeleteResponse(response);
     }
 }

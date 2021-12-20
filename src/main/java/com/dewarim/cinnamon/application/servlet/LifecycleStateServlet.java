@@ -14,10 +14,13 @@ import com.dewarim.cinnamon.dao.OsdDao;
 import com.dewarim.cinnamon.model.Lifecycle;
 import com.dewarim.cinnamon.model.LifecycleState;
 import com.dewarim.cinnamon.model.ObjectSystemData;
-import com.dewarim.cinnamon.model.request.AttachLifecycleRequest;
-import com.dewarim.cinnamon.model.request.ChangeLifecycleStateRequest;
 import com.dewarim.cinnamon.model.request.IdRequest;
+import com.dewarim.cinnamon.model.request.lifecycleState.AttachLifecycleRequest;
+import com.dewarim.cinnamon.model.request.lifecycleState.ChangeLifecycleStateRequest;
 import com.dewarim.cinnamon.model.request.lifecycleState.CreateLifecycleStateRequest;
+import com.dewarim.cinnamon.model.request.lifecycleState.DeleteLifecycleStateRequest;
+import com.dewarim.cinnamon.model.request.lifecycleState.ListLifecycleStateRequest;
+import com.dewarim.cinnamon.model.request.lifecycleState.UpdateLifecycleStateRequest;
 import com.dewarim.cinnamon.model.response.LifecycleStateWrapper;
 import com.dewarim.cinnamon.provider.StateProviderService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -30,7 +33,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static com.dewarim.cinnamon.api.Constants.CONTENT_TYPE_XML;
 import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
 
 @WebServlet(name = "LifecycleState", urlPatterns = "/")
@@ -50,8 +52,20 @@ public class LifecycleStateServlet extends BaseServlet implements CruddyServlet<
             case LIFECYCLE_STATE__ATTACH_LIFECYCLE -> attachLifecycleState(request, response, osdDao, lifecycleDao, stateDao);
             case LIFECYCLE_STATE__CHANGE_STATE -> changeState(request, response, osdDao, stateDao);
             case LIFECYCLE_STATE__DETACH_LIFECYCLE -> detachLifecycleState(request, response, osdDao);
-            case LIFECYCLE_STATE__GET -> getLifecycleState(request, response);
-            case LIFECYCLE_STATE__CREATE -> create(convertCreateRequest(request, CreateLifecycleStateRequest.class), stateDao, cinnamonResponse);
+            case LIFECYCLE_STATE__GET -> getLifecycleState(request, cinnamonResponse);
+            case LIFECYCLE_STATE__CREATE -> {
+                superuserCheck();
+                create(convertCreateRequest(request, CreateLifecycleStateRequest.class), stateDao, cinnamonResponse);
+            }
+            case LIFECYCLE_STATE__DELETE -> {
+                superuserCheck();
+                delete(convertDeleteRequest(request, DeleteLifecycleStateRequest.class), stateDao, cinnamonResponse);
+            }
+            case LIFECYCLE_STATE__UPDATE -> {
+                superuserCheck();
+                update(convertUpdateRequest(request, UpdateLifecycleStateRequest.class), stateDao, cinnamonResponse);
+            }
+            case LIFECYCLE_STATE__LIST -> list(convertListRequest(request, ListLifecycleStateRequest.class), stateDao, cinnamonResponse);
             case LIFECYCLE_STATE__GET_NEXT_STATES -> getNextStates(request, response, osdDao, stateDao);
             default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
@@ -151,7 +165,7 @@ public class LifecycleStateServlet extends BaseServlet implements CruddyServlet<
         }
     }
 
-    private void getLifecycleState(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    private void getLifecycleState(HttpServletRequest request, CinnamonResponse response) throws IOException {
         IdRequest         stateRequest = xmlMapper.readValue(request.getInputStream(), IdRequest.class);
         LifecycleStateDao stateDao     = new LifecycleStateDao();
         if (stateRequest.validated()) {
@@ -159,15 +173,13 @@ public class LifecycleStateServlet extends BaseServlet implements CruddyServlet<
             if (state.isPresent()) {
                 LifecycleStateWrapper wrapper = new LifecycleStateWrapper();
                 wrapper.setLifecycleStates(Collections.singletonList(state.get()));
-                response.setContentType(CONTENT_TYPE_XML);
-                response.setStatus(HttpServletResponse.SC_OK);
-                xmlMapper.writeValue(response.getWriter(), wrapper);
+                response.setWrapper(wrapper);
             } else {
-                ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.OBJECT_NOT_FOUND);
+                ErrorCode.OBJECT_NOT_FOUND.throwUp();
             }
             return;
         }
-        ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.INVALID_REQUEST);
+        ErrorCode.INVALID_REQUEST.throwUp();
     }
 
     @Override
