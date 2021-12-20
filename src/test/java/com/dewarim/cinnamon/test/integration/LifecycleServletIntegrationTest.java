@@ -25,7 +25,8 @@ public class LifecycleServletIntegrationTest extends CinnamonIntegrationTest {
 
         assertNotNull(lifecycles);
         assertFalse(lifecycles.isEmpty());
-        assertEquals(4, lifecycles.size());
+        // actual list depends on whether OsdServletIntegrationTest has run and added another lifecycle.
+        assertTrue(lifecycles.size() >= 4);
 
         Optional<Lifecycle> typeOpt = lifecycles.stream().filter(lifecycle -> lifecycle.getName().equals("review.lc"))
                 .findFirst();
