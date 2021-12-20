@@ -5,6 +5,7 @@ import com.dewarim.cinnamon.FailedRequestException;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.api.lifecycle.State;
 import com.dewarim.cinnamon.api.lifecycle.StateChangeResult;
+import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.application.ErrorResponseGenerator;
 import com.dewarim.cinnamon.application.ResponseUtil;
 import com.dewarim.cinnamon.dao.LifecycleDao;
@@ -16,6 +17,7 @@ import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.request.AttachLifecycleRequest;
 import com.dewarim.cinnamon.model.request.ChangeLifecycleStateRequest;
 import com.dewarim.cinnamon.model.request.IdRequest;
+import com.dewarim.cinnamon.model.request.lifecycleState.CreateLifecycleStateRequest;
 import com.dewarim.cinnamon.model.response.LifecycleStateWrapper;
 import com.dewarim.cinnamon.provider.StateProviderService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,22 +34,24 @@ import static com.dewarim.cinnamon.api.Constants.CONTENT_TYPE_XML;
 import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
 
 @WebServlet(name = "LifecycleState", urlPatterns = "/")
-public class LifecycleStateServlet extends BaseServlet {
+public class LifecycleStateServlet extends BaseServlet implements CruddyServlet<LifecycleState> {
 
     private final ObjectMapper xmlMapper = XML_MAPPER;
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
-        OsdDao            osdDao       = new OsdDao();
-        LifecycleDao      lifecycleDao = new LifecycleDao();
-        LifecycleStateDao  stateDao = new LifecycleStateDao();
-        UrlMapping mapping  = UrlMapping.getByPath(request.getRequestURI());
+        OsdDao            osdDao           = new OsdDao();
+        LifecycleDao      lifecycleDao     = new LifecycleDao();
+        LifecycleStateDao stateDao         = new LifecycleStateDao();
+        UrlMapping        mapping          = UrlMapping.getByPath(request.getRequestURI());
+        CinnamonResponse  cinnamonResponse = (CinnamonResponse) response;
 
         switch (mapping) {
             case LIFECYCLE_STATE__ATTACH_LIFECYCLE -> attachLifecycleState(request, response, osdDao, lifecycleDao, stateDao);
             case LIFECYCLE_STATE__CHANGE_STATE -> changeState(request, response, osdDao, stateDao);
             case LIFECYCLE_STATE__DETACH_LIFECYCLE -> detachLifecycleState(request, response, osdDao);
-            case LIFECYCLE_STATE__GET_LIFECYCLE_STATE -> getLifecycleState(request, response);
+            case LIFECYCLE_STATE__GET -> getLifecycleState(request, response);
+            case LIFECYCLE_STATE__CREATE -> create(convertCreateRequest(request, CreateLifecycleStateRequest.class), stateDao, cinnamonResponse);
             case LIFECYCLE_STATE__GET_NEXT_STATES -> getNextStates(request, response, osdDao, stateDao);
             default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
@@ -166,4 +170,8 @@ public class LifecycleStateServlet extends BaseServlet {
         ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.INVALID_REQUEST);
     }
 
+    @Override
+    public ObjectMapper getMapper() {
+        return XML_MAPPER;
+    }
 }

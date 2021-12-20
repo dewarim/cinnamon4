@@ -4,8 +4,12 @@ import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.client.CinnamonClientException;
+import com.dewarim.cinnamon.lifecycle.NopState;
 import com.dewarim.cinnamon.model.Language;
+import com.dewarim.cinnamon.model.Lifecycle;
+import com.dewarim.cinnamon.model.LifecycleState;
 import com.dewarim.cinnamon.model.Meta;
+import com.dewarim.cinnamon.model.MetasetType;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.relations.Relation;
@@ -1770,55 +1774,115 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void copyWithLeftRelationOnCopy() throws IOException {
-        var toh = createCopySourceObject("copyWithLeftRelationOnCopy")
-                .addPermissionsByName(List.of(READ_OBJECT_CONTENT.getName(),
-                        READ_OBJECT_CUSTOM_METADATA.getName(),
-                        READ_OBJECT_SYS_METADATA.getName(),
-                        CREATE_OBJECT.getName()));
-        var acl = client.getAclByName("reviewers.acl");
-        var relatedOsd = client.createOsd(new CreateOsdRequest("copyWithLeftRelationOnCopy",
+        var toh = createCopySourceObject("copyWithLeftRelationOnCopy");
+        var acl = adminClient.getAclByName("reviewers.acl");
+        var relatedOsd = adminClient.createOsd(new CreateOsdRequest("copyWithLeftRelationOnCopy",
                 toh.folder.getId(), userId, acl.getId(), toh.objectType.getId(), null, toh.language.getId(), null, null));
         var relationType = adminClient.createRelationTypes(List.of(
                 new RelationType("copyWithLeftRelationOnCopy", false, false, false, true, false, false))).get(0);
-        var originalRelation = client.createRelation(toh.osd.getId(), relatedOsd.getId(), relationType.getId(), "<meta/>");
-        var copy = client.copyOsds(createFolderId, List.of(toh.osd.getId())).get(0);
+        var originalRelation = adminClient.createRelation(toh.osd.getId(), relatedOsd.getId(), relationType.getId(), "<meta/>");
+        var copy             = adminClient.copyOsds(createFolderId, List.of(toh.osd.getId())).get(0);
         adminClient.lockOsd(copy.getId());
-        adminClient.updateOsd(new UpdateOsdRequest(copy.getId(), null,null,null,acl.getId(),null,null));
-        List<Relation> relations = client.getRelations(List.of(copy.getId()));
-        assertEquals(1,relations.size());
+        List<Relation> relations = adminClient.getRelations(List.of(copy.getId()));
+        assertEquals(1, relations.size());
         var copiedRelation = relations.get(0);
-        assertEquals(originalRelation.getTypeId(), copiedRelation.getTypeId() );
+        assertEquals(originalRelation.getTypeId(), copiedRelation.getTypeId());
         assertEquals(originalRelation.getMetadata(), copiedRelation.getMetadata());
         assertEquals(relatedOsd.getId(), copiedRelation.getRightId());
     }
 
     @Test
     public void copyWithLeftRelationNonCopy() throws IOException {
+        var toh = createCopySourceObject("copyWithLeftRelationNonCopy");
+        var acl = client.getAclByName("reviewers.acl");
+        var relatedOsd = adminClient.createOsd(new CreateOsdRequest("copyWithLeftRelationNonCopy",
+                toh.folder.getId(), userId, acl.getId(), toh.objectType.getId(), null, toh.language.getId(), null, null));
+        var relationType = adminClient.createRelationTypes(List.of(
+                new RelationType("copyWithLeftRelationNonCopy", false, false, true, false, true, true))).get(0);
+        var            originalRelation = adminClient.createRelation(toh.osd.getId(), relatedOsd.getId(), relationType.getId(), "<meta/>");
+        var            copy             = adminClient.copyOsds(createFolderId, List.of(toh.osd.getId())).get(0);
+        List<Relation> relations        = adminClient.getRelations(List.of(copy.getId()));
+        assertEquals(0, relations.size());
     }
 
     @Test
     public void copyWithRightRelationOnCopy() throws IOException {
+        var toh = createCopySourceObject("copyWithRightRelationOnCopy");
+        var acl = client.getAclByName("reviewers.acl");
+        var relatedOsd = adminClient.createOsd(new CreateOsdRequest("copyWithRightRelationOnCopy",
+                toh.folder.getId(), userId, acl.getId(), toh.objectType.getId(), null, toh.language.getId(), null, null));
+        var relationType = adminClient.createRelationTypes(List.of(
+                new RelationType("copyWithRightRelationOnCopy", false, false, true, true, true, true))).get(0);
+        var            originalRelation = adminClient.createRelation(relatedOsd.getId(), toh.osd.getId(), relationType.getId(), "<meta/>");
+        var            copy             = adminClient.copyOsds(createFolderId, List.of(toh.osd.getId())).get(0);
+        List<Relation> relations        = adminClient.getRelations(List.of(copy.getId()));
+        assertEquals(1, relations.size());
+        var copiedRelation = relations.get(0);
+        assertEquals(originalRelation.getTypeId(), copiedRelation.getTypeId());
+        assertEquals(originalRelation.getMetadata(), copiedRelation.getMetadata());
+        assertEquals(relatedOsd.getId(), copiedRelation.getLeftId());
     }
 
     @Test
     public void copyWithRightRelationNonCopy() throws IOException {
+        var toh = createCopySourceObject("copyWithRightRelationNonCopy");
+        var acl = client.getAclByName("reviewers.acl");
+        var relatedOsd = adminClient.createOsd(new CreateOsdRequest("copyWithRightRelationNonCopy",
+                toh.folder.getId(), userId, acl.getId(), toh.objectType.getId(), null, toh.language.getId(), null, null));
+        var relationType = adminClient.createRelationTypes(List.of(
+                new RelationType("copyWithRightRelationNonCopy", false, false, false, false, true, true))).get(0);
+        var            originalRelation = adminClient.createRelation(toh.osd.getId(), relatedOsd.getId(), relationType.getId(), "<meta/>");
+        var            copy             = adminClient.copyOsds(createFolderId, List.of(toh.osd.getId())).get(0);
+        List<Relation> relations        = adminClient.getRelations(List.of(copy.getId()));
+        assertEquals(0, relations.size());
     }
 
     @Test
     public void copyWithMetasets() throws IOException {
-
+        var                    toh      = createCopySourceObject("copyWithMetasets");
+        MetasetType            foo      = adminClient.createMetasetType("foo", false);
+        long                   osdId    = toh.osd.getId();
+        Meta                   osdMeta  = adminClient.createOsdMeta(osdId, "some meta", foo.getId());
+        List<ObjectSystemData> copies   = adminClient.copyOsds(createFolderId, List.of(osdId), List.of(foo.getId()));
+        ObjectSystemData       copy     = copies.get(0);
+        Meta                   copyMeta = adminClient.getOsdMetas(copy.getId()).get(0);
+        assertEquals(osdMeta.getContent(), copyMeta.getContent());
+        assertEquals(osdMeta.getTypeId(), copyMeta.getTypeId());
     }
 
     @Test
     public void copyWithContent() throws IOException {
-
+        var toh = createCopySourceObject("copyWithContent");
+        var id  = toh.osd.getId();
+        adminClient.lockOsd(id);
+        var xmlFormat = toh.formats.stream().filter(format -> format.getName().equals("xml")).findFirst().orElseThrow();
+        var result    = adminClient.setContentOnLockedOsd(id, xmlFormat.getId(), new File("pom.xml"));
+        assertTrue(result);
+        ObjectSystemData copy          = adminClient.copyOsds(createFolderId, List.of(id), List.of()).get(0);
+        String           sha256HexOrig = DigestUtils.sha256Hex(new FileInputStream("pom.xml"));
+        String           sha256HexCopy = DigestUtils.sha256Hex(adminClient.getContent(copy.getId()).readAllBytes());
+        assertEquals(sha256HexOrig, sha256HexCopy);
+        var original = adminClient.getOsdById(id, false, false);
+        assertEquals(original.getContentHash(), copy.getContentHash());
+        // at the moment, we do not have content de-duplication, so copying
+        // an OSD should result in the content being replicated in storage with new path:
+        assertNotEquals(original.getContentPath(), copy.getContentPath());
+        assertEquals(original.getFormatId(), copy.getFormatId());
     }
 
     @Test
-    public void simpleCopyHappyPath() throws IOException {
-
+    public void copyWithLifecycleStateForCopyId() throws IOException {
+        var            toh        = createCopySourceObject("copyWithLifecycleStateForCopyId");
+        Lifecycle      lifecycle  = adminClient.createLifecycle("copy-cycle");
+        LifecycleState copyState  = adminClient.createLifecycleState(new LifecycleState("copy-state", "<config/>", NopState.class.getName(), lifecycle.getId(), null));
+        LifecycleState startState = adminClient.createLifecycleState(new LifecycleState("start-copy-test", "<config/>", NopState.class.getName(), lifecycle.getId(), copyState.getId()));
+        // skip update to lifecycle for now, just use AttachLifecycleRequest
+        // lifecycle.setDefaultStateId(startState.getId());
+        var id = toh.osd.getId();
+        adminClient.attachLifecycle(id, lifecycle.getId(), startState.getId());
+        ObjectSystemData copy = adminClient.copyOsds(createFolderId, List.of(id), List.of()).get(0);
+        assertEquals(copyState.getId(), copy.getLifecycleStateId());
     }
-
 
     private HttpResponse sendAdminMultipartRequest(UrlMapping url, HttpEntity multipartEntity) throws IOException {
         return Request.Post("http://localhost:" + cinnamonTestPort + url.getPath())

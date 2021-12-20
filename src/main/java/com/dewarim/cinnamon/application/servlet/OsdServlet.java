@@ -141,16 +141,16 @@ public class OsdServlet extends BaseServlet {
         GetRelationRequest relationRequest = xmlMapper.readValue(request.getInputStream(), GetRelationRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
-        var accessFilter = AccessFilter.getInstance(user);
-        List<ObjectSystemData> osds = osdDao.getObjectsById(relationRequest.getIds(), false);
+        var                    accessFilter = AccessFilter.getInstance(user);
+        List<ObjectSystemData> osds         = osdDao.getObjectsById(relationRequest.getIds(), false);
         boolean hasReadSysMetaPermission = osds.stream().allMatch(osd ->
                 accessFilter.hasPermissionOnOwnable(osd, DefaultPermission.READ_OBJECT_SYS_METADATA, osd));
         if (!hasReadSysMetaPermission) {
             ErrorCode.NO_READ_OBJECT_SYS_METADATA_PERMISSION.throwUp();
             return;
         }
-        List<Long> ids = osds.stream().map(ObjectSystemData::getId).collect(Collectors.toList());
-        List<Relation> relations = new RelationDao().getRelationsOrMode(ids, ids, null, relationRequest.isIncludeMetadata());
+        List<Long>      ids             = osds.stream().map(ObjectSystemData::getId).collect(Collectors.toList());
+        List<Relation>  relations       = new RelationDao().getRelationsOrMode(ids, ids, null, relationRequest.isIncludeMetadata());
         RelationWrapper relationWrapper = new RelationWrapper(relations);
         cinnamonResponse.setWrapper(relationWrapper);
     }
@@ -191,8 +191,9 @@ public class OsdServlet extends BaseServlet {
         }
 
         // create copy
-        var                    relationDao = new RelationDao();
-        List<ObjectSystemData> copies      = new ArrayList<>();
+        var                    relationDao       = new RelationDao();
+        var                    lifecycleStateDao = new LifecycleStateDao();
+        List<ObjectSystemData> copies            = new ArrayList<>();
         for (ObjectSystemData osd : sourceOsds) {
             long id     = osd.getId();
             long userId = user.getId();
@@ -236,6 +237,13 @@ public class OsdServlet extends BaseServlet {
             }
             relationDao.create(relationCopies);
 
+            // check lifecycle_state_on_copy
+            if (osd.getLifecycleStateId() != null) {
+                LifecycleState state = lifecycleStateDao.getLifecycleStateById(osd.getLifecycleStateId())
+                        .orElseThrow(ErrorCode.LIFECYCLE_STATE_NOT_FOUND.getException());
+                copy.setLifecycleStateId(state.getLifecycleStateForCopyId());
+            }
+
             // copy metasets
             if (copyOsdRequest.getMetasetTypeIds().size() > 0) {
                 var        metasetDao = new OsdMetaDao();
@@ -257,7 +265,7 @@ public class OsdServlet extends BaseServlet {
                     copy.setContentPath(metadata.getContentPath());
                     copy.setContentSize(metadata.getContentSize());
                     copy.setContentProvider(contentProvider.getName());
-                    copy.setFormatId(osd.getId());
+                    copy.setFormatId(osd.getFormatId());
                     osdDao.updateOsd(copy, false);
                 }
             }

@@ -36,10 +36,12 @@ public class ObjectTypeServlet extends HttpServlet implements CruddyServlet<Obje
                 superuserCheck();
                 create(convertCreateRequest(request, CreateObjectTypeRequest.class), objectTypeDao, cinnamonResponse);
             }
+            // TODO: add test for OBJECT_TYPE__UPDATE
             case OBJECT_TYPE__UPDATE -> {
                 superuserCheck();
                 update(convertUpdateRequest(request, UpdateObjectTypeRequest.class), objectTypeDao, cinnamonResponse);
             }
+            // TODO: add test for OBJECT_TYPE__DELETE
             case OBJECT_TYPE__DELETE -> {
                 superuserCheck();
                 delete(convertDeleteRequest(request, DeleteObjectTypeRequest.class), objectTypeDao, cinnamonResponse);

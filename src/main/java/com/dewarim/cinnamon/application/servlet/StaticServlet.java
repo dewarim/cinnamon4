@@ -43,14 +43,9 @@ public class StaticServlet extends HttpServlet {
             String defaultMimeByExtension = MimeTypes.getDefaultMimeByExtension(pathInfo);
             response.setContentType(defaultMimeByExtension);
             switch (defaultMimeByExtension) {
-                case "application/xml":
-                case "text/plain":
-                case "text/css":
-                case "text/html":
-                case "text/javascript":
-                    response.setCharacterEncoding("UTF-8");
-                    break;
-                default: // do not set character encoding.
+                case "application/xml", "text/plain", "text/css", "text/html", "text/javascript" -> response.setCharacterEncoding("UTF-8");
+                default -> {
+                } // do not set character encoding.
             }
             response.setStatus(HttpServletResponse.SC_OK);
             inputStream.transferTo(response.getOutputStream());

@@ -169,7 +169,6 @@ create table lifecycles
     constraint lifecycles_name_key
     unique,
   default_state_id bigint
-
 );
 drop sequence if exists seq_lifecycle_id ;
 create sequence seq_lifecycle_id start with 1;
@@ -188,7 +187,8 @@ create table lifecycle_states
   state_class varchar(128) not null,
   life_cycle_id bigint
     constraint fke3bd9877407f648b
-    references lifecycles
+    references lifecycles,
+  copy_state_id bigint references lifecycle_states
 );
 
 alter table lifecycles add constraint fk_default_state_id FOREIGN KEY
@@ -196,13 +196,6 @@ alter table lifecycles add constraint fk_default_state_id FOREIGN KEY
 
 drop sequence if exists seq_lifecycle_state_id;
 create sequence seq_lifecycle_state_id start with 1;
-
--- lifecycle_state_to_copy_state --
-drop table if exists lifecycle_state_to_copy_state cascade ;
-create table lifecycle_state_to_copy_state(
-  lifecycle_state_id bigint references lifecycle_states(id) unique,
-  copy_state_id bigint references lifecycle_states(id)
-);
 
 -- objects --
 drop table if exists objects cascade ;
@@ -1257,42 +1250,34 @@ insert into lifecycles(id, name, default_state_id) VALUES (nextval('seq_lifecycl
 insert into lifecycles(id, name, default_state_id) VALUES (nextval('seq_lifecycle_id'), 'fail.lc',null);
 
 -- #1 lifecycle_state of lc #1
-insert into lifecycle_states (id, name, config, state_class, life_cycle_id)
+insert into lifecycle_states (id, name, config, state_class, life_cycle_id, copy_state_id)
 values (nextval('seq_lifecycle_state_id'), 'newRenderTask', '<config>' ||
                                                              '<properties><property><name>render.server.host</name><value>localhost</value></property></properties>' ||
                                                              '<nextStates/>' ||
-                                                             '</config>', 'NopState', 2);
-insert into lifecycle_state_to_copy_state(lifecycle_state_id, copy_state_id)
-  values (currval('seq_lifecycle_state_id'), currval('seq_lifecycle_state_id'));
+                                                             '</config>', 'com.dewarim.cinnamon.lifecycle.NopState', 2, currval('seq_lifecycle_state_id'));
 update lifecycles set default_state_id=1 where id=1;
 
 -- #2 first lifecycle_state of lc 3 with ChangeAclState
-insert into lifecycle_states(id, name, config, state_class, life_cycle_id )
+insert into lifecycle_states(id, name, config, state_class, life_cycle_id, copy_state_id )
     values (nextval('seq_lifecycle_state_id'), 'authoring', '<config>' ||
                                                              '<properties><property><name>aclName</name><value>reviewers.acl</value></property></properties>' ||
                                                              '<nextStates><name>published</name></nextStates>' ||
-                                                             '</config>', 'ChangeAclState', 3);
-insert into lifecycle_state_to_copy_state(lifecycle_state_id, copy_state_id)
-  values (currval('seq_lifecycle_state_id'), currval('seq_lifecycle_state_id'));
+                                                             '</config>', 'com.dewarim.cinnamon.lifecycle.ChangeAclState', 3, currval('seq_lifecycle_state_id'));
 update lifecycles set default_state_id=1 where id=3;
 update objects set state_id=2 where id=31;
 update objects set state_id=2 where id=35;
 update objects set state_id=1 where id=45;
 
 -- #3 second lifecycle_state of lc 3 with ChangeAclState
-insert into lifecycle_states(id, name, config, state_class, life_cycle_id )
+insert into lifecycle_states(id, name, config, state_class, life_cycle_id, copy_state_id )
     values (nextval('seq_lifecycle_state_id'), 'published', '<config>' ||
                                                              '<properties><property><name>aclName</name><value>_default_acl</value></property></properties>' ||
                                                              '<nextStates><name>authoring</name></nextStates>' ||
-                                                             '</config>', 'ChangeAclState', 3);
-insert into lifecycle_state_to_copy_state(lifecycle_state_id, copy_state_id)
-  values (currval('seq_lifecycle_state_id'), currval('seq_lifecycle_state_id'));
+                                                             '</config>', 'com.dewarim.cinnamon.lifecycle.ChangeAclState', 3, currval('seq_lifecycle_state_id'));
 
 -- #4 failState for lc 4
-insert into lifecycle_states(id, name, config, state_class, life_cycle_id )
-values (nextval('seq_lifecycle_state_id'), 'failed', '<config></config>', 'FailState', 4);
-insert into lifecycle_state_to_copy_state(lifecycle_state_id, copy_state_id)
-values (currval('seq_lifecycle_state_id'), currval('seq_lifecycle_state_id'));
+insert into lifecycle_states(id, name, config, state_class, life_cycle_id, copy_state_id )
+values (nextval('seq_lifecycle_state_id'), 'failed', '<config></config>', 'com.dewarim.cinnamon.lifecycle.FailState', 4, currval('seq_lifecycle_state_id'));
 -- osd#32 with FailState lifecycle state: should fail on state.exit()
 update objects set state_id=4 where id=32;
 update objects set state_id=4 where id=46;

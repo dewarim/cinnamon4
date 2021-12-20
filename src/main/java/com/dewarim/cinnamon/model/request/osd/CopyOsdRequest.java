@@ -6,6 +6,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,7 +37,7 @@ public class CopyOsdRequest implements ApiRequest {
                 && sourceIds.stream().allMatch(id -> id != null && id > 0)
                 && targetFolderId != null
                 && targetFolderId > 0
-                && metasetTypeIds.stream().allMatch(id -> id != null && id > 0);
+                && (metasetTypeIds == null || metasetTypeIds.stream().allMatch(id -> id != null && id > 0));
     }
 
     public Optional<CopyOsdRequest> validateRequest() {
@@ -56,6 +57,9 @@ public class CopyOsdRequest implements ApiRequest {
     }
 
     public List<Long> getMetasetTypeIds() {
+        if(metasetTypeIds == null){
+            return Collections.emptyList();
+        }
         return metasetTypeIds;
     }
 

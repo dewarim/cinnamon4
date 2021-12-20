@@ -1,4 +1,4 @@
-package com.dewarim.cinnamon.test.provider;
+package com.dewarim.cinnamon.lifecycle;
 
 import com.dewarim.cinnamon.api.CinnamonObject;
 import com.dewarim.cinnamon.api.lifecycle.LifecycleStateConfig;
@@ -11,8 +11,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Does nothing, accepts exiting to and entering from every other state.
- * Useful for lifecycles whose states are mostly declarative instead of functional.
+ * Testing lifecycle state: will fail every time upon entering / leaving.
  */
 public class FailState implements State {
 
