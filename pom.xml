@@ -13,11 +13,11 @@
         <jetty.version>11.0.7</jetty.version>
         <jackson.version>2.13.0</jackson.version>
         <junit.version>5.8.2</junit.version>
-        <mybatis.version>3.5.7</mybatis.version>
+        <mybatis.version>3.5.8</mybatis.version>
         <postgresql.version>42.3.1</postgresql.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.plugin.version>3.8.1</maven.compiler.plugin.version>
-        <log4j.version>2.14.1</log4j.version>
+        <log4j.version>2.17.0</log4j.version>
         <httpcomponents.version>4.5.13</httpcomponents.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>17</maven.compiler.source>
@@ -72,7 +72,7 @@
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-slf4j18-impl</artifactId>
-            <version>2.14.1</version>
+            <version>${log4j.version}</version>
         </dependency>
 
         <!-- database dependencies -->
@@ -109,6 +109,7 @@
         </dependency>
 
         <!--logging  -->
+        <!-- cannot migrate to logback due to mybatis->log4j dependency -->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
