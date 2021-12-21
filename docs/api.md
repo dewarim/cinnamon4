@@ -763,7 +763,7 @@ Delete a list of config entries
       <typeId>4</typeId>
       <metadataChanged>false</metadataChanged>
       <summary>&lt;summary>&lt;description>contains images&lt;/description>&lt;/summary></summary>
-      <created>2021-12-21T11:16:20+0000</created>
+      <created>2021-12-21T17:06:53+0000</created>
     </folder>
     <folder>
       <id/>
@@ -775,7 +775,7 @@ Delete a list of config entries
       <typeId>2</typeId>
       <metadataChanged>false</metadataChanged>
       <summary>&lt;summary /></summary>
-      <created>2021-12-21T11:16:20+0000</created>
+      <created>2021-12-21T17:06:53+0000</created>
     </folder>
   </folders>
 </createFolderRequest>
@@ -852,7 +852,14 @@ Fetch a single folder
 
 ```xml
 <singleFolderRequest>
-  <id/>
+  <id>123</id>
+  <includeSummary>true</includeSummary>
+</singleFolderRequest>
+
+```
+```xml
+<singleFolderRequest>
+  <id>321</id>
   <includeSummary>false</includeSummary>
 </singleFolderRequest>
 
@@ -967,7 +974,14 @@ Fetch a single folder
 
 ```xml
 <singleFolderRequest>
-  <id/>
+  <id>123</id>
+  <includeSummary>true</includeSummary>
+</singleFolderRequest>
+
+```
+```xml
+<singleFolderRequest>
+  <id>321</id>
   <includeSummary>false</includeSummary>
 </singleFolderRequest>
 
@@ -1536,11 +1550,26 @@ Fetch a single folder
 ## Request
 
 ```xml
-<attachLifecycleRequest>
-  <osdId/>
-  <lifecycleId/>
-  <lifecycleStateId/>
-</attachLifecycleRequest>
+<createLifecycleStateRequest>
+  <lifecycleStates>
+    <lifecycleState>
+      <id/>
+      <name>review-state</name>
+      <config>&lt;config/></config>
+      <stateClass>com.dewarim.cinnamon.lifecycle.NopState</stateClass>
+      <lifecycleId>1</lifecycleId>
+      <lifecycleStateForCopyId/>
+    </lifecycleState>
+    <lifecycleState>
+      <id/>
+      <name>authoring-state</name>
+      <config>&lt;config>&lt;properties>&lt;property>&lt;name>aclName&lt;/name>&lt;value>_default_acl&lt;/value>&lt;/property>&lt;/properties>&lt;nextStates>&lt;name>review-state&lt;/name>&lt;/nextStates>&lt;/config></config>
+      <stateClass>com.dewarim.cinnamon.lifecycle.ChangeAclState</stateClass>
+      <lifecycleId>2</lifecycleId>
+      <lifecycleStateForCopyId>3</lifecycleStateForCopyId>
+    </lifecycleState>
+  </lifecycleStates>
+</createLifecycleStateRequest>
 
 ```
 

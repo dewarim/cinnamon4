@@ -54,6 +54,7 @@ import com.dewarim.cinnamon.model.request.lifecycle.ListLifecycleRequest;
 import com.dewarim.cinnamon.model.request.lifecycle.UpdateLifecycleRequest;
 import com.dewarim.cinnamon.model.request.lifecycleState.AttachLifecycleRequest;
 import com.dewarim.cinnamon.model.request.lifecycleState.ChangeLifecycleStateRequest;
+import com.dewarim.cinnamon.model.request.lifecycleState.CreateLifecycleStateRequest;
 import com.dewarim.cinnamon.model.request.lifecycleState.DeleteLifecycleStateRequest;
 import com.dewarim.cinnamon.model.request.lifecycleState.ListLifecycleStateRequest;
 import com.dewarim.cinnamon.model.request.lifecycleState.UpdateLifecycleStateRequest;
@@ -191,7 +192,7 @@ public enum UrlMapping {
     LANGUAGE__CREATE("language", "create", "/api", "", CreateLanguageRequest.class, LanguageWrapper.class),
     LANGUAGE__UPDATE("language", "update", "/api", "", UpdateLanguageRequest.class, LanguageWrapper.class),
     LANGUAGE__DELETE("language", "delete", "/api", "", DeleteLanguageRequest.class, DeleteResponse.class),
-    LIFECYCLE_STATE__CREATE("lifecycleState", "create", "/api", "", AttachLifecycleRequest.class, LifecycleStateWrapper.class),
+    LIFECYCLE_STATE__CREATE("lifecycleState", "create", "/api", "", CreateLifecycleStateRequest.class, LifecycleStateWrapper.class),
     LIFECYCLE_STATE__DELETE("lifecycleState", "delete", "/api", "", DeleteLifecycleStateRequest.class, DeleteResponse.class),
     LIFECYCLE_STATE__LIST("lifecycleState", "list", "/api", "", ListLifecycleStateRequest.class, LifecycleStateWrapper.class),
     LIFECYCLE_STATE__UPDATE("lifecycleState", "update", "/api", "", UpdateLifecycleStateRequest.class, LifecycleStateWrapper.class),
