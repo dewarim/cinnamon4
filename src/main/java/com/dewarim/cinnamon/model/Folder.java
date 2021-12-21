@@ -2,12 +2,15 @@ package com.dewarim.cinnamon.model;
 
 import com.dewarim.cinnamon.api.Identifiable;
 import com.dewarim.cinnamon.api.Ownable;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.util.Date;
 import java.util.Objects;
 
+import static com.dewarim.cinnamon.api.Constants.DEFAULT_SUMMARY;
+
 public class Folder implements Ownable, Identifiable {
-    
+
     private Long id;
     private String name;
     private Long objVersion;
@@ -17,9 +20,12 @@ public class Folder implements Ownable, Identifiable {
     private Long typeId;
     private Boolean metadataChanged;
     private String summary;
-    private Date created;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssZ")
+    private Date created  = new Date();
 
     public Folder() {
+        summary = DEFAULT_SUMMARY;
     }
 
     public Folder(String name, Long aclId, Long ownerId, Long parentId, Long typeId, String summary) {
@@ -28,7 +34,7 @@ public class Folder implements Ownable, Identifiable {
         this.ownerId = ownerId;
         this.parentId = parentId;
         this.typeId = typeId;
-        this.summary = summary;
+        this.summary = Objects.requireNonNullElse(summary, DEFAULT_SUMMARY);
         objVersion = 0L;
         metadataChanged = false;
         created = new Date();

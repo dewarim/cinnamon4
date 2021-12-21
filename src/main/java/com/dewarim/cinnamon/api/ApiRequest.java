@@ -1,11 +1,10 @@
 package com.dewarim.cinnamon.api;
 
-import java.util.Collections;
 import java.util.List;
 
-public interface ApiRequest {
+public interface ApiRequest<T> {
 
-    default List<Object> examples(){
-        return Collections.singletonList(this);
+    default List<ApiRequest<T>> examples(){
+        return List.of(this);
     }
 }

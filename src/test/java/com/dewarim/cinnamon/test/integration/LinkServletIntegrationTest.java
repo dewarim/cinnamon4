@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.util.List;
 
 import static com.dewarim.cinnamon.ErrorCode.*;
+import static com.dewarim.cinnamon.api.Constants.DEFAULT_SUMMARY;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -77,7 +78,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
         Link                link        = linkWrapper.getLinks().get(0);
         assertThat(link.getType(), equalTo(LinkType.FOLDER));
         Folder folder = client.getFolderById(link.getFolderId(), false);
-        assertThat(folder.getSummary(), nullValue());
+        assertEquals(DEFAULT_SUMMARY, folder.getSummary());
     }
 
     @Test
@@ -120,7 +121,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void deleteLinkWithNonExistentLink() throws IOException {
+    public void deleteLinkWithNonExistentLink() {
         assertClientError(() -> client.deleteLinks(List.of(Long.MAX_VALUE)), ErrorCode.OBJECT_NOT_FOUND);
     }
 
@@ -149,7 +150,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void deleteLinkToFolderWithoutPermission() throws IOException {
+    public void deleteLinkToFolderWithoutPermission() {
         assertClientError(() -> client.deleteLinks(List.of(13L)), ErrorCode.UNAUTHORIZED);
     }
 

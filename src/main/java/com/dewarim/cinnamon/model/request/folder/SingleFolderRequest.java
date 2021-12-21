@@ -2,15 +2,17 @@ package com.dewarim.cinnamon.model.request.folder;
 
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.dewarim.cinnamon.model.Folder;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
  * Request for a single folder and its ancestors.
  */
 @JacksonXmlRootElement(localName = "singleFolderRequest")
-public class SingleFolderRequest implements ApiRequest {
+public class SingleFolderRequest implements ApiRequest<Folder> {
 
     private Long    id;
     private boolean includeSummary;
@@ -52,5 +54,10 @@ public class SingleFolderRequest implements ApiRequest {
         } else {
             return Optional.empty();
         }
+    }
+
+    @Override
+    public List<ApiRequest<Folder>> examples() {
+        return List.of(new SingleFolderRequest(123L,true), new SingleFolderRequest(321L,false));
     }
 }

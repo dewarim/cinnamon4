@@ -22,6 +22,7 @@ import com.dewarim.cinnamon.model.Meta;
 import com.dewarim.cinnamon.model.MetasetType;
 import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.request.CreateMetaRequest;
+import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.request.DeleteMetaRequest;
 import com.dewarim.cinnamon.model.request.IdListRequest;
 import com.dewarim.cinnamon.model.request.MetaRequest;
@@ -43,6 +44,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -65,7 +67,7 @@ public class FolderServlet extends BaseServlet {
         UrlMapping       mapping          = UrlMapping.getByPath(request.getRequestURI());
 
         switch (mapping) {
-            case FOLDER__CREATE -> createFolder(request, response, user, folderDao);
+            case FOLDER__CREATE -> createFolder(request, cinnamonResponse, user, folderDao);
             case FOLDER__CREATE_META -> createMeta(request, cinnamonResponse, user, folderDao);
             case FOLDER__DELETE_META -> deleteMeta(request, response, user, folderDao);
             case FOLDER__GET_FOLDER -> getFolder(request, response, user, folderDao);
@@ -80,54 +82,56 @@ public class FolderServlet extends BaseServlet {
         }
     }
 
-    private void createFolder(HttpServletRequest request, HttpServletResponse response, UserAccount user, FolderDao folderDao) throws IOException {
-        CreateFolderRequest createRequest = xmlMapper.readValue(request.getInputStream(), CreateFolderRequest.class)
+    private void createFolder(HttpServletRequest request, CinnamonResponse response, UserAccount user, FolderDao folderDao) throws IOException {
+        CreateRequest<Folder> createRequest = xmlMapper.readValue(request.getInputStream(), CreateFolderRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
-        Long parentId = createRequest.getParentId();
-        Folder parentFolder = folderDao.getFolderById(parentId)
-                .orElseThrow(ErrorCode.PARENT_FOLDER_NOT_FOUND.getException());
+        List<Folder> folders = new ArrayList<>();
 
-        AccessFilter accessFilter = AccessFilter.getInstance(user);
-        if (!accessFilter.hasPermissionOnOwnable(parentFolder, DefaultPermission.CREATE_FOLDER, parentFolder)) {
-            ErrorCode.NO_CREATE_PERMISSION.throwUp();
+        for (Folder folder : createRequest.list()) {
+            Long parentId = folder.getParentId();
+            Folder parentFolder = folderDao.getFolderById(parentId)
+                    .orElseThrow(ErrorCode.PARENT_FOLDER_NOT_FOUND.getException());
+
+            AccessFilter accessFilter = AccessFilter.getInstance(user);
+            if (!accessFilter.hasPermissionOnOwnable(parentFolder, DefaultPermission.CREATE_FOLDER, parentFolder)) {
+                ErrorCode.NO_CREATE_PERMISSION.throwUp();
+            }
+            String name = folder.getName();
+            folderDao.getFolderByParentAndName(parentFolder.getId(), name, false)
+                    .ifPresent(f -> ErrorCode.DUPLICATE_FOLDER_NAME_FORBIDDEN.throwUp());
+
+            FolderTypeDao typeDao = new FolderTypeDao();
+            Long          typeId  = folder.getTypeId();
+            if (typeId == null) {
+                typeId = typeDao.getFolderTypeByName(Constants.FOLDER_TYPE_DEFAULT)
+                        .orElseThrow(ErrorCode.FOLDER_TYPE_NOT_FOUND.getException()).getId();
+            } else {
+                typeId = typeDao.getFolderTypeById(typeId)
+                        .orElseThrow(ErrorCode.FOLDER_TYPE_NOT_FOUND.getException()).getId();
+            }
+
+            Long ownerId = folder.getOwnerId();
+            if (ownerId == null) {
+                ownerId = parentFolder.getOwnerId();
+            } else {
+                ownerId = new UserAccountDao().getUserAccountById(ownerId)
+                        .orElseThrow(ErrorCode.USER_ACCOUNT_NOT_FOUND.getException()).getId();
+            }
+
+            Long aclId = folder.getAclId();
+            if (aclId == null) {
+                aclId = parentFolder.getAclId();
+            } else {
+                aclId = new AclDao().getAclById(aclId)
+                        .orElseThrow(ErrorCode.ACL_NOT_FOUND.getException()).getId();
+            }
+
+            Folder newFolder = new Folder(name, aclId, ownerId, parentId, typeId, folder.getSummary());
+            folders.add(folderDao.saveFolder(newFolder));
         }
-        String name = createRequest.getName();
-        folderDao.getFolderByParentAndName(parentFolder.getId(), name, false)
-                .ifPresent(f -> ErrorCode.DUPLICATE_FOLDER_NAME_FORBIDDEN.throwUp());
 
-        FolderTypeDao typeDao = new FolderTypeDao();
-        Long          typeId  = createRequest.getTypeId();
-        if (typeId == null) {
-            typeId = typeDao.getFolderTypeByName(Constants.FOLDER_TYPE_DEFAULT)
-                    .orElseThrow(ErrorCode.FOLDER_TYPE_NOT_FOUND.getException()).getId();
-        } else {
-            typeId = typeDao.getFolderTypeById(typeId)
-                    .orElseThrow(ErrorCode.FOLDER_TYPE_NOT_FOUND.getException()).getId();
-        }
-
-        Long ownerId = createRequest.getOwnerId();
-        if (ownerId == null) {
-            ownerId = parentFolder.getOwnerId();
-        } else {
-            ownerId = new UserAccountDao().getUserAccountById(ownerId)
-                    .orElseThrow(ErrorCode.USER_ACCOUNT_NOT_FOUND.getException()).getId();
-        }
-
-        Long aclId = createRequest.getAclId();
-        if (aclId == null) {
-            aclId = parentFolder.getAclId();
-        } else {
-            aclId = new AclDao().getAclById(aclId)
-                    .orElseThrow(ErrorCode.ACL_NOT_FOUND.getException()).getId();
-        }
-
-        Folder folder      = new Folder(name, aclId, ownerId, parentId, typeId, createRequest.getSummary());
-        Folder savedFolder = folderDao.saveFolder(folder);
-
-        FolderWrapper wrapper = new FolderWrapper(Collections.singletonList(savedFolder));
-        ResponseUtil.responseIsOkayAndXml(response);
-        xmlMapper.writeValue(response.getWriter(), wrapper);
-
+        FolderWrapper wrapper = new FolderWrapper(folders);
+        response.setWrapper(wrapper);
     }
 
     private void getSubFolders(HttpServletRequest request, HttpServletResponse response, UserAccount user, FolderDao folderDao) throws IOException {

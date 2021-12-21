@@ -752,12 +752,32 @@ Delete a list of config entries
 
 ```xml
 <createFolderRequest>
-  <name/>
-  <parentId/>
-  <summary>&lt;summary /></summary>
-  <ownerId/>
-  <aclId/>
-  <typeId/>
+  <folders>
+    <folder>
+      <id/>
+      <name>images</name>
+      <objVersion>0</objVersion>
+      <aclId>1</aclId>
+      <ownerId>2</ownerId>
+      <parentId>3</parentId>
+      <typeId>4</typeId>
+      <metadataChanged>false</metadataChanged>
+      <summary>&lt;summary>&lt;description>contains images&lt;/description>&lt;/summary></summary>
+      <created>2021-12-21T11:16:20+0000</created>
+    </folder>
+    <folder>
+      <id/>
+      <name>archive</name>
+      <objVersion>0</objVersion>
+      <aclId>2</aclId>
+      <ownerId>2</ownerId>
+      <parentId>2</parentId>
+      <typeId>2</typeId>
+      <metadataChanged>false</metadataChanged>
+      <summary>&lt;summary /></summary>
+      <created>2021-12-21T11:16:20+0000</created>
+    </folder>
+  </folders>
 </createFolderRequest>
 
 ```
@@ -1510,6 +1530,118 @@ Fetch a single folder
 
 ---
 
+# /api/lifecycleState/create
+
+
+## Request
+
+```xml
+<attachLifecycleRequest>
+  <osdId/>
+  <lifecycleId/>
+  <lifecycleStateId/>
+</attachLifecycleRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <lifecycleStates/>
+</cinnamon>
+
+```
+
+
+---
+
+# /api/lifecycleState/delete
+
+
+## Request
+
+```xml
+<deleteLifecycleStateRequest>
+  <ignoreNotFound>false</ignoreNotFound>
+  <ids/>
+</deleteLifecycleStateRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <success>false</success>
+</cinnamon>
+
+```
+
+
+---
+
+# /api/lifecycleState/list
+
+
+## Request
+
+```xml
+<listLifecycleStateRequest>
+  <type>FULL</type>
+</listLifecycleStateRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <lifecycleStates/>
+</cinnamon>
+
+```
+
+
+---
+
+# /api/lifecycleState/update
+
+
+## Request
+
+```xml
+<updateLifecycleStateRequest>
+  <lifecycleStates>
+    <lifecycleStates>
+      <id>232</id>
+      <name>review-state-update</name>
+      <config>&lt;config/></config>
+      <stateClass>com.dewarim.cinnamon.lifecycle.ChangeAclState</stateClass>
+      <lifecycleId>1</lifecycleId>
+      <lifecycleStateForCopyId/>
+    </lifecycleStates>
+  </lifecycleStates>
+</updateLifecycleStateRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <lifecycleStates/>
+</cinnamon>
+
+```
+
+
+---
+
 # /api/lifecycleState/attachLifecycle
 
 
@@ -1592,7 +1724,7 @@ Fetch a single folder
 
 ---
 
-# /api/lifecycleState/getLifecycleState
+# /api/lifecycleState/get
 
 
 ## Request
@@ -1642,7 +1774,7 @@ Fetch a single folder
 
 ---
 
-# /api/lifecycle/getLifecycle
+# /api/lifecycle/get
 
 
 ## Request
@@ -1652,6 +1784,95 @@ Fetch a single folder
   <id/>
   <name/>
 </lifecycleRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <lifecycles/>
+</cinnamon>
+
+```
+
+
+---
+
+# /api/lifecycle/create
+Create lifecycles. Note: does not create lifecycle states, defaultStateId should be empty.
+
+## Request
+
+```xml
+<createLifecycleRequest>
+  <lifecycles>
+    <lifecycle>
+      <id/>
+      <name>authoring</name>
+      <defaultStateId/>
+      <lifecycleStates/>
+    </lifecycle>
+    <lifecycle>
+      <id/>
+      <name>translation-lc</name>
+      <defaultStateId/>
+      <lifecycleStates/>
+    </lifecycle>
+  </lifecycles>
+</createLifecycleRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <lifecycles/>
+</cinnamon>
+
+```
+
+
+---
+
+# /api/lifecycle/delete
+Delete lifecycles 
+
+## Request
+
+```xml
+<deleteLifecycleRequest>
+  <ignoreNotFound>false</ignoreNotFound>
+  <ids/>
+</deleteLifecycleRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <success>false</success>
+</cinnamon>
+
+```
+
+
+---
+
+# /api/lifecycle/update
+Update lifecycles. Note: does not update lifecycle states 
+
+## Request
+
+```xml
+<updateLifecycleRequest>
+  <lifecycles/>
+</updateLifecycleRequest>
 
 ```
 
@@ -2062,6 +2283,43 @@ List lifecycles
 
 ---
 
+# /api/osd/copy
+
+
+## Request
+
+```xml
+<copyOsdRequest>
+  <targetFolderId>20</targetFolderId>
+  <sourceIds>
+    <sourceId>1</sourceId>
+    <sourceId>2</sourceId>
+    <sourceId>3</sourceId>
+  </sourceIds>
+  <metasetTypeIds>
+    <metasetTypeId>13</metasetTypeId>
+    <metasetTypeId>15</metasetTypeId>
+    <metasetTypeId>2</metasetTypeId>
+  </metasetTypeIds>
+</copyOsdRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <osds/>
+  <links/>
+  <references/>
+</cinnamon>
+
+```
+
+
+---
+
 # /api/osd/createMeta
 
 
@@ -2292,6 +2550,31 @@ Returns an OSD's content according to it's format's content type.
   <osds/>
   <links/>
   <references/>
+</cinnamon>
+
+```
+
+
+---
+
+# /api/osd/getRelations
+
+
+## Request
+
+```xml
+<getRelationRequest>
+  <includeMetadata>false</includeMetadata>
+</getRelationRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <relations/>
 </cinnamon>
 
 ```
@@ -2777,6 +3060,7 @@ part "file", if the new version should contain data.
 ```xml
 <relationRequest>
   <includeMetadata>false</includeMetadata>
+  <orMode>false</orMode>
 </relationRequest>
 
 ```

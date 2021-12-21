@@ -1,112 +1,70 @@
 package com.dewarim.cinnamon.model.request.folder;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.dewarim.cinnamon.model.Folder;
+import com.dewarim.cinnamon.model.request.CreateRequest;
+import com.dewarim.cinnamon.model.response.FolderWrapper;
+import com.dewarim.cinnamon.model.response.Wrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
-import java.util.Optional;
+import java.util.ArrayList;
+import java.util.List;
 
 @JacksonXmlRootElement(localName = "createFolderRequest")
-public class CreateFolderRequest implements ApiRequest {
+public class CreateFolderRequest implements CreateRequest<Folder>, ApiRequest<Folder> {
 
     private static final String DEFAULT_SUMMARY = "<summary />";
 
-    private String name;
-    private Long   parentId;
-    private String summary = DEFAULT_SUMMARY;
-    private Long   ownerId;
-    private Long   aclId;
-    private Long   typeId;
+    @JacksonXmlElementWrapper(localName = "folders")
+    @JacksonXmlProperty(localName = "folder")
+    private List<Folder> folders = new ArrayList<>();
 
     public CreateFolderRequest() {
     }
 
     public CreateFolderRequest(String name, Long parentId, String summary, Long ownerId, Long aclId, Long typeId) {
-        this.name = name;
-        this.parentId = parentId;
-        this.summary = summary;
-        this.ownerId = ownerId;
-        this.aclId = aclId;
-        this.typeId = typeId;
+        folders.add(new Folder(name,aclId,ownerId,parentId,typeId,summary));
     }
 
-    public String getName() {
-        return name;
+    public CreateFolderRequest(List<Folder> folders) {
+        this.folders = folders;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public List<Folder> getFolders() {
+        return folders;
     }
 
-    public Long getParentId() {
-        return parentId;
+    public void setFolders(List<Folder> folders) {
+        this.folders = folders;
     }
 
-    public void setParentId(Long parentId) {
-        this.parentId = parentId;
-    }
-
-    public String getSummary() {
-        if (summary == null) {
-            summary = DEFAULT_SUMMARY;
-        }
-        return summary;
-    }
-
-    public void setSummary(String summary) {
-        this.summary = summary;
-    }
-
-    public Long getOwnerId() {
-        return ownerId;
-    }
-
-    public void setOwnerId(Long ownerId) {
-        this.ownerId = ownerId;
-    }
-
-    public Long getAclId() {
-        return aclId;
-    }
-
-    public void setAclId(Long aclId) {
-        this.aclId = aclId;
-    }
-
-    public Long getTypeId() {
-        return typeId;
-    }
-
-    public void setTypeId(Long typeId) {
-        this.typeId = typeId;
-    }
-
-    private boolean validated() {
-        return name != null && name.trim().length() > 0
-                && parentId != null && parentId > 0
-                && (typeId == null || typeId > 0)
-                && (aclId == null || aclId > 0)
-                && (ownerId == null || ownerId > 0)
-                && getSummary() != null
-                && summary.trim().length() > 0;
-    }
-
-    public Optional<CreateFolderRequest> validateRequest() {
-        if (validated()) {
-            return Optional.of(this);
-        } else {
-            return Optional.empty();
-        }
+    public boolean validated() {
+        return folders != null && folders.size() > 0 && folders.stream().allMatch(f ->
+                f.getName() != null && f.getName().trim().length() > 0
+                && f.getParentId() != null && f.getParentId() > 0
+                && (f.getTypeId()    == null || f.getTypeId() > 0)
+                && (f.getAclId() == null || f.getAclId() > 0)
+                && (f.getOwnerId() == null || f.getOwnerId() > 0)
+        );
     }
 
     @Override
-    public String toString() {
-        return "CreateFolderRequest{" +
-                "name='" + name + '\'' +
-                ", parentId=" + parentId +
-                ", summary='" + summary + '\'' +
-                ", ownerId=" + ownerId +
-                ", aclId=" + aclId +
-                ", typeId=" + typeId +
-                '}';
+    public List<Folder> list() {
+        return folders;
+    }
+
+    @Override
+    public Wrapper<Folder> fetchResponseWrapper() {
+        return new FolderWrapper();
+    }
+
+    @Override
+    public List<ApiRequest<Folder>> examples() {
+        return List.of(new CreateFolderRequest(List.of(
+                new Folder("images", 1L, 2L, 3L, 4L, "<summary><description>contains images</description></summary>"),
+                new Folder("archive", 2L,2L,2L,2L,null)
+                )));
     }
 }

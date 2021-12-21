@@ -42,4 +42,5 @@ public class Constants {
     public static final String CREATE_NEW_VERSION = "createNewVersionRequest";
     public static final String CREATE_NEW_OSD     = "createOsdRequest";
 
+    public static final String DEFAULT_SUMMARY = "<summary />";
 }

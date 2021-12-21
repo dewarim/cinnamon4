@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Objects;
 
 @JacksonXmlRootElement(localName = "createLifecycleRequest")
-public class CreateLifecycleRequest implements CreateRequest<Lifecycle>, ApiRequest {
+public class CreateLifecycleRequest implements CreateRequest<Lifecycle>, ApiRequest<Lifecycle> {
 
     @JacksonXmlElementWrapper(localName = "lifecycles")
     @JacksonXmlProperty(localName = "lifecycle")
@@ -56,5 +56,10 @@ public class CreateLifecycleRequest implements CreateRequest<Lifecycle>, ApiRequ
     @Override
     public Wrapper<Lifecycle> fetchResponseWrapper() {
         return new LifecycleWrapper();
+    }
+
+    @Override
+    public List<ApiRequest<Lifecycle>> examples() {
+        return List.of(new CreateLifecycleRequest(List.of(new Lifecycle("authoring",null), new Lifecycle("translation-lc",null))));
     }
 }

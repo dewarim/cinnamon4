@@ -47,6 +47,7 @@ import com.dewarim.cinnamon.model.request.language.CreateLanguageRequest;
 import com.dewarim.cinnamon.model.request.language.DeleteLanguageRequest;
 import com.dewarim.cinnamon.model.request.language.ListLanguageRequest;
 import com.dewarim.cinnamon.model.request.language.UpdateLanguageRequest;
+import com.dewarim.cinnamon.model.request.lifecycle.CreateLifecycleRequest;
 import com.dewarim.cinnamon.model.request.lifecycle.DeleteLifecycleRequest;
 import com.dewarim.cinnamon.model.request.lifecycle.LifecycleRequest;
 import com.dewarim.cinnamon.model.request.lifecycle.ListLifecycleRequest;
@@ -200,7 +201,7 @@ public enum UrlMapping {
     LIFECYCLE_STATE__GET("lifecycleState", "get", "/api", "", IdRequest.class, LifecycleStateWrapper.class),
     LIFECYCLE_STATE__GET_NEXT_STATES("lifecycleState", "getNextStates", "/api", "", IdRequest.class, LifecycleStateWrapper.class),
     LIFECYCLE__GET("lifecycle", "get", "/api", "", LifecycleRequest.class, LifecycleWrapper.class),
-    LIFECYCLE__CREATE("lifecycle", "create", "/api", "Create lifecycles. Note: does not create lifecycle states", ListLifecycleRequest.class, LifecycleWrapper.class),
+    LIFECYCLE__CREATE("lifecycle", "create", "/api", "Create lifecycles. Note: does not create lifecycle states, defaultStateId should be empty.", CreateLifecycleRequest.class, LifecycleWrapper.class),
     LIFECYCLE__DELETE("lifecycle", "delete", "/api", "Delete lifecycles ", DeleteLifecycleRequest.class, DeleteResponse.class),
     LIFECYCLE__UPDATE("lifecycle", "update", "/api", "Update lifecycles. Note: does not update lifecycle states ", UpdateLifecycleRequest.class, LifecycleWrapper.class),
     LIFECYCLE__LIST("lifecycle", "list", "/api", "List lifecycles ", ListLifecycleRequest.class, LifecycleWrapper.class),
@@ -270,6 +271,7 @@ public enum UrlMapping {
     private final        String                       action;
     private final        String                       prefix;
     private final        String                       description;
+    // TODO: migrate to parameterized version of ApiRequest<?>
     private final        Class<? extends ApiRequest>  requestClass;
     private final        Class<? extends ApiResponse> responseClass;
 

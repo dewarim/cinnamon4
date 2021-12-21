@@ -1,6 +1,8 @@
 package com.dewarim.cinnamon.model.request.lifecycleState;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.dewarim.cinnamon.lifecycle.ChangeAclState;
+import com.dewarim.cinnamon.lifecycle.NopState;
 import com.dewarim.cinnamon.model.LifecycleState;
 import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.response.LifecycleStateWrapper;
@@ -14,7 +16,7 @@ import java.util.List;
 import java.util.Objects;
 
 @JacksonXmlRootElement(localName = "createLifecycleStateRequest")
-public class CreateLifecycleStateRequest implements CreateRequest<LifecycleState>, ApiRequest {
+public class CreateLifecycleStateRequest implements CreateRequest<LifecycleState>, ApiRequest<LifecycleState> {
 
     @JacksonXmlElementWrapper(localName = "lifecycleStates")
     @JacksonXmlProperty(localName = "lifecycleState")
@@ -58,5 +60,15 @@ public class CreateLifecycleStateRequest implements CreateRequest<LifecycleState
     @Override
     public Wrapper<LifecycleState> fetchResponseWrapper() {
         return new LifecycleStateWrapper();
+    }
+
+    @Override
+    public List<ApiRequest<LifecycleState>> examples() {
+        return List.of(new CreateLifecycleStateRequest(List.of(
+                new LifecycleState("review-state", "<config/>", NopState.class.getName(), 1L, null),
+                new LifecycleState("authoring-state",
+                        "<config><properties><property><name>aclName</name><value>_default_acl</value></property></properties><nextStates><name>review-state</name></nextStates></config>",
+                        ChangeAclState.class.getName(), 2L, 3L)
+        )));
     }
 }
