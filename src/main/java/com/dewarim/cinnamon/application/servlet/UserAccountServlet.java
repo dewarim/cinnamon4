@@ -26,12 +26,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
-import static com.dewarim.cinnamon.application.ResponseUtil.responseIsOkayAndXml;
 
 /**
  *
@@ -95,29 +93,26 @@ public class UserAccountServlet extends HttpServlet implements CruddyServlet<Use
     }
 
     private void setPassword(HttpServletRequest request, UserAccountDao userDao, CinnamonResponse response) throws IOException {
+        // TODO: add SetPasswordRequest.validateRequest
         SetPasswordRequest    passwordRequest = xmlMapper.readValue(request.getInputStream(), SetPasswordRequest.class);
         UserAccount           currentUser     = ThreadLocalSqlSession.getCurrentUser();
         Optional<UserAccount> userOpt         = userDao.getUserAccountById(passwordRequest.getUserId());
 
         if (!passwordRequest.getUserId().equals(currentUser.getId())) {
             if (!userDao.isSuperuser(currentUser)) {
-                ErrorCode.FORBIDDEN.throwUp();
+                throw ErrorCode.FORBIDDEN.exception();
             }
         }
 
         if (passwordIsTooShort(passwordRequest.getPassword())) {
-            ErrorCode.PASSWORD_TOO_SHORT.throwUp();
+            throw ErrorCode.PASSWORD_TOO_SHORT.exception();
         }
 
-        if (userOpt.isEmpty()) {
-            ErrorCode.USER_ACCOUNT_NOT_FOUND.throwUp();
-        }
-
+        UserAccount user    = userOpt.orElseThrow(ErrorCode.USER_ACCOUNT_NOT_FOUND.getException());
         String      pwdHash = HashMaker.createDigest(passwordRequest.getPassword());
-        UserAccount user    = userOpt.get();
         user.setPassword(pwdHash);
         userDao.updateUser(user);
-        responseIsOkayAndXml(response);
+        response.responseIsGenericOkay();
     }
 
     private void showUserInfo(GetUserAccountRequest userInfoRequest, UserAccountDao userAccountDao, CinnamonResponse response) {
@@ -127,17 +122,12 @@ public class UserAccountServlet extends HttpServlet implements CruddyServlet<Use
         } else if (userInfoRequest.byName()) {
             userOpt = userAccountDao.getUserAccountByName(userInfoRequest.getUsername());
         } else {
-            ErrorCode.USER_INFO_REQUEST_WITHOUT_NAME_OR_ID.throwUp();
-            return;
-        }
-        if (userOpt.isEmpty()) {
-            ErrorCode.USER_ACCOUNT_NOT_FOUND.throwUp();
+            throw ErrorCode.USER_INFO_REQUEST_WITHOUT_NAME_OR_ID.exception();
         }
 
-        UserAccount user = userOpt.get();
+        UserAccount user = userOpt.orElseThrow(ErrorCode.USER_ACCOUNT_NOT_FOUND.getException());
         user.filterInfo();
-        UserAccountWrapper wrapper = new UserAccountWrapper();
-        wrapper.setList(Collections.singletonList(user));
+        UserAccountWrapper wrapper = new UserAccountWrapper(List.of(user));
         response.setWrapper(wrapper);
     }
 

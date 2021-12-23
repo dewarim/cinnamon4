@@ -24,6 +24,8 @@ import com.dewarim.cinnamon.model.relations.Relation;
 import com.dewarim.cinnamon.model.relations.RelationType;
 import com.dewarim.cinnamon.model.request.CreateMetaRequest;
 import com.dewarim.cinnamon.model.request.CreateNewVersionRequest;
+import com.dewarim.cinnamon.model.request.DeleteMetaRequest;
+import com.dewarim.cinnamon.model.request.IdListRequest;
 import com.dewarim.cinnamon.model.request.IdRequest;
 import com.dewarim.cinnamon.model.request.MetaRequest;
 import com.dewarim.cinnamon.model.request.acl.AclInfoRequest;
@@ -128,6 +130,8 @@ import com.dewarim.cinnamon.model.response.OsdWrapper;
 import com.dewarim.cinnamon.model.response.PermissionWrapper;
 import com.dewarim.cinnamon.model.response.RelationTypeWrapper;
 import com.dewarim.cinnamon.model.response.RelationWrapper;
+import com.dewarim.cinnamon.model.response.Summary;
+import com.dewarim.cinnamon.model.response.SummaryWrapper;
 import com.dewarim.cinnamon.model.response.UiLanguageWrapper;
 import com.dewarim.cinnamon.model.response.UserAccountWrapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -191,6 +195,7 @@ public class CinnamonClient {
     private final Unwrapper<LinkResponse, LinkResponseWrapper>      linkResponseUnwrapper   = new Unwrapper<>(LinkResponseWrapper.class);
     private final Unwrapper<Relation, RelationWrapper>              relationUnwrapper       = new Unwrapper<>(RelationWrapper.class);
     private final Unwrapper<RelationType, RelationTypeWrapper>      relationTypeUnwrapper   = new Unwrapper<>(RelationTypeWrapper.class);
+    private final Unwrapper<Summary, SummaryWrapper>                summaryUnwrapper        = new Unwrapper<>(SummaryWrapper.class);
     private final Unwrapper<Permission, PermissionWrapper>          permissionUnwrapper     = new Unwrapper<>(PermissionWrapper.class);
     private final Unwrapper<DisconnectResponse, DisconnectResponse> disconnectUnwrapper     = new Unwrapper<>(DisconnectResponse.class);
     private final Unwrapper<MetasetType, MetasetTypeWrapper>        metasetTypeUnwrapper    = new Unwrapper<>(MetasetTypeWrapper.class);
@@ -906,7 +911,7 @@ public class CinnamonClient {
     }
 
     public List<Relation> getRelationsWithCriteria(List<Long> leftIds, List<Long> rightIds, Collection<String> names, boolean includeMetadata, boolean orMode) throws IOException {
-        var request  = new SearchRelationRequest(leftIds,rightIds,names, includeMetadata, orMode );
+        var request  = new SearchRelationRequest(leftIds, rightIds, names, includeMetadata, orMode);
         var response = sendStandardRequest(UrlMapping.OSD__GET_RELATIONS, request);
         return relationUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
@@ -924,63 +929,81 @@ public class CinnamonClient {
     }
 
     public void attachLifecycle(Long osdId, Long lifecycleId, Long lifecycleStateId) throws IOException {
-        var request = new AttachLifecycleRequest(osdId,lifecycleId,lifecycleStateId);
+        var request  = new AttachLifecycleRequest(osdId, lifecycleId, lifecycleStateId);
         var response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__ATTACH_LIFECYCLE, request);
         verifyResponseIsOkay(response);
     }
 
     public List<Lifecycle> listLifecycles() throws IOException {
-        var request = new ListLifecycleRequest();
+        var request  = new ListLifecycleRequest();
         var response = sendStandardRequest(UrlMapping.LIFECYCLE__LIST, request);
-        return lifecycleUnwrapper.unwrap(response,EXPECTED_SIZE_ANY);
+        return lifecycleUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
     public Lifecycle getLifecycle(Long lifecycleId) throws IOException {
-        var request = new LifecycleRequest(lifecycleId,null);
-        var response = sendStandardRequest(UrlMapping.LIFECYCLE__GET,request);
-        return lifecycleUnwrapper.unwrap(response,1).get(0);
+        var request  = new LifecycleRequest(lifecycleId, null);
+        var response = sendStandardRequest(UrlMapping.LIFECYCLE__GET, request);
+        return lifecycleUnwrapper.unwrap(response, 1).get(0);
     }
 
     public Lifecycle getLifecycle(String name) throws IOException {
-        var request = new LifecycleRequest(null,name);
-        var response = sendStandardRequest(UrlMapping.LIFECYCLE__GET,request);
-        return lifecycleUnwrapper.unwrap(response,1).get(0);
+        var request  = new LifecycleRequest(null, name);
+        var response = sendStandardRequest(UrlMapping.LIFECYCLE__GET, request);
+        return lifecycleUnwrapper.unwrap(response, 1).get(0);
 
     }
 
     public Lifecycle updateLifecycle(Lifecycle lifecycle) throws IOException {
-        var request = new UpdateLifecycleRequest(List.of(lifecycle));
-        var response = sendStandardRequest(UrlMapping.LIFECYCLE__UPDATE,request);
-        return lifecycleUnwrapper.unwrap(response,1).get(0);
+        var request  = new UpdateLifecycleRequest(List.of(lifecycle));
+        var response = sendStandardRequest(UrlMapping.LIFECYCLE__UPDATE, request);
+        return lifecycleUnwrapper.unwrap(response, 1).get(0);
     }
 
     public void deleteLifecycle(Long lifecycleId) throws IOException {
-        var request = new DeleteLifecycleRequest(List.of(lifecycleId));
-        var response = sendStandardRequest(UrlMapping.LIFECYCLE__DELETE,request);
+        var request  = new DeleteLifecycleRequest(List.of(lifecycleId));
+        var response = sendStandardRequest(UrlMapping.LIFECYCLE__DELETE, request);
         verifyDeleteResponse(response);
     }
 
     public List<LifecycleState> getNextLifecycleStates(long lifecycleStateId) throws IOException {
-        var request = new IdRequest(lifecycleStateId);
+        var request  = new IdRequest(lifecycleStateId);
         var response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__GET_NEXT_STATES, request);
         return lifecycleStateUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
     public LifecycleState getLifecycleState(long lifecycleStateId) throws IOException {
-        var request = new IdRequest(lifecycleStateId);
+        var request  = new IdRequest(lifecycleStateId);
         var response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__GET, request);
-        return lifecycleStateUnwrapper.unwrap(response,1).get(0);
+        return lifecycleStateUnwrapper.unwrap(response, 1).get(0);
     }
 
     public LifecycleState updateLifecycleState(LifecycleState lcs) throws IOException {
-        var request = new UpdateLifecycleStateRequest(List.of(lcs));
+        var request  = new UpdateLifecycleStateRequest(List.of(lcs));
         var response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__UPDATE, request);
-        return lifecycleStateUnwrapper.unwrap(response,1).get(0);
+        return lifecycleStateUnwrapper.unwrap(response, 1).get(0);
     }
 
     public void deleteLifecycleState(Long lifecycleStateId) throws IOException {
-        var request = new DeleteLifecycleRequest(lifecycleStateId);
-        var response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__DELETE,request);
+        var request  = new DeleteLifecycleRequest(lifecycleStateId);
+        var response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__DELETE, request);
+        verifyDeleteResponse(response);
+    }
+
+    public List<Summary> getFolderSummaries(List<Long> folderIds) throws IOException {
+        var request  = new IdListRequest(folderIds);
+        var response = sendStandardRequest(UrlMapping.FOLDER__GET_SUMMARIES, request);
+        return summaryUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
+    }
+
+    public void deleteFolderMeta(Long folderId, Long metaId) throws IOException {
+        var request  = new DeleteMetaRequest(folderId, metaId);
+        var response = sendStandardRequest(UrlMapping.FOLDER__DELETE_META, request);
+        verifyDeleteResponse(response);
+    }
+
+    public void deleteFolderMeta(Long folderId, String metaName) throws IOException {
+        var request  = new DeleteMetaRequest(folderId, metaName);
+        var response = sendStandardRequest(UrlMapping.FOLDER__DELETE_META, request);
         verifyDeleteResponse(response);
     }
 }

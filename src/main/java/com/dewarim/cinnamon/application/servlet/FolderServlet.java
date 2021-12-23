@@ -355,6 +355,7 @@ public class FolderServlet extends BaseServlet {
     }
 
     private void setSummary(HttpServletRequest request, CinnamonResponse response, UserAccount user, FolderDao folderDao) throws IOException {
+        // TODO: add SetSummaryRequest.validateRequest
         SetSummaryRequest summaryRequest = xmlMapper.readValue(request.getInputStream(), SetSummaryRequest.class);
         Optional<Folder>  folderOpt      = folderDao.getFolderById(summaryRequest.getId());
         if (folderOpt.isPresent()) {
@@ -379,8 +380,11 @@ public class FolderServlet extends BaseServlet {
             if (authorizationService.hasUserOrOwnerPermission(folder, DefaultPermission.READ_OBJECT_SYS_METADATA, user)) {
                 wrapper.getSummaries().add(new Summary(folder.getId(), folder.getSummary()));
             }
+            else{
+                throw ErrorCode.NO_READ_OBJECT_SYS_METADATA_PERMISSION.exception();
+            }
         });
-        response.responseIsGenericOkay();
+        response.setWrapper(wrapper);
     }
 
 }

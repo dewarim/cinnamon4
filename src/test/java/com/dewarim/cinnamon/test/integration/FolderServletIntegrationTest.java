@@ -80,13 +80,9 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void getSummariesMissingPermission() throws IOException {
-        IdListRequest idListRequest = new IdListRequest(Collections.singletonList(12L));
-        HttpResponse  response      = sendStandardRequest(UrlMapping.FOLDER__GET_SUMMARIES, idListRequest);
-        assertResponseOkay(response);
-        SummaryWrapper wrapper = mapper.readValue(response.getEntity().getContent(), SummaryWrapper.class);
-        // when all ids are non-readable, return an empty list:
-        assertNull(wrapper.getSummaries());
+    public void getSummariesMissingPermission()  {
+        var ex = assertThrows(CinnamonClientException.class, () -> client.getFolderSummaries(List.of(12L)));
+        assertEquals(NO_READ_OBJECT_SYS_METADATA_PERMISSION, ex.getErrorCode());
     }
 
     @Test
@@ -311,19 +307,13 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void deleteMetaHappyPathById() throws IOException {
         // #7 folder_meta = metaset_type license
-        DeleteMetaRequest request  = new DeleteMetaRequest(21L, 7L);
-        HttpResponse      response = sendStandardRequest(UrlMapping.FOLDER__DELETE_META, request);
-        assertResponseOkay(response);
-        assertTrue(parseGenericResponse(response).isSuccessful());
+        client.deleteFolderMeta(21L,7L);
     }
 
     @Test
     public void deleteMetaHappyPathByName() throws IOException {
         // #5 + #6 folder_meta = metaset_type comment
-        DeleteMetaRequest request  = new DeleteMetaRequest(21L, "comment");
-        HttpResponse      response = sendStandardRequest(UrlMapping.FOLDER__DELETE_META, request);
-        assertResponseOkay(response);
-        assertTrue(parseGenericResponse(response).isSuccessful());
+        client.deleteFolderMeta(21L,"comment");
     }
 
     @Test
