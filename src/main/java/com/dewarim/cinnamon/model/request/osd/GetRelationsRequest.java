@@ -6,16 +6,16 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import java.util.List;
 import java.util.Optional;
 
-@JacksonXmlRootElement(localName = "getRelationRequest")
-public class GetRelationRequest implements ApiRequest {
+@JacksonXmlRootElement(localName = "getRelationsRequest")
+public class GetRelationsRequest implements ApiRequest {
 
     private List<Long> ids;
     private boolean    includeMetadata;
 
-    public GetRelationRequest() {
+    public GetRelationsRequest() {
     }
 
-    public GetRelationRequest(List<Long> ids, boolean includeMetadata) {
+    public GetRelationsRequest(List<Long> ids, boolean includeMetadata) {
         this.ids = ids;
         this.includeMetadata = includeMetadata;
     }
@@ -40,7 +40,7 @@ public class GetRelationRequest implements ApiRequest {
         return ids != null && ids.size() > 0;
     }
 
-    public Optional<GetRelationRequest> validateRequest() {
+    public Optional<GetRelationsRequest> validateRequest() {
         if (validated()) {
             return Optional.of(this);
         } else {

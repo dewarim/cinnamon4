@@ -10,7 +10,7 @@ import com.dewarim.cinnamon.model.relations.Relation;
 import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.request.relation.CreateRelationRequest;
 import com.dewarim.cinnamon.model.request.relation.DeleteRelationRequest;
-import com.dewarim.cinnamon.model.request.relation.RelationRequest;
+import com.dewarim.cinnamon.model.request.relation.SearchRelationRequest;
 import com.dewarim.cinnamon.model.response.RelationWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.annotation.WebServlet;
@@ -36,7 +36,7 @@ public class RelationServlet extends HttpServlet implements CruddyServlet<Relati
 
         UrlMapping mapping = UrlMapping.getByPath(request.getRequestURI());
         switch (mapping) {
-            case RELATION__LIST -> listRelations(request, relationDao, cinnamonResponse);
+            case RELATION__SEARCH -> searchRelations(request, relationDao, cinnamonResponse);
             case RELATION__CREATE -> {
                 CreateRequest<Relation> createRequest = convertCreateRequest(request, CreateRelationRequest.class);
                 RelationTypeDao         rtDao         = new RelationTypeDao();
@@ -65,8 +65,8 @@ public class RelationServlet extends HttpServlet implements CruddyServlet<Relati
         ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.INVALID_REQUEST);
     }
 
-    private void listRelations(HttpServletRequest request, RelationDao relationDao, CinnamonResponse response) throws IOException {
-        RelationRequest relationRequest = xmlMapper.readValue(request.getInputStream(), RelationRequest.class)
+    private void searchRelations(HttpServletRequest request, RelationDao relationDao, CinnamonResponse response) throws IOException {
+        SearchRelationRequest relationRequest = xmlMapper.readValue(request.getInputStream(), SearchRelationRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
         List<Relation> relations;

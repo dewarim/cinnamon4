@@ -1,14 +1,15 @@
 package com.dewarim.cinnamon.model.request.relation;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.dewarim.cinnamon.model.relations.Relation;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
 
-@JacksonXmlRootElement(localName = "relationRequest")
-public class RelationRequest implements ApiRequest {
+@JacksonXmlRootElement(localName = "searchRelationRequest")
+public class SearchRelationRequest implements ApiRequest<Relation> {
 
     private Collection<Long>   leftIds;
     private Collection<Long>   rightIds;
@@ -16,14 +17,16 @@ public class RelationRequest implements ApiRequest {
     private boolean            includeMetadata;
     private boolean            orMode = false;
 
-    public RelationRequest() {
+    public SearchRelationRequest() {
     }
 
-    public RelationRequest(Collection<Long> leftIds, Collection<Long> rightIds, Collection<String> names, boolean includeMetadata) {
+    public SearchRelationRequest(Collection<Long> leftIds, Collection<Long> rightIds, Collection<String> names,
+                                 boolean includeMetadata, boolean orMode) {
         this.leftIds = leftIds;
         this.rightIds = rightIds;
         this.names = names;
         this.includeMetadata = includeMetadata;
+        this.orMode = orMode;
     }
 
     public Collection<Long> getLeftIds() {
@@ -78,7 +81,7 @@ public class RelationRequest implements ApiRequest {
         this.orMode = orMode;
     }
 
-    public Optional<RelationRequest> validateRequest(){
+    public Optional<SearchRelationRequest> validateRequest() {
         if (validated()) {
             return Optional.of(this);
         } else {

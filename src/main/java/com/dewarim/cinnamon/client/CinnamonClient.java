@@ -82,7 +82,7 @@ import com.dewarim.cinnamon.model.request.objectType.ListObjectTypeRequest;
 import com.dewarim.cinnamon.model.request.osd.CopyOsdRequest;
 import com.dewarim.cinnamon.model.request.osd.CreateOsdRequest;
 import com.dewarim.cinnamon.model.request.osd.DeleteOsdRequest;
-import com.dewarim.cinnamon.model.request.osd.GetRelationRequest;
+import com.dewarim.cinnamon.model.request.osd.GetRelationsRequest;
 import com.dewarim.cinnamon.model.request.osd.OsdByFolderRequest;
 import com.dewarim.cinnamon.model.request.osd.OsdRequest;
 import com.dewarim.cinnamon.model.request.osd.SetContentRequest;
@@ -91,6 +91,7 @@ import com.dewarim.cinnamon.model.request.osd.VersionPredicate;
 import com.dewarim.cinnamon.model.request.permission.ChangePermissionsRequest;
 import com.dewarim.cinnamon.model.request.permission.ListPermissionRequest;
 import com.dewarim.cinnamon.model.request.relation.CreateRelationRequest;
+import com.dewarim.cinnamon.model.request.relation.SearchRelationRequest;
 import com.dewarim.cinnamon.model.request.relationType.CreateRelationTypeRequest;
 import com.dewarim.cinnamon.model.request.relationType.DeleteRelationTypeRequest;
 import com.dewarim.cinnamon.model.request.uiLanguage.CreateUiLanguageRequest;
@@ -144,6 +145,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -664,6 +666,10 @@ public class CinnamonClient {
         return relationTypeUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
+    public RelationType createRelationType(RelationType relationType) throws IOException {
+        return createRelationTypes(List.of(relationType)).get(0);
+    }
+
     private HttpEntity createSimpleMultipartEntity(String fieldname, Object contentRequest) throws IOException {
         MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
                 .addTextBody(fieldname, mapper.writeValueAsString(contentRequest),
@@ -894,7 +900,13 @@ public class CinnamonClient {
     }
 
     public List<Relation> getRelations(List<Long> ids) throws IOException {
-        var request  = new GetRelationRequest(ids, true);
+        var request  = new GetRelationsRequest(ids, true);
+        var response = sendStandardRequest(UrlMapping.OSD__GET_RELATIONS, request);
+        return relationUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
+    }
+
+    public List<Relation> getRelationsWithCriteria(List<Long> leftIds, List<Long> rightIds, Collection<String> names, boolean includeMetadata, boolean orMode) throws IOException {
+        var request  = new SearchRelationRequest(leftIds,rightIds,names, includeMetadata, orMode );
         var response = sendStandardRequest(UrlMapping.OSD__GET_RELATIONS, request);
         return relationUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }

@@ -47,7 +47,7 @@ import com.dewarim.cinnamon.model.request.SetSummaryRequest;
 import com.dewarim.cinnamon.model.request.osd.CopyOsdRequest;
 import com.dewarim.cinnamon.model.request.osd.CreateOsdRequest;
 import com.dewarim.cinnamon.model.request.osd.DeleteOsdRequest;
-import com.dewarim.cinnamon.model.request.osd.GetRelationRequest;
+import com.dewarim.cinnamon.model.request.osd.GetRelationsRequest;
 import com.dewarim.cinnamon.model.request.osd.OsdByFolderRequest;
 import com.dewarim.cinnamon.model.request.osd.OsdRequest;
 import com.dewarim.cinnamon.model.request.osd.SetContentRequest;
@@ -138,7 +138,7 @@ public class OsdServlet extends BaseServlet {
     }
 
     private void getRelations(HttpServletRequest request, CinnamonResponse cinnamonResponse, UserAccount user, OsdDao osdDao) throws IOException {
-        GetRelationRequest relationRequest = xmlMapper.readValue(request.getInputStream(), GetRelationRequest.class)
+        GetRelationsRequest relationRequest = xmlMapper.readValue(request.getInputStream(), GetRelationsRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
         var                    accessFilter = AccessFilter.getInstance(user);

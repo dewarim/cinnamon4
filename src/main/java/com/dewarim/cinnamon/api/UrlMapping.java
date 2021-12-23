@@ -74,7 +74,7 @@ import com.dewarim.cinnamon.model.request.objectType.UpdateObjectTypeRequest;
 import com.dewarim.cinnamon.model.request.osd.CopyOsdRequest;
 import com.dewarim.cinnamon.model.request.osd.CreateOsdRequest;
 import com.dewarim.cinnamon.model.request.osd.DeleteOsdRequest;
-import com.dewarim.cinnamon.model.request.osd.GetRelationRequest;
+import com.dewarim.cinnamon.model.request.osd.GetRelationsRequest;
 import com.dewarim.cinnamon.model.request.osd.OsdByFolderRequest;
 import com.dewarim.cinnamon.model.request.osd.OsdRequest;
 import com.dewarim.cinnamon.model.request.osd.SetContentRequest;
@@ -83,7 +83,7 @@ import com.dewarim.cinnamon.model.request.permission.ChangePermissionsRequest;
 import com.dewarim.cinnamon.model.request.permission.ListPermissionRequest;
 import com.dewarim.cinnamon.model.request.relation.CreateRelationRequest;
 import com.dewarim.cinnamon.model.request.relation.DeleteRelationRequest;
-import com.dewarim.cinnamon.model.request.relation.RelationRequest;
+import com.dewarim.cinnamon.model.request.relation.SearchRelationRequest;
 import com.dewarim.cinnamon.model.request.relationType.CreateRelationTypeRequest;
 import com.dewarim.cinnamon.model.request.relationType.DeleteRelationTypeRequest;
 import com.dewarim.cinnamon.model.request.relationType.ListRelationTypeRequest;
@@ -232,7 +232,7 @@ public enum UrlMapping {
     OSD__GET_META("osd", "getMeta", "/api", "", MetaRequest.class, MetaWrapper.class),
     OSD__GET_OBJECTS_BY_FOLDER_ID("osd", "getObjectsByFolderId", "/api", "", OsdByFolderRequest.class, OsdWrapper.class),
     OSD__GET_OBJECTS_BY_ID("osd", "getObjectsById", "/api", "", OsdRequest.class, OsdWrapper.class),
-    OSD__GET_RELATIONS("osd", "getRelations", "/api", "", GetRelationRequest.class, RelationWrapper.class),
+    OSD__GET_RELATIONS("osd", "getRelations", "/api", "", GetRelationsRequest.class, RelationWrapper.class),
     OSD__GET_SUMMARIES("osd", "getSummaries", "/api", "", IdListRequest.class, SummaryWrapper.class),
     OSD__LOCK("osd", "lock", "/api", "", IdRequest.class, GenericResponse.class),
     OSD__SET_CONTENT("osd", "setContent", "/api", """
@@ -255,7 +255,7 @@ public enum UrlMapping {
     RELATION_TYPE__DELETE("relationType", "delete", "/api", "", DeleteRelationTypeRequest.class, DeleteResponse.class),
     RELATION__CREATE("relation", "create", "/api", "", CreateRelationRequest.class, RelationWrapper.class),
     RELATION__DELETE("relation", "delete", "/api", "", DeleteRelationRequest.class, GenericResponse.class),
-    RELATION__LIST("relation", "list", "/api", "", RelationRequest.class, RelationWrapper.class),
+    RELATION__SEARCH("relation", "search", "/api", "Search ", SearchRelationRequest.class, RelationWrapper.class),
     STATIC__ROOT("static", "", "", "Returns a static file from the server (for example, a favicon.ico if one exists).", null, null),
     UI_LANGUAGE__LIST("uiLanguage", "list", "/api", "", ListUiLanguageRequest.class, UiLanguageWrapper.class),
     UI_LANGUAGE__CREATE("uiLanguage", "create", "/api", "", CreateUiLanguageRequest.class, UiLanguageWrapper.class),
