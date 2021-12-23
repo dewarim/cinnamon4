@@ -79,4 +79,9 @@ public class RelationDao implements CrudDao<Relation>{
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
         return sqlSession.selectList("com.dewarim.cinnamon.model.relations.Relation.getRelationsToCopy", id);
     }
+
+    public List<Relation> getRelationsToCopyOnVersion(Long id) {
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        return sqlSession.selectList("com.dewarim.cinnamon.model.relations.Relation.getRelationsToCopyOnVersion", id);
+    }
 }

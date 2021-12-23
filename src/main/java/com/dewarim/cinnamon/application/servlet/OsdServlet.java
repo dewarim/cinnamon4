@@ -890,6 +890,25 @@ public class OsdServlet extends BaseServlet {
         // save here to generate Id so metasets can be created and linked to the OSD.
         ObjectSystemData savedOsd = osdDao.saveOsd(osd);
 
+        // copy relations
+        RelationDao relationDao = new RelationDao();
+        List<Relation> relations = relationDao.getRelationsToCopyOnVersion(preOsd.getId());
+        Map<Long, RelationType> relationTypes = new RelationTypeDao()
+                .getRelationTypeMap(relations.stream().map(Relation::getTypeId).collect(Collectors.toSet()));
+        List<Relation> relationCopies = new ArrayList<>();
+        for (Relation relation : relations) {
+            RelationType relationType = relationTypes.get(relation.getTypeId());
+            if (relationType.isCloneOnLeftVersion() && relation.getLeftId().equals(preOsd.getId())) {
+                Relation rel = new Relation(savedOsd.getId(), relation.getRightId(), relation.getTypeId(), relation.getMetadata());
+                relationCopies.add(rel);
+            }
+            if (relationType.isCloneOnRightVersion() && relation.getRightId().equals(preOsd.getId())) {
+                Relation rel = new Relation(relation.getLeftId(), savedOsd.getId(), relation.getTypeId(), relation.getMetadata());
+                relationCopies.add(rel);
+            }
+        }
+        relationDao.create(relationCopies);
+
         // storeMetadata
         if (versionRequest.hasMetaRequests()) {
             OsdMetaDao            osdMetaDao = new OsdMetaDao();

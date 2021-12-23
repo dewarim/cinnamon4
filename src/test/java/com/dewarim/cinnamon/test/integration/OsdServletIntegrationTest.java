@@ -1121,6 +1121,40 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
+    public void versionWithCopyOnLeftRelation() throws IOException{
+        var relationType = adminClient.createRelationType(                new RelationType("clone-on-left-version",
+                false,false,false,false,true,false));
+        var toh  = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
+        var leftOsd = toh.createOsd("leftOsd").osd;
+        var rightOsd = toh.createOsd("rightOsd").osd;
+        var relation = client.createRelation(leftOsd.getId(), rightOsd.getId(), relationType.getId(),"<meta/>");
+        var leftVersion = client.version(new CreateNewVersionRequest(leftOsd.getId()));
+        var copiedRelations = client.getRelations(List.of(leftVersion.getId()));
+        assertEquals(1,copiedRelations.size());
+        var relationCopy = copiedRelations.get(0);
+        assertEquals(relation.getTypeId(),relationCopy.getTypeId());
+        assertEquals(relation.getRightId(), relationCopy.getRightId());
+        assertEquals(leftVersion.getId(), relationCopy.getLeftId());
+    }
+
+    @Test
+    public void versionWithCopyOnRightRelation() throws IOException{
+        var relationType = adminClient.createRelationType(                new RelationType("clone-on-right-version",
+                false,false,false,false,false,true));
+        var toh  = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
+        var leftOsd = toh.createOsd("leftOsd-version").osd;
+        var rightOsd = toh.createOsd("rightOsd-version").osd;
+        var relation = client.createRelation(leftOsd.getId(), rightOsd.getId(), relationType.getId(),"<meta/>");
+        var rightVersion = client.version(new CreateNewVersionRequest(rightOsd.getId()));
+        var copiedRelations = client.getRelations(List.of(rightVersion.getId()));
+        assertEquals(1,copiedRelations.size());
+        var relationCopy = copiedRelations.get(0);
+        assertEquals(relation.getTypeId(),relationCopy.getTypeId());
+        assertEquals(relation.getLeftId(), relationCopy.getLeftId());
+        assertEquals(rightVersion.getId(), relationCopy.getRightId());
+    }
+
+    @Test
     public void updateOsdWithChangeTracking() throws IOException, InterruptedException {
         CreateOsdRequest request = new CreateOsdRequest();
         request.setAclId(CREATE_ACL_ID);
@@ -1855,7 +1889,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var toh = createCopySourceObject("copyWithContent");
         var id  = toh.osd.getId();
         adminClient.lockOsd(id);
-        var xmlFormat = toh.formats.stream().filter(format -> format.getName().equals("xml")).findFirst().orElseThrow();
+        var xmlFormat = TestObjectHolder.formats.stream().filter(format -> format.getName().equals("xml")).findFirst().orElseThrow();
         var result    = adminClient.setContentOnLockedOsd(id, xmlFormat.getId(), new File("pom.xml"));
         assertTrue(result);
         ObjectSystemData copy          = adminClient.copyOsds(createFolderId, List.of(id), List.of()).get(0);

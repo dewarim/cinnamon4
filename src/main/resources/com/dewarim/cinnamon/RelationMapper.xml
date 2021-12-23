@@ -197,4 +197,12 @@
            or (r.right_id = #{id} and rt.clone_on_right_copy = true)
     </select>
 
+    <select id="getRelationsToCopyOnVersion" parameterType="long" resultMap="relationMap">
+        SELECT r.*
+        FROM relations r
+                 join relation_types rt on r.type_id = rt.id
+        WHERE (r.left_id = #{id} and rt.clone_on_left_version = true)
+           or (r.right_id = #{id} and rt.clone_on_right_version = true)
+    </select>
+
 </mapper>
