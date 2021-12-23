@@ -7,7 +7,6 @@ import com.dewarim.cinnamon.api.lifecycle.State;
 import com.dewarim.cinnamon.api.lifecycle.StateChangeResult;
 import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.application.ErrorResponseGenerator;
-import com.dewarim.cinnamon.application.ResponseUtil;
 import com.dewarim.cinnamon.dao.LifecycleDao;
 import com.dewarim.cinnamon.dao.LifecycleStateDao;
 import com.dewarim.cinnamon.dao.OsdDao;
@@ -49,9 +48,9 @@ public class LifecycleStateServlet extends BaseServlet implements CruddyServlet<
         CinnamonResponse  cinnamonResponse = (CinnamonResponse) response;
 
         switch (mapping) {
-            case LIFECYCLE_STATE__ATTACH_LIFECYCLE -> attachLifecycleState(request, response, osdDao, lifecycleDao, stateDao);
-            case LIFECYCLE_STATE__CHANGE_STATE -> changeState(request, response, osdDao, stateDao);
-            case LIFECYCLE_STATE__DETACH_LIFECYCLE -> detachLifecycleState(request, response, osdDao);
+            case LIFECYCLE_STATE__ATTACH_LIFECYCLE -> attachLifecycleState(request, cinnamonResponse, osdDao, lifecycleDao, stateDao);
+            case LIFECYCLE_STATE__CHANGE_STATE -> changeState(request, cinnamonResponse, osdDao, stateDao);
+            case LIFECYCLE_STATE__DETACH_LIFECYCLE -> detachLifecycleState(request, cinnamonResponse, osdDao);
             case LIFECYCLE_STATE__GET -> getLifecycleState(request, cinnamonResponse);
             case LIFECYCLE_STATE__CREATE -> {
                 superuserCheck();
@@ -66,12 +65,12 @@ public class LifecycleStateServlet extends BaseServlet implements CruddyServlet<
                 update(convertUpdateRequest(request, UpdateLifecycleStateRequest.class), stateDao, cinnamonResponse);
             }
             case LIFECYCLE_STATE__LIST -> list(convertListRequest(request, ListLifecycleStateRequest.class), stateDao, cinnamonResponse);
-            case LIFECYCLE_STATE__GET_NEXT_STATES -> getNextStates(request, response, osdDao, stateDao);
+            case LIFECYCLE_STATE__GET_NEXT_STATES -> getNextStates(request, cinnamonResponse, osdDao, stateDao);
             default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
     }
 
-    private void getNextStates(HttpServletRequest request, HttpServletResponse response, OsdDao osdDao, LifecycleStateDao stateDao) throws IOException {
+    private void getNextStates(HttpServletRequest request, CinnamonResponse response, OsdDao osdDao, LifecycleStateDao stateDao) throws IOException {
         IdRequest idRequest = xmlMapper.readValue(request.getInputStream(), IdRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         Long             osdId = idRequest.getId();
@@ -81,11 +80,10 @@ public class LifecycleStateServlet extends BaseServlet implements CruddyServlet<
         LifecycleState        state      = stateDao.getLifecycleStateById(osd.getLifecycleStateId()).orElseThrow(ErrorCode.LIFECYCLE_STATE_NOT_FOUND.getException());
         List<LifecycleState>  nextStates = new LifecycleStateDao().getLifecycleStatesByNameList(state.getLifecycleStateConfig().getNextStates());
         LifecycleStateWrapper wrapper    = new LifecycleStateWrapper(nextStates);
-        ResponseUtil.responseIsOkayAndXml(response);
-        xmlMapper.writeValue(response.getOutputStream(), wrapper);
+        response.setWrapper(wrapper);
     }
 
-    private void changeState(HttpServletRequest request, HttpServletResponse response, OsdDao osdDao, LifecycleStateDao stateDao) throws IOException {
+    private void changeState(HttpServletRequest request, CinnamonResponse response, OsdDao osdDao, LifecycleStateDao stateDao) throws IOException {
         ChangeLifecycleStateRequest changeRequest = xmlMapper.readValue(request.getInputStream(), ChangeLifecycleStateRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         Long             osdId     = changeRequest.getOsdId();
@@ -114,19 +112,19 @@ public class LifecycleStateServlet extends BaseServlet implements CruddyServlet<
         changeStateAndCreateResponse(newState, osd, newLcState, osdDao, response);
     }
 
-    private void changeStateAndCreateResponse(State newState, ObjectSystemData osd, LifecycleState lcState, OsdDao osdDao, HttpServletResponse response)
+    private void changeStateAndCreateResponse(State newState, ObjectSystemData osd, LifecycleState lcState, OsdDao osdDao, CinnamonResponse response)
             throws IOException {
         StateChangeResult stateChangeResult = newState.enter(osd, lcState.getLifecycleStateConfig());
         if (stateChangeResult.isSuccessful()) {
             osd.setLifecycleStateId(lcState.getId());
             osdDao.updateOsd(osd, true);
-            ResponseUtil.responseIsGenericOkay(response);
+            response.responseIsGenericOkay();
         } else {
             throw new FailedRequestException(ErrorCode.LIFECYCLE_STATE_CHANGE_FAILED, stateChangeResult.getCombinedMessages());
         }
     }
 
-    private void detachLifecycleState(HttpServletRequest request, HttpServletResponse response, OsdDao osdDao) throws IOException {
+    private void detachLifecycleState(HttpServletRequest request, CinnamonResponse response, OsdDao osdDao) throws IOException {
         IdRequest detachReq = xmlMapper.readValue(request.getInputStream(), IdRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         Long             id  = detachReq.getId();
@@ -135,10 +133,10 @@ public class LifecycleStateServlet extends BaseServlet implements CruddyServlet<
 
         osd.setLifecycleStateId(null);
         osdDao.updateOsd(osd, true);
-        ResponseUtil.responseIsGenericOkay(response);
+        response.responseIsGenericOkay();
     }
 
-    private void attachLifecycleState(HttpServletRequest request, HttpServletResponse response, OsdDao osdDao, LifecycleDao lifecycleDao, LifecycleStateDao stateDao) throws IOException {
+    private void attachLifecycleState(HttpServletRequest request, CinnamonResponse response, OsdDao osdDao, LifecycleDao lifecycleDao, LifecycleStateDao stateDao) throws IOException {
         AttachLifecycleRequest attachReq = xmlMapper.readValue(request.getInputStream(), AttachLifecycleRequest.class);
         if (attachReq.validated()) {
             ObjectSystemData osd = osdDao.getObjectById(attachReq.getOsdId()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());

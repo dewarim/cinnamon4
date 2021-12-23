@@ -4,7 +4,6 @@ import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.Ownable;
 import com.dewarim.cinnamon.application.CinnamonResponse;
-import com.dewarim.cinnamon.application.ResponseUtil;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.dao.MetasetTypeDao;
 import com.dewarim.cinnamon.model.Meta;
@@ -14,6 +13,7 @@ import com.dewarim.cinnamon.model.request.MetaRequest;
 import com.dewarim.cinnamon.model.response.MetaWrapper;
 import com.dewarim.cinnamon.security.authorization.AuthorizationService;
 import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletResponse;
 import nu.xom.Attribute;
 import nu.xom.Builder;
 import nu.xom.Document;
@@ -25,6 +25,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import static com.dewarim.cinnamon.api.Constants.CONTENT_TYPE_XML;
 
 public class BaseServlet extends HttpServlet {
 
@@ -82,7 +84,8 @@ public class BaseServlet extends HttpServlet {
                 }
                 root.appendChild(metaset);
             });
-            ResponseUtil.responseIsOkayAndXml(response);
+            response.setContentType(CONTENT_TYPE_XML);
+            response.setStatus(HttpServletResponse.SC_OK);
             response.getWriter().print(document.toXML());
         } else {
             MetaWrapper wrapper = new MetaWrapper(metaList);

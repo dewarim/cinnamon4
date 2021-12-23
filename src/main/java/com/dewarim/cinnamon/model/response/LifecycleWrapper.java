@@ -17,6 +17,13 @@ public class LifecycleWrapper implements Wrapper<Lifecycle>, ApiResponse {
     @JacksonXmlProperty(localName = "lifecycle")
     List<Lifecycle> lifecycles = new ArrayList<>();
 
+    public LifecycleWrapper() {
+    }
+
+    public LifecycleWrapper(List<Lifecycle> lifecycles) {
+        this.lifecycles = lifecycles;
+    }
+
     public List<Lifecycle> getLifecycles() {
         return lifecycles;
     }

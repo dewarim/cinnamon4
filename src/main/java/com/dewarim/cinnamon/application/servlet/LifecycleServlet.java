@@ -3,7 +3,6 @@ package com.dewarim.cinnamon.application.servlet;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonResponse;
-import com.dewarim.cinnamon.application.ResponseUtil;
 import com.dewarim.cinnamon.dao.LifecycleDao;
 import com.dewarim.cinnamon.dao.LifecycleStateDao;
 import com.dewarim.cinnamon.model.Lifecycle;
@@ -59,7 +58,7 @@ public class LifecycleServlet extends HttpServlet implements CruddyServlet<Lifec
                 list(convertListRequest(request, ListLifecycleRequest.class), lifecycleDao, cinnamonResponse);
                 addLifecycleStates(cinnamonResponse);
             }
-            case LIFECYCLE__GET -> getLifecycle(request, response);
+            case LIFECYCLE__GET -> getLifecycle(request, cinnamonResponse);
             default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
     }
@@ -73,7 +72,7 @@ public class LifecycleServlet extends HttpServlet implements CruddyServlet<Lifec
                 .forEach(state -> lifecycleMap.get(state.getLifecycleId()).getLifecycleStates().add(state));
     }
 
-    private void getLifecycle(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    private void getLifecycle(HttpServletRequest request, CinnamonResponse response) throws IOException {
         LifecycleRequest lifecycleRequest = xmlMapper.readValue(request.getInputStream(), LifecycleRequest.class);
         if (lifecycleRequest.validated()) {
             Lifecycle           lifecycle;
@@ -87,12 +86,10 @@ public class LifecycleServlet extends HttpServlet implements CruddyServlet<Lifec
             }
             List<LifecycleState> lifecycleStates = new LifecycleStateDao().getLifecycleStatesByLifecycleId(lifecycle.getId());
             lifecycle.setLifecycleStates(lifecycleStates);
-            ResponseUtil.responseIsOkayAndXml(response);
-            LifecycleWrapper wrapper = new LifecycleWrapper();
-            wrapper.setLifecycles(Collections.singletonList(lifecycle));
-            xmlMapper.writeValue(response.getWriter(), wrapper);
+            LifecycleWrapper wrapper = new LifecycleWrapper(Collections.singletonList(lifecycle));
+            response.setWrapper(wrapper);
         } else {
-            generateErrorMessage(response, ErrorCode.INVALID_REQUEST);
+            throw ErrorCode.INVALID_REQUEST.exception();
         }
     }
 
