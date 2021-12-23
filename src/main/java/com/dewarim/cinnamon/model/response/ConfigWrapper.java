@@ -11,6 +11,7 @@ import com.dewarim.cinnamon.model.Lifecycle;
 import com.dewarim.cinnamon.model.MetasetType;
 import com.dewarim.cinnamon.model.ObjectType;
 import com.dewarim.cinnamon.model.Permission;
+import com.dewarim.cinnamon.model.ProviderClass;
 import com.dewarim.cinnamon.model.UiLanguage;
 import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.relations.RelationType;
@@ -76,6 +77,10 @@ public class ConfigWrapper implements ApiResponse, Wrapper<ConfigWrapper> {
     @JacksonXmlElementWrapper(localName = "users")
     @JacksonXmlProperty(localName = "user")
     List<UserAccount> users = new ArrayList<>();
+
+    @JacksonXmlElementWrapper(localName = "providerClasses")
+    @JacksonXmlProperty(localName = "providerClass")
+    List<ProviderClass> providerClasses = new ArrayList<>();
     
     public List<Acl> getAcls() {
         return acls;
@@ -179,6 +184,14 @@ public class ConfigWrapper implements ApiResponse, Wrapper<ConfigWrapper> {
 
     public void setUsers(List<UserAccount> users) {
         this.users = users;
+    }
+
+    public List<ProviderClass> getProviderClasses() {
+        return providerClasses;
+    }
+
+    public void setProviderClasses(List<ProviderClass> providerClasses) {
+        this.providerClasses = providerClasses;
     }
 
     @Override

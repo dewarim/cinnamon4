@@ -1,6 +1,7 @@
 package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.api.UrlMapping;
+import com.dewarim.cinnamon.model.ProviderType;
 import com.dewarim.cinnamon.model.request.config.ListConfigRequest;
 import com.dewarim.cinnamon.model.response.ConfigWrapper;
 import org.apache.http.HttpResponse;
@@ -8,8 +9,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 
 public class ConfigServletIntegrationTest extends CinnamonIntegrationTest {
@@ -33,6 +33,10 @@ public class ConfigServletIntegrationTest extends CinnamonIntegrationTest {
         assertFalse(config.getRelationTypes().isEmpty());
         assertFalse(config.getUiLanguages().isEmpty());
         assertFalse(config.getUsers().isEmpty());
+        assertFalse(config.getProviderClasses().isEmpty());
+        assertTrue(config.getProviderClasses().stream().anyMatch(providerClass -> providerClass.getProviderType().equals(ProviderType.CONTENT_PROVIDER)));
+        assertTrue(config.getProviderClasses().stream().anyMatch(providerClass -> providerClass.getProviderType().equals(ProviderType.LOGIN_PROVIDER)));
+        assertTrue(config.getProviderClasses().stream().anyMatch(providerClass -> providerClass.getProviderType().equals(ProviderType.STATE_PROVIDER)));
 
         // note: actual configuration items will be tested in their own servlet integration tests.
 

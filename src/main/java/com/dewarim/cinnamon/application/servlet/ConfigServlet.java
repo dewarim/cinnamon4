@@ -16,8 +16,13 @@ import com.dewarim.cinnamon.dao.PermissionDao;
 import com.dewarim.cinnamon.dao.RelationTypeDao;
 import com.dewarim.cinnamon.dao.UiLanguageDao;
 import com.dewarim.cinnamon.dao.UserAccountDao;
+import com.dewarim.cinnamon.model.ProviderClass;
+import com.dewarim.cinnamon.model.ProviderType;
 import com.dewarim.cinnamon.model.request.config.ListConfigRequest;
 import com.dewarim.cinnamon.model.response.ConfigWrapper;
+import com.dewarim.cinnamon.provider.ContentProviderService;
+import com.dewarim.cinnamon.provider.StateProviderService;
+import com.dewarim.cinnamon.security.LoginProviderService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -25,6 +30,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
 
@@ -62,7 +69,22 @@ public class ConfigServlet extends HttpServlet {
         wrapper.setRelationTypes(new RelationTypeDao().list());
         wrapper.setUiLanguages(new UiLanguageDao().list());
         wrapper.setUsers(new UserAccountDao().list());
+        wrapper.setProviderClasses(generateProviderClassList());
         response.setWrapper(wrapper);
+    }
+
+    private List<ProviderClass> generateProviderClassList() {
+        List<ProviderClass> providerClasses = new ArrayList<>();
+        providerClasses.addAll(ContentProviderService.getInstance().getProviderList().stream()
+                .map(provider -> new ProviderClass(ProviderType.CONTENT_PROVIDER, provider.getName()))
+                .toList());
+        providerClasses.addAll(StateProviderService.getInstance().getProviderList().stream()
+                .map(provider -> new ProviderClass(ProviderType.STATE_PROVIDER, provider.getName()))
+                .toList());
+        providerClasses.addAll(LoginProviderService.getInstance().getProviderList().stream()
+                .map(provider -> new ProviderClass(ProviderType.LOGIN_PROVIDER, provider.getName()))
+                .toList());
+        return providerClasses;
     }
 
 }

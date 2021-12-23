@@ -49,5 +49,8 @@ public class StateProviderService {
 
     }
 
+    public List<StateProvider> getProviderList(){
+        return serviceLoader.stream().map(ServiceLoader.Provider::get).toList();
+    }
 
 }

@@ -4,6 +4,7 @@ import com.dewarim.cinnamon.api.login.LoginProvider;
 import com.dewarim.cinnamon.api.login.LoginResult;
 import com.dewarim.cinnamon.api.login.LoginUser;
 
+import java.util.List;
 import java.util.ServiceConfigurationError;
 import java.util.ServiceLoader;
 
@@ -36,7 +37,9 @@ public class LoginProviderService {
         } catch (ServiceConfigurationError e) {
             throw new RuntimeException("Failed to find a valid login service provider for " + loginType, e);
         }
+    }
 
-
+    public List<LoginProvider> getProviderList(){
+        return serviceLoader.stream().map(ServiceLoader.Provider::get).toList();
     }
 }

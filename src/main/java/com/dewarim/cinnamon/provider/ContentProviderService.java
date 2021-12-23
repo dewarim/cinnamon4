@@ -2,6 +2,7 @@ package com.dewarim.cinnamon.provider;
 
 import com.dewarim.cinnamon.api.content.ContentProvider;
 
+import java.util.List;
 import java.util.ServiceConfigurationError;
 import java.util.ServiceLoader;
 
@@ -32,6 +33,10 @@ public class ContentProviderService {
         } catch (ServiceConfigurationError e) {
             throw new RuntimeException("Failed to find a valid content provider for " + name, e);
         }
+    }
+
+    public List<ContentProvider> getProviderList(){
+        return serviceLoader.stream().map(ServiceLoader.Provider::get).toList();
     }
 
 }
