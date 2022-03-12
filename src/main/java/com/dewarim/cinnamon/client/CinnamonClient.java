@@ -42,6 +42,7 @@ import com.dewarim.cinnamon.model.request.configEntry.DeleteConfigEntryRequest;
 import com.dewarim.cinnamon.model.request.configEntry.ListConfigEntryRequest;
 import com.dewarim.cinnamon.model.request.configEntry.UpdateConfigEntryRequest;
 import com.dewarim.cinnamon.model.request.folder.CreateFolderRequest;
+import com.dewarim.cinnamon.model.request.folder.DeleteFolderRequest;
 import com.dewarim.cinnamon.model.request.folder.FolderRequest;
 import com.dewarim.cinnamon.model.request.folder.UpdateFolderRequest;
 import com.dewarim.cinnamon.model.request.folderType.CreateFolderTypeRequest;
@@ -139,7 +140,6 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Form;
 import org.apache.http.client.fluent.Request;
-import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.FileBody;
 import org.apache.logging.log4j.LogManager;
@@ -232,7 +232,7 @@ public class CinnamonClient {
         String requestStr = mapper.writeValueAsString(request);
         return Request.Post("http://localhost:" + port + urlMapping.getPath())
                 .addHeader("ticket", getTicket(false))
-                .bodyString(requestStr, ContentType.APPLICATION_XML)
+                .bodyString(requestStr, APPLICATION_XML.withCharset(StandardCharsets.UTF_8))
                 .execute().returnResponse();
     }
 
@@ -1005,6 +1005,16 @@ public class CinnamonClient {
         var request  = new DeleteMetaRequest(folderId, metaName);
         var response = sendStandardRequest(UrlMapping.FOLDER__DELETE_META, request);
         verifyDeleteResponse(response);
+    }
+
+    public void deleteFolder(List<Long> folderId, boolean deleteRecursively, boolean deleteContent) throws IOException {
+        var request  = new DeleteFolderRequest(folderId, deleteRecursively, deleteContent);
+        var response = sendStandardRequest(UrlMapping.FOLDER__DELETE, request);
+        verifyDeleteResponse(response);
+    }
+
+    public void deleteFolder(Long folderId, boolean deleteRecursively, boolean deleteContent) throws IOException {
+        deleteFolder(List.of(folderId), deleteRecursively, deleteContent);
     }
 }
 
