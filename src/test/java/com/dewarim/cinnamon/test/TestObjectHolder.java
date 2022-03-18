@@ -37,6 +37,7 @@ public class TestObjectHolder {
     static public List<ObjectType>  objectTypes;
     static public List<MetasetType> metasetTypes;
     static public List<FolderType>  folderTypes;
+    static public List<Acl> acls;
 
     CinnamonClient client;
     public ObjectSystemData osd;
@@ -54,6 +55,12 @@ public class TestObjectHolder {
     public List<Meta> metas;
     public String     summary = "<summary/>";
 
+    /**
+     * Initialize a new TestObjectHolder with default values, using the given client
+     * with its configured user as background client to perform requests.
+     *
+     * This results in a bare-bones TOH without a set user/folder/acl, ideal for admin tasks.
+     */
     public TestObjectHolder(CinnamonClient client) {
         this.client = client;
         initialize();
@@ -61,9 +68,19 @@ public class TestObjectHolder {
                 type.getName().equals(Constants.OBJTYPE_DEFAULT)).findFirst().orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
     }
 
+    /**
+     * Initialize a new TestObjectHolder with default values, using the given client
+     * as background client to perform requests, but set acl, user and createFolder to be used
+     * for requests separately.
+     *
+     * This results in a TOH ready to create objects and folders and such which require an ACL,
+     * base folder and user (for ownerId etc)
+     */
     public TestObjectHolder(CinnamonClient client, String aclName, Long userId, Long createFolderId) throws IOException {
         this.client = client;
-        this.acl = client.getAclByName(aclName);
+        if(aclName != null) {
+            this.acl = client.getAclByName(aclName);
+        }
         setUser(userId);
         setFolder(createFolderId);
         initialize();
@@ -81,6 +98,7 @@ public class TestObjectHolder {
                     metasetTypes = client.listMetasetTypes();
                     folderTypes = client.listFolderTypes();
                     languages = client.listLanguages();
+                    acls = client.listAcls();
                 } catch (IOException e) {
                     throw new IllegalStateException("Failed to initialize test object holder", e);
                 }
@@ -146,7 +164,9 @@ public class TestObjectHolder {
     }
 
     public TestObjectHolder setFolder(Long id) throws IOException {
-        folder = client.getFolders(List.of(id), true).get(0);
+        if(id != null) {
+            folder = client.getFolders(List.of(id), true).get(0);
+        }
         return this;
     }
 

@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 
 import static com.dewarim.cinnamon.api.Constants.ROOT_FOLDER_NAME;
 
-public class FolderDao {
+public class FolderDao implements CrudDao<Folder>{
 
     /**
      * Max number of ids in "in clause" is 32768 for Postgresql.
@@ -40,7 +40,7 @@ public class FolderDao {
             }
             List<Long> partialList = ids.subList(rowCount, lastIndex);
             params.put("idList", partialList);
-            List<Folder> batch = sqlSession.selectList("com.dewarim.cinnamon.FolderMapper.getFoldersById", params);
+            List<Folder> batch = sqlSession.selectList("com.dewarim.cinnamon.model.Folder.getFoldersById", params);
             results.addAll(batch);
             rowCount += BATCH_SIZE;
         }
@@ -52,7 +52,7 @@ public class FolderDao {
         Map<String, Object> params     = new HashMap<>();
         params.put("includeSummary", includeSummary);
         params.put("id", id);
-        return sqlSession.selectList("com.dewarim.cinnamon.FolderMapper.getFolderByIdWithAncestors", params);
+        return sqlSession.selectList("com.dewarim.cinnamon.model.Folder.getFolderByIdWithAncestors", params);
     }
 
     public Folder getRootFolder(boolean includeSummary) {
@@ -60,7 +60,7 @@ public class FolderDao {
         Map<String, Object> params     = new HashMap<>();
         params.put("includeSummary", includeSummary);
         params.put("rootFolderName", ROOT_FOLDER_NAME);
-        return sqlSession.selectOne("com.dewarim.cinnamon.FolderMapper.getRootFolder", params);
+        return sqlSession.selectOne("com.dewarim.cinnamon.model.Folder.getRootFolder", params);
     }
     public Optional<Folder> getFolderByParentAndName(Long parentId, String name, boolean includeSummary) {
         SqlSession          sqlSession = ThreadLocalSqlSession.getSqlSession();
@@ -68,7 +68,7 @@ public class FolderDao {
         params.put("includeSummary", includeSummary);
         params.put("name", name);
         params.put("parentId", parentId);
-        Folder folder = sqlSession.selectOne("com.dewarim.cinnamon.FolderMapper.getFolderByParentAndName", params);
+        Folder folder = sqlSession.selectOne("com.dewarim.cinnamon.model.Folder.getFolderByParentAndName", params);
         return Optional.ofNullable(folder);
     }
 
@@ -77,12 +77,12 @@ public class FolderDao {
         Map<String, Object> params     = new HashMap<>();
         params.put("includeSummary", includeSummary);
         params.put("id", id);
-        return sqlSession.selectList("com.dewarim.cinnamon.FolderMapper.getDirectSubFolders", params);
+        return sqlSession.selectList("com.dewarim.cinnamon.model.Folder.getDirectSubFolders", params);
     }
 
     public Folder saveFolder(Folder folder){
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        int resultRows =  sqlSession.insert("com.dewarim.cinnamon.FolderMapper.insertFolder", folder);
+        int resultRows =  sqlSession.insert("com.dewarim.cinnamon.model.Folder.insertFolder", folder);
         if(resultRows != 1){
             ErrorCode.DB_INSERT_FAILED.throwUp();
         }
@@ -121,11 +121,11 @@ public class FolderDao {
                 params.put("id", rootFolder.getId());
                 params.put("name", name);
                 firstIteration = false;
-                targetFolders = sqlSession.selectList("com.dewarim.cinnamon.FolderMapper.getChildFolderOfRootByName", params);
+                targetFolders = sqlSession.selectList("com.dewarim.cinnamon.model.Folder.getChildFolderOfRootByName", params);
             } else {
                 params.put("parentId", currentFolder.getId());
                 params.put("childName", name);
-                targetFolders = sqlSession.selectList("com.dewarim.cinnamon.FolderMapper.getFolderByParentIdAndChildName", params);
+                targetFolders = sqlSession.selectList("com.dewarim.cinnamon.model.Folder.getFolderByParentIdAndChildName", params);
             }
 
             if (targetFolders.size() != 1) {
@@ -163,6 +163,17 @@ public class FolderDao {
 
     public void updateFolder(Folder folder) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        sqlSession.update("com.dewarim.cinnamon.FolderMapper.updateFolder", folder);
+        sqlSession.update("com.dewarim.cinnamon.model.Folder.updateFolder", folder);
+    }
+
+    public boolean hasContent(List<Long> ids) {
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        Long count = sqlSession.selectOne("com.dewarim.cinnamon.model.Folder.countContent", ids);
+        return count > 0;
+    }
+
+    @Override
+    public String getTypeClassName() {
+        return Folder.class.getName();
     }
 }

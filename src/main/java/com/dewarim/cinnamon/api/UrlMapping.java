@@ -24,6 +24,7 @@ import com.dewarim.cinnamon.model.request.configEntry.DeleteConfigEntryRequest;
 import com.dewarim.cinnamon.model.request.configEntry.ListConfigEntryRequest;
 import com.dewarim.cinnamon.model.request.configEntry.UpdateConfigEntryRequest;
 import com.dewarim.cinnamon.model.request.folder.CreateFolderRequest;
+import com.dewarim.cinnamon.model.request.folder.DeleteFolderRequest;
 import com.dewarim.cinnamon.model.request.folder.FolderPathRequest;
 import com.dewarim.cinnamon.model.request.folder.FolderRequest;
 import com.dewarim.cinnamon.model.request.folder.SingleFolderRequest;
@@ -168,6 +169,7 @@ public enum UrlMapping {
     FOLDER_TYPE__UPDATE("folderType", "update", "/api", "", UpdateFolderTypeRequest.class, FolderTypeWrapper.class),
     FOLDER__CREATE("folder", "create", "/api", "", CreateFolderRequest.class, null),
     FOLDER__CREATE_META("folder", "createMeta", "/api", "", CreateMetaRequest.class, MetaWrapper.class),
+    FOLDER__DELETE("folder", "delete", "/api", "", DeleteFolderRequest.class, DeleteResponse.class),
     FOLDER__DELETE_META("folder", "deleteMeta", "/api", "", DeleteMetaRequest.class, GenericResponse.class),
     FOLDER__GET_FOLDER("folder", "getFolder", "/api", "Fetch a single folder", SingleFolderRequest.class, FolderWrapper.class),
     FOLDER__GET_FOLDERS("folder", "getFolders", "/api", "", FolderRequest.class, FolderWrapper.class),

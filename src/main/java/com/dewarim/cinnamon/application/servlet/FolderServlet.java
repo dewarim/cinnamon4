@@ -6,20 +6,26 @@ import com.dewarim.cinnamon.FailedRequestException;
 import com.dewarim.cinnamon.api.Constants;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonResponse;
+import com.dewarim.cinnamon.application.DeleteLinkService;
+import com.dewarim.cinnamon.application.DeleteOsdService;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.application.exception.BadArgumentException;
 import com.dewarim.cinnamon.dao.AclDao;
 import com.dewarim.cinnamon.dao.FolderDao;
 import com.dewarim.cinnamon.dao.FolderMetaDao;
 import com.dewarim.cinnamon.dao.FolderTypeDao;
+import com.dewarim.cinnamon.dao.LinkDao;
 import com.dewarim.cinnamon.dao.MetasetTypeDao;
+import com.dewarim.cinnamon.dao.OsdDao;
 import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.Folder;
 import com.dewarim.cinnamon.model.FolderType;
 import com.dewarim.cinnamon.model.Meta;
 import com.dewarim.cinnamon.model.MetasetType;
+import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.UserAccount;
+import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.request.CreateMetaRequest;
 import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.request.DeleteMetaRequest;
@@ -27,10 +33,12 @@ import com.dewarim.cinnamon.model.request.IdListRequest;
 import com.dewarim.cinnamon.model.request.MetaRequest;
 import com.dewarim.cinnamon.model.request.SetSummaryRequest;
 import com.dewarim.cinnamon.model.request.folder.CreateFolderRequest;
+import com.dewarim.cinnamon.model.request.folder.DeleteFolderRequest;
 import com.dewarim.cinnamon.model.request.folder.FolderPathRequest;
 import com.dewarim.cinnamon.model.request.folder.FolderRequest;
 import com.dewarim.cinnamon.model.request.folder.SingleFolderRequest;
 import com.dewarim.cinnamon.model.request.folder.UpdateFolderRequest;
+import com.dewarim.cinnamon.model.request.osd.VersionPredicate;
 import com.dewarim.cinnamon.model.response.DeleteResponse;
 import com.dewarim.cinnamon.model.response.FolderWrapper;
 import com.dewarim.cinnamon.model.response.Summary;
@@ -56,6 +64,8 @@ public class FolderServlet extends BaseServlet {
 
     private final ObjectMapper         xmlMapper            = XML_MAPPER;
     private final AuthorizationService authorizationService = new AuthorizationService();
+    private final DeleteOsdService     deleteOsdService     = new DeleteOsdService();
+    private final DeleteLinkService    deleteLinkService    = new DeleteLinkService();
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
@@ -67,6 +77,7 @@ public class FolderServlet extends BaseServlet {
         switch (mapping) {
             case FOLDER__CREATE -> createFolder(request, cinnamonResponse, user, folderDao);
             case FOLDER__CREATE_META -> createMeta(request, cinnamonResponse, user, folderDao);
+            case FOLDER__DELETE -> delete(request, cinnamonResponse, user, folderDao);
             case FOLDER__DELETE_META -> deleteMeta(request, cinnamonResponse, user, folderDao);
             case FOLDER__GET_FOLDER -> getFolder(request, cinnamonResponse, user, folderDao);
             case FOLDER__GET_FOLDER_BY_PATH -> getFolderByPath(request, cinnamonResponse, user, folderDao);
@@ -77,6 +88,69 @@ public class FolderServlet extends BaseServlet {
             case FOLDER__GET_SUMMARIES -> getSummaries(request, cinnamonResponse, user, folderDao);
             case FOLDER__UPDATE -> updateFolder(request, cinnamonResponse, user, folderDao);
             default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
+        }
+    }
+
+    private void delete(HttpServletRequest request, CinnamonResponse cinnamonResponse, UserAccount user, FolderDao folderDao) throws IOException {
+        DeleteFolderRequest deleteRequest = xmlMapper.readValue(request.getInputStream(), DeleteFolderRequest.class)
+                .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
+        boolean deleteRecursively = deleteRequest.isDeleteRecursively();
+        boolean deleteContent     = deleteRequest.isDeleteContent();
+        // load folders recursively (if needed)
+        List<Folder> folders = loadFolders(deleteRequest.getIds(), deleteRecursively, deleteContent, folderDao);
+
+        for (Folder folder : folders) {
+            authorizationService.throwUpUnlessUserOrOwnerHasPermission(folder, DefaultPermission.DELETE_FOLDER, user, ErrorCode.NO_DELETE_PERMISSION);
+        }
+
+        List<Long> folderIds = folders.stream().map(Folder::getId).collect(Collectors.toList());
+        OsdDao     osdDao    = new OsdDao();
+        if (deleteContent) {
+            for (Folder folder : folders) {
+                List<ObjectSystemData> osds = osdDao.getObjectsByFolderId(folder.getId(), false, VersionPredicate.ALL);
+                deleteOsdService.verifyAndDelete(osds, true, true, user);
+            }
+        } else if (folderDao.hasContent(folderIds)) {
+            throw ErrorCode.FOLDER_IS_NOT_EMPTY.exception();
+        }
+
+        LinkDao    linkDao = new LinkDao();
+        List<Link> links   = linkDao.getLinksToOutsideStuff(folderIds);
+        deleteLinkService.verifyAndDelete(links, user, linkDao);
+
+        // delete links from folders to inside folders / objects
+        linkDao.deleteAllLinksToFolders(folderIds);
+        folderDao.delete(folderIds);
+
+        // TODO delete file content, see issue #199
+        // delete file content should be asynchronous. In case db commit fails, we would be
+        // unable to restore already deleted file content
+        // should put to-be-deleted content path into extra table (action log via background thread?)
+
+        var deleteResponse = new DeleteResponse(true);
+        cinnamonResponse.setWrapper(deleteResponse);
+    }
+
+    private List<Folder> loadFolders(List<Long> ids, boolean recursively, boolean deleteContent, FolderDao folderDao) {
+        List<Folder> folders = folderDao.getFoldersById(ids, false);
+        if(folders.size() != ids.size()){
+            throw ErrorCode.FOLDER_NOT_FOUND.getException().get();
+        }
+        checkFoldersForContent(ids, deleteContent, folderDao);
+        if (recursively) {
+            for (Folder folder : folders) {
+                List<Folder> subFolders = folderDao.getDirectSubFolders(folder.getId(), false);
+                checkFoldersForContent(ids, deleteContent, folderDao);
+                folders.addAll(subFolders);
+                folders.addAll(loadFolders(subFolders.stream().map(Folder::getId).collect(Collectors.toList()), true, deleteContent, folderDao));
+            }
+        }
+        return folders;
+    }
+
+    private void checkFoldersForContent(List<Long> ids, boolean mustBeEmpty, FolderDao folderDao) {
+        if (mustBeEmpty && folderDao.hasContent(ids)) {
+            throw ErrorCode.FOLDER_IS_NOT_EMPTY.getException().get();
         }
     }
 
@@ -334,7 +408,7 @@ public class FolderServlet extends BaseServlet {
         List<Folder> rawFolders = folderDao.getFolderByIdWithAncestors(folderRequest.getId(), folderRequest.isIncludeSummary());
         List<Folder> folders    = new AuthorizationService().filterFoldersByBrowsePermission(rawFolders, user);
         if (folders.isEmpty()) {
-            throw ErrorCode.OBJECT_NOT_FOUND.exception();
+            throw ErrorCode.FOLDER_NOT_FOUND.exception();
         }
         response.setWrapper(new FolderWrapper(folders));
     }
@@ -349,7 +423,7 @@ public class FolderServlet extends BaseServlet {
         List<Folder> rawFolders = folderDao.getFoldersById(folderRequest.getIds(), folderRequest.isIncludeSummary());
         List<Folder> folders    = new AuthorizationService().filterFoldersByBrowsePermission(rawFolders, user);
         if (folders.isEmpty()) {
-            throw ErrorCode.OBJECT_NOT_FOUND.exception();
+            throw ErrorCode.FOLDER_NOT_FOUND.exception();
         }
         response.setWrapper(new FolderWrapper(folders));
     }
@@ -379,8 +453,7 @@ public class FolderServlet extends BaseServlet {
         folders.forEach(folder -> {
             if (authorizationService.hasUserOrOwnerPermission(folder, DefaultPermission.READ_OBJECT_SYS_METADATA, user)) {
                 wrapper.getSummaries().add(new Summary(folder.getId(), folder.getSummary()));
-            }
-            else{
+            } else {
                 throw ErrorCode.NO_READ_OBJECT_SYS_METADATA_PERMISSION.exception();
             }
         });

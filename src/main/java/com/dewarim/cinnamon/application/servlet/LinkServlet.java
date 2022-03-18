@@ -4,6 +4,7 @@ import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonResponse;
+import com.dewarim.cinnamon.application.DeleteLinkService;
 import com.dewarim.cinnamon.application.ErrorResponseGenerator;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.dao.AclDao;
@@ -43,11 +44,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static com.dewarim.cinnamon.DefaultPermission.DELETE_FOLDER;
-import static com.dewarim.cinnamon.DefaultPermission.DELETE_OBJECT;
 import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
 import static com.dewarim.cinnamon.model.links.LinkType.FOLDER;
-import static com.dewarim.cinnamon.model.links.LinkType.OBJECT;
 
 @WebServlet(name = "Link", urlPatterns = "/")
 public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
@@ -55,6 +53,7 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
     private static final Logger log             = LogManager.getLogger(LinkServlet.class);
     private static final int    UPDATED_ONE_ROW = 1;
 
+    private final DeleteLinkService    deleteLinkService    = new DeleteLinkService();
     private final ObjectMapper         xmlMapper            = XML_MAPPER;
     private final AuthorizationService authorizationService = new AuthorizationService();
 
@@ -150,7 +149,7 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
         UserAccount  user         = ThreadLocalSqlSession.getCurrentUser();
         AccessFilter accessFilter = AccessFilter.getInstance(user);
 
-        if(link.getType() != update.getType()){
+        if (link.getType() != update.getType()) {
             ErrorCode.CANNOT_CHANGE_LINK_TYPE.throwUp();
         }
 
@@ -249,27 +248,7 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
             ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.UNAUTHORIZED);
             return;
         }
-
-        List<Link> folderLinks = links.stream().filter(link -> link.getType().equals(FOLDER)).collect(Collectors.toList());
-        boolean deleteFolderLinksOkay = folderLinks.stream().allMatch(link ->
-                authorizationService.userHasPermission(link.getAclId(), DELETE_FOLDER, user)
-                        ||
-                        (link.getOwnerId().equals(user.getId())
-                                && authorizationService.userHasOwnerPermission(link.getAclId(), DELETE_FOLDER, user))
-        );
-        List<Link> osdLinks = links.stream().filter(link -> link.getType().equals(OBJECT)).collect(Collectors.toList());
-        boolean deleteObjectLinksOkay = osdLinks.stream().allMatch(link ->
-                authorizationService.userHasPermission(link.getAclId(), DELETE_OBJECT, user)
-                        ||
-                        (link.getOwnerId().equals(user.getId())
-                                && authorizationService.userHasOwnerPermission(link.getAclId(), DELETE_OBJECT, user))
-        );
-        if (deleteFolderLinksOkay && deleteObjectLinksOkay) {
-            linkDao.delete(deleteRequest.list());
-        } else {
-            log.warn("User does not have permission to delete all requested links.");
-            ErrorCode.UNAUTHORIZED.throwUp();
-        }
+        deleteLinkService.verifyAndDelete(filteredLinks, user, linkDao);
         response.setWrapper(deleteRequest.fetchResponseWrapper());
     }
 
@@ -281,16 +260,14 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
         List<Link> links   = linkDao.getObjectsById(linkRequest.getIds());
 
         if (links.size() != idCount) {
-            ErrorCode.OBJECT_NOT_FOUND.throwUp();
-            return;
+            throw ErrorCode.OBJECT_NOT_FOUND.getException().get();
         }
 
         // check the ACLs of all links.
         UserAccount user          = ThreadLocalSqlSession.getCurrentUser();
         List<Link>  filteredLinks = authorizationService.filterLinksByBrowsePermission(links, user);
         if (filteredLinks.size() != idCount) {
-            ErrorCode.NO_BROWSE_PERMISSION.throwUp();
-            return;
+            throw ErrorCode.NO_BROWSE_PERMISSION.getException().get();
         }
 
         List<LinkResponse> linkResponses  = new ArrayList<>();

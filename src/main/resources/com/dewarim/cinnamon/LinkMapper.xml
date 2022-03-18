@@ -36,10 +36,19 @@
         </foreach>
     </delete>
 
-    <delete id="deleteAllLinksToObjects" parameterType="map">
+    <delete id="deleteAllLinksToObjects" parameterType="list">
         DELETE FROM links
         WHERE osd_id IN
-        <foreach item="item" index="index" collection="ids"
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <delete id="deleteAllLinksToFolders" parameterType="list">
+        DELETE FROM links
+        WHERE folder_id IN
+        <foreach item="item" index="index" collection="list"
                  open="(" separator="," close=")">
             #{item}
         </foreach>
@@ -68,6 +77,16 @@
         SELECT *
         FROM links
         WHERE id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="getLinksToOutsideStuff" parameterType="list" resultMap="linkMap">
+        SELECT *
+        FROM links
+        WHERE parent_id in
         <foreach item="item" index="index" collection="list"
                  open="(" separator="," close=")">
             #{item}

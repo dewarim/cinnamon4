@@ -4,9 +4,7 @@ import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.model.links.Link;
 import org.apache.ibatis.session.SqlSession;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 public class LinkDao implements CrudDao<Link> {
@@ -33,9 +31,20 @@ public class LinkDao implements CrudDao<Link> {
     }
 
     public void deleteAllLinksToObjects(List<Long> osdIds) {
-        Map<String, Object> params = new HashMap<>();
-        params.put("ids", osdIds);
+        // TODO maybe: batch deleteAllLinksToObjects - or fetch links, then delete via CRUD
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        sqlSession.delete("com.dewarim.cinnamon.model.links.Link.deleteAllLinksToObjects", params);
+        sqlSession.delete("com.dewarim.cinnamon.model.links.Link.deleteAllLinksToObjects", osdIds);
+    }
+
+    public List<Link> getLinksToOutsideStuff(List<Long> folderIds) {
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        return sqlSession.selectList("com.dewarim.cinnamon.model.links.Link.getLinksToOutsideStuff", folderIds);
+    }
+
+    public void deleteAllLinksToFolders(List<Long> folderIds) {
+        // TODO maybe: batch deleteAllLinksToFolders - or fetch links, then delete via CRUD
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        sqlSession.delete("com.dewarim.cinnamon.model.links.Link.deleteAllLinksToFolders", folderIds);
+
     }
 }

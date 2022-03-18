@@ -1,6 +1,5 @@
 package com.dewarim.cinnamon.application.servlet;
 
-import com.beust.jcommander.Strings;
 import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.FailedRequestException;
@@ -10,6 +9,7 @@ import com.dewarim.cinnamon.api.content.ContentProvider;
 import com.dewarim.cinnamon.api.lifecycle.State;
 import com.dewarim.cinnamon.api.lifecycle.StateChangeResult;
 import com.dewarim.cinnamon.application.CinnamonResponse;
+import com.dewarim.cinnamon.application.DeleteOsdService;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.dao.AclDao;
 import com.dewarim.cinnamon.dao.FolderDao;
@@ -52,7 +52,6 @@ import com.dewarim.cinnamon.model.request.osd.OsdByFolderRequest;
 import com.dewarim.cinnamon.model.request.osd.OsdRequest;
 import com.dewarim.cinnamon.model.request.osd.SetContentRequest;
 import com.dewarim.cinnamon.model.request.osd.UpdateOsdRequest;
-import com.dewarim.cinnamon.model.response.CinnamonError;
 import com.dewarim.cinnamon.model.response.DeleteResponse;
 import com.dewarim.cinnamon.model.response.OsdWrapper;
 import com.dewarim.cinnamon.model.response.RelationWrapper;
@@ -82,7 +81,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -101,6 +99,7 @@ public class OsdServlet extends BaseServlet {
 
     private final        ObjectMapper         xmlMapper            = XML_MAPPER;
     private final        AuthorizationService authorizationService = new AuthorizationService();
+    private final        DeleteOsdService     deleteOsdService     = new DeleteOsdService();
     private static final Logger               log                  = LogManager.getLogger(OsdServlet.class);
     private static final String               MULTIPART            = "multipart/";
 
@@ -284,109 +283,14 @@ public class OsdServlet extends BaseServlet {
         osds.sort(Comparator.comparingLong(ObjectSystemData::getId).reversed());
         boolean deleteDescendants = deleteRequest.isDeleteDescendants() || deleteRequest.isDeleteAllVersions();
         boolean deleteAllVersions = deleteRequest.isDeleteAllVersions();
-        Set<Long> osdIds = osds.stream().map(osd -> {
-                    if (deleteAllVersions) {
-                        // TODO: should the DB just return osd.id if osd.rootId is null?
-                        return Objects.requireNonNullElse(osd.getRootId(), osd.getId());
-                    } else {
-                        return osd.getId();
-                    }
-                }
-        ).collect(Collectors.toSet());
 
-        Set<Long> descendants = new HashSet<>();
+        deleteOsdService.verifyAndDelete(osds, deleteDescendants, deleteAllVersions, user);
 
-        List<CinnamonError> errors = new ArrayList<>();
-
-        /*
-         * Add all descendants to list of OSDs we want to delete.
-         * Verify that previously unknown descendants are only added if deleteDescendants is true.
-         * It's okay for the user to manually specify an osd and all its descendants for deletion
-         * in one request without setting deleteDescendants to true.
-         */
-        osdIds.forEach(id -> {
-                    Set<Long> osdAndDescendants = osdDao.getOsdIdByIdWithDescendants(id);
-                    if (deleteDescendants) {
-                        osdAndDescendants.remove(id);
-                        descendants.addAll(osdAndDescendants);
-                    } else if (!osdIds.containsAll(osdAndDescendants)) {
-                        CinnamonError error = new CinnamonError(ErrorCode.OBJECT_HAS_DESCENDANTS.getCode(), id);
-                        errors.add(error);
-                    }
-                }
-        );
-        osds.addAll(osdDao.getObjectsById(new ArrayList<>(descendants), false));
-        osdIds.addAll(descendants);
-
-        /*
-         * Check for protected relations.
-         * It's okay to delete an object with a protected relation if the protected target objects are
-         * also included in the list of osdIds.
-         * Challenge: we cannot call getProtectedRelations in batch mode since then id from batch1 may
-         * be related to an id from batch2.
-         * Solution: fetch all relations for those ids (in batch mode) and check manually.
-         */
-
-        List<Relation>          protectedRelations = new RelationDao().getProtectedRelations(new ArrayList<>(osdIds));
-        Map<Long, RelationType> relationTypes      = new RelationTypeDao().getRelationTypeMap(protectedRelations.stream().map(Relation::getTypeId).collect(Collectors.toSet()));
-        if (protectedRelations.size() > 0) {
-            protectedRelations.forEach(relation -> {
-                var leftId       = relation.getLeftId();
-                var rightId      = relation.getRightId();
-                var relationType = relationTypes.get(relation.getTypeId());
-                if (
-                    // if both related  objects will be deleted, ignore their protections vs each other
-                        (osdIds.contains(leftId) && osdIds.contains(rightId)) ||
-                                // if only left is protected and will be deleted, that's okay too.
-                                (osdIds.contains(leftId) && !relationType.isLeftObjectProtected()) ||
-                                // and finally, if only right is protected and will be deleted, continue.
-                                (osdIds.contains(rightId) && !relationType.isRightObjectProtected())
-                ) {
-                    return;
-                }
-                // maybe: add serialized relation for client side error handling?
-                CinnamonError error = new CinnamonError(ErrorCode.OBJECT_HAS_PROTECTED_RELATIONS.getCode(), relation.toString());
-                errors.add(error);
-            });
-        }
-
-        errors.addAll(delete(osds, user, osdDao, osdIds));
-
-        if (errors.size() > 0) {
-            throw new FailedRequestException(ErrorCode.CANNOT_DELETE_DUE_TO_ERRORS, errors);
-        }
-        List<Long> osdIdsToToDelete = new ArrayList<>(osdIds);
-        log.debug("delete " + Strings.join(",", osdIdsToToDelete.stream().map(String::valueOf).collect(Collectors.toList())));
-        var relationDao = new RelationDao();
-        relationDao.deleteAllUnprotectedRelationsOfObjects(osdIdsToToDelete);
-        relationDao.delete(protectedRelations.stream().map(Relation::getId).collect(Collectors.toList()));
-        new LinkDao().deleteAllLinksToObjects(osdIdsToToDelete);
-        new OsdMetaDao().deleteByOsdIds(osdIdsToToDelete);
-        osdDao.deleteOsds(osdIdsToToDelete);
         // TODO: deleteContent? -> cleanup process? #199
         var deleteResponse = new DeleteResponse(true);
         cinnamonResponse.setWrapper(deleteResponse);
     }
 
-    private List<CinnamonError> delete(List<ObjectSystemData> osds, UserAccount user, OsdDao osdDao, Set<Long> osdIds) {
-        AuthorizationService authorizationService = new AuthorizationService();
-        List<CinnamonError>  errors               = new ArrayList<>();
-        for (ObjectSystemData osd : osds) {
-            Long osdId = osd.getId();
-            // - check permission for delete
-            boolean deleteAllowed = authorizationService.userHasPermission(osd.getAclId(), DefaultPermission.DELETE_OBJECT, user);
-            if (!deleteAllowed) {
-                CinnamonError error = new CinnamonError(ErrorCode.NO_DELETE_PERMISSION.getCode(), osdId);
-                errors.add(error);
-            }
-            // - check for locked objects; superusers may delete locked objects:
-            if (osd.getLockerId() != null && (!user.getId().equals(osd.getLockerId()) && !authorizationService.currentUserIsSuperuser())) {
-                CinnamonError error = new CinnamonError(ErrorCode.OBJECT_LOCKED_BY_OTHER_USER.getCode(), osdId);
-                errors.add(error);
-            }
-        }
-        return errors;
-    }
 
     private void createOsd(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws
             IOException, ServletException {
@@ -891,8 +795,8 @@ public class OsdServlet extends BaseServlet {
         ObjectSystemData savedOsd = osdDao.saveOsd(osd);
 
         // copy relations
-        RelationDao relationDao = new RelationDao();
-        List<Relation> relations = relationDao.getRelationsToCopyOnVersion(preOsd.getId());
+        RelationDao    relationDao = new RelationDao();
+        List<Relation> relations   = relationDao.getRelationsToCopyOnVersion(preOsd.getId());
         Map<Long, RelationType> relationTypes = new RelationTypeDao()
                 .getRelationTypeMap(relations.stream().map(Relation::getTypeId).collect(Collectors.toSet()));
         List<Relation> relationCopies = new ArrayList<>();

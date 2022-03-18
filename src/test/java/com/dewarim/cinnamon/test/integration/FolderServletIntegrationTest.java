@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.test.integration;
 
+import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.client.CinnamonClientException;
@@ -19,6 +20,7 @@ import com.dewarim.cinnamon.model.response.FolderWrapper;
 import com.dewarim.cinnamon.model.response.MetaWrapper;
 import com.dewarim.cinnamon.model.response.Summary;
 import com.dewarim.cinnamon.model.response.SummaryWrapper;
+import com.dewarim.cinnamon.test.TestObjectHolder;
 import nu.xom.Builder;
 import nu.xom.Document;
 import nu.xom.Node;
@@ -80,7 +82,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void getSummariesMissingPermission()  {
+    public void getSummariesMissingPermission() {
         var ex = assertThrows(CinnamonClientException.class, () -> client.getFolderSummaries(List.of(12L)));
         assertEquals(NO_READ_OBJECT_SYS_METADATA_PERMISSION, ex.getErrorCode());
     }
@@ -106,7 +108,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     public void getUnknownFolder() throws IOException {
         SingleFolderRequest singleRequest = new SingleFolderRequest(Long.MAX_VALUE, false);
         HttpResponse        response      = sendStandardRequest(UrlMapping.FOLDER__GET_FOLDER, singleRequest);
-        assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND);
+        assertCinnamonError(response, FOLDER_NOT_FOUND);
     }
 
     @Test
@@ -130,7 +132,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     public void getUnknownFolders() throws IOException {
         FolderRequest folderRequest = new FolderRequest(Collections.singletonList(Long.MAX_VALUE), false);
         HttpResponse  response      = sendStandardRequest(UrlMapping.FOLDER__GET_FOLDERS, folderRequest);
-        assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND);
+        assertCinnamonError(response, FOLDER_NOT_FOUND);
     }
 
     @Test
@@ -307,13 +309,13 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void deleteMetaHappyPathById() throws IOException {
         // #7 folder_meta = metaset_type license
-        client.deleteFolderMeta(21L,7L);
+        client.deleteFolderMeta(21L, 7L);
     }
 
     @Test
     public void deleteMetaHappyPathByName() throws IOException {
         // #5 + #6 folder_meta = metaset_type comment
-        client.deleteFolderMeta(21L,"comment");
+        client.deleteFolderMeta(21L, "comment");
     }
 
     @Test
@@ -471,7 +473,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         );
         HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__UPDATE, request);
         parseGenericResponse(response);
-        Folder updatedFolder = adminClient.getFolderById(25L,false);
+        Folder updatedFolder = adminClient.getFolderById(25L, false);
         assertEquals(27L, updatedFolder.getParentId());
     }
 
@@ -569,6 +571,132 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         Folder              folder   = folders.get(0);
         assertEquals("create happy folder", folder.getName());
         assertThat("new folder must have id", folder.getId() > 0);
+    }
+
+    @Test
+    public void deleteFolderInvalidRequest() throws IOException {
+        CinnamonClientException exception = assertThrows(CinnamonClientException.class,
+                () -> client.deleteFolder(Collections.emptyList(), false, false));
+        assertEquals(INVALID_REQUEST, exception.getErrorCode());
+    }
+
+    @Test
+    public void deleteFolderNoDeletePermission() throws IOException {
+        TestObjectHolder toh = new TestObjectHolder(adminClient, null, userId, createFolderId);
+        toh.createAcl("deleteFolderNoDeletePermission")
+                .createFolder("unloeschbar", createFolderId);
+        CinnamonClientException exception = assertThrows(CinnamonClientException.class, () -> client.deleteFolder(toh.folder.getId(), false, false));
+        assertEquals(NO_DELETE_PERMISSION, exception.getErrorCode());
+    }
+
+    @Test
+    public void createFolderWithUmlaut() throws IOException {
+        TestObjectHolder toh = new TestObjectHolder(adminClient, null, userId, createFolderId);
+        toh.createAcl("createFolderWithUmlaut")
+                .createFolder("the földer", createFolderId);
+    }
+
+    @Test
+    public void deleteNonExistentFolder() throws IOException {
+        CinnamonClientException exception = assertThrows(CinnamonClientException.class,
+                () -> client.deleteFolder(List.of(Long.MAX_VALUE), false, false));
+        assertEquals(FOLDER_NOT_FOUND, exception.getErrorCode());
+    }
+
+    @Test
+    public void deleteEmptyFolder() throws IOException {
+
+        TestObjectHolder toh         = new TestObjectHolder(adminClient, null, userId, createFolderId);
+        toh.createAcl("delete-folder-allowed")
+                .createGroup("deleteFolderUsers")
+                .createAclGroup()
+                .addPermissionsByName(List.of(DefaultPermission.DELETE_FOLDER.getName()))
+                .addUserToGroup(userId);
+        Folder           emptyFolder = toh.createFolder("deleteEmptyFolder", createFolderId).folder;
+        client.deleteFolder(emptyFolder.getId(), false,false);
+        var ex = assertThrows(CinnamonClientException.class, () -> client.getFolderById(emptyFolder.getId(), false));
+        assertEquals(FOLDER_NOT_FOUND, ex.getErrorCode());
+    }
+
+    /**
+     * Folder contains empty folders and deleteRecursively=false
+     */
+    @Test
+    public void deleteFolderFailWithSubfolderNonRecursively() throws IOException {
+        fail("not implemented yet");
+    }
+
+    /**
+     * Folder contains empty folders and deleteRecursively=true
+     */
+    @Test
+    public void deleteFolderWithSubfoldersRecursively() throws IOException {
+        fail("not implemented yet");
+    }
+
+    /**
+     * Folder contains OSD and deleteContent=false
+     */
+    @Test
+    public void deleteFolderWithContentButWithoutDeleteContentParameterFail() {
+        fail("not implemented yet");
+    }
+
+    /**
+     * Folder contains OSD and deleteContent=true and OSD.acl allows it
+     */
+    @Test
+    public void deleteFolderWithContentWithDeleteContentParameter() {
+        fail("not implemented yet");
+    }
+
+    /**
+     * Folder contains OSD and deleteContent=true and OSD.acl forbids it
+     */
+    @Test
+    public void deleteFolderWithContentWithDeleteContentParameterButMissingPermission() {
+        fail("not implemented yet");
+    }
+
+    /**
+     * Folder contains link with acl which prevents us from deleting the link
+     */
+    @Test
+    public void deleteFolderWithLinksWithoutDeleteLinkAclPermission() {
+        fail("not implemented yet");
+    }
+
+    /**
+     * Folder contains link with acl that allows deletion of link
+     */
+    @Test
+    public void deleteFolderWithLinksWithDeleteLinkAclPermission() {
+        fail("not implemented yet");
+    }
+
+    /**
+     * Folder has object content, and links from outside point to it.
+     * As long as user is allowed to delete the content, the links should be removed automatically, no
+     * matter their acl
+     */
+    @Test
+    public void deleteFolderWithOutsideLinkToContainedObject() {
+        fail("not implemented yet");
+    }
+
+    @Test
+    public void deleteFolderWithObjectsHavingOutsideDescendants() {
+        fail("not implemented yet");
+    }
+
+    @Test
+    public void deleteFolderWithContentProtectedByRelation() {
+        fail("not implemented yet");
+    }
+
+    @Test
+    public void deleteFolderWithContentWithUnprotectedRelation() {
+        fail("not implemented yet");
     }
 
     private List<Folder> unwrapFolders(HttpResponse response, Integer expectedSize) throws IOException {
