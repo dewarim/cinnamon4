@@ -8,12 +8,14 @@ import com.dewarim.cinnamon.lifecycle.NopState;
 import com.dewarim.cinnamon.model.LifecycleState;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.request.IdRequest;
+import com.dewarim.cinnamon.model.request.lifecycle.ListLifecycleRequest;
 import com.dewarim.cinnamon.model.request.lifecycleState.AttachLifecycleRequest;
 import com.dewarim.cinnamon.model.request.lifecycleState.ChangeLifecycleStateRequest;
 import org.apache.http.HttpResponse;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -327,5 +329,13 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
     public void deleteLifecycleStateInvalidRequest() {
         var ex = assertThrows(CinnamonClientException.class, () -> adminClient.deleteLifecycleState(-1L));
         assertEquals(ErrorCode.INVALID_REQUEST, ex.getErrorCode());
+    }
+
+    @Test
+    public void verifySerialization() throws IOException {
+        HttpResponse response = sendStandardRequest(UrlMapping.LIFECYCLE__LIST, new ListLifecycleRequest());
+        String       xmlResponse        = new String(response.getEntity().getContent().readAllBytes(), StandardCharsets.UTF_8);
+        // <lifecycleState> was shown as <lifecycleStates>
+        assertTrue(xmlResponse.contains("<lifecycleStates><lifecycleState>"));
     }
 }

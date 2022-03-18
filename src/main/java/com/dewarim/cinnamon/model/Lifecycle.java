@@ -1,6 +1,8 @@
 package com.dewarim.cinnamon.model;
 
 import com.dewarim.cinnamon.api.Identifiable;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,6 +13,9 @@ public class Lifecycle implements Identifiable {
     private Long id;
     private String name;
     private Long defaultStateId;
+
+    @JacksonXmlElementWrapper(localName = "lifecycleStates")
+    @JacksonXmlProperty(localName = "lifecycleState")
     private List<LifecycleState> lifecycleStates;
 
     public Lifecycle() {
