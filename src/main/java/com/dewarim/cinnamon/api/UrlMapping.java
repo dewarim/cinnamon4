@@ -43,7 +43,10 @@ import com.dewarim.cinnamon.model.request.group.ListGroupRequest;
 import com.dewarim.cinnamon.model.request.group.UpdateGroupRequest;
 import com.dewarim.cinnamon.model.request.groupUser.AddUserToGroupsRequest;
 import com.dewarim.cinnamon.model.request.groupUser.RemoveUserFromGroupsRequest;
+import com.dewarim.cinnamon.model.request.index.CreateIndexItemRequest;
+import com.dewarim.cinnamon.model.request.index.DeleteIndexItemRequest;
 import com.dewarim.cinnamon.model.request.index.ListIndexItemRequest;
+import com.dewarim.cinnamon.model.request.index.UpdateIndexItemRequest;
 import com.dewarim.cinnamon.model.request.language.CreateLanguageRequest;
 import com.dewarim.cinnamon.model.request.language.DeleteLanguageRequest;
 import com.dewarim.cinnamon.model.request.language.ListLanguageRequest;
@@ -190,6 +193,9 @@ public enum UrlMapping {
     GROUP__REMOVE_USER_FROM_GROUPS("group", "removeUserFromGroups", "/api", "", RemoveUserFromGroupsRequest.class, GenericResponse.class),
     GROUP__UPDATE("group", "update", "/api", "", UpdateGroupRequest.class, GroupWrapper.class),
     INDEX_ITEM__LIST("indexItem", "list", "/api", "", ListIndexItemRequest.class, IndexItemWrapper.class),
+    INDEX_ITEM__CREATE("indexItem", "create", "/api", "", CreateIndexItemRequest.class, IndexItemWrapper.class),
+    INDEX_ITEM__UPDATE("indexItem", "udpate", "/api", "", UpdateIndexItemRequest.class, IndexItemWrapper.class),
+    INDEX_ITEM__DELETE("indexItem", "delete", "/api", "", DeleteIndexItemRequest.class, GenericResponse.class),
     LANGUAGE__LIST("language", "list", "/api", "", ListLanguageRequest.class, LanguageWrapper.class),
     LANGUAGE__CREATE("language", "create", "/api", "", CreateLanguageRequest.class, LanguageWrapper.class),
     LANGUAGE__UPDATE("language", "update", "/api", "", UpdateLanguageRequest.class, LanguageWrapper.class),

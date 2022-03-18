@@ -21,6 +21,19 @@ public class IndexItem implements Identifiable {
     public IndexItem() {
     }
 
+    public IndexItem(String fieldName, boolean forContent, boolean forMetadata, boolean forSysMetadata, boolean multipleResults, String name, String searchString, String indexTypeName, String searchCondition, boolean storeField) {
+        this.fieldName = fieldName;
+        this.forContent = forContent;
+        this.forMetadata = forMetadata;
+        this.forSysMetadata = forSysMetadata;
+        this.multipleResults = multipleResults;
+        this.name = name;
+        this.searchString = searchString;
+        this.indexTypeName = indexTypeName;
+        this.searchCondition = searchCondition;
+        this.storeField = storeField;
+    }
+
     public Long getId() {
         return id;
     }

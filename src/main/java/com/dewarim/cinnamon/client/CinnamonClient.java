@@ -8,6 +8,7 @@ import com.dewarim.cinnamon.model.Folder;
 import com.dewarim.cinnamon.model.FolderType;
 import com.dewarim.cinnamon.model.Format;
 import com.dewarim.cinnamon.model.Group;
+import com.dewarim.cinnamon.model.IndexItem;
 import com.dewarim.cinnamon.model.Language;
 import com.dewarim.cinnamon.model.Lifecycle;
 import com.dewarim.cinnamon.model.LifecycleState;
@@ -59,6 +60,10 @@ import com.dewarim.cinnamon.model.request.group.ListGroupRequest;
 import com.dewarim.cinnamon.model.request.group.UpdateGroupRequest;
 import com.dewarim.cinnamon.model.request.groupUser.AddUserToGroupsRequest;
 import com.dewarim.cinnamon.model.request.groupUser.RemoveUserFromGroupsRequest;
+import com.dewarim.cinnamon.model.request.index.CreateIndexItemRequest;
+import com.dewarim.cinnamon.model.request.index.DeleteIndexItemRequest;
+import com.dewarim.cinnamon.model.request.index.ListIndexItemRequest;
+import com.dewarim.cinnamon.model.request.index.UpdateIndexItemRequest;
 import com.dewarim.cinnamon.model.request.language.CreateLanguageRequest;
 import com.dewarim.cinnamon.model.request.language.DeleteLanguageRequest;
 import com.dewarim.cinnamon.model.request.language.ListLanguageRequest;
@@ -119,6 +124,7 @@ import com.dewarim.cinnamon.model.response.FolderWrapper;
 import com.dewarim.cinnamon.model.response.FormatWrapper;
 import com.dewarim.cinnamon.model.response.GenericResponse;
 import com.dewarim.cinnamon.model.response.GroupWrapper;
+import com.dewarim.cinnamon.model.response.IndexItemWrapper;
 import com.dewarim.cinnamon.model.response.LanguageWrapper;
 import com.dewarim.cinnamon.model.response.LifecycleStateWrapper;
 import com.dewarim.cinnamon.model.response.LifecycleWrapper;
@@ -199,6 +205,7 @@ public class CinnamonClient {
     private final Unwrapper<Permission, PermissionWrapper>          permissionUnwrapper     = new Unwrapper<>(PermissionWrapper.class);
     private final Unwrapper<DisconnectResponse, DisconnectResponse> disconnectUnwrapper     = new Unwrapper<>(DisconnectResponse.class);
     private final Unwrapper<MetasetType, MetasetTypeWrapper>        metasetTypeUnwrapper    = new Unwrapper<>(MetasetTypeWrapper.class);
+    private final Unwrapper<IndexItem, IndexItemWrapper>            indexItemUnwrapper      = new Unwrapper<>(IndexItemWrapper.class);
 
     private boolean generateTicketIfNull = true;
 
@@ -1015,6 +1022,30 @@ public class CinnamonClient {
 
     public void deleteFolder(Long folderId, boolean deleteRecursively, boolean deleteContent) throws IOException {
         deleteFolder(List.of(folderId), deleteRecursively, deleteContent);
+    }
+
+    public List<IndexItem> listIndexItems() throws IOException{
+        var request = new ListIndexItemRequest();
+        var response = sendStandardRequest(UrlMapping.INDEX_ITEM__LIST, request);
+        return indexItemUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
+    }
+
+    public IndexItem createIndexItem(IndexItem indexItem) throws IOException {
+        var request = new CreateIndexItemRequest(List.of(indexItem));
+        var response = sendStandardRequest(UrlMapping.INDEX_ITEM__CREATE, request);
+        return indexItemUnwrapper.unwrap(response, 1).get(0);
+    }
+
+    public void deleteIndexItem(Long id) throws IOException{
+        var request = new DeleteIndexItemRequest(id);
+        var response = sendStandardRequest(UrlMapping.INDEX_ITEM__DELETE,request);
+        verifyDeleteResponse(response);
+    }
+
+    public IndexItem updateIndexItem(IndexItem indexItem) throws IOException {
+        var request = new UpdateIndexItemRequest(List.of(indexItem));
+        var response = sendStandardRequest(UrlMapping.INDEX_ITEM__UPDATE,request);
+        return indexItemUnwrapper.unwrap(response,1).get(0);
     }
 }
 

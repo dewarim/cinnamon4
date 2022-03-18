@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.dewarim.cinnamon.IndexItemMapper">
+<mapper namespace="com.dewarim.cinnamon.model.IndexItem">
 
     <resultMap id="indexItemMap" type="com.dewarim.cinnamon.model.IndexItem">
         <id property="id" column="id"/>
@@ -28,6 +28,51 @@
         SELECT *
         FROM index_items
         WHERE id = #{id}
+    </select>
+
+    <delete id="delete" parameterType="list">
+        DELETE
+        FROM index_items
+        WHERE id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <update id="update" parameterType="com.dewarim.cinnamon.model.IndexItem">
+        UPDATE index_items
+        SET name             = #{name},
+            fieldname        = #{fieldName},
+            for_content      = #{forContent},
+            for_metadata     = #{forMetadata},
+            for_sys_meta     = #{forSysMetadata},
+            multiple_results = #{multipleResults},
+            search_string    = #{searchString},
+            search_condition = #{searchCondition},
+            index_type_name  = #{indexTypeName},
+            store_field      = #{storeField}
+        WHERE id = #{id}
+    </update>
+
+    <insert id="insert" parameterType="com.dewarim.cinnamon.model.IndexItem">
+        <selectKey keyProperty="id" resultType="long" order="BEFORE">
+            select nextval('seq_index_item_id')
+        </selectKey>
+        INSERT INTO index_items(id, fieldname, for_content, for_metadata, for_sys_meta, multiple_results,
+        name, search_string, search_condition, index_type_name, store_field)
+        values (#{id}, #{fieldName},#{forContent},#{forMetadata},#{forSysMetadata},#{multipleResults},
+        #{name}, #{searchString},#{searchCondition},#{indexTypeName},#{storeField} )
+    </insert>
+
+    <select id="getAllById" parameterType="list" resultMap="indexItemMap">
+        SELECT *
+        FROM index_items
+        WHERE id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
     </select>
 
 </mapper>

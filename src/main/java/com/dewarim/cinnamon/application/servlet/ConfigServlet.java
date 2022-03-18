@@ -60,7 +60,7 @@ public class ConfigServlet extends HttpServlet {
         wrapper.setFolderTypes(new FolderTypeDao().list());
         wrapper.setFormats(new FormatDao().list());
         wrapper.setGroups(new GroupDao().list());
-        wrapper.setIndexItems(new IndexItemDao().listIndexItems());
+        wrapper.setIndexItems(new IndexItemDao().list());
         wrapper.setLanguages(new LanguageDao().list());
         wrapper.setLifecycles(new LifecycleDao().list());
         wrapper.setMetasetTypes(new MetasetTypeDao().list());

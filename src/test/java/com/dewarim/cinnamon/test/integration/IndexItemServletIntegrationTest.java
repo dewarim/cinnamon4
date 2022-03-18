@@ -1,10 +1,8 @@
 package com.dewarim.cinnamon.test.integration;
 
-import com.dewarim.cinnamon.api.UrlMapping;
+import com.dewarim.cinnamon.ErrorCode;
+import com.dewarim.cinnamon.client.CinnamonClientException;
 import com.dewarim.cinnamon.model.IndexItem;
-import com.dewarim.cinnamon.model.request.index.ListIndexItemRequest;
-import com.dewarim.cinnamon.model.response.IndexItemWrapper;
-import org.apache.http.HttpResponse;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -19,13 +17,11 @@ public class IndexItemServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void listIndexItems() throws IOException {
-        HttpResponse       response      = sendStandardRequest(UrlMapping.INDEX_ITEM__LIST, new ListIndexItemRequest());
-        List<IndexItem> indexItems = parseResponse(response);
+        List<IndexItem> indexItems = client.listIndexItems();
 
         assertNotNull(indexItems);
         assertFalse(indexItems.isEmpty());
-        assertEquals(1, indexItems.size());
-        
+
         Optional<IndexItem> itemOpt = indexItems.stream().filter(indexItem -> indexItem.getName().equals("index.acl"))
                 .findFirst();
         assertTrue(itemOpt.isPresent());
@@ -39,15 +35,54 @@ public class IndexItemServletIntegrationTest extends CinnamonIntegrationTest {
         assertThat(item.getSearchString(), equalTo("/sysMeta/object/aclId"));
         assertThat(item.getSearchCondition(), equalTo("true()"));
         assertTrue(item.isStoreField());
-        
     }
 
-    private List<IndexItem> parseResponse(HttpResponse response) throws IOException {
-        assertResponseOkay(response);
-        IndexItemWrapper indexItemWrapper = mapper.readValue(response.getEntity().getContent(), IndexItemWrapper.class);
-        assertNotNull(indexItemWrapper);
-        return indexItemWrapper.getIndexItems();
+    @Test
+    public void createIndexItemInvalidRequest() {
+        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> adminClient.createIndexItem(new IndexItem()));
+        assertEquals(ErrorCode.INVALID_REQUEST, ex.getErrorCode());
     }
 
+    @Test
+    public void createIndexItemHappyPath() throws IOException {
+        IndexItem item = adminClient.createIndexItem(new IndexItem("test", true, true, true, true, "test.field", "/test", "some.index.type.name", "true()", true));
+        assertTrue(client.listIndexItems().stream().anyMatch(i -> i.getName().equals("test.field")));
+    }
+
+    @Test
+    public void deleteIndexItemHappyPath() throws IOException {
+        IndexItem item = adminClient.createIndexItem(new IndexItem("test", true, true, true, true, "test.field.delete", "/test", "some.index.type.name", "true()", true));
+        adminClient.deleteIndexItem(item.getId());
+        assertTrue(client.listIndexItems().stream().noneMatch(i -> i.getName().equals("test.field.delete")));
+    }
+
+    @Test
+    public void updateIndexItemHappyPath() throws IOException {
+        IndexItem item = adminClient.createIndexItem(new IndexItem("test", true, true, true, true, "test.field.update", "/test", "some.index.type.name", "true()", true));
+        item.setName("update.index.name");
+        adminClient.updateIndexItem(item);
+        List<IndexItem> items = client.listIndexItems();
+        assertTrue(items.stream().noneMatch(i -> i.getName().equals("test.field.update")));
+        assertTrue(items.stream().anyMatch(i -> i.getName().equals("update.index.name")));
+
+    }
+
+    @Test
+    public void createIndexItemNonSuperuser() throws IOException {
+        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> client.createIndexItem(new IndexItem()));
+        assertEquals(ErrorCode.REQUIRES_SUPERUSER_STATUS, ex.getErrorCode());
+    }
+
+    @Test
+    public void deleteIndexItemNonSuperuser() throws IOException {
+        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> client.deleteIndexItem(1L));
+        assertEquals(ErrorCode.REQUIRES_SUPERUSER_STATUS, ex.getErrorCode());
+    }
+
+    @Test
+    public void updateIndexItemNonSuperuser() throws IOException {
+        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> client.updateIndexItem(new IndexItem()));
+        assertEquals(ErrorCode.REQUIRES_SUPERUSER_STATUS, ex.getErrorCode());
+    }
 
 }
