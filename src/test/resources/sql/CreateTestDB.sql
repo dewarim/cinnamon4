@@ -452,7 +452,6 @@ create table index_items
     constraint index_items_name_key
     unique,
   search_string text not null,
-  va_params text not null,
   index_type_name varchar(255) default '' not null,
   search_condition text default 'true()' not null,
   store_field boolean default false not null
@@ -1229,9 +1228,9 @@ insert into ui_languages (id,iso_code) values (nextval('seq_ui_language_id'), 'E
 
 -- #1 index_item
 insert into index_items(id, fieldname, for_content, for_metadata, for_sys_meta, multiple_results,
-   name, search_string, va_params, search_condition, index_type_name, store_field)
+   name, search_string, search_condition, index_type_name, store_field)
 values (nextval('seq_index_item_id'), 'acl', false,false,true,false,'index.acl',
-  '/sysMeta/object/aclId', '<vaParams type="client.acl.id"/>','true()','DEFAULT_STRING_INDEXER',true
+  '/sysMeta/object/aclId', 'true()','DEFAULT_STRING_INDEXER',true
 );
 
 -- #1 relation: type 1 relation

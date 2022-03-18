@@ -14,7 +14,6 @@ public class IndexItem implements Identifiable {
     private boolean multipleResults;
     private String name;
     private String searchString;
-    private String vaParams;
     private String indexTypeName;
     private String searchCondition;
     private boolean storeField;
@@ -86,14 +85,6 @@ public class IndexItem implements Identifiable {
         this.searchString = searchString;
     }
 
-    public String getVaParams() {
-        return vaParams;
-    }
-
-    public void setVaParams(String vaParams) {
-        this.vaParams = vaParams;
-    }
-
     public String getIndexTypeName() {
         return indexTypeName;
     }
@@ -135,7 +126,6 @@ public class IndexItem implements Identifiable {
                Objects.equals(fieldName, indexItem.fieldName) &&
                Objects.equals(name, indexItem.name) &&
                Objects.equals(searchString, indexItem.searchString) &&
-               Objects.equals(vaParams, indexItem.vaParams) &&
                Objects.equals(indexTypeName, indexItem.indexTypeName) &&
                Objects.equals(searchCondition, indexItem.searchCondition);
     }
@@ -157,7 +147,6 @@ public class IndexItem implements Identifiable {
                ", multipleResults=" + multipleResults +
                ", name='" + name + '\'' +
                ", searchString='" + searchString + '\'' +
-               ", vaParams='" + vaParams + '\'' +
                ", indexTypeName=" + indexTypeName +
                ", searchCondition=" + searchCondition +
                ", storeField=" + storeField +

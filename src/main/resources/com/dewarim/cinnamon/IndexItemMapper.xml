@@ -14,7 +14,6 @@
         <result property="forSysMetadata" column="for_sys_meta"/>
         <result property="multipleResults" column="multiple_results"/>
         <result property="searchString" column="search_string"/>
-        <result property="vaParams" column="va_params"/>
         <result property="indexTypeName" column="index_type_name"/>
         <result property="searchCondition" column="search_condition"/>
         <result property="storeField" column="store_field"/>
