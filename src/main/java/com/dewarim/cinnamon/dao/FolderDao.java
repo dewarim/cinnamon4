@@ -172,6 +172,12 @@ public class FolderDao implements CrudDao<Folder>{
         return count > 0;
     }
 
+    public boolean hasSubfolders(List<Long> ids) {
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        Long count = sqlSession.selectOne("com.dewarim.cinnamon.model.Folder.countSubfolders", ids);
+        return count > 0;
+    }
+
     @Override
     public String getTypeClassName() {
         return Folder.class.getName();

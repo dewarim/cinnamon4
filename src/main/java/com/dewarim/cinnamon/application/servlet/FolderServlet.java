@@ -110,8 +110,12 @@ public class FolderServlet extends BaseServlet {
                 List<ObjectSystemData> osds = osdDao.getObjectsByFolderId(folder.getId(), false, VersionPredicate.ALL);
                 deleteOsdService.verifyAndDelete(osds, true, true, user);
             }
-        } else if (folderDao.hasContent(folderIds)) {
+        } else if (folderDao.hasContent(folderIds) ) {
             throw ErrorCode.FOLDER_IS_NOT_EMPTY.exception();
+        }
+
+        if(folderDao.hasSubfolders(folderIds) && !deleteRecursively){
+            throw ErrorCode.FOLDER_HAS_SUBFOLDERS.exception();
         }
 
         LinkDao    linkDao = new LinkDao();
@@ -137,19 +141,22 @@ public class FolderServlet extends BaseServlet {
             throw ErrorCode.FOLDER_NOT_FOUND.getException().get();
         }
         checkFoldersForContent(ids, deleteContent, folderDao);
+        List<Folder> foldersWithSubfolders = new ArrayList<>(folders);
         if (recursively) {
             for (Folder folder : folders) {
                 List<Folder> subFolders = folderDao.getDirectSubFolders(folder.getId(), false);
-                checkFoldersForContent(ids, deleteContent, folderDao);
-                folders.addAll(subFolders);
-                folders.addAll(loadFolders(subFolders.stream().map(Folder::getId).collect(Collectors.toList()), true, deleteContent, folderDao));
+                if(subFolders.size() > 0) {
+                    checkFoldersForContent(ids, deleteContent, folderDao);
+                    foldersWithSubfolders.addAll(subFolders);
+                    foldersWithSubfolders.addAll(loadFolders(subFolders.stream().map(Folder::getId).collect(Collectors.toList()), true, deleteContent, folderDao));
+                }
             }
         }
-        return folders;
+        return foldersWithSubfolders;
     }
 
-    private void checkFoldersForContent(List<Long> ids, boolean mustBeEmpty, FolderDao folderDao) {
-        if (mustBeEmpty && folderDao.hasContent(ids)) {
+    private void checkFoldersForContent(List<Long> ids, boolean deleteContent, FolderDao folderDao) {
+        if (!deleteContent && folderDao.hasContent(ids)) {
             throw ErrorCode.FOLDER_IS_NOT_EMPTY.getException().get();
         }
     }

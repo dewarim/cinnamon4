@@ -205,10 +205,18 @@
     </insert>
 
     <select id="countContent" parameterType="list" resultType="long">
-        select count(f.id) from folders f join objects o on f.id = o.parent_id
+        select count(id) from objects
+        where
+        <foreach item="item" index="index" collection="list" open="parent_id in (" separator="," close=")"
+                 nullable="false">#{item}
+        </foreach>
+    </select>
+
+    <select id="countSubfolders" parameterType="list" resultType="long">
+        select count(f.id) from folders f
         where
             <foreach item="item" index="index" collection="list"
-                     open="f.id in (" separator="," close=")" nullable="false">#{item}
+                     open="f.parent_id in (" separator="," close=")" nullable="false">#{item}
             </foreach>
     </select>
 

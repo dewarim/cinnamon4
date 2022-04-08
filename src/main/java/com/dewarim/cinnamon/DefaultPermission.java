@@ -5,6 +5,33 @@ package com.dewarim.cinnamon;
  */
 public enum DefaultPermission {
 
+    /*
+
+planned:
+folder.createfolder
+folder.createobject
+node.acl.write
+node.browse
+node.delete
+node.metadata.read
+node.metadata.write
+node.move
+node.name.write
+node.parentfolder.write
+node.sysmetadata.read
+node.type.write
+object.content.read
+object.content.write
+object.lifecyclestate.write
+object.lock
+object.version
+relation.child.add
+relation.child.remove
+relation.parent.add
+relation.parent.remove
+
+     */
+
     /**
      * Permission to lock an object. Implies permission to unlock the user's own locks.
      */

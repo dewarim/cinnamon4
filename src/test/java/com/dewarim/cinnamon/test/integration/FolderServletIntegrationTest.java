@@ -605,15 +605,14 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void deleteEmptyFolder() throws IOException {
-
-        TestObjectHolder toh         = new TestObjectHolder(adminClient, null, userId, createFolderId);
+        TestObjectHolder toh = new TestObjectHolder(adminClient, null, userId, createFolderId);
         toh.createAcl("delete-folder-allowed")
                 .createGroup("deleteFolderUsers")
                 .createAclGroup()
                 .addPermissionsByName(List.of(DefaultPermission.DELETE_FOLDER.getName()))
                 .addUserToGroup(userId);
-        Folder           emptyFolder = toh.createFolder("deleteEmptyFolder", createFolderId).folder;
-        client.deleteFolder(emptyFolder.getId(), false,false);
+        Folder emptyFolder = toh.createFolder("deleteEmptyFolder", createFolderId).folder;
+        client.deleteFolder(emptyFolder.getId(), false, false);
         var ex = assertThrows(CinnamonClientException.class, () -> client.getFolderById(emptyFolder.getId(), false));
         assertEquals(FOLDER_NOT_FOUND, ex.getErrorCode());
     }
@@ -623,39 +622,90 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
      */
     @Test
     public void deleteFolderFailWithSubfolderNonRecursively() throws IOException {
-        fail("not implemented yet");
+        TestObjectHolder toh = new TestObjectHolder(adminClient, null, userId, createFolderId);
+        toh.createAcl("deleteFolderFailWithSubfolderNonRecursively")
+                .createGroup("deleteFolderFailWithSubfolderNonRecursively")
+                .createAclGroup()
+                .addPermissionsByName(List.of(DefaultPermission.DELETE_FOLDER.getName(), DefaultPermission.CREATE_FOLDER.getName()))
+                .addUserToGroup(userId);
+        Folder folderWithSubfolder = toh.createFolder("folderWithSubfolderFail", createFolderId).folder;
+        client.createFolder(folderWithSubfolder.getId(), "subfolder", userId, toh.acl.getId(), folderWithSubfolder.getTypeId());
+
+        var ex = assertThrows(CinnamonClientException.class, () -> client.deleteFolder(folderWithSubfolder.getId(), false, false));
+        assertEquals(FOLDER_HAS_SUBFOLDERS, ex.getErrorCode());
     }
+
 
     /**
      * Folder contains empty folders and deleteRecursively=true
      */
     @Test
     public void deleteFolderWithSubfoldersRecursively() throws IOException {
-        fail("not implemented yet");
+        TestObjectHolder toh = new TestObjectHolder(adminClient, null, userId, createFolderId);
+        toh.createAcl("deleteFolderWithSubfoldersRecursively")
+                .createGroup("deleteFolderWithSubfoldersRecursively")
+                .createAclGroup()
+                .addPermissionsByName(List.of(DefaultPermission.DELETE_FOLDER.getName(), DefaultPermission.CREATE_FOLDER.getName()))
+                .addUserToGroup(userId);
+        Folder folderWithSubfolder = toh.createFolder("folderWithSubfolder", createFolderId).folder;
+        client.createFolder(folderWithSubfolder.getId(), "subfolder", userId, toh.acl.getId(), folderWithSubfolder.getTypeId());
+        client.deleteFolder(folderWithSubfolder.getId(), true, false);
+        var ex = assertThrows(CinnamonClientException.class, () -> client.getFolderById(folderWithSubfolder.getId(), false));
+        assertEquals(FOLDER_NOT_FOUND, ex.getErrorCode());
     }
 
     /**
      * Folder contains OSD and deleteContent=false
      */
     @Test
-    public void deleteFolderWithContentButWithoutDeleteContentParameterFail() {
-        fail("not implemented yet");
+    public void deleteFolderWithContentButWithoutDeleteContentParameterFail() throws IOException {
+        TestObjectHolder toh = new TestObjectHolder(adminClient, null, userId, createFolderId);
+        toh.createAcl("deleteFolderWithContentFail")
+                .createGroup("deleteFolderWithContentFail")
+                .createAclGroup()
+                .addPermissionsByName(List.of(DefaultPermission.DELETE_FOLDER.getName()))
+                .addUserToGroup(userId)
+                .createFolder("folderWithContentFail", createFolderId)
+                .createOsd("undeleted");
+
+        var ex = assertThrows(CinnamonClientException.class, () -> client.deleteFolder(toh.folder.getId(), false, false));
+        assertEquals(FOLDER_IS_NOT_EMPTY, ex.getErrorCode());
     }
 
     /**
      * Folder contains OSD and deleteContent=true and OSD.acl allows it
      */
     @Test
-    public void deleteFolderWithContentWithDeleteContentParameter() {
-        fail("not implemented yet");
+    public void deleteFolderWithContentWithDeleteContentParameter() throws IOException {
+        TestObjectHolder toh = new TestObjectHolder(adminClient, null, userId, createFolderId);
+        toh.createAcl("deleteFolderWithContentWithDeleteContentParameter")
+                .createGroup("deleteFolderWithContentWithDeleteContentParameter")
+                .createAclGroup()
+                .addPermissions(List.of(DefaultPermission.DELETE_FOLDER, DefaultPermission.DELETE_OBJECT))
+                .addUserToGroup(userId)
+                .createFolder("folderWithContent", createFolderId)
+                .createOsd("delete-me");
+        client.deleteFolder(toh.folder.getId(), false, true);
+        var ex = assertThrows(CinnamonClientException.class, () -> client.getFolderById(toh.folder.getId(), false));
+        assertEquals(FOLDER_NOT_FOUND, ex.getErrorCode());
     }
 
     /**
      * Folder contains OSD and deleteContent=true and OSD.acl forbids it
      */
     @Test
-    public void deleteFolderWithContentWithDeleteContentParameterButMissingPermission() {
-        fail("not implemented yet");
+    public void deleteFolderWithContentWithDeleteContentParameterButMissingPermission() throws IOException {
+        TestObjectHolder toh = new TestObjectHolder(adminClient, null, userId, createFolderId);
+        toh.createAcl("deleteFolderWithContentWithDeleteContentParameterButMissingPermission")
+                .createGroup("deleteFolderWithContentWithDeleteContentParameterButMissingPermission")
+                .createAclGroup()
+                .addPermissions(List.of(DefaultPermission.DELETE_FOLDER))
+                .addUserToGroup(userId)
+                .createFolder("folderWithContentMissingPermission", createFolderId)
+                .createOsd("delete-me");
+        var ex = assertThrows(CinnamonClientException.class, () -> client.deleteFolder(toh.folder.getId(), false, true));
+        assertEquals(CANNOT_DELETE_DUE_TO_ERRORS, ex.getErrorCode());
+        assertTrue(ex.getErrorWrapper().getErrors().stream().anyMatch(e -> e.getCode().equals(NO_DELETE_PERMISSION.getCode())));
     }
 
     /**

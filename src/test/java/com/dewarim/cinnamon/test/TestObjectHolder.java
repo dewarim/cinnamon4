@@ -37,7 +37,7 @@ public class TestObjectHolder {
     static public List<ObjectType>  objectTypes;
     static public List<MetasetType> metasetTypes;
     static public List<FolderType>  folderTypes;
-    static public List<Acl> acls;
+    static public List<Acl>         acls;
 
     CinnamonClient client;
     public ObjectSystemData osd;
@@ -46,6 +46,7 @@ public class TestObjectHolder {
     public AclGroup         aclGroup;
     public UserAccount      user;
     public Folder           folder;
+    public FolderType       folderType;
     public ObjectType       objectType;
     public Format           format;
     public Language         language;
@@ -58,7 +59,7 @@ public class TestObjectHolder {
     /**
      * Initialize a new TestObjectHolder with default values, using the given client
      * with its configured user as background client to perform requests.
-     *
+     * <p>
      * This results in a bare-bones TOH without a set user/folder/acl, ideal for admin tasks.
      */
     public TestObjectHolder(CinnamonClient client) {
@@ -66,19 +67,21 @@ public class TestObjectHolder {
         initialize();
         objectType = objectTypes.stream().filter(type ->
                 type.getName().equals(Constants.OBJTYPE_DEFAULT)).findFirst().orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
+        folderType = folderTypes.stream().filter(type ->
+                type.getName().equals(FOLDER_TYPE_DEFAULT)).findFirst().orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
     }
 
     /**
      * Initialize a new TestObjectHolder with default values, using the given client
      * as background client to perform requests, but set acl, user and createFolder to be used
      * for requests separately.
-     *
+     * <p>
      * This results in a TOH ready to create objects and folders and such which require an ACL,
      * base folder and user (for ownerId etc)
      */
     public TestObjectHolder(CinnamonClient client, String aclName, Long userId, Long createFolderId) throws IOException {
         this.client = client;
-        if(aclName != null) {
+        if (aclName != null) {
             this.acl = client.getAclByName(aclName);
         }
         setUser(userId);
@@ -86,6 +89,8 @@ public class TestObjectHolder {
         initialize();
         objectType = objectTypes.stream().filter(type ->
                 type.getName().equals(Constants.OBJTYPE_DEFAULT)).findFirst().orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
+        folderType = folderTypes.stream().filter(type ->
+                type.getName().equals(FOLDER_TYPE_DEFAULT)).findFirst().orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
     }
 
     private void initialize() {
@@ -164,7 +169,7 @@ public class TestObjectHolder {
     }
 
     public TestObjectHolder setFolder(Long id) throws IOException {
-        if(id != null) {
+        if (id != null) {
             folder = client.getFolders(List.of(id), true).get(0);
         }
         return this;
