@@ -26,6 +26,7 @@ import com.dewarim.cinnamon.application.servlet.PermissionServlet;
 import com.dewarim.cinnamon.application.servlet.RelationServlet;
 import com.dewarim.cinnamon.application.servlet.RelationTypeServlet;
 import com.dewarim.cinnamon.application.servlet.StaticServlet;
+import com.dewarim.cinnamon.application.servlet.TestServlet;
 import com.dewarim.cinnamon.application.servlet.UiLanguageServlet;
 import com.dewarim.cinnamon.application.servlet.UserAccountServlet;
 import com.dewarim.cinnamon.configuration.CinnamonConfig;
@@ -124,6 +125,7 @@ public class CinnamonServer {
         handler.addFilter(AuthenticationFilter.class, "/api/*", EnumSet.of(DispatcherType.REQUEST));
         handler.addFilter(RequestResponseFilter.class, "/api/*", EnumSet.of(DispatcherType.REQUEST));
         handler.addFilter(RequestResponseFilter.class, "/cinnamon/*", EnumSet.of(DispatcherType.REQUEST));
+        handler.addFilter(RequestResponseFilter.class, "/test/*", EnumSet.of(DispatcherType.REQUEST));
     }
 
     private void addServlets(WebAppContext handler) {
@@ -148,6 +150,7 @@ public class CinnamonServer {
         handler.addServlet(RelationServlet.class, "/api/relation/*");
         handler.addServlet(RelationTypeServlet.class, "/api/relationType/*");
         handler.addServlet(StaticServlet.class, "/static/*");
+        handler.addServlet(TestServlet.class, "/test/*");
         handler.addServlet(UiLanguageServlet.class, "/api/uiLanguage/*");
         handler.addServlet(UserAccountServlet.class, "/api/user/*");
     }

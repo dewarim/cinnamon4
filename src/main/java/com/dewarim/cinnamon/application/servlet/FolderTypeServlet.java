@@ -14,8 +14,6 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 
@@ -24,7 +22,6 @@ import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
 @WebServlet(name = "FolderType", urlPatterns = "/")
 public class FolderTypeServlet extends HttpServlet implements CruddyServlet<FolderType> {
 
-    private static final Logger       log       = LogManager.getLogger(AclServlet.class);
     private final        ObjectMapper xmlMapper = XML_MAPPER;
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {

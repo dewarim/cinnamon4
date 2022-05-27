@@ -265,6 +265,8 @@ public enum UrlMapping {
     RELATION__DELETE("relation", "delete", "/api", "", DeleteRelationRequest.class, GenericResponse.class),
     RELATION__SEARCH("relation", "search", "/api", "Search ", SearchRelationRequest.class, RelationWrapper.class),
     STATIC__ROOT("static", "", "", "Returns a static file from the server (for example, a favicon.ico if one exists).", null, null),
+    TEST__STATUS_200("test", "status200", "", "Returns status code 200", null, null),
+    TEST__STATUS_400("test", "status400", "", "Returns status code 400", null, null),
     UI_LANGUAGE__LIST("uiLanguage", "list", "/api", "", ListUiLanguageRequest.class, UiLanguageWrapper.class),
     UI_LANGUAGE__CREATE("uiLanguage", "create", "/api", "", CreateUiLanguageRequest.class, UiLanguageWrapper.class),
     UI_LANGUAGE__UPDATE("uiLanguage", "update", "/api", "", UpdateUiLanguageRequest.class, UiLanguageWrapper.class),
