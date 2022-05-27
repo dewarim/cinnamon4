@@ -32,6 +32,7 @@ public class DeleteLinkService {
             linkDao.delete(osdLinks.stream().map(Link::getId).collect(Collectors.toList()));
         } else {
             log.warn("User does not have permission to delete all requested links.");
+            // TODO: refactor to throw new FailedRequestException with list of bad links (like DeleteOsdService)
             throw ErrorCode.NO_DELETE_LINK_PERMISSION.exception();
         }
     }

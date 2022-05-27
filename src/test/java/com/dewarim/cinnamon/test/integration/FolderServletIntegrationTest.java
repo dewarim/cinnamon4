@@ -574,7 +574,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void deleteFolderInvalidRequest() throws IOException {
+    public void deleteFolderInvalidRequest() {
         CinnamonClientException exception = assertThrows(CinnamonClientException.class,
                 () -> client.deleteFolder(Collections.emptyList(), false, false));
         assertEquals(INVALID_REQUEST, exception.getErrorCode());
@@ -597,7 +597,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void deleteNonExistentFolder() throws IOException {
+    public void deleteNonExistentFolder() {
         CinnamonClientException exception = assertThrows(CinnamonClientException.class,
                 () -> client.deleteFolder(List.of(Long.MAX_VALUE), false, false));
         assertEquals(FOLDER_NOT_FOUND, exception.getErrorCode());
@@ -712,16 +712,37 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
      * Folder contains link with acl which prevents us from deleting the link
      */
     @Test
-    public void deleteFolderWithLinksWithoutDeleteLinkAclPermission() {
-        fail("not implemented yet");
+    public void deleteFolderWithLinksWithoutDeleteLinkAclPermission() throws IOException {
+        TestObjectHolder toh = new TestObjectHolder(adminClient, null, userId, createFolderId);
+        toh.createAcl("deleteFolderWithLinksWithoutDeleteLinkAclPermission")
+                .createOsd("outside-of-deleteFolder-folder-as-link-target")
+                .createGroup("deleteFolderWithLinksWithoutDeleteLinkAclPermission")
+                .createAclGroup()
+                .addPermissions(List.of(DefaultPermission.DELETE_FOLDER))
+                .addUserToGroup(userId)
+                .createFolder("deleteFolderWithLinksWithoutDeleteLinkAclPermission", createFolderId)
+                .createLinkToOsd(toh.osd);
+        var ex = assertThrows(CinnamonClientException.class, () -> client.deleteFolder(toh.folder.getId(), false, true));
+        // at the moment, links without delete permission will not return a list of errors
+        //  assertEquals(CANNOT_DELETE_DUE_TO_ERRORS, ex.getErrorCode());
+        assertTrue(ex.getErrorWrapper().getErrors().stream().anyMatch(e -> e.getCode().equals(NO_DELETE_LINK_PERMISSION.getCode())));
     }
 
     /**
      * Folder contains link with acl that allows deletion of link
      */
     @Test
-    public void deleteFolderWithLinksWithDeleteLinkAclPermission() {
-        fail("not implemented yet");
+    public void deleteFolderWithLinksWithDeleteLinkAclPermission() throws IOException {
+        TestObjectHolder toh = new TestObjectHolder(adminClient, null, userId, createFolderId);
+        toh.createAcl("deleteFolderWithLinksWithDeleteLinkAclPermission")
+                .createOsd("outside-of-deleteFolder-folder-as-link-target")
+                .createGroup("deleteFolderWithLinksWithDeleteLinkAclPermission")
+                .createAclGroup()
+                .addPermissions(List.of(DefaultPermission.DELETE_FOLDER, DefaultPermission.DELETE_OBJECT))
+                .addUserToGroup(userId)
+                .createFolder("deleteFolderWithLinksWithDeleteLinkAclPermission", createFolderId)
+                .createLinkToOsd(toh.osd);
+        client.deleteFolder(toh.folder.getId(), false, true);
     }
 
     /**

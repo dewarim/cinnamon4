@@ -18,6 +18,8 @@ import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.ObjectType;
 import com.dewarim.cinnamon.model.Permission;
 import com.dewarim.cinnamon.model.UserAccount;
+import com.dewarim.cinnamon.model.links.Link;
+import com.dewarim.cinnamon.model.links.LinkType;
 import com.dewarim.cinnamon.model.request.folder.UpdateFolderRequest;
 import com.dewarim.cinnamon.model.request.osd.CreateOsdRequest;
 
@@ -52,6 +54,7 @@ public class TestObjectHolder {
     public Language         language;
     public LifecycleState   lifecycleState;
     public Meta             meta;
+    public Link             link;
 
     public List<Meta> metas;
     public String     summary = "<summary/>";
@@ -215,6 +218,15 @@ public class TestObjectHolder {
 
     public TestObjectHolder createOsdMeta(String content) throws IOException {
         meta = client.createOsdMeta(osd.getId(), content, metasetTypes.get(0).getId());
+        return this;
+    }
+
+    /**
+     * Create a link to the given osd using the current folder, acl, owner.
+     * New link object is stored in TOH.link field.
+     */
+    public TestObjectHolder createLinkToOsd(ObjectSystemData osd) throws IOException {
+        link = client.createLink(folder.getId(), LinkType.OBJECT, acl.getId(), user.getId(), null, osd.getId());
         return this;
     }
 }

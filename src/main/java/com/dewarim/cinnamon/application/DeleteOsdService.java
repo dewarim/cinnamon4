@@ -32,6 +32,9 @@ public class DeleteOsdService {
     private final        AuthorizationService authorizationService = new AuthorizationService();
 
     public void verifyAndDelete(List<ObjectSystemData> osds, boolean deleteDescendants, boolean deleteAllVersions, UserAccount user) {
+        if(osds.isEmpty()){
+            return;
+        }
         OsdDao osdDao = new OsdDao();
         Set<Long> osdIds = osds.stream().map(osd -> {
                     if (deleteAllVersions) {
