@@ -6,6 +6,11 @@ import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.client.CinnamonClientException;
 import com.dewarim.cinnamon.model.Folder;
 import com.dewarim.cinnamon.model.Meta;
+import com.dewarim.cinnamon.model.ObjectSystemData;
+import com.dewarim.cinnamon.model.links.Link;
+import com.dewarim.cinnamon.model.links.LinkType;
+import com.dewarim.cinnamon.model.relations.Relation;
+import com.dewarim.cinnamon.model.relations.RelationType;
 import com.dewarim.cinnamon.model.request.CreateMetaRequest;
 import com.dewarim.cinnamon.model.request.DeleteMetaRequest;
 import com.dewarim.cinnamon.model.request.IdListRequest;
@@ -751,18 +756,48 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
      * matter their acl
      */
     @Test
-    public void deleteFolderWithOutsideLinkToContainedObject() {
-        fail("not implemented yet");
+    public void deleteFolderWithOutsideLinkToContainedObject() throws IOException {
+        TestObjectHolder toh = new TestObjectHolder(adminClient, null, userId, createFolderId);
+        toh.createAcl("delete-with-outside-link")
+                .createGroup("delete-with-outside-link")
+                .createAclGroup()
+                .addPermissions(List.of(DefaultPermission.DELETE_FOLDER, DefaultPermission.DELETE_OBJECT))
+                .createFolder("delete-with-outside-link", createFolderId)
+                .createOsd("delete-with-outside-link")
+                .addUserToGroup(userId);
+        Link link = adminClient.createLink(createFolderId, LinkType.OBJECT, toh.acl.getId(), userId, null, toh.osd.getId());
+        client.deleteFolder(toh.folder.getId(), false, true);
+        CinnamonClientException ce = assertThrows(CinnamonClientException.class, () -> client.getLinksById(List.of(link.getId()), false));
+        assertEquals(OBJECT_NOT_FOUND, ce.getErrorCode());
     }
 
     @Test
+    // TODO: are outside descendants allowed?
     public void deleteFolderWithObjectsHavingOutsideDescendants() {
         fail("not implemented yet");
     }
 
     @Test
-    public void deleteFolderWithContentProtectedByRelation() {
-        fail("not implemented yet");
+    public void deleteFolderWithContentProtectedByRelation() throws IOException {
+        TestObjectHolder toh = new TestObjectHolder(adminClient, null, userId, createFolderId);
+        toh.createAcl("delete-with-protected-relation")
+                .createGroup("delete-with-protected-relation")
+                .createAclGroup()
+                .addPermissions(List.of(DefaultPermission.DELETE_FOLDER, DefaultPermission.DELETE_OBJECT))
+                .createFolder("folder with relation source", createFolderId)
+                .addUserToGroup(userId)
+                .createOsd("relation-source");
+        ObjectSystemData relationSource = toh.osd;
+        toh.createFolder("delete-with-protected-relation", createFolderId)
+                .createOsd("relation-target");
+        ObjectSystemData relationTarget = toh.osd;
+        RelationType     relationType   = adminClient.createRelationType(new RelationType("protected-relation", false, true,
+                false, false, false, false));
+        Relation         relation       = adminClient.createRelation(relationSource.getId(), relationTarget.getId(), relationType.getId(), "");
+        var ex = assertThrows(CinnamonClientException.class, () -> client.deleteFolder(toh.folder.getId(), false, true));
+        // at the moment, links without delete permission will not return a list of errors
+        //  assertEquals(CANNOT_DELETE_DUE_TO_ERRORS, ex.getErrorCode());
+        assertTrue(ex.getErrorWrapper().getErrors().stream().anyMatch(e -> e.getCode().equals(OBJECT_HAS_PROTECTED_RELATIONS.getCode())));
     }
 
     @Test
