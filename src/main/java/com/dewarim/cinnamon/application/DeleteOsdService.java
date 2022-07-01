@@ -4,11 +4,13 @@ import com.beust.jcommander.Strings;
 import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.FailedRequestException;
+import com.dewarim.cinnamon.dao.DeletionDao;
 import com.dewarim.cinnamon.dao.LinkDao;
 import com.dewarim.cinnamon.dao.OsdDao;
 import com.dewarim.cinnamon.dao.OsdMetaDao;
 import com.dewarim.cinnamon.dao.RelationDao;
 import com.dewarim.cinnamon.dao.RelationTypeDao;
+import com.dewarim.cinnamon.model.Deletion;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.relations.Relation;
@@ -111,9 +113,14 @@ public class DeleteOsdService {
         var relationDao = new RelationDao();
         relationDao.deleteAllUnprotectedRelationsOfObjects(osdIdsToToDelete);
         relationDao.delete(protectedRelations.stream().map(Relation::getId).collect(Collectors.toList()));
+        // TODO: in case of more than 32K ids, split osdIds into sub-lists for deletion
         new LinkDao().deleteAllLinksToObjects(osdIdsToToDelete);
         new OsdMetaDao().deleteByOsdIds(osdIdsToToDelete);
         osdDao.deleteOsds(osdIdsToToDelete);
+        List<Deletion> deletions = osds.stream().filter(osd -> Objects.nonNull(osd.getContentPath()))
+                .map(osd -> new Deletion(osd.getId(), osd.getContentPath(), false))
+                .collect(Collectors.toList());
+        new DeletionDao().create(deletions);
     }
 
     private List<CinnamonError> delete(List<ObjectSystemData> osds, UserAccount user) {

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dewarim.cinnamon.model.Deletion">
+
+    <resultMap id="deletionMap" type="com.dewarim.cinnamon.model.Deletion">
+        <result property="osdId" column="osd_id"/>
+        <result property="contentPath" column="content_path"/>
+        <result property="deleted" column="is_deleted"/>
+    </resultMap>
+
+    <select id="list" parameterType="map" resultMap="deletionMap">
+        SELECT *
+        FROM deletions
+    </select>
+
+    <delete id="delete" parameterType="list">
+        DELETE
+        FROM deletions
+        WHERE id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <update id="update" parameterType="com.dewarim.cinnamon.model.Deletion">
+        UPDATE deletions
+        SET osd_id       = #{osdId},
+            content_path = #{contentPath},
+            is_deleted   = #{deleted},
+            WHERE id = #{id}
+    </update>
+
+    <insert id="insert" parameterType="com.dewarim.cinnamon.model.Deletion">
+        INSERT INTO deletions(osd_id, content_path, is_deleted)
+        VALUES (#{osdId}, #{contentPath}, #{deleted})
+    </insert>
+
+    <select id="getAllById" parameterType="list" resultMap="deletionMap">
+        SELECT *
+        FROM deletions
+        WHERE id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="getDeletionById" parameterType="long" resultMap="deletionMap">
+        SELECT *
+        FROM deletions
+        WHERE id = #{id}
+    </select>
+
+</mapper>
