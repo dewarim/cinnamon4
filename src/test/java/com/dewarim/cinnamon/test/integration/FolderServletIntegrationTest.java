@@ -772,12 +772,6 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    // TODO: are outside descendants allowed?
-    public void deleteFolderWithObjectsHavingOutsideDescendants() {
-        fail("not implemented yet");
-    }
-
-    @Test
     public void deleteFolderWithContentProtectedByRelation() throws IOException {
         TestObjectHolder toh = new TestObjectHolder(adminClient, null, userId, createFolderId);
         toh.createAcl("delete-with-protected-relation")
@@ -801,8 +795,23 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void deleteFolderWithContentWithUnprotectedRelation() {
-        fail("not implemented yet");
+    public void deleteFolderWithContentWithUnprotectedRelation() throws IOException {
+        TestObjectHolder toh = new TestObjectHolder(adminClient, null, userId, createFolderId);
+        toh.createAcl("delete-with-unprotected-relation")
+                .createGroup("delete-with-unprotected-relation")
+                .createAclGroup()
+                .addPermissions(List.of(DefaultPermission.DELETE_FOLDER, DefaultPermission.DELETE_OBJECT))
+                .createFolder("folder with other relation source", createFolderId)
+                .addUserToGroup(userId)
+                .createOsd("relation-source");
+        ObjectSystemData relationSource = toh.osd;
+        toh.createFolder("delete-with-unprotected-relation", createFolderId)
+                .createOsd("relation-target");
+        ObjectSystemData relationTarget = toh.osd;
+        RelationType     relationType   = adminClient.createRelationType(new RelationType("unprotected-relation", false, false,
+                false, false, false, false));
+        Relation         relation       = adminClient.createRelation(relationSource.getId(), relationTarget.getId(), relationType.getId(), "");
+        client.deleteFolder(toh.folder.getId(), false, true);
     }
 
     private List<Folder> unwrapFolders(HttpResponse response, Integer expectedSize) throws IOException {
