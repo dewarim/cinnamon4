@@ -10,7 +10,7 @@
     <name>Cinnamon CMS</name>
 
     <properties>
-        <jetty.version>11.0.8</jetty.version>
+        <jetty.version>11.0.10</jetty.version>
         <jackson.version>2.13.2</jackson.version>
         <junit.version>5.8.2</junit.version>
         <mybatis.version>3.5.9</mybatis.version>
