@@ -49,7 +49,6 @@ public enum ErrorCode {
     LIFECYCLE_STATE_CHANGE_FAILED("Lifecycle state change failed.", HttpServletResponse.SC_BAD_REQUEST),
     LIFECYCLE_STATE_EXIT_FAILED("Failed to exit existing lifecycle state.", HttpServletResponse.SC_BAD_REQUEST),
     LIFECYCLE_STATE_NOT_FOUND("Lifecycle state was not found in database", HttpServletResponse.SC_NOT_FOUND),
-    LIFECYCLE_STATE_BY_NAME_NOT_FOUND("Named lifecycle state was not found in database", HttpServletResponse.SC_NOT_FOUND),
     LOGIN_FAILED("login failed", HttpServletResponse.SC_UNAUTHORIZED),
     METASET_IS_UNIQUE_AND_ALREADY_EXISTS("The metaset is already exists and is unique", HttpServletResponse.SC_BAD_REQUEST),
     METASET_NOT_FOUND("The Metaset was not found.", HttpServletResponse.SC_NOT_FOUND),

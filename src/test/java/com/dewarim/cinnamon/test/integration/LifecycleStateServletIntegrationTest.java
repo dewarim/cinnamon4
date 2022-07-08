@@ -92,7 +92,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
     @Test
     public void changeStateFailInStateClass() throws IOException {
         // should fail on oldState.exit
-        ChangeLifecycleStateRequest attachRequest = new ChangeLifecycleStateRequest(32L, null, 4L);
+        ChangeLifecycleStateRequest attachRequest = new ChangeLifecycleStateRequest(32L, 4L);
         HttpResponse                response      = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__CHANGE_STATE, attachRequest);
         assertCinnamonError(response, ErrorCode.LIFECYCLE_STATE_EXIT_FAILED);
 
@@ -101,7 +101,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
     @Test
     public void attachLifecycleStateChangeFailed() throws IOException {
         // should fail on newState.enter
-        ChangeLifecycleStateRequest attachRequest = new ChangeLifecycleStateRequest(33L, null, 4L);
+        ChangeLifecycleStateRequest attachRequest = new ChangeLifecycleStateRequest(33L, 4L);
         HttpResponse                response      = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__CHANGE_STATE, attachRequest);
         assertCinnamonError(response, ErrorCode.LIFECYCLE_STATE_CHANGE_FAILED);
     }
@@ -168,35 +168,28 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
 
     @Test
     public void changeStateInvalidRequest() throws IOException {
-        ChangeLifecycleStateRequest attachRequest = new ChangeLifecycleStateRequest(34L, null, null);
+        ChangeLifecycleStateRequest attachRequest = new ChangeLifecycleStateRequest(34L, null);
         HttpResponse                response      = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__CHANGE_STATE, attachRequest);
         assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
     }
 
     @Test
     public void changeStateMissingObject() throws IOException {
-        ChangeLifecycleStateRequest attachRequest = new ChangeLifecycleStateRequest(Long.MAX_VALUE, "foo", null);
+        ChangeLifecycleStateRequest attachRequest = new ChangeLifecycleStateRequest(Long.MAX_VALUE, Long.MAX_VALUE);
         HttpResponse                response      = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__CHANGE_STATE, attachRequest);
         assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND);
     }
 
     @Test
-    public void changeStateNamedStateNotFound() throws IOException {
-        ChangeLifecycleStateRequest attachRequest = new ChangeLifecycleStateRequest(34L, "foo", null);
-        HttpResponse                response      = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__CHANGE_STATE, attachRequest);
-        assertCinnamonError(response, ErrorCode.LIFECYCLE_STATE_BY_NAME_NOT_FOUND);
-    }
-
-    @Test
     public void changeStateWithStateNotFound() throws IOException {
-        ChangeLifecycleStateRequest attachRequest = new ChangeLifecycleStateRequest(34L, null, Long.MAX_VALUE);
+        ChangeLifecycleStateRequest attachRequest = new ChangeLifecycleStateRequest(34L,  Long.MAX_VALUE);
         HttpResponse                response      = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__CHANGE_STATE, attachRequest);
         assertCinnamonError(response, ErrorCode.LIFECYCLE_STATE_NOT_FOUND);
     }
 
     @Test
     public void changeStateHappyPath() throws IOException {
-        ChangeLifecycleStateRequest attachRequest = new ChangeLifecycleStateRequest(31L, null, 3L);
+        ChangeLifecycleStateRequest attachRequest = new ChangeLifecycleStateRequest(31L,  3L);
         HttpResponse                response      = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__CHANGE_STATE, attachRequest);
         parseGenericResponse(response);
 

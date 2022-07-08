@@ -86,19 +86,12 @@ public class LifecycleStateServlet extends BaseServlet implements CruddyServlet<
     private void changeState(HttpServletRequest request, CinnamonResponse response, OsdDao osdDao, LifecycleStateDao stateDao) throws IOException {
         ChangeLifecycleStateRequest changeRequest = xmlMapper.readValue(request.getInputStream(), ChangeLifecycleStateRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
-        Long             osdId     = changeRequest.getOsdId();
-        Long             stateId   = changeRequest.getStateId();
-        String           stateName = changeRequest.getStateName();
-        ObjectSystemData osd       = osdDao.getObjectById(osdId).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
+        Long             osdId   = changeRequest.getOsdId();
+        Long             stateId = changeRequest.getStateId();
+        ObjectSystemData osd     = osdDao.getObjectById(osdId).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
         throwUnlessSysMetadataIsWritable(osd);
 
-        LifecycleState newLcState;
-        if (stateName != null) {
-            newLcState = stateDao.getLifecycleStateByName(stateName)
-                    .orElseThrow(ErrorCode.LIFECYCLE_STATE_BY_NAME_NOT_FOUND.getException());
-        } else {
-            newLcState = stateDao.getLifecycleStateById(stateId).orElseThrow(ErrorCode.LIFECYCLE_STATE_NOT_FOUND.getException());
-        }
+        LifecycleState           newLcState = stateDao.getLifecycleStateById(stateId).orElseThrow(ErrorCode.LIFECYCLE_STATE_NOT_FOUND.getException());
         State                    newState   = StateProviderService.getInstance().getStateProvider(newLcState.getStateClass()).getState();
         Optional<LifecycleState> oldLcState = stateDao.getLifecycleStateById(osd.getLifecycleStateId());
         if (oldLcState.isPresent()) {
