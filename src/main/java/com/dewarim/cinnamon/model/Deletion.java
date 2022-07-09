@@ -8,6 +8,8 @@ public class Deletion implements Identifiable {
     private String contentPath;
     private boolean deleted;
 
+    private boolean deleteFailed;
+
     public Deletion() {
     }
 
@@ -39,6 +41,14 @@ public class Deletion implements Identifiable {
 
     public void setDeleted(boolean deleted) {
         this.deleted = deleted;
+    }
+
+    public boolean isDeleteFailed() {
+        return deleteFailed;
+    }
+
+    public void setDeleteFailed(boolean deleteFailed) {
+        this.deleteFailed = deleteFailed;
     }
 
     @Override

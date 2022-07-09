@@ -56,6 +56,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import static com.dewarim.cinnamon.api.Constants.*;
 
@@ -72,6 +76,8 @@ public class CinnamonServer {
     private             DbSessionFactory dbSessionFactory;
     private final       WebAppContext    webAppContext = new WebAppContext();
     public static       CinnamonConfig   config        = new CinnamonConfig();
+    public static       ExecutorService  executorService;
+    public static       CinnamonStats    cinnamonStats = new CinnamonStats();
 
     public CinnamonServer(int port) {
         this.port = port;
@@ -93,6 +99,10 @@ public class CinnamonServer {
         server.start();
 
         addSingletons();
+
+        // start executorService for background threads
+        // TODO: make number of threads and timeout configurable
+        executorService = new ThreadPoolExecutor(4, 16, 5, TimeUnit.MINUTES, new ArrayBlockingQueue<Runnable>(100));
 
         log.info("Server is running at port " + config.getServerConfig().getPort());
     }
@@ -203,9 +213,9 @@ public class CinnamonServer {
                                     __description__
                                                                         
                                     ## Request
-                                    
+                                                                        
                                     __request__
-                                    
+                                                                        
                                     ## Response
 
                                     __response__

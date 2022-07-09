@@ -9,6 +9,7 @@
         <result property="osdId" column="osd_id"/>
         <result property="contentPath" column="content_path"/>
         <result property="deleted" column="is_deleted"/>
+        <result property="deleteFailed" column="delete_failed"/>
     </resultMap>
 
     <select id="list" parameterType="map" resultMap="deletionMap">
@@ -19,7 +20,7 @@
     <delete id="delete" parameterType="list">
         DELETE
         FROM deletions
-        WHERE id in
+        WHERE osd_id in
         <foreach item="item" index="index" collection="list"
                  open="(" separator="," close=")">
             #{item}
@@ -31,18 +32,19 @@
         SET osd_id       = #{osdId},
             content_path = #{contentPath},
             is_deleted   = #{deleted},
+            delete_failed= #{deleteFailed}
             WHERE id = #{id}
     </update>
 
     <insert id="insert" parameterType="com.dewarim.cinnamon.model.Deletion">
-        INSERT INTO deletions(osd_id, content_path, is_deleted)
-        VALUES (#{osdId}, #{contentPath}, #{deleted})
+        INSERT INTO deletions(osd_id, content_path, is_deleted, delete_failed)
+        VALUES (#{osdId}, #{contentPath}, #{deleted}, #{deleteFailed})
     </insert>
 
     <select id="getAllById" parameterType="list" resultMap="deletionMap">
         SELECT *
         FROM deletions
-        WHERE id in
+        WHERE osd_id in
         <foreach item="item" index="index" collection="list"
                  open="(" separator="," close=")">
             #{item}
@@ -52,7 +54,13 @@
     <select id="getDeletionById" parameterType="long" resultMap="deletionMap">
         SELECT *
         FROM deletions
-        WHERE id = #{id}
+        WHERE osd_id = #{id}
+    </select>
+
+    <select id="listPendingDeletions" resultMap="deletionMap">
+        SELECT *
+        FROM deletions
+        WHERE is_deleted = false AND delete_failed=false
     </select>
 
 </mapper>

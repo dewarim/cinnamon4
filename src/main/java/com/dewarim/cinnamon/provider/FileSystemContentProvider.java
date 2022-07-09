@@ -37,6 +37,26 @@ public class FileSystemContentProvider implements ContentProvider {
     }
 
     @Override
+    public boolean deleteContent(ContentMetadata metadata) throws IOException {
+        File file = new File(dataRootPath + SEP + metadata.getContentPath());
+        if(file.exists()){
+            boolean deleteSuccess = file.delete();
+            if(!deleteSuccess){
+                log.warn("Failed to delete "+file.getAbsolutePath());
+                return false;
+            }
+            String[] otherFiles = file.getParentFile().list();
+            if(otherFiles != null && otherFiles.length == 0){
+                boolean deleteParentFolderSuccess = file.getParentFile().delete();
+                if(!deleteParentFolderSuccess){
+                    log.warn("Failed to delete parent folder "+file.getParentFile().getAbsolutePath());
+                }
+            }
+        }
+        return true;
+    }
+
+    @Override
     public ContentMetadata writeContentStream(ContentMetadata metadata, InputStream inputStream) throws IOException {
         String targetName    = UUID.randomUUID().toString();
         String subfolderName = getSubFolderName(targetName);

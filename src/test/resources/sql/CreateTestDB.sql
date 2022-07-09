@@ -513,10 +513,12 @@ drop sequence if exists seq_folder_meta_id;
 create sequence seq_folder_meta_id;
 
 drop table if exists deletions cascade;
-create table deletions(
-  osd_id bigint not null unique,
-  content_path varchar(255) not null,
-  is_deleted boolean default false
+create table deletions
+(
+    osd_id        bigint       not null unique,
+    content_path  varchar(255) not null,
+    is_deleted    boolean default false,
+    delete_failed boolean default false
 );
 
 --------------------------

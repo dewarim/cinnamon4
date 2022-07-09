@@ -66,6 +66,8 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject, Identi
 
     private Long   objVersion      = 0L;
     private String contentHash;
+
+    // Note: also hardcoded use by DeletionTask
     private String contentProvider = DefaultContentProvider.FILE_SYSTEM.name();
 
     public ObjectSystemData() {

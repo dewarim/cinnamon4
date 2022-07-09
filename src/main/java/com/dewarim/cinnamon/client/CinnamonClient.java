@@ -424,6 +424,12 @@ public class CinnamonClient {
         return parseGenericResponse(response).isSuccessful();
     }
 
+    public boolean unlockOsd(Long id) throws IOException{
+        IdRequest idRequest = new IdRequest(id);
+        var       response  = sendStandardRequest(UrlMapping.OSD__UNLOCK, idRequest);
+        return parseGenericResponse(response).isSuccessful();
+    }
+
     public boolean updateOsd(UpdateOsdRequest updateOsdRequest) throws IOException {
         HttpResponse response = sendStandardRequest(OSD__UPDATE, updateOsdRequest);
         return parseGenericResponse(response).isSuccessful();

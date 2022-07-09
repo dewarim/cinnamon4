@@ -431,11 +431,11 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void setContentWithUnknownFormatId() throws IOException {
         Long id = 22L;
-        lockOsd(id);
+        client.lockOsd(id);
         SetContentRequest contentRequest = new SetContentRequest(id, Long.MAX_VALUE);
         HttpResponse      response       = sendStandardMultipartRequest(UrlMapping.OSD__SET_CONTENT, createMultipartEntityWithFileBody("setContentRequest", contentRequest));
         assertCinnamonError(response, ErrorCode.FORMAT_NOT_FOUND);
-        unLockOsd(id);
+        client.unlockOsd(id);
     }
 
     @Test
@@ -1121,35 +1121,35 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void versionWithCopyOnLeftRelation() throws IOException{
-        var relationType = adminClient.createRelationType(                new RelationType("clone-on-left-version",
-                false,false,false,false,true,false));
-        var toh  = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
-        var leftOsd = toh.createOsd("leftOsd").osd;
-        var rightOsd = toh.createOsd("rightOsd").osd;
-        var relation = client.createRelation(leftOsd.getId(), rightOsd.getId(), relationType.getId(),"<meta/>");
-        var leftVersion = client.version(new CreateNewVersionRequest(leftOsd.getId()));
+    public void versionWithCopyOnLeftRelation() throws IOException {
+        var relationType = adminClient.createRelationType(new RelationType("clone-on-left-version",
+                false, false, false, false, true, false));
+        var toh             = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
+        var leftOsd         = toh.createOsd("leftOsd").osd;
+        var rightOsd        = toh.createOsd("rightOsd").osd;
+        var relation        = client.createRelation(leftOsd.getId(), rightOsd.getId(), relationType.getId(), "<meta/>");
+        var leftVersion     = client.version(new CreateNewVersionRequest(leftOsd.getId()));
         var copiedRelations = client.getRelations(List.of(leftVersion.getId()));
-        assertEquals(1,copiedRelations.size());
+        assertEquals(1, copiedRelations.size());
         var relationCopy = copiedRelations.get(0);
-        assertEquals(relation.getTypeId(),relationCopy.getTypeId());
+        assertEquals(relation.getTypeId(), relationCopy.getTypeId());
         assertEquals(relation.getRightId(), relationCopy.getRightId());
         assertEquals(leftVersion.getId(), relationCopy.getLeftId());
     }
 
     @Test
-    public void versionWithCopyOnRightRelation() throws IOException{
-        var relationType = adminClient.createRelationType(                new RelationType("clone-on-right-version",
-                false,false,false,false,false,true));
-        var toh  = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
-        var leftOsd = toh.createOsd("leftOsd-version").osd;
-        var rightOsd = toh.createOsd("rightOsd-version").osd;
-        var relation = client.createRelation(leftOsd.getId(), rightOsd.getId(), relationType.getId(),"<meta/>");
-        var rightVersion = client.version(new CreateNewVersionRequest(rightOsd.getId()));
+    public void versionWithCopyOnRightRelation() throws IOException {
+        var relationType = adminClient.createRelationType(new RelationType("clone-on-right-version",
+                false, false, false, false, false, true));
+        var toh             = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
+        var leftOsd         = toh.createOsd("leftOsd-version").osd;
+        var rightOsd        = toh.createOsd("rightOsd-version").osd;
+        var relation        = client.createRelation(leftOsd.getId(), rightOsd.getId(), relationType.getId(), "<meta/>");
+        var rightVersion    = client.version(new CreateNewVersionRequest(rightOsd.getId()));
         var copiedRelations = client.getRelations(List.of(rightVersion.getId()));
-        assertEquals(1,copiedRelations.size());
+        assertEquals(1, copiedRelations.size());
         var relationCopy = copiedRelations.get(0);
-        assertEquals(relation.getTypeId(),relationCopy.getTypeId());
+        assertEquals(relation.getTypeId(), relationCopy.getTypeId());
         assertEquals(relation.getLeftId(), relationCopy.getLeftId());
         assertEquals(rightVersion.getId(), relationCopy.getRightId());
     }
@@ -1918,6 +1918,18 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         assertEquals(copyState.getId(), copy.getLifecycleStateId());
     }
 
+    @Test
+    public void deleteOsdWithContent() throws IOException, InterruptedException {
+        var toh = new TestObjectHolder(adminClient,"reviewers.acl",adminId,createFolderId );
+        toh.createOsd("deleteOsdWithContent - deletionTask test");
+        var osd = toh.osd;
+        createTestContentOnOsd(osd.getId(), true);
+        toh.lockOsd();
+        adminClient.deleteOsd(osd.getId());
+        Thread.sleep(500);
+        assertEquals(1, CinnamonServer.cinnamonStats.getDeletions().get());
+    }
+
     private HttpResponse sendAdminMultipartRequest(UrlMapping url, HttpEntity multipartEntity) throws IOException {
         return Request.Post("http://localhost:" + cinnamonTestPort + url.getPath())
                 .addHeader("ticket", getAdminTicket())
@@ -1982,31 +1994,17 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     private void createTestContentOnOsd(Long osdId, boolean asSuperuser) throws IOException {
         // lock before setContent:
-        lockOsd(osdId);
-
-        SetContentRequest setContentRequest = new SetContentRequest(osdId, 1L);
-        HttpEntity        multipartEntity   = createMultipartEntityWithFileBody("setContentRequest", setContentRequest);
-        HttpResponse      setContentResponse;
         if (asSuperuser) {
-            setContentResponse = sendAdminMultipartRequest(UrlMapping.OSD__SET_CONTENT, multipartEntity);
+            adminClient.lockOsd(osdId);
+            adminClient.setContentOnLockedOsd(osdId, 1L,new File("pom.xml"));
+            adminClient.unlockOsd(osdId);
         } else {
-            setContentResponse = sendStandardMultipartRequest(UrlMapping.OSD__SET_CONTENT, multipartEntity);
+            client.lockOsd(osdId);
+            client.setContentOnLockedOsd(osdId, 1L, new File("pom.xml"));
+            client.unlockOsd(osdId);
         }
-        assertResponseOkay(setContentResponse);
-        unLockOsd(osdId);
     }
 
-    private void lockOsd(Long osdId) throws IOException {
-        IdRequest    idRequest    = new IdRequest(osdId);
-        HttpResponse lockResponse = sendStandardRequest(UrlMapping.OSD__LOCK, idRequest);
-        assertResponseOkay(lockResponse);
-    }
-
-    private void unLockOsd(Long osdId) throws IOException {
-        IdRequest    idRequest      = new IdRequest(osdId);
-        HttpResponse unlockResponse = sendStandardRequest(UrlMapping.OSD__UNLOCK, idRequest);
-        assertResponseOkay(unlockResponse);
-    }
 
     public ObjectSystemData fetchSingleOsd(Long id) throws IOException {
         OsdRequest   osdRequest  = new OsdRequest(Collections.singletonList(id), true, false);
