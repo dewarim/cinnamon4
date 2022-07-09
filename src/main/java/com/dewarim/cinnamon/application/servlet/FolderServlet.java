@@ -124,12 +124,12 @@ public class FolderServlet extends BaseServlet {
 
         // delete links from folders to inside folders / objects
         linkDao.deleteAllLinksToFolders(folderIds);
-        folderDao.delete(folderIds);
 
-        // TODO delete file content, see issue #199
-        // delete file content should be asynchronous. In case db commit fails, we would be
-        // unable to restore already deleted file content
-        // should put to-be-deleted content path into extra table (action log via background thread?)
+        // delete metadata
+        FolderMetaDao metaDao = new FolderMetaDao();
+        metaDao.deleteByFolderIds(folderIds);
+
+        folderDao.delete(folderIds);
 
         var deleteResponse = new DeleteResponse(true);
         cinnamonResponse.setWrapper(deleteResponse);

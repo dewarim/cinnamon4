@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.dewarim.cinnamon.FolderMetaMapper">
+<mapper namespace="com.dewarim.cinnamon.model.FolderMeta">
 
     <resultMap id="folderMetaMap" type="com.dewarim.cinnamon.model.Meta">
         <id property="id" column="id"/>
@@ -49,5 +49,15 @@
         INSERT INTO folder_meta (id, folder_id, type_id, content) VALUES
         (#{id}, #{objectId}, #{typeId}, #{content})
     </insert>
+
+    <delete id="deleteByFolderIds" parameterType="list">
+        DELETE
+        FROM folder_meta
+        WHERE folder_id IN
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
 
 </mapper>

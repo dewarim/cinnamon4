@@ -795,6 +795,14 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
+    public void deleteFolderWithMetadata() throws IOException{
+        TestObjectHolder toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
+        Folder folder = toh.createFolder("deleteFolderWithMetadata", createFolderId).folder;
+        client.createFolderMeta(new CreateMetaRequest(folder.getId(), "some content", "comment"));
+        adminClient.deleteFolder(folder.getId(), false, false);
+    }
+
+    @Test
     public void deleteFolderWithContentWithUnprotectedRelation() throws IOException {
         TestObjectHolder toh = new TestObjectHolder(adminClient, null, userId, createFolderId);
         toh.createAcl("delete-with-unprotected-relation")
