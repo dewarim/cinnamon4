@@ -265,3 +265,9 @@ It's recommended to use a copy of production for testing.
     alter table lifecycle_states add column copy_state_id bigint references lifecycle_states;
     update lifecycle_states ls set copy_state_id=(select copy_state_id from lifecycle_state_to_copy_state where lifecycle_state_id=ls.id);
     drop table if exists lifecycle_state_to_copy_state;
+
+    --
+    insert into permissions values (nextval('seq_permission_id'),'relation.child.add');
+    insert into permissions values (nextval('seq_permission_id'),'relation.parent.add');
+    insert into permissions values (nextval('seq_permission_id'),'relation.child.remove');
+    insert into permissions values (nextval('seq_permission_id'),'relation.parent.remove'); 

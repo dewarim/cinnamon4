@@ -2,6 +2,7 @@ package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
+import com.dewarim.cinnamon.client.CinnamonClientException;
 import com.dewarim.cinnamon.model.relations.Relation;
 import com.dewarim.cinnamon.model.relations.RelationType;
 import com.dewarim.cinnamon.model.request.relation.CreateRelationRequest;
@@ -17,6 +18,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
+import static com.dewarim.cinnamon.DefaultPermission.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
@@ -121,27 +123,33 @@ public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void deleteRelationWithInvalidRequest() throws IOException {
-        DeleteRelationRequest deleteRequest = new DeleteRelationRequest(0L, 0L, null);
+        DeleteRelationRequest deleteRequest = new DeleteRelationRequest((Long) null);
         HttpResponse          response      = sendStandardRequest(UrlMapping.RELATION__DELETE, deleteRequest);
         assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
     }
 
     @Test
     public void deleteRelationWhichDoesNotExist() throws IOException {
-        DeleteRelationRequest deleteRequest = new DeleteRelationRequest(Long.MAX_VALUE, Long.MAX_VALUE, firstRelationTypeName);
-        HttpResponse          response      = sendStandardRequest(UrlMapping.RELATION__DELETE, deleteRequest);
-        assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND_OR_GONE);
+        var ex = assertThrows(CinnamonClientException.class, () -> client.deleteRelation(Long.MAX_VALUE));
+        assertEquals(ErrorCode.OBJECT_NOT_FOUND, ex.getErrorCode());
     }
 
     @Test
     public void happyPathCreateAndDeleteRelation() throws IOException {
+        addUserToAclGroupWithPermissions("happyPathCreateAndDeleteRelation",
+                List.of(READ_OBJECT_SYS_METADATA, RELATION_CHILD_ADD, RELATION_PARENT_ADD,
+                        RELATION_CHILD_REMOVE, RELATION_PARENT_REMOVE));
+        var toh = new TestObjectHolder(client, "happyPathCreateAndDeleteRelation", userId, createFolderId);
+
+        var leftOsd  = toh.createOsd("left-osd").osd;
+        var rightOsd = toh.createOsd("right-osd").osd;
         // create
-        var createdRelation = client.createRelation(21L, 20L, 1L, "<meta>m</meta>");
+        var createdRelation = client.createRelation(leftOsd.getId(), rightOsd.getId(), 1L, "<meta>m</meta>");
 
         // verify relation exists:
         SearchRelationRequest request = new SearchRelationRequest();
-        request.setLeftIds(Collections.singletonList(21L));
-        request.setRightIds(Collections.singletonList(20L));
+        request.setLeftIds(Collections.singletonList(leftOsd.getId()));
+        request.setRightIds(Collections.singletonList(rightOsd.getId()));
         request.setIncludeMetadata(true);
         request.setNames(Collections.singletonList(firstRelationTypeName));
         HttpResponse    response = sendStandardRequest(UrlMapping.RELATION__SEARCH, request);
@@ -152,17 +160,73 @@ public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
         assertEquals(1L, (long) typeId);
         Long leftId = relation.getLeftId();
         assertNotNull(leftId);
-        assertEquals(21L, (long) leftId);
+        assertEquals(leftOsd.getId(), (long) leftId);
         Long rightId = relation.getRightId();
         assertNotNull(rightId);
-        assertEquals(20L, (long) rightId);
+        assertEquals(rightOsd.getId(), (long) rightId);
         String meta = relation.getMetadata();
         assertEquals(meta, "<meta>m</meta>");
 
         // delete
-        DeleteRelationRequest deleteRequest  = new DeleteRelationRequest(21L, 20L, firstRelationTypeName);
+        DeleteRelationRequest deleteRequest  = new DeleteRelationRequest(relation.getId());
         HttpResponse          deleteResponse = sendStandardRequest(UrlMapping.RELATION__DELETE, deleteRequest);
         assertResponseOkay(deleteResponse);
+    }
+
+    @Test
+    public void createRelationFailsWithoutChildAddPermission() throws IOException {
+        addUserToAclGroupWithPermissions("createRelationFailsWithoutChildAddPermission", List.of(READ_OBJECT_SYS_METADATA));
+        var toh      = new TestObjectHolder(client, "createRelationFailsWithoutChildAddPermission", userId, createFolderId);
+        var leftOsd  = toh.createOsd("left-osd").osd;
+        var rightOsd = toh.createOsd("right-osd").osd;
+
+        // create
+        var ex = assertThrows(CinnamonClientException.class, () -> client.createRelation(leftOsd.getId(), rightOsd.getId(), 1L, "<meta>m</meta>"));
+        assertEquals(ex.getErrorCode(), ErrorCode.NO_RELATION_CHILD_ADD_PERMISSION);
+    }
+
+    @Test
+    public void deleteRelationFailsWithoutChildRemovePermission() throws IOException {
+        addUserToAclGroupWithPermissions("deleteRelationFailsWithoutChildRemovePermission",
+                List.of(READ_OBJECT_SYS_METADATA, RELATION_CHILD_ADD, RELATION_PARENT_ADD));
+        var toh      = new TestObjectHolder(client, "deleteRelationFailsWithoutChildRemovePermission", userId, createFolderId);
+        var leftOsd  = toh.createOsd("left-osd").osd;
+        var rightOsd = toh.createOsd("right-osd").osd;
+
+        // create
+        Relation relation = client.createRelation(leftOsd.getId(), rightOsd.getId(), 1L, "<meta>m</meta>");
+
+        // delete:
+        var ex = assertThrows(CinnamonClientException.class, ()->client.deleteRelation(relation.getId()));
+        assertEquals(ErrorCode.NO_RELATION_CHILD_REMOVE_PERMISSION, ex.getErrorCode());
+    }
+
+    @Test
+    public void deleteRelationFailsWithoutParentRemovePermission() throws IOException {
+        addUserToAclGroupWithPermissions("deleteRelationFailsWithoutParentRemovePermission", List.of(READ_OBJECT_SYS_METADATA, RELATION_CHILD_ADD, RELATION_PARENT_ADD,
+                RELATION_CHILD_REMOVE));
+        var toh      = new TestObjectHolder(client, "deleteRelationFailsWithoutParentRemovePermission", userId, createFolderId);
+        var leftOsd  = toh.createOsd("left-osd").osd;
+        var rightOsd = toh.createOsd("right-osd").osd;
+
+        // create
+        Relation relation = client.createRelation(leftOsd.getId(), rightOsd.getId(), 1L, "<meta>m</meta>");
+
+        // delete:
+        var ex = assertThrows(CinnamonClientException.class, ()->client.deleteRelation(relation.getId()));
+        assertEquals(ErrorCode.NO_RELATION_PARENT_REMOVE_PERMISSION, ex.getErrorCode());
+    }
+
+    @Test
+    public void createRelationFailsWithoutParentAddPermission() throws IOException {
+        addUserToAclGroupWithPermissions("createRelationFailsWithoutParentAddPermission", List.of(READ_OBJECT_SYS_METADATA, RELATION_CHILD_ADD));
+        var toh      = new TestObjectHolder(client, "createRelationFailsWithoutParentAddPermission", userId, createFolderId);
+        var leftOsd  = toh.createOsd("left-osd").osd;
+        var rightOsd = toh.createOsd("right-osd").osd;
+
+        // create
+        var ex = assertThrows(CinnamonClientException.class, () -> client.createRelation(leftOsd.getId(), rightOsd.getId(), 1L, "<meta>m</meta>"));
+        assertEquals(ex.getErrorCode(), ErrorCode.NO_RELATION_PARENT_ADD_PERMISSION);
     }
 
     /**
@@ -195,13 +259,17 @@ public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getRelations() throws IOException {
-        var toh          = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
-        var left1        = toh.createOsd("left and 1").osd;
-        var left2        = toh.createOsd("left and 2").osd;
-        var right1       = toh.createOsd("right and 1").osd;
-        var right2       = toh.createOsd("right and 2").osd;
-        var left3        = toh.createOsd("left and 3").osd;
-        var right3       = toh.createOsd("right and 3").osd;
+        addUserToAclGroupWithPermissions("getRelationsTest",
+                List.of(RELATION_CHILD_ADD, RELATION_PARENT_ADD, READ_OBJECT_SYS_METADATA));
+        var toh = new TestObjectHolder(client, "getRelationsTest", userId, createFolderId);
+
+        var left1  = toh.createOsd("left and 1").osd;
+        var left2  = toh.createOsd("left and 2").osd;
+        var right1 = toh.createOsd("right and 1").osd;
+        var right2 = toh.createOsd("right and 2").osd;
+        var left3  = toh.createOsd("left and 3").osd;
+        var right3 = toh.createOsd("right and 3").osd;
+
         var relationType = adminClient.createRelationType(new RelationType("getRelations-test", false, false, false, false, false, false));
         var relation1    = client.createRelation(left1.getId(), right1.getId(), relationType.getId(), "<meta/>");
         var relation2    = client.createRelation(left2.getId(), right2.getId(), relationType.getId(), "<meta/>");
@@ -212,4 +280,5 @@ public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
         assertTrue(andRelations.containsAll(List.of(relation1, relation2)));
         assertFalse(andRelations.contains(relation3));
     }
+
 }

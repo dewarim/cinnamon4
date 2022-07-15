@@ -20,7 +20,7 @@ public class PermissionServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void listPermissions() throws IOException {
         List<Permission> permissions = client.listPermissions();
-        assertEquals(17, permissions.size());
+        assertEquals(21, permissions.size());
     }
 
     @Test

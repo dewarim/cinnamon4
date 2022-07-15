@@ -625,6 +625,10 @@ insert into permissions values (nextval('seq_permission_id'),'_version'); -- #14
 insert into permissions values (nextval('seq_permission_id'),'_write_object_content'); -- #15
 insert into permissions values (nextval('seq_permission_id'),'_write_object_custom_metadata'); -- #16
 insert into permissions values (nextval('seq_permission_id'),'_write_object_sysmeta'); -- #17
+insert into permissions values (nextval('seq_permission_id'),'relation.child.add'); -- #18
+insert into permissions values (nextval('seq_permission_id'),'relation.parent.add'); -- #19
+insert into permissions values (nextval('seq_permission_id'),'relation.child.remove'); -- #20
+insert into permissions values (nextval('seq_permission_id'),'relation.parent.remove'); -- #21
 
 -- note: personal user groups are deprecated. Add user to normal groups instead.
 -- #1 browse permission for doe's group + default_acl:

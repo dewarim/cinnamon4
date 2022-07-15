@@ -98,7 +98,7 @@ relation.parent.remove
      * Permission to create an object inside a folder.
      */
     CREATE_OBJECT("_create_inside_folder"), // create_object_inside_folder
-    
+
     /**
      * Permission to edit a folder (change name, change metadata).
      */
@@ -119,8 +119,14 @@ relation.parent.remove
     /**
      * Permission to change an object's or folder's ACL.
      */
-    SET_ACL("_set_acl");
-    
+    SET_ACL("_set_acl"),
+
+    RELATION_CHILD_ADD("relation.child.add"),
+    RELATION_CHILD_REMOVE("relation.child.remove"),
+    RELATION_PARENT_ADD("relation.parent.add"),
+    RELATION_PARENT_REMOVE("relation.parent.remove"),
+    ;
+
     String name;
 
     DefaultPermission(String name) {

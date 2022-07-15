@@ -1,50 +1,24 @@
 package com.dewarim.cinnamon.model.request.relation;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.dewarim.cinnamon.model.relations.Relation;
+import com.dewarim.cinnamon.model.request.DeleteByIdRequest;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
+import java.util.List;
+
 @JacksonXmlRootElement(localName = "deleteRelationRequest")
-public class DeleteRelationRequest implements ApiRequest {
-    
-    private Long leftId;
-    private Long rightId;
-    private String typeName;
+public class DeleteRelationRequest  extends DeleteByIdRequest<Relation>  implements ApiRequest {
 
     public DeleteRelationRequest() {
     }
 
-    public DeleteRelationRequest(Long leftId, Long rightId, String typeName) {
-        this.leftId = leftId;
-        this.rightId = rightId;
-        this.typeName = typeName;
+    public DeleteRelationRequest(Long id) {
+        super(id);
     }
 
-    public Long getLeftId() {
-        return leftId;
+    public DeleteRelationRequest(List<Long> ids) {
+        super(ids);
     }
 
-    public void setLeftId(Long leftId) {
-        this.leftId = leftId;
-    }
-
-    public Long getRightId() {
-        return rightId;
-    }
-
-    public void setRightId(Long rightId) {
-        this.rightId = rightId;
-    }
-
-    public String getTypeName() {
-        return typeName;
-    }
-
-    public void setTypeName(String typeName) {
-        this.typeName = typeName;
-    }
-
-    public boolean validated() {
-        return leftId != null && rightId != null && typeName != null &&
-               leftId > 0 && rightId > 0 && typeName.trim().length() > 0;
-    }
 }

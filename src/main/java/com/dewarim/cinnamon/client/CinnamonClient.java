@@ -99,6 +99,7 @@ import com.dewarim.cinnamon.model.request.osd.VersionPredicate;
 import com.dewarim.cinnamon.model.request.permission.ChangePermissionsRequest;
 import com.dewarim.cinnamon.model.request.permission.ListPermissionRequest;
 import com.dewarim.cinnamon.model.request.relation.CreateRelationRequest;
+import com.dewarim.cinnamon.model.request.relation.DeleteRelationRequest;
 import com.dewarim.cinnamon.model.request.relation.SearchRelationRequest;
 import com.dewarim.cinnamon.model.request.relationType.CreateRelationTypeRequest;
 import com.dewarim.cinnamon.model.request.relationType.DeleteRelationTypeRequest;
@@ -1052,6 +1053,12 @@ public class CinnamonClient {
         var request = new UpdateIndexItemRequest(List.of(indexItem));
         var response = sendStandardRequest(UrlMapping.INDEX_ITEM__UPDATE,request);
         return indexItemUnwrapper.unwrap(response,1).get(0);
+    }
+
+    public void deleteRelation(Long id) throws IOException {
+        var request = new DeleteRelationRequest(id);
+        var response = sendStandardRequest(UrlMapping.RELATION__DELETE, request);
+        verifyDeleteResponse(response);
     }
 }
 

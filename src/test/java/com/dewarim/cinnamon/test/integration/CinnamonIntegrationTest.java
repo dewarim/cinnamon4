@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.test.integration;
 
+import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonServer;
@@ -10,6 +11,7 @@ import com.dewarim.cinnamon.model.response.CinnamonConnection;
 import com.dewarim.cinnamon.model.response.CinnamonError;
 import com.dewarim.cinnamon.model.response.CinnamonErrorWrapper;
 import com.dewarim.cinnamon.model.response.GenericResponse;
+import com.dewarim.cinnamon.test.TestObjectHolder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import org.apache.http.HttpResponse;
@@ -208,5 +210,16 @@ public class CinnamonIntegrationTest {
     protected GenericResponse parseGenericResponse(HttpResponse response) throws IOException {
         assertResponseOkay(response);
         return mapper.readValue(response.getEntity().getContent(), GenericResponse.class);
+    }
+
+    // TODO: use this in FolderServletIntegrationTests, too
+    protected Long addUserToAclGroupWithPermissions(String aclName, List<DefaultPermission> permissions) throws IOException {
+        TestObjectHolder toh = new TestObjectHolder(adminClient, null, userId, createFolderId);
+        return toh.createAcl(aclName)
+                .createGroup(aclName)
+                .createAclGroup()
+                .addPermissions(permissions)
+                .addUserToGroup(userId)
+                .acl.getId();
     }
 }

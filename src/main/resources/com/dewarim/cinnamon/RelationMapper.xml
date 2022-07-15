@@ -205,4 +205,14 @@
            or (r.right_id = #{id} and rt.clone_on_right_version = true)
     </select>
 
+    <select id="getAllById" parameterType="list" resultMap="relationMap">
+        SELECT *
+        FROM relations
+        WHERE id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
 </mapper>
