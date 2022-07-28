@@ -617,6 +617,7 @@ Delete a list of config entries
   <relationTypes/>
   <uiLanguages/>
   <users/>
+  <providerClasses/>
 </cinnamon>
 
 ```
@@ -763,7 +764,7 @@ Delete a list of config entries
       <typeId>4</typeId>
       <metadataChanged>false</metadataChanged>
       <summary>&lt;summary>&lt;description>contains images&lt;/description>&lt;/summary></summary>
-      <created>2021-12-21T17:06:53+0000</created>
+      <created>2022-07-28T17:01:10+0000</created>
     </folder>
     <folder>
       <id/>
@@ -775,7 +776,7 @@ Delete a list of config entries
       <typeId>2</typeId>
       <metadataChanged>false</metadataChanged>
       <summary>&lt;summary /></summary>
-      <created>2021-12-21T17:06:53+0000</created>
+      <created>2022-07-28T17:01:10+0000</created>
     </folder>
   </folders>
 </createFolderRequest>
@@ -810,6 +811,37 @@ Delete a list of config entries
 ```xml
 <cinnamon>
   <metasets/>
+</cinnamon>
+
+```
+
+
+---
+
+# /api/folder/delete
+
+
+## Request
+
+```xml
+<deleteFolderRequest>
+  <ids>
+    <ids>1</ids>
+    <ids>2</ids>
+    <ids>3</ids>
+  </ids>
+  <deleteRecursively>true</deleteRecursively>
+  <deleteContent>false</deleteContent>
+</deleteFolderRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <success>false</success>
 </cinnamon>
 
 ```
@@ -1425,6 +1457,83 @@ Fetch a single folder
 
 ---
 
+# /api/indexItem/create
+
+
+## Request
+
+```xml
+<createIndexItemRequest>
+  <indexItems/>
+</createIndexItemRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <indexItems/>
+</cinnamon>
+
+```
+
+
+---
+
+# /api/indexItem/udpate
+
+
+## Request
+
+```xml
+<updateIndexItemRequest>
+  <indexItems/>
+</updateIndexItemRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <indexItems/>
+</cinnamon>
+
+```
+
+
+---
+
+# /api/indexItem/delete
+
+
+## Request
+
+```xml
+<deleteIndexItemRequest>
+  <ignoreNotFound>false</ignoreNotFound>
+  <ids/>
+</deleteIndexItemRequest>
+
+```
+
+
+## Response
+
+```xml
+<genericResponse>
+  <message/>
+  <successful>false</successful>
+</genericResponse>
+
+```
+
+
+---
+
 # /api/language/list
 
 
@@ -1707,7 +1816,6 @@ Fetch a single folder
 ```xml
 <changeLifecycleStateRequest>
   <osdId/>
-  <stateName/>
   <stateId/>
 </changeLifecycleStateRequest>
 
@@ -2592,9 +2700,9 @@ Returns an OSD's content according to it's format's content type.
 ## Request
 
 ```xml
-<getRelationRequest>
+<getRelationsRequest>
   <includeMetadata>false</includeMetadata>
-</getRelationRequest>
+</getRelationsRequest>
 
 ```
 
@@ -3060,9 +3168,8 @@ part "file", if the new version should contain data.
 
 ```xml
 <deleteRelationRequest>
-  <leftId/>
-  <rightId/>
-  <typeName/>
+  <ignoreNotFound>false</ignoreNotFound>
+  <ids/>
 </deleteRelationRequest>
 
 ```
@@ -3081,16 +3188,16 @@ part "file", if the new version should contain data.
 
 ---
 
-# /api/relation/list
-
+# /api/relation/search
+Search 
 
 ## Request
 
 ```xml
-<relationRequest>
+<searchRelationRequest>
   <includeMetadata>false</includeMetadata>
   <orMode>false</orMode>
-</relationRequest>
+</searchRelationRequest>
 
 ```
 
@@ -3109,6 +3216,16 @@ part "file", if the new version should contain data.
 
 # /static/
 Returns a static file from the server (for example, a favicon.ico if one exists).
+
+---
+
+# /test/status200
+Returns status code 200
+
+---
+
+# /test/status400
+Returns status code 400
 
 ---
 
