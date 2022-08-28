@@ -1,4 +1,4 @@
-package com.dewarim.cinnamon.application;
+package com.dewarim.cinnamon.application.service;
 
 import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.ErrorCode;

@@ -30,16 +30,15 @@
         WHERE id = #{id}
     </delete>
 
-    <select id="getMetasetsByNameAndFolderId" parameterType="map" resultMap="folderMetaMap">
+    <select id="getMetaByTypeIdsAndFolder" parameterType="map" resultMap="folderMetaMap">
         SELECT *
         FROM folder_meta
         WHERE folder_id = #{id}
-        AND type_id IN (select id from metaset_types where name in
-        <foreach item="item" index="index" collection="typeNames"
+        AND type_id IN
+        <foreach item="item" index="index" collection="typeIds"
                  open="(" separator="," close=")">
             #{item}
         </foreach>
-        )
     </select>
 
     <insert id="insertMeta" parameterType="com.dewarim.cinnamon.model.Meta">
@@ -54,6 +53,47 @@
         DELETE
         FROM folder_meta
         WHERE folder_id IN
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <select id="getUniqueMetaTypeIdsOfFolder" parameterType="long" resultType="long">
+        SELECT type.id
+        FROM folder_meta fm
+                 join metaset_types type ON fm.type_id = type.id
+        WHERE fm.folder_id = #{id}
+          AND type.is_unique
+    </select>
+
+    <insert id="insert" parameterType="com.dewarim.cinnamon.model.Meta">
+        <selectKey keyProperty="id" resultType="long" order="BEFORE">
+            select nextval('seq_folder_meta_id')
+        </selectKey>
+        INSERT INTO folder_meta (id, folder_id, type_id, content) VALUES
+        (#{id}, #{objectId}, #{typeId}, #{content})
+    </insert>
+
+    <select id="getAllById" parameterType="list" resultMap="folderMetaMap">
+        SELECT *
+        FROM folder_meta
+        WHERE id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="list" parameterType="list" resultMap="folderMetaMap">
+        SELECT *
+        FROM folder_meta
+    </select>
+
+    <delete id="delete" parameterType="list">
+        DELETE
+        FROM folder_meta
+        WHERE id in
         <foreach item="item" index="index" collection="list"
                  open="(" separator="," close=")">
             #{item}

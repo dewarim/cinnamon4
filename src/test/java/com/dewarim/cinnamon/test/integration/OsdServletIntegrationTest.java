@@ -574,18 +574,18 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         assertCinnamonError(metaResponse, ErrorCode.NO_READ_CUSTOM_METADATA_PERMISSION);
     }
 
-    @Test
-    public void getMetaCompatibilityMode() throws IOException, ParsingException {
-        MetaRequest request = new MetaRequest(36L, null);
-        request.setVersion3CompatibilityRequired(true);
-        HttpResponse metaResponse = sendStandardRequest(UrlMapping.OSD__GET_META, request);
-        assertResponseOkay(metaResponse);
-        String   content = new String(metaResponse.getEntity().getContent().readAllBytes(), StandardCharsets.UTF_8);
-        Document metaDoc = new Builder().build(content, null);
-        Nodes    nodes   = metaDoc.query("/meta/metaset[@type='comment']/p");
-        Node     node    = nodes.get(0);
-        assertEquals("Good Test", node.getValue());
-    }
+//    @Test
+//    public void getMetaCompatibilityMode() throws IOException, ParsingException {
+//        MetaRequest request = new MetaRequest(36L, null);
+//        request.setVersion3CompatibilityRequired(true);
+//        HttpResponse metaResponse = sendStandardRequest(UrlMapping.OSD__GET_META, request);
+//        assertResponseOkay(metaResponse);
+//        String   content = new String(metaResponse.getEntity().getContent().readAllBytes(), StandardCharsets.UTF_8);
+//        Document metaDoc = new Builder().build(content, null);
+//        Nodes    nodes   = metaDoc.query("/meta/metaset[@type='comment']/p");
+//        Node     node    = nodes.get(0);
+//        assertEquals("Good Test", node.getValue());
+//    }
 
     @Test
     public void getMetaHappyPathAllMeta() throws IOException, ParsingException {
@@ -602,7 +602,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getMetaHappyPathSingleMeta() throws IOException, ParsingException {
-        MetaRequest  request      = new MetaRequest(36L, Collections.singletonList("license"));
+        MetaRequest  request      = new MetaRequest(36L, Collections.singletonList(2L));
         HttpResponse metaResponse = sendStandardRequest(UrlMapping.OSD__GET_META, request);
         assertResponseOkay(metaResponse);
         String   content  = new String(metaResponse.getEntity().getContent().readAllBytes(), StandardCharsets.UTF_8);
@@ -641,14 +641,14 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createMetaMetasetTypeByNameNotFound() throws IOException {
-        CreateMetaRequest request      = new CreateMetaRequest(38L, "foo", "unknown");
+        CreateMetaRequest request      = new CreateMetaRequest(38L, "foo", Long.MAX_VALUE);
         HttpResponse      metaResponse = sendStandardRequest(UrlMapping.OSD__CREATE_META, request);
         assertCinnamonError(metaResponse, ErrorCode.METASET_TYPE_NOT_FOUND);
     }
 
     @Test
     public void createMetaMetasetIsUniqueAndExists() throws IOException {
-        CreateMetaRequest request      = new CreateMetaRequest(39L, "duplicate license", "license");
+        CreateMetaRequest request      = new CreateMetaRequest(39L, "duplicate license", 2L);
         HttpResponse      metaResponse = sendStandardRequest(UrlMapping.OSD__CREATE_META, request);
         assertCinnamonError(metaResponse, ErrorCode.METASET_IS_UNIQUE_AND_ALREADY_EXISTS);
     }
@@ -656,10 +656,10 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     // non-unique metasetType should allow appending new metasets.
     @Test
     public void createMetaMetasetHappyWithExistingMeta() throws IOException {
-        CreateMetaRequest request      = new CreateMetaRequest(40L, "duplicate comment", "comment");
+        CreateMetaRequest request      = new CreateMetaRequest(40L, "duplicate comment", 1L);
         HttpResponse      metaResponse = sendStandardRequest(UrlMapping.OSD__CREATE_META, request);
         assertResponseOkay(metaResponse);
-        MetaRequest  metaRequest     = new MetaRequest(40L, Collections.singletonList("comment"));
+        MetaRequest  metaRequest     = new MetaRequest(40L, Collections.singletonList(1L));
         HttpResponse commentResponse = sendStandardRequest(UrlMapping.OSD__GET_META, metaRequest);
         assertResponseOkay(commentResponse);
         MetaWrapper metaWrapper = mapper.readValue(commentResponse.getEntity().getContent(), MetaWrapper.class);
@@ -668,7 +668,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createMetaMetasetHappyPath() throws IOException {
-        CreateMetaRequest request      = new CreateMetaRequest(38L, "new license meta", "license");
+        CreateMetaRequest request      = new CreateMetaRequest(38L, "new license meta", 2L);
         HttpResponse      metaResponse = sendStandardRequest(UrlMapping.OSD__CREATE_META, request);
         assertResponseOkay(metaResponse);
         List<Meta> metas = unwrapMeta(metaResponse, 1);
@@ -685,40 +685,22 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void deleteMetaObjectNotFound() throws IOException {
-        DeleteMetaRequest deleteRequest = new DeleteMetaRequest(Long.MAX_VALUE, 1L);
-        HttpResponse      metaResponse  = sendStandardRequest(UrlMapping.OSD__DELETE_META, deleteRequest);
-        assertCinnamonError(metaResponse, ErrorCode.OBJECT_NOT_FOUND);
-    }
-
-    @Test
     public void deleteMetaWithoutPermission() throws IOException {
-        DeleteMetaRequest deleteRequest = new DeleteMetaRequest(42L, "license");
+        DeleteMetaRequest deleteRequest = new DeleteMetaRequest(8L);
         HttpResponse      metaResponse  = sendStandardRequest(UrlMapping.OSD__DELETE_META, deleteRequest);
         assertCinnamonError(metaResponse, ErrorCode.NO_WRITE_CUSTOM_METADATA_PERMISSION);
     }
 
     @Test
     public void deleteMetaWithMetaNotFound() throws IOException {
-        DeleteMetaRequest deleteRequest = new DeleteMetaRequest(41L, "unknown-type");
+        DeleteMetaRequest deleteRequest = new DeleteMetaRequest(Long.MAX_VALUE);
         HttpResponse      metaResponse  = sendStandardRequest(UrlMapping.OSD__DELETE_META, deleteRequest);
         assertCinnamonError(metaResponse, ErrorCode.METASET_NOT_FOUND);
     }
 
     @Test
     public void deleteMetaHappyPathById() throws IOException {
-        DeleteMetaRequest request  = new DeleteMetaRequest(41L, 7L);
-        HttpResponse      response = sendStandardRequest(UrlMapping.OSD__DELETE_META, request);
-        assertResponseOkay(response);
-        assertTrue(parseGenericResponse(response).isSuccessful());
-    }
-
-    @Test
-    public void deleteMetaHappyPathByName() throws IOException {
-        DeleteMetaRequest request  = new DeleteMetaRequest(41L, "comment");
-        HttpResponse      response = sendStandardRequest(UrlMapping.OSD__DELETE_META, request);
-        assertResponseOkay(response);
-        assertTrue(parseGenericResponse(response).isSuccessful());
+        client.deleteOsdMeta(7L);
     }
 
     @Test

@@ -35,17 +35,24 @@
         </foreach>
     </delete>
 
-    <select id="getMetasetsByNameAndOsd" parameterType="map" resultMap="osdMetaMap">
+    <select id="getMetaByTypeIdsAndOsd" parameterType="map" resultMap="osdMetaMap">
         SELECT *
         FROM osd_meta
         WHERE osd_id = #{id}
-        AND type_id IN (select id from metaset_types where name in
-        <foreach item="item" index="index" collection="typeNames"
+        AND type_id IN
+        <foreach item="item" index="index" collection="typeIds"
                  open="(" separator="," close=")">
             #{item}
         </foreach>
-        )
         ORDER BY id
+    </select>
+
+    <select id="getUniqueMetaTypeIdsOfOsd" parameterType="long" resultType="long">
+        SELECT type.id
+        FROM osd_meta om
+                 join metaset_types type ON om.type_id = type.id
+        WHERE om.osd_id = #{id}
+          AND type.is_unique
     </select>
 
     <insert id="insert" parameterType="com.dewarim.cinnamon.model.Meta">
@@ -65,5 +72,20 @@
             #{item}
         </foreach>
     </delete>
+
+    <select id="getAllById" parameterType="list" resultMap="osdMetaMap">
+        SELECT *
+        FROM osd_meta
+        WHERE id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="list" parameterType="list" resultMap="osdMetaMap">
+        SELECT *
+        FROM osd_meta
+    </select>
 
 </mapper>

@@ -5,6 +5,7 @@ import com.dewarim.cinnamon.model.relations.Relation;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -87,5 +88,11 @@ public class SearchRelationRequest implements ApiRequest<Relation> {
         } else {
             return Optional.empty();
         }
+    }
+
+    @Override
+    public List<ApiRequest<Relation>> examples() {
+        return List.of(new SearchRelationRequest(List.of(1L,2L,3L), List.of(4L,5L,6L),
+                List.of("pdf-rendition - note: searching by name is deprecated, will be replaced by relationTypeIds"), true,true));
     }
 }

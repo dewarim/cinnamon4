@@ -764,7 +764,7 @@ Delete a list of config entries
       <typeId>4</typeId>
       <metadataChanged>false</metadataChanged>
       <summary>&lt;summary>&lt;description>contains images&lt;/description>&lt;/summary></summary>
-      <created>2022-07-28T17:01:10+0000</created>
+      <created>2022-08-28T11:02:22+0000</created>
     </folder>
     <folder>
       <id/>
@@ -776,7 +776,7 @@ Delete a list of config entries
       <typeId>2</typeId>
       <metadataChanged>false</metadataChanged>
       <summary>&lt;summary /></summary>
-      <created>2022-07-28T17:01:10+0000</created>
+      <created>2022-08-28T11:02:22+0000</created>
     </folder>
   </folders>
 </createFolderRequest>
@@ -797,10 +797,27 @@ Delete a list of config entries
 
 ```xml
 <createMetaRequest>
-  <id/>
-  <content/>
-  <typeId/>
-  <typeName/>
+  <metas>
+    <metas>
+      <id/>
+      <objectId>32</objectId>
+      <typeId>3</typeId>
+      <content>&lt;xml>some meta&lt;/xml></content>
+    </metas>
+  </metas>
+</createMetaRequest>
+
+```
+```xml
+<createMetaRequest>
+  <metas>
+    <metas>
+      <id/>
+      <objectId>40</objectId>
+      <typeId>10</typeId>
+      <content>&lt;meta>metadata&lt;/meta></content>
+    </metas>
+  </metas>
 </createMetaRequest>
 
 ```
@@ -856,9 +873,8 @@ Delete a list of config entries
 
 ```xml
 <deleteMetaRequest>
-  <id/>
-  <metaId/>
-  <typeName/>
+  <ignoreNotFound>false</ignoreNotFound>
+  <ids/>
 </deleteMetaRequest>
 
 ```
@@ -867,10 +883,9 @@ Delete a list of config entries
 ## Response
 
 ```xml
-<genericResponse>
-  <message/>
-  <successful>false</successful>
-</genericResponse>
+<cinnamon>
+  <success>false</success>
+</cinnamon>
 
 ```
 
@@ -943,8 +958,8 @@ Fetch a single folder
 
 ```xml
 <folderPathRequest>
-  <path/>
-  <includeSummary>false</includeSummary>
+  <path>/home/creation/some-sub-folder</path>
+  <includeSummary>true</includeSummary>
 </folderPathRequest>
 
 ```
@@ -969,19 +984,17 @@ Fetch a single folder
 
 ```xml
 <metaRequest>
-  <id/>
-  <version3CompatibilityRequired>false</version3CompatibilityRequired>
-  <typeNames>
-    <typeName>copyright</typeName>
-    <typeName>thumbnail</typeName>
-  </typeNames>
+  <id>3</id>
+  <typeIds>
+    <typeIds>12</typeIds>
+    <typeIds>13</typeIds>
+  </typeIds>
 </metaRequest>
 
 ```
 ```xml
 <metaRequest>
   <id>1</id>
-  <version3CompatibilityRequired>false</version3CompatibilityRequired>
 </metaRequest>
 
 ```
@@ -1062,8 +1075,15 @@ Fetch a single folder
 
 ```xml
 <setSummaryRequest>
-  <id/>
-  <summary/>
+  <id>45</id>
+  <summary>&lt;xml>summary&lt;/xml></summary>
+</setSummaryRequest>
+
+```
+```xml
+<setSummaryRequest>
+  <id>65</id>
+  <summary>be careful when indexing non-xml summaries</summary>
 </setSummaryRequest>
 
 ```
@@ -2464,10 +2484,27 @@ List lifecycles
 
 ```xml
 <createMetaRequest>
-  <id/>
-  <content/>
-  <typeId/>
-  <typeName/>
+  <metas>
+    <metas>
+      <id/>
+      <objectId>32</objectId>
+      <typeId>3</typeId>
+      <content>&lt;xml>some meta&lt;/xml></content>
+    </metas>
+  </metas>
+</createMetaRequest>
+
+```
+```xml
+<createMetaRequest>
+  <metas>
+    <metas>
+      <id/>
+      <objectId>40</objectId>
+      <typeId>10</typeId>
+      <content>&lt;meta>metadata&lt;/meta></content>
+    </metas>
+  </metas>
 </createMetaRequest>
 
 ```
@@ -2530,9 +2567,8 @@ should contain data.
 
 ```xml
 <deleteMetaRequest>
-  <id/>
-  <metaId/>
-  <typeName/>
+  <ignoreNotFound>false</ignoreNotFound>
+  <ids/>
 </deleteMetaRequest>
 
 ```
@@ -2541,10 +2577,9 @@ should contain data.
 ## Response
 
 ```xml
-<genericResponse>
-  <message/>
-  <successful>false</successful>
-</genericResponse>
+<cinnamon>
+  <success>false</success>
+</cinnamon>
 
 ```
 
@@ -2604,19 +2639,17 @@ Returns an OSD's content according to it's format's content type.
 
 ```xml
 <metaRequest>
-  <id/>
-  <version3CompatibilityRequired>false</version3CompatibilityRequired>
-  <typeNames>
-    <typeName>copyright</typeName>
-    <typeName>thumbnail</typeName>
-  </typeNames>
+  <id>3</id>
+  <typeIds>
+    <typeIds>12</typeIds>
+    <typeIds>13</typeIds>
+  </typeIds>
 </metaRequest>
 
 ```
 ```xml
 <metaRequest>
   <id>1</id>
-  <version3CompatibilityRequired>false</version3CompatibilityRequired>
 </metaRequest>
 
 ```
@@ -2701,6 +2734,11 @@ Returns an OSD's content according to it's format's content type.
 
 ```xml
 <getRelationsRequest>
+  <ids>
+    <ids>1</ids>
+    <ids>32</ids>
+    <ids>4</ids>
+  </ids>
   <includeMetadata>false</includeMetadata>
 </getRelationsRequest>
 
@@ -2710,9 +2748,13 @@ Returns an OSD's content according to it's format's content type.
 ## Response
 
 ```xml
-<cinnamon>
-  <relations/>
-</cinnamon>
+<Relation>
+  <id>399</id>
+  <leftId>1</leftId>
+  <rightId>4</rightId>
+  <typeId>1</typeId>
+  <metadata>&lt;generatedBy>PDF Renderer&lt;/generatedBy</metadata>
+</Relation>
 
 ```
 
@@ -2803,8 +2845,15 @@ Set an OSD's content. Requires a multipart-mime request, with part "setContentRe
 
 ```xml
 <setSummaryRequest>
-  <id/>
-  <summary/>
+  <id>45</id>
+  <summary>&lt;xml>summary&lt;/xml></summary>
+</setSummaryRequest>
+
+```
+```xml
+<setSummaryRequest>
+  <id>65</id>
+  <summary>be careful when indexing non-xml summaries</summary>
 </setSummaryRequest>
 
 ```
@@ -3152,9 +3201,13 @@ part "file", if the new version should contain data.
 ## Response
 
 ```xml
-<cinnamon>
-  <relations/>
-</cinnamon>
+<Relation>
+  <id>399</id>
+  <leftId>1</leftId>
+  <rightId>4</rightId>
+  <typeId>1</typeId>
+  <metadata>&lt;generatedBy>PDF Renderer&lt;/generatedBy</metadata>
+</Relation>
 
 ```
 
@@ -3189,14 +3242,27 @@ part "file", if the new version should contain data.
 ---
 
 # /api/relation/search
-Search 
+Search for relations matching all( with orMode=false) or some (with orMode=true) criteria. Fields are optional, but at least one field must contain criteria.
 
 ## Request
 
 ```xml
 <searchRelationRequest>
-  <includeMetadata>false</includeMetadata>
-  <orMode>false</orMode>
+  <leftIds>
+    <leftIds>1</leftIds>
+    <leftIds>2</leftIds>
+    <leftIds>3</leftIds>
+  </leftIds>
+  <rightIds>
+    <rightIds>4</rightIds>
+    <rightIds>5</rightIds>
+    <rightIds>6</rightIds>
+  </rightIds>
+  <names>
+    <names>pdf-rendition - note: searching by name is deprecated, will be replaced by relationTypeIds</names>
+  </names>
+  <includeMetadata>true</includeMetadata>
+  <orMode>true</orMode>
 </searchRelationRequest>
 
 ```
@@ -3205,9 +3271,13 @@ Search
 ## Response
 
 ```xml
-<cinnamon>
-  <relations/>
-</cinnamon>
+<Relation>
+  <id>399</id>
+  <leftId>1</leftId>
+  <rightId>4</rightId>
+  <typeId>1</typeId>
+  <metadata>&lt;generatedBy>PDF Renderer&lt;/generatedBy</metadata>
+</Relation>
 
 ```
 

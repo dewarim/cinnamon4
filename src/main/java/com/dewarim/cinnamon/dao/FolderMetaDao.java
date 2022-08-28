@@ -4,8 +4,6 @@ import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.FailedRequestException;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.model.Meta;
-import com.dewarim.cinnamon.model.MetasetType;
-import com.dewarim.cinnamon.model.request.CreateMetaRequest;
 import org.apache.ibatis.exceptions.PersistenceException;
 import org.apache.ibatis.session.SqlSession;
 
@@ -13,29 +11,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class FolderMetaDao {
+public class FolderMetaDao implements CrudDao<Meta>{
 
     public List<Meta> listByFolderId(long id) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
         return sqlSession.selectList("com.dewarim.cinnamon.model.FolderMeta.listByFolderId", id);
-    }
-
-    public List<Meta> getMetaByNamesAndFolderId(List<String> names, long id) {
-        SqlSession          sqlSession = ThreadLocalSqlSession.getSqlSession();
-        Map<String, Object> params     = new HashMap<>();
-        params.put("id", id);
-        params.put("typeNames", names);
-        return sqlSession.selectList("com.dewarim.cinnamon.model.FolderMeta.getMetasetsByNameAndFolderId", params);
-    }
-
-    public Meta createMeta(CreateMetaRequest metaRequest, MetasetType metaType) {
-        SqlSession          sqlSession = ThreadLocalSqlSession.getSqlSession();
-        Meta folderMeta = new Meta(metaRequest.getId(), metaType.getId(), metaRequest.getContent());
-        int resultRows = sqlSession.insert("com.dewarim.cinnamon.model.FolderMeta.insertMeta", folderMeta);
-        if(resultRows != 1){
-            throw new RuntimeException("Create FolderMeta failed.");
-        }
-        return folderMeta;
     }
 
     public Meta getFolderMetaById(Long metaId) {
@@ -64,5 +44,23 @@ public class FolderMetaDao {
                 throw new FailedRequestException(ErrorCode.DB_DELETE_FAILED, e);
             }
         });
+    }
+
+    @Override
+    public String getTypeClassName() {
+        return "com.dewarim.cinnamon.model.FolderMeta";
+    }
+    public List<Meta> getMetaByTypeIdsAndOsd(List<Long> typeIds, long id) {
+        SqlSession          sqlSession = ThreadLocalSqlSession.getSqlSession();
+        Map<String, Object> params     = new HashMap<>();
+        params.put("id", id);
+        params.put("typeIds", typeIds);
+        return sqlSession.selectList("com.dewarim.cinnamon.model.FolderMeta.getMetaByTypeIdsAndFolder", params);
+    }
+
+
+    public List<Long> getUniqueMetaTypeIdsOfFolder(Long folderId){
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        return sqlSession.selectList("com.dewarim.cinnamon.model.FolderMeta.getUniqueMetaTypeIdsOfFolder", folderId);
     }
 }

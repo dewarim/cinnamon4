@@ -248,22 +248,22 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createMetaMetasetTypeByNameNotFound() {
-        CreateMetaRequest request = new CreateMetaRequest(17L, "foo", "unknown");
+        CreateMetaRequest request = new CreateMetaRequest(17L, "foo", Long.MAX_VALUE);
         assertClientError(() -> client.createFolderMeta(request), METASET_TYPE_NOT_FOUND);
     }
 
     @Test
     public void createMetaMetasetIsUniqueAndExists() {
-        CreateMetaRequest request = new CreateMetaRequest(18L, "duplicate license", "license");
+        CreateMetaRequest request = new CreateMetaRequest(18L, "duplicate license", 2L);
         assertClientError(() -> client.createFolderMeta(request), METASET_IS_UNIQUE_AND_ALREADY_EXISTS);
     }
 
     @Test
     public void createFolderMetasetHappyWithExistingMeta() throws IOException {
-        CreateMetaRequest request      = new CreateMetaRequest(19L, "duplicate comment", "comment");
+        CreateMetaRequest request      = new CreateMetaRequest(19L, "duplicate comment", 1L);
         HttpResponse      metaResponse = sendStandardRequest(UrlMapping.FOLDER__CREATE_META, request);
         assertResponseOkay(metaResponse);
-        MetaRequest  metaRequest     = new MetaRequest(19L, Collections.singletonList("comment"));
+        MetaRequest  metaRequest     = new MetaRequest(19L, Collections.singletonList(1L));
         HttpResponse commentResponse = sendStandardRequest(UrlMapping.FOLDER__GET_META, metaRequest);
         assertResponseOkay(commentResponse);
         MetaWrapper metaWrapper = mapper.readValue(commentResponse.getEntity().getContent(), MetaWrapper.class);
@@ -272,7 +272,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createOsdMetasetHappyPath() throws IOException {
-        CreateMetaRequest request      = new CreateMetaRequest(17L, "new license meta", "license");
+        CreateMetaRequest request      = new CreateMetaRequest(17L, "new license meta", 2L);
         HttpResponse      metaResponse = sendStandardRequest(UrlMapping.OSD__CREATE_META, request);
         assertResponseOkay(metaResponse);
         MetaWrapper metaWrapper = mapper.readValue(metaResponse.getEntity().getContent(), MetaWrapper.class);
@@ -282,7 +282,6 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         assertEquals(2, meta.getTypeId().longValue());
     }
 
-
     @Test
     public void deleteMetaInvalidRequest() throws IOException {
         DeleteMetaRequest deleteRequest = new DeleteMetaRequest();
@@ -291,22 +290,15 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void deleteMetaObjectNotFound() throws IOException {
-        DeleteMetaRequest deleteRequest = new DeleteMetaRequest(Long.MAX_VALUE, 1L);
-        HttpResponse      metaResponse  = sendStandardRequest(UrlMapping.FOLDER__DELETE_META, deleteRequest);
-        assertCinnamonError(metaResponse, ErrorCode.FOLDER_NOT_FOUND);
-    }
-
-    @Test
     public void deleteMetaWithoutPermission() throws IOException {
-        DeleteMetaRequest deleteRequest = new DeleteMetaRequest(20L, "comment");
+        DeleteMetaRequest deleteRequest = new DeleteMetaRequest(4L);
         HttpResponse      metaResponse  = sendStandardRequest(UrlMapping.FOLDER__DELETE_META, deleteRequest);
         assertCinnamonError(metaResponse, NO_WRITE_CUSTOM_METADATA_PERMISSION);
     }
 
     @Test
     public void deleteMetaWithMetaNotFound() throws IOException {
-        DeleteMetaRequest deleteRequest = new DeleteMetaRequest(21L, "unknown-type");
+        DeleteMetaRequest deleteRequest = new DeleteMetaRequest(Long.MAX_VALUE);
         HttpResponse      metaResponse  = sendStandardRequest(UrlMapping.FOLDER__DELETE_META, deleteRequest);
         assertCinnamonError(metaResponse, ErrorCode.METASET_NOT_FOUND);
     }
@@ -314,13 +306,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void deleteMetaHappyPathById() throws IOException {
         // #7 folder_meta = metaset_type license
-        client.deleteFolderMeta(21L, 7L);
-    }
-
-    @Test
-    public void deleteMetaHappyPathByName() throws IOException {
-        // #5 + #6 folder_meta = metaset_type comment
-        client.deleteFolderMeta(21L, "comment");
+        client.deleteFolderMeta(7L);
     }
 
     @Test
@@ -798,7 +784,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     public void deleteFolderWithMetadata() throws IOException{
         TestObjectHolder toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
         Folder folder = toh.createFolder("deleteFolderWithMetadata", createFolderId).folder;
-        client.createFolderMeta(new CreateMetaRequest(folder.getId(), "some content", "comment"));
+        client.createFolderMeta(new CreateMetaRequest(folder.getId(), "some content", 1L));
         adminClient.deleteFolder(folder.getId(), false, false);
     }
 

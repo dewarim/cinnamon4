@@ -1,4 +1,4 @@
-package com.dewarim.cinnamon.application;
+package com.dewarim.cinnamon.application.service;
 
 import com.beust.jcommander.Strings;
 import com.dewarim.cinnamon.DefaultPermission;

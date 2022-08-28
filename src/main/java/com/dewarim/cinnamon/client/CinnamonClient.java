@@ -1009,15 +1009,14 @@ public class CinnamonClient {
         return summaryUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
-    public void deleteFolderMeta(Long folderId, Long metaId) throws IOException {
-        var request  = new DeleteMetaRequest(folderId, metaId);
+    public void deleteFolderMeta(Long metaId) throws IOException {
+        var request  = new DeleteMetaRequest(metaId);
         var response = sendStandardRequest(UrlMapping.FOLDER__DELETE_META, request);
         verifyDeleteResponse(response);
     }
-
-    public void deleteFolderMeta(Long folderId, String metaName) throws IOException {
-        var request  = new DeleteMetaRequest(folderId, metaName);
-        var response = sendStandardRequest(UrlMapping.FOLDER__DELETE_META, request);
+    public void deleteOsdMeta(Long metaId) throws IOException {
+        var request  = new DeleteMetaRequest(metaId);
+        var response = sendStandardRequest(UrlMapping.OSD__DELETE_META, request);
         verifyDeleteResponse(response);
     }
 

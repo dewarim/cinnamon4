@@ -1,6 +1,7 @@
 package com.dewarim.cinnamon.model.request;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.dewarim.cinnamon.model.Meta;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
@@ -9,26 +10,19 @@ import java.util.List;
 import java.util.Optional;
 
 @JacksonXmlRootElement(localName = "metaRequest")
-public class MetaRequest implements ApiRequest {
+public class MetaRequest implements ApiRequest<Meta> {
 
     private Long         id;
 
-    @JacksonXmlElementWrapper(localName = "typeNames")
-    @JacksonXmlProperty(localName = "typeName")
-    private List<String> typeNames;
-
-    /**
-     * Expects the XML content of each metaset to be an XML DOM element in the response XML,
-     * instead of an encoded String.
-     */
-    private boolean      version3CompatibilityRequired;
-
+    @JacksonXmlElementWrapper(localName = "typeIds")
+    @JacksonXmlProperty(localName = "typeIds")
+    private List<Long> typeIds;
     public MetaRequest() {
     }
 
-    public MetaRequest(Long id, List<String> typeNames) {
+    public MetaRequest(Long id, List<Long> typeIds) {
         this.id = id;
-        this.typeNames = typeNames;
+        this.typeIds = typeIds;
     }
 
     public Long getId() {
@@ -39,24 +33,16 @@ public class MetaRequest implements ApiRequest {
         this.id = id;
     }
 
-    public List<String> getTypeNames() {
-        return typeNames;
+    public List<Long> getTypeIds() {
+        return typeIds;
     }
 
-    public void setTypeNames(List<String> typeNames) {
-        this.typeNames = typeNames;
-    }
-
-    public boolean isVersion3CompatibilityRequired() {
-        return version3CompatibilityRequired;
-    }
-
-    public void setVersion3CompatibilityRequired(boolean version3CompatibilityRequired) {
-        this.version3CompatibilityRequired = version3CompatibilityRequired;
+    public void setTypeIds(List<Long> typeIds) {
+        this.typeIds = typeIds;
     }
 
     private boolean validated(){
-        return id != null && id > 0 && (typeNames == null || typeNames.stream().noneMatch(name -> name == null || name.trim().isEmpty()));
+        return id != null && id > 0 && (typeIds == null || typeIds.stream().noneMatch(typeId -> typeId == null || typeId < 0));
     }
 
     public Optional<MetaRequest> validateRequest() {
@@ -68,7 +54,7 @@ public class MetaRequest implements ApiRequest {
     }
 
     @Override
-    public List<Object> examples() {
-        return List.of(new MetaRequest(null, List.of("copyright", "thumbnail")), new MetaRequest(1L, null));
+    public List<ApiRequest<Meta>> examples() {
+        return List.of(new MetaRequest(3L, List.of(12L, 13L)), new MetaRequest(1L, null));
     }
 }

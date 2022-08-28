@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.dewarim.cinnamon.ObjectSystemDataMapper">
+<mapper namespace="com.dewarim.cinnamon.model.ObjectSystemData">
 
     <resultMap id="osdMap" type="com.dewarim.cinnamon.model.ObjectSystemData">
         <id property="id" column="id"/>
@@ -131,14 +131,14 @@
         ${versionPredicate}
     </select>
 
-    <select id="com.dewarim.cinnamon.ObjectSystemDataMapper.getLatestHead" parameterType="long" resultMap="osdMap">
+    <select id="com.dewarim.cinnamon.model.ObjectSystemData.getLatestHead" parameterType="long" resultMap="osdMap">
         select *
         from objects
         where root_id = #{id}
           and latest_head = true
     </select>
 
-    <select id="com.dewarim.cinnamon.ObjectSystemDataMapper.findLastDescendantVersion" parameterType="long"
+    <select id="com.dewarim.cinnamon.model.ObjectSystemData.findLastDescendantVersion" parameterType="long"
             resultMap="osdMap">
         select *
         from objects
@@ -205,5 +205,16 @@
             #{item}
         </foreach>
     </delete>
+
+
+    <select id="getAllById" parameterType="list" resultMap="osdMap">
+        SELECT *
+        FROM objects
+        WHERE id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
 
 </mapper>

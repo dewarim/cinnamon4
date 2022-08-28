@@ -26,7 +26,7 @@ public abstract class DeleteByIdRequest<T> implements DeleteRequest<T>{
 
     @Override
     public boolean validated() {
-        return ids.stream().allMatch(id -> id != null && id > 0 );
+        return ids != null && ids.stream().allMatch(id -> id != null && id > 0 );
     }
 
     public List<Long> getIds() {

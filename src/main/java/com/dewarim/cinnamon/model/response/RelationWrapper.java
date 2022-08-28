@@ -42,4 +42,11 @@ public class RelationWrapper implements Wrapper<Relation>, ApiResponse {
         setRelations(relations);
         return this;
     }
+
+    @Override
+    public List<Object> examples() {
+        Relation relation = new Relation(1L, 4L, 1L, "<generatedBy>PDF Renderer</generatedBy");
+        relation.setId(399L);
+        return List.of(relation);
+    }
 }

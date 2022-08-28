@@ -3,6 +3,8 @@ package com.dewarim.cinnamon.model.request.folder;
 import com.dewarim.cinnamon.api.ApiRequest;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
+import java.util.List;
+
 @JacksonXmlRootElement(localName = "folderPathRequest")
 public class FolderPathRequest implements ApiRequest {
 
@@ -37,4 +39,8 @@ public class FolderPathRequest implements ApiRequest {
         return path != null && path.length() > 0;
     }
 
+    @Override
+    public List<ApiRequest> examples() {
+        return List.of(new FolderPathRequest("/home/creation/some-sub-folder", true));
+    }
 }

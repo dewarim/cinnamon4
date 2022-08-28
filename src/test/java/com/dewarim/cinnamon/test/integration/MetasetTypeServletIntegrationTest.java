@@ -85,7 +85,7 @@ public class MetasetTypeServletIntegrationTest extends CinnamonIntegrationTest {
         var osd         = toh.createOsd("delete-metasetType-in-use-test").osd;
         var metasetType = adminClient.createMetasetType("test-in-use", false);
         client.lockOsd(osd.getId());
-        client.createOsdMeta(new CreateMetaRequest(osd.getId(), "<xml>test</xml>", "test-in-use"));
+        client.createOsdMeta(new CreateMetaRequest(osd.getId(), "<xml>test</xml>", metasetType.getId()));
         var ex = assertThrows(CinnamonClientException.class, () -> adminClient.deleteMetasetType(metasetType.getId()));
         assertEquals(ErrorCode.DB_DELETE_FAILED, ex.getErrorCode());
     }

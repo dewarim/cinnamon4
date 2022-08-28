@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-public class OsdDao {
+public class OsdDao implements CrudDao<ObjectSystemData> {
 
     /**
      * Max number of ids in "in clause" is 32768 for Postgresql.
@@ -38,7 +38,7 @@ public class OsdDao {
             }
             List<Long> partialList = ids.subList(rowCount, lastIndex);
             params.put("ids", partialList);
-            results.addAll(sqlSession.selectList("com.dewarim.cinnamon.ObjectSystemDataMapper.getOsdsById", params));
+            results.addAll(sqlSession.selectList("com.dewarim.cinnamon.model.ObjectSystemData.getOsdsById", params));
             rowCount += BATCH_SIZE;
         }
         return results;
@@ -46,7 +46,7 @@ public class OsdDao {
 
     public ObjectSystemData getLatestHead(long id) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        return sqlSession.selectOne("com.dewarim.cinnamon.ObjectSystemDataMapper.getLatestHead", id);
+        return sqlSession.selectOne("com.dewarim.cinnamon.model.ObjectSystemData.getLatestHead", id);
     }
 
     public List<ObjectSystemData> getObjectsByFolderId(long folderId, boolean includeSummary, VersionPredicate versionPredicate) {
@@ -60,7 +60,7 @@ public class OsdDao {
             case HEAD -> params.put("versionPredicate", " AND latest_head=true ");
             case BRANCH -> params.put("versionPredicate", " AND latest_branch=true ");
         }
-        return new ArrayList<>(sqlSession.selectList("com.dewarim.cinnamon.ObjectSystemDataMapper.getOsdsByFolderId", params));
+        return new ArrayList<>(sqlSession.selectList("com.dewarim.cinnamon.model.ObjectSystemData.getOsdsByFolderId", params));
     }
 
     public Optional<ObjectSystemData> getObjectById(long id) {
@@ -81,12 +81,12 @@ public class OsdDao {
                 osd.setModifierId(currentUser.getId());
             }
         }
-        sqlSession.update("com.dewarim.cinnamon.ObjectSystemDataMapper.updateOsd", osd);
+        sqlSession.update("com.dewarim.cinnamon.model.ObjectSystemData.updateOsd", osd);
     }
 
     public ObjectSystemData saveOsd(ObjectSystemData osd) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        int        resultRows = sqlSession.insert("com.dewarim.cinnamon.ObjectSystemDataMapper.insertOsd", osd);
+        int        resultRows = sqlSession.insert("com.dewarim.cinnamon.model.ObjectSystemData.insertOsd", osd);
         if (resultRows != 1) {
             ErrorCode.DB_INSERT_FAILED.throwUp();
         }
@@ -103,20 +103,25 @@ public class OsdDao {
 
     public List<ObjectSystemData> findObjectsWithSamePredecessor(long predecessorId) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        return sqlSession.selectList("com.dewarim.cinnamon.ObjectSystemDataMapper.findLastDescendantVersion", predecessorId);
+        return sqlSession.selectList("com.dewarim.cinnamon.model.ObjectSystemData.findLastDescendantVersion", predecessorId);
     }
 
     public void deleteOsds(List<Long> osdIdsToToDelete) {
         SqlSession          sqlSession = ThreadLocalSqlSession.getSqlSession();
         Map<String, Object> params     = new HashMap<>();
         params.put("ids", osdIdsToToDelete);
-        sqlSession.delete("com.dewarim.cinnamon.ObjectSystemDataMapper.deleteOsds", params);
+        sqlSession.delete("com.dewarim.cinnamon.model.ObjectSystemData.deleteOsds", params);
     }
 
     public Set<Long> getOsdIdByIdWithDescendants(Long id) {
         SqlSession          sqlSession = ThreadLocalSqlSession.getSqlSession();
         Map<String, Object> params     = new HashMap<>();
         params.put("ids", Collections.singletonList(id));
-        return new HashSet<>(sqlSession.selectList("com.dewarim.cinnamon.ObjectSystemDataMapper.getOsdIdByIdWithDescendants", params));
+        return new HashSet<>(sqlSession.selectList("com.dewarim.cinnamon.model.ObjectSystemData.getOsdIdByIdWithDescendants", params));
+    }
+
+    @Override
+    public String getTypeClassName() {
+        return ObjectSystemData.class.getName();
     }
 }

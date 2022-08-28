@@ -1,53 +1,42 @@
 package com.dewarim.cinnamon.model.request;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.dewarim.cinnamon.model.Meta;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @JacksonXmlRootElement(localName = "createMetaRequest")
-public class CreateMetaRequest implements ApiRequest {
+public class CreateMetaRequest implements ApiRequest<Meta> {
 
-    private Long   id;
-    private String content;
-    private Long   typeId;
-    private String typeName;
+    private List<Meta> metas = new ArrayList<>();
 
     public CreateMetaRequest() {
     }
 
     public CreateMetaRequest(Long id, String content, Long typeId) {
-        this.id = id;
-        this.content = content;
-        this.typeId = typeId;
+        metas.add(new Meta(id, typeId, content));
     }
 
-    public CreateMetaRequest(Long id, String content, String typeName) {
-        this.id = id;
-        this.content = content;
-        this.typeName = typeName;
+    public List<Meta> getMetas() {
+        return metas;
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public Long getTypeId() {
-        return typeId;
-    }
-
-    public String getTypeName() {
-        return typeName;
+    public void setMetas(List<Meta> metas) {
+        this.metas = metas;
     }
 
     private boolean validated() {
-        return id != null && id > 0
-                && ((typeId != null && typeId > 0) || (typeName != null && !typeName.trim().isEmpty()))
-                && (content != null);
+        if (metas == null || metas.isEmpty()) {
+            return false;
+        }
+        return metas.stream().allMatch(meta ->
+                meta.getObjectId() != null && meta.getObjectId() > 0
+                        && (meta.getTypeId() != null && meta.getTypeId() > 0)
+                        && (meta.getContent() != null)
+        );
     }
 
     public Optional<CreateMetaRequest> validateRequest() {
@@ -60,10 +49,14 @@ public class CreateMetaRequest implements ApiRequest {
 
     @Override
     public String toString() {
-        return "SetMetaRequest{" +
-                "id=" + id +
-                ", content='" + content + '\'' +
-                ", typeId=" + typeId +
+        return "CreateMetaRequest{" +
+                "metas=" + metas +
                 '}';
+    }
+
+    @Override
+    public List<ApiRequest<Meta>> examples() {
+        return List.of(new CreateMetaRequest(32L, "<xml>some meta</xml>", 3L),
+                new CreateMetaRequest(40L, "<meta>metadata</meta>", 10L));
     }
 }

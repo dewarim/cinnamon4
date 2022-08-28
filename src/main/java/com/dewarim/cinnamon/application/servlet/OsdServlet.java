@@ -9,8 +9,9 @@ import com.dewarim.cinnamon.api.content.ContentProvider;
 import com.dewarim.cinnamon.api.lifecycle.State;
 import com.dewarim.cinnamon.api.lifecycle.StateChangeResult;
 import com.dewarim.cinnamon.application.CinnamonResponse;
-import com.dewarim.cinnamon.application.DeleteOsdService;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
+import com.dewarim.cinnamon.application.service.DeleteMetaService;
+import com.dewarim.cinnamon.application.service.DeleteOsdService;
 import com.dewarim.cinnamon.dao.AclDao;
 import com.dewarim.cinnamon.dao.FolderDao;
 import com.dewarim.cinnamon.dao.FormatDao;
@@ -86,6 +87,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.dewarim.cinnamon.api.Constants.LANGUAGE_UNDETERMINED_ISO_CODE;
@@ -95,7 +97,7 @@ import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 @MultipartConfig
 @WebServlet(name = "Osd", urlPatterns = "/")
-public class OsdServlet extends BaseServlet {
+public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSystemData> {
 
     private final        ObjectMapper         xmlMapper            = XML_MAPPER;
     private final        AuthorizationService authorizationService = new AuthorizationService();
@@ -391,28 +393,13 @@ public class OsdServlet extends BaseServlet {
 
     private void deleteMeta(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws
             IOException {
-        DeleteMetaRequest metaRequest = xmlMapper.readValue(request.getInputStream(), DeleteMetaRequest.class)
+        DeleteMetaRequest metaRequest = (DeleteMetaRequest) getMapper().readValue(request.getInputStream(), DeleteMetaRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
-        Long             osdId = metaRequest.getId();
-        ObjectSystemData osd   = osdDao.getObjectById(osdId).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
-        throwUnlessCustomMetaIsWritable(osd, user);
 
-        List<Long> metaIds;
         OsdMetaDao metaDao = new OsdMetaDao();
-        if (metaRequest.getMetaId() != null) {
-            metaIds = Collections.singletonList(metaRequest.getMetaId());
-        } else {
-            metaIds = metaDao.getMetaByNamesAndOsd(Collections.singletonList(metaRequest.getTypeName()), osdId)
-                    .stream().map(Meta::getId).collect(Collectors.toList());
-        }
-        if (metaIds.isEmpty()) {
-            throw ErrorCode.METASET_NOT_FOUND.exception();
-        }
-        int deleteCount = metaDao.delete(metaIds);
-        if (deleteCount != metaIds.size()) {
-            ErrorCode.DB_DELETE_FAILED.throwUp();
-        }
-        response.responseIsGenericOkay();
+        new DeleteMetaService<>().deleteMeta(metaDao, metaRequest.getIds(), osdDao, user );
+        var deleteResponse = new DeleteResponse(true);
+        response.setWrapper(deleteResponse);
     }
 
     /**
@@ -432,13 +419,13 @@ public class OsdServlet extends BaseServlet {
         throwUnlessCustomMetaIsReadable(osd);
 
         List<Meta> metaList;
-        if (metaRequest.getTypeNames() != null) {
-            metaList = new OsdMetaDao().getMetaByNamesAndOsd(metaRequest.getTypeNames(), osdId);
+        if (metaRequest.getTypeIds() != null) {
+            metaList = new OsdMetaDao().getMetaByTypeIdsAndOsd(metaRequest.getTypeIds(), osdId);
         } else {
             metaList = new OsdMetaDao().listByOsd(osdId);
         }
 
-        createMetaResponse(metaRequest, response, metaList);
+        createMetaResponse(response, metaList);
     }
 
     private void createMeta(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws
@@ -446,20 +433,40 @@ public class OsdServlet extends BaseServlet {
         CreateMetaRequest metaRequest = xmlMapper.readValue(request.getInputStream(), CreateMetaRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
-        Long             osdId = metaRequest.getId();
-        ObjectSystemData osd   = osdDao.getObjectById(osdId).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
-        throwUnlessCustomMetaIsWritable(osd, user);
-        MetasetType metaType = determineMetasetType(metaRequest.getTypeId(), metaRequest.getTypeName());
+        // load osds
+        List<Long>             osdIds = metaRequest.getMetas().stream().map(Meta::getObjectId).collect(Collectors.toList());
+        List<ObjectSystemData> osds   = osdDao.getObjectsById(osdIds, false);
+        if (osdIds.size() != osds.size()) {
+            throw ErrorCode.OBJECT_NOT_FOUND.getException().get();
+        }
+        Map<Long, ObjectSystemData> osdMap = osds.stream().filter(osd -> {
+            throwUnlessCustomMetaIsWritable(osd, user);
+            return true;
+        }).collect(Collectors.toMap(ObjectSystemData::getId, Function.identity()));
+
+        // load metasetTypes
+        MetasetTypeDao         metasetTypeDao = new MetasetTypeDao();
+        Map<Long, MetasetType> metasetTypes   = metasetTypeDao.list().stream().collect(Collectors.toMap(MetasetType::getId, Function.identity()));
+        // check that request does not contain unknown metasetTypeIds
+        Set<Long> requestedTypeIds = metaRequest.getMetas().stream().map(Meta::getTypeId).collect(Collectors.toUnmodifiableSet());
+        if (!requestedTypeIds.stream().allMatch(metasetTypes::containsKey)) {
+            throw ErrorCode.METASET_TYPE_NOT_FOUND.exception();
+        }
 
         // does meta already exist and is unique?
         OsdMetaDao metaDao = new OsdMetaDao();
-        List<Meta> metas   = metaDao.getMetaByNamesAndOsd(Collections.singletonList(metaType.getName()), osdId);
-        if (metaType.getUnique() && metas.size() > 0) {
-            throw ErrorCode.METASET_IS_UNIQUE_AND_ALREADY_EXISTS.exception();
-        }
-        Meta       meta     = new Meta(metaRequest.getId(), metaType.getId(), metaRequest.getContent());
-        List<Meta> newMetas = metaDao.create(List.of(meta));
-        createMetaResponse(new MetaRequest(), response, newMetas);
+        osdIds.forEach(osdId -> {
+            List<Long> uniqueMetaTypeIds = metaDao.getUniqueMetaTypeIdsOfOsd(osdId);
+            if (requestedTypeIds.stream().anyMatch(uniqueMetaTypeIds::contains)) {
+                throw ErrorCode.METASET_IS_UNIQUE_AND_ALREADY_EXISTS.exception();
+            }
+        });
+
+        List<Meta> metasToCreate = metaRequest.getMetas().stream().map(meta -> new Meta(meta.getObjectId(), meta.getTypeId(), meta.getContent()))
+                .collect(Collectors.toList());
+        List<Meta> newMetas = metaDao.create(metasToCreate);
+
+        createMetaResponse(response, newMetas);
     }
 
     private MetasetType determineMetasetType(Long typeId, String typeName) {
@@ -820,8 +827,8 @@ public class OsdServlet extends BaseServlet {
             versionRequest.getMetaRequests().forEach(metadata -> {
                         try {
                             MetasetType       metasetType       = determineMetasetType(metadata.getTypeId(), metadata.getTypeName());
-                            CreateMetaRequest createMetaRequest = new CreateMetaRequest(osd.getId(), metadata.getContent(), metasetType.getName());
-                            osdMetaDao.createMeta(createMetaRequest, metasetType);
+                            Meta              meta              = new Meta(osd.getId(), metasetType.getId(), metadata.getContent());
+                            osdMetaDao.create(List.of(meta));
                         } catch (FailedRequestException e) {
                             errorCodes.add(e.getErrorCode());
                         } catch (Exception e) {
@@ -868,4 +875,8 @@ public class OsdServlet extends BaseServlet {
         }
     }
 
+    @Override
+    public ObjectMapper getMapper() {
+        return xmlMapper;
+    }
 }
