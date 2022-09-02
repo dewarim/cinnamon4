@@ -24,12 +24,16 @@ public class CreateUserAccountRequest implements CreateRequest<UserAccount>, Api
     }
 
     public CreateUserAccountRequest(String name, String password, String fullname, String email, Long uiLanguageId,
-                                    String loginType, Boolean changeTracking, Boolean activated) {
+                                    String loginType, Boolean changeTracking, Boolean activated, Boolean activateTriggers) {
         UserAccount userAccount = new UserAccount(name, password, fullname, email, uiLanguageId,
-                loginType, changeTracking, activated);
+                loginType, changeTracking, activated, activateTriggers);
         userAccount.setLocked(false);
         userAccount.setPasswordExpired(false);
         userAccounts.add(userAccount);
+    }
+
+    public CreateUserAccountRequest(List<UserAccount> userAccounts) {
+        this.userAccounts = userAccounts;
     }
 
     @Override
@@ -63,6 +67,6 @@ public class CreateUserAccountRequest implements CreateRequest<UserAccount>, Api
     @Override
     public List<Object> examples() {
         return List.of(new CreateUserAccountRequest("jane", "super-secret", "Jane Doe", "jane@example.com", 1L,
-                LoginType.CINNAMON.name(), false, true));
+                LoginType.CINNAMON.name(), false, true, true));
     }
 }

@@ -24,17 +24,19 @@ public class UserAccount implements Principal, LoginUser, Identifiable {
     private String     fullname;
     private String     email;
     private boolean    changeTracking;
+    private boolean    activateTriggers = true;
     @JsonIgnore
     private String     token;
     @JsonIgnore
     private int        tokensToday;
     private boolean    passwordExpired;
-    private List<Long> groupIds = new ArrayList<>();
+    private List<Long> groupIds         = new ArrayList<>();
 
     public UserAccount() {
     }
 
-    public UserAccount(String name, String password, String fullname, String email, Long uiLanguageId, String loginType, Boolean changeTracking, Boolean activated) {
+    public UserAccount(String name, String password, String fullname, String email, Long uiLanguageId, String loginType,
+                       Boolean changeTracking, Boolean activated, Boolean activateTriggers) {
         this.name = name;
         this.password = password;
         this.fullname = fullname;
@@ -43,6 +45,15 @@ public class UserAccount implements Principal, LoginUser, Identifiable {
         this.loginType = loginType;
         this.changeTracking = changeTracking;
         this.activated = activated;
+        this.activateTriggers = activateTriggers;
+    }
+
+    public boolean isActivateTriggers() {
+        return activateTriggers;
+    }
+
+    public void setActivateTriggers(boolean activateTriggers) {
+        this.activateTriggers = activateTriggers;
     }
 
     @Override
@@ -184,6 +195,7 @@ public class UserAccount implements Principal, LoginUser, Identifiable {
                 && id.equals(that.id) && name.equals(that.name) && loginType.equals(that.loginType)
                 && password.equals(that.password) && Objects.equals(uiLanguageId, that.uiLanguageId)
                 && Objects.equals(fullname, that.fullname) && Objects.equals(email, that.email)
+                && Objects.equals(activateTriggers, that.activateTriggers)
                 && Objects.equals(token, that.token) && Objects.equals(groupIds, that.groupIds);
     }
 
@@ -205,6 +217,7 @@ public class UserAccount implements Principal, LoginUser, Identifiable {
                 ", fullname='" + fullname + '\'' +
                 ", email='" + email + '\'' +
                 ", changeTracking=" + changeTracking +
+                ", activateTriggers=" + activateTriggers +
                 ", token='" + token + '\'' +
                 ", tokensToday=" + tokensToday +
                 ", passwordExpired=" + passwordExpired +

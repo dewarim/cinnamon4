@@ -588,6 +588,7 @@ Delete a list of config entries
 ---
 
 # /api/config/listAllConfigurations
+List of all objects the client may want to cache, for example users, object types, groups, permissions, languages etc.
 
 
 ## Request
@@ -626,7 +627,7 @@ Delete a list of config entries
 ---
 
 # /api/folderType/create
-
+Create a new folder type
 
 ## Request
 
@@ -671,7 +672,7 @@ Delete a list of config entries
 ---
 
 # /api/folderType/delete
-
+Delete a folder type
 
 ## Request
 
@@ -697,7 +698,7 @@ Delete a list of config entries
 ---
 
 # /api/folderType/list
-
+List all folder types
 
 ## Request
 
@@ -747,7 +748,7 @@ Delete a list of config entries
 ---
 
 # /api/folder/create
-
+Create a new folder.
 
 ## Request
 
@@ -764,7 +765,7 @@ Delete a list of config entries
       <typeId>4</typeId>
       <metadataChanged>false</metadataChanged>
       <summary>&lt;summary>&lt;description>contains images&lt;/description>&lt;/summary></summary>
-      <created>2022-08-28T11:02:22+0000</created>
+      <created>2022-09-02T08:49:15+0000</created>
     </folder>
     <folder>
       <id/>
@@ -776,7 +777,7 @@ Delete a list of config entries
       <typeId>2</typeId>
       <metadataChanged>false</metadataChanged>
       <summary>&lt;summary /></summary>
-      <created>2022-08-28T11:02:22+0000</created>
+      <created>2022-09-02T08:49:15+0000</created>
     </folder>
   </folders>
 </createFolderRequest>
@@ -1069,7 +1070,7 @@ Fetch a single folder
 ---
 
 # /api/folder/setSummary
-
+Add a summary to an object, for example a short description of this folder's content. Currently single-folder-API.
 
 ## Request
 
@@ -2839,7 +2840,7 @@ Set an OSD's content. Requires a multipart-mime request, with part "setContentRe
 ---
 
 # /api/osd/setSummary
-
+Add a summary to an object, for example a short description of the content.
 
 ## Request
 
@@ -3441,6 +3442,7 @@ Returns status code 400
       <fullname>Jane Doe</fullname>
       <email>jane@example.com</email>
       <changeTracking>false</changeTracking>
+      <activateTriggers>true</activateTriggers>
       <passwordExpired>false</passwordExpired>
       <groupIds/>
     </userAccount>
@@ -3466,6 +3468,7 @@ Returns status code 400
       <fullname>U.W.Example</fullname>
       <email>user@example.com</email>
       <changeTracking>true</changeTracking>
+      <activateTriggers>true</activateTriggers>
       <passwordExpired>false</passwordExpired>
       <groupIds/>
     </user>
@@ -3506,6 +3509,7 @@ Returns status code 400
       <fullname>U.W.Example</fullname>
       <email>user@example.com</email>
       <changeTracking>true</changeTracking>
+      <activateTriggers>true</activateTriggers>
       <passwordExpired>false</passwordExpired>
       <groupIds/>
     </user>
@@ -3546,6 +3550,7 @@ Returns status code 400
       <fullname>U.W.Example</fullname>
       <email>user@example.com</email>
       <changeTracking>true</changeTracking>
+      <activateTriggers>true</activateTriggers>
       <passwordExpired>false</passwordExpired>
       <groupIds/>
     </user>
@@ -3621,6 +3626,7 @@ Returns status code 400
       <fullname>U.W.Example</fullname>
       <email>user@example.com</email>
       <changeTracking>true</changeTracking>
+      <activateTriggers>true</activateTriggers>
       <passwordExpired>false</passwordExpired>
       <groupIds/>
     </user>

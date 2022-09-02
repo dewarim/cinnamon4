@@ -165,12 +165,14 @@ public enum UrlMapping {
             ListConfigEntryRequest.class, ConfigEntryWrapper.class),
     CONFIG_ENTRY__UPDATE("configEntry", "update", "/api", "Update a list of config entries", UpdateConfigEntryRequest.class, ConfigEntryWrapper.class),
     CONFIG_ENTRY__DELETE("configEntry", "delete", "/api", "Delete a list of config entries", DeleteConfigEntryRequest.class, DeleteResponse.class),
-    CONFIG__LIST_ALL_CONFIGURATIONS("config", "listAllConfigurations", "/api", "", ListConfigRequest.class, ConfigWrapper.class),
-    FOLDER_TYPE__CREATE("folderType", "create", "/api", "", CreateFolderTypeRequest.class, FolderTypeWrapper.class),
-    FOLDER_TYPE__DELETE("folderType", "delete", "/api", "", DeleteFolderTypeRequest.class, DeleteResponse.class),
-    FOLDER_TYPE__LIST("folderType", "list", "/api", "", ListFolderTypeRequest.class, FolderTypeWrapper.class),
+    CONFIG__LIST_ALL_CONFIGURATIONS("config", "listAllConfigurations", "/api", """
+            List of all objects the client may want to cache, for example users, object types, groups, permissions, languages etc.
+            """, ListConfigRequest.class, ConfigWrapper.class),
+    FOLDER_TYPE__CREATE("folderType", "create", "/api", "Create a new folder type", CreateFolderTypeRequest.class, FolderTypeWrapper.class),
+    FOLDER_TYPE__DELETE("folderType", "delete", "/api", "Delete a folder type", DeleteFolderTypeRequest.class, DeleteResponse.class),
+    FOLDER_TYPE__LIST("folderType", "list", "/api", "List all folder types", ListFolderTypeRequest.class, FolderTypeWrapper.class),
     FOLDER_TYPE__UPDATE("folderType", "update", "/api", "", UpdateFolderTypeRequest.class, FolderTypeWrapper.class),
-    FOLDER__CREATE("folder", "create", "/api", "", CreateFolderRequest.class, null),
+    FOLDER__CREATE("folder", "create", "/api", "Create a new folder.", CreateFolderRequest.class, null),
     FOLDER__CREATE_META("folder", "createMeta", "/api", "", CreateMetaRequest.class, MetaWrapper.class),
     FOLDER__DELETE("folder", "delete", "/api", "", DeleteFolderRequest.class, DeleteResponse.class),
     FOLDER__DELETE_META("folder", "deleteMeta", "/api", "", DeleteMetaRequest.class, DeleteResponse.class),
@@ -180,7 +182,7 @@ public enum UrlMapping {
     FOLDER__GET_META("folder", "getMeta", "/api", "", MetaRequest.class, MetaWrapper.class),
     FOLDER__GET_SUBFOLDERS("folder", "getSubFolders", "/api", "", SingleFolderRequest.class, FolderWrapper.class),
     FOLDER__GET_SUMMARIES("folder", "getSummaries", "/api", "", IdListRequest.class, SummaryWrapper.class),
-    FOLDER__SET_SUMMARY("folder", "setSummary", "/api", "", SetSummaryRequest.class, GenericResponse.class),
+    FOLDER__SET_SUMMARY("folder", "setSummary", "/api", "Add a summary to an object, for example a short description of this folder's content. Currently single-folder-API.", SetSummaryRequest.class, GenericResponse.class),
     FOLDER__UPDATE("folder", "update", "/api", "", UpdateFolderRequest.class, GenericResponse.class),
     FORMAT__LIST("format", "list", "/api", "", ListFormatRequest.class, FormatWrapper.class),
     FORMAT__CREATE("format", "create", "/api", "", CreateFormatRequest.class, FormatWrapper.class),
@@ -247,7 +249,7 @@ public enum UrlMapping {
             Set an OSD's content. Requires a multipart-mime request, with part "setContentRequest" and part "file".
             """,
             SetContentRequest.class, GenericResponse.class),
-    OSD__SET_SUMMARY("osd", "setSummary", "/api", "", SetSummaryRequest.class, GenericResponse.class),
+    OSD__SET_SUMMARY("osd", "setSummary", "/api", "Add a summary to an object, for example a short description of the content.", SetSummaryRequest.class, GenericResponse.class),
     OSD__UNLOCK("osd", "unlock", "/api", "", IdRequest.class, GenericResponse.class),
     OSD__UPDATE("osd", "update", "/api", "", UpdateOsdRequest.class, GenericResponse.class),
     OSD__VERSION("osd", "version", "/api", """

@@ -168,7 +168,7 @@ public class GroupServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void addUserToGroupAndRemove() throws IOException {
         var userGroup = adminClient.createGroup(new Group("user-group", null));
-        var user      = adminClient.createUser(new UserAccount("user-for-a-group", "passwehde", "-", "-", 1L, LoginType.CINNAMON.name(), true, true));
+        var user      = adminClient.createUser(new UserAccount("user-for-a-group", "passwehde", "-", "-", 1L, LoginType.CINNAMON.name(), true, true, true));
         adminClient.addUserToGroups(user.getId(), List.of(userGroup.getId()));
         UserAccount userWithGroup = client.getUser(user.getId());
         assertEquals(userGroup.getId(), userWithGroup.getGroupIds().get(0));
@@ -182,7 +182,7 @@ public class GroupServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void addUserToNonExistentGroup() throws IOException {
         var user = adminClient.createUser(new UserAccount("user-for-a-missing-group",
-                "passwehde", "-", "-", 1L, LoginType.CINNAMON.name(), true, true));
+                "passwehde", "-", "-", 1L, LoginType.CINNAMON.name(), true, true, true));
         CinnamonClientException ex = assertThrows(CinnamonClientException.class, () ->
                 adminClient.addUserToGroups(user.getId(), List.of(Long.MAX_VALUE)));
         assertEquals(ErrorCode.DB_INSERT_FAILED, ex.getErrorCode());

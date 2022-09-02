@@ -118,7 +118,7 @@ public class UserAccountServletIntegrationTest extends CinnamonIntegrationTest {
         String username = "new user";
         String password = "xxx12345";
         UserAccount user = new UserAccount(username, password, "A new user", "user@invalid.com",
-                1L, LoginType.CINNAMON.name(), false, true);
+                1L, LoginType.CINNAMON.name(), false, true, true);
         UserAccount userAccount = adminClient.createUser(user);
         assertEquals(username, userAccount.getName());
         assertEquals(user.getFullname(), userAccount.getFullname());
@@ -127,6 +127,7 @@ public class UserAccountServletIntegrationTest extends CinnamonIntegrationTest {
         assertEquals(user.getLoginType(), userAccount.getLoginType());
         assertEquals(user.isChangeTracking(), userAccount.isChangeTracking());
         assertEquals(user.isActivated(), userAccount.isActivated());
+        assertEquals(user.isActivateTriggers(), userAccount.isActivateTriggers());
 
         var testClient = new CinnamonClient(adminClient.getPort(), adminClient.getHost(), adminClient.getProtocol(),
                 username, password);
@@ -138,7 +139,7 @@ public class UserAccountServletIntegrationTest extends CinnamonIntegrationTest {
     public void createUserWithoutPassword() {
         String username = "new user without password";
         UserAccount user = new UserAccount(username, "", "A new user", "user@invalid.com",
-                1L, LoginType.CINNAMON.name(), false, true);
+                1L, LoginType.CINNAMON.name(), false, true,false);
         CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> adminClient.createUser(user));
         assertEquals(ErrorCode.INVALID_REQUEST, ex.getErrorCode());
     }
@@ -146,7 +147,7 @@ public class UserAccountServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void createUserWithExistingName(){
         UserAccount user = new UserAccount("admin", "a second admin!", "A new user", "user@invalid.com",
-                1L, LoginType.CINNAMON.name(), false, true);
+                1L, LoginType.CINNAMON.name(), false, true, false);
         CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> adminClient.createUser(user));
         assertEquals(ErrorCode.DB_INSERT_FAILED, ex.getErrorCode());
     }
@@ -154,7 +155,7 @@ public class UserAccountServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void createUserWithoutAdminAccess(){
         UserAccount user = new UserAccount("not-an-admin", "just-a-pass", "A new user", "user@invalid.com",
-                1L, LoginType.CINNAMON.name(), false, true);
+                1L, LoginType.CINNAMON.name(), false, true, true);
         CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> client.createUser(user));
         assertEquals(ErrorCode.REQUIRES_SUPERUSER_STATUS, ex.getErrorCode());
     }
@@ -163,7 +164,7 @@ public class UserAccountServletIntegrationTest extends CinnamonIntegrationTest {
     public void createUserWithoutTooShortPassword() {
         String username = "new user with tiny password";
         UserAccount user = new UserAccount(username, "tiny", "A new user", "user@invalid.com",
-                1L, LoginType.CINNAMON.name(), false, true);
+                1L, LoginType.CINNAMON.name(), false, true, false);
         CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> adminClient.createUser(user));
         assertEquals(ErrorCode.PASSWORD_TOO_SHORT, ex.getErrorCode());
     }
@@ -173,7 +174,7 @@ public class UserAccountServletIntegrationTest extends CinnamonIntegrationTest {
         String username = "update user";
         String password = "12345678";
         UserAccount user = new UserAccount(username, password, "A new user", "user@invalid.com",
-                1L, LoginType.CINNAMON.name(), false, true);
+                1L, LoginType.CINNAMON.name(), false, true, true);
         UserAccount account = adminClient.createUser(user);
         account.setName("updated user");
         UserAccount userAccount = adminClient.updateUser(account);
@@ -183,7 +184,7 @@ public class UserAccountServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void updateWithDuplicateName() throws IOException {
         UserAccount user = new UserAccount("duplicate-name-test", "xxx123456", "A new user", "user@invalid.com",
-                1L, LoginType.CINNAMON.name(), false, true);
+                1L, LoginType.CINNAMON.name(), false, true, true);
         UserAccount account = adminClient.createUser(user);
         account.setName("admin");
 
@@ -197,7 +198,7 @@ public class UserAccountServletIntegrationTest extends CinnamonIntegrationTest {
         String username    = "update-without-changing-password";
         String newUserName = "a new updated name";
         UserAccount user = new UserAccount(username, password, "A new user", "user@invalid.com",
-                1L, LoginType.CINNAMON.name(), false, true);
+                1L, LoginType.CINNAMON.name(), false, true, true);
         UserAccount account = adminClient.createUser(user);
         account.setName(newUserName);
         // passwords should always be filtered when returning a user:

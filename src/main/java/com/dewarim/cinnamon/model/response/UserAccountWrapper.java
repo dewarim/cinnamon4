@@ -45,6 +45,6 @@ public class UserAccountWrapper implements Wrapper<UserAccount>, ApiResponse {
     @Override
     public List<Object> examples() {
         return List.of(new UserAccountWrapper(List.of(
-                new UserAccount("user-wrapper-example", "see-creta", "U.W.Example", "user@example.com", 1L, LoginType.CINNAMON.name(), true, true))));
+                new UserAccount("user-wrapper-example", "see-creta", "U.W.Example", "user@example.com", 1L, LoginType.CINNAMON.name(), true, true,true))));
     }
 }
