@@ -104,7 +104,10 @@ public enum ErrorCode {
     STATIC__NO_PATH_TRAVERSAL("no path traversal allowed", HttpServletResponse.SC_FORBIDDEN),
     UNAUTHORIZED("access not allowed", HttpServletResponse.SC_UNAUTHORIZED),
     USER_INFO_REQUEST_WITHOUT_NAME_OR_ID("userInfoRequest missing id or name", HttpServletResponse.SC_BAD_REQUEST),
-    USER_ACCOUNT_NOT_FOUND("userInfoRequest invalid id or name", HttpServletResponse.SC_NOT_FOUND)
+    USER_ACCOUNT_NOT_FOUND("userInfoRequest invalid id or name", HttpServletResponse.SC_NOT_FOUND),
+    USER_ACCOUNT_SET_PASSWORD_NOT_ALLOWED("""
+    You can only set a password on a user with original Cinnamon login,
+     Cinnamon cannot change your password on an external login provider like LDAP.""", HttpServletResponse.SC_BAD_REQUEST)
     ;
 
     private static final Map<String, ErrorCode> codeMapping = new ConcurrentHashMap<>();

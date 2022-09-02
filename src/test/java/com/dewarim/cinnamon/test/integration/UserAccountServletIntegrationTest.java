@@ -52,9 +52,9 @@ public class UserAccountServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void listUsers() throws IOException {
-        List<UserAccount> users = client.listUsers();
-        List<String>      names = Arrays.asList("admin", "doe", "deactivated user", "locked user");
-        List<String> userNames = users.stream().map(UserAccount::getName).collect(Collectors.toList());
+        List<UserAccount> users     = client.listUsers();
+        List<String>      names     = Arrays.asList("admin", "doe", "deactivated user", "locked user");
+        List<String>      userNames = users.stream().map(UserAccount::getName).collect(Collectors.toList());
         assertTrue(userNames.containsAll(names));
         assertFalse(client.getUser("deactivated user").isActivated());
         assertTrue(client.getUser("locked user").isLocked());
@@ -139,13 +139,13 @@ public class UserAccountServletIntegrationTest extends CinnamonIntegrationTest {
     public void createUserWithoutPassword() {
         String username = "new user without password";
         UserAccount user = new UserAccount(username, "", "A new user", "user@invalid.com",
-                1L, LoginType.CINNAMON.name(), false, true,false);
+                1L, LoginType.CINNAMON.name(), false, true, false);
         CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> adminClient.createUser(user));
         assertEquals(ErrorCode.INVALID_REQUEST, ex.getErrorCode());
     }
 
     @Test
-    public void createUserWithExistingName(){
+    public void createUserWithExistingName() {
         UserAccount user = new UserAccount("admin", "a second admin!", "A new user", "user@invalid.com",
                 1L, LoginType.CINNAMON.name(), false, true, false);
         CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> adminClient.createUser(user));
@@ -153,11 +153,28 @@ public class UserAccountServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void createUserWithoutAdminAccess(){
+    public void createUserWithoutAdminAccess() {
         UserAccount user = new UserAccount("not-an-admin", "just-a-pass", "A new user", "user@invalid.com",
                 1L, LoginType.CINNAMON.name(), false, true, true);
         CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> client.createUser(user));
         assertEquals(ErrorCode.REQUIRES_SUPERUSER_STATUS, ex.getErrorCode());
+    }
+
+    @Test
+    public void setPasswordOnNonCinnamonLoginType() throws IOException {
+        UserAccount user = new UserAccount("user-with-other-login-type", "just-a-pass", "A new user", "user@invalid.com",
+                1L, "UNKNOWN_LOGIN_TYPE", false, true, true);
+        UserAccount             userAccount = adminClient.createUser(user);
+        CinnamonClientException ex          = assertThrows(CinnamonClientException.class, () -> adminClient.setPassword(userAccount.getId(), "some other password"));
+        assertEquals(ErrorCode.USER_ACCOUNT_SET_PASSWORD_NOT_ALLOWED, ex.getErrorCode());
+    }
+
+    @Test
+    public void setPassword() throws IOException {
+        UserAccount user = new UserAccount("not-an-admin", "just-a-pass", "A new user", "user@invalid.com",
+                1L, LoginType.CINNAMON.name(), false, true, true);
+        UserAccount userAccount = adminClient.createUser(user);
+        assertTrue(adminClient.setPassword(userAccount.getId(), "some other password"));
     }
 
     @Test

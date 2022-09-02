@@ -7,6 +7,7 @@ import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.configuration.SecurityConfig;
 import com.dewarim.cinnamon.dao.UserAccountDao;
+import com.dewarim.cinnamon.model.LoginType;
 import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
@@ -47,13 +48,15 @@ public class UserAccountServlet extends HttpServlet implements CruddyServlet<Use
 
         UrlMapping mapping = UrlMapping.getByPath(request.getRequestURI());
         switch (mapping) {
-            case USER__GET -> showUserInfo(xmlMapper.readValue(request.getReader(), GetUserAccountRequest.class), userAccountDao, cinnamonResponse);
+            case USER__GET ->
+                    showUserInfo(xmlMapper.readValue(request.getReader(), GetUserAccountRequest.class), userAccountDao, cinnamonResponse);
             case USER__LIST -> {
                 list(convertListRequest(request, ListUserAccountRequest.class), userAccountDao, cinnamonResponse);
                 ((List<UserAccount>) cinnamonResponse.getWrapper().list()).forEach(UserAccount::filterInfo);
             }
             case USER__CREATE -> {
                 superuserCheck();
+                // TODO: check that loginProvider is valid.
                 CreateRequest<UserAccount> createRequest = convertCreateRequest(request, CreateUserAccountRequest.class);
                 createRequest.list().forEach(userAccount -> {
                     if (passwordIsTooShort(userAccount.getPassword())) {
@@ -93,10 +96,10 @@ public class UserAccountServlet extends HttpServlet implements CruddyServlet<Use
     }
 
     private void setPassword(HttpServletRequest request, UserAccountDao userDao, CinnamonResponse response) throws IOException {
-        // TODO: add SetPasswordRequest.validateRequest
-        SetPasswordRequest    passwordRequest = xmlMapper.readValue(request.getInputStream(), SetPasswordRequest.class);
-        UserAccount           currentUser     = ThreadLocalSqlSession.getCurrentUser();
-        Optional<UserAccount> userOpt         = userDao.getUserAccountById(passwordRequest.getUserId());
+        SetPasswordRequest passwordRequest = xmlMapper.readValue(request.getInputStream(), SetPasswordRequest.class)
+                .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
+        UserAccount           currentUser = ThreadLocalSqlSession.getCurrentUser();
+        Optional<UserAccount> userOpt     = userDao.getUserAccountById(passwordRequest.getUserId());
 
         if (!passwordRequest.getUserId().equals(currentUser.getId())) {
             if (!userDao.isSuperuser(currentUser)) {
@@ -109,6 +112,9 @@ public class UserAccountServlet extends HttpServlet implements CruddyServlet<Use
         }
 
         UserAccount user    = userOpt.orElseThrow(ErrorCode.USER_ACCOUNT_NOT_FOUND.getException());
+        if(!user.getLoginType().equals(LoginType.CINNAMON.name())){
+            throw ErrorCode.USER_ACCOUNT_SET_PASSWORD_NOT_ALLOWED.exception();
+        }
         String      pwdHash = HashMaker.createDigest(passwordRequest.getPassword());
         user.setPassword(pwdHash);
         userDao.updateUser(user);

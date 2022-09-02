@@ -110,6 +110,7 @@ import com.dewarim.cinnamon.model.request.uiLanguage.UpdateUiLanguageRequest;
 import com.dewarim.cinnamon.model.request.user.CreateUserAccountRequest;
 import com.dewarim.cinnamon.model.request.user.GetUserAccountRequest;
 import com.dewarim.cinnamon.model.request.user.ListUserAccountRequest;
+import com.dewarim.cinnamon.model.request.user.SetPasswordRequest;
 import com.dewarim.cinnamon.model.request.user.UpdateUserAccountRequest;
 import com.dewarim.cinnamon.model.request.user.UserPermissionRequest;
 import com.dewarim.cinnamon.model.response.AclGroupWrapper;
@@ -162,8 +163,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.dewarim.cinnamon.api.Constants.*;
-import static com.dewarim.cinnamon.api.UrlMapping.OSD__CREATE_OSD;
-import static com.dewarim.cinnamon.api.UrlMapping.OSD__UPDATE;
+import static com.dewarim.cinnamon.api.UrlMapping.*;
 import static com.dewarim.cinnamon.model.request.osd.VersionPredicate.ALL;
 import static org.apache.http.HttpStatus.SC_OK;
 import static org.apache.http.entity.ContentType.APPLICATION_XML;
@@ -433,6 +433,11 @@ public class CinnamonClient {
 
     public boolean updateOsd(UpdateOsdRequest updateOsdRequest) throws IOException {
         HttpResponse response = sendStandardRequest(OSD__UPDATE, updateOsdRequest);
+        return parseGenericResponse(response).isSuccessful();
+    }
+
+    public boolean setPassword(Long userId, String password) throws IOException{
+        HttpResponse response=sendStandardRequest(USER__SET_PASSWORD, new SetPasswordRequest(userId,password));
         return parseGenericResponse(response).isSuccessful();
     }
 

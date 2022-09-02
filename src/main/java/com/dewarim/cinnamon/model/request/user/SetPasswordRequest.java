@@ -3,10 +3,13 @@ package com.dewarim.cinnamon.model.request.user;
 import com.dewarim.cinnamon.api.ApiRequest;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
+import java.util.List;
+import java.util.Optional;
+
 @JacksonXmlRootElement(localName = "setPasswordRequest")
 public class SetPasswordRequest implements ApiRequest {
-    
-    private Long userId;
+
+    private Long   userId;
     private String password;
 
     public SetPasswordRequest() {
@@ -31,5 +34,18 @@ public class SetPasswordRequest implements ApiRequest {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public Optional<SetPasswordRequest> validateRequest() {
+        if (password != null && userId != null && userId > 0) {
+            return Optional.of(this);
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    @Override
+    public List<ApiRequest> examples() {
+        return List.of(new SetPasswordRequest(123L, "my-new-secret-password"));
     }
 }
