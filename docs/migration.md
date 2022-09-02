@@ -271,3 +271,6 @@ It's recommended to use a copy of production for testing.
     insert into permissions values (nextval('seq_permission_id'),'relation.parent.add');
     insert into permissions values (nextval('seq_permission_id'),'relation.child.remove');
     insert into permissions values (nextval('seq_permission_id'),'relation.parent.remove'); 
+
+    ---
+    alter table users add column activate_triggers boolean not null default true;
