@@ -78,12 +78,12 @@ public class CinnamonIntegrationTest {
 
             SqlSession   session          = dbSessionFactory.getSqlSessionFactory().openSession(true);
             Connection   conn             = session.getConnection();
-            Reader       reader           = Resources.getResourceAsReader("sql/CreateTestDB.sql");
-            ScriptRunner runner           = new ScriptRunner(conn);
-            PrintWriter  errorPrintWriter = new PrintWriter(System.out);
-            runner.setErrorLogWriter(errorPrintWriter);
-            runner.runScript(reader);
-            reader.close();
+            try (Reader reader = Resources.getResourceAsReader("sql/CreateTestDB.sql")) {
+                ScriptRunner runner           = new ScriptRunner(conn);
+                PrintWriter  errorPrintWriter = new PrintWriter(System.out);
+                runner.setErrorLogWriter(errorPrintWriter);
+                runner.runScript(reader);
+            }
             session.close();
 
             cinnamonServer.setDbSessionFactory(dbSessionFactory);

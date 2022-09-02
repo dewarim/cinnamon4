@@ -94,6 +94,7 @@ import static com.dewarim.cinnamon.api.Constants.LANGUAGE_UNDETERMINED_ISO_CODE;
 import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
 import static jakarta.servlet.http.HttpServletResponse.SC_OK;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+import static org.apache.http.entity.mime.MIME.CONTENT_DISPOSITION;
 
 @MultipartConfig
 @WebServlet(name = "Osd", urlPatterns = "/")
@@ -548,6 +549,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                         osd.getId(), osd.getFormatId())));
         ContentProvider contentProvider = ContentProviderService.getInstance().getContentProvider(osd.getContentProvider());
         InputStream     contentStream   = contentProvider.getContentStream(osd);
+        response.setHeader(CONTENT_DISPOSITION, "attachment; filename=\""+ osd.getName().replace("\"","%22") +"\"");
         response.setContentType(format.getContentType());
         response.setStatus(SC_OK);
         contentStream.transferTo(response.getOutputStream());

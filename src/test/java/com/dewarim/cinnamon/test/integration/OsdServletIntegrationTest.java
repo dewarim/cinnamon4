@@ -68,6 +68,7 @@ import static com.dewarim.cinnamon.api.Constants.CREATE_NEW_VERSION;
 import static com.dewarim.cinnamon.model.request.osd.VersionPredicate.*;
 import static org.apache.http.HttpHeaders.CONTENT_TYPE;
 import static org.apache.http.entity.ContentType.APPLICATION_XML;
+import static org.apache.http.entity.mime.MIME.CONTENT_DISPOSITION;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -315,16 +316,14 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         assertResponseOkay(response);
         Header contentType = response.getFirstHeader(CONTENT_TYPE);
         assertEquals(APPLICATION_XML.getMimeType(), contentType.getValue());
+        Header contentDisposition = response.getFirstHeader(CONTENT_DISPOSITION);
+        ObjectSystemData osd = client.getOsdById(22L,false,false);
+        assertEquals("attachment; filename=\""+osd.getName()+"\"" ,contentDisposition.getValue());
         File             tempFile = Files.createTempFile("cinnamon-test-get-content-", ".xml").toFile();
-        FileOutputStream fos      = new FileOutputStream(tempFile);
-        response.getEntity().writeTo(fos);
-        fos.close();
+        try (FileOutputStream fos = new FileOutputStream(tempFile)) {
+            response.getEntity().writeTo(fos);
+        }
         String sha256Hex = DigestUtils.sha256Hex(new FileInputStream(tempFile));
-
-        OsdRequest             osdRequest       = new OsdRequest(List.of(22L), false, false);
-        HttpResponse           osdResponse      = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
-        List<ObjectSystemData> objectSystemData = unwrapOsds(osdResponse, 1);
-        ObjectSystemData       osd              = objectSystemData.get(0);
         assertEquals(osd.getContentHash(), sha256Hex);
     }
 
