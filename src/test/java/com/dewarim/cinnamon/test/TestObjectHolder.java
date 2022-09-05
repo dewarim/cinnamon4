@@ -229,4 +229,8 @@ public class TestObjectHolder {
         link = client.createLink(folder.getId(), LinkType.OBJECT, acl.getId(), user.getId(), null, osd.getId());
         return this;
     }
+
+    public List<Acl> getAcls(){
+        return acls;
+    }
 }

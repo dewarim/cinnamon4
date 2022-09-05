@@ -17,6 +17,11 @@ public class OsdMetaDao implements CrudDao<Meta>, MetaDao{
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
         return sqlSession.selectList("com.dewarim.cinnamon.model.OsdMeta.listByOsd", id);
     }
+    @Override
+    public List<Meta> listByObjectIds(List<Long> ids) {
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        return sqlSession.selectList("com.dewarim.cinnamon.model.OsdMeta.listByOsds", ids);
+    }
 
     public List<Meta> getMetaByTypeIdsAndOsd(List<Long> typeIds, long id) {
         SqlSession          sqlSession = ThreadLocalSqlSession.getSqlSession();

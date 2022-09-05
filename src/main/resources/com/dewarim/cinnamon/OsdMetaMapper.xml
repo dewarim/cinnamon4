@@ -19,6 +19,17 @@
         ORDER BY id
     </select>
 
+    <select id="listByOsds" parameterType="list" resultMap="osdMetaMap">
+        SELECT *
+        FROM osd_meta
+        WHERE osd_id IN
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        ORDER BY id
+    </select>
+
     <select id="getMetasetById" parameterType="long" resultMap="osdMetaMap">
         SELECT *
         FROM osd_meta

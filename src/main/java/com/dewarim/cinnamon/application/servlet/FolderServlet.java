@@ -26,6 +26,7 @@ import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.request.CreateMetaRequest;
 import com.dewarim.cinnamon.model.request.CreateRequest;
+import com.dewarim.cinnamon.model.request.DeleteAllMetasRequest;
 import com.dewarim.cinnamon.model.request.DeleteMetaRequest;
 import com.dewarim.cinnamon.model.request.IdListRequest;
 import com.dewarim.cinnamon.model.request.MetaRequest;
@@ -76,6 +77,7 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
             case FOLDER__CREATE_META -> createMeta(request, cinnamonResponse, user, folderDao);
             case FOLDER__DELETE -> delete(request, cinnamonResponse, user, folderDao);
             case FOLDER__DELETE_META -> deleteMeta(request, cinnamonResponse, user, folderDao);
+            case FOLDER__DELETE_ALL_METAS -> deleteAllMetas(request, cinnamonResponse, user, folderDao);
             case FOLDER__GET_FOLDER -> getFolder(request, cinnamonResponse, user, folderDao);
             case FOLDER__GET_FOLDER_BY_PATH -> getFolderByPath(request, cinnamonResponse, user, folderDao);
             case FOLDER__GET_FOLDERS -> getFolders(request, cinnamonResponse, user, folderDao);
@@ -86,6 +88,16 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
             case FOLDER__UPDATE -> updateFolder(request, cinnamonResponse, user, folderDao);
             default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
+    }
+
+    private void deleteAllMetas(HttpServletRequest request, CinnamonResponse cinnamonResponse, UserAccount user, FolderDao folderDao) throws IOException {
+        DeleteAllMetasRequest metaRequest = (DeleteAllMetasRequest) getMapper().readValue(request.getInputStream(), DeleteAllMetasRequest.class)
+                .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
+
+        FolderMetaDao metaDao = new FolderMetaDao();
+        List<Long> metaIds = metaDao.listByObjectIds(metaRequest.getIds()).stream().map(Meta::getId).collect(Collectors.toList());
+        new MetaService<>().deleteMeta(metaDao, metaIds, folderDao, user );
+        cinnamonResponse.setWrapper(new DeleteResponse(true));
     }
 
     private void delete(HttpServletRequest request, CinnamonResponse cinnamonResponse, UserAccount user, FolderDao folderDao) throws IOException {

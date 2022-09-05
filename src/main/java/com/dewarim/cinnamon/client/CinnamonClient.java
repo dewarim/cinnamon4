@@ -25,6 +25,7 @@ import com.dewarim.cinnamon.model.relations.Relation;
 import com.dewarim.cinnamon.model.relations.RelationType;
 import com.dewarim.cinnamon.model.request.CreateMetaRequest;
 import com.dewarim.cinnamon.model.request.CreateNewVersionRequest;
+import com.dewarim.cinnamon.model.request.DeleteAllMetasRequest;
 import com.dewarim.cinnamon.model.request.DeleteMetaRequest;
 import com.dewarim.cinnamon.model.request.IdListRequest;
 import com.dewarim.cinnamon.model.request.IdRequest;
@@ -881,6 +882,12 @@ public class CinnamonClient {
         return metaUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
+    public List<Meta> getFolderMetas(Long id) throws IOException {
+        var request  = new MetaRequest(id, null);
+        var response = sendStandardRequest(UrlMapping.FOLDER__GET_META, request);
+        return metaUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
+    }
+
     public int getPort() {
         return port;
     }
@@ -1019,6 +1026,18 @@ public class CinnamonClient {
         var response = sendStandardRequest(UrlMapping.FOLDER__DELETE_META, request);
         verifyDeleteResponse(response);
     }
+
+    public void deleteAllFolderMeta(Long folderId) throws IOException {
+        var request  = new DeleteAllMetasRequest(folderId);
+        var response = sendStandardRequest(FOLDER__DELETE_ALL_METAS, request);
+        verifyDeleteResponse(response);
+    }
+    public void deleteAllOsdMeta(Long osdId) throws IOException {
+        var request  = new DeleteAllMetasRequest(osdId);
+        var response = sendStandardRequest(OSD__DELETE_ALL_METAS, request);
+        verifyDeleteResponse(response);
+    }
+
     public void deleteOsdMeta(Long metaId) throws IOException {
         var request  = new DeleteMetaRequest(metaId);
         var response = sendStandardRequest(UrlMapping.OSD__DELETE_META, request);
@@ -1065,4 +1084,3 @@ public class CinnamonClient {
         verifyDeleteResponse(response);
     }
 }
-

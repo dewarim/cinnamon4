@@ -7,6 +7,7 @@ import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.application.DbSessionFactory;
 import com.dewarim.cinnamon.client.CinnamonClient;
 import com.dewarim.cinnamon.client.CinnamonClientException;
+import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.response.CinnamonConnection;
 import com.dewarim.cinnamon.model.response.CinnamonError;
 import com.dewarim.cinnamon.model.response.CinnamonErrorWrapper;
@@ -221,5 +222,9 @@ public class CinnamonIntegrationTest {
                 .addPermissions(permissions)
                 .addUserToGroup(userId)
                 .acl.getId();
+    }
+
+    protected Acl getReviewerAcl() {
+        return new TestObjectHolder(client).getAcls().stream().filter(a -> a.getName().equals("reviewers.acl")).toList().get(0);
     }
 }

@@ -255,7 +255,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createMetaMetasetIsUniqueAndExists() throws IOException {
-        Acl acl = client.listAcls().stream().filter(a -> a.getName().equals("reviewers.acl")).toList().get(0);
+        Acl acl = getReviewerAcl();
         Folder folder = client.createFolder(createFolderId, "createMetaMetasetIsUniqueAndExists",
                 userId,acl.getId(), 1L);
         MetasetType type = adminClient.createMetasetType("unique metaset type", true);
@@ -287,6 +287,15 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         Meta meta = metaWrapper.getMetasets().get(0);
         assertEquals("new license meta", meta.getContent());
         assertEquals(2, meta.getTypeId().longValue());
+    }
+
+    @Test
+    public void deleteAllMetas() throws IOException{
+        Folder folder = client.createFolder(createFolderId,"folder-deleteAllMetas",userId,getReviewerAcl().getId(), 1L );
+        client.createFolderMeta(new CreateMetaRequest(folder.getId(),"...",1L));
+        client.createFolderMeta(new CreateMetaRequest(folder.getId(),"...",1L));
+        client.deleteAllFolderMeta(folder.getId());
+        assertEquals(0,client.getFolderMetas(folder.getId()).size());
     }
 
     @Test

@@ -18,6 +18,17 @@
         WHERE folder_id = #{id}
     </select>
 
+    <select id="listByFolderIds" parameterType="list" resultMap="folderMetaMap">
+        SELECT *
+        FROM folder_meta
+        WHERE folder_id IN
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        ORDER BY id
+    </select>
+
     <select id="getMetasetById" parameterType="long" resultMap="folderMetaMap">
         SELECT *
         FROM folder_meta

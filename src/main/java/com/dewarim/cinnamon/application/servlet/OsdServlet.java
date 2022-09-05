@@ -40,6 +40,7 @@ import com.dewarim.cinnamon.model.relations.Relation;
 import com.dewarim.cinnamon.model.relations.RelationType;
 import com.dewarim.cinnamon.model.request.CreateMetaRequest;
 import com.dewarim.cinnamon.model.request.CreateNewVersionRequest;
+import com.dewarim.cinnamon.model.request.DeleteAllMetasRequest;
 import com.dewarim.cinnamon.model.request.DeleteMetaRequest;
 import com.dewarim.cinnamon.model.request.IdListRequest;
 import com.dewarim.cinnamon.model.request.IdRequest;
@@ -122,6 +123,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
             case OSD__CREATE_META -> createMeta(request, cinnamonResponse, user, osdDao);
             case OSD__DELETE -> deleteOsds(request, cinnamonResponse, user, osdDao);
             case OSD__DELETE_META -> deleteMeta(request, cinnamonResponse, user, osdDao);
+            case OSD__DELETE_ALL_METAS -> deleteAllMetas(request, cinnamonResponse, user, osdDao);
             case OSD__GET_CONTENT -> getContent(request, cinnamonResponse, user, osdDao);
             case OSD__GET_META -> getMeta(request, cinnamonResponse, user, osdDao);
             case OSD__GET_OBJECTS_BY_FOLDER_ID -> getObjectsByFolderId(request, cinnamonResponse, user, osdDao);
@@ -136,6 +138,16 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
             case OSD__VERSION -> newVersion(request, cinnamonResponse, user, osdDao);
             default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
+    }
+
+    private void deleteAllMetas(HttpServletRequest request, CinnamonResponse cinnamonResponse, UserAccount user, OsdDao osdDao) throws IOException {
+        DeleteAllMetasRequest metaRequest = (DeleteAllMetasRequest) getMapper().readValue(request.getInputStream(), DeleteAllMetasRequest.class)
+                .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
+
+        OsdMetaDao metaDao = new OsdMetaDao();
+        List<Long> metaIds = metaDao.listByObjectIds(metaRequest.getIds()).stream().map(Meta::getId).collect(Collectors.toList());
+        new MetaService<>().deleteMeta(metaDao, metaIds, osdDao, user);
+        cinnamonResponse.setWrapper(new DeleteResponse(true));
     }
 
     private void getRelations(HttpServletRequest request, CinnamonResponse cinnamonResponse, UserAccount user, OsdDao osdDao) throws IOException {

@@ -703,6 +703,16 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
+    public void deleteAllMetas() throws IOException{
+        Long id = new TestObjectHolder(client, "reviewers.acl", userId,createFolderId)
+                .createOsd("delete-all-metas").osd.getId();
+        client.createOsdMeta(new CreateMetaRequest(id,"...",1L));
+        client.createOsdMeta(new CreateMetaRequest(id,"...",1L));
+        client.deleteAllOsdMeta(id);
+        assertEquals(0,client.getOsdMetas(id).size());
+    }
+
+    @Test
     public void deleteAllVersionsHappyPath() throws IOException {
         var holder = new TestObjectHolder(client);
         holder.setAcl(client.getAclByName("reviewers.acl"))

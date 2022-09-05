@@ -2,6 +2,7 @@ package com.dewarim.cinnamon.api;
 
 import com.dewarim.cinnamon.model.request.CreateMetaRequest;
 import com.dewarim.cinnamon.model.request.CreateNewVersionRequest;
+import com.dewarim.cinnamon.model.request.DeleteAllMetasRequest;
 import com.dewarim.cinnamon.model.request.DeleteMetaRequest;
 import com.dewarim.cinnamon.model.request.IdListRequest;
 import com.dewarim.cinnamon.model.request.IdRequest;
@@ -176,6 +177,7 @@ public enum UrlMapping {
     FOLDER__CREATE_META("folder", "createMeta", "/api", "", CreateMetaRequest.class, MetaWrapper.class),
     FOLDER__DELETE("folder", "delete", "/api", "", DeleteFolderRequest.class, DeleteResponse.class),
     FOLDER__DELETE_META("folder", "deleteMeta", "/api", "", DeleteMetaRequest.class, DeleteResponse.class),
+    FOLDER__DELETE_ALL_METAS("folder", "deleteAllMetas", "/api", "", DeleteAllMetasRequest.class, DeleteResponse.class),
     FOLDER__GET_FOLDER("folder", "getFolder", "/api", "Fetch a single folder", SingleFolderRequest.class, FolderWrapper.class),
     FOLDER__GET_FOLDERS("folder", "getFolders", "/api", "", FolderRequest.class, FolderWrapper.class),
     FOLDER__GET_FOLDER_BY_PATH("folder", "getFolderByPath", "/api", "", FolderPathRequest.class, FolderWrapper.class),
@@ -237,6 +239,7 @@ public enum UrlMapping {
             """,
             CreateOsdRequest.class, OsdWrapper.class),
     OSD__DELETE_META("osd", "deleteMeta", "/api", "", DeleteMetaRequest.class, DeleteResponse.class),
+    OSD__DELETE_ALL_METAS("osd", "deleteAllMetas", "/api", "", DeleteAllMetasRequest.class, DeleteResponse.class),
     OSD__DELETE("osd", "delete", "/api", "", DeleteOsdRequest.class, DeleteResponse.class),
     OSD__GET_CONTENT("osd", "getContent", "/api", "Returns an OSD's content according to it's format's content type.", IdRequest.class, null),
     OSD__GET_META("osd", "getMeta", "/api", "", MetaRequest.class, MetaWrapper.class),
