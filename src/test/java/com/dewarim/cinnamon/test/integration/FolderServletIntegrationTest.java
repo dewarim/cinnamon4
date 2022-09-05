@@ -4,8 +4,10 @@ import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.client.CinnamonClientException;
+import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.Folder;
 import com.dewarim.cinnamon.model.Meta;
+import com.dewarim.cinnamon.model.MetasetType;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.links.LinkType;
@@ -38,7 +40,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static com.dewarim.cinnamon.ErrorCode.*;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -172,7 +173,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         FolderPathRequest request     = new FolderPathRequest("/home/creation/some-sub-folder", true);
         HttpResponse      response    = sendStandardRequest(UrlMapping.FOLDER__GET_FOLDER_BY_PATH, request);
         List<Folder>      folders     = unwrapFolders(response, 4);
-        List<String>      folderNames = folders.stream().map(Folder::getName).collect(Collectors.toList());
+        List<String>      folderNames = folders.stream().map(Folder::getName).toList();
         assertTrue(folderNames.contains("root"));
         assertTrue(folderNames.contains("home"));
         assertTrue(folderNames.contains("creation"));
@@ -230,7 +231,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         try {
             client.createFolderMeta(request);
         } catch (CinnamonClientException e) {
-            assertEquals(e.getErrorCode(), ErrorCode.FOLDER_NOT_FOUND);
+            assertEquals(e.getErrorCode(), OBJECT_NOT_FOUND);
         }
     }
 
@@ -253,8 +254,14 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void createMetaMetasetIsUniqueAndExists() {
-        CreateMetaRequest request = new CreateMetaRequest(18L, "duplicate license", 2L);
+    public void createMetaMetasetIsUniqueAndExists() throws IOException {
+        Acl acl = client.listAcls().stream().filter(a -> a.getName().equals("reviewers.acl")).toList().get(0);
+        Folder folder = client.createFolder(createFolderId, "createMetaMetasetIsUniqueAndExists",
+                userId,acl.getId(), 1L);
+        MetasetType type = adminClient.createMetasetType("unique metaset type", true);
+
+        CreateMetaRequest request = new CreateMetaRequest(folder.getId(), "duplicate license", type.getId());
+        client.createFolderMeta(request);
         assertClientError(() -> client.createFolderMeta(request), METASET_IS_UNIQUE_AND_ALREADY_EXISTS);
     }
 

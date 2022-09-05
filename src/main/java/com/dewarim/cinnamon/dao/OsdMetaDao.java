@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class OsdMetaDao implements CrudDao<Meta>{
+public class OsdMetaDao implements CrudDao<Meta>, MetaDao{
 
     public List<Meta> listByOsd(long id) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
@@ -26,7 +26,7 @@ public class OsdMetaDao implements CrudDao<Meta>{
         return sqlSession.selectList("com.dewarim.cinnamon.model.OsdMeta.getMetaByTypeIdsAndOsd", params);
     }
 
-    public List<Long> getUniqueMetaTypeIdsOfOsd(Long osdId){
+    public List<Long> getUniqueMetaTypeIdsOfObject(Long osdId){
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
         return sqlSession.selectList("com.dewarim.cinnamon.model.OsdMeta.getUniqueMetaTypeIdsOfOsd", osdId);
     }

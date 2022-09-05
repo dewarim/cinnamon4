@@ -10,8 +10,8 @@ import com.dewarim.cinnamon.api.lifecycle.State;
 import com.dewarim.cinnamon.api.lifecycle.StateChangeResult;
 import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
-import com.dewarim.cinnamon.application.service.DeleteMetaService;
 import com.dewarim.cinnamon.application.service.DeleteOsdService;
+import com.dewarim.cinnamon.application.service.MetaService;
 import com.dewarim.cinnamon.dao.AclDao;
 import com.dewarim.cinnamon.dao.FolderDao;
 import com.dewarim.cinnamon.dao.FormatDao;
@@ -87,7 +87,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.dewarim.cinnamon.api.Constants.LANGUAGE_UNDETERMINED_ISO_CODE;
@@ -398,7 +397,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
         OsdMetaDao metaDao = new OsdMetaDao();
-        new DeleteMetaService<>().deleteMeta(metaDao, metaRequest.getIds(), osdDao, user );
+        new MetaService<>().deleteMeta(metaDao, metaRequest.getIds(), osdDao, user);
         var deleteResponse = new DeleteResponse(true);
         response.setWrapper(deleteResponse);
     }
@@ -434,40 +433,8 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         CreateMetaRequest metaRequest = xmlMapper.readValue(request.getInputStream(), CreateMetaRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
-        // load osds
-        List<Long>             osdIds = metaRequest.getMetas().stream().map(Meta::getObjectId).collect(Collectors.toList());
-        List<ObjectSystemData> osds   = osdDao.getObjectsById(osdIds, false);
-        if (osdIds.size() != osds.size()) {
-            throw ErrorCode.OBJECT_NOT_FOUND.getException().get();
-        }
-        Map<Long, ObjectSystemData> osdMap = osds.stream().filter(osd -> {
-            throwUnlessCustomMetaIsWritable(osd, user);
-            return true;
-        }).collect(Collectors.toMap(ObjectSystemData::getId, Function.identity()));
-
-        // load metasetTypes
-        MetasetTypeDao         metasetTypeDao = new MetasetTypeDao();
-        Map<Long, MetasetType> metasetTypes   = metasetTypeDao.list().stream().collect(Collectors.toMap(MetasetType::getId, Function.identity()));
-        // check that request does not contain unknown metasetTypeIds
-        Set<Long> requestedTypeIds = metaRequest.getMetas().stream().map(Meta::getTypeId).collect(Collectors.toUnmodifiableSet());
-        if (!requestedTypeIds.stream().allMatch(metasetTypes::containsKey)) {
-            throw ErrorCode.METASET_TYPE_NOT_FOUND.exception();
-        }
-
-        // does meta already exist and is unique?
-        OsdMetaDao metaDao = new OsdMetaDao();
-        osdIds.forEach(osdId -> {
-            List<Long> uniqueMetaTypeIds = metaDao.getUniqueMetaTypeIdsOfOsd(osdId);
-            if (requestedTypeIds.stream().anyMatch(uniqueMetaTypeIds::contains)) {
-                throw ErrorCode.METASET_IS_UNIQUE_AND_ALREADY_EXISTS.exception();
-            }
-        });
-
-        List<Meta> metasToCreate = metaRequest.getMetas().stream().map(meta -> new Meta(meta.getObjectId(), meta.getTypeId(), meta.getContent()))
-                .collect(Collectors.toList());
-        List<Meta> newMetas = metaDao.create(metasToCreate);
-
-        createMetaResponse(response, newMetas);
+        List<Meta> metas = new MetaService<>().createMeta(new OsdMetaDao(), metaRequest.getMetas(), osdDao, user);
+        createMetaResponse(response, metas);
     }
 
     private MetasetType determineMetasetType(Long typeId, String typeName) {
@@ -549,7 +516,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                         osd.getId(), osd.getFormatId())));
         ContentProvider contentProvider = ContentProviderService.getInstance().getContentProvider(osd.getContentProvider());
         InputStream     contentStream   = contentProvider.getContentStream(osd);
-        response.setHeader(CONTENT_DISPOSITION, "attachment; filename=\""+ osd.getName().replace("\"","%22") +"\"");
+        response.setHeader(CONTENT_DISPOSITION, "attachment; filename=\"" + osd.getName().replace("\"", "%22") + "\"");
         response.setContentType(format.getContentType());
         response.setStatus(SC_OK);
         contentStream.transferTo(response.getOutputStream());
@@ -828,8 +795,8 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
             final List<ErrorCode> errorCodes = new ArrayList<>();
             versionRequest.getMetaRequests().forEach(metadata -> {
                         try {
-                            MetasetType       metasetType       = determineMetasetType(metadata.getTypeId(), metadata.getTypeName());
-                            Meta              meta              = new Meta(osd.getId(), metasetType.getId(), metadata.getContent());
+                            MetasetType metasetType = determineMetasetType(metadata.getTypeId(), metadata.getTypeName());
+                            Meta        meta        = new Meta(osd.getId(), metasetType.getId(), metadata.getContent());
                             osdMetaDao.create(List.of(meta));
                         } catch (FailedRequestException e) {
                             errorCodes.add(e.getErrorCode());

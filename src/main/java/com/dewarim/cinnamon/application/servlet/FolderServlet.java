@@ -8,21 +8,19 @@ import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.application.exception.BadArgumentException;
 import com.dewarim.cinnamon.application.service.DeleteLinkService;
-import com.dewarim.cinnamon.application.service.DeleteMetaService;
 import com.dewarim.cinnamon.application.service.DeleteOsdService;
+import com.dewarim.cinnamon.application.service.MetaService;
 import com.dewarim.cinnamon.dao.AclDao;
 import com.dewarim.cinnamon.dao.FolderDao;
 import com.dewarim.cinnamon.dao.FolderMetaDao;
 import com.dewarim.cinnamon.dao.FolderTypeDao;
 import com.dewarim.cinnamon.dao.LinkDao;
-import com.dewarim.cinnamon.dao.MetasetTypeDao;
 import com.dewarim.cinnamon.dao.OsdDao;
 import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.Folder;
 import com.dewarim.cinnamon.model.FolderType;
 import com.dewarim.cinnamon.model.Meta;
-import com.dewarim.cinnamon.model.MetasetType;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.links.Link;
@@ -53,10 +51,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
@@ -312,7 +307,7 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
         FolderMetaDao metaDao = new FolderMetaDao();
-        new DeleteMetaService<>().deleteMeta(metaDao, metaRequest.getIds(), folderDao, user );
+        new MetaService<>().deleteMeta(metaDao, metaRequest.getIds(), folderDao, user );
         var deleteResponse = new DeleteResponse(true);
         response.setWrapper(deleteResponse);
     }
@@ -346,40 +341,8 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
         CreateMetaRequest metaRequest = xmlMapper.readValue(request.getInputStream(), CreateMetaRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
-        // load folders
-        List<Long>   folderIds = metaRequest.getMetas().stream().map(Meta::getObjectId).collect(Collectors.toList());
-        List<Folder> folders   = folderDao.getObjectsById(folderIds);
-        if (folderIds.size() != folders.size()) {
-            throw ErrorCode.FOLDER_NOT_FOUND.getException().get();
-        }
-        Map<Long, Folder> folderMap = folders.stream().filter(folder -> {
-            throwUnlessCustomMetaIsWritable(folder, user);
-            return true;
-        }).collect(Collectors.toMap(Folder::getId, Function.identity()));
-
-        // load metasetTypes
-        MetasetTypeDao         metasetTypeDao = new MetasetTypeDao();
-        Map<Long, MetasetType> metasetTypes   = metasetTypeDao.list().stream().collect(Collectors.toMap(MetasetType::getId, Function.identity()));
-        // check that request does not contain unknown metasetTypeIds
-        Set<Long> requestedTypeIds = metaRequest.getMetas().stream().map(Meta::getTypeId).collect(Collectors.toUnmodifiableSet());
-        if (!requestedTypeIds.stream().allMatch(metasetTypes::containsKey)) {
-            throw ErrorCode.METASET_TYPE_NOT_FOUND.exception();
-        }
-
-        // does meta already exist and is unique?
-        FolderMetaDao metaDao = new FolderMetaDao();
-        folderIds.forEach(folderId -> {
-            List<Long> uniqueMetaTypeIds = metaDao.getUniqueMetaTypeIdsOfFolder(folderId);
-            if (requestedTypeIds.stream().anyMatch(uniqueMetaTypeIds::contains)) {
-                throw ErrorCode.METASET_IS_UNIQUE_AND_ALREADY_EXISTS.exception();
-            }
-        });
-
-        List<Meta> metasToCreate = metaRequest.getMetas().stream().map(meta -> new Meta(meta.getObjectId(), meta.getTypeId(), meta.getContent()))
-                .collect(Collectors.toList());
-        List<Meta> newMetas = metaDao.create(metasToCreate);
-
-        createMetaResponse(response, newMetas);
+        List<Meta> metas = new MetaService<>().createMeta(new FolderMetaDao(), metaRequest.getMetas(), folderDao, user);
+        createMetaResponse(response, metas);
     }
 
     private void getFolderByPath(HttpServletRequest request, CinnamonResponse response, UserAccount user, FolderDao folderDao) throws IOException {

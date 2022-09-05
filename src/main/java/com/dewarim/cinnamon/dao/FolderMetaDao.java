@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class FolderMetaDao implements CrudDao<Meta>{
+public class FolderMetaDao implements CrudDao<Meta>, MetaDao{
 
     public List<Meta> listByFolderId(long id) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
@@ -58,8 +58,7 @@ public class FolderMetaDao implements CrudDao<Meta>{
         return sqlSession.selectList("com.dewarim.cinnamon.model.FolderMeta.getMetaByTypeIdsAndFolder", params);
     }
 
-
-    public List<Long> getUniqueMetaTypeIdsOfFolder(Long folderId){
+    public List<Long> getUniqueMetaTypeIdsOfObject(Long folderId){
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
         return sqlSession.selectList("com.dewarim.cinnamon.model.FolderMeta.getUniqueMetaTypeIdsOfFolder", folderId);
     }
