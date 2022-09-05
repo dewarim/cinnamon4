@@ -19,7 +19,6 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -54,7 +53,7 @@ public class UserAccountServletIntegrationTest extends CinnamonIntegrationTest {
     public void listUsers() throws IOException {
         List<UserAccount> users     = client.listUsers();
         List<String>      names     = Arrays.asList("admin", "doe", "deactivated user", "locked user");
-        List<String>      userNames = users.stream().map(UserAccount::getName).collect(Collectors.toList());
+        List<String>      userNames = users.stream().map(UserAccount::getName).toList();
         assertTrue(userNames.containsAll(names));
         assertFalse(client.getUser("deactivated user").isActivated());
         assertTrue(client.getUser("locked user").isLocked());
@@ -153,6 +152,14 @@ public class UserAccountServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
+    public void createUserWithUnknownLoginType() {
+        UserAccount user = new UserAccount("admin", "a second admin!", "A new user", "user@invalid.com",
+                1L, "login via biometrically authenticated hug", false, true, false);
+        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> adminClient.createUser(user));
+        assertEquals(ErrorCode.LOGIN_TYPE_IS_UNKNOWN, ex.getErrorCode());
+    }
+
+    @Test
     public void createUserWithoutAdminAccess() {
         UserAccount user = new UserAccount("not-an-admin", "just-a-pass", "A new user", "user@invalid.com",
                 1L, LoginType.CINNAMON.name(), false, true, true);
@@ -163,7 +170,7 @@ public class UserAccountServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void setPasswordOnNonCinnamonLoginType() throws IOException {
         UserAccount user = new UserAccount("user-with-other-login-type", "just-a-pass", "A new user", "user@invalid.com",
-                1L, "UNKNOWN_LOGIN_TYPE", false, true, true);
+                1L, "LDAP", false, true, true);
         UserAccount             userAccount = adminClient.createUser(user);
         CinnamonClientException ex          = assertThrows(CinnamonClientException.class, () -> adminClient.setPassword(userAccount.getId(), "some other password"));
         assertEquals(ErrorCode.USER_ACCOUNT_SET_PASSWORD_NOT_ALLOWED, ex.getErrorCode());

@@ -56,11 +56,13 @@ public class UserAccountServlet extends HttpServlet implements CruddyServlet<Use
             }
             case USER__CREATE -> {
                 superuserCheck();
-                // TODO: check that loginProvider is valid.
                 CreateRequest<UserAccount> createRequest = convertCreateRequest(request, CreateUserAccountRequest.class);
                 createRequest.list().forEach(userAccount -> {
+                    if(!LoginType.isKnown(userAccount.getLoginType())){
+                        throw ErrorCode.LOGIN_TYPE_IS_UNKNOWN.exception();
+                    }
                     if (passwordIsTooShort(userAccount.getPassword())) {
-                        ErrorCode.PASSWORD_TOO_SHORT.throwUp();
+                        throw ErrorCode.PASSWORD_TOO_SHORT.exception();
                     }
                     userAccount.setPassword(HashMaker.createDigest(userAccount.getPassword()));
                 });
