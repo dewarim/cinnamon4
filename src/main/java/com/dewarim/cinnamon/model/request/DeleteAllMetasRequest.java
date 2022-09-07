@@ -19,4 +19,9 @@ public class DeleteAllMetasRequest extends DeleteByIdRequest<Meta> implements Ap
     public DeleteAllMetasRequest(Long id) {
         super(id);
     }
+
+    @Override
+    public List<ApiRequest> examples() {
+        return List.of(new DeleteAllMetasRequest(List.of(14L,15L)));
+    }
 }

@@ -765,7 +765,7 @@ Create a new folder.
       <typeId>4</typeId>
       <metadataChanged>false</metadataChanged>
       <summary>&lt;summary>&lt;description>contains images&lt;/description>&lt;/summary></summary>
-      <created>2022-09-02T08:49:15+0000</created>
+      <created>2022-08-10T01:21:00+0000</created>
     </folder>
     <folder>
       <id/>
@@ -777,7 +777,7 @@ Create a new folder.
       <typeId>2</typeId>
       <metadataChanged>false</metadataChanged>
       <summary>&lt;summary /></summary>
-      <created>2022-09-02T08:49:15+0000</created>
+      <created>2022-08-10T01:21:00+0000</created>
     </folder>
   </folders>
 </createFolderRequest>
@@ -875,8 +875,41 @@ Create a new folder.
 ```xml
 <deleteMetaRequest>
   <ignoreNotFound>false</ignoreNotFound>
-  <ids/>
+  <ids>
+    <ids>3</ids>
+    <ids>5</ids>
+    <ids>6</ids>
+  </ids>
 </deleteMetaRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <success>false</success>
+</cinnamon>
+
+```
+
+
+---
+
+# /api/folder/deleteAllMetas
+
+
+## Request
+
+```xml
+<deleteAllMetasRequest>
+  <ignoreNotFound>false</ignoreNotFound>
+  <ids>
+    <ids>14</ids>
+    <ids>15</ids>
+  </ids>
+</deleteAllMetasRequest>
 
 ```
 
@@ -2569,8 +2602,41 @@ should contain data.
 ```xml
 <deleteMetaRequest>
   <ignoreNotFound>false</ignoreNotFound>
-  <ids/>
+  <ids>
+    <ids>3</ids>
+    <ids>5</ids>
+    <ids>6</ids>
+  </ids>
 </deleteMetaRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <success>false</success>
+</cinnamon>
+
+```
+
+
+---
+
+# /api/osd/deleteAllMetas
+
+
+## Request
+
+```xml
+<deleteAllMetasRequest>
+  <ignoreNotFound>false</ignoreNotFound>
+  <ids>
+    <ids>14</ids>
+    <ids>15</ids>
+  </ids>
+</deleteAllMetasRequest>
 
 ```
 
@@ -3569,8 +3635,8 @@ Returns status code 400
 
 ```xml
 <setPasswordRequest>
-  <userId/>
-  <password/>
+  <userId>123</userId>
+  <password>my-new-secret-password</password>
 </setPasswordRequest>
 
 ```

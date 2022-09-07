@@ -19,4 +19,9 @@ public class DeleteMetaRequest extends DeleteByIdRequest<Meta> implements ApiReq
     public DeleteMetaRequest(Long id) {
         super(id);
     }
+
+    @Override
+    public List<ApiRequest> examples() {
+        return List.of(new DeleteMetaRequest(List.of(3L, 5L, 6L)));
+    }
 }
