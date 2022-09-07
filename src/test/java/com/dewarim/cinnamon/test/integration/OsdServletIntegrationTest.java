@@ -31,11 +31,6 @@ import com.dewarim.cinnamon.model.response.OsdWrapper;
 import com.dewarim.cinnamon.model.response.Summary;
 import com.dewarim.cinnamon.model.response.SummaryWrapper;
 import com.dewarim.cinnamon.test.TestObjectHolder;
-import nu.xom.Builder;
-import nu.xom.Document;
-import nu.xom.Node;
-import nu.xom.Nodes;
-import nu.xom.ParsingException;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -44,6 +39,7 @@ import org.apache.http.client.fluent.Request;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.entity.mime.content.StringBody;
+import org.apache.ibatis.parsing.ParsingException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Disabled;
@@ -573,41 +569,19 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         assertCinnamonError(metaResponse, ErrorCode.NO_READ_CUSTOM_METADATA_PERMISSION);
     }
 
-//    @Test
-//    public void getMetaCompatibilityMode() throws IOException, ParsingException {
-//        MetaRequest request = new MetaRequest(36L, null);
-//        request.setVersion3CompatibilityRequired(true);
-//        HttpResponse metaResponse = sendStandardRequest(UrlMapping.OSD__GET_META, request);
-//        assertResponseOkay(metaResponse);
-//        String   content = new String(metaResponse.getEntity().getContent().readAllBytes(), StandardCharsets.UTF_8);
-//        Document metaDoc = new Builder().build(content, null);
-//        Nodes    nodes   = metaDoc.query("/meta/metaset[@type='comment']/p");
-//        Node     node    = nodes.get(0);
-//        assertEquals("Good Test", node.getValue());
-//    }
-
     @Test
-    public void getMetaHappyPathAllMeta() throws IOException, ParsingException {
+    public void getMetaHappyPathAllMeta() throws IOException {
         MetaRequest  request      = new MetaRequest(36L, null);
-        HttpResponse metaResponse = sendStandardRequest(UrlMapping.OSD__GET_META, request);
-        assertResponseOkay(metaResponse);
-        String   content = new String(metaResponse.getEntity().getContent().readAllBytes(), StandardCharsets.UTF_8);
-        Document metaDoc = new Builder().build(content, null);
-        Node     comment = metaDoc.query("//metasets/metaset[typeId/text()='1']/content").get(0);
-        assertEquals("<metaset><p>Good Test</p></metaset>", comment.getValue());
-        Node license = metaDoc.query("//metasets/metaset[typeId/text()='2']/content").get(0);
-        assertEquals("<metaset><license>GPL</license></metaset>", license.getValue());
+        List<Meta> osdMetas = client.getOsdMetas(36L);
+        List<String> content = osdMetas.stream().map(Meta::getContent).toList();
+        assertTrue(content.contains("<metaset><p>Good Test</p></metaset>"));
+        assertTrue(content.contains("<metaset><license>GPL</license></metaset>"));
     }
 
     @Test
     public void getMetaHappyPathSingleMeta() throws IOException, ParsingException {
-        MetaRequest  request      = new MetaRequest(36L, Collections.singletonList(2L));
-        HttpResponse metaResponse = sendStandardRequest(UrlMapping.OSD__GET_META, request);
-        assertResponseOkay(metaResponse);
-        String   content  = new String(metaResponse.getEntity().getContent().readAllBytes(), StandardCharsets.UTF_8);
-        Document metaDoc  = new Builder().build(content, null);
-        Nodes    metasets = metaDoc.query("//metasets/metaset");
-        assertEquals(1, metasets.size());
+        List<Meta> osdMetas = client.getOsdMetas(36L, List.of(2L));
+        assertEquals(1,osdMetas.size());
     }
 
     @Test

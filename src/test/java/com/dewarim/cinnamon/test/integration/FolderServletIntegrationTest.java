@@ -28,15 +28,10 @@ import com.dewarim.cinnamon.model.response.MetaWrapper;
 import com.dewarim.cinnamon.model.response.Summary;
 import com.dewarim.cinnamon.model.response.SummaryWrapper;
 import com.dewarim.cinnamon.test.TestObjectHolder;
-import nu.xom.Builder;
-import nu.xom.Document;
-import nu.xom.Node;
-import nu.xom.ParsingException;
 import org.apache.http.HttpResponse;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -205,14 +200,10 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void getMetaHappyPath() throws IOException, ParsingException {
+    public void getMetaHappyPath() throws IOException {
         MetaRequest  request      = new MetaRequest(16L, null);
-        HttpResponse metaResponse = sendStandardRequest(UrlMapping.FOLDER__GET_META, request);
-        assertResponseOkay(metaResponse);
-        String   content = new String(metaResponse.getEntity().getContent().readAllBytes(), StandardCharsets.UTF_8);
-        Document metaDoc = new Builder().build(content, null);
-        Node     comment = metaDoc.query("//metasets/metaset[typeId/text()='1']/content").get(0);
-        assertEquals("<metaset><p>Good Folder Meta Test</p></metaset>", comment.getValue());
+        Meta folderMeta = client.getFolderMetas(16L).get(0);
+        assertEquals("<metaset><p>Good Folder Meta Test</p></metaset>", folderMeta.getContent());
     }
 
     @Test

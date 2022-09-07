@@ -10,11 +10,7 @@ import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.response.MetaWrapper;
 import com.dewarim.cinnamon.security.authorization.AuthorizationService;
 import jakarta.servlet.http.HttpServlet;
-import nu.xom.Builder;
-import nu.xom.Document;
-import nu.xom.ParsingException;
 
-import java.io.IOException;
 import java.util.List;
 
 public class BaseServlet extends HttpServlet {
@@ -50,19 +46,9 @@ public class BaseServlet extends HttpServlet {
         }
     }
 
-    static void createMetaResponse( CinnamonResponse response, List<Meta> metaList) throws IOException {
+    static void createMetaResponse( CinnamonResponse response, List<Meta> metaList) {
         MetaWrapper wrapper = new MetaWrapper(metaList);
         response.setWrapper(wrapper);
-    }
-
-    static private Document parseXml(String content) {
-        try {
-            Builder parser = new Builder();
-            return parser.build(content, null);
-        } catch (IOException | ParsingException e) {
-            // TODO: use CinnamonException with custom error message
-            throw new RuntimeException(e);
-        }
     }
 
 

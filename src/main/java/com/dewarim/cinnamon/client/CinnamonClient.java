@@ -881,6 +881,11 @@ public class CinnamonClient {
         var response = sendStandardRequest(UrlMapping.OSD__GET_META, request);
         return metaUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
+    public List<Meta> getOsdMetas(Long id, List<Long> typeIds) throws IOException {
+        var request  = new MetaRequest(id, typeIds);
+        var response = sendStandardRequest(UrlMapping.OSD__GET_META, request);
+        return metaUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
+    }
 
     public List<Meta> getFolderMetas(Long id) throws IOException {
         var request  = new MetaRequest(id, null);
