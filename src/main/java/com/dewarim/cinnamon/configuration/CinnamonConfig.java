@@ -13,6 +13,8 @@ public class CinnamonConfig {
     private SecurityConfig securityConfig = new SecurityConfig();
 
     private DatabaseConfig databaseConfig = new DatabaseConfig();
+
+    private LuceneConfig luceneConfig = new LuceneConfig();
     
     private List<LoginProviderConfig> loginProviders = new ArrayList<>();
     
@@ -62,5 +64,13 @@ public class CinnamonConfig {
 
     public void setLoginProviders(List<LoginProviderConfig> loginProviders) {
         this.loginProviders = loginProviders;
+    }
+
+    public LuceneConfig getLuceneConfig() {
+        return luceneConfig;
+    }
+
+    public void setLuceneConfig(LuceneConfig luceneConfig) {
+        this.luceneConfig = luceneConfig;
     }
 }
