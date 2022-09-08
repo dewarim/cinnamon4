@@ -5,6 +5,7 @@ import com.beust.jcommander.Parameter;
 import com.dewarim.cinnamon.api.ApiRequest;
 import com.dewarim.cinnamon.api.ApiResponse;
 import com.dewarim.cinnamon.api.UrlMapping;
+import com.dewarim.cinnamon.application.service.IndexService;
 import com.dewarim.cinnamon.application.servlet.AclGroupServlet;
 import com.dewarim.cinnamon.application.servlet.AclServlet;
 import com.dewarim.cinnamon.application.servlet.CinnamonServlet;
@@ -70,7 +71,7 @@ public class CinnamonServer {
 
     private static final Logger log = LogManager.getLogger(CinnamonServer.class);
 
-    public static final String           VERSION       = "0.3.10";
+    public static final String           VERSION       = "0.4.0";
     private final       int              port;
     private             Server           server;
     private             DbSessionFactory dbSessionFactory;
@@ -78,6 +79,7 @@ public class CinnamonServer {
     public static       CinnamonConfig   config        = new CinnamonConfig();
     public static       ExecutorService  executorService;
     public static       CinnamonStats    cinnamonStats = new CinnamonStats();
+    private             IndexService     indexService;
 
     public CinnamonServer(int port) {
         this.port = port;
@@ -102,12 +104,17 @@ public class CinnamonServer {
 
         // start executorService for background threads
         // TODO: make number of threads and timeout configurable
-        executorService = new ThreadPoolExecutor(4, 16, 5, TimeUnit.MINUTES, new ArrayBlockingQueue<Runnable>(100));
+        executorService = new ThreadPoolExecutor(4, 16, 5, TimeUnit.MINUTES, new ArrayBlockingQueue<>(100));
+
+        indexService = new IndexService(config.getLuceneConfig());
+        executorService.submit(indexService);
 
         log.info("Server is running at port " + config.getServerConfig().getPort());
     }
 
     public void stop() throws Exception {
+        // TODO: maybe wait for indexService to be fully stopped?
+        indexService.setStopped(true);
         server.stop();
     }
 

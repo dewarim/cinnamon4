@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dewarim.cinnamon.model.index.IndexJob">
+
+
+    <resultMap id="indexJobMap" type="com.dewarim.cinnamon.model.index.IndexJob">
+        <id property="id" column="id"/>
+        <result property="itemId" column="item_id"/>
+        <result property="jobType" column="job_type"/>
+        <result property="action" column="action"/>
+        <result property="failed" column="failed"/>
+    </resultMap>
+
+    <!-- order by item_id to get the newest index_job first -->
+    <select id="getIndexJobsByFailedCountWithLimit" resultType="com.dewarim.cinnamon.model.index.IndexJob">
+        SELECT *
+        FROM index_jobs
+        WHERE job_type = #{type}
+          AND failed &lt;= #{failed}
+        ORDER BY item_id DESC
+    </select>
+
+    <select id="countJobs" resultType="int">
+        SELECT count(*)
+        FROM index_jobs
+    </select>
+
+    <insert id="insert" parameterType="com.dewarim.cinnamon.model.index.IndexJob">
+        <selectKey keyProperty="id" resultType="long" order="BEFORE">
+            select nextval('seq_index_job_id')
+        </selectKey>
+        INSERT INTO index_jobs(id, item_id, job_type, action, failed)
+        VALUES (#{id}, #{itemId}, #{jobType}, #{action}, 0)
+    </insert>
+
+    <delete id="delete" parameterType="long">
+        DELETE
+        FROM index_jobs
+        WHERE id = #{id}
+    </delete>
+
+    <update id="updateStatus" parameterType="com.dewarim.cinnamon.model.index.IndexJob">
+        UPDATE index_jobs
+        SET failed=#{failed}
+        WHERE id=#{id}
+    </update>
+
+</mapper>

@@ -7,7 +7,7 @@
 
     <resultMap id="linkMap" type="com.dewarim.cinnamon.model.links.Link">
         <id property="id" column="id"/>
-        <result property="type" typeHandler="org.apache.ibatis.type.EnumTypeHandler" column="type"/>
+        <result property="type"  column="type"/>
         <result property="ownerId" column="owner_id"/>
         <result property="aclId" column="acl_id"/>
         <result property="parentId" column="parent_id"/>

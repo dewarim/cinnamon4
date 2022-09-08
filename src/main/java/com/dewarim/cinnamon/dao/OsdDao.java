@@ -4,6 +4,9 @@ import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.UserAccount;
+import com.dewarim.cinnamon.model.index.IndexJob;
+import com.dewarim.cinnamon.model.index.IndexJobAction;
+import com.dewarim.cinnamon.model.index.IndexJobType;
 import com.dewarim.cinnamon.model.request.osd.VersionPredicate;
 import org.apache.ibatis.session.SqlSession;
 
@@ -23,6 +26,7 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
      * Max number of ids in "in clause" is 32768 for Postgresql.
      */
     private static final int BATCH_SIZE = 10000;
+    private final IndexJobDao indexJobDao = new IndexJobDao();
 
     public List<ObjectSystemData> getObjectsById(List<Long> ids, boolean includeSummary) {
         SqlSession             sqlSession  = ThreadLocalSqlSession.getSqlSession();
@@ -90,6 +94,7 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
         if (resultRows != 1) {
             ErrorCode.DB_INSERT_FAILED.throwUp();
         }
+        indexJobDao.insertIndexJob(new IndexJob(IndexJobType.OSD, osd.getId(), IndexJobAction.CREATE));
         return osd;
     }
 

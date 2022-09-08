@@ -522,6 +522,18 @@ create table deletions
     delete_failed boolean default false
 );
 
+drop sequence if exists seq_index_job_id;
+create sequence seq_index_job_id;
+
+drop table if exists index_jobs cascade;
+create table index_jobs(
+  id bigint not null constraint index_job_pkey primary key,
+    job_type varchar(127) not null,
+    item_id bigint not null,
+    failed int not null default 0,
+    action varchar(127) not null
+);
+
 --------------------------
 --- insert test data:  ---
 -- -----------------------
