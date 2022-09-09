@@ -6,6 +6,7 @@ import com.dewarim.cinnamon.api.ApiRequest;
 import com.dewarim.cinnamon.api.ApiResponse;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.service.IndexService;
+import com.dewarim.cinnamon.application.service.SearchService;
 import com.dewarim.cinnamon.application.servlet.AclGroupServlet;
 import com.dewarim.cinnamon.application.servlet.AclServlet;
 import com.dewarim.cinnamon.application.servlet.CinnamonServlet;
@@ -16,6 +17,7 @@ import com.dewarim.cinnamon.application.servlet.FolderTypeServlet;
 import com.dewarim.cinnamon.application.servlet.FormatServlet;
 import com.dewarim.cinnamon.application.servlet.GroupServlet;
 import com.dewarim.cinnamon.application.servlet.IndexItemServlet;
+import com.dewarim.cinnamon.application.servlet.IndexServlet;
 import com.dewarim.cinnamon.application.servlet.LanguageServlet;
 import com.dewarim.cinnamon.application.servlet.LifecycleServlet;
 import com.dewarim.cinnamon.application.servlet.LifecycleStateServlet;
@@ -118,7 +120,7 @@ public class CinnamonServer {
         server.stop();
     }
 
-    private void addSingletons() {
+    private void addSingletons() throws IOException {
 
         // initialize mybatis:
         if (dbSessionFactory == null) {
@@ -126,13 +128,19 @@ public class CinnamonServer {
             dbSessionFactory = new DbSessionFactory(null);
         }
         ThreadLocalSqlSession.dbSessionFactory = dbSessionFactory;
+        // TODO: unused?
         server.setAttribute(DEFAULT_DATABASE_SESSION_FACTORY, dbSessionFactory);
 
-        // add DAOs
-        UserAccountDao userAccountDao = new UserAccountDao();
-        server.setAttribute(DAO_USER_ACCOUNT, userAccountDao);
+        SearchService searchService = new SearchService(config.getLuceneConfig());
+        webAppContext.setAttribute(SEARCH_SERVICE, searchService);
+
+        webAppContext.setAttribute(CINNAMON_CONFIG, config);
 
         // test query:
+        // add DAOs
+        UserAccountDao userAccountDao = new UserAccountDao();
+        // TODO: unused?
+        server.setAttribute(DAO_USER_ACCOUNT, userAccountDao);
         List<UserAccount> userAccounts = userAccountDao.listUserAccounts();
         log.info("Test query: database contains " + userAccounts.size() + " user accounts.");
     }
@@ -155,6 +163,7 @@ public class CinnamonServer {
         handler.addServlet(FolderServlet.class, "/api/folder/*");
         handler.addServlet(FolderTypeServlet.class, "/api/folderType/*");
         handler.addServlet(GroupServlet.class, "/api/group/*");
+        handler.addServlet(IndexServlet.class, "/api/index/*");
         handler.addServlet(IndexItemServlet.class, "/api/indexItem/*");
         handler.addServlet(LanguageServlet.class, "/api/language/*");
         handler.addServlet(LifecycleServlet.class, "/api/lifecycle/*");

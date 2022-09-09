@@ -16,8 +16,6 @@ public class DbSessionFactory {
 
     private final SqlSessionFactory sqlSessionFactory;
     
-    public static final String DEFAULT_PROPERTIES_FILENAME = "sql/mybatis.properties.xml";
-    
     public DbSessionFactory(String propertiesFilename) {
         String resource = "sql/mybatis-config.xml";
         try {

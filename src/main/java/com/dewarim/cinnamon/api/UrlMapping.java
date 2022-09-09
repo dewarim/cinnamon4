@@ -46,6 +46,7 @@ import com.dewarim.cinnamon.model.request.groupUser.AddUserToGroupsRequest;
 import com.dewarim.cinnamon.model.request.groupUser.RemoveUserFromGroupsRequest;
 import com.dewarim.cinnamon.model.request.index.CreateIndexItemRequest;
 import com.dewarim.cinnamon.model.request.index.DeleteIndexItemRequest;
+import com.dewarim.cinnamon.model.request.index.IndexInfoRequest;
 import com.dewarim.cinnamon.model.request.index.ListIndexItemRequest;
 import com.dewarim.cinnamon.model.request.index.UpdateIndexItemRequest;
 import com.dewarim.cinnamon.model.request.language.CreateLanguageRequest;
@@ -128,6 +129,7 @@ import com.dewarim.cinnamon.model.response.RelationWrapper;
 import com.dewarim.cinnamon.model.response.SummaryWrapper;
 import com.dewarim.cinnamon.model.response.UiLanguageWrapper;
 import com.dewarim.cinnamon.model.response.UserAccountWrapper;
+import com.dewarim.cinnamon.model.response.index.IndexInfoResponse;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -196,6 +198,7 @@ public enum UrlMapping {
     GROUP__LIST("group", "list", "/api", "", ListGroupRequest.class, GroupWrapper.class),
     GROUP__REMOVE_USER_FROM_GROUPS("group", "removeUserFromGroups", "/api", "", RemoveUserFromGroupsRequest.class, GenericResponse.class),
     GROUP__UPDATE("group", "update", "/api", "", UpdateGroupRequest.class, GroupWrapper.class),
+    INDEX__INFO("index", "info", "/api", "Provides information on the status of the Lucene search index", IndexInfoRequest.class, IndexInfoResponse.class),
     INDEX_ITEM__LIST("indexItem", "list", "/api", "", ListIndexItemRequest.class, IndexItemWrapper.class),
     INDEX_ITEM__CREATE("indexItem", "create", "/api", "", CreateIndexItemRequest.class, IndexItemWrapper.class),
     INDEX_ITEM__UPDATE("indexItem", "udpate", "/api", "", UpdateIndexItemRequest.class, IndexItemWrapper.class),

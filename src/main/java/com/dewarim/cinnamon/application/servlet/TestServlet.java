@@ -31,7 +31,7 @@ public class TestServlet extends HttpServlet {
         generateResponse(request, response);
     }
 
-    private void generateResponse(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    private void generateResponse(HttpServletRequest request, HttpServletResponse response) {
         CinnamonResponse cinnamonResponse = (CinnamonResponse) response;
         UrlMapping       mapping          = UrlMapping.getByPath(request.getRequestURI());
 
@@ -47,7 +47,7 @@ public class TestServlet extends HttpServlet {
         response.setStatusCode(status);
         GenericResponse genericResponse = new GenericResponse(status == HttpStatus.OK_200);
         genericResponse.setMessage(message);
-        response.setGenericResponse(genericResponse);
+        response.setResponse(genericResponse);
     }
 
 }

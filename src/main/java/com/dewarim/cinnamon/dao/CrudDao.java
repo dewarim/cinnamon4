@@ -24,7 +24,7 @@ public interface CrudDao<T extends Identifiable> {
 
     default List<T> create(List<T> items) {
         List<T>    createdItems = new ArrayList<>();
-        SqlSession sqlSession   = ThreadLocalSqlSession.getSqlSession();
+        SqlSession sqlSession   = getSqlSession();
         items.forEach(item -> {
             String sqlAction = getMapperNamespace(INSERT);
             try {
@@ -39,7 +39,7 @@ public interface CrudDao<T extends Identifiable> {
     }
 
     default int delete(List<Long> ids) {
-        SqlSession       sqlSession  = ThreadLocalSqlSession.getSqlSession();
+        SqlSession       sqlSession  = getSqlSession();
         List<List<Long>> partitions  = partitionLongList(ids);
         AtomicInteger    deleteCount = new AtomicInteger(0);
         partitions.forEach(partition -> {
@@ -54,13 +54,13 @@ public interface CrudDao<T extends Identifiable> {
     }
 
     default List<T> list() {
-        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        SqlSession sqlSession = getSqlSession();
         return sqlSession.selectList(getMapperNamespace(LIST));
     }
 
     default List<T> getObjectsById(List<Long> ids) {
         List<List<Long>> partitions = partitionLongList(ids);
-        SqlSession       sqlSession = ThreadLocalSqlSession.getSqlSession();
+        SqlSession       sqlSession = getSqlSession();
         List<T>          results    = new ArrayList<>(ids.size());
         partitions.forEach(partition -> results.addAll(sqlSession.selectList(getMapperNamespace(GET_ALL_BY_ID), partition)));
         return results;
@@ -113,7 +113,7 @@ public interface CrudDao<T extends Identifiable> {
 
     default List<T> update(List<T> items) throws SQLException {
         List<T>    updatedItems = new ArrayList<>();
-        SqlSession sqlSession   = ThreadLocalSqlSession.getSqlSession();
+        SqlSession sqlSession   = getSqlSession();
         items.forEach(item -> {
             String sqlAction = getMapperNamespace(UPDATE);
             // some more effort to check if an object does exist, so we can
@@ -156,4 +156,7 @@ public interface CrudDao<T extends Identifiable> {
         return CinnamonServer.config.getServerConfig().isIgnoreNopUpdates();
     }
 
+    default SqlSession getSqlSession(){
+        return ThreadLocalSqlSession.getSqlSession();
+    }
 }

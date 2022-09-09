@@ -10,6 +10,7 @@ import java.util.Map;
 
 public class IndexJobDao {
 
+    private SqlSession sqlSession;
     public List<IndexJob> getIndexJobsByFailedCountWithLimit(int status, int limit) {
         SqlSession          sqlSession = ThreadLocalSqlSession.getSqlSession();
         Map<String, Object> params     = Map.of("limit", limit, "failed", status);
@@ -39,5 +40,17 @@ public class IndexJobDao {
     public void updateStatus(IndexJob job) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
         sqlSession.update("com.dewarim.cinnamon.model.index.IndexJob.updateStatus", job);
+    }
+
+    public IndexJobDao setSqlSession(SqlSession sqlSession) {
+        this.sqlSession = sqlSession;
+        return this;
+    }
+
+    public SqlSession getSqlSession(){
+        if(sqlSession != null){
+            return sqlSession;
+        }
+        return ThreadLocalSqlSession.getSqlSession();
     }
 }

@@ -3,8 +3,8 @@ package com.dewarim.cinnamon.application.servlet;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonResponse;
-import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
+import com.dewarim.cinnamon.configuration.CinnamonConfig;
 import com.dewarim.cinnamon.configuration.SecurityConfig;
 import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.model.LoginType;
@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
+import static com.dewarim.cinnamon.api.Constants.CINNAMON_CONFIG;
 import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
 
 /**
@@ -38,8 +39,12 @@ import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
 @WebServlet(name = "UserAccount", urlPatterns = "/")
 public class UserAccountServlet extends HttpServlet implements CruddyServlet<UserAccount> {
 
-    private static final Logger       log       = LogManager.getLogger(UserAccountServlet.class);
-    private final        ObjectMapper xmlMapper = XML_MAPPER;
+    private static final Logger         log       = LogManager.getLogger(UserAccountServlet.class);
+    private final        ObjectMapper   xmlMapper = XML_MAPPER;
+    private              SecurityConfig securityConfig;
+
+    public UserAccountServlet() {
+    }
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
@@ -58,7 +63,7 @@ public class UserAccountServlet extends HttpServlet implements CruddyServlet<Use
                 superuserCheck();
                 CreateRequest<UserAccount> createRequest = convertCreateRequest(request, CreateUserAccountRequest.class);
                 createRequest.list().forEach(userAccount -> {
-                    if(!LoginType.isKnown(userAccount.getLoginType())){
+                    if (!LoginType.isKnown(userAccount.getLoginType())) {
                         throw ErrorCode.LOGIN_TYPE_IS_UNKNOWN.exception();
                     }
                     if (passwordIsTooShort(userAccount.getPassword())) {
@@ -93,8 +98,7 @@ public class UserAccountServlet extends HttpServlet implements CruddyServlet<Use
     }
 
     private boolean passwordIsTooShort(String password) {
-        SecurityConfig config = CinnamonServer.config.getSecurityConfig();
-        return password == null || password.trim().length() < config.getMinimumPasswordLength();
+        return password == null || password.trim().length() < securityConfig.getMinimumPasswordLength();
     }
 
     private void setPassword(HttpServletRequest request, UserAccountDao userDao, CinnamonResponse response) throws IOException {
@@ -113,11 +117,11 @@ public class UserAccountServlet extends HttpServlet implements CruddyServlet<Use
             throw ErrorCode.PASSWORD_TOO_SHORT.exception();
         }
 
-        UserAccount user    = userOpt.orElseThrow(ErrorCode.USER_ACCOUNT_NOT_FOUND.getException());
-        if(!user.getLoginType().equals(LoginType.CINNAMON.name())){
+        UserAccount user = userOpt.orElseThrow(ErrorCode.USER_ACCOUNT_NOT_FOUND.getException());
+        if (!user.getLoginType().equals(LoginType.CINNAMON.name())) {
             throw ErrorCode.USER_ACCOUNT_SET_PASSWORD_NOT_ALLOWED.exception();
         }
-        String      pwdHash = HashMaker.createDigest(passwordRequest.getPassword());
+        String pwdHash = HashMaker.createDigest(passwordRequest.getPassword());
         user.setPassword(pwdHash);
         userDao.updateUser(user);
         response.responseIsGenericOkay();
@@ -142,5 +146,10 @@ public class UserAccountServlet extends HttpServlet implements CruddyServlet<Use
     @Override
     public ObjectMapper getMapper() {
         return xmlMapper;
+    }
+
+    @Override
+    public void init() {
+        securityConfig = ((CinnamonConfig) getServletContext().getAttribute(CINNAMON_CONFIG)).getSecurityConfig();
     }
 }

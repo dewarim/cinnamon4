@@ -4,6 +4,9 @@ import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.application.exception.BadArgumentException;
 import com.dewarim.cinnamon.model.Folder;
+import com.dewarim.cinnamon.model.index.IndexJob;
+import com.dewarim.cinnamon.model.index.IndexJobAction;
+import com.dewarim.cinnamon.model.index.IndexJobType;
 import org.apache.ibatis.session.SqlSession;
 
 import java.util.ArrayList;
@@ -14,16 +17,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static com.dewarim.cinnamon.api.Constants.ROOT_FOLDER_NAME;
 
-public class FolderDao implements CrudDao<Folder>{
+public class FolderDao implements CrudDao<Folder> {
 
+    private final        IndexJobDao indexJobDao = new IndexJobDao();
     /**
      * Max number of ids in "in clause" is 32768 for Postgresql.
      */
-    private static final int BATCH_SIZE = 10000;
+    private static final int         BATCH_SIZE  = 10000;
 
     // note: almost same code as OsdDao, although you could argue that fetching > 10K folders is a pathological case.
     public List<Folder> getFoldersById(List<Long> ids, boolean includeSummary) {
@@ -62,6 +65,7 @@ public class FolderDao implements CrudDao<Folder>{
         params.put("rootFolderName", ROOT_FOLDER_NAME);
         return sqlSession.selectOne("com.dewarim.cinnamon.model.Folder.getRootFolder", params);
     }
+
     public Optional<Folder> getFolderByParentAndName(Long parentId, String name, boolean includeSummary) {
         SqlSession          sqlSession = ThreadLocalSqlSession.getSqlSession();
         Map<String, Object> params     = new HashMap<>();
@@ -80,12 +84,13 @@ public class FolderDao implements CrudDao<Folder>{
         return sqlSession.selectList("com.dewarim.cinnamon.model.Folder.getDirectSubFolders", params);
     }
 
-    public Folder saveFolder(Folder folder){
+    public Folder saveFolder(Folder folder) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        int resultRows =  sqlSession.insert("com.dewarim.cinnamon.model.Folder.insertFolder", folder);
-        if(resultRows != 1){
+        int        resultRows = sqlSession.insert("com.dewarim.cinnamon.model.Folder.insertFolder", folder);
+        if (resultRows != 1) {
             ErrorCode.DB_INSERT_FAILED.throwUp();
         }
+        indexJobDao.insertIndexJob(new IndexJob(IndexJobType.FOLDER, folder.getId(), IndexJobAction.CREATE));
         return folder;
     }
 
@@ -104,7 +109,7 @@ public class FolderDao implements CrudDao<Folder>{
         }
         SqlSession   sqlSession   = ThreadLocalSqlSession.getSqlSession();
         List<String> pathElements = new ArrayList<>(Arrays.asList(path.substring(1).split("/")));
-        List<String> names        = pathElements.stream().filter(Objects::nonNull).collect(Collectors.toList());
+        List<String> names        = pathElements.stream().filter(Objects::nonNull).toList();
         if (names.isEmpty()) {
             return Collections.emptyList();
         }
@@ -168,13 +173,13 @@ public class FolderDao implements CrudDao<Folder>{
 
     public boolean hasContent(List<Long> ids) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        Long count = sqlSession.selectOne("com.dewarim.cinnamon.model.Folder.countContent", ids);
+        Long       count      = sqlSession.selectOne("com.dewarim.cinnamon.model.Folder.countContent", ids);
         return count > 0;
     }
 
     public boolean hasSubfolders(List<Long> ids) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        Long count = sqlSession.selectOne("com.dewarim.cinnamon.model.Folder.countSubfolders", ids);
+        Long       count      = sqlSession.selectOne("com.dewarim.cinnamon.model.Folder.countSubfolders", ids);
         return count > 0;
     }
 

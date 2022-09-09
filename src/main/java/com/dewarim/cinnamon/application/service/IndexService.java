@@ -11,6 +11,7 @@ import com.dewarim.cinnamon.model.IndexItem;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.index.IndexJob;
 import com.dewarim.cinnamon.model.index.IndexJobType;
+import org.apache.ibatis.session.SqlSession;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
@@ -36,14 +37,14 @@ import java.util.Set;
 public class IndexService implements Runnable {
     private static final Logger log = LogManager.getLogger(IndexService.class);
 
-    private       boolean     stopped   = false;
-    private final IndexWriter indexWriter;
-    private final OsdDao      osdDao    = new OsdDao();
-    private final FolderDao   folderDao = new FolderDao();
-    private final IndexJobDao jobDao    = new IndexJobDao();
+    private       boolean      stopped   = false;
+    private final IndexWriter  indexWriter;
+    private final OsdDao       osdDao    = new OsdDao();
+    private final FolderDao    folderDao = new FolderDao();
+    private final LuceneConfig config;
 
     public IndexService(LuceneConfig config) {
-
+        this.config = config;
         Path indexPath = Paths.get(config.getIndexPath());
         if (!indexPath.toFile().exists()) {
             boolean madeDirs = indexPath.toFile().mkdirs();
@@ -67,12 +68,11 @@ public class IndexService implements Runnable {
     public void run() {
         int limit = 100;
         while (!stopped) {
-            try {
-                ThreadLocalSqlSession.refreshSession();
-                List<IndexItem> indexItems = new IndexItemDao().list();
-                Set<IndexKey>   seen       = new HashSet<>(128);
+            try(SqlSession    sqlSession = ThreadLocalSqlSession.getNewReuseSession()) {
+                Set<IndexKey> seen       = new HashSet<>(128);
+                IndexJobDao   jobDao     = new IndexJobDao().setSqlSession(ThreadLocalSqlSession.getNewReuseSession());
                 while (jobDao.countJobs() > 0) {
-
+                    List<IndexItem> indexItems = new IndexItemDao().setSqlSession(sqlSession).list();
                     List<IndexJob> jobs = jobDao.getIndexJobsByFailedCountWithLimit(0, limit);
                     log.debug("Found " + jobs.size() + " IndexJobs.");
                     for (IndexJob job : jobs) {
@@ -96,8 +96,9 @@ public class IndexService implements Runnable {
                         seen.add(indexKey);
                     }
                     jobDao.commit();
+                    indexWriter.commit();
                     // TODO: avoid busy waiting
-                    Thread.sleep(1000L);
+                    Thread.sleep(config.getMillisToWaitBetweenRuns());
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -131,7 +132,12 @@ public class IndexService implements Runnable {
             return false;
         }
         Folder folder = folderOpt.get();
-        // index sysMeta
+        //// index sysMeta
+
+        // folderpath
+        List<Folder> folders = folderDao.getFolderByIdWithAncestors(folder.getParentId(), false);
+        doc.add(new StoredField("folderpath", foldersToPath(folders)));
+
         return true;
     }
 
@@ -145,7 +151,7 @@ public class IndexService implements Runnable {
         //// index sysMeta
 
         // folderpath
-        List<Folder> folders = folderDao.getFolderByIdWithAncestors(osd.getId(), false);
+        List<Folder> folders = folderDao.getFolderByIdWithAncestors(osd.getParentId(), false);
         doc.add(new StoredField("folderpath", foldersToPath(folders)));
         // index content
 
