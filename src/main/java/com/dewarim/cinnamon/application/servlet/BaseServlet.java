@@ -15,9 +15,11 @@ import java.util.List;
 
 public class BaseServlet extends HttpServlet {
 
+    static final AuthorizationService authorizationService = new AuthorizationService();
+
     static void throwUnlessSysMetadataIsWritable(Ownable ownable) {
         UserAccount user         = ThreadLocalSqlSession.getCurrentUser();
-        boolean     writeAllowed = new AuthorizationService().hasUserOrOwnerPermission(ownable, DefaultPermission.WRITE_OBJECT_SYS_METADATA, user);
+        boolean     writeAllowed = authorizationService.hasUserOrOwnerPermission(ownable, DefaultPermission.WRITE_OBJECT_SYS_METADATA, user);
         if (!writeAllowed) {
             throw ErrorCode.NO_WRITE_SYS_METADATA_PERMISSION.getException().get();
         }
@@ -25,7 +27,7 @@ public class BaseServlet extends HttpServlet {
 
     static void throwUnlessSysMetadataIsReadable(Ownable ownable) {
         UserAccount user        = ThreadLocalSqlSession.getCurrentUser();
-        boolean     readAllowed = new AuthorizationService().hasUserOrOwnerPermission(ownable, DefaultPermission.READ_OBJECT_SYS_METADATA, user);
+        boolean     readAllowed = authorizationService.hasUserOrOwnerPermission(ownable, DefaultPermission.READ_OBJECT_SYS_METADATA, user);
         if (!readAllowed) {
             throw ErrorCode.NO_READ_OBJECT_SYS_METADATA_PERMISSION.getException().get();
         }
@@ -33,14 +35,14 @@ public class BaseServlet extends HttpServlet {
 
     static void throwUnlessCustomMetaIsReadable(Ownable ownable) {
         UserAccount user        = ThreadLocalSqlSession.getCurrentUser();
-        boolean     readAllowed = new AuthorizationService().hasUserOrOwnerPermission(ownable, DefaultPermission.READ_OBJECT_CUSTOM_METADATA, user);
+        boolean     readAllowed = authorizationService.hasUserOrOwnerPermission(ownable, DefaultPermission.READ_OBJECT_CUSTOM_METADATA, user);
         if (!readAllowed) {
             throw ErrorCode.NO_READ_CUSTOM_METADATA_PERMISSION.getException().get();
         }
     }
 
     static void throwUnlessCustomMetaIsWritable(Ownable ownable, UserAccount user) {
-        boolean readAllowed = new AuthorizationService().hasUserOrOwnerPermission(ownable, DefaultPermission.READ_OBJECT_CUSTOM_METADATA, user);
+        boolean readAllowed = authorizationService.hasUserOrOwnerPermission(ownable, DefaultPermission.READ_OBJECT_CUSTOM_METADATA, user);
         if (!readAllowed) {
             throw ErrorCode.NO_WRITE_CUSTOM_METADATA_PERMISSION.getException().get();
         }

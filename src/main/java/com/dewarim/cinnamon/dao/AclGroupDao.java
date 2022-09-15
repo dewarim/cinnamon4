@@ -7,7 +7,6 @@ import com.dewarim.cinnamon.model.Group;
 import org.apache.ibatis.session.SqlSession;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -17,9 +16,7 @@ public class AclGroupDao implements CrudDao<AclGroup> {
 
     public List<AclGroup> getAclGroupsByGroupIdsAndAcl(List<Long> groupIds, long aclId) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        Map<String, Object> params = new HashMap<>();
-        params.put("groupIds", groupIds);
-        params.put("aclId", aclId);
+        Map<String, Object> params = Map.of("groupIds", groupIds, "aclId", aclId);
         return sqlSession.selectList("com.dewarim.cinnamon.model.AclGroup.getAclGroupsByGroupIdsAndAcl", params);
     }
 
@@ -56,9 +53,7 @@ public class AclGroupDao implements CrudDao<AclGroup> {
 
     private Optional<AclGroup> getAclGroupByAclAndGroupName(String name, long aclId) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        Map<String, Object> params = new HashMap<>();
-        params.put("groupName", name);
-        params.put("aclId", aclId);
+        Map<String, Object> params = Map.of("groupName", name, "aclId", aclId);
         AclGroup aclGroup = sqlSession.selectOne("com.dewarim.cinnamon.model.AclGroup.getAclGroupByAclAndGroupName", params);
         if(aclGroup != null){
             addPermissionsToAclGroups(List.of(aclGroup));

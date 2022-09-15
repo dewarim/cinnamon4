@@ -6,11 +6,9 @@ import com.dewarim.cinnamon.model.GroupUser;
 import com.dewarim.cinnamon.model.UserAccount;
 import org.apache.ibatis.session.SqlSession;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  *
@@ -32,9 +30,9 @@ public class UserAccountDao implements CrudDao<UserAccount> {
     }
 
     private void addGroupInfo(UserAccount userAccount) {
-        var groupUserDao = new GroupUserDao();
-        List<GroupUser> groupUsers = groupUserDao.listGroupsOfUser(userAccount.getId());
-        userAccount.getGroupIds().addAll(groupUsers.stream().map(GroupUser::getGroupId).collect(Collectors.toList()));
+        var             groupUserDao = new GroupUserDao();
+        List<GroupUser> groupUsers   = groupUserDao.listGroupsOfUser(userAccount.getId());
+        userAccount.getGroupIds().addAll(groupUsers.stream().map(GroupUser::getGroupId).toList());
     }
 
     public void changeUserActivationStatus(UserAccount user) {
@@ -44,9 +42,7 @@ public class UserAccountDao implements CrudDao<UserAccount> {
 
     public boolean isSuperuser(UserAccount user) {
         SqlSession          sqlSession = ThreadLocalSqlSession.getSqlSession();
-        Map<String, Object> params     = new HashMap<>();
-        params.put("superuserGroupName", Constants.GROUP_SUPERUSERS);
-        params.put("userId", user.getId());
+        Map<String, Object> params     = Map.of("superuserGroupName", Constants.GROUP_SUPERUSERS, "userId", user.getId());
         return sqlSession.selectOne("com.dewarim.cinnamon.model.UserAccount.getSuperuserStatus",
                 params) != null;
     }

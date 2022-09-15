@@ -71,27 +71,20 @@
     </select>
 
 
-    <select id="getOsdIdByIdWithDescendants" parameterType="map" resultType="Long">
+    <select id="getOsdIdByIdWithDescendants" parameterType="long" resultType="Long">
         SELECT id
         FROM objects
-        WHERE id in (
-        with recursive osdId (id, predecessor_id, root_id)
-        as (
-        select o.id, o.predecessor_id, o.root_id
-        from objects o
-        where o.predecessor_id =
-        <foreach item="item" index="index" collection="ids" open="(" separator="," close=")">
-            #{item}
-        </foreach>
-        union
-        select child.id, child.predecessor_id, child.root_id
-        from osdId parent,
-        objects child
-        WHERE child.predecessor_id = parent.id
-        )
-        SELECT id
-        FROM osdId
-        )
+        WHERE id in (with recursive osdId (id, predecessor_id, root_id)
+                                        as (select o.id, o.predecessor_id, o.root_id
+                                            from objects o
+                                            where o.predecessor_id = #{id}
+                                            union
+                                            select child.id, child.predecessor_id, child.root_id
+                                            from osdId parent,
+                                                 objects child
+                                            WHERE child.predecessor_id = parent.id)
+                     SELECT id
+                     FROM osdId)
     </select>
 
 
@@ -128,7 +121,7 @@
 
         FROM objects
         WHERE parent_id = #{folderId}
-        ${versionPredicate}
+            ${versionPredicate}
     </select>
 
     <select id="com.dewarim.cinnamon.model.ObjectSystemData.getLatestHead" parameterType="long" resultMap="osdMap">
@@ -197,10 +190,10 @@
         #{contentChanged}, #{metadataChanged}, #{summary})
     </insert>
 
-    <delete id="deleteOsds" parameterType="map">
+    <delete id="deleteOsds">
         DELETE FROM objects
         WHERE id IN
-        <foreach item="item" index="index" collection="ids"
+        <foreach item="item" index="index" collection="list"
                  open="(" separator="," close=")">
             #{item}
         </foreach>

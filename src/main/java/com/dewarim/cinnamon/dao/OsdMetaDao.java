@@ -7,7 +7,6 @@ import com.dewarim.cinnamon.model.Meta;
 import org.apache.ibatis.exceptions.PersistenceException;
 import org.apache.ibatis.session.SqlSession;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -25,9 +24,7 @@ public class OsdMetaDao implements CrudDao<Meta>, MetaDao{
 
     public List<Meta> getMetaByTypeIdsAndOsd(List<Long> typeIds, long id) {
         SqlSession          sqlSession = ThreadLocalSqlSession.getSqlSession();
-        Map<String, Object> params     = new HashMap<>();
-        params.put("id", id);
-        params.put("typeIds", typeIds);
+        Map<String, Object> params     = Map.of("id", id, "typeIds", typeIds);
         return sqlSession.selectList("com.dewarim.cinnamon.model.OsdMeta.getMetaByTypeIdsAndOsd", params);
     }
 

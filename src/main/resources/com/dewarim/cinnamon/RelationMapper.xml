@@ -13,7 +13,7 @@
         <result property="metadata" column="metadata"/>
     </resultMap>
 
-    <select id="getProtectedRelations" parameterType="map" resultMap="relationMap">
+    <select id="getProtectedRelations" resultMap="relationMap">
         SELECT
         r.id,
         r.left_id,
@@ -22,40 +22,41 @@
         FROM relations r join relation_types rt on r.type_id = rt.id
         WHERE
         ( rt.left_object_protected = true and r.left_id in
-        <foreach item="item" index="index" collection="ids"
+        <foreach item="item" index="index" collection="list"
                  open="(" separator="," close=")">
             #{item}
         </foreach>
         )
         OR (rt.right_object_protected = true and r.right_id in
-        <foreach item="item" index="index" collection="ids"
+        <foreach item="item" index="index" collection="list"
                  open="(" separator="," close=")">
             #{item}
         </foreach>
         )
     </select>
 
-    <select id="getAllRelationsOfObjects" parameterType="map" resultMap="relationMap">
-        SELECT
-        r.id,
-        r.left_id,
-        r.right_id,
-        r.type_id
-        FROM relations r
-        WHERE
-        ( r.left_id in
-        <foreach item="item" index="index" collection="ids"
-                 open="(" separator="," close=")">
-            #{item}
-        </foreach>
-        )
-        OR (r.right_id in
-        <foreach item="item" index="index" collection="ids"
-                 open="(" separator="," close=")">
-            #{item}
-        </foreach>
-        )
-    </select>
+    <!-- currently unused -->
+    <!--    <select id="getAllRelationsOfObjects" parameterType="map" resultMap="relationMap">-->
+    <!--        SELECT-->
+    <!--        r.id,-->
+    <!--        r.left_id,-->
+    <!--        r.right_id,-->
+    <!--        r.type_id-->
+    <!--        FROM relations r-->
+    <!--        WHERE-->
+    <!--        ( r.left_id in-->
+    <!--        <foreach item="item" index="index" collection="ids"-->
+    <!--                 open="(" separator="," close=")">-->
+    <!--            #{item}-->
+    <!--        </foreach>-->
+    <!--        )-->
+    <!--        OR (r.right_id in-->
+    <!--        <foreach item="item" index="index" collection="ids"-->
+    <!--                 open="(" separator="," close=")">-->
+    <!--            #{item}-->
+    <!--        </foreach>-->
+    <!--        )-->
+    <!--    </select>-->
 
     <select id="getRelationsWithCriteria" parameterType="map" resultMap="relationMap">
         SELECT
@@ -147,15 +148,6 @@
         ( #{id},#{leftId},#{rightId},#{typeId},#{metadata} )
     </insert>
 
-    <delete id="deleteRelationByExample" parameterType="map">
-        DELETE
-        FROM relations
-        WHERE left_id = #{leftId}
-          AND right_id = #{rightId}
-          AND type_id IN (select id
-                          from relation_types
-                          where name = #{name})
-    </delete>
     <delete id="delete" parameterType="list">
         DELETE
         FROM relations
@@ -166,7 +158,7 @@
         </foreach>
     </delete>
 
-    <delete id="deleteAllUnprotectedRelationsOfObjects" parameterType="map">
+    <delete id="deleteAllUnprotectedRelationsOfObjects" >
         DELETE
         FROM relations
         WHERE id in (
@@ -175,13 +167,13 @@
         FROM relations r join relation_types rt on r.type_id = rt.id
         WHERE
         ( rt.left_object_protected = false and r.left_id in
-        <foreach item="item" index="index" collection="ids"
+        <foreach item="item" index="index" collection="list"
                  open="(" separator="," close=")">
             #{item}
         </foreach>
         )
         OR (rt.right_object_protected = false and r.right_id in
-        <foreach item="item" index="index" collection="ids"
+        <foreach item="item" index="index" collection="list"
                  open="(" separator="," close=")">
             #{item}
         </foreach>

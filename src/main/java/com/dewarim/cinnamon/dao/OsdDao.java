@@ -113,16 +113,12 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
 
     public void deleteOsds(List<Long> osdIdsToToDelete) {
         SqlSession          sqlSession = ThreadLocalSqlSession.getSqlSession();
-        Map<String, Object> params     = new HashMap<>();
-        params.put("ids", osdIdsToToDelete);
-        sqlSession.delete("com.dewarim.cinnamon.model.ObjectSystemData.deleteOsds", params);
+        sqlSession.delete("com.dewarim.cinnamon.model.ObjectSystemData.deleteOsds", osdIdsToToDelete);
     }
 
     public Set<Long> getOsdIdByIdWithDescendants(Long id) {
         SqlSession          sqlSession = ThreadLocalSqlSession.getSqlSession();
-        Map<String, Object> params     = new HashMap<>();
-        params.put("ids", Collections.singletonList(id));
-        return new HashSet<>(sqlSession.selectList("com.dewarim.cinnamon.model.ObjectSystemData.getOsdIdByIdWithDescendants", params));
+        return new HashSet<>(sqlSession.selectList("com.dewarim.cinnamon.model.ObjectSystemData.getOsdIdByIdWithDescendants", id));
     }
 
     @Override

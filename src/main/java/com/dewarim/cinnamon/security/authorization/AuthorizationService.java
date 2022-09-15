@@ -28,18 +28,11 @@ public class AuthorizationService {
     public List<Link> filterLinksByBrowsePermission(List<Link> links, UserAccount user) {
         AccessFilter accessFilter = AccessFilter.getInstance(user);
         return links.stream().filter(link ->
-                {
-                    switch (link.getType()) {
-                        case FOLDER:
-                            return accessFilter.hasFolderBrowsePermission(link.getAclId())
-                                    || (link.getOwnerId().equals(user.getId()) && accessFilter.hasOwnerBrowsePermission(link.getAclId()));
-                        case OBJECT:
-                            return accessFilter.hasBrowsePermissionForOwnable(link)
-                                    || (link.getOwnerId().equals(user.getId()) && accessFilter.hasPermission(link.getAclId(), DefaultPermission.BROWSE_FOLDER, true));
-                        default:
-                            throw new IllegalStateException("unknown link type");
-                    }
-
+                switch (link.getType()) {
+                    case FOLDER -> accessFilter.hasFolderBrowsePermission(link.getAclId())
+                            || (link.getOwnerId().equals(user.getId()) && accessFilter.hasOwnerBrowsePermission(link.getAclId()));
+                    case OBJECT -> accessFilter.hasBrowsePermissionForOwnable(link)
+                            || (link.getOwnerId().equals(user.getId()) && accessFilter.hasPermission(link.getAclId(), DefaultPermission.BROWSE_FOLDER, true));
                 }
         ).collect(Collectors.toList());
     }

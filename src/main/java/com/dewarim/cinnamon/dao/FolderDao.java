@@ -52,35 +52,26 @@ public class FolderDao implements CrudDao<Folder> {
 
     public List<Folder> getFolderByIdWithAncestors(Long id, boolean includeSummary) {
         SqlSession          sqlSession = ThreadLocalSqlSession.getSqlSession();
-        Map<String, Object> params     = new HashMap<>();
-        params.put("includeSummary", includeSummary);
-        params.put("id", id);
+        Map<String, Object> params     = Map.of("includeSummary", includeSummary, "id", id);
         return sqlSession.selectList("com.dewarim.cinnamon.model.Folder.getFolderByIdWithAncestors", params);
     }
 
     public Folder getRootFolder(boolean includeSummary) {
         SqlSession          sqlSession = ThreadLocalSqlSession.getSqlSession();
-        Map<String, Object> params     = new HashMap<>();
-        params.put("includeSummary", includeSummary);
-        params.put("rootFolderName", ROOT_FOLDER_NAME);
+        Map<String, Object> params     = Map.of("includeSummary", includeSummary, "rootFolderName", ROOT_FOLDER_NAME);
         return sqlSession.selectOne("com.dewarim.cinnamon.model.Folder.getRootFolder", params);
     }
 
     public Optional<Folder> getFolderByParentAndName(Long parentId, String name, boolean includeSummary) {
         SqlSession          sqlSession = ThreadLocalSqlSession.getSqlSession();
-        Map<String, Object> params     = new HashMap<>();
-        params.put("includeSummary", includeSummary);
-        params.put("name", name);
-        params.put("parentId", parentId);
-        Folder folder = sqlSession.selectOne("com.dewarim.cinnamon.model.Folder.getFolderByParentAndName", params);
+        Map<String, Object> params     = Map.of("includeSummary", includeSummary, "name", name, "parentId", parentId);
+        Folder              folder     = sqlSession.selectOne("com.dewarim.cinnamon.model.Folder.getFolderByParentAndName", params);
         return Optional.ofNullable(folder);
     }
 
     public List<Folder> getDirectSubFolders(Long id, boolean includeSummary) {
         SqlSession          sqlSession = ThreadLocalSqlSession.getSqlSession();
-        Map<String, Object> params     = new HashMap<>();
-        params.put("includeSummary", includeSummary);
-        params.put("id", id);
+        Map<String, Object> params     = Map.of("includeSummary", includeSummary, "id", id);
         return sqlSession.selectList("com.dewarim.cinnamon.model.Folder.getDirectSubFolders", params);
     }
 
@@ -114,22 +105,19 @@ public class FolderDao implements CrudDao<Folder> {
             return Collections.emptyList();
         }
 
-        Map<String, Object> params         = new HashMap<>();
-        Folder              rootFolder     = getRootFolder(false);
-        Folder              currentFolder  = null;
-        Folder              targetFolder   = null;
-        boolean             firstIteration = true;
+        Folder  rootFolder     = getRootFolder(false);
+        Folder  currentFolder  = null;
+        Folder  targetFolder   = null;
+        boolean firstIteration = true;
 
         for (String name : pathElements) {
             List<Folder> targetFolders;
             if (firstIteration) {
-                params.put("id", rootFolder.getId());
-                params.put("name", name);
+                Map<String, Object> params = Map.of("id", rootFolder.getId(), "name", name);
                 firstIteration = false;
                 targetFolders = sqlSession.selectList("com.dewarim.cinnamon.model.Folder.getChildFolderOfRootByName", params);
             } else {
-                params.put("parentId", currentFolder.getId());
-                params.put("childName", name);
+                Map<String, Object> params = Map.of("parentId", currentFolder.getId(), "childName", name);
                 targetFolders = sqlSession.selectList("com.dewarim.cinnamon.model.Folder.getFolderByParentIdAndChildName", params);
             }
 
