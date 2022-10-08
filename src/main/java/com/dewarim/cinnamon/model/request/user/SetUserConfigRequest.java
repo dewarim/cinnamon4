@@ -6,7 +6,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import java.util.List;
 import java.util.Optional;
 
-@JacksonXmlRootElement(localName = "setConfigRequest")
+@JacksonXmlRootElement(localName = "setUserConfigRequest")
 public class SetUserConfigRequest implements ApiRequest {
 
     private Long   userId;

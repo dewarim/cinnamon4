@@ -3574,15 +3574,15 @@ Returns status code 400
 ---
 
 # /api/user/setConfig
-
+Update a user's individual configuration
 
 ## Request
 
 ```xml
-<setConfigRequest>
+<setUserConfigRequest>
   <userId>123</userId>
   <config>&lt;config>&lt;lastSearches>&lt;search>foo&lt;/search>&lt;/lastSearches>&lt;/config></config>
-</setConfigRequest>
+</setUserConfigRequest>
 
 ```
 
