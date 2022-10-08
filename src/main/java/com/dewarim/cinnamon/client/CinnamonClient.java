@@ -63,6 +63,7 @@ import com.dewarim.cinnamon.model.request.groupUser.AddUserToGroupsRequest;
 import com.dewarim.cinnamon.model.request.groupUser.RemoveUserFromGroupsRequest;
 import com.dewarim.cinnamon.model.request.index.CreateIndexItemRequest;
 import com.dewarim.cinnamon.model.request.index.DeleteIndexItemRequest;
+import com.dewarim.cinnamon.model.request.index.IndexInfoRequest;
 import com.dewarim.cinnamon.model.request.index.ListIndexItemRequest;
 import com.dewarim.cinnamon.model.request.index.UpdateIndexItemRequest;
 import com.dewarim.cinnamon.model.request.language.CreateLanguageRequest;
@@ -112,6 +113,7 @@ import com.dewarim.cinnamon.model.request.user.CreateUserAccountRequest;
 import com.dewarim.cinnamon.model.request.user.GetUserAccountRequest;
 import com.dewarim.cinnamon.model.request.user.ListUserAccountRequest;
 import com.dewarim.cinnamon.model.request.user.SetPasswordRequest;
+import com.dewarim.cinnamon.model.request.user.SetUserConfigRequest;
 import com.dewarim.cinnamon.model.request.user.UpdateUserAccountRequest;
 import com.dewarim.cinnamon.model.request.user.UserPermissionRequest;
 import com.dewarim.cinnamon.model.response.AclGroupWrapper;
@@ -144,9 +146,11 @@ import com.dewarim.cinnamon.model.response.Summary;
 import com.dewarim.cinnamon.model.response.SummaryWrapper;
 import com.dewarim.cinnamon.model.response.UiLanguageWrapper;
 import com.dewarim.cinnamon.model.response.UserAccountWrapper;
+import com.dewarim.cinnamon.model.response.index.IndexInfoResponse;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
+import org.apache.http.StatusLine;
 import org.apache.http.client.fluent.Form;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
@@ -1087,5 +1091,48 @@ public class CinnamonClient {
         var request = new DeleteRelationRequest(id);
         var response = sendStandardRequest(UrlMapping.RELATION__DELETE, request);
         verifyDeleteResponse(response);
+    }
+
+    public void setUserConfig(Long userId, String config) throws IOException{
+        var request = new SetUserConfigRequest(userId, config);
+        var response = sendStandardRequest(USER__SET_CONFIG, request);
+        verifyResponseIsOkay(response);
+    }
+
+    public IndexInfoResponse getIndexInfo(boolean countDocuments) throws IOException{
+        var request = new IndexInfoRequest(countDocuments);
+        HttpResponse response = sendStandardRequest(INDEX__INFO, request);
+        return new SingletonUnwrapper<IndexInfoResponse>(IndexInfoResponse.class).unwrap(response);
+    }
+
+    static class SingletonUnwrapper<S>{
+
+        private final Class<? extends S> clazz;
+
+        private final static XmlMapper mapper   = XML_MAPPER;
+
+        SingletonUnwrapper(Class<? extends S> clazz) {
+            this.clazz = clazz;
+        }
+
+        public S unwrap(HttpResponse response) throws IOException {
+            checkResponseForErrors(response, mapper);
+            return mapper.readValue(response.getEntity().getContent(), clazz);
+        }
+    }
+
+    static void checkResponseForErrors(HttpResponse response, XmlMapper mapper) throws IOException {
+        if (response.containsHeader(HEADER_FIELD_CINNAMON_ERROR)) {
+            CinnamonErrorWrapper wrapper = mapper.readValue(response.getEntity().getContent(), CinnamonErrorWrapper.class);
+            log.warn("Found errors: "+wrapper.getErrors().stream().map(CinnamonError::toString).collect(Collectors.joining(",")));
+            throw new CinnamonClientException(wrapper);
+        }
+        if (response.getStatusLine().getStatusCode() != SC_OK) {
+            StatusLine statusLine = response.getStatusLine();
+            String     message    = statusLine.getStatusCode() + " " + statusLine.getReasonPhrase();
+            log.warn("Failed to unwrap non-okay response with status: " + message);
+            log.info("Response: " + new String(response.getEntity().getContent().readAllBytes()));
+            throw new CinnamonClientException(message);
+        }
     }
 }

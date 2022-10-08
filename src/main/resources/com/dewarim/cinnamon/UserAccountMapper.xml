@@ -20,6 +20,7 @@
         <result property="tokensToday" column="tokens_today"/>
         <result property="passwordExpired" column="password_expired"/>
         <result property="activateTriggers" column="activate_triggers"/>
+        <result property="config" column="config"/>
     </resultMap>
 
     <select id="getUserAccountByName" parameterType="String" resultMap="userAccountMap">
@@ -80,7 +81,8 @@
             token            = #{token},
             tokens_today     = #{tokensToday},
             password_expired = #{passwordExpired},
-            activate_triggers= #{activateTriggers}
+            activate_triggers= #{activateTriggers},
+            config           = #{config}
         WHERE id = #{id}
     </update>
 
@@ -90,10 +92,10 @@
         </selectKey>
         INSERT INTO users (id, name, login_type, pwd, activated, locked,
         ui_language_id, fullname, email, change_tracking, tokens_today,
-        password_expired, activate_triggers)
+        password_expired, activate_triggers, config)
         VALUES( #{id}, #{name}, #{loginType}, #{password}, #{activated}, #{locked},
         #{uiLanguageId},
-        #{fullname}, #{email}, #{changeTracking}, 0, false, #{activateTriggers})
+        #{fullname}, #{email}, #{changeTracking}, 0, false, #{activateTriggers}, #{config})
     </insert>
 
     <select id="getAllById" parameterType="list" resultMap="userAccountMap">

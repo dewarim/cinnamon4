@@ -210,4 +210,10 @@
         </foreach>
     </select>
 
+    <!-- should only be used for debugging -->
+    <select id="list" resultMap="osdMap">
+        SELECT *
+        FROM objects
+    </select>
+
 </mapper>

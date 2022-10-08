@@ -102,6 +102,7 @@ import com.dewarim.cinnamon.model.request.user.CreateUserAccountRequest;
 import com.dewarim.cinnamon.model.request.user.GetUserAccountRequest;
 import com.dewarim.cinnamon.model.request.user.ListUserAccountRequest;
 import com.dewarim.cinnamon.model.request.user.SetPasswordRequest;
+import com.dewarim.cinnamon.model.request.user.SetUserConfigRequest;
 import com.dewarim.cinnamon.model.request.user.UpdateUserAccountRequest;
 import com.dewarim.cinnamon.model.request.user.UserPermissionRequest;
 import com.dewarim.cinnamon.model.response.AclGroupWrapper;
@@ -283,6 +284,7 @@ public enum UrlMapping {
     UI_LANGUAGE__UPDATE("uiLanguage", "update", "/api", "", UpdateUiLanguageRequest.class, UiLanguageWrapper.class),
     UI_LANGUAGE__DELETE("uiLanguage", "delete", "/api", "", DeleteUiLanguageRequest.class, DeleteResponse.class),
     USER__CREATE("user", "create", "/api", "", CreateUserAccountRequest.class, UserAccountWrapper.class),
+    USER__SET_CONFIG("user", "setConfig", "/api", "", SetUserConfigRequest.class, GenericResponse.class),
     USER__UPDATE("user", "update", "/api", "", UpdateUserAccountRequest.class, UserAccountWrapper.class),
     USER__LIST("user", "list", "/api", "", ListUserAccountRequest.class, UserAccountWrapper.class),
     USER__SET_PASSWORD("user", "setPassword", "/api", "", SetPasswordRequest.class, GenericResponse.class),

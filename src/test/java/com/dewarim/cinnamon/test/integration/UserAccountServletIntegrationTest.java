@@ -239,4 +239,36 @@ public class UserAccountServletIntegrationTest extends CinnamonIntegrationTest {
         var testClient2 = new CinnamonClient(adminClient.getPort(), adminClient.getHost(), adminClient.getProtocol(), newUserName, password);
         testClient2.connect();
     }
+
+    @Test
+    public void setConfigInvalidRequest(){
+        CinnamonClientException cex = assertThrows(CinnamonClientException.class, () -> client.setUserConfig(adminId, null));
+        assertEquals(ErrorCode.INVALID_REQUEST, cex.getErrorCode());
+    }
+    @Test
+    public void setConfigOtherUserIsForbidden(){
+        CinnamonClientException cex = assertThrows(CinnamonClientException.class, () -> client.setUserConfig(adminId, "xxx"));
+        assertEquals(ErrorCode.FORBIDDEN, cex.getErrorCode());
+    }
+
+    @Test
+    public void setConfigUserNotFound(){
+        CinnamonClientException cex = assertThrows(CinnamonClientException.class, () -> client.setUserConfig(Long.MAX_VALUE, "xxx"));
+        assertEquals(ErrorCode.USER_ACCOUNT_NOT_FOUND, cex.getErrorCode());
+    }
+
+    @Test
+    public void setConfigSuperuserIsAllowed() throws IOException {
+        adminClient.setUserConfig(userId, "<new-config/>");
+        UserAccount user = client.getUser(userId);
+        assertEquals("<new-config/>", user.getConfig());
+    }
+
+    @Test
+    public void setConfigHappyPath() throws IOException {
+        client.setUserConfig(userId, "<config>1</config>");
+        UserAccount userWithNewConfig = client.getUser(userId);
+        assertEquals("<config>1</config>",userWithNewConfig.getConfig());
+    }
+
 }

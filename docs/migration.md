@@ -274,3 +274,21 @@ It's recommended to use a copy of production for testing.
 
     ---
     alter table users add column activate_triggers boolean not null default true;
+
+    ---
+    alter table index_items add column
+      for_osd boolean not null
+      default false; 
+    alter table index_items add column
+      for_folder boolean not null
+      default false;
+    update index_items set for_osd=true where name in ('index.version', 'index.root', 'index.path', 'index.parentId',
+        'index.owner','index.objecttype', 'index.name', index.modifier', index.modified.time', 'index.lockedby',
+        'index.lifecycle.state', 'index.latesthead', 'index.latestbranch', 'index.language', 'index.format',
+        'index.creator', 'index.creaetd.time', 'index.created.date', 'index.contentsize', 'index.acl'); 
+    update index_items set for_folder=true where name in ('index.folder.type', 'index.folder.parentId',
+        'index.folder.path', 'index.folder.owner', 'index.folder.name');
+    update index_items set for_osd=true where name in (select name from index_items where for_content=true);
+
+    ---
+    alter table users add column config text default '<config/>' not null;

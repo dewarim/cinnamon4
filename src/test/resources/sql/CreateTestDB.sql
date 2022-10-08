@@ -19,7 +19,8 @@ CREATE TABLE users (
   token varchar(255),
   tokens_today int,
   password_expired BOOLEAN NOT NULL DEFAULT FALSE,
-  activate_triggers BOOLEAN NOT NULL DEFAULT TRUE
+  activate_triggers BOOLEAN NOT NULL DEFAULT TRUE,
+  config text default '<config/>' not null
 );
 
 drop sequence if exists seq_user_id;

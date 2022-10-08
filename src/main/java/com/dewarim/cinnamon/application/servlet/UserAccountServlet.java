@@ -15,6 +15,7 @@ import com.dewarim.cinnamon.model.request.user.CreateUserAccountRequest;
 import com.dewarim.cinnamon.model.request.user.GetUserAccountRequest;
 import com.dewarim.cinnamon.model.request.user.ListUserAccountRequest;
 import com.dewarim.cinnamon.model.request.user.SetPasswordRequest;
+import com.dewarim.cinnamon.model.request.user.SetUserConfigRequest;
 import com.dewarim.cinnamon.model.request.user.UpdateUserAccountRequest;
 import com.dewarim.cinnamon.model.response.UserAccountWrapper;
 import com.dewarim.cinnamon.security.HashMaker;
@@ -92,6 +93,24 @@ public class UserAccountServlet extends HttpServlet implements CruddyServlet<Use
                 );
                 update(updateRequest, userAccountDao, cinnamonResponse);
                 ((List<UserAccount>) cinnamonResponse.getWrapper().list()).forEach(UserAccount::filterInfo);
+            }
+            case USER__SET_CONFIG -> {
+                SetUserConfigRequest configRequest = xmlMapper.readValue(request.getInputStream(), SetUserConfigRequest.class)
+                        .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
+                UserAccount           currentUser = ThreadLocalSqlSession.getCurrentUser();
+                Optional<UserAccount> userOpt     = userAccountDao.getUserAccountById(configRequest.getUserId());
+                if(userOpt.isEmpty()){
+                    throw ErrorCode.USER_ACCOUNT_NOT_FOUND.exception();
+                }
+                if (!configRequest.getUserId().equals(currentUser.getId())) {
+                    if (!userAccountDao.isSuperuser(currentUser)) {
+                        throw ErrorCode.FORBIDDEN.exception();
+                    }
+                }
+                UserAccount user = userOpt.get();
+                user.setConfig(configRequest.getConfig());
+                userAccountDao.updateUser(user);
+                cinnamonResponse.responseIsGenericOkay();
             }
             default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }

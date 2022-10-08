@@ -31,6 +31,7 @@ public class UserAccount implements Principal, LoginUser, Identifiable {
     private int        tokensToday;
     private boolean    passwordExpired;
     private List<Long> groupIds         = new ArrayList<>();
+    private String     config           = "<config/>";
 
     public UserAccount() {
     }
@@ -181,6 +182,14 @@ public class UserAccount implements Principal, LoginUser, Identifiable {
         this.groupIds = groupIds;
     }
 
+    public String getConfig() {
+        return config;
+    }
+
+    public void setConfig(String config) {
+        this.config = config;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -196,7 +205,8 @@ public class UserAccount implements Principal, LoginUser, Identifiable {
                 && password.equals(that.password) && Objects.equals(uiLanguageId, that.uiLanguageId)
                 && Objects.equals(fullname, that.fullname) && Objects.equals(email, that.email)
                 && Objects.equals(activateTriggers, that.activateTriggers)
-                && Objects.equals(token, that.token) && Objects.equals(groupIds, that.groupIds);
+                && Objects.equals(token, that.token) && Objects.equals(groupIds, that.groupIds)
+                && Objects.equals(config, that.config);
     }
 
     @Override
@@ -221,6 +231,7 @@ public class UserAccount implements Principal, LoginUser, Identifiable {
                 ", token='" + token + '\'' +
                 ", tokensToday=" + tokensToday +
                 ", passwordExpired=" + passwordExpired +
+                ", config=" + config +
                 '}';
     }
 
