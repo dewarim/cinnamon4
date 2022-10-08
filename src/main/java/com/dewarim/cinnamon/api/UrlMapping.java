@@ -284,7 +284,7 @@ public enum UrlMapping {
     UI_LANGUAGE__UPDATE("uiLanguage", "update", "/api", "", UpdateUiLanguageRequest.class, UiLanguageWrapper.class),
     UI_LANGUAGE__DELETE("uiLanguage", "delete", "/api", "", DeleteUiLanguageRequest.class, DeleteResponse.class),
     USER__CREATE("user", "create", "/api", "", CreateUserAccountRequest.class, UserAccountWrapper.class),
-    USER__SET_CONFIG("user", "setConfig", "/api", "", SetUserConfigRequest.class, GenericResponse.class),
+    USER__SET_CONFIG("user", "setConfig", "/api", "Update a user's individual configuration", SetUserConfigRequest.class, GenericResponse.class),
     USER__UPDATE("user", "update", "/api", "", UpdateUserAccountRequest.class, UserAccountWrapper.class),
     USER__LIST("user", "list", "/api", "", ListUserAccountRequest.class, UserAccountWrapper.class),
     USER__SET_PASSWORD("user", "setPassword", "/api", "", SetPasswordRequest.class, GenericResponse.class),

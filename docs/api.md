@@ -1486,6 +1486,31 @@ Add a summary to an object, for example a short description of this folder's con
 
 ---
 
+# /api/index/info
+Provides information on the status of the Lucene search index
+
+## Request
+
+```xml
+<indexInfoRequest>
+  <countDocuments>true</countDocuments>
+</indexInfoRequest>
+
+```
+
+
+## Response
+
+```xml
+<indexInfoResponse>
+  <documentsInIndex/>
+</indexInfoResponse>
+
+```
+
+
+---
+
 # /api/indexItem/list
 
 
@@ -3511,6 +3536,7 @@ Returns status code 400
       <activateTriggers>true</activateTriggers>
       <passwordExpired>false</passwordExpired>
       <groupIds/>
+      <config>&lt;config/></config>
     </userAccount>
   </userAccounts>
 </createUserAccountRequest>
@@ -3537,9 +3563,37 @@ Returns status code 400
       <activateTriggers>true</activateTriggers>
       <passwordExpired>false</passwordExpired>
       <groupIds/>
+      <config>&lt;config/></config>
     </user>
   </users>
 </UserAccountWrapper>
+
+```
+
+
+---
+
+# /api/user/setConfig
+
+
+## Request
+
+```xml
+<setConfigRequest>
+  <userId>123</userId>
+  <config>&lt;config>&lt;lastSearches>&lt;search>foo&lt;/search>&lt;/lastSearches>&lt;/config></config>
+</setConfigRequest>
+
+```
+
+
+## Response
+
+```xml
+<genericResponse>
+  <message/>
+  <successful>false</successful>
+</genericResponse>
 
 ```
 
@@ -3578,6 +3632,7 @@ Returns status code 400
       <activateTriggers>true</activateTriggers>
       <passwordExpired>false</passwordExpired>
       <groupIds/>
+      <config>&lt;config/></config>
     </user>
   </users>
 </UserAccountWrapper>
@@ -3619,6 +3674,7 @@ Returns status code 400
       <activateTriggers>true</activateTriggers>
       <passwordExpired>false</passwordExpired>
       <groupIds/>
+      <config>&lt;config/></config>
     </user>
   </users>
 </UserAccountWrapper>
@@ -3695,6 +3751,7 @@ Returns status code 400
       <activateTriggers>true</activateTriggers>
       <passwordExpired>false</passwordExpired>
       <groupIds/>
+      <config>&lt;config/></config>
     </user>
   </users>
 </UserAccountWrapper>
