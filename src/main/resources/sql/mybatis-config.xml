@@ -5,6 +5,7 @@
 <configuration>
     <settings>
         <setting name="logImpl" value="LOG4J2"/>
+        <setting name="defaultEnumTypeHandler" value="org.apache.ibatis.type.EnumTypeHandler"/>
     </settings>
     <typeHandlers>
         <typeHandler javaType="com.dewarim.cinnamon.model.links.LinkType" handler="org.apache.ibatis.type.EnumTypeHandler" jdbcType="VARCHAR"/>

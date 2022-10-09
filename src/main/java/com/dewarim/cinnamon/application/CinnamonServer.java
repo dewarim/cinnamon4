@@ -82,6 +82,8 @@ public class CinnamonServer {
     public static       ExecutorService  executorService;
     public static       CinnamonStats    cinnamonStats = new CinnamonStats();
     private             IndexService     indexService;
+    private             SearchService    searchService;
+    private static      Thread           indexServiceThread;
 
     public CinnamonServer(int port) {
         this.port = port;
@@ -109,7 +111,10 @@ public class CinnamonServer {
         executorService = new ThreadPoolExecutor(4, 16, 5, TimeUnit.MINUTES, new ArrayBlockingQueue<>(100));
 
         indexService = new IndexService(config.getLuceneConfig());
-        executorService.submit(indexService);
+        indexServiceThread = new Thread(indexService);
+        indexServiceThread.setName("Index-Service");
+        // TODO: fix indexing ( see task Create custom mybatis enum handler #308)
+//        indexServiceThread.start();
 
         log.info("Server is running at port " + config.getServerConfig().getPort());
     }
@@ -131,7 +136,7 @@ public class CinnamonServer {
         // TODO: unused?
         server.setAttribute(DEFAULT_DATABASE_SESSION_FACTORY, dbSessionFactory);
 
-        SearchService searchService = new SearchService(config.getLuceneConfig());
+        searchService = new SearchService(config.getLuceneConfig());
         webAppContext.setAttribute(SEARCH_SERVICE, searchService);
 
         webAppContext.setAttribute(CINNAMON_CONFIG, config);

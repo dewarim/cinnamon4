@@ -4,10 +4,10 @@ import java.util.Objects;
 
 public class IndexJob {
 
-    private Long id;
-    private IndexJobType  jobType;
-    private Long    itemId;
-    private Integer failed = 0;
+    private Long         id;
+    private IndexJobType jobType;
+    private Long         itemId;
+    private Integer      failed = 0;
 
     private IndexJobAction action;
 
@@ -75,5 +75,16 @@ public class IndexJob {
     @Override
     public int hashCode() {
         return Objects.hash(jobType, itemId);
+    }
+
+    @Override
+    public String toString() {
+        return "IndexJob{" +
+                "id=" + id +
+                ", jobType=" + jobType +
+                ", itemId=" + itemId +
+                ", failed=" + failed +
+                ", action=" + action +
+                '}';
     }
 }

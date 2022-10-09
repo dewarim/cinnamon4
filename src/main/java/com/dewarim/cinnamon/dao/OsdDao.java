@@ -94,7 +94,8 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
         if (resultRows != 1) {
             ErrorCode.DB_INSERT_FAILED.throwUp();
         }
-        indexJobDao.insertIndexJob(new IndexJob(IndexJobType.OSD, osd.getId(), IndexJobAction.CREATE));
+        IndexJob indexJob = new IndexJob(IndexJobType.OSD, osd.getId(), IndexJobAction.CREATE);
+        indexJobDao.insertIndexJob(indexJob);
         return osd;
     }
 

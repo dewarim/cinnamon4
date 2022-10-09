@@ -66,15 +66,20 @@ public class IndexService implements Runnable {
 
 
     public void run() {
+        log.info("IndexService thread is running");
         int limit = 100;
         while (!stopped) {
-            try(SqlSession    sqlSession = ThreadLocalSqlSession.getNewReuseSession()) {
-                Set<IndexKey> seen       = new HashSet<>(128);
-                IndexJobDao   jobDao     = new IndexJobDao().setSqlSession(ThreadLocalSqlSession.getNewReuseSession());
+            try (SqlSession sqlSession = ThreadLocalSqlSession.getNewReuseSession()) {
+                Set<IndexKey>   seen       = new HashSet<>(128);
+                IndexJobDao     jobDao     = new IndexJobDao().setSqlSession(sqlSession);
+                List<IndexItem> indexItems = new IndexItemDao().setSqlSession(sqlSession).list();
+
                 while (jobDao.countJobs() > 0) {
-                    List<IndexItem> indexItems = new IndexItemDao().setSqlSession(sqlSession).list();
                     List<IndexJob> jobs = jobDao.getIndexJobsByFailedCountWithLimit(0, limit);
                     log.debug("Found " + jobs.size() + " IndexJobs.");
+                    if (jobs.size() == 0) {
+                        break;
+                    }
                     for (IndexJob job : jobs) {
                         IndexKey indexKey = new IndexKey(job.getJobType(), job.getItemId());
                         if (seen.contains(indexKey)) {
@@ -85,8 +90,7 @@ public class IndexService implements Runnable {
                         try {
                             switch (job.getAction()) {
                                 case DELETE -> deleteFromIndex(indexKey);
-                                case CREATE -> createIndexItem(job, indexKey, indexItems);
-                                case UPDATE -> updateIndexItem(job, indexKey, indexItems);
+                                case CREATE, UPDATE -> handleIndexItem(job, indexKey, indexItems);
                             }
                             jobDao.delete(job);
                         } catch (Exception e) {
@@ -97,9 +101,10 @@ public class IndexService implements Runnable {
                     }
                     jobDao.commit();
                     indexWriter.commit();
-                    // TODO: avoid busy waiting
-                    Thread.sleep(config.getMillisToWaitBetweenRuns());
                 }
+                // TODO: avoid busy waiting
+                Thread.sleep(config.getMillisToWaitBetweenRuns());
+                seen.clear();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 log.warn("Index thread was interrupted.");
@@ -109,10 +114,7 @@ public class IndexService implements Runnable {
         }
     }
 
-    private void updateIndexItem(IndexJob job, IndexKey key, List<IndexItem> indexItems) {
-    }
-
-    private void createIndexItem(IndexJob job, IndexKey key, List<IndexItem> indexItems) throws IOException {
+    private void handleIndexItem(IndexJob job, IndexKey key, List<IndexItem> indexItems) throws IOException {
         Document doc = new Document();
         doc.add(new StoredField("uniqueId", key.toString()));
         boolean failed = false;
@@ -121,9 +123,13 @@ public class IndexService implements Runnable {
             case FOLDER -> failed = indexFolder(job.getItemId(), doc, indexItems);
         }
         if (failed) {
+            log.info("Failed to index " + job);
             return;
         }
-        indexWriter.addDocument(doc);
+        switch (job.getAction()) {
+            case UPDATE -> indexWriter.updateDocument(new Term("uniqueId", key.toString()), doc);
+            case CREATE -> indexWriter.addDocument(doc);
+        }
     }
 
     private boolean indexFolder(Long id, Document doc, List<IndexItem> indexItems) {
@@ -207,4 +213,7 @@ public class IndexService implements Runnable {
     }
 
 
+    enum IndexMode {
+        CREATE, UPDATE
+    }
 }

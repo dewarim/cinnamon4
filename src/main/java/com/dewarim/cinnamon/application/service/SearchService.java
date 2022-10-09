@@ -1,9 +1,14 @@
 package com.dewarim.cinnamon.application.service;
 
 
+import com.dewarim.cinnamon.application.exception.CinnamonException;
 import com.dewarim.cinnamon.configuration.LuceneConfig;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.SearcherFactory;
+import org.apache.lucene.search.SearcherManager;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 
@@ -12,18 +17,50 @@ import java.nio.file.Path;
 
 public class SearchService {
 
-    private final LuceneConfig config;
-    private DirectoryReader indexReader;
+    private static final Logger log = LogManager.getLogger(SearchService.class);
+
+    private final LuceneConfig    config;
+    private final Directory       directory;
+    private       DirectoryReader indexReader;
+
+    private SearcherManager searcherManager;
 
     public SearchService(LuceneConfig luceneConfig) throws IOException {
         this.config = luceneConfig;
-        Directory directory = FSDirectory.open(Path.of(config.getIndexPath()));
+        directory = FSDirectory.open(Path.of(config.getIndexPath()));
         indexReader = DirectoryReader.open(directory);
-        IndexSearcher indexSearcher = new IndexSearcher(indexReader);
+        searcherManager = new SearcherManager(indexReader, new SearcherFactory());
+        searcherManager.maybeRefresh();
+        // TODO: refresh periodically - or if last refresh was > config.lucene.refreshTime
     }
 
     public int countDocs() throws IOException {
-        return indexReader.getDocCount("uniqueId");
+        IndexSearcher searcher = null;
+        try {
+            searcherManager.maybeRefresh();
+            searcher = searcherManager.acquire();
+            return indexReader.getDocCount("uniqueId");
+        } catch (Exception e) {
+            log.warn("countDocs failed: ", e);
+            throw new CinnamonException("countDocs failed", e);
+        } finally {
+            searcherManager.release(searcher);
+        }
+    }
+
+    public void reopenIndexIfNeeded() throws IOException {
+        if (!indexReader.isCurrent()) {
+            reopen();
+        }
+    }
+
+    synchronized public void reopen() throws IOException {
+        indexReader = DirectoryReader.openIfChanged(indexReader);
+        //indexSearcher = new IndexSearcher(indexReader);
+    }
+
+    synchronized DirectoryReader getIndexReader() {
+        return indexReader;
     }
 
 //

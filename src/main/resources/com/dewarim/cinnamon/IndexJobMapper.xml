@@ -9,17 +9,16 @@
     <resultMap id="indexJobMap" type="com.dewarim.cinnamon.model.index.IndexJob">
         <id property="id" column="id"/>
         <result property="itemId" column="item_id"/>
-        <result property="jobType" column="job_type"/>
-        <result property="action" column="action"/>
+        <result property="jobType" column="job_type" javaType="com.dewarim.cinnamon.model.index.IndexJobType" typeHandler="org.apache.ibatis.type.EnumTypeHandler"/>
+        <result property="action" column="action" javaType="com.dewarim.cinnamon.model.index.IndexJobAction" typeHandler="org.apache.ibatis.type.EnumTypeHandler"/>
         <result property="failed" column="failed"/>
     </resultMap>
 
     <!-- order by item_id to get the newest index_job first -->
-    <select id="getIndexJobsByFailedCountWithLimit" resultType="com.dewarim.cinnamon.model.index.IndexJob">
+    <select id="getIndexJobsByFailedCount" resultMap="indexJobMap">
         SELECT *
         FROM index_jobs
-        WHERE job_type = #{type}
-          AND failed &lt;= #{failed}
+        WHERE failed &lt;= #{failed}
         ORDER BY item_id DESC
     </select>
 
@@ -47,5 +46,9 @@
         SET failed=#{failed}
         WHERE id=#{id}
     </update>
+
+    <select id="list" resultMap="indexJobMap">
+        SELECT * FROM index_jobs
+    </select>
 
 </mapper>

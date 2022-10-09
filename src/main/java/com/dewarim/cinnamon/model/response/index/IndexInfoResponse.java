@@ -22,4 +22,11 @@ public class IndexInfoResponse implements ApiResponse {
     public void setDocumentsInIndex(Integer documentsInIndex) {
         this.documentsInIndex = documentsInIndex;
     }
+
+    @Override
+    public String toString() {
+        return "IndexInfoResponse{" +
+                "documentsInIndex=" + documentsInIndex +
+                '}';
+    }
 }
