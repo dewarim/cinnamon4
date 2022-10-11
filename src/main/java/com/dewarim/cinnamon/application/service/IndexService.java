@@ -17,7 +17,9 @@ import org.apache.logging.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StoredField;
+import org.apache.lucene.document.StringField;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.Term;
@@ -38,14 +40,15 @@ public class IndexService implements Runnable {
     private static final Logger log = LogManager.getLogger(IndexService.class);
 
     private       boolean      stopped   = false;
-    private final IndexWriter  indexWriter;
+    private       IndexWriter  indexWriter;
     private final OsdDao       osdDao    = new OsdDao();
     private final FolderDao    folderDao = new FolderDao();
     private final LuceneConfig config;
+    private final Path         indexPath;
 
     public IndexService(LuceneConfig config) {
         this.config = config;
-        Path indexPath = Paths.get(config.getIndexPath());
+        indexPath = Paths.get(config.getIndexPath());
         if (!indexPath.toFile().exists()) {
             boolean madeDirs = indexPath.toFile().mkdirs();
             if (madeDirs) {
@@ -61,6 +64,8 @@ public class IndexService implements Runnable {
         } catch (IOException e) {
             log.debug("failed to initialize lucene for repository $name", e);
             throw new RuntimeException("error.lucene.IO", e);
+        } finally {
+            log.info("Finished initialization of lucene index.");
         }
     }
 
@@ -68,61 +73,81 @@ public class IndexService implements Runnable {
     public void run() {
         log.info("IndexService thread is running");
         int limit = 100;
-        while (!stopped) {
-            try (SqlSession sqlSession = ThreadLocalSqlSession.getNewReuseSession()) {
-                Set<IndexKey>   seen       = new HashSet<>(128);
-                IndexJobDao     jobDao     = new IndexJobDao().setSqlSession(sqlSession);
-                List<IndexItem> indexItems = new IndexItemDao().setSqlSession(sqlSession).list();
+        try (Analyzer standardAnalyzer = new StandardAnalyzer();
+             Directory indexDir = FSDirectory.open(indexPath, new SingleInstanceLockFactory())) {
 
-                while (jobDao.countJobs() > 0) {
-                    List<IndexJob> jobs = jobDao.getIndexJobsByFailedCountWithLimit(0, limit);
-                    log.debug("Found " + jobs.size() + " IndexJobs.");
-                    if (jobs.size() == 0) {
-                        break;
-                    }
-                    for (IndexJob job : jobs) {
-                        IndexKey indexKey = new IndexKey(job.getJobType(), job.getItemId());
-                        if (seen.contains(indexKey)) {
-                            // remove duplicate jobs in the current transaction
-                            continue;
+            while (!stopped) {
+                try (SqlSession sqlSession = ThreadLocalSqlSession.getNewReuseSession()) {
+                    IndexWriterConfig writerConfig = new IndexWriterConfig(standardAnalyzer);
+                    writerConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
+                    writerConfig.setCommitOnClose(true);
+                    indexWriter = new IndexWriter(indexDir, writerConfig);
+
+                    Set<IndexKey>   seen       = new HashSet<>(128);
+                    IndexJobDao     jobDao     = new IndexJobDao().setSqlSession(sqlSession);
+                    List<IndexItem> indexItems = new IndexItemDao().setSqlSession(sqlSession).list();
+
+                    while (jobDao.countJobs() > 0) {
+                        List<IndexJob> jobs = jobDao.getIndexJobsByFailedCountWithLimit(0, limit);
+                        log.debug("Found " + jobs.size() + " IndexJobs.");
+                        if (jobs.size() == 0) {
+                            break;
                         }
-
-                        try {
-                            switch (job.getAction()) {
-                                case DELETE -> deleteFromIndex(indexKey);
-                                case CREATE, UPDATE -> handleIndexItem(job, indexKey, indexItems);
+                        for (IndexJob job : jobs) {
+                            IndexKey indexKey = new IndexKey(job.getJobType(), job.getItemId());
+                            if (seen.contains(indexKey)) {
+                                // remove duplicate jobs in the current transaction
+                                continue;
                             }
-                            jobDao.delete(job);
-                        } catch (Exception e) {
-                            job.setFailed(job.getFailed() + 1);
-                            jobDao.updateStatus(job);
+
+                            try {
+                                switch (job.getAction()) {
+                                    case DELETE -> deleteFromIndex(indexKey);
+                                    case CREATE, UPDATE -> handleIndexItem(job, indexKey, indexItems);
+                                }
+                                jobDao.delete(job);
+                            } catch (Exception e) {
+                                job.setFailed(job.getFailed() + 1);
+                                jobDao.updateStatus(job);
+                            }
+                            seen.add(indexKey);
                         }
-                        seen.add(indexKey);
+                        jobDao.commit();
+                        long sequenceNr = indexWriter.commit();
+                        log.debug("sequenceNr: " + sequenceNr);
                     }
-                    jobDao.commit();
-                    indexWriter.commit();
+                    indexWriter.close();
+                    // TODO: avoid busy waiting
+                    Thread.sleep(config.getMillisToWaitBetweenRuns());
+                    seen.clear();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    log.warn("Index thread was interrupted.");
+                } catch (Exception e) {
+                    log.warn("Failed to index: ", e);
                 }
-                // TODO: avoid busy waiting
-                Thread.sleep(config.getMillisToWaitBetweenRuns());
-                seen.clear();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                log.warn("Index thread was interrupted.");
-            } catch (Exception e) {
-                log.warn("Failed to index: ", e);
             }
+            if (indexWriter.isOpen()) {
+                indexWriter.close();
+            }
+        } catch (Exception e) {
+            log.error("Lucene Index Loop failed: ", e);
         }
+
+
     }
 
     private void handleIndexItem(IndexJob job, IndexKey key, List<IndexItem> indexItems) throws IOException {
         Document doc = new Document();
         doc.add(new StoredField("uniqueId", key.toString()));
-        boolean failed = false;
+        doc.add(new Field("cinnamon_class", key.type.toString(), StringField.TYPE_NOT_STORED));
+
+        boolean isOkay = false;
         switch (job.getJobType()) {
-            case OSD -> failed = indexOsd(job.getItemId(), doc, indexItems);
-            case FOLDER -> failed = indexFolder(job.getItemId(), doc, indexItems);
+            case OSD -> isOkay = indexOsd(job.getItemId(), doc, indexItems);
+            case FOLDER -> isOkay = indexFolder(job.getItemId(), doc, indexItems);
         }
-        if (failed) {
+        if (!isOkay) {
             log.info("Failed to index " + job);
             return;
         }

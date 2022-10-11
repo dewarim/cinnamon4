@@ -61,4 +61,7 @@ public class ThreadLocalSqlSession {
         currentUser.set(user);
     }
 
+    public static void setDbSessionFactory(DbSessionFactory dbSessionFactory) {
+        ThreadLocalSqlSession.dbSessionFactory = dbSessionFactory;
+    }
 }

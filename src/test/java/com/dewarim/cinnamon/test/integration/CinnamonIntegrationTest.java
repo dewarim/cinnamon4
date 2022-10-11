@@ -5,6 +5,7 @@ import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.application.DbSessionFactory;
+import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.client.CinnamonClient;
 import com.dewarim.cinnamon.client.CinnamonClientException;
 import com.dewarim.cinnamon.model.Acl;
@@ -87,6 +88,8 @@ public class CinnamonIntegrationTest {
             }
             session.close();
 
+            cinnamonServer.startIndexService();
+            ThreadLocalSqlSession.setDbSessionFactory(dbSessionFactory);
             cinnamonServer.setDbSessionFactory(dbSessionFactory);
             cinnamonServer.start();
 

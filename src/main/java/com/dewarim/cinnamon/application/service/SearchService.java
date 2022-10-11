@@ -6,9 +6,11 @@ import com.dewarim.cinnamon.configuration.LuceneConfig;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.SearcherFactory;
 import org.apache.lucene.search.SearcherManager;
+import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 
@@ -37,9 +39,11 @@ public class SearchService {
     public int countDocs() throws IOException {
         IndexSearcher searcher = null;
         try {
-            searcherManager.maybeRefresh();
+            if(!searcherManager.isSearcherCurrent()){
+                searcherManager.maybeRefreshBlocking();
+            }
             searcher = searcherManager.acquire();
-            return indexReader.getDocCount("uniqueId");
+            return searcher.count(new TermQuery(new Term("cinnamon_class", "OSD")));
         } catch (Exception e) {
             log.warn("countDocs failed: ", e);
             throw new CinnamonException("countDocs failed", e);

@@ -4,6 +4,7 @@ import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.model.response.index.IndexInfoResponse;
 import com.dewarim.cinnamon.test.TestObjectHolder;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
@@ -11,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class IndexServletIntegrationTest extends CinnamonIntegrationTest {
 
-//    @Test
+    @Test
     public void showInfo() throws IOException, InterruptedException {
         new TestObjectHolder(client, "reviewers.acl", userId, createFolderId).createOsd("showInfo - index this");
         ThreadLocalSqlSession.refreshSession();

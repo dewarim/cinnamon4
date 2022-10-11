@@ -73,7 +73,7 @@ public class CinnamonServer {
 
     private static final Logger log = LogManager.getLogger(CinnamonServer.class);
 
-    public static final String           VERSION       = "0.4.1";
+    public static final String           VERSION       = "0.4.2";
     private final       int              port;
     private             Server           server;
     private             DbSessionFactory dbSessionFactory;
@@ -110,13 +110,16 @@ public class CinnamonServer {
         // TODO: make number of threads and timeout configurable
         executorService = new ThreadPoolExecutor(4, 16, 5, TimeUnit.MINUTES, new ArrayBlockingQueue<>(100));
 
+        startIndexService();
+
+        log.info("Server is running at port " + config.getServerConfig().getPort());
+    }
+
+    public void startIndexService() {
         indexService = new IndexService(config.getLuceneConfig());
         indexServiceThread = new Thread(indexService);
         indexServiceThread.setName("Index-Service");
-        // TODO: fix indexing ( see task Create custom mybatis enum handler #308)
-//        indexServiceThread.start();
-
-        log.info("Server is running at port " + config.getServerConfig().getPort());
+        indexServiceThread.start();
     }
 
     public void stop() throws Exception {
@@ -138,7 +141,6 @@ public class CinnamonServer {
 
         searchService = new SearchService(config.getLuceneConfig());
         webAppContext.setAttribute(SEARCH_SERVICE, searchService);
-
         webAppContext.setAttribute(CINNAMON_CONFIG, config);
 
         // test query:

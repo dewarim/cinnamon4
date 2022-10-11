@@ -9,8 +9,8 @@
     <resultMap id="indexJobMap" type="com.dewarim.cinnamon.model.index.IndexJob">
         <id property="id" column="id"/>
         <result property="itemId" column="item_id"/>
-        <result property="jobType" column="job_type" javaType="com.dewarim.cinnamon.model.index.IndexJobType" typeHandler="org.apache.ibatis.type.EnumTypeHandler"/>
-        <result property="action" column="action" javaType="com.dewarim.cinnamon.model.index.IndexJobAction" typeHandler="org.apache.ibatis.type.EnumTypeHandler"/>
+        <result property="jobType" column="job_type"/>
+        <result property="action" column="action"/>
         <result property="failed" column="failed"/>
     </resultMap>
 
