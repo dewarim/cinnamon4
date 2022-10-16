@@ -110,8 +110,6 @@ public class CinnamonServer {
         // TODO: make number of threads and timeout configurable
         executorService = new ThreadPoolExecutor(4, 16, 5, TimeUnit.MINUTES, new ArrayBlockingQueue<>(100));
 
-        startIndexService();
-
         log.info("Server is running at port " + config.getServerConfig().getPort());
     }
 
@@ -138,6 +136,8 @@ public class CinnamonServer {
         ThreadLocalSqlSession.dbSessionFactory = dbSessionFactory;
         // TODO: unused?
         server.setAttribute(DEFAULT_DATABASE_SESSION_FACTORY, dbSessionFactory);
+
+        startIndexService();
 
         searchService = new SearchService(config.getLuceneConfig());
         webAppContext.setAttribute(SEARCH_SERVICE, searchService);

@@ -717,6 +717,7 @@ public class CinnamonClient {
     public static void main(String[] args) throws IOException {
         CinnamonClient client = new CinnamonClient();
         client.ticket = client.getTicket(true);
+        client.createFolder(6L, "test", 1L, 1L, 1L);
         log.debug(client.getOsdById(1, false, false).toString());
     }
 

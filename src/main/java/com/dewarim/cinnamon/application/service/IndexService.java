@@ -55,18 +55,6 @@ public class IndexService implements Runnable {
                 throw new IllegalStateException("Could not create path to index: " + indexPath.toAbsolutePath());
             }
         }
-        try (Analyzer standardAnalyzer = new StandardAnalyzer(); Directory indexDir = FSDirectory.open(indexPath, new SingleInstanceLockFactory())) {
-            IndexWriterConfig writerConfig = new IndexWriterConfig(standardAnalyzer);
-            writerConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
-            writerConfig.setCommitOnClose(true);
-            indexWriter = new IndexWriter(indexDir, writerConfig);
-            indexWriter.commit();
-        } catch (IOException e) {
-            log.debug("failed to initialize lucene for repository $name", e);
-            throw new RuntimeException("error.lucene.IO", e);
-        } finally {
-            log.info("Finished initialization of lucene index.");
-        }
     }
 
 
@@ -126,9 +114,11 @@ public class IndexService implements Runnable {
                 } catch (Exception e) {
                     log.warn("Failed to index: ", e);
                 }
-            }
-            if (indexWriter.isOpen()) {
-                indexWriter.close();
+                finally {
+                    if (indexWriter.isOpen()) {
+                        indexWriter.close();
+                    }
+                }
             }
         } catch (Exception e) {
             log.error("Lucene Index Loop failed: ", e);
