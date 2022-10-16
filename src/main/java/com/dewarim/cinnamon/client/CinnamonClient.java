@@ -65,6 +65,7 @@ import com.dewarim.cinnamon.model.request.index.CreateIndexItemRequest;
 import com.dewarim.cinnamon.model.request.index.DeleteIndexItemRequest;
 import com.dewarim.cinnamon.model.request.index.IndexInfoRequest;
 import com.dewarim.cinnamon.model.request.index.ListIndexItemRequest;
+import com.dewarim.cinnamon.model.request.index.ReindexRequest;
 import com.dewarim.cinnamon.model.request.index.UpdateIndexItemRequest;
 import com.dewarim.cinnamon.model.request.language.CreateLanguageRequest;
 import com.dewarim.cinnamon.model.request.language.DeleteLanguageRequest;
@@ -147,6 +148,7 @@ import com.dewarim.cinnamon.model.response.SummaryWrapper;
 import com.dewarim.cinnamon.model.response.UiLanguageWrapper;
 import com.dewarim.cinnamon.model.response.UserAccountWrapper;
 import com.dewarim.cinnamon.model.response.index.IndexInfoResponse;
+import com.dewarim.cinnamon.model.response.index.ReindexResponse;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -1104,6 +1106,11 @@ public class CinnamonClient {
         var request = new IndexInfoRequest(countDocuments);
         HttpResponse response = sendStandardRequest(INDEX__INFO, request);
         return new SingletonUnwrapper<IndexInfoResponse>(IndexInfoResponse.class).unwrap(response);
+    }
+
+    public ReindexResponse reindex( ReindexRequest request) throws IOException {
+        HttpResponse response = sendStandardRequest(INDEX__REINDEX, request);
+        return new SingletonUnwrapper<ReindexResponse>(ReindexResponse.class).unwrap(response);
     }
 
     static class SingletonUnwrapper<S>{

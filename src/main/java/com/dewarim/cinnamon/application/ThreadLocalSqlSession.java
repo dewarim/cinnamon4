@@ -38,7 +38,10 @@ public class ThreadLocalSqlSession {
         setTransactionStatus(TransactionStatus.OK);
     }
 
-    public static SqlSession getNewReuseSession(){
+    public static SqlSession getNewReuseSession(TransactionIsolationLevel isolationLevel){
+        if(isolationLevel != null){
+            return dbSessionFactory.getSqlSessionFactory().openSession(ExecutorType.REUSE, isolationLevel);
+        }
         return dbSessionFactory.getSqlSessionFactory().openSession(ExecutorType.REUSE, transactionIsolationLevel);
     }
     

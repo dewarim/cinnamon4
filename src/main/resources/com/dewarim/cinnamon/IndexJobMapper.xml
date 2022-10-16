@@ -27,6 +27,12 @@
         FROM index_jobs
     </select>
 
+    <select id="countFailedJobs" resultType="int">
+        SELECT count(*)
+        FROM index_jobs
+        WHERE failed > 0
+    </select>
+
     <insert id="insert" parameterType="com.dewarim.cinnamon.model.index.IndexJob">
         <selectKey keyProperty="id" resultType="long" order="BEFORE">
             select nextval('seq_index_job_id')
@@ -44,11 +50,46 @@
     <update id="updateStatus" parameterType="com.dewarim.cinnamon.model.index.IndexJob">
         UPDATE index_jobs
         SET failed=#{failed}
-        WHERE id=#{id}
+        WHERE id = #{id}
     </update>
 
     <select id="list" resultMap="indexJobMap">
-        SELECT * FROM index_jobs
+        SELECT *
+        FROM index_jobs
     </select>
+
+    <insert id="reindexAllOsds">
+        INSERT INTO index_jobs(id, item_id, job_type, action, failed)
+        SELECT nextval('seq_index_job_id'), id, 'OSD', 'UPDATE', 0
+        FROM objects
+    </insert>
+
+    <insert id="reindexAllFolders">
+        INSERT INTO index_jobs(id, item_id, job_type, action, failed)
+        SELECT nextval('seq_index_job_id'), id, 'FOLDER', 'UPDATE', 0
+        FROM folders
+    </insert>
+
+    <insert id="reindexOsds" parameterType="list">
+        INSERT INTO index_jobs(id,item_id,job_type,action,failed)
+        SELECT nextval('seq_index_job_id'), id,
+        'OSD','UPDATE',0 FROM objects
+        WHERE objects.id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </insert>
+
+    <insert id="reindexFolders" parameterType="list">
+        INSERT INTO index_jobs(id,item_id,job_type,action,failed)
+        SELECT nextval('seq_index_job_id'), id,
+        'FOLDER','UPDATE',0 FROM folders
+        WHERE folders.id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </insert>
 
 </mapper>

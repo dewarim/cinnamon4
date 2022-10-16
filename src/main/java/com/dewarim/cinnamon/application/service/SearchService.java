@@ -3,6 +3,7 @@ package com.dewarim.cinnamon.application.service;
 
 import com.dewarim.cinnamon.application.exception.CinnamonException;
 import com.dewarim.cinnamon.configuration.LuceneConfig;
+import com.dewarim.cinnamon.dao.IndexJobDao;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.lucene.index.DirectoryReader;
@@ -25,7 +26,7 @@ public class SearchService {
     private final Directory       directory;
     private       DirectoryReader indexReader;
 
-    private SearcherManager searcherManager;
+    private final SearcherManager searcherManager;
 
     public SearchService(LuceneConfig luceneConfig) throws IOException {
         this.config = luceneConfig;
@@ -36,14 +37,16 @@ public class SearchService {
         // TODO: refresh periodically - or if last refresh was > config.lucene.refreshTime
     }
 
-    public int countDocs() throws IOException {
+    public IndexJobDao.IndexRows countDocs() throws IOException {
         IndexSearcher searcher = null;
         try {
-            if(!searcherManager.isSearcherCurrent()){
+            if (!searcherManager.isSearcherCurrent()) {
                 searcherManager.maybeRefreshBlocking();
             }
             searcher = searcherManager.acquire();
-            return searcher.count(new TermQuery(new Term("cinnamon_class", "OSD")));
+            int documents = searcher.count(new TermQuery(new Term("cinnamon_class", "OSD")));
+            int folders   = searcher.count(new TermQuery(new Term("cinnamon_class", "FOLDER")));
+            return new IndexJobDao.IndexRows(documents, folders);
         } catch (Exception e) {
             log.warn("countDocs failed: ", e);
             throw new CinnamonException("countDocs failed", e);

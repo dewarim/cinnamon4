@@ -1504,7 +1504,50 @@ Provides information on the status of the Lucene search index
 ```xml
 <indexInfoResponse>
   <documentsInIndex/>
+  <foldersInIndex/>
+  <failedJobCount/>
+  <jobCount/>
 </indexInfoResponse>
+
+```
+
+
+---
+
+# /api/index/reindex
+Rebuild the Lucene search index in parts or completely. When reindexing large numbers of documents, this will affect the system's performance.
+
+## Request
+
+```xml
+<ReindexRequest>
+  <osdIds/>
+  <folderIds/>
+</ReindexRequest>
+
+```
+```xml
+<ReindexRequest>
+  <osdIds>
+    <osdIds>13</osdIds>
+    <osdIds>23</osdIds>
+  </osdIds>
+  <folderIds>
+    <folderIds>43</folderIds>
+    <folderIds>2</folderIds>
+  </folderIds>
+</ReindexRequest>
+
+```
+
+
+## Response
+
+```xml
+<reindexResponse>
+  <documentsToIndex>1000</documentsToIndex>
+  <foldersToIndex>123</foldersToIndex>
+</reindexResponse>
 
 ```
 

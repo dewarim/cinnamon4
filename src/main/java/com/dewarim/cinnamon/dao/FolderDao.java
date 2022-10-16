@@ -51,6 +51,10 @@ public class FolderDao implements CrudDao<Folder> {
     }
 
     public List<Folder> getFolderByIdWithAncestors(Long id, boolean includeSummary) {
+        if(id == null){
+            // root has no parent, so looking up it's ancestors would otherwise fail.
+            return List.of();
+        }
         SqlSession          sqlSession = ThreadLocalSqlSession.getSqlSession();
         Map<String, Object> params     = Map.of("includeSummary", includeSummary, "id", id);
         return sqlSession.selectList("com.dewarim.cinnamon.model.Folder.getFolderByIdWithAncestors", params);

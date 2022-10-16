@@ -48,6 +48,7 @@ import com.dewarim.cinnamon.model.request.index.CreateIndexItemRequest;
 import com.dewarim.cinnamon.model.request.index.DeleteIndexItemRequest;
 import com.dewarim.cinnamon.model.request.index.IndexInfoRequest;
 import com.dewarim.cinnamon.model.request.index.ListIndexItemRequest;
+import com.dewarim.cinnamon.model.request.index.ReindexRequest;
 import com.dewarim.cinnamon.model.request.index.UpdateIndexItemRequest;
 import com.dewarim.cinnamon.model.request.language.CreateLanguageRequest;
 import com.dewarim.cinnamon.model.request.language.DeleteLanguageRequest;
@@ -131,6 +132,7 @@ import com.dewarim.cinnamon.model.response.SummaryWrapper;
 import com.dewarim.cinnamon.model.response.UiLanguageWrapper;
 import com.dewarim.cinnamon.model.response.UserAccountWrapper;
 import com.dewarim.cinnamon.model.response.index.IndexInfoResponse;
+import com.dewarim.cinnamon.model.response.index.ReindexResponse;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -200,6 +202,7 @@ public enum UrlMapping {
     GROUP__REMOVE_USER_FROM_GROUPS("group", "removeUserFromGroups", "/api", "", RemoveUserFromGroupsRequest.class, GenericResponse.class),
     GROUP__UPDATE("group", "update", "/api", "", UpdateGroupRequest.class, GroupWrapper.class),
     INDEX__INFO("index", "info", "/api", "Provides information on the status of the Lucene search index", IndexInfoRequest.class, IndexInfoResponse.class),
+    INDEX__REINDEX("index","reindex" , "/api","Rebuild the Lucene search index in parts or completely. When reindexing large numbers of documents, this will affect the system's performance." , ReindexRequest.class, ReindexResponse.class),
     INDEX_ITEM__LIST("indexItem", "list", "/api", "", ListIndexItemRequest.class, IndexItemWrapper.class),
     INDEX_ITEM__CREATE("indexItem", "create", "/api", "", CreateIndexItemRequest.class, IndexItemWrapper.class),
     INDEX_ITEM__UPDATE("indexItem", "udpate", "/api", "", UpdateIndexItemRequest.class, IndexItemWrapper.class),

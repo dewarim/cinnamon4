@@ -12,6 +12,7 @@ import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.index.IndexJob;
 import com.dewarim.cinnamon.model.index.IndexJobType;
 import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.TransactionIsolationLevel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
@@ -65,7 +66,7 @@ public class IndexService implements Runnable {
              Directory indexDir = FSDirectory.open(indexPath, new SingleInstanceLockFactory())) {
 
             while (!stopped) {
-                try (SqlSession sqlSession = ThreadLocalSqlSession.getNewReuseSession()) {
+                try (SqlSession sqlSession = ThreadLocalSqlSession.getNewReuseSession(TransactionIsolationLevel.READ_COMMITTED)) {
                     IndexWriterConfig writerConfig = new IndexWriterConfig(standardAnalyzer);
                     writerConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
                     writerConfig.setCommitOnClose(true);
@@ -95,6 +96,7 @@ public class IndexService implements Runnable {
                                 }
                                 jobDao.delete(job);
                             } catch (Exception e) {
+                                log.info("IndexJob failed with: " + e);
                                 job.setFailed(job.getFailed() + 1);
                                 jobDao.updateStatus(job);
                             }
@@ -113,8 +115,7 @@ public class IndexService implements Runnable {
                     log.warn("Index thread was interrupted.");
                 } catch (Exception e) {
                     log.warn("Failed to index: ", e);
-                }
-                finally {
+                } finally {
                     if (indexWriter.isOpen()) {
                         indexWriter.close();
                     }

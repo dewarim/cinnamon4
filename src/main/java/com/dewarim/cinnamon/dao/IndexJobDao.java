@@ -11,6 +11,7 @@ import java.util.Map;
 public class IndexJobDao {
 
     private SqlSession sqlSession;
+
     public List<IndexJob> getIndexJobsByFailedCountWithLimit(int failedCount, int limit) {
         SqlSession          sqlSession = getSqlSession();
         Map<String, Object> params     = Map.of("failed", failedCount);
@@ -37,7 +38,7 @@ public class IndexJobDao {
         sqlSession.delete("com.dewarim.cinnamon.model.index.IndexJob.delete", job.getId());
     }
 
-    public List<IndexJob> list(){
+    public List<IndexJob> list() {
         SqlSession sqlSession = getSqlSession();
         return sqlSession.selectList("com.dewarim.cinnamon.model.index.IndexJob.list");
     }
@@ -52,10 +53,50 @@ public class IndexJobDao {
         return this;
     }
 
-    public SqlSession getSqlSession(){
-        if(sqlSession != null){
+    public SqlSession getSqlSession() {
+        if (sqlSession != null) {
             return sqlSession;
         }
         return ThreadLocalSqlSession.getSqlSession();
+    }
+
+    public IndexRows fullReindex() {
+        SqlSession session = getSqlSession();
+        int        folders = session.insert("com.dewarim.cinnamon.model.index.IndexJob.reindexAllFolders");
+        int        osds    = session.insert("com.dewarim.cinnamon.model.index.IndexJob.reindexAllOsds");
+        return new IndexRows(folders, osds);
+    }
+
+    public int reindexFolders(List<Long> folderIds) {
+        SqlSession session = getSqlSession();
+        return session.insert("com.dewarim.cinnamon.model.index.IndexJob.reindexFolders", folderIds);
+    }
+
+    public int reindexOsds(List<Long> osdIds) {
+        SqlSession session = getSqlSession();
+        return session.insert("com.dewarim.cinnamon.model.index.IndexJob.reindexOsds", osdIds);
+    }
+
+    public int countFailedJobs() {
+        SqlSession session = getSqlSession();
+        return session.insert("com.dewarim.cinnamon.model.index.IndexJob.countFailedJobs");
+    }
+
+    public static class IndexRows {
+        private int folders;
+        private int osds;
+
+        public IndexRows(int folders, int osds) {
+            this.folders = folders;
+            this.osds = osds;
+        }
+
+        public int getFolderRowCount() {
+            return folders;
+        }
+
+        public int getOsdRowCount() {
+            return osds;
+        }
     }
 }
