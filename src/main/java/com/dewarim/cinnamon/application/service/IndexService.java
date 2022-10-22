@@ -40,6 +40,8 @@ import java.util.Set;
 public class IndexService implements Runnable {
     private static final Logger log = LogManager.getLogger(IndexService.class);
 
+    public static boolean isInitialized = false;
+
     private       boolean      stopped   = false;
     private       IndexWriter  indexWriter;
     private final OsdDao       osdDao    = new OsdDao();
@@ -119,6 +121,7 @@ public class IndexService implements Runnable {
                     if (indexWriter.isOpen()) {
                         indexWriter.close();
                     }
+                    isInitialized = true;
                 }
             }
         } catch (Exception e) {

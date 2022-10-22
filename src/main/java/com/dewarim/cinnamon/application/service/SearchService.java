@@ -28,8 +28,14 @@ public class SearchService {
 
     private final SearcherManager searcherManager;
 
-    public SearchService(LuceneConfig luceneConfig) throws IOException {
+    public SearchService(LuceneConfig luceneConfig) throws IOException, InterruptedException {
         this.config = luceneConfig;
+
+        while(!IndexService.isInitialized){
+            log.debug("Waiting for IndexService to finish initialization.");
+            Thread.sleep(400);
+        }
+
         directory = FSDirectory.open(Path.of(config.getIndexPath()));
         indexReader = DirectoryReader.open(directory);
         searcherManager = new SearcherManager(indexReader, new SearcherFactory());

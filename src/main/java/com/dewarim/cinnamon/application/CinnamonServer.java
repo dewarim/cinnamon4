@@ -126,7 +126,7 @@ public class CinnamonServer {
         server.stop();
     }
 
-    private void addSingletons() throws IOException {
+    private void addSingletons() throws IOException, InterruptedException {
 
         // initialize mybatis:
         if (dbSessionFactory == null) {
