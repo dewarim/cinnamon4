@@ -765,6 +765,7 @@ Create a new folder.
       <typeId>4</typeId>
       <metadataChanged>false</metadataChanged>
       <summary>&lt;summary>&lt;description>contains images&lt;/description>&lt;/summary></summary>
+      <hasSubfolders>false</hasSubfolders>
       <created>2022-08-10T01:21:00+0000</created>
     </folder>
     <folder>
@@ -777,6 +778,7 @@ Create a new folder.
       <typeId>2</typeId>
       <metadataChanged>false</metadataChanged>
       <summary>&lt;summary /></summary>
+      <hasSubfolders>false</hasSubfolders>
       <created>2022-08-10T01:21:00+0000</created>
     </folder>
   </folders>
@@ -1020,8 +1022,8 @@ Fetch a single folder
 <metaRequest>
   <id>3</id>
   <typeIds>
-    <typeIds>12</typeIds>
-    <typeIds>13</typeIds>
+    <typeId>12</typeId>
+    <typeId>13</typeId>
   </typeIds>
 </metaRequest>
 
@@ -1503,10 +1505,10 @@ Provides information on the status of the Lucene search index
 
 ```xml
 <indexInfoResponse>
-  <documentsInIndex/>
-  <foldersInIndex/>
-  <failedJobCount/>
-  <jobCount/>
+  <documentsInIndex>100</documentsInIndex>
+  <foldersInIndex>20</foldersInIndex>
+  <failedJobCount>2</failedJobCount>
+  <jobCount>41</jobCount>
 </indexInfoResponse>
 
 ```
@@ -2776,8 +2778,8 @@ Returns an OSD's content according to it's format's content type.
 <metaRequest>
   <id>3</id>
   <typeIds>
-    <typeIds>12</typeIds>
-    <typeIds>13</typeIds>
+    <typeId>12</typeId>
+    <typeId>13</typeId>
   </typeIds>
 </metaRequest>
 
