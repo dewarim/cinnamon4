@@ -99,6 +99,18 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
+    public void rootFolderShouldHaveOneSubfolder() throws IOException {
+        Folder folder = client.getFolderById(1L, false);
+        assertTrue(folder.isHasSubfolders());
+    }
+
+    @Test
+    public void newFolderShouldNotHaveSubfolder() throws IOException{
+        Folder newFolder = client.createFolder(createFolderId,"new-folder-without-subfolder",userId,1L,1L);
+        assertFalse(newFolder.isHasSubfolders());
+    }
+
+    @Test
     public void getFolderInvalidRequest() throws IOException {
         SingleFolderRequest singleRequest = new SingleFolderRequest(0L, false);
         HttpResponse        response      = sendStandardRequest(UrlMapping.FOLDER__GET_FOLDER, singleRequest);
@@ -201,8 +213,8 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getMetaHappyPath() throws IOException {
-        MetaRequest  request      = new MetaRequest(16L, null);
-        Meta folderMeta = client.getFolderMetas(16L).get(0);
+        MetaRequest request    = new MetaRequest(16L, null);
+        Meta        folderMeta = client.getFolderMetas(16L).get(0);
         assertEquals("<metaset><p>Good Folder Meta Test</p></metaset>", folderMeta.getContent());
     }
 
@@ -248,7 +260,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     public void createMetaMetasetIsUniqueAndExists() throws IOException {
         Acl acl = getReviewerAcl();
         Folder folder = client.createFolder(createFolderId, "createMetaMetasetIsUniqueAndExists",
-                userId,acl.getId(), 1L);
+                userId, acl.getId(), 1L);
         MetasetType type = adminClient.createMetasetType("unique metaset type", true);
 
         CreateMetaRequest request = new CreateMetaRequest(folder.getId(), "duplicate license", type.getId());
@@ -281,12 +293,12 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void deleteAllMetas() throws IOException{
-        Folder folder = client.createFolder(createFolderId,"folder-deleteAllMetas",userId,getReviewerAcl().getId(), 1L );
-        client.createFolderMeta(new CreateMetaRequest(folder.getId(),"...",1L));
-        client.createFolderMeta(new CreateMetaRequest(folder.getId(),"...",1L));
+    public void deleteAllMetas() throws IOException {
+        Folder folder = client.createFolder(createFolderId, "folder-deleteAllMetas", userId, getReviewerAcl().getId(), 1L);
+        client.createFolderMeta(new CreateMetaRequest(folder.getId(), "...", 1L));
+        client.createFolderMeta(new CreateMetaRequest(folder.getId(), "...", 1L));
         client.deleteAllFolderMeta(folder.getId());
-        assertEquals(0,client.getFolderMetas(folder.getId()).size());
+        assertEquals(0, client.getFolderMetas(folder.getId()).size());
     }
 
     @Test
@@ -778,19 +790,19 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         toh.createFolder("delete-with-protected-relation", createFolderId)
                 .createOsd("relation-target");
         ObjectSystemData relationTarget = toh.osd;
-        RelationType     relationType   = adminClient.createRelationType(new RelationType("protected-relation", false, true,
+        RelationType relationType = adminClient.createRelationType(new RelationType("protected-relation", false, true,
                 false, false, false, false));
-        Relation         relation       = adminClient.createRelation(relationSource.getId(), relationTarget.getId(), relationType.getId(), "");
-        var ex = assertThrows(CinnamonClientException.class, () -> client.deleteFolder(toh.folder.getId(), false, true));
+        Relation relation = adminClient.createRelation(relationSource.getId(), relationTarget.getId(), relationType.getId(), "");
+        var      ex       = assertThrows(CinnamonClientException.class, () -> client.deleteFolder(toh.folder.getId(), false, true));
         // at the moment, links without delete permission will not return a list of errors
         //  assertEquals(CANNOT_DELETE_DUE_TO_ERRORS, ex.getErrorCode());
         assertTrue(ex.getErrorWrapper().getErrors().stream().anyMatch(e -> e.getCode().equals(OBJECT_HAS_PROTECTED_RELATIONS.getCode())));
     }
 
     @Test
-    public void deleteFolderWithMetadata() throws IOException{
-        TestObjectHolder toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
-        Folder folder = toh.createFolder("deleteFolderWithMetadata", createFolderId).folder;
+    public void deleteFolderWithMetadata() throws IOException {
+        TestObjectHolder toh    = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
+        Folder           folder = toh.createFolder("deleteFolderWithMetadata", createFolderId).folder;
         client.createFolderMeta(new CreateMetaRequest(folder.getId(), "some content", 1L));
         adminClient.deleteFolder(folder.getId(), false, false);
     }
@@ -809,9 +821,9 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         toh.createFolder("delete-with-unprotected-relation", createFolderId)
                 .createOsd("relation-target");
         ObjectSystemData relationTarget = toh.osd;
-        RelationType     relationType   = adminClient.createRelationType(new RelationType("unprotected-relation", false, false,
+        RelationType relationType = adminClient.createRelationType(new RelationType("unprotected-relation", false, false,
                 false, false, false, false));
-        Relation         relation       = adminClient.createRelation(relationSource.getId(), relationTarget.getId(), relationType.getId(), "");
+        Relation relation = adminClient.createRelation(relationSource.getId(), relationTarget.getId(), relationType.getId(), "");
         client.deleteFolder(toh.folder.getId(), false, true);
     }
 

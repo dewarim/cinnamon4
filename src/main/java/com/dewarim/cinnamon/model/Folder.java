@@ -11,18 +11,23 @@ import static com.dewarim.cinnamon.api.Constants.DEFAULT_SUMMARY;
 
 public class Folder implements Ownable, Identifiable {
 
-    private Long id;
-    private String name;
-    private Long objVersion;
-    private Long aclId;
-    private Long ownerId;
-    private Long parentId;
-    private Long typeId;
+    private Long    id;
+    private String  name;
+    private Long    objVersion;
+    private Long    aclId;
+    private Long    ownerId;
+    private Long    parentId;
+    private Long    typeId;
     private Boolean metadataChanged;
-    private String summary;
+    private String  summary;
+    /**
+     * Is true if other folders have this folder as parent folder.
+     * Value is read-only.
+     */
+    private boolean hasSubfolders = false;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssZ")
-    private Date created  = new Date();
+    private Date created = new Date();
 
     public Folder() {
         summary = DEFAULT_SUMMARY;
@@ -120,10 +125,22 @@ public class Folder implements Ownable, Identifiable {
         this.created = created;
     }
 
+    public boolean isHasSubfolders() {
+        return hasSubfolders;
+    }
+
+    public void setHasSubfolders(boolean hasSubfolders) {
+        this.hasSubfolders = hasSubfolders;
+    }
+
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         Folder folder = (Folder) o;
         return Objects.equals(name, folder.name) &&
                 Objects.equals(objVersion, folder.objVersion) &&
@@ -154,6 +171,7 @@ public class Folder implements Ownable, Identifiable {
                 ", metadataChanged=" + metadataChanged +
                 ", summary='" + summary + '\'' +
                 ", created=" + created +
+                ", subfolders=" + hasSubfolders +
                 '}';
     }
 }

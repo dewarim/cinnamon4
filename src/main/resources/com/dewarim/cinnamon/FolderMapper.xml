@@ -16,6 +16,7 @@
         <result property="metadataChanged" column="metadata_changed"/>
         <result property="created" column="created"/>
         <result property="summary" column="summary"/>
+        <result property="hasSubfolders" column="has_subfolders"/>
     </resultMap>
 
     <select id="getFoldersById" parameterType="map" resultMap="folderMap">
@@ -29,9 +30,10 @@
         type_id,
         metadata_changed,
         created,
+        CASE WHEN ((select count(*) from folders subfolers where subfolers.parent_id=f.id limit 1) > 0) THEN true ELSE false END as has_subfolders,
         CASE WHEN #{includeSummary} THEN summary ELSE null END AS summary
 
-        FROM folders
+        FROM folders f
         WHERE id IN
         <foreach item="item" index="index" collection="idList"
                  open="(" separator="," close=")">
@@ -49,8 +51,9 @@
                type_id,
                metadata_changed,
                created,
+               CASE WHEN ((select count(*) from folders subfolers where subfolers.parent_id=f.id limit 1) > 0) THEN true ELSE false END as has_subfolders,
                CASE WHEN #{includeSummary} THEN summary ELSE null END AS summary
-        FROM folders
+        FROM folders f
         WHERE parent_id = #{parentId}
           AND name = #{name}
     </select>
@@ -65,12 +68,13 @@
                type_id,
                metadata_changed,
                created,
+               CASE WHEN ((select count(*) from folders subfolers where subfolers.parent_id=fo.id limit 1) > 0) THEN true ELSE false END as has_subfolders,
                CASE
                    WHEN #{includeSummary}
                        THEN summary
                    ELSE null END AS summary
 
-        FROM folders
+        FROM folders fo
         WHERE id in (
             with recursive fp (id, parent_id, name, ids)
                                as (
@@ -110,12 +114,13 @@
                type_id,
                metadata_changed,
                created,
+               CASE WHEN ((select count(*) from folders subfolers where subfolers.parent_id=f.id limit 1) > 0) THEN true ELSE false END as has_subfolders,
                CASE
                    WHEN #{includeSummary}
                        THEN summary
                    ELSE null END AS summary
 
-        FROM folders
+        FROM folders f
         WHERE name = #{rootFolderName}
           AND parent_id is NULL
     </select>
@@ -130,12 +135,13 @@
                type_id,
                metadata_changed,
                created,
+               CASE WHEN ((select count(*) from folders subfolers where subfolers.parent_id=f.id limit 1) > 0) THEN true ELSE false END as has_subfolders,
                CASE
                    WHEN #{includeSummary}
                        THEN summary
                    ELSE null END AS summary
 
-        FROM folders
+        FROM folders f
         WHERE name = #{childName}
           AND parent_id = #{parentId}
     </select>
@@ -150,12 +156,13 @@
                type_id,
                metadata_changed,
                created,
+               CASE WHEN ((select count(*) from folders subfolers where subfolers.parent_id=f.id limit 1) > 0) THEN true ELSE false END as has_subfolders,
                CASE
                    WHEN #{includeSummary}
                        THEN summary
                    ELSE null END AS summary
 
-        FROM folders
+        FROM folders f
         WHERE parent_id = #{id}
     </select>
 
@@ -169,12 +176,13 @@
                type_id,
                metadata_changed,
                created,
+               CASE WHEN ((select count(*) from folders subfolers where subfolers.parent_id=f.id limit 1) > 0) THEN true ELSE false END as has_subfolders,
                CASE
                    WHEN #{includeSummary}
                        THEN summary
                    ELSE null END AS summary
 
-        FROM folders
+        FROM folders f
         WHERE name = #{name}
           AND parent_id = #{id}
     </select>
