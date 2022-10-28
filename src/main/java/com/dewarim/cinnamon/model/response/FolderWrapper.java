@@ -14,7 +14,7 @@ import java.util.List;
 public class FolderWrapper implements Wrapper<Folder>, ApiResponse {
 
     @JacksonXmlElementWrapper(localName = "folders")
-    @JacksonXmlProperty(localName = "folders")
+    @JacksonXmlProperty(localName = "folder")
     List<Folder> folders = new ArrayList<>();
 
     public FolderWrapper() {

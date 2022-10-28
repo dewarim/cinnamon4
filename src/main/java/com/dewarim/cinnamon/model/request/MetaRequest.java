@@ -15,7 +15,7 @@ public class MetaRequest implements ApiRequest<Meta> {
     private Long         id;
 
     @JacksonXmlElementWrapper(localName = "typeIds")
-    @JacksonXmlProperty(localName = "typeIds")
+    @JacksonXmlProperty(localName = "typeId")
     private List<Long> typeIds;
     public MetaRequest() {
     }
