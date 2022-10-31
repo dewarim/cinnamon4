@@ -95,6 +95,7 @@ import com.dewarim.cinnamon.model.request.relationType.CreateRelationTypeRequest
 import com.dewarim.cinnamon.model.request.relationType.DeleteRelationTypeRequest;
 import com.dewarim.cinnamon.model.request.relationType.ListRelationTypeRequest;
 import com.dewarim.cinnamon.model.request.relationType.UpdateRelationTypeRequest;
+import com.dewarim.cinnamon.model.request.search.SearchIdsRequest;
 import com.dewarim.cinnamon.model.request.uiLanguage.CreateUiLanguageRequest;
 import com.dewarim.cinnamon.model.request.uiLanguage.DeleteUiLanguageRequest;
 import com.dewarim.cinnamon.model.request.uiLanguage.ListUiLanguageRequest;
@@ -128,6 +129,7 @@ import com.dewarim.cinnamon.model.response.OsdWrapper;
 import com.dewarim.cinnamon.model.response.PermissionWrapper;
 import com.dewarim.cinnamon.model.response.RelationTypeWrapper;
 import com.dewarim.cinnamon.model.response.RelationWrapper;
+import com.dewarim.cinnamon.model.response.SearchIdsResponse;
 import com.dewarim.cinnamon.model.response.SummaryWrapper;
 import com.dewarim.cinnamon.model.response.UiLanguageWrapper;
 import com.dewarim.cinnamon.model.response.UserAccountWrapper;
@@ -279,6 +281,10 @@ public enum UrlMapping {
             "Search for relations matching all( with orMode=false) or some (with orMode=true) criteria. " +
                     "Fields are optional, but at least one field must contain criteria.",
             SearchRelationRequest.class, RelationWrapper.class),
+    SEARCH__IDS("search", "objectIds", "/api", """
+        Search the Lucene index for objects (documents and folders) matching the given query
+        and return the ids of all objects found which are browsable for the current user.""",
+            SearchIdsRequest.class, SearchIdsResponse.class ),
     STATIC__ROOT("static", "", "", "Returns a static file from the server (for example, a favicon.ico if one exists).", null, null),
     TEST__STATUS_200("test", "status200", "", "Returns status code 200", null, null),
     TEST__STATUS_400("test", "status400", "", "Returns status code 400", null, null),

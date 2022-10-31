@@ -4,6 +4,7 @@ import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.Ownable;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
+import com.dewarim.cinnamon.application.service.search.BrowsableAcls;
 import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.model.Folder;
 import com.dewarim.cinnamon.model.ObjectSystemData;
@@ -54,12 +55,12 @@ public class AuthorizationService {
         }
     }
 
-    public boolean currentUserIsSuperuser(){
+    public boolean currentUserIsSuperuser() {
         return AccessFilter.getInstance(ThreadLocalSqlSession.getCurrentUser()).isSuperuser();
     }
 
     public boolean hasUserOrOwnerPermission(Ownable ownable, DefaultPermission permission, UserAccount user) {
-        if(UserAccountDao.currentUserIsSuperuser()){
+        if (UserAccountDao.currentUserIsSuperuser()) {
             // Superuser is allowed to do everything.
             return true;
         }
@@ -71,5 +72,10 @@ public class AuthorizationService {
             return userHasOwnerPermission(aclId, permission, user);
         }
         return false;
+    }
+
+    public BrowsableAcls getBrowsableAcls(UserAccount user) {
+        AccessFilter accessFilter = AccessFilter.getInstance(user);
+        return new BrowsableAcls(accessFilter.getObjectAclsWithBrowsePermissions(), accessFilter.getOwnerAclsWithBrowsePermissions(), user.getId());
     }
 }

@@ -2,21 +2,40 @@ package com.dewarim.cinnamon.application.service;
 
 
 import com.dewarim.cinnamon.application.exception.CinnamonException;
+import com.dewarim.cinnamon.application.service.search.BrowsableAcls;
+import com.dewarim.cinnamon.application.service.search.RegexQueryBuilder;
+import com.dewarim.cinnamon.application.service.search.ResultCollector;
+import com.dewarim.cinnamon.application.service.search.WildcardQueryBuilder;
 import com.dewarim.cinnamon.configuration.LuceneConfig;
 import com.dewarim.cinnamon.dao.IndexJobDao;
+import com.dewarim.cinnamon.model.UserAccount;
+import com.dewarim.cinnamon.model.index.IndexJobType;
+import com.dewarim.cinnamon.model.index.SearchResult;
+import com.dewarim.cinnamon.model.request.search.SearchType;
+import com.dewarim.cinnamon.security.authorization.AuthorizationService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.lucene.analysis.miscellaneous.LimitTokenCountAnalyzer;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.queryparser.xml.CoreParser;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.Query;
 import org.apache.lucene.search.SearcherFactory;
 import org.apache.lucene.search.SearcherManager;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.List;
+
+import static com.dewarim.cinnamon.api.Constants.*;
 
 public class SearchService {
 
@@ -26,16 +45,17 @@ public class SearchService {
     private final Directory       directory;
     private       DirectoryReader indexReader;
 
-    private final SearcherManager searcherManager;
+    private final SearcherManager         searcherManager;
+    private final LimitTokenCountAnalyzer limitTokenCountAnalyzer = new LimitTokenCountAnalyzer(new StandardAnalyzer(), Integer.MAX_VALUE);
 
     public SearchService(LuceneConfig luceneConfig) throws IOException, InterruptedException {
         this.config = luceneConfig;
 
-        while(!IndexService.isInitialized){
+        while (!IndexService.isInitialized) {
             log.debug("Waiting for IndexService to finish initialization.");
             Thread.sleep(400);
         }
-
+        IndexSearcher.setMaxClauseCount(10000);
         directory = FSDirectory.open(Path.of(config.getIndexPath()));
         indexReader = DirectoryReader.open(directory);
         searcherManager = new SearcherManager(indexReader, new SearcherFactory());
@@ -57,9 +77,61 @@ public class SearchService {
             log.warn("countDocs failed: ", e);
             throw new CinnamonException("countDocs failed", e);
         } finally {
-            searcherManager.release(searcher);
+            if (searcher != null) {
+                searcherManager.release(searcher);
+            }
         }
     }
+
+    public SearchResult doSearch(String xmlQuery, SearchType searchType, UserAccount user) throws IOException {
+        IndexSearcher searcher = null;
+        try {
+            if (!searcherManager.isSearcherCurrent()) {
+                searcherManager.maybeRefreshBlocking();
+            }
+            searcher = searcherManager.acquire();
+            InputStream xmlInputStream = new ByteArrayInputStream(xmlQuery.getBytes(StandardCharsets.UTF_8));
+            CoreParser  coreParser     = new CoreParser("content", limitTokenCountAnalyzer);
+            coreParser.addQueryBuilder("WildcardQuery", new WildcardQueryBuilder());
+            coreParser.addQueryBuilder("RegexQuery", new RegexQueryBuilder());
+            Query           query     = coreParser.parse(xmlInputStream);
+            ResultCollector collector = new ResultCollector(searcher);
+            searcher.search(query, collector);
+            log.debug("Found " + collector.getDocuments().size() + " documents.");
+
+            BrowsableAcls browsableAcls = new AuthorizationService().getBrowsableAcls(user);
+            List<Long>    osdIds        = List.of();
+            List<Long>    folderIds     = List.of();
+            switch (searchType) {
+                case OSD -> osdIds = filterForType(collector, IndexJobType.OSD, browsableAcls);
+                case FOLDER -> folderIds = filterForType(collector, IndexJobType.FOLDER, browsableAcls);
+                case ALL -> {
+                    osdIds = filterForType(collector, IndexJobType.OSD, browsableAcls);
+                    folderIds = filterForType(collector, IndexJobType.FOLDER, browsableAcls);
+                }
+            }
+
+            return new SearchResult(osdIds, folderIds);
+        } catch (Exception e) {
+            log.warn("search failed: ", e);
+            throw new CinnamonException("search failed", e);
+        } finally {
+            if (searcher != null) {
+                searcherManager.release(searcher);
+            }
+        }
+    }
+
+    private List<Long> filterForType(ResultCollector collector, IndexJobType jobType, BrowsableAcls browsableAcls) {
+        return collector.getDocuments().stream()
+                .filter(doc -> doc.getField(LUCENE_FIELD_CINNAMON_CLASS).stringValue().equals(jobType.name()))
+                .filter(doc -> browsableAcls.hasBrowsePermission(
+                        doc.getField(LUCENE_FIELD_ACL_ID).numericValue().longValue(),
+                        doc.getField(LUCENE_FIELD_OWNER_ID).numericValue().longValue()))
+                .map(doc -> doc.getField("id").numericValue().longValue())
+                .toList();
+    }
+
 
     public void reopenIndexIfNeeded() throws IOException {
         if (!indexReader.isCurrent()) {

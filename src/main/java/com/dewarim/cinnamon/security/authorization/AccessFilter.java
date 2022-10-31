@@ -279,4 +279,12 @@ public class AccessFilter {
     public boolean isSuperuser() {
         return superuser;
     }
+
+    public Set<Long> getObjectAclsWithBrowsePermissions() {
+        return objectAclsWithBrowsePermissions;
+    }
+
+    public Set<Long> getOwnerAclsWithBrowsePermissions() {
+        return ownerAclsWithBrowsePermissions;
+    }
 }

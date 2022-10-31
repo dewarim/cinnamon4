@@ -19,6 +19,7 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.document.NumericDocValuesField;
 import org.apache.lucene.document.StoredField;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.index.IndexWriter;
@@ -36,6 +37,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+
+import static com.dewarim.cinnamon.api.Constants.LUCENE_FIELD_CINNAMON_CLASS;
+import static com.dewarim.cinnamon.api.Constants.LUCENE_FIELD_UNIQUE_ID;
 
 public class IndexService implements Runnable {
     private static final Logger log = LogManager.getLogger(IndexService.class);
@@ -133,8 +137,8 @@ public class IndexService implements Runnable {
 
     private void handleIndexItem(IndexJob job, IndexKey key, List<IndexItem> indexItems) throws IOException {
         Document doc = new Document();
-        doc.add(new StoredField("uniqueId", key.toString()));
-        doc.add(new Field("cinnamon_class", key.type.toString(), StringField.TYPE_NOT_STORED));
+        doc.add(new StoredField(LUCENE_FIELD_UNIQUE_ID, key.toString()));
+        doc.add(new Field(LUCENE_FIELD_CINNAMON_CLASS, key.type.toString(), StringField.TYPE_STORED));
 
         boolean isOkay = false;
         switch (job.getJobType()) {
@@ -146,7 +150,7 @@ public class IndexService implements Runnable {
             return;
         }
         switch (job.getAction()) {
-            case UPDATE -> indexWriter.updateDocument(new Term("uniqueId", key.toString()), doc);
+            case UPDATE -> indexWriter.updateDocument(new Term(LUCENE_FIELD_UNIQUE_ID, key.toString()), doc);
             case CREATE -> indexWriter.addDocument(doc);
         }
     }
@@ -162,6 +166,7 @@ public class IndexService implements Runnable {
         // folderpath
         List<Folder> folders = folderDao.getFolderByIdWithAncestors(folder.getParentId(), false);
         doc.add(new StoredField("folderpath", foldersToPath(folders)));
+        doc.add(new NumericDocValuesField("id", folder.getId()));
 
         return true;
     }
@@ -178,6 +183,8 @@ public class IndexService implements Runnable {
         // folderpath
         List<Folder> folders = folderDao.getFolderByIdWithAncestors(osd.getParentId(), false);
         doc.add(new StoredField("folderpath", foldersToPath(folders)));
+        doc.add(new NumericDocValuesField("id", osd.getId()));
+
         // index content
 
         // index metasets
@@ -192,7 +199,7 @@ public class IndexService implements Runnable {
     }
 
     private void deleteFromIndex(IndexKey key) throws IOException {
-        indexWriter.deleteDocuments(new Term("uniqueId", key.toString()));
+        indexWriter.deleteDocuments(new Term(LUCENE_FIELD_UNIQUE_ID, key.toString()));
     }
 
     public void setStopped(boolean stopped) {

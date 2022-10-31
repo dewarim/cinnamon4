@@ -45,4 +45,10 @@ public class Constants {
     public static final String DEFAULT_SUMMARY = "<summary />";
     public static final String SEARCH_SERVICE  = "SearchService";
     public static final String CINNAMON_CONFIG = "CinnamonConfig";
+
+    public static final String LUCENE_FIELD_UNIQUE_ID = "uniqueId";
+    public static final String LUCENE_FIELD_CINNAMON_CLASS = "cinnamon_class";
+    public static final String LUCENE_FIELD_ACL_ID = "acl";
+    public static final String LUCENE_FIELD_USER_ID = "user";
+    public static final String LUCENE_FIELD_OWNER_ID = "user";
 }

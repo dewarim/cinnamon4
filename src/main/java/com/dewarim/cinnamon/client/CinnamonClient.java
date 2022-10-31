@@ -106,6 +106,8 @@ import com.dewarim.cinnamon.model.request.relation.DeleteRelationRequest;
 import com.dewarim.cinnamon.model.request.relation.SearchRelationRequest;
 import com.dewarim.cinnamon.model.request.relationType.CreateRelationTypeRequest;
 import com.dewarim.cinnamon.model.request.relationType.DeleteRelationTypeRequest;
+import com.dewarim.cinnamon.model.request.search.SearchIdsRequest;
+import com.dewarim.cinnamon.model.request.search.SearchType;
 import com.dewarim.cinnamon.model.request.uiLanguage.CreateUiLanguageRequest;
 import com.dewarim.cinnamon.model.request.uiLanguage.DeleteUiLanguageRequest;
 import com.dewarim.cinnamon.model.request.uiLanguage.ListUiLanguageRequest;
@@ -143,6 +145,7 @@ import com.dewarim.cinnamon.model.response.OsdWrapper;
 import com.dewarim.cinnamon.model.response.PermissionWrapper;
 import com.dewarim.cinnamon.model.response.RelationTypeWrapper;
 import com.dewarim.cinnamon.model.response.RelationWrapper;
+import com.dewarim.cinnamon.model.response.SearchIdsResponse;
 import com.dewarim.cinnamon.model.response.Summary;
 import com.dewarim.cinnamon.model.response.SummaryWrapper;
 import com.dewarim.cinnamon.model.response.UiLanguageWrapper;
@@ -1111,6 +1114,12 @@ public class CinnamonClient {
     public ReindexResponse reindex( ReindexRequest request) throws IOException {
         HttpResponse response = sendStandardRequest(INDEX__REINDEX, request);
         return new SingletonUnwrapper<ReindexResponse>(ReindexResponse.class).unwrap(response);
+    }
+
+    public SearchIdsResponse search(String query, SearchType searchType) throws IOException {
+        SearchIdsRequest request = new SearchIdsRequest(searchType, query);
+        HttpResponse response = sendStandardRequest(SEARCH__IDS, request);
+        return new SingletonUnwrapper<SearchIdsResponse>(SearchIdsResponse.class).unwrap(response);
     }
 
     static class SingletonUnwrapper<S>{
