@@ -17,11 +17,14 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.document.DateTools;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.document.NumericDocValuesField;
 import org.apache.lucene.document.StoredField;
 import org.apache.lucene.document.StringField;
+import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.Term;
@@ -137,7 +140,7 @@ public class IndexService implements Runnable {
 
     private void handleIndexItem(IndexJob job, IndexKey key, List<IndexItem> indexItems) throws IOException {
         Document doc = new Document();
-        doc.add(new StoredField(LUCENE_FIELD_UNIQUE_ID, key.toString()));
+        doc.add(new StringField(LUCENE_FIELD_UNIQUE_ID, key.toString(), Field.Store.NO));
         doc.add(new Field(LUCENE_FIELD_CINNAMON_CLASS, key.type.toString(), StringField.TYPE_STORED));
 
         boolean isOkay = false;
@@ -158,6 +161,7 @@ public class IndexService implements Runnable {
     private boolean indexFolder(Long id, Document doc, List<IndexItem> indexItems) {
         Optional<Folder> folderOpt = folderDao.getFolderById(id);
         if (folderOpt.isEmpty()) {
+            log.debug("Folder " + id + " not found for indexing.");
             return false;
         }
         Folder folder = folderOpt.get();
@@ -165,8 +169,23 @@ public class IndexService implements Runnable {
 
         // folderpath
         List<Folder> folders = folderDao.getFolderByIdWithAncestors(folder.getParentId(), false);
-        doc.add(new StoredField("folderpath", foldersToPath(folders)));
+        doc.add(new StringField("folderpath", foldersToPath(folders), Field.Store.NO));
+
+        doc.add(new StoredField("acl", folder.getAclId()));
+        doc.add(new NumericDocValuesField("acl", folder.getAclId()));
+        // option: add a NumericDocValueField for scoring by age
         doc.add(new NumericDocValuesField("id", folder.getId()));
+        doc.add(new StoredField("id", folder.getId()));
+        doc.add(new StringField("created", DateTools.dateToString(folder.getCreated(), DateTools.Resolution.MILLISECOND), Field.Store.NO));
+        doc.add(new LongPoint("created", folder.getCreated().getTime()));
+        doc.add(new StringField("name", folder.getName(), Field.Store.NO));
+        doc.add(new NumericDocValuesField("owner", folder.getOwnerId()));
+        doc.add(new StoredField("owner", folder.getOwnerId()));
+        if (folder.getParentId() != null) {
+            doc.add(new NumericDocValuesField("parent", folder.getParentId()));
+        }
+        doc.add(new TextField("summary", folder.getSummary(), Field.Store.NO));
+        doc.add(new NumericDocValuesField("type", folder.getTypeId()));
 
         return true;
     }
@@ -174,16 +193,60 @@ public class IndexService implements Runnable {
     private boolean indexOsd(Long id, Document doc, List<IndexItem> indexItems) {
         Optional<ObjectSystemData> osdOpt = osdDao.getObjectById(id);
         if (osdOpt.isEmpty()) {
+            log.debug("osd "+id+" not found for indexing");
             return false;
         }
         ObjectSystemData osd = osdOpt.get();
 
-        //// index sysMeta
+        // index sysMeta
+        List<Folder> folders    = folderDao.getFolderByIdWithAncestors(osd.getParentId(), false);
+        String       folderpath = foldersToPath(folders);
+        doc.add(new StringField("folderpath", folderpath, Field.Store.NO));
 
-        // folderpath
-        List<Folder> folders = folderDao.getFolderByIdWithAncestors(osd.getParentId(), false);
-        doc.add(new StoredField("folderpath", foldersToPath(folders)));
+        doc.add(new StoredField("acl", osd.getAclId()));
+        doc.add(new NumericDocValuesField("acl", osd.getAclId()));
+        doc.add(new StringField("cmn_version", osd.getCmnVersion(), Field.Store.NO));
+        doc.add(new StringField("content_changed", String.valueOf(osd.isContentChanged()), Field.Store.NO));
+        if (osd.getContentSize() != null) {
+            doc.add(new NumericDocValuesField("content_size", osd.getContentSize()));
+        }
+        // option: add a NumericDocValueField for scoring by age
+        doc.add(new StringField("created", DateTools.dateToString(osd.getCreated(), DateTools.Resolution.MILLISECOND), Field.Store.NO));
+        doc.add(new LongPoint("created", osd.getCreated().getTime()));
+        doc.add(new StringField("modified", DateTools.dateToString(osd.getCreated(), DateTools.Resolution.MILLISECOND), Field.Store.NO));
+        doc.add(new LongPoint("modified", osd.getCreated().getTime()));
+
+        doc.add(new NumericDocValuesField("creator", osd.getCreatorId()));
+        doc.add(new NumericDocValuesField("modifier", osd.getModifierId()));
+        if (osd.getFormatId() != null) {
+            doc.add(new NumericDocValuesField("format", osd.getFormatId()));
+        }
         doc.add(new NumericDocValuesField("id", osd.getId()));
+        doc.add(new StoredField("id", osd.getId()));
+        if (osd.getLanguageId() != null) {
+            doc.add(new NumericDocValuesField("language", osd.getLanguageId()));
+        }
+        doc.add(new StringField("latest_branch", String.valueOf(osd.isLatestBranch()), Field.Store.NO));
+        doc.add(new StringField("latest_head", String.valueOf(osd.isLatestHead()), Field.Store.NO));
+        if (osd.getLockerId() != null) {
+            doc.add(new NumericDocValuesField("locker", osd.getId()));
+        }
+        doc.add(new StringField("metadata_changed", String.valueOf(osd.isMetadataChanged()), Field.Store.NO));
+        doc.add(new StringField("name", osd.getName(), Field.Store.NO));
+        doc.add(new NumericDocValuesField("owner", osd.getOwnerId()));
+        doc.add(new StoredField("owner", osd.getOwnerId()));
+        doc.add(new NumericDocValuesField("parent", osd.getParentId()));
+        if (osd.getPredecessorId() != null) {
+            doc.add(new NumericDocValuesField("predecessor", osd.getPredecessorId()));
+        }
+        if (osd.getRootId() != null) {
+            doc.add(new NumericDocValuesField("root", osd.getRootId()));
+        }
+        if (osd.getLifecycleStateId() != null) {
+            doc.add(new NumericDocValuesField("lifecycle_state", osd.getLifecycleStateId()));
+        }
+        doc.add(new TextField("summary", osd.getSummary(), Field.Store.NO));
+        doc.add(new NumericDocValuesField("type", osd.getTypeId()));
 
         // index content
 

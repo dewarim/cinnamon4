@@ -28,6 +28,7 @@ import com.dewarim.cinnamon.application.servlet.OsdServlet;
 import com.dewarim.cinnamon.application.servlet.PermissionServlet;
 import com.dewarim.cinnamon.application.servlet.RelationServlet;
 import com.dewarim.cinnamon.application.servlet.RelationTypeServlet;
+import com.dewarim.cinnamon.application.servlet.SearchServlet;
 import com.dewarim.cinnamon.application.servlet.StaticServlet;
 import com.dewarim.cinnamon.application.servlet.TestServlet;
 import com.dewarim.cinnamon.application.servlet.UiLanguageServlet;
@@ -182,6 +183,7 @@ public class CinnamonServer {
         handler.addServlet(PermissionServlet.class, "/api/permission/*");
         handler.addServlet(RelationServlet.class, "/api/relation/*");
         handler.addServlet(RelationTypeServlet.class, "/api/relationType/*");
+        handler.addServlet(SearchServlet.class, "/api/search/*");
         handler.addServlet(StaticServlet.class, "/static/*");
         handler.addServlet(TestServlet.class, "/test/*");
         handler.addServlet(UiLanguageServlet.class, "/api/uiLanguage/*");

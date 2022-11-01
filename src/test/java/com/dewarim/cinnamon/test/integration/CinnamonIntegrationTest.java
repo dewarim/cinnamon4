@@ -88,7 +88,10 @@ public class CinnamonIntegrationTest {
             }
             session.close();
 
-            cinnamonServer.startIndexService();
+            Path tempIndexDir = Files.createTempDirectory("cinnamon-index-root");
+            CinnamonServer.config.getLuceneConfig().setIndexPath(tempIndexDir.toAbsolutePath().toString());
+
+//            cinnamonServer.startIndexService();
             ThreadLocalSqlSession.setDbSessionFactory(dbSessionFactory);
             cinnamonServer.setDbSessionFactory(dbSessionFactory);
             cinnamonServer.start();

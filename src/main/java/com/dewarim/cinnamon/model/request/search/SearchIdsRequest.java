@@ -54,9 +54,9 @@ public class SearchIdsRequest implements ApiRequest {
 
     @Override
     public List<ApiRequest> examples() {
-        return List.of(new SearchIdsRequest(OSD, "<BooleanQuery><Clause+occurs='must'><TermQuery+fieldName='name'>test</TermQuery></Clause></BooleanQuery>"),
-                new SearchIdsRequest(FOLDER,"<BooleanQuery><Clause+occurs='must'><TermQuery+fieldName='acl'>123</TermQuery></Clause></BooleanQuery>" ),
-                new SearchIdsRequest(ALL,"<BooleanQuery><Clause+occurs='must'><TermQuery+fieldName='owner'>1337</TermQuery></Clause></BooleanQuery>" )
+        return List.of(new SearchIdsRequest(OSD, "<BooleanQuery><Clause occurs='must'><TermQuery fieldName='name'>test</TermQuery></Clause></BooleanQuery>"),
+                new SearchIdsRequest(FOLDER,"<BooleanQuery><Clause occurs='must'><TermQuery fieldName='acl'>123</TermQuery></Clause></BooleanQuery>" ),
+                new SearchIdsRequest(ALL,"<BooleanQuery><Clause occurs='must'><TermQuery fieldName='owner'>1337</TermQuery></Clause></BooleanQuery>" )
                 );
     }
 

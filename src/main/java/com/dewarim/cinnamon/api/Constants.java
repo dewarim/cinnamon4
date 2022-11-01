@@ -49,6 +49,5 @@ public class Constants {
     public static final String LUCENE_FIELD_UNIQUE_ID = "uniqueId";
     public static final String LUCENE_FIELD_CINNAMON_CLASS = "cinnamon_class";
     public static final String LUCENE_FIELD_ACL_ID = "acl";
-    public static final String LUCENE_FIELD_USER_ID = "user";
-    public static final String LUCENE_FIELD_OWNER_ID = "user";
+    public static final String LUCENE_FIELD_OWNER_ID = "owner";
 }
