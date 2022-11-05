@@ -75,7 +75,7 @@ public class IndexService implements Runnable {
              Directory indexDir = FSDirectory.open(indexPath, new SingleInstanceLockFactory())) {
 
             while (!stopped) {
-                try (SqlSession sqlSession = ThreadLocalSqlSession.getNewReuseSession(TransactionIsolationLevel.READ_COMMITTED)) {
+                try (SqlSession sqlSession = ThreadLocalSqlSession.getNewSession(TransactionIsolationLevel.READ_COMMITTED)) {
                     IndexWriterConfig writerConfig = new IndexWriterConfig(standardAnalyzer);
                     writerConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
                     writerConfig.setCommitOnClose(true);
@@ -83,6 +83,8 @@ public class IndexService implements Runnable {
 
                     Set<IndexKey>   seen       = new HashSet<>(128);
                     IndexJobDao     jobDao     = new IndexJobDao().setSqlSession(sqlSession);
+                    osdDao.setSqlSession(sqlSession);
+                    folderDao.setSqlSession(sqlSession);
                     List<IndexItem> indexItems = new IndexItemDao().setSqlSession(sqlSession).list();
 
                     while (jobDao.countJobs() > 0) {
@@ -91,10 +93,12 @@ public class IndexService implements Runnable {
                         if (jobs.size() == 0) {
                             break;
                         }
+                        boolean indexChanged = false;
                         for (IndexJob job : jobs) {
                             IndexKey indexKey = new IndexKey(job.getJobType(), job.getItemId());
                             if (seen.contains(indexKey)) {
                                 // remove duplicate jobs in the current transaction
+                                jobDao.delete(job);
                                 continue;
                             }
 
@@ -104,6 +108,7 @@ public class IndexService implements Runnable {
                                     case CREATE, UPDATE -> handleIndexItem(job, indexKey, indexItems);
                                 }
                                 jobDao.delete(job);
+                                indexChanged=true;
                             } catch (Exception e) {
                                 log.info("IndexJob failed with: " + e);
                                 job.setFailed(job.getFailed() + 1);
@@ -111,9 +116,14 @@ public class IndexService implements Runnable {
                             }
                             seen.add(indexKey);
                         }
-                        jobDao.commit();
-                        long sequenceNr = indexWriter.commit();
-                        log.debug("sequenceNr: " + sequenceNr);
+                        if(indexChanged) {
+                            jobDao.commit();
+                            long sequenceNr = indexWriter.commit();
+                            log.debug("sequenceNr: " + sequenceNr);
+                        }
+                        else{
+                            log.debug("no change to index");
+                        }
                     }
                     indexWriter.close();
                     // TODO: avoid busy waiting
@@ -128,6 +138,7 @@ public class IndexService implements Runnable {
                     if (indexWriter.isOpen()) {
                         indexWriter.close();
                     }
+                    // signals SearchService it's okay to open the (potentially new) index for reading
                     isInitialized = true;
                 }
             }
@@ -152,6 +163,7 @@ public class IndexService implements Runnable {
             log.info("Failed to index " + job);
             return;
         }
+        log.debug("indexing document: "+doc);
         switch (job.getAction()) {
             case UPDATE -> indexWriter.updateDocument(new Term(LUCENE_FIELD_UNIQUE_ID, key.toString()), doc);
             case CREATE -> indexWriter.addDocument(doc);

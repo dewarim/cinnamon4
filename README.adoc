@@ -107,6 +107,5 @@ Ingo Wiarda - ingo_wiarda@dewarim.de
 
 === Contributors
 
-Be the first human to contribute :)
-
 * https://docs.github.com/en/code-security/supply-chain-security/managing-vulnerabilities-in-your-projects-dependencies/configuring-dependabot-security-updates[dependabot]
+* https://github.com/joni21800[joni21800]

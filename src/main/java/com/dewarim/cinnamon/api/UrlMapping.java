@@ -283,7 +283,54 @@ public enum UrlMapping {
             SearchRelationRequest.class, RelationWrapper.class),
     SEARCH__IDS("search", "objectIds", "/api", """
         Search the Lucene index for objects (documents and folders) matching the given query
-        and return the ids of all objects found which are browsable for the current user.""",
+        and return the ids of all objects found which are browsable for the current user.
+        
+        Systemic fields contain metadata that will always be indexed.
+        
+        ## Systemic Folder Fields
+        
+        Field of objects contain the id, so acl field will index the acl.id.
+        
+        * folderpath
+        * acl
+        * id
+        * created
+        * name
+        * owner
+        * parent (id of parent folder, empty if root folder)
+        * summary
+        * type
+        
+        ## Systemic OSD Fields
+        
+        * folderpath
+        * acl
+        * cmn_version
+        * content_changed
+        * content_size
+        * created (date)
+        * modified (date)
+        * creator
+        * modifier
+        * format
+        * language
+        * latest_branch
+        * latest_head
+        * locker (id of user who placed a lock on the object, if any)
+        * metadata_changed
+        * name
+        * owner
+        * parent (id of parent folder)
+        * predecessor (id of previous version, null if this is the first object in tree)
+        * root (id of the first object in this object's version tree)
+        * lifecycle_state
+        * summary
+        * type
+        
+        ### Fields only indexed for objects with content
+        * content_size
+        * format
+        """,
             SearchIdsRequest.class, SearchIdsResponse.class ),
     STATIC__ROOT("static", "", "", "Returns a static file from the server (for example, a favicon.ico if one exists).", null, null),
     TEST__STATUS_200("test", "status200", "", "Returns status code 200", null, null),

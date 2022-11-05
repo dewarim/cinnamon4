@@ -38,11 +38,11 @@ public class ThreadLocalSqlSession {
         setTransactionStatus(TransactionStatus.OK);
     }
 
-    public static SqlSession getNewReuseSession(TransactionIsolationLevel isolationLevel){
+    public static SqlSession getNewSession(TransactionIsolationLevel isolationLevel){
         if(isolationLevel != null){
-            return dbSessionFactory.getSqlSessionFactory().openSession(ExecutorType.REUSE, isolationLevel);
+            return dbSessionFactory.getSqlSessionFactory().openSession(ExecutorType.SIMPLE, isolationLevel);
         }
-        return dbSessionFactory.getSqlSessionFactory().openSession(ExecutorType.REUSE, transactionIsolationLevel);
+        return dbSessionFactory.getSqlSessionFactory().openSession(ExecutorType.SIMPLE, transactionIsolationLevel);
     }
     
     public static TransactionStatus getTransactionStatus(){

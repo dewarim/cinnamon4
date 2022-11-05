@@ -3421,6 +3421,101 @@ Search for relations matching all( with orMode=false) or some (with orMode=true)
 
 ---
 
+# /api/search/objectIds
+Search the Lucene index for objects (documents and folders) matching the given query
+and return the ids of all objects found which are browsable for the current user.
+
+Systemic fields contain metadata that will always be indexed.
+
+## Systemic Folder Fields
+
+Field of objects contain the id, so acl field will index the acl.id.
+
+* folderpath
+* acl
+* id
+* created
+* name
+* owner
+* parent (id of parent folder, empty if root folder)
+* summary
+* type
+
+## Systemic OSD Fields
+
+* folderpath
+* acl
+* cmn_version
+* content_changed
+* content_size
+* created (date)
+* modified (date)
+* creator
+* modifier
+* format
+* language
+* latest_branch
+* latest_head
+* locker (id of user who placed a lock on the object, if any)
+* metadata_changed
+* name
+* owner
+* parent (id of parent folder)
+* predecessor (id of previous version, null if this is the first object in tree)
+* root (id of the first object in this object's version tree)
+* lifecycle_state
+* summary
+* type
+
+### Fields only indexed for objects with content
+* content_size
+* format
+
+
+## Request
+
+```xml
+<searchIdsRequest>
+  <searchType>OSD</searchType>
+  <query>&lt;BooleanQuery>&lt;Clause occurs='must'>&lt;TermQuery fieldName='name'>test&lt;/TermQuery>&lt;/Clause>&lt;/BooleanQuery></query>
+</searchIdsRequest>
+
+```
+```xml
+<searchIdsRequest>
+  <searchType>FOLDER</searchType>
+  <query>&lt;BooleanQuery>&lt;Clause occurs='must'>&lt;TermQuery fieldName='acl'>123&lt;/TermQuery>&lt;/Clause>&lt;/BooleanQuery></query>
+</searchIdsRequest>
+
+```
+```xml
+<searchIdsRequest>
+  <searchType>ALL</searchType>
+  <query>&lt;BooleanQuery>&lt;Clause occurs='must'>&lt;TermQuery fieldName='owner'>1337&lt;/TermQuery>&lt;/Clause>&lt;/BooleanQuery></query>
+</searchIdsRequest>
+
+```
+
+
+## Response
+
+```xml
+<searchIdsResponse>
+  <osdIds>
+    <osdId>1</osdId>
+    <osdId>32</osdId>
+  </osdIds>
+  <folderIds>
+    <folderId>100</folderId>
+    <folderId>200</folderId>
+  </folderIds>
+</searchIdsResponse>
+
+```
+
+
+---
+
 # /static/
 Returns a static file from the server (for example, a favicon.ico if one exists).
 

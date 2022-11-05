@@ -70,8 +70,8 @@ public class SearchService {
                 searcherManager.maybeRefreshBlocking();
             }
             searcher = searcherManager.acquire();
-            int documents = searcher.count(new TermQuery(new Term("cinnamon_class", "OSD")));
-            int folders   = searcher.count(new TermQuery(new Term("cinnamon_class", "FOLDER")));
+            int documents = searcher.count(new TermQuery(new Term(LUCENE_FIELD_CINNAMON_CLASS, "OSD")));
+            int folders   = searcher.count(new TermQuery(new Term(LUCENE_FIELD_CINNAMON_CLASS, "FOLDER")));
             return new IndexJobDao.IndexRows(documents, folders);
         } catch (Exception e) {
             log.warn("countDocs failed: ", e);

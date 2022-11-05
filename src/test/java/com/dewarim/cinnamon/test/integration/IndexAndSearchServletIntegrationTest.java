@@ -10,6 +10,8 @@ import com.dewarim.cinnamon.model.response.SearchIdsResponse;
 import com.dewarim.cinnamon.model.response.index.IndexInfoResponse;
 import com.dewarim.cinnamon.model.response.index.ReindexResponse;
 import com.dewarim.cinnamon.test.TestObjectHolder;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -19,6 +21,8 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTest {
+
+    private final static Logger log = LogManager.getLogger(IndexAndSearchServletIntegrationTest.class);
 
     public static Long osdId;
     public static Long folderId;
@@ -30,8 +34,9 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
                 .createFolder("search-me-folder", createFolderId);
         osdId = toh.osd.getId();
         folderId = toh.folder.getId();
-        ThreadLocalSqlSession.refreshSession();
+        log.info("created search-me objects: osd: " + osdId + " folder: " + folderId);
         Thread.sleep(CinnamonServer.config.getLuceneConfig().getMillisToWaitBetweenRuns() + 5000L);
+        ThreadLocalSqlSession.refreshSession();
     }
 
     @Test
@@ -44,12 +49,14 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
     @Test
     public void searchIds() throws IOException {
         // TODO: filter system indexItems before indexing with XML-Indexers
+        // TODO: test filtering for unbrowsable items
         SearchIdsResponse response = client.search("<BooleanQuery><Clause occurs='must'><TermQuery fieldName='name'>search-me-osd</TermQuery></Clause></BooleanQuery>", SearchType.OSD);
-        SearchIdsResponse adminResponse = adminClient.search("<BooleanQuery><Clause occurs='must'><TermQuery fieldName='name'>search-me-osd</TermQuery></Clause></BooleanQuery>", SearchType.OSD);
-        System.out.println(response);
+        log.info("searchIdsResponse for OSD search: " + response);
         assertEquals(1, response.getOsdIds().size());
         SearchIdsResponse folderResponse = client.search("<BooleanQuery><Clause occurs='must'><TermQuery fieldName='name'>search-me-folder</TermQuery></Clause></BooleanQuery>", SearchType.FOLDER);
+        log.info("searchIdsResponse for FOLDER search: " + response);
         assertEquals(1, folderResponse.getFolderIds().size());
+
         SearchIdsResponse allResponse = client.search("<BooleanQuery><Clause occurs='must'><WildcardQuery fieldName='name'>search-me-*</WildcardQuery></Clause></BooleanQuery>", SearchType.ALL);
         assertEquals(1, allResponse.getFolderIds().size());
         assertEquals(1, allResponse.getOsdIds().size());

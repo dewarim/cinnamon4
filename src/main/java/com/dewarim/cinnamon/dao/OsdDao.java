@@ -26,10 +26,11 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
      * Max number of ids in "in clause" is 32768 for Postgresql.
      */
     private static final int BATCH_SIZE = 10000;
-    private final IndexJobDao indexJobDao = new IndexJobDao();
+
+    private SqlSession sqlSession;
 
     public List<ObjectSystemData> getObjectsById(List<Long> ids, boolean includeSummary) {
-        SqlSession             sqlSession  = ThreadLocalSqlSession.getSqlSession();
+        SqlSession             sqlSession  = getSqlSession();
         List<ObjectSystemData> results     = new ArrayList<>(ids.size());
         int                    requestSize = ids.size();
         int                    rowCount    = 0;
@@ -49,12 +50,12 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
     }
 
     public ObjectSystemData getLatestHead(long id) {
-        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        SqlSession sqlSession = getSqlSession();
         return sqlSession.selectOne("com.dewarim.cinnamon.model.ObjectSystemData.getLatestHead", id);
     }
 
     public List<ObjectSystemData> getObjectsByFolderId(long folderId, boolean includeSummary, VersionPredicate versionPredicate) {
-        SqlSession          sqlSession = ThreadLocalSqlSession.getSqlSession();
+        SqlSession          sqlSession = getSqlSession();
         Map<String, Object> params     = new HashMap<>();
         params.put("includeSummary", includeSummary);
         params.put("folderId", folderId);
@@ -77,7 +78,7 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
     }
 
     public void updateOsd(ObjectSystemData osd, boolean updateModifier) {
-        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        SqlSession sqlSession = getSqlSession();
         if (updateModifier) {
             UserAccount currentUser = ThreadLocalSqlSession.getCurrentUser();
             if (currentUser.isChangeTracking()) {
@@ -86,10 +87,11 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
             }
         }
         sqlSession.update("com.dewarim.cinnamon.model.ObjectSystemData.updateOsd", osd);
+        new IndexJobDao().insertIndexJob(new IndexJob(IndexJobType.FOLDER, osd.getId(), IndexJobAction.UPDATE));
     }
 
     public ObjectSystemData saveOsd(ObjectSystemData osd) {
-        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        SqlSession sqlSession = getSqlSession();
         int        resultRows = sqlSession.insert("com.dewarim.cinnamon.model.ObjectSystemData.insertOsd", osd);
         if (resultRows != 1) {
             ErrorCode.DB_INSERT_FAILED.throwUp();
@@ -99,7 +101,7 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
             updateOsd(osd, false);
         }
         IndexJob indexJob = new IndexJob(IndexJobType.OSD, osd.getId(), IndexJobAction.CREATE);
-        indexJobDao.insertIndexJob(indexJob);
+        new IndexJobDao().insertIndexJob(indexJob);
         return osd;
     }
 
@@ -112,22 +114,34 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
     }
 
     public List<ObjectSystemData> findObjectsWithSamePredecessor(long predecessorId) {
-        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        SqlSession sqlSession = getSqlSession();
         return sqlSession.selectList("com.dewarim.cinnamon.model.ObjectSystemData.findLastDescendantVersion", predecessorId);
     }
 
     public void deleteOsds(List<Long> osdIdsToToDelete) {
-        SqlSession          sqlSession = ThreadLocalSqlSession.getSqlSession();
+        SqlSession          sqlSession = getSqlSession();
         sqlSession.delete("com.dewarim.cinnamon.model.ObjectSystemData.deleteOsds", osdIdsToToDelete);
     }
 
     public Set<Long> getOsdIdByIdWithDescendants(Long id) {
-        SqlSession          sqlSession = ThreadLocalSqlSession.getSqlSession();
+        SqlSession          sqlSession =getSqlSession();
         return new HashSet<>(sqlSession.selectList("com.dewarim.cinnamon.model.ObjectSystemData.getOsdIdByIdWithDescendants", id));
     }
 
     @Override
     public String getTypeClassName() {
         return ObjectSystemData.class.getName();
+    }
+
+    public OsdDao setSqlSession(SqlSession sqlSession) {
+        this.sqlSession = sqlSession;
+        return this;
+    }
+
+    public SqlSession getSqlSession() {
+        if (sqlSession != null) {
+            return sqlSession;
+        }
+        return ThreadLocalSqlSession.getSqlSession();
     }
 }
