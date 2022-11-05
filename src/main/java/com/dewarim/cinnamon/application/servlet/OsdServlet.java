@@ -330,6 +330,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         ObjectSystemData osd = new ObjectSystemData();
         osd.setParentId(parentFolder.getId());
         osd.setName(createRequest.getName());
+        osd.setLatestHead(true);
 
         // check acl exists
         Long aclId = new AclDao().getAclById(createRequest.getAclId()).orElseThrow(ErrorCode.ACL_NOT_FOUND.getException())

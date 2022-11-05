@@ -1934,6 +1934,13 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         assertEquals(osd.getId(), newVersion.getRootId());
     }
 
+    @Test
+    public void newObjectIsLatestHead() throws IOException{
+        TestObjectHolder toh = new TestObjectHolder(client, "reviewers.acl", userId,createFolderId);
+        var osd = toh.createOsd("should-be-latest-head").osd;
+        assertTrue(osd.isLatestHead());
+    }
+
     private HttpResponse sendAdminMultipartRequest(UrlMapping url, HttpEntity multipartEntity) throws IOException {
         return Request.Post("http://localhost:" + cinnamonTestPort + url.getPath())
                 .addHeader("ticket", getAdminTicket())
