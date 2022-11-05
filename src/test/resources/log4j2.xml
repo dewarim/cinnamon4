@@ -5,6 +5,8 @@
             <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
         </Console>
     </Appenders>
+
+
     <Loggers>
         <Root level="debug">
             <AppenderRef ref="Console"/>
@@ -12,5 +14,17 @@
         <Logger name="org.eclipse" level="warn">
             <AppenderRef ref="Console"/>
         </Logger>
+        <Logger name="com.dewarim.cinnamon.model.UserAccount" level="warn"><AppenderRef ref="Console"/></Logger>
+        <Logger name="com.dewarim.cinnamon.model.Group" level="warn"><AppenderRef ref="Console"/></Logger>
+        <Logger name="com.dewarim.cinnamon.model.GroupUser" level="warn"><AppenderRef ref="Console"/></Logger>
+        <Logger name="com.dewarim.cinnamon.model.AclGroup" level="warn"><AppenderRef ref="Console"/></Logger>
+        <Logger name="com.dewarim.cinnamon.model.AclGroupPermission" level="warn"><AppenderRef ref="Console"/></Logger>
+        <Logger name="com.dewarim.cinnamon.model.Acl" level="warn"><AppenderRef ref="Console"/></Logger>
+        <Logger name="com.dewarim.cinnamon.model.ObjectType" level="warn"><AppenderRef ref="Console"/></Logger>
+        <Logger name="com.dewarim.cinnamon.model.Language" level="warn"><AppenderRef ref="Console"/></Logger>
+        <Logger name="com.dewarim.cinnamon.model.Deletion" level="warn"><AppenderRef ref="Console"/></Logger>
+        <Logger name="com.dewarim.cinnamon.model.SessionMapper" level="warn"><AppenderRef ref="Console"/></Logger>
+        <Logger name="com.dewarim.cinnamon.filter.AuthenticationFilter" level="warn"><AppenderRef ref="Console"/></Logger>
+
     </Loggers>
 </Configuration>
