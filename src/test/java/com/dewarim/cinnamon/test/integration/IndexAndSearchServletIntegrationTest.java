@@ -4,6 +4,7 @@ import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.client.CinnamonClientException;
+import com.dewarim.cinnamon.dao.FolderDao;
 import com.dewarim.cinnamon.model.request.index.ReindexRequest;
 import com.dewarim.cinnamon.model.request.search.SearchType;
 import com.dewarim.cinnamon.model.response.SearchIdsResponse;
@@ -93,5 +94,17 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
         Thread.sleep(3000);
     }
 
-
+    // TODO: maybe move to a FolderDaoIntegrationTest
+    // but then, folderPath is currently only used in IndexService.
+    @Test
+    public void verifyFolderPathOrdering() throws IOException{
+        TestObjectHolder toh = new TestObjectHolder(adminClient, "reviewers.acl", adminId,createFolderId);
+        toh.createFolder("f1", 1L)
+        .createFolder("f2", toh.folder.getId())
+        .createFolder("f3", toh.folder.getId())
+        .createFolder("f4", toh.folder.getId())
+        .createFolder("f5", toh.folder.getId());
+        String withAncestors = new FolderDao().setSqlSession(null).getFolderPath(toh.folder.getId());
+        assertEquals("/root/f1/f2/f3/f4/f5", withAncestors);
+    }
 }

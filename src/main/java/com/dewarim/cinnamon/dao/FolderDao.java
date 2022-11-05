@@ -22,11 +22,11 @@ import static com.dewarim.cinnamon.api.Constants.ROOT_FOLDER_NAME;
 
 public class FolderDao implements CrudDao<Folder> {
 
-    private SqlSession sqlSession;
+    private              SqlSession sqlSession;
     /**
      * Max number of ids in "in clause" is 32768 for Postgresql.
      */
-    private static final int         BATCH_SIZE  = 10000;
+    private static final int        BATCH_SIZE = 10000;
 
     // note: almost same code as OsdDao, although you could argue that fetching > 10K folders is a pathological case.
     public List<Folder> getFoldersById(List<Long> ids, boolean includeSummary) {
@@ -51,13 +51,23 @@ public class FolderDao implements CrudDao<Folder> {
     }
 
     public List<Folder> getFolderByIdWithAncestors(Long id, boolean includeSummary) {
-        if(id == null){
+        if (id == null) {
             // root has no parent, so looking up it's ancestors would otherwise fail.
             return List.of();
         }
         SqlSession          sqlSession = getSqlSession();
         Map<String, Object> params     = Map.of("includeSummary", includeSummary, "id", id);
         return sqlSession.selectList("com.dewarim.cinnamon.model.Folder.getFolderByIdWithAncestors", params);
+    }
+
+    public String getFolderPath(Long id) {
+        if (id == null) {
+            // root has no parent, so looking up it's ancestors would otherwise fail.
+            return "/";
+        }
+        SqlSession sqlSession = getSqlSession();
+        return "/" + String.join("/",
+                sqlSession.selectList("com.dewarim.cinnamon.model.Folder.getFolderPath", id));
     }
 
     public Folder getRootFolder(boolean includeSummary) {

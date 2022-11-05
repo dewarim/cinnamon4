@@ -81,8 +81,8 @@ public class IndexService implements Runnable {
                     writerConfig.setCommitOnClose(true);
                     indexWriter = new IndexWriter(indexDir, writerConfig);
 
-                    Set<IndexKey>   seen       = new HashSet<>(128);
-                    IndexJobDao     jobDao     = new IndexJobDao().setSqlSession(sqlSession);
+                    Set<IndexKey> seen   = new HashSet<>(128);
+                    IndexJobDao   jobDao = new IndexJobDao().setSqlSession(sqlSession);
                     osdDao.setSqlSession(sqlSession);
                     folderDao.setSqlSession(sqlSession);
                     List<IndexItem> indexItems = new IndexItemDao().setSqlSession(sqlSession).list();
@@ -108,7 +108,7 @@ public class IndexService implements Runnable {
                                     case CREATE, UPDATE -> handleIndexItem(job, indexKey, indexItems);
                                 }
                                 jobDao.delete(job);
-                                indexChanged=true;
+                                indexChanged = true;
                             } catch (Exception e) {
                                 log.info("IndexJob failed with: " + e);
                                 job.setFailed(job.getFailed() + 1);
@@ -116,12 +116,11 @@ public class IndexService implements Runnable {
                             }
                             seen.add(indexKey);
                         }
-                        if(indexChanged) {
+                        if (indexChanged) {
                             jobDao.commit();
                             long sequenceNr = indexWriter.commit();
                             log.debug("sequenceNr: " + sequenceNr);
-                        }
-                        else{
+                        } else {
                             log.debug("no change to index");
                         }
                     }
@@ -163,7 +162,7 @@ public class IndexService implements Runnable {
             log.info("Failed to index " + job);
             return;
         }
-        log.debug("indexing document: "+doc);
+        log.debug("indexing document: " + doc);
         switch (job.getAction()) {
             case UPDATE -> indexWriter.updateDocument(new Term(LUCENE_FIELD_UNIQUE_ID, key.toString()), doc);
             case CREATE -> indexWriter.addDocument(doc);
@@ -180,8 +179,8 @@ public class IndexService implements Runnable {
         //// index sysMeta
 
         // folderpath
-        List<Folder> folders = folderDao.getFolderByIdWithAncestors(folder.getParentId(), false);
-        doc.add(new StringField("folderpath", foldersToPath(folders), Field.Store.NO));
+        String folderPath = folderDao.getFolderPath(folder.getParentId());
+        doc.add(new StringField("folderpath", folderPath, Field.Store.NO));
 
         doc.add(new StoredField("acl", folder.getAclId()));
         doc.add(new NumericDocValuesField("acl", folder.getAclId()));
@@ -205,15 +204,14 @@ public class IndexService implements Runnable {
     private boolean indexOsd(Long id, Document doc, List<IndexItem> indexItems) {
         Optional<ObjectSystemData> osdOpt = osdDao.getObjectById(id);
         if (osdOpt.isEmpty()) {
-            log.debug("osd "+id+" not found for indexing");
+            log.debug("osd " + id + " not found for indexing");
             return false;
         }
         ObjectSystemData osd = osdOpt.get();
 
         // index sysMeta
-        List<Folder> folders    = folderDao.getFolderByIdWithAncestors(osd.getParentId(), false);
-        String       folderpath = foldersToPath(folders);
-        doc.add(new StringField("folderpath", folderpath, Field.Store.NO));
+        String folderPath    = folderDao.getFolderPath(osd.getParentId());
+        doc.add(new StringField("folderpath", folderPath, Field.Store.NO));
 
         doc.add(new StoredField("acl", osd.getAclId()));
         doc.add(new NumericDocValuesField("acl", osd.getAclId()));
@@ -264,13 +262,6 @@ public class IndexService implements Runnable {
 
         // index metasets
         return true;
-    }
-
-    private String foldersToPath(List<Folder> folders) {
-        List<String> names = folders.stream().map(Folder::getName).toList();
-        String       path  = String.join("/", names);
-        log.info("folderPath: " + path);
-        return path;
     }
 
     private void deleteFromIndex(IndexKey key) throws IOException {

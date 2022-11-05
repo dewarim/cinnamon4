@@ -58,6 +58,34 @@
           AND name = #{name}
     </select>
 
+    <select id="getFolderPath" parameterType="long" resultType="String">
+        with recursive fp (id, parent_id, name, ids)
+                           as (
+                select id,
+                       parent_id,
+                       name,
+                       array [id]
+                from folders f
+                where f.parent_id is null
+                union all
+                select child.id,
+                       child.parent_id,
+                       child.name,
+                       array_append(ids, child.id)
+                from folders child
+                         join fp on child.parent_id = fp.id
+                where child.parent_id is not null
+            )
+        select name
+        from fp
+        where array_length(ids, 1) &lt;= (select array_length(ids, 1)
+                                          from fp
+                                          where id = #{id})
+          and ids &lt;@ (select ids
+                         from fp
+                         where id = #{id})
+    </select>
+
     <select id="getFolderByIdWithAncestors" parameterType="map" resultMap="folderMap">
         SELECT id,
                name,
