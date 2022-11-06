@@ -163,4 +163,12 @@ public class CreateOsdRequest implements ApiRequest {
                 ", metas=" + getMetas() +
                 '}';
     }
+
+    @Override
+    public List<ApiRequest> examples() {
+        return List.of(new CreateOsdRequest("create OSD request must be sent via multipart-request",
+                1L, 23L, 44L, 2L, 3L, 1L, null,
+                "<summary>Optional fields: typeId, aclId, ownerId, formatId, languageId, summary</summary>"));
+
+    }
 }

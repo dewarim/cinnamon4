@@ -2635,15 +2635,15 @@ should contain data.
 
 ```xml
 <createOsdRequest>
-  <name/>
-  <parentId/>
-  <ownerId/>
-  <aclId/>
-  <typeId/>
-  <formatId/>
-  <languageId/>
+  <name>create OSD request must be sent via multipart-request</name>
+  <parentId>1</parentId>
+  <ownerId>23</ownerId>
+  <aclId>44</aclId>
+  <typeId>2</typeId>
+  <formatId>3</formatId>
+  <languageId>1</languageId>
   <lifecycleStateId/>
-  <summary>&lt;summary /></summary>
+  <summary>&lt;summary>Optional fields: typeId, aclId, ownerId, formatId, languageId, summary&lt;/summary></summary>
   <metas/>
 </createOsdRequest>
 
