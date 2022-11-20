@@ -862,7 +862,8 @@ public class CinnamonClient {
     }
 
     public List<ConfigEntry> getConfigEntries(List<Long> ids) throws IOException {
-        var request  = new ConfigEntryRequest().getIds().addAll(ids);
+        var request  = new ConfigEntryRequest();
+        request.getIds().addAll(ids);
         var response = sendStandardRequest(UrlMapping.CONFIG_ENTRY__GET, request);
         return configEntryUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
