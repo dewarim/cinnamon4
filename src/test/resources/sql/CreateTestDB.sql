@@ -454,9 +454,9 @@ create table index_items
     constraint index_items_name_key
     unique,
   search_string text not null,
-  index_type_name varchar(255) default '' not null,
   search_condition text default 'true()' not null,
-  store_field boolean default false not null
+  store_field boolean default false not null,
+  index_type varchar(64) not null
 )
 ;
 drop sequence if exists seq_index_item_id;
@@ -1254,9 +1254,9 @@ insert into ui_languages (id,iso_code) values (nextval('seq_ui_language_id'), 'E
 
 -- #1 index_item
 insert into index_items(id, fieldname, for_content, for_metadata, for_sys_meta, multiple_results,
-   name, search_string, search_condition, index_type_name, store_field)
+   name, search_string, search_condition, store_field, index_type)
 values (nextval('seq_index_item_id'), 'acl', false,false,true,false,'index.acl',
-  '/sysMeta/object/aclId', 'true()','DEFAULT_STRING_INDEXER',true
+  '/sysMeta/object/aclId', 'true()',true, 'DEFAULT_INDEXER'
 );
 
 -- #1 relation: type 1 relation

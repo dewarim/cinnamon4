@@ -9,6 +9,7 @@
     </settings>
     <typeHandlers>
         <typeHandler javaType="com.dewarim.cinnamon.model.links.LinkType" handler="org.apache.ibatis.type.EnumTypeHandler" jdbcType="VARCHAR"/>
+        <typeHandler javaType="com.dewarim.cinnamon.model.index.IndexType" handler="com.dewarim.cinnamon.model.index.IndexTypeEnumHandler" jdbcType="VARCHAR"/>
         <typeHandler javaType="com.dewarim.cinnamon.model.index.IndexJobType" handler="com.dewarim.cinnamon.model.index.IndexJobTypeEnumHandler" jdbcType="VARCHAR"/>
         <typeHandler javaType="com.dewarim.cinnamon.model.index.IndexJobAction" handler="com.dewarim.cinnamon.model.index.IndexJobActionEnumHandler" jdbcType="VARCHAR"/>
     </typeHandlers>

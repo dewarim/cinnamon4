@@ -50,12 +50,11 @@ public class CreateIndexItemRequest implements CreateRequest<IndexItem>, ApiRequ
                         Objects.isNull(item.getName()) ||
                         Objects.isNull(item.getFieldName()) ||
                         Objects.isNull(item.getSearchCondition()) ||
-                        Objects.isNull(item.getIndexTypeName()) ||
+                        Objects.isNull(item.getIndexType()) ||
                         Objects.isNull(item.getSearchString()) ||
                         item.getName().isBlank() ||
                         item.getFieldName().isBlank() ||
                         item.getSearchCondition().isBlank() ||
-                        item.getIndexTypeName().isBlank() ||
                         item.getSearchString().isBlank());
     }
 

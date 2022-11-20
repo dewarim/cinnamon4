@@ -1,16 +1,22 @@
 package com.dewarim.cinnamon.application.service;
 
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
+import com.dewarim.cinnamon.application.service.index.ContentContainer;
 import com.dewarim.cinnamon.configuration.LuceneConfig;
 import com.dewarim.cinnamon.dao.FolderDao;
+import com.dewarim.cinnamon.dao.FolderMetaDao;
 import com.dewarim.cinnamon.dao.IndexItemDao;
 import com.dewarim.cinnamon.dao.IndexJobDao;
 import com.dewarim.cinnamon.dao.OsdDao;
+import com.dewarim.cinnamon.dao.OsdMetaDao;
 import com.dewarim.cinnamon.model.Folder;
 import com.dewarim.cinnamon.model.IndexItem;
+import com.dewarim.cinnamon.model.Meta;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.index.IndexJob;
 import com.dewarim.cinnamon.model.index.IndexJobType;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.TransactionIsolationLevel;
 import org.apache.logging.log4j.LogManager;
@@ -47,7 +53,8 @@ import static com.dewarim.cinnamon.api.Constants.LUCENE_FIELD_UNIQUE_ID;
 public class IndexService implements Runnable {
     private static final Logger log = LogManager.getLogger(IndexService.class);
 
-    public static boolean isInitialized = false;
+    public static final byte[]  NO_CONTENT    = new byte[0];
+    public static       boolean isInitialized = false;
 
     private       boolean      stopped   = false;
     private       IndexWriter  indexWriter;
@@ -55,6 +62,8 @@ public class IndexService implements Runnable {
     private final FolderDao    folderDao = new FolderDao();
     private final LuceneConfig config;
     private final Path         indexPath;
+
+    private final XmlMapper xmlMapper = new XmlMapper();
 
     public IndexService(LuceneConfig config) {
         this.config = config;
@@ -169,7 +178,7 @@ public class IndexService implements Runnable {
         }
     }
 
-    private boolean indexFolder(Long id, Document doc, List<IndexItem> indexItems) {
+    private boolean indexFolder(Long id, Document doc, List<IndexItem> indexItems) throws JsonProcessingException {
         Optional<Folder> folderOpt = folderDao.getFolderById(id);
         if (folderOpt.isEmpty()) {
             log.debug("Folder " + id + " not found for indexing.");
@@ -198,10 +207,12 @@ public class IndexService implements Runnable {
         doc.add(new TextField("summary", folder.getSummary(), Field.Store.NO));
         doc.add(new NumericDocValuesField("type", folder.getTypeId()));
 
+        List<Meta> metas = new FolderMetaDao().listByFolderId(folder.getId());
+        applyIndexItems(doc, indexItems, metas, xmlMapper.writeValueAsString(folder), NO_CONTENT);
         return true;
     }
 
-    private boolean indexOsd(Long id, Document doc, List<IndexItem> indexItems) {
+    private boolean indexOsd(Long id, Document doc, List<IndexItem> indexItems) throws JsonProcessingException {
         Optional<ObjectSystemData> osdOpt = osdDao.getObjectById(id);
         if (osdOpt.isEmpty()) {
             log.debug("osd " + id + " not found for indexing");
@@ -210,7 +221,7 @@ public class IndexService implements Runnable {
         ObjectSystemData osd = osdOpt.get();
 
         // index sysMeta
-        String folderPath    = folderDao.getFolderPath(osd.getParentId());
+        String folderPath = folderDao.getFolderPath(osd.getParentId());
         doc.add(new StringField("folderpath", folderPath, Field.Store.NO));
 
         doc.add(new StoredField("acl", osd.getAclId()));
@@ -258,10 +269,25 @@ public class IndexService implements Runnable {
         doc.add(new TextField("summary", osd.getSummary(), Field.Store.NO));
         doc.add(new NumericDocValuesField("type", osd.getTypeId()));
 
-        // index content
+        // TODO: load content
+        // TODO: load relations -> use writeValueAsString(OsdWrapper)
 
-        // index metasets
+        List<Meta> metas = new OsdMetaDao().listByOsd(osd.getId());
+        applyIndexItems(doc, indexItems, metas, xmlMapper.writeValueAsString(osd), NO_CONTENT);
         return true;
+
+    }
+
+    private void applyIndexItems(Document doc, List<IndexItem> indexItems,
+                                 List<Meta> metas, String objectAsString, byte[] content)  {
+        ContentContainer contentContainer = new ContentContainer(objectAsString, content, metas);
+
+        for (IndexItem indexItem : indexItems) {
+            String fieldName    = indexItem.getFieldName();
+            String searchString = indexItem.getSearchString();
+            indexItem.getIndexType().getIndexer().indexObject(contentContainer, doc, fieldName, searchString, indexItem.isMultipleResults());
+        }
+
     }
 
     private void deleteFromIndex(IndexKey key) throws IOException {

@@ -292,3 +292,6 @@ It's recommended to use a copy of production for testing.
 
     ---
     alter table users add column config text default '<config/>' not null;
+
+    ---
+    alter table index_items drop column index_type_name;

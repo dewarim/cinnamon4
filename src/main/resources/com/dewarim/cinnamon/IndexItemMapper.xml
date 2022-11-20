@@ -14,9 +14,9 @@
         <result property="forSysMetadata" column="for_sys_meta"/>
         <result property="multipleResults" column="multiple_results"/>
         <result property="searchString" column="search_string"/>
-        <result property="indexTypeName" column="index_type_name"/>
         <result property="searchCondition" column="search_condition"/>
         <result property="storeField" column="store_field"/>
+        <result property="indexType" column="index_type"/>
     </resultMap>
 
     <select id="list" resultMap="indexItemMap">
@@ -50,8 +50,8 @@
             multiple_results = #{multipleResults},
             search_string    = #{searchString},
             search_condition = #{searchCondition},
-            index_type_name  = #{indexTypeName},
-            store_field      = #{storeField}
+            store_field      = #{storeField},
+            index_type       = #{indexType}
         WHERE id = #{id}
     </update>
 
@@ -60,9 +60,9 @@
             select nextval('seq_index_item_id')
         </selectKey>
         INSERT INTO index_items(id, fieldname, for_content, for_metadata, for_sys_meta, multiple_results,
-        name, search_string, search_condition, index_type_name, store_field)
+        name, search_string, search_condition, store_field, index_type)
         values (#{id}, #{fieldName},#{forContent},#{forMetadata},#{forSysMetadata},#{multipleResults},
-        #{name}, #{searchString},#{searchCondition},#{indexTypeName},#{storeField} )
+        #{name}, #{searchString},#{searchCondition},#{storeField}, #{indexType} )
     </insert>
 
     <select id="getAllById" parameterType="list" resultMap="indexItemMap">

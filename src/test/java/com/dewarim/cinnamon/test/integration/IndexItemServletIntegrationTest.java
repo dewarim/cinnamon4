@@ -3,6 +3,7 @@ package com.dewarim.cinnamon.test.integration;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.client.CinnamonClientException;
 import com.dewarim.cinnamon.model.IndexItem;
+import com.dewarim.cinnamon.model.index.IndexType;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -45,20 +46,20 @@ public class IndexItemServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createIndexItemHappyPath() throws IOException {
-        IndexItem item = adminClient.createIndexItem(new IndexItem("test", true, true, true, true, "test.field", "/test", "some.index.type.name", "true()", true));
+        IndexItem item = adminClient.createIndexItem(new IndexItem("test", true, true, true, true, "test.field", "/test", "true()", true, IndexType.DEFAULT_INDEXER));
         assertTrue(client.listIndexItems().stream().anyMatch(i -> i.getName().equals("test.field")));
     }
 
     @Test
     public void deleteIndexItemHappyPath() throws IOException {
-        IndexItem item = adminClient.createIndexItem(new IndexItem("test", true, true, true, true, "test.field.delete", "/test", "some.index.type.name", "true()", true));
+        IndexItem item = adminClient.createIndexItem(new IndexItem("test", true, true, true, true, "test.field.delete", "/test", "true()", true, IndexType.DEFAULT_INDEXER));
         adminClient.deleteIndexItem(item.getId());
         assertTrue(client.listIndexItems().stream().noneMatch(i -> i.getName().equals("test.field.delete")));
     }
 
     @Test
     public void updateIndexItemHappyPath() throws IOException {
-        IndexItem item = adminClient.createIndexItem(new IndexItem("test", true, true, true, true, "test.field.update", "/test", "some.index.type.name", "true()", true));
+        IndexItem item = adminClient.createIndexItem(new IndexItem("test", true, true, true, true, "test.field.update", "/test",  "true()", true, IndexType.DEFAULT_INDEXER));
         item.setName("update.index.name");
         adminClient.updateIndexItem(item);
         List<IndexItem> items = client.listIndexItems();
@@ -68,19 +69,19 @@ public class IndexItemServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void createIndexItemNonSuperuser() throws IOException {
+    public void createIndexItemNonSuperuser() {
         CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> client.createIndexItem(new IndexItem()));
         assertEquals(ErrorCode.REQUIRES_SUPERUSER_STATUS, ex.getErrorCode());
     }
 
     @Test
-    public void deleteIndexItemNonSuperuser() throws IOException {
+    public void deleteIndexItemNonSuperuser() {
         CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> client.deleteIndexItem(1L));
         assertEquals(ErrorCode.REQUIRES_SUPERUSER_STATUS, ex.getErrorCode());
     }
 
     @Test
-    public void updateIndexItemNonSuperuser() throws IOException {
+    public void updateIndexItemNonSuperuser() {
         CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> client.updateIndexItem(new IndexItem()));
         assertEquals(ErrorCode.REQUIRES_SUPERUSER_STATUS, ex.getErrorCode());
     }
