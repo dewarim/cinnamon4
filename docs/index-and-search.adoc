@@ -1,0 +1,78 @@
+= Index & Search
+
+Cinnamon lets you search all objects and folders via an Apache Lucene index. Metadata like an object's name or type is automatically indexed, but you can define link:../src/main/java/com/dewarim/cinnamon/model/IndexItem.java[IndexItem]s which index only specific content once certain conditions are met.
+
+An OSD (link:../src/main/java/com/dewarim/cinnamon/model/ObjectSystemData.java[ObjectSystemData], the core data structure for documents) is converted into an XML representation:
+
+    <?xml version="1.0" encoding="UTF-8"?>
+    <objectSystemData>
+    <id>50</id>
+    <name>search-me-osd</name>
+    <contentPath>88/1c/c3/881cc383-9f2d-44fa-a63c-8415825aa549</contentPath>
+    <contentSize>13481</contentSize>
+    <predecessorId/>
+    <rootId>50</rootId>
+    <creatorId>2</creatorId>
+    <modifierId>2</modifierId>
+    <ownerId>2</ownerId>
+    <lockerId>2</lockerId>
+    <created>2022-12-10T18:10:51+0000</created>
+    <modified>2022-12-10T18:10:51+0000</modified>
+    <languageId>1</languageId>
+    <aclId>2</aclId>
+    <parentId>6</parentId>
+    <formatId>3</formatId>
+    <typeId>1</typeId>
+    <latestHead>true</latestHead>
+    <latestBranch>true</latestBranch>
+    <contentChanged>false</contentChanged>
+    <metadataChanged>false</metadataChanged>
+    <cmnVersion>1</cmnVersion>
+    <lifecycleStateId/>
+    <summary>&lt;summary/&gt;</summary>
+    <contentHash>2247ffc60994e05b6516514d0aada033f73b0235705f0d82632d8bb70553c2cf</contentHash>
+    <contentProvider>FILE_SYSTEM</contentProvider>
+    <metasets/>
+    <relations/>
+    <content>
+        <xml>the content of this object's xml document stored in the file system</xml>
+    </content>
+   </objectSystemData>
+
+
+Given an link:../src/main/java/com/dewarim/cinnamon/model/IndexItem.java[IndexItem] with:
+
+    <indexItem>
+    <id>1</id>
+    <fieldName>xml_content</fieldName>
+    <forContent>true</forContent>
+    <forMetadata>false</forMetadata>
+    <forSysMetadata>false</forSysMetadata>
+    <multipleResults>true</multipleResults>
+    <name>Xml Content Index</name>
+    <searchString>/objectSystemData/content/descendant::*</searchString>
+    <searchCondition>boolean(/objectSystemData/formatId[text()='3'])</searchCondition>
+    <storeField>false</storeField>
+    <indexType>DEFAULT_INDEXER</indexType>
+    </indexItem>
+
+The content of the OSD will be indexed since the XPath <searchCondition> (the object has the local id of the XML format object) is met.
+
+All nodes matched by the XPath expression of <searchString> will be indexed. In this case, the link:../src/main/java/com/dewarim/cinnamon/application/service/index/DefaultIndexer.java[DefaultIndexer] will tokenize any text and store each word. Hyphens are considered word boundaries by the default indexer.
+
+You can then search for this OSD by sending a SearchIdsRequest to the /api/search/objectIds endpoint, for example:
+
+    <searchIdsRequest>
+        <searchType>OSD</searchType>
+        <query>&lt;BooleanQuery>&lt;Clause occurs='must'>&lt;TermQuery fieldName='xml_content'>document&lt;/TermQuery>&lt;/Clause>&lt;/BooleanQuery></query>
+    </searchIdsRequest>
+
+The query itself has to be encoded and should specify the name of the field used by the IndexItem:
+
+    <BooleanQuery>
+        <Clause occurs='must'>
+            <TermQuery fieldName='xml_content'>document</TermQuery>
+        </Clause>
+    </BooleanQuery>
+
+For a list of always available search fields, see the https://github.com/dewarim/cinnamon4/blob/master/docs/api.md#apisearchobjectids[API doc]

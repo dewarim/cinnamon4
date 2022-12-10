@@ -7,6 +7,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.FieldType;
 import org.apache.lucene.index.IndexOptions;
+import org.dom4j.Element;
 import org.dom4j.Node;
 
 import java.util.ArrayList;
@@ -34,10 +35,9 @@ public class DefaultIndexer implements Indexer {
     transient Logger log = LogManager.getLogger(this.getClass());
 
     @Override
-    public void indexObject(org.dom4j.Document xml, Document luceneDoc, String fieldName,
+    public void indexObject(org.dom4j.Document xml, Element contentNode, Document luceneDoc, String fieldName,
                             String searchString, Boolean multipleResults) {
 
-        // 	log.debug("trying to index the following data:\n"+data.asString()+"\n//end of data.");
         List<Node> hits = new ArrayList<>();
 
         if (multipleResults) {
@@ -52,7 +52,7 @@ public class DefaultIndexer implements Indexer {
 
         for (Node node : hits) {
             String nodeValue = convertNodeToString(node);
-            if (nodeValue != null) {
+            if (nodeValue != null && !nodeValue.isBlank()) {
                 log.debug("fieldName: " + fieldName + " value: " + nodeValue + " stored:" + fieldType.stored());
                 luceneDoc.add(new Field(fieldName, nodeValue, fieldType));
             }

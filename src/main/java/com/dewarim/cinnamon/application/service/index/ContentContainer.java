@@ -51,7 +51,7 @@ public class ContentContainer {
      * @return a dom4j Document which is either a representation of the content as XML, or an empty document which
      * contains only an "empty" element.
      */
-    private Element asNode() {
+    public Element asNode() {
         if (Arrays.equals(NO_CONTENT, content)) {
             contentAsDocument = new DefaultDocument().addElement("empty").getDocument();
         }

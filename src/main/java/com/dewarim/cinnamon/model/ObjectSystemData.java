@@ -8,6 +8,7 @@ import com.dewarim.cinnamon.provider.DefaultContentProvider;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -20,6 +21,7 @@ import java.util.Objects;
  * Core Cinnamon object, contains the system's data of an object (document, media file, other resource).
  * It's abbreviated to OSD.
  */
+@JacksonXmlRootElement(localName = "objectSystemData")
 public class ObjectSystemData implements ContentMetadata, CinnamonObject, Identifiable {
 
     private Long   id;

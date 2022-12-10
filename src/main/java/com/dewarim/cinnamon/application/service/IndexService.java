@@ -177,7 +177,6 @@ public class IndexService implements Runnable {
             log.info("Failed to index " + job);
             return;
         }
-        log.debug("indexing document: " + doc);
         switch (job.getAction()) {
             case UPDATE -> indexWriter.updateDocument(new Term(LUCENE_FIELD_UNIQUE_ID, key.toString()), doc);
             case CREATE -> indexWriter.addDocument(doc);
@@ -284,7 +283,7 @@ public class IndexService implements Runnable {
         osd.setMetas(metas);
 
         byte[] content = NO_CONTENT;
-        if(osd.getContentPath() != null) {
+        if (osd.getContentPath() != null) {
             ContentProvider contentProvider = ContentProviderService.getInstance().getContentProvider(osd.getContentProvider());
             // TODO: depending on contenttype, load content or use NO_CONTENT
             // for example, do not try to parse JPEG to XML (we will use Apache Tika to create a metaset for the metadata)
@@ -304,12 +303,20 @@ public class IndexService implements Runnable {
 
     private void applyIndexItems(Document luceneDoc, List<IndexItem> indexItems,
                                  String objectAsString, byte[] content) {
-        org.dom4j.Document xmlDoc = new ContentContainer(objectAsString, content).getCombinedDocument();
+        ContentContainer   contentContainer = new ContentContainer(objectAsString, content);
+        org.dom4j.Document xmlDoc           = contentContainer.getCombinedDocument();
 
         for (IndexItem indexItem : indexItems) {
             String fieldName    = indexItem.getFieldName();
             String searchString = indexItem.getSearchString();
-            indexItem.getIndexType().getIndexer().indexObject(xmlDoc, luceneDoc, fieldName, searchString, indexItem.isMultipleResults());
+            // TODO: check search condition, probably with xmlDoc
+            if(xmlDoc.valueOf(indexItem.getSearchCondition()) .equals( "true")) {
+                indexItem.getIndexType().getIndexer()
+                        .indexObject(xmlDoc, contentContainer.asNode(), luceneDoc, fieldName, searchString, indexItem.isMultipleResults());
+            }
+            else{
+                log.debug("searchCondition failed: "+indexItem.getSearchCondition());
+            }
         }
     }
 

@@ -2,9 +2,11 @@ package com.dewarim.cinnamon.model;
 
 import com.dewarim.cinnamon.api.Identifiable;
 import com.dewarim.cinnamon.model.index.IndexType;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.Objects;
 
+@JacksonXmlRootElement(localName = "indexItem")
 public class IndexItem implements Identifiable {
 
     private Long    id;

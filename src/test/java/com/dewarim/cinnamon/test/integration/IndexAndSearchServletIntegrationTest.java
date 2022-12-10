@@ -5,6 +5,9 @@ import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.client.CinnamonClientException;
 import com.dewarim.cinnamon.dao.FolderDao;
+import com.dewarim.cinnamon.model.Format;
+import com.dewarim.cinnamon.model.IndexItem;
+import com.dewarim.cinnamon.model.index.IndexType;
 import com.dewarim.cinnamon.model.request.index.ReindexRequest;
 import com.dewarim.cinnamon.model.request.search.SearchType;
 import com.dewarim.cinnamon.model.response.SearchIdsResponse;
@@ -16,6 +19,7 @@ import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
@@ -36,9 +40,25 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
         osdId = toh.osd.getId();
         folderId = toh.folder.getId();
         log.info("created search-me objects: osd: " + osdId + " folder: " + folderId);
+
+        // create indexItem for xml-content
+        Format xml = adminClient.createFormat("text/xml", "xml", "xml-content", 1L);
+        adminClient.createIndexItem(new IndexItem("xml_content",true,false,false,
+                true,"Xml Content Index", "/objectSystemData/content/descendant::*", "boolean(/objectSystemData/formatId[text()='"+xml.getId()+"'])", false, IndexType.DEFAULT_INDEXER ));
+        // set xml-content:
+        client.lockOsd(osdId);
+        client.setContentOnLockedOsd(osdId, xml.getId(), new File("pom.xml"));
+
         Thread.sleep(CinnamonServer.config.getLuceneConfig().getMillisToWaitBetweenRuns() + 5000L);
         ThreadLocalSqlSession.refreshSession();
     }
+
+//    @Test
+//    public void searchConditionTest(){
+//        String searchCondition = "boolean(/osd/id[text()='1'])";
+//        Document document = ParamParser.parseXmlToDocument("<osd><id>1</id></osd>");
+//        assertEquals("true", document.valueOf(searchCondition));
+//    }
 
     @Test
     public void showInfo() throws IOException {
@@ -65,6 +85,12 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
         assertEquals(folderId, allResponse.getFolderIds().get(0));
     }
 
+    @Test
+    public void searchForContent() throws IOException{
+        SearchIdsResponse response = client.search("<BooleanQuery><Clause occurs='must'><TermQuery fieldName='xml_content'>maven</TermQuery></Clause></BooleanQuery>", SearchType.OSD);
+        assertEquals(1, response.getOsdIds().size());
+        assertEquals(osdId, response.getOsdIds().get(0));
+    }
 
     @Test
     public void reindexIsForbiddenForNonAdmins() {
