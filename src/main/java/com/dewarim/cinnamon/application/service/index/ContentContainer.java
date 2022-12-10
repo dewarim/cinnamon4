@@ -1,15 +1,15 @@
 package com.dewarim.cinnamon.application.service.index;
 
 import com.dewarim.cinnamon.application.exception.CinnamonException;
-import com.dewarim.cinnamon.model.Meta;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.dom4j.Document;
-import org.dom4j.dom.DOMDocument;
+import org.dom4j.Element;
+import org.dom4j.tree.DefaultDocument;
+import org.dom4j.tree.DefaultElement;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.List;
 
 import static com.dewarim.cinnamon.application.service.IndexService.NO_CONTENT;
 
@@ -17,22 +17,31 @@ import static com.dewarim.cinnamon.application.service.IndexService.NO_CONTENT;
  * A content container class which will load the content when needed - unless it was either supplied
  * at instantiation.
  */
-// copied from Cinnamon 3, TODO: refactoring
 public class ContentContainer {
 
-    private final static Logger log = LogManager.getLogger(ContentContainer.class);
-
-    private final byte[]   content;
-    private       String   contentAsString;
-    private       Document contentAsDoc;
+    private final static Logger   log            = LogManager.getLogger(ContentContainer.class);
+    private final        byte[]   content;
+    private              String   contentAsString;
+    private              Document contentAsDocument;
+    private final        String   sysMeta;
 
     /**
      * Instantiate a new ContentContainer object and set the content with a byte[] array.
      *
      * @param content a byte array which holds the content
      */
-    public ContentContainer(String sysMeta, byte[] content, List<Meta> metas) {
+    public ContentContainer(String sysMeta, byte[] content) {
         this.content = content;
+        this.sysMeta = sysMeta;
+    }
+
+    public Document getCombinedDocument() {
+        Document combinedDoc = ParamParser.parseXmlToDocument(sysMeta);
+        Element contentNode = new DefaultElement("content");
+        contentNode.add(asNode());
+        combinedDoc.getRootElement().add(contentNode);
+        log.debug("combinedDocument:\n" + combinedDoc.asXML());
+        return combinedDoc;
     }
 
     /**
@@ -42,21 +51,20 @@ public class ContentContainer {
      * @return a dom4j Document which is either a representation of the content as XML, or an empty document which
      * contains only an "empty" element.
      */
-    public Document asDocument() {
+    private Element asNode() {
         if (Arrays.equals(NO_CONTENT, content)) {
-            contentAsDoc = new DOMDocument();
+            contentAsDocument = new DefaultDocument().addElement("empty").getDocument();
         }
-        if (contentAsDoc == null) {
+        if (contentAsDocument == null) {
             try {
-                contentAsDoc = ParamParser.parseXmlToDocument(asString());
-                // "error.parse.indexable_object"); // error message is not needed as the exception is not
-                // propagated to the end user.
+                // TODO: it would be nice if we could parse pure text files (like markdown). may need some format-detection
+                contentAsDocument = ParamParser.parseXmlToDocument(asString());
             } catch (Exception e) {
-                log.debug("Failed to parse content. Will create <empty/> content.");
-                contentAsDoc = ParamParser.parseXmlToDocument("<empty />");
+                log.debug("Failed to parse content. Will create <content/> content.");
+                contentAsDocument = new DefaultDocument().addElement("empty").getDocument();
             }
         }
-        return contentAsDoc;
+        return contentAsDocument.getRootElement();
     }
 
     /**
@@ -70,13 +78,10 @@ public class ContentContainer {
      */
     public String asString() throws CinnamonException {
         if (contentAsString == null) {
-            contentAsString = new String(asBytes(), StandardCharsets.UTF_8);
+            contentAsString = new String(content, StandardCharsets.UTF_8);
         }
         return contentAsString;
     }
 
-    public byte[] asBytes() {
-        return content;
-    }
 
 }

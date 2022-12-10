@@ -3,8 +3,11 @@ package com.dewarim.cinnamon.model;
 import com.dewarim.cinnamon.api.Identifiable;
 import com.dewarim.cinnamon.api.Ownable;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 
 import static com.dewarim.cinnamon.api.Constants.DEFAULT_SUMMARY;
@@ -13,7 +16,6 @@ public class Folder implements Ownable, Identifiable {
 
     private Long    id;
     private String  name;
-    private Long    objVersion;
     private Long    aclId;
     private Long    ownerId;
     private Long    parentId;
@@ -25,6 +27,10 @@ public class Folder implements Ownable, Identifiable {
      * Value is read-only.
      */
     private boolean hasSubfolders = false;
+
+    @JacksonXmlElementWrapper(localName = "metasets")
+    @JacksonXmlProperty(localName = "meta")
+    private List<Meta> metas;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssZ")
     private Date created = new Date();
@@ -40,7 +46,6 @@ public class Folder implements Ownable, Identifiable {
         this.parentId = parentId;
         this.typeId = typeId;
         this.summary = Objects.requireNonNullElse(summary, DEFAULT_SUMMARY);
-        objVersion = 0L;
         metadataChanged = false;
         created = new Date();
     }
@@ -59,14 +64,6 @@ public class Folder implements Ownable, Identifiable {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public Long getObjVersion() {
-        return objVersion;
-    }
-
-    public void setObjVersion(Long objVersion) {
-        this.objVersion = objVersion;
     }
 
     public Long getAclId() {
@@ -133,6 +130,14 @@ public class Folder implements Ownable, Identifiable {
         this.hasSubfolders = hasSubfolders;
     }
 
+    public List<Meta> getMetas() {
+        return metas;
+    }
+
+    public void setMetas(List<Meta> metas) {
+        this.metas = metas;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -143,7 +148,6 @@ public class Folder implements Ownable, Identifiable {
         }
         Folder folder = (Folder) o;
         return Objects.equals(name, folder.name) &&
-                Objects.equals(objVersion, folder.objVersion) &&
                 Objects.equals(aclId, folder.aclId) &&
                 Objects.equals(ownerId, folder.ownerId) &&
                 Objects.equals(created, folder.created) &&
@@ -163,7 +167,6 @@ public class Folder implements Ownable, Identifiable {
         return "Folder{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
-                ", objVersion=" + objVersion +
                 ", aclId=" + aclId +
                 ", ownerId=" + ownerId +
                 ", parentId=" + parentId +

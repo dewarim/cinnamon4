@@ -34,18 +34,17 @@ public class DefaultIndexer implements Indexer {
     transient Logger log = LogManager.getLogger(this.getClass());
 
     @Override
-    public void indexObject(ContentContainer data, Document doc, String fieldname,
+    public void indexObject(org.dom4j.Document xml, Document luceneDoc, String fieldName,
                             String searchString, Boolean multipleResults) {
 
         // 	log.debug("trying to index the following data:\n"+data.asString()+"\n//end of data.");
-        org.dom4j.Document indexObject = data.asDocument();
         List<Node> hits = new ArrayList<>();
 
         if (multipleResults) {
-            hits = indexObject.selectNodes(searchString);
+            hits = xml.selectNodes(searchString);
         }
         else {
-            Node node = indexObject.selectSingleNode(searchString);
+            Node node = xml.selectSingleNode(searchString);
             if (node != null) {
                 hits.add(node);
             }
@@ -54,8 +53,8 @@ public class DefaultIndexer implements Indexer {
         for (Node node : hits) {
             String nodeValue = convertNodeToString(node);
             if (nodeValue != null) {
-                log.debug("fieldname: " + fieldname + " value: " + nodeValue + " stored:" + fieldType.stored());
-                doc.add(new Field(fieldname, nodeValue, fieldType));
+                log.debug("fieldName: " + fieldName + " value: " + nodeValue + " stored:" + fieldType.stored());
+                luceneDoc.add(new Field(fieldName, nodeValue, fieldType));
             }
             else {
                 log.debug("nodeValue for '" + searchString + "' is null");

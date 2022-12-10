@@ -1,6 +1,8 @@
 package com.dewarim.cinnamon.application.service;
 
+import com.dewarim.cinnamon.api.content.ContentProvider;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
+import com.dewarim.cinnamon.application.exception.CinnamonException;
 import com.dewarim.cinnamon.application.service.index.ContentContainer;
 import com.dewarim.cinnamon.configuration.LuceneConfig;
 import com.dewarim.cinnamon.dao.FolderDao;
@@ -9,12 +11,15 @@ import com.dewarim.cinnamon.dao.IndexItemDao;
 import com.dewarim.cinnamon.dao.IndexJobDao;
 import com.dewarim.cinnamon.dao.OsdDao;
 import com.dewarim.cinnamon.dao.OsdMetaDao;
+import com.dewarim.cinnamon.dao.RelationDao;
 import com.dewarim.cinnamon.model.Folder;
 import com.dewarim.cinnamon.model.IndexItem;
 import com.dewarim.cinnamon.model.Meta;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.index.IndexJob;
 import com.dewarim.cinnamon.model.index.IndexJobType;
+import com.dewarim.cinnamon.model.relations.Relation;
+import com.dewarim.cinnamon.provider.ContentProviderService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import org.apache.ibatis.session.SqlSession;
@@ -39,8 +44,10 @@ import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.SingleInstanceLockFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -62,8 +69,7 @@ public class IndexService implements Runnable {
     private final FolderDao    folderDao = new FolderDao();
     private final LuceneConfig config;
     private final Path         indexPath;
-
-    private final XmlMapper xmlMapper = new XmlMapper();
+    private final XmlMapper    xmlMapper = new XmlMapper();
 
     public IndexService(LuceneConfig config) {
         this.config = config;
@@ -119,7 +125,7 @@ public class IndexService implements Runnable {
                                 jobDao.delete(job);
                                 indexChanged = true;
                             } catch (Exception e) {
-                                log.info("IndexJob failed with: " + e);
+                                log.info("IndexJob failed with: ", e);
                                 job.setFailed(job.getFailed() + 1);
                                 jobDao.updateStatus(job);
                             }
@@ -208,7 +214,8 @@ public class IndexService implements Runnable {
         doc.add(new NumericDocValuesField("type", folder.getTypeId()));
 
         List<Meta> metas = new FolderMetaDao().listByFolderId(folder.getId());
-        applyIndexItems(doc, indexItems, metas, xmlMapper.writeValueAsString(folder), NO_CONTENT);
+        folder.setMetas(metas);
+        applyIndexItems(doc, indexItems, xmlMapper.writeValueAsString(folder), NO_CONTENT);
         return true;
     }
 
@@ -269,25 +276,41 @@ public class IndexService implements Runnable {
         doc.add(new TextField("summary", osd.getSummary(), Field.Store.NO));
         doc.add(new NumericDocValuesField("type", osd.getTypeId()));
 
-        // TODO: load content
-        // TODO: load relations -> use writeValueAsString(OsdWrapper)
+        List<Long>     relationCriteria = List.of(osd.getId());
+        List<Relation> relations        = new RelationDao().getRelationsOrMode(relationCriteria, relationCriteria, Collections.emptyList(), true);
+        osd.setRelations(relations);
 
         List<Meta> metas = new OsdMetaDao().listByOsd(osd.getId());
-        applyIndexItems(doc, indexItems, metas, xmlMapper.writeValueAsString(osd), NO_CONTENT);
+        osd.setMetas(metas);
+
+        byte[] content = NO_CONTENT;
+        if(osd.getContentPath() != null) {
+            ContentProvider contentProvider = ContentProviderService.getInstance().getContentProvider(osd.getContentProvider());
+            // TODO: depending on contenttype, load content or use NO_CONTENT
+            // for example, do not try to parse JPEG to XML (we will use Apache Tika to create a metaset for the metadata)
+            // LuceneConfig should have list of contenttypes which may be indexed - as long as a flag "pure text" for
+            // content that needs to be wrapped as <content>$PURE_TEXT_CONTENT</content> for proper parsing.
+            try (InputStream contentStream = contentProvider.getContentStream(osd)) {
+                // performance: maybe detect <xml>-Content here before reading all the bytes of a DVD.iso etc.
+                content = contentStream.readAllBytes();
+            } catch (IOException e) {
+                throw new CinnamonException("Failed to load content for OSD " + osd.getId() + " at " + osd.getContentPath(), e);
+            }
+        }
+        applyIndexItems(doc, indexItems, xmlMapper.writeValueAsString(osd), content);
         return true;
 
     }
 
-    private void applyIndexItems(Document doc, List<IndexItem> indexItems,
-                                 List<Meta> metas, String objectAsString, byte[] content)  {
-        ContentContainer contentContainer = new ContentContainer(objectAsString, content, metas);
+    private void applyIndexItems(Document luceneDoc, List<IndexItem> indexItems,
+                                 String objectAsString, byte[] content) {
+        org.dom4j.Document xmlDoc = new ContentContainer(objectAsString, content).getCombinedDocument();
 
         for (IndexItem indexItem : indexItems) {
             String fieldName    = indexItem.getFieldName();
             String searchString = indexItem.getSearchString();
-            indexItem.getIndexType().getIndexer().indexObject(contentContainer, doc, fieldName, searchString, indexItem.isMultipleResults());
+            indexItem.getIndexType().getIndexer().indexObject(xmlDoc, luceneDoc, fieldName, searchString, indexItem.isMultipleResults());
         }
-
     }
 
     private void deleteFromIndex(IndexKey key) throws IOException {

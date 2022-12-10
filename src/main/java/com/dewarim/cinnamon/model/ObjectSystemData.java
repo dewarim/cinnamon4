@@ -3,6 +3,7 @@ package com.dewarim.cinnamon.model;
 import com.dewarim.cinnamon.api.CinnamonObject;
 import com.dewarim.cinnamon.api.Identifiable;
 import com.dewarim.cinnamon.api.content.ContentMetadata;
+import com.dewarim.cinnamon.model.relations.Relation;
 import com.dewarim.cinnamon.provider.DefaultContentProvider;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
@@ -45,7 +46,11 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject, Identi
 
     @JacksonXmlElementWrapper(localName = "metasets")
     @JacksonXmlProperty(localName = "meta")
-    private List<Meta> metas;
+    private List<Meta>     metas;
+
+    @JacksonXmlElementWrapper(localName = "relations")
+    @JacksonXmlProperty(localName = "relation")
+    private List<Relation> relations;
 
     /**
      * An object is latestHead, if it is not of part of a branch and has no
@@ -64,7 +69,6 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject, Identi
     private Long    lifecycleStateId;
     private String  summary         = "<summary/>";
 
-    private Long   objVersion      = 0L;
     private String contentHash;
 
     // Note: also hardcoded use by DeletionTask
@@ -403,14 +407,6 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject, Identi
         this.latestHead = latestHead;
     }
 
-    public Long getObjVersion() {
-        return objVersion;
-    }
-
-    public void setObjVersion(Long objVersion) {
-        this.objVersion = objVersion;
-    }
-
     public boolean isLatestBranch() {
         return latestBranch;
     }
@@ -522,15 +518,17 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject, Identi
                 Objects.equals(cmnVersion, that.cmnVersion) &&
                 Objects.equals(lifecycleStateId, that.lifecycleStateId) &&
                 Objects.equals(summary, that.summary) &&
-                // objVersion was originally used to detect database level changes for Hibernate in Cinnamon 3.
-                // It will change even by osdDao.update() though the object's other fields may remain unchanged.
-                // So, change osd.name, change it back, fetch osd anew -> you have two non-equal objects if you compare
-                // objVersion.
-                // TODO: do we still need objVersion?
-                // Objects.equals(objVersion, that.objVersion) &&
                 Objects.equals(contentHash, that.contentHash) &&
                 Objects.equals(contentProvider, that.contentProvider) &&
                 compareMetas(getMetas(), that.getMetas());
+    }
+
+    public List<Relation> getRelations() {
+        return relations;
+    }
+
+    public void setRelations(List<Relation> relations) {
+        this.relations = relations;
     }
 
     private boolean compareMetas(List<Meta> metas, List<Meta> thatMetas) {
@@ -575,7 +573,6 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject, Identi
                 ", cmnVersion='" + cmnVersion + '\'' +
                 ", lifecycleStateId=" + lifecycleStateId +
                 ", summary='" + summary + '\'' +
-                ", objVersion=" + objVersion +
                 ", contentHash='" + contentHash + '\'' +
                 ", contentProvider='" + contentProvider + '\'' +
                 '}';
