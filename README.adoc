@@ -2,7 +2,7 @@
 
 A new implementation of the Cinnamon 3 CMS server in Java.
 
-Current status: pre-alpha.
+Current status: alpha.
 
 == Goal
 
@@ -24,13 +24,13 @@ Version numbers describe the minimum version. You can either download them direc
 
 To run the newest binary release, you just need
 
-* https://adoptopenjdk.net/[Java 16]
+* https://adoptopenjdk.net/[Java 17]
 * https://www.postgresql.org/download/[PostgreSQL 12]
 * https://github.com/dewarim/cinnamon4/releases[cinnamon-server.jar] (click on "Assets" to expand the file list, then download the jar file.)
 
 === Build & run from source
 
-* https://adoptopenjdk.net/[Java 16]
+* https://adoptopenjdk.net/[Java 17]
 * https://www.postgresql.org/download/[PostgreSQL 12]
 * https://git-scm.com/downloads[Git] (optional for build, required for developers)
 * https://maven.apache.org/download.cgi[Apache Maven 3.8.1] (as build system)
@@ -85,7 +85,7 @@ See the file default-config.xml[default-config.xml] for the default values.
 
 == Copyright & License
 
-    Copyright 2018 Ingo Wiarda
+    Copyright 2018-2022 Ingo Wiarda
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this project except in compliance with the License.
