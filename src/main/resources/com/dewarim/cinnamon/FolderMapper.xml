@@ -8,7 +8,6 @@
     <resultMap id="folderMap" type="com.dewarim.cinnamon.model.Folder">
         <id property="id" column="id"/>
         <result property="name" column="name"/>
-        <result property="objVersion" column="obj_version"/>
         <result property="aclId" column="acl_id"/>
         <result property="ownerId" column="owner_id"/>
         <result property="parentId" column="parent_id"/>
@@ -23,7 +22,6 @@
         SELECT
         id,
         name,
-        obj_version,
         acl_id,
         owner_id,
         parent_id,
@@ -44,7 +42,6 @@
     <select id="getFolderByParentAndName" parameterType="map" resultMap="folderMap">
         SELECT id,
                name,
-               obj_version,
                acl_id,
                owner_id,
                parent_id,
@@ -89,7 +86,6 @@
     <select id="getFolderByIdWithAncestors" parameterType="map" resultMap="folderMap">
         SELECT id,
                name,
-               obj_version,
                acl_id,
                owner_id,
                parent_id,
@@ -135,7 +131,6 @@
     <select id="getRootFolder" parameterType="map" resultMap="folderMap">
         SELECT id,
                name,
-               obj_version,
                acl_id,
                owner_id,
                parent_id,
@@ -156,7 +151,6 @@
     <select id="getFolderByParentIdAndChildName" parameterType="map" resultMap="folderMap">
         SELECT id,
                name,
-               obj_version,
                acl_id,
                owner_id,
                parent_id,
@@ -177,7 +171,6 @@
     <select id="getDirectSubFolders" parameterType="map" resultMap="folderMap">
         SELECT id,
                name,
-               obj_version,
                acl_id,
                owner_id,
                parent_id,
@@ -197,7 +190,6 @@
     <select id="getChildFolderOfRootByName" parameterType="map" resultMap="folderMap">
         SELECT id,
                name,
-               obj_version,
                acl_id,
                owner_id,
                parent_id,
@@ -215,12 +207,10 @@
           AND parent_id = #{id}
     </select>
 
-    <!-- TODO: perhaps implement safe version (checking for folder.obj_version = old obj_version) -->
     <update id="updateFolder">
         UPDATE folders
         SET created          = #{created},
             name             = #{name},
-            obj_version      = obj_version + 1,
             acl_id           = #{aclId},
             owner_id         = #{ownerId},
             parent_id        = #{parentId},
@@ -236,8 +226,8 @@
             select nextval('seq_folder_id')
         </selectKey>
         INSERT INTO folders
-        (id, name, obj_version, acl_id, owner_id, parent_id, type_id, metadata_changed, summary, created)
-        VALUES (#{id}, #{name},0,#{aclId},#{ownerId},#{parentId},#{typeId},#{metadataChanged},#{summary},#{created})
+        (id, name, acl_id, owner_id, parent_id, type_id, metadata_changed, summary, created)
+        VALUES (#{id}, #{name},#{aclId},#{ownerId},#{parentId},#{typeId},#{metadataChanged},#{summary},#{created})
     </insert>
 
     <select id="countContent" parameterType="list" resultType="long">

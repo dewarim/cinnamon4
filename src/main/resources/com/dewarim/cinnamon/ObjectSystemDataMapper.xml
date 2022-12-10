@@ -15,7 +15,6 @@
         <result property="latestHead" column="latest_head"/>
         <result property="modified" column="modified"/>
         <result property="name" column="name"/>
-        <result property="objVersion" column="version"/>
         <result property="cmnVersion" column="cmn_version"/>
         <result property="aclId" column="acl_id"/>
         <result property="creatorId" column="creator_id"/>

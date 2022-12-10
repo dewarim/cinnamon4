@@ -295,3 +295,8 @@ It's recommended to use a copy of production for testing.
 
     ---
     alter table index_items drop column index_type_name;
+
+    ---
+    alter table folders drop column obj_version;
+    alter table objects drop column obj_version;
+    alter table folder_types drop column obj_version;

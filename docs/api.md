@@ -758,7 +758,6 @@ Create a new folder.
     <folder>
       <id/>
       <name>images</name>
-      <objVersion>0</objVersion>
       <aclId>1</aclId>
       <ownerId>2</ownerId>
       <parentId>3</parentId>
@@ -771,7 +770,6 @@ Create a new folder.
     <folder>
       <id/>
       <name>archive</name>
-      <objVersion>0</objVersion>
       <aclId>2</aclId>
       <ownerId>2</ownerId>
       <parentId>2</parentId>
