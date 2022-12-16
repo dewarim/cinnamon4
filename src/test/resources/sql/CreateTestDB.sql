@@ -1098,26 +1098,26 @@ insert into objects (id, created, latest_branch, latest_head, modified, name, cr
                      owner_id, parent_id, type_id, acl_id)
 values (nextval('seq_object_id'), now(), true, true, now(), 'version-test', 1, 1, 1, 1, 6, 1, 2);
 
--- #46 test object for version request in creation folder #6
--- state_id 4 is set below via update to test failed state.
-insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
-                     owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_object_id'), now(), true, true, now(), 'version-test', 1, 1, 1, 1, 6, 1, 2);
+-- -- #46 test object for version request in creation folder #6
+-- -- state_id 4 is set below via update to test failed state.
+-- insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+--                      owner_id, parent_id, type_id, acl_id)
+-- values (nextval('seq_object_id'), now(), true, true, now(), 'version-test', 1, 1, 1, 1, 6, 1, 2);
 
--- #47 test object for version label tests in creation folder #6
-insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
-                     owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_object_id'), now(), true, true, now(), 'test-version-numbering', 1, 1, 1, 1, 6, 1, 2);
+-- -- #47 test object for version label tests in creation folder #6
+-- insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+--                      owner_id, parent_id, type_id, acl_id)
+-- values (nextval('seq_object_id'), now(), true, true, now(), 'test-version-numbering', 1, 1, 1, 1, 6, 1, 2);
 
--- #48 test object for version test with metadata in creation folder #6
-insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
-                     owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_object_id'), now(), true, true, now(), 'version-with-metadata', 1, 1, 1, 1, 6, 1, 2);
+-- -- #48 test object for version test with metadata in creation folder #6
+-- insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+--                      owner_id, parent_id, type_id, acl_id)
+-- values (nextval('seq_object_id'), now(), true, true, now(), 'version-with-metadata', 1, 1, 1, 1, 6, 1, 2);
 
--- #49 test object for delete happy path (delete a single OSD)
-insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
-                     owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_object_id'), now(), true, true, now(), 'delete-me', 1, 1, 1, 1, 6, 1, 2);
+-- -- #49 test object for delete happy path (delete a single OSD)
+-- insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+--                      owner_id, parent_id, type_id, acl_id)
+-- values (nextval('seq_object_id'), now(), true, true, now(), 'delete-me', 1, 1, 1, 1, 6, 1, 2);
 
 
 -- #1 link to osd #1 with default acl (#1)
@@ -1301,7 +1301,7 @@ insert into lifecycle_states(id, name, config, state_class, life_cycle_id, copy_
 values (nextval('seq_lifecycle_state_id'), 'failed', '<config></config>', 'com.dewarim.cinnamon.lifecycle.FailState', 4, currval('seq_lifecycle_state_id'));
 -- osd#32 with FailState lifecycle state: should fail on state.exit()
 update objects set state_id=4 where id=32;
-update objects set state_id=4 where id=46;
+-- update objects set state_id=4 where id=46;
 
 -- #1 metaset type 'comment'
 insert into metaset_types(id, name, is_unique) VALUES (nextval('seq_metaset_type_id'), 'comment', false );

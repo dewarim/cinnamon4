@@ -970,8 +970,8 @@ public class CinnamonClient {
         return lifecycleStateUnwrapper.unwrap(response, 1).get(0);
     }
 
-    public void attachLifecycle(Long osdId, Long lifecycleId, Long lifecycleStateId) throws IOException {
-        var request  = new AttachLifecycleRequest(osdId, lifecycleId, lifecycleStateId);
+    public void attachLifecycle(Long osdId, Long lifecycleId, Long lifecycleStateId, boolean forceChange) throws IOException {
+        var request  = new AttachLifecycleRequest(osdId, lifecycleId, lifecycleStateId, forceChange);
         var response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__ATTACH_LIFECYCLE, request);
         verifyResponseIsOkay(response);
     }

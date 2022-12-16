@@ -13,14 +13,15 @@ public class AttachLifecycleRequest implements ApiRequest {
      * Optional id of the new state, if null, use default state of the chosen lifecycle.
      */
     private Long lifecycleStateId;
-
+private boolean forceChange;
     public AttachLifecycleRequest() {
     }
 
-    public AttachLifecycleRequest(Long osdId, Long lifecycleId, Long lifecycleStateId) {
+    public AttachLifecycleRequest(Long osdId, Long lifecycleId, Long lifecycleStateId, boolean forceChange) {
         this.osdId = osdId;
         this.lifecycleId = lifecycleId;
         this.lifecycleStateId = lifecycleStateId;
+        this.forceChange=forceChange;
     }
 
     public boolean validated(){
@@ -52,5 +53,13 @@ public class AttachLifecycleRequest implements ApiRequest {
 
     public void setLifecycleStateId(Long lifecycleStateId) {
         this.lifecycleStateId = lifecycleStateId;
+    }
+
+    public boolean isForceChange() {
+        return forceChange;
+    }
+
+    public void setForceChange(boolean forceChange) {
+        this.forceChange = forceChange;
     }
 }

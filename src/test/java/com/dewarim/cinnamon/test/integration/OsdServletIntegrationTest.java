@@ -967,7 +967,9 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void versionWithMetaRequests() throws IOException {
-        CreateNewVersionRequest          versionRequest = new CreateNewVersionRequest(48L);
+        var holder = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
+        holder.createOsd("versionWithMetaRequests");
+        CreateNewVersionRequest          versionRequest = new CreateNewVersionRequest(holder.osd.getId());
         CreateNewVersionRequest.Metadata metadata       = new CreateNewVersionRequest.Metadata();
         metadata.setContent("<comment>cool</comment>");
         metadata.setTypeId(1L);
@@ -1034,55 +1036,52 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void testVersionNumbering() throws IOException {
-        ObjectSystemData initialVersion = fetchSingleOsd(47L);
+        var holder = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
+
+        ObjectSystemData initialVersion = holder.createOsd("testVersionNumbering").osd;
         assertEquals("1", initialVersion.getCmnVersion());
         CreateNewVersionRequest versionRequest = new CreateNewVersionRequest(initialVersion.getId());
-        HttpEntity              request        = createSimpleMultipartEntity(CREATE_NEW_VERSION, versionRequest);
-        HttpResponse            response       = sendStandardMultipartRequest(UrlMapping.OSD__VERSION, request);
-        ObjectSystemData        v2             = unwrapOsds(response, 1).get(0);
+        ObjectSystemData        v2             = client.version(versionRequest);
 
         assertEquals("2", v2.getCmnVersion());
         versionRequest.setId(v2.getId());
-        request = createSimpleMultipartEntity(CREATE_NEW_VERSION, versionRequest);
-        response = sendStandardMultipartRequest(UrlMapping.OSD__VERSION, request);
 
-        ObjectSystemData v3 = unwrapOsds(response, 1).get(0);
+        ObjectSystemData v3 = client.version(versionRequest);
         assertEquals("3", v3.getCmnVersion());
 
         // create another version of v2
-        response = sendStandardMultipartRequest(UrlMapping.OSD__VERSION, request);
-        ObjectSystemData v2Branch = unwrapOsds(response, 1).get(0);
+        versionRequest.setId(v2.getId());
+        ObjectSystemData v2Branch = client.version(versionRequest);
         assertEquals("2.1-1", v2Branch.getCmnVersion());
 
         // create next version in branch 2
         versionRequest.setId(v2Branch.getId());
-        request = createSimpleMultipartEntity(CREATE_NEW_VERSION, versionRequest);
-        response = sendStandardMultipartRequest(UrlMapping.OSD__VERSION, request);
-        ObjectSystemData v2Branchv2 = unwrapOsds(response, 1).get(0);
-        assertEquals("2.1-2", v2Branchv2.getCmnVersion());
+        ObjectSystemData v2BranchV2 = client.version(versionRequest);
+        assertEquals("2.1-2", v2BranchV2.getCmnVersion());
 
         // create next version of v2 (second parallel branch)
         versionRequest.setId(v2.getId());
-        request = createSimpleMultipartEntity(CREATE_NEW_VERSION, versionRequest);
-        response = sendStandardMultipartRequest(UrlMapping.OSD__VERSION, request);
-        ObjectSystemData v2parallelBranch = unwrapOsds(response, 1).get(0);
+        ObjectSystemData v2parallelBranch = client.version(versionRequest);
         assertEquals("2.2-1", v2parallelBranch.getCmnVersion());
 
         // create branch of 1st branch of v2
         versionRequest.setId(v2Branch.getId());
-        request = createSimpleMultipartEntity(CREATE_NEW_VERSION, versionRequest);
-        response = sendStandardMultipartRequest(UrlMapping.OSD__VERSION, request);
-        ObjectSystemData branchOfBranch = unwrapOsds(response, 1).get(0);
+        ObjectSystemData branchOfBranch = client.version(versionRequest);
         assertEquals("2.1-1.1-1", branchOfBranch.getCmnVersion());
     }
 
     @Test
     public void versionWithFailingLifecycleStateChange() throws IOException {
-        CreateNewVersionRequest versionRequest = new CreateNewVersionRequest(46L);
+        var holder = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
+        var osd = holder.createOsd("versionWithFailingLifecycleStateChange").osd;
+        adminClient.attachLifecycle(osd.getId(), 4L, 4L, true);
+        CreateNewVersionRequest versionRequest = new CreateNewVersionRequest(osd.getId());
         versionRequest.setFormatId(PLAINTEXT_FORMAT_ID);
         HttpEntity   entity          = createMultipartEntityWithFileBody(CREATE_NEW_VERSION, versionRequest);
         HttpResponse versionResponse = sendStandardMultipartRequest(UrlMapping.OSD__VERSION, entity);
         assertCinnamonError(versionResponse, ErrorCode.LIFECYCLE_STATE_CHANGE_FAILED);
+        var ex = assertThrows(CinnamonClientException.class, () -> client.version(versionRequest));
+        assertEquals(ErrorCode.LIFECYCLE_STATE_CHANGE_FAILED, ex.getErrorCode());
     }
 
     @Test
@@ -1435,7 +1434,9 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void deleteOsdHappyPath() throws IOException {
-        assertTrue(client.deleteOsd(49L));
+        var holder = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
+        holder.createOsd("deleteOsdHappyPath");
+        assertTrue(client.deleteOsd(holder.osd.getId()));
     }
 
     @Test
@@ -1900,7 +1901,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         // skip update to lifecycle for now, just use AttachLifecycleRequest
         // lifecycle.setDefaultStateId(startState.getId());
         var id = toh.osd.getId();
-        adminClient.attachLifecycle(id, lifecycle.getId(), startState.getId());
+        adminClient.attachLifecycle(id, lifecycle.getId(), startState.getId(), false);
         ObjectSystemData copy = adminClient.copyOsds(createFolderId, List.of(id), List.of()).get(0);
         assertEquals(copyState.getId(), copy.getLifecycleStateId());
     }

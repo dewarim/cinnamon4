@@ -55,36 +55,36 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
     @Test
     public void attachLifecycleInvalidRequest() throws IOException {
         // TODO: add unit test for ALR to cover all branches of invalid requests.
-        AttachLifecycleRequest badOsd   = new AttachLifecycleRequest(null, 1L, 1L);
+        AttachLifecycleRequest badOsd   = new AttachLifecycleRequest(null, 1L, 1L, false);
         HttpResponse           response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__ATTACH_LIFECYCLE, badOsd);
         assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
 
-        AttachLifecycleRequest badLifecycle = new AttachLifecycleRequest(28L, null, 1L);
+        AttachLifecycleRequest badLifecycle = new AttachLifecycleRequest(28L, null, 1L, false);
         response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__ATTACH_LIFECYCLE, badLifecycle);
         assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
 
-        AttachLifecycleRequest badLifecycleState = new AttachLifecycleRequest(28L, 1L, 0L);
+        AttachLifecycleRequest badLifecycleState = new AttachLifecycleRequest(28L, 1L, 0L, false);
         response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__ATTACH_LIFECYCLE, badLifecycleState);
         assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
     }
 
     @Test
     public void attachLifecycleMissingOsd() throws IOException {
-        AttachLifecycleRequest badOsd   = new AttachLifecycleRequest(Long.MAX_VALUE, 1L, 1L);
+        AttachLifecycleRequest badOsd   = new AttachLifecycleRequest(Long.MAX_VALUE, 1L, 1L, false);
         HttpResponse           response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__ATTACH_LIFECYCLE, badOsd);
         assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND);
     }
 
     @Test
     public void attachLifecycleMissingLifecycle() throws IOException {
-        AttachLifecycleRequest badOsd   = new AttachLifecycleRequest(28L, Long.MAX_VALUE, 1L);
+        AttachLifecycleRequest badOsd   = new AttachLifecycleRequest(28L, Long.MAX_VALUE, 1L, false);
         HttpResponse           response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__ATTACH_LIFECYCLE, badOsd);
         assertCinnamonError(response, ErrorCode.LIFECYCLE_NOT_FOUND);
     }
 
     @Test
     public void attachLifecycleMissingWritePermission() throws IOException {
-        AttachLifecycleRequest badOsd   = new AttachLifecycleRequest(27L, 1L, 1L);
+        AttachLifecycleRequest badOsd   = new AttachLifecycleRequest(27L, 1L, 1L, false);
         HttpResponse           response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__ATTACH_LIFECYCLE, badOsd);
         assertCinnamonError(response, ErrorCode.NO_WRITE_SYS_METADATA_PERMISSION);
     }
@@ -108,14 +108,14 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
 
     @Test
     public void attachLifecycleMissingLifecycleState() throws IOException {
-        AttachLifecycleRequest badOsd   = new AttachLifecycleRequest(28L, 2L, null);
+        AttachLifecycleRequest badOsd   = new AttachLifecycleRequest(28L, 2L, null, false);
         HttpResponse           response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__ATTACH_LIFECYCLE, badOsd);
         assertCinnamonError(response, ErrorCode.LIFECYCLE_STATE_NOT_FOUND);
     }
 
     @Test
     public void attachLifecycleHappyPathDefaultState() throws IOException {
-        AttachLifecycleRequest attachRequest = new AttachLifecycleRequest(28L, 1L, null);
+        AttachLifecycleRequest attachRequest = new AttachLifecycleRequest(28L, 1L, null, false);
         HttpResponse           response      = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__ATTACH_LIFECYCLE, attachRequest);
         parseGenericResponse(response);
 
@@ -126,7 +126,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
 
     @Test
     public void attachLifecycleHappyPathWithNonDefaultState() throws IOException {
-        AttachLifecycleRequest attachRequest = new AttachLifecycleRequest(30L, 3L, 2L);
+        AttachLifecycleRequest attachRequest = new AttachLifecycleRequest(30L, 3L, 2L, false);
         HttpResponse           response      = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__ATTACH_LIFECYCLE, attachRequest);
         parseGenericResponse(response);
 
@@ -152,7 +152,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
     @Test
     public void detachLifecycleHappyPath() throws IOException {
         // attach lifecycle:
-        AttachLifecycleRequest attachRequest = new AttachLifecycleRequest(29L, 1L, null);
+        AttachLifecycleRequest attachRequest = new AttachLifecycleRequest(29L, 1L, null, false);
         HttpResponse           response      = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__ATTACH_LIFECYCLE, attachRequest);
         assertResponseOkay(response);
 

@@ -48,7 +48,8 @@ public class LifecycleStateServlet extends BaseServlet implements CruddyServlet<
         CinnamonResponse  cinnamonResponse = (CinnamonResponse) response;
 
         switch (mapping) {
-            case LIFECYCLE_STATE__ATTACH_LIFECYCLE -> attachLifecycleState(request, cinnamonResponse, osdDao, lifecycleDao, stateDao);
+            case LIFECYCLE_STATE__ATTACH_LIFECYCLE ->
+                    attachLifecycleState(request, cinnamonResponse, osdDao, lifecycleDao, stateDao);
             case LIFECYCLE_STATE__CHANGE_STATE -> changeState(request, cinnamonResponse, osdDao, stateDao);
             case LIFECYCLE_STATE__DETACH_LIFECYCLE -> detachLifecycleState(request, cinnamonResponse, osdDao);
             case LIFECYCLE_STATE__GET -> getLifecycleState(request, cinnamonResponse);
@@ -64,7 +65,8 @@ public class LifecycleStateServlet extends BaseServlet implements CruddyServlet<
                 superuserCheck();
                 update(convertUpdateRequest(request, UpdateLifecycleStateRequest.class), stateDao, cinnamonResponse);
             }
-            case LIFECYCLE_STATE__LIST -> list(convertListRequest(request, ListLifecycleStateRequest.class), stateDao, cinnamonResponse);
+            case LIFECYCLE_STATE__LIST ->
+                    list(convertListRequest(request, ListLifecycleStateRequest.class), stateDao, cinnamonResponse);
             case LIFECYCLE_STATE__GET_NEXT_STATES -> getNextStates(request, cinnamonResponse, osdDao, stateDao);
             default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
@@ -102,13 +104,14 @@ public class LifecycleStateServlet extends BaseServlet implements CruddyServlet<
             }
         }
 
-        changeStateAndCreateResponse(newState, osd, newLcState, osdDao, response);
+        changeStateAndCreateResponse(newState, osd, newLcState, osdDao, response, false);
     }
 
-    private void changeStateAndCreateResponse(State newState, ObjectSystemData osd, LifecycleState lcState, OsdDao osdDao, CinnamonResponse response)
+    private void changeStateAndCreateResponse(State newState, ObjectSystemData osd, LifecycleState lcState, OsdDao osdDao, CinnamonResponse response, boolean forceChange)
             throws IOException {
         StateChangeResult stateChangeResult = newState.enter(osd, lcState.getLifecycleStateConfig());
-        if (stateChangeResult.isSuccessful()) {
+        // TODO: test only superuser may force change a new state
+        if (stateChangeResult.isSuccessful() || (forceChange && authorizationService.currentUserIsSuperuser())) {
             osd.setLifecycleStateId(lcState.getId());
             osdDao.updateOsd(osd, true);
             response.responseIsGenericOkay();
@@ -149,7 +152,7 @@ public class LifecycleStateServlet extends BaseServlet implements CruddyServlet<
             }
             lifecycleState = stateOpt.get();
             State newState = StateProviderService.getInstance().getStateProvider(lifecycleState.getStateClass()).getState();
-            changeStateAndCreateResponse(newState, osd, lifecycleState, osdDao, response);
+            changeStateAndCreateResponse(newState, osd, lifecycleState, osdDao, response, attachReq.isForceChange());
 
         } else {
             ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.INVALID_REQUEST);
