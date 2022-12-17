@@ -325,7 +325,9 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void setContentWithoutLockingOsd() throws IOException {
-        SetContentRequest setContentRequest  = new SetContentRequest(43L, 1L);
+        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId)
+                .createOsd("setContentWithoutLockingOsd");
+        SetContentRequest setContentRequest  = new SetContentRequest(toh.osd.getId(), 1L);
         HttpEntity        multipartEntity    = createMultipartEntityWithFileBody("setContentRequest", setContentRequest);
         HttpResponse      setContentResponse = sendStandardMultipartRequest(UrlMapping.OSD__SET_CONTENT, multipartEntity);
         assertCinnamonError(setContentResponse, ErrorCode.OBJECT_MUST_BE_LOCKED_BY_USER);
@@ -564,14 +566,20 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getMetaWithoutReadPermission() throws IOException {
-        MetaRequest  request      = new MetaRequest(37L, null);
-        HttpResponse metaResponse = sendStandardRequest(UrlMapping.OSD__GET_META, request);
-        assertCinnamonError(metaResponse, ErrorCode.NO_READ_CUSTOM_METADATA_PERMISSION);
+        MetasetType metasetType = adminClient.createMetasetType("not-readable", true);
+        var toh = new TestObjectHolder(adminClient, "reviewers.acl", userId, createFolderId);
+        toh.createAcl("getMetaWithoutReadPermission")
+                .createGroup("getMetaWithoutReadPermission")
+                .createAclGroup().addUserToGroup(userId)
+                .createOsd("getMetaWithoutReadPermission")
+                .setMetasetType(metasetType)
+                .createOsdMeta("foo");
+        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> client.getOsdMetas(toh.osd.getId()));
+        assertEquals(NO_READ_CUSTOM_METADATA_PERMISSION, ex.getErrorCode());
     }
 
     @Test
     public void getMetaHappyPathAllMeta() throws IOException {
-        MetaRequest  request  = new MetaRequest(36L, null);
         List<Meta>   osdMetas = client.getOsdMetas(36L);
         List<String> content  = osdMetas.stream().map(Meta::getContent).toList();
         assertTrue(content.contains("<metaset><p>Good Test</p></metaset>"));
@@ -600,54 +608,59 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createMetaObjectNotWritable() throws IOException {
-        CreateMetaRequest request      = new CreateMetaRequest(37L, "foo", 1L);
-        HttpResponse      metaResponse = sendStandardRequest(UrlMapping.OSD__CREATE_META, request);
-        assertCinnamonError(metaResponse, ErrorCode.NO_WRITE_CUSTOM_METADATA_PERMISSION);
+        MetasetType metasetType = adminClient.createMetasetType("not-writable", true);
+        var toh = new TestObjectHolder(adminClient, "reviewers.acl", userId, createFolderId);
+        toh.createAcl("createMetaObjectNotWritable")
+                .createGroup("createMetaObjectNotWritable")
+                .createAclGroup().addUserToGroup(userId)
+                .createOsd("createMetaObjectNotWritable");
+        var ex = assertThrows(CinnamonClientException.class, () -> client.createOsdMeta(toh.osd.getId(),"unwritten",metasetType.getId()));
+        assertEquals(NO_WRITE_CUSTOM_METADATA_PERMISSION, ex.getErrorCode());
     }
 
     @Test
     public void createMetaMetasetTypeByIdNotFound() throws IOException {
-        CreateMetaRequest request      = new CreateMetaRequest(38L, "foo", Long.MAX_VALUE);
-        HttpResponse      metaResponse = sendStandardRequest(UrlMapping.OSD__CREATE_META, request);
-        assertCinnamonError(metaResponse, ErrorCode.METASET_TYPE_NOT_FOUND);
-    }
-
-    @Test
-    public void createMetaMetasetTypeByNameNotFound() throws IOException {
-        CreateMetaRequest request      = new CreateMetaRequest(38L, "foo", Long.MAX_VALUE);
-        HttpResponse      metaResponse = sendStandardRequest(UrlMapping.OSD__CREATE_META, request);
-        assertCinnamonError(metaResponse, ErrorCode.METASET_TYPE_NOT_FOUND);
+        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId)
+                .createOsd("createMetaMetasetTypeByNameNotFound");
+        var ex = assertThrows(CinnamonClientException.class,
+                () -> client.createOsdMeta(toh.osd.getId(), "type does not exist", Long.MAX_VALUE));
+        assertEquals(METASET_TYPE_NOT_FOUND, ex.getErrorCode());
     }
 
     @Test
     public void createMetaMetasetIsUniqueAndExists() throws IOException {
-        CreateMetaRequest request      = new CreateMetaRequest(39L, "duplicate license", 2L);
-        HttpResponse      metaResponse = sendStandardRequest(UrlMapping.OSD__CREATE_META, request);
-        assertCinnamonError(metaResponse, ErrorCode.METASET_IS_UNIQUE_AND_ALREADY_EXISTS);
+        MetasetType metasetType = adminClient.createMetasetType("unique-metaset", true);
+        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId)
+                .createOsd("createMetaMetasetHappyWithExistingMeta")
+                .setMetasetType(metasetType)
+                .createOsdMeta("1st");
+        var ex = assertThrows(CinnamonClientException.class, () -> client.createOsdMeta(toh.osd.getId(),
+                "forbidden duplicate", metasetType.getId()));
+        assertEquals(METASET_IS_UNIQUE_AND_ALREADY_EXISTS, ex.getErrorCode());
     }
 
     // non-unique metasetType should allow appending new metasets.
     @Test
     public void createMetaMetasetHappyWithExistingMeta() throws IOException {
-        CreateMetaRequest request      = new CreateMetaRequest(40L, "duplicate comment", 1L);
-        HttpResponse      metaResponse = sendStandardRequest(UrlMapping.OSD__CREATE_META, request);
-        assertResponseOkay(metaResponse);
-        MetaRequest  metaRequest     = new MetaRequest(40L, Collections.singletonList(1L));
-        HttpResponse commentResponse = sendStandardRequest(UrlMapping.OSD__GET_META, metaRequest);
-        assertResponseOkay(commentResponse);
-        MetaWrapper metaWrapper = mapper.readValue(commentResponse.getEntity().getContent(), MetaWrapper.class);
-        assertEquals(2, metaWrapper.getMetasets().size());
+        MetasetType metasetType = adminClient.createMetasetType("non-unique-metaset", false);
+        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId)
+                .createOsd("createMetaMetasetHappyWithExistingMeta")
+                .setMetasetType(metasetType)
+                .createOsdMeta("1st")
+                .createOsdMeta("2nd");
+        List<Meta> osdMetas = client.getOsdMetas(toh.osd.getId());
+        assertEquals(2, osdMetas.size());
     }
 
     @Test
     public void createMetaMetasetHappyPath() throws IOException {
-        CreateMetaRequest request      = new CreateMetaRequest(38L, "new license meta", 2L);
-        HttpResponse      metaResponse = sendStandardRequest(UrlMapping.OSD__CREATE_META, request);
-        assertResponseOkay(metaResponse);
-        List<Meta> metas = unwrapMeta(metaResponse, 1);
-        Meta       meta  = metas.get(0);
-        assertEquals("new license meta", meta.getContent());
-        assertEquals(2, meta.getTypeId().longValue());
+        MetasetType metasetType = adminClient.createMetasetType("happy metaset", false);
+        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId)
+                .createOsd("createMetaMetasetHappyPath")
+                .setMetasetType(metasetType)
+                .createOsdMeta("smile");
+        assertEquals("smile", toh.meta.getContent());
+        assertEquals(metasetType.getId(), toh.meta.getTypeId());
     }
 
     @Test
@@ -659,9 +672,15 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void deleteMetaWithoutPermission() throws IOException {
-        DeleteMetaRequest deleteRequest = new DeleteMetaRequest(8L);
-        HttpResponse      metaResponse  = sendStandardRequest(UrlMapping.OSD__DELETE_META, deleteRequest);
-        assertCinnamonError(metaResponse, ErrorCode.NO_WRITE_CUSTOM_METADATA_PERMISSION);
+        var toh = new TestObjectHolder(adminClient, "reviewers.acl", userId, createFolderId);
+        toh.createAcl("deleteMetaWithoutPermission")
+                .createGroup("deleteMetaWithoutPermission")
+                .createAclGroup().addUserToGroup(userId)
+                .addPermissions(List.of(CREATE_OBJECT))
+                .createOsd("deleteMetaWithoutPermission")
+                .createOsdMeta("test");
+        var ex = assertThrows(CinnamonClientException.class, () -> client.deleteOsdMeta(toh.meta.getId()));
+        assertEquals(NO_WRITE_CUSTOM_METADATA_PERMISSION, ex.getErrorCode());
     }
 
     @Test
@@ -673,7 +692,10 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void deleteMetaHappyPathById() throws IOException {
-        client.deleteOsdMeta(7L);
+        Long metaId = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId)
+                .createOsd("delete-all-metas")
+                .createOsdMeta("<some><meta/></some>").meta.getId();
+        client.deleteOsdMeta(metaId);
     }
 
     @Test
@@ -953,8 +975,8 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
                 .createAclGroup().addUserToGroup(userId)
                 .addPermissions(List.of(CREATE_OBJECT))
                 .createOsd("version without version permission");
-        CreateNewVersionRequest versionRequest  = new CreateNewVersionRequest(toh.osd.getId());
-        var ex = assertThrows(CinnamonClientException.class, () -> client.version(versionRequest));
+        CreateNewVersionRequest versionRequest = new CreateNewVersionRequest(toh.osd.getId());
+        var                     ex             = assertThrows(CinnamonClientException.class, () -> client.version(versionRequest));
         assertEquals(NO_VERSION_PERMISSION, ex.getErrorCode());
     }
 
@@ -966,8 +988,8 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
                 .createAclGroup().addUserToGroup(userId)
                 .createFolder("versionWithoutCreatePermission", createFolderId)
                 .createOsd("version without create permission");
-        CreateNewVersionRequest versionRequest  = new CreateNewVersionRequest(toh.osd.getId());
-        var ex = assertThrows(CinnamonClientException.class, () -> client.version(versionRequest));
+        CreateNewVersionRequest versionRequest = new CreateNewVersionRequest(toh.osd.getId());
+        var                     ex             = assertThrows(CinnamonClientException.class, () -> client.version(versionRequest));
         assertEquals(NO_CREATE_PERMISSION, ex.getErrorCode());
     }
 

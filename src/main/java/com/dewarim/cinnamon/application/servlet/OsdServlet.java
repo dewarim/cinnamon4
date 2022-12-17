@@ -409,7 +409,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
             IOException {
         DeleteMetaRequest metaRequest = (DeleteMetaRequest) getMapper().readValue(request.getInputStream(), DeleteMetaRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
-
+        // TODO: does deleteMeta need to check if the parent OSD/Folder is browsable? Or does WRITE_CUSTOM_METADATA suffice?
         OsdMetaDao metaDao = new OsdMetaDao();
         new MetaService<>().deleteMeta(metaDao, metaRequest.getIds(), osdDao, user);
         var deleteResponse = new DeleteResponse(true);

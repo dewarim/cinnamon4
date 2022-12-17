@@ -1052,40 +1052,40 @@ insert into objects (id, created, latest_branch, latest_head, modified, name, cr
                      owner_id, parent_id, type_id, acl_id)
 values (nextval('seq_object_id'), now(), true, true, now(), 'has-meta', 1, 1, 1, 1, 6, 1, 2);
 
--- #37 object with no permissions, used in getMeta and createMeta test
-insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
-                     owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_object_id'), now(), true, true, now(), 'no-read-custom-meta-permission', 1, 1, 1, 1, 1, 1, 5);
+-- -- #37 object with no permissions, used in getMeta and createMeta test
+-- insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+--                      owner_id, parent_id, type_id, acl_id)
+-- values (nextval('seq_object_id'), now(), true, true, now(), 'no-read-custom-meta-permission', 1, 1, 1, 1, 1, 1, 5);
 
--- #38 empty test object for createMeta
-insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
-                     owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_object_id'), now(), true, true, now(), 'create-me-a-meta', 1, 1, 1, 1, 6, 1, 2);
+-- -- #38 empty test object for createMeta
+-- insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+--                      owner_id, parent_id, type_id, acl_id)
+-- values (nextval('seq_object_id'), now(), true, true, now(), 'create-me-a-meta', 1, 1, 1, 1, 6, 1, 2);
 
--- #39 empty test object for createMeta with existing license metaset
-insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
-                     owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_object_id'), now(), true, true, now(), 'has-a-license-meta-already', 1, 1, 1, 1, 6, 1, 2);
+-- -- #39 empty test object for createMeta with existing license metaset
+-- insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+--                      owner_id, parent_id, type_id, acl_id)
+-- values (nextval('seq_object_id'), now(), true, true, now(), 'has-a-license-meta-already', 1, 1, 1, 1, 6, 1, 2);
 
--- #40 empty test object for createMeta with existing non-unique comment metaset
-insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
-                     owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_object_id'), now(), true, true, now(), 'has-a-comment-meta-already', 1, 1, 1, 1, 6, 1, 2);
+-- -- #40 empty test object for createMeta with existing non-unique comment metaset
+-- insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+--                      owner_id, parent_id, type_id, acl_id)
+-- values (nextval('seq_object_id'), now(), true, true, now(), 'has-a-comment-meta-already', 1, 1, 1, 1, 6, 1, 2);
 
--- #41 empty test object for deleteMeta with one metaset by name, one by id
-insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
-                     owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_object_id'), now(), true, true, now(), 'has-deletable-meta', 1, 1, 1, 1, 6, 1, 2);
+-- -- #41 empty test object for deleteMeta with one metaset by name, one by id
+-- insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+--                      owner_id, parent_id, type_id, acl_id)
+-- values (nextval('seq_object_id'), now(), true, true, now(), 'has-deletable-meta', 1, 1, 1, 1, 6, 1, 2);
+--
+-- -- #42 empty test object for deleteMeta without permission
+-- insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+--                      owner_id, parent_id, type_id, acl_id)
+-- values (nextval('seq_object_id'), now(), true, true, now(), 'has-deletable-meta-but-no-permission', 1, 1, 1, 1, 6, 1, 5);
 
--- #42 empty test object for deleteMeta without permission
-insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
-                     owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_object_id'), now(), true, true, now(), 'has-deletable-meta-but-no-permission', 1, 1, 1, 1, 6, 1, 5);
-
--- #43 test object for unlocked setContent/getContent in creation folder #6
-insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
-                     owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_object_id'), now(), true, true, now(), 'content-holder', 1, 1, 1, 1, 6, 1, 2);
+-- -- #43 test object for unlocked setContent/getContent in creation folder #6
+-- insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+--                      owner_id, parent_id, type_id, acl_id)
+-- values (nextval('seq_object_id'), now(), true, true, now(), 'content-holder', 1, 1, 1, 1, 6, 1, 2);
 
 -- -- #44 test object for version request in creation folder #6 (no permission)
 -- insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
@@ -1315,29 +1315,29 @@ values (nextval('seq_osd_meta_id'), 36, '<metaset><p>Good Test</p></metaset>', 1
 insert into osd_meta(id, osd_id, content, type_id)
 values (nextval('seq_osd_meta_id'), 36, '<metaset><license>GPL</license></metaset>', 2);
 
--- #3 osd_meta
-insert into osd_meta(id,osd_id,content,type_id)
-values (nextval('seq_osd_meta_id'), 39, '<metaset><licesne>AGPL</license></metaset>',2);
+-- -- #3 osd_meta
+-- insert into osd_meta(id,osd_id,content,type_id)
+-- values (nextval('seq_osd_meta_id'), 39, '<metaset><licesne>AGPL</license></metaset>',2);
 
--- #4 osd_meta
-insert into osd_meta(id,osd_id,content,type_id)
-values (nextval('seq_osd_meta_id'), 40, '<metaset><comment>foo</comment></metaset>',1);
+-- -- #4 osd_meta
+-- insert into osd_meta(id,osd_id,content,type_id)
+-- values (nextval('seq_osd_meta_id'), 40, '<metaset><comment>foo</comment></metaset>',1);
 
--- #5 osd_meta for osd#41, deletion by name (and list)
-insert into osd_meta(id,osd_id,content,type_id)
-values (nextval('seq_osd_meta_id'), 41, '<metaset><comment>bar</comment></metaset>',1);
+-- -- #5 osd_meta for osd#41, deletion by name (and list)
+-- insert into osd_meta(id,osd_id,content,type_id)
+-- values (nextval('seq_osd_meta_id'), 41, '<metaset><comment>bar</comment></metaset>',1);
+--
+-- -- #6 osd_meta for osd#41, deletion by name (and list)
+-- insert into osd_meta(id,osd_id,content,type_id)
+-- values (nextval('seq_osd_meta_id'), 41, '<metaset><comment>fuzz</comment></metaset>',1);
 
--- #6 osd_meta for osd#41, deletion by name (and list)
-insert into osd_meta(id,osd_id,content,type_id)
-values (nextval('seq_osd_meta_id'), 41, '<metaset><comment>fuzz</comment></metaset>',1);
+-- -- #7 osd_meta for osd#41, deletion by id
+-- insert into osd_meta(id,osd_id,content,type_id)
+-- values (nextval('seq_osd_meta_id'), 41, '<license>MPL</license>>',2);
 
--- #7 osd_meta for osd#41, deletion by id
-insert into osd_meta(id,osd_id,content,type_id)
-values (nextval('seq_osd_meta_id'), 41, '<license>MPL</license>>',2);
-
--- #8 osd_meta for osd#42, deletion without permission
-insert into osd_meta(id,osd_id,content,type_id)
-values (nextval('seq_osd_meta_id'), 42, '<license>LGPL</license>>',2);
+-- -- #8 osd_meta for osd#42, deletion without permission
+-- insert into osd_meta(id,osd_id,content,type_id)
+-- values (nextval('seq_osd_meta_id'), 42, '<license>LGPL</license>>',2);
 
 
 -- #1 folder_meta

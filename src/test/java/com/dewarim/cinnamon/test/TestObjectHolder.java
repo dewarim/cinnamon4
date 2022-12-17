@@ -25,6 +25,7 @@ import com.dewarim.cinnamon.model.request.osd.CreateOsdRequest;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static com.dewarim.cinnamon.api.Constants.FOLDER_TYPE_DEFAULT;
@@ -56,8 +57,9 @@ public class TestObjectHolder {
     public Meta             meta;
     public Link             link;
 
-    public List<Meta> metas;
-    public String     summary = "<summary/>";
+    public  List<Meta>  metas;
+    public  String      summary = "<summary/>";
+    private MetasetType metasetType;
 
     /**
      * Initialize a new TestObjectHolder with default values, using the given client
@@ -217,7 +219,7 @@ public class TestObjectHolder {
     }
 
     public TestObjectHolder createOsdMeta(String content) throws IOException {
-        meta = client.createOsdMeta(osd.getId(), content, metasetTypes.get(0).getId());
+        meta = client.createOsdMeta(osd.getId(), content, Objects.requireNonNullElse(metasetType, metasetTypes.get(0)).getId());
         return this;
     }
 
@@ -230,7 +232,12 @@ public class TestObjectHolder {
         return this;
     }
 
-    public List<Acl> getAcls(){
+    public List<Acl> getAcls() {
         return acls;
+    }
+
+    public TestObjectHolder setMetasetType(MetasetType metasetType) {
+        this.metasetType = metasetType;
+        return this;
     }
 }

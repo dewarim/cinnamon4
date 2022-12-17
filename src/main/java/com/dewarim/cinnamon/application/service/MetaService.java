@@ -2,7 +2,6 @@ package com.dewarim.cinnamon.application.service;
 
 import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.ErrorCode;
-import com.dewarim.cinnamon.FailedRequestException;
 import com.dewarim.cinnamon.api.Ownable;
 import com.dewarim.cinnamon.dao.CrudDao;
 import com.dewarim.cinnamon.dao.MetaDao;
@@ -31,7 +30,7 @@ public class MetaService<T extends CrudDao<Meta> & MetaDao, O extends CrudDao<? 
     public void deleteMeta(T dao, List<Long> ids, O ownableDao, UserAccount user){
         List<Meta> metas = dao.getObjectsById(ids);
         if (metas.isEmpty() || metas.size() != ids.size()) {
-            throw new FailedRequestException(ErrorCode.METASET_NOT_FOUND);
+            throw ErrorCode.METASET_NOT_FOUND.exception();
         }
         List<? extends Ownable> ownables = ownableDao.getObjectsById(metas.stream().map(Meta::getObjectId).collect(Collectors.toList()));
         ownables.forEach(ownable -> throwUnlessCustomMetaIsWritable(ownable, user));
