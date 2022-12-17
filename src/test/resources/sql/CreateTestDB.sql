@@ -1087,16 +1087,16 @@ insert into objects (id, created, latest_branch, latest_head, modified, name, cr
                      owner_id, parent_id, type_id, acl_id)
 values (nextval('seq_object_id'), now(), true, true, now(), 'content-holder', 1, 1, 1, 1, 6, 1, 2);
 
--- #44 test object for version request in creation folder #6 (no permission)
-insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
-                     owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_object_id'), now(), true, true, now(), 'version-test', 1, 1, 1, 1, 6, 1, 1);
+-- -- #44 test object for version request in creation folder #6 (no permission)
+-- insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+--                      owner_id, parent_id, type_id, acl_id)
+-- values (nextval('seq_object_id'), now(), true, true, now(), 'version-test', 1, 1, 1, 1, 6, 1, 1);
 
--- #45 test object for version request in creation folder #6
--- state_id 1 is set below via update.
-insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
-                     owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_object_id'), now(), true, true, now(), 'version-test', 1, 1, 1, 1, 6, 1, 2);
+-- -- #45 test object for version request in creation folder #6
+-- -- state_id 1 is set below via update.
+-- insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+--                      owner_id, parent_id, type_id, acl_id)
+-- values (nextval('seq_object_id'), now(), true, true, now(), 'version-test', 1, 1, 1, 1, 6, 1, 2);
 
 -- -- #46 test object for version request in creation folder #6
 -- -- state_id 4 is set below via update to test failed state.
@@ -1287,7 +1287,6 @@ insert into lifecycle_states(id, name, config, state_class, life_cycle_id, copy_
 update lifecycles set default_state_id=1 where id=3;
 update objects set state_id=2 where id=31;
 update objects set state_id=2 where id=35;
-update objects set state_id=1 where id=45;
 
 -- #3 second lifecycle_state of lc 3 with ChangeAclState
 insert into lifecycle_states(id, name, config, state_class, life_cycle_id, copy_state_id )

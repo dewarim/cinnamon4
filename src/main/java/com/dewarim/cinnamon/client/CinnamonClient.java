@@ -385,6 +385,15 @@ public class CinnamonClient {
         return unwrapOsds(sendStandardMultipartRequest(UrlMapping.OSD__VERSION, request), 1).get(0);
     }
 
+    public ObjectSystemData versionWithContent(CreateNewVersionRequest versionRequest, File content) throws IOException {
+        FileBody fileBody = new FileBody(content);
+        MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
+                .addPart("file", fileBody)
+                .addTextBody(CREATE_NEW_VERSION, mapper.writeValueAsString(versionRequest),
+                        APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
+        return unwrapOsds(sendStandardMultipartRequest(UrlMapping.OSD__VERSION, entityBuilder.build()), 1).get(0);
+    }
+
     public boolean deleteOsd(Long id) throws IOException {
         return deleteOsd(id, false);
     }

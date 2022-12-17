@@ -153,30 +153,30 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getObjectsByFolderIdOnlyHead() throws IOException {
-        var holder = new TestObjectHolder(client);
-        holder.setAcl(client.getAclByName("creators.acl"))
+        var toh = new TestObjectHolder(client);
+        toh.setAcl(client.getAclByName("creators.acl"))
                 .setUser(userId)
                 .createFolder("only-head", createFolderId)
                 .createOsd("get-objects-by-folder-only-head");
-        ObjectSystemData       version1     = client.version(new CreateNewVersionRequest(holder.osd.getId()));
+        ObjectSystemData       version1     = client.version(new CreateNewVersionRequest(toh.osd.getId()));
         ObjectSystemData       head         = client.version(new CreateNewVersionRequest(version1.getId()));
-        ObjectSystemData       branch       = client.version(new CreateNewVersionRequest(holder.osd.getId()));
-        List<ObjectSystemData> osdsInFolder = client.getOsdsInFolder(holder.folder.getId(), false, false, false, HEAD).getOsds();
+        ObjectSystemData       branch       = client.version(new CreateNewVersionRequest(toh.osd.getId()));
+        List<ObjectSystemData> osdsInFolder = client.getOsdsInFolder(toh.folder.getId(), false, false, false, HEAD).getOsds();
         assertEquals(1, osdsInFolder.size());
         assertEquals(head, osdsInFolder.get(0));
     }
 
     @Test
     public void getObjectsByFolderIdOnlyBranches() throws IOException {
-        var holder = new TestObjectHolder(client);
-        holder.setAcl(client.getAclByName("creators.acl"))
+        var toh = new TestObjectHolder(client);
+        toh.setAcl(client.getAclByName("creators.acl"))
                 .setUser(userId)
                 .createFolder("getObjectsByFolderIdOnlyBranches", createFolderId)
                 .createOsd("get-objects-by-folder-branch");
-        ObjectSystemData       version1     = client.version(new CreateNewVersionRequest(holder.osd.getId()));
+        ObjectSystemData       version1     = client.version(new CreateNewVersionRequest(toh.osd.getId()));
         ObjectSystemData       head         = client.version(new CreateNewVersionRequest(version1.getId()));
-        ObjectSystemData       branch       = client.version(new CreateNewVersionRequest(holder.osd.getId()));
-        List<ObjectSystemData> osdsInFolder = client.getOsdsInFolder(holder.folder.getId(), false, false, false, BRANCH).getOsds();
+        ObjectSystemData       branch       = client.version(new CreateNewVersionRequest(toh.osd.getId()));
+        List<ObjectSystemData> osdsInFolder = client.getOsdsInFolder(toh.folder.getId(), false, false, false, BRANCH).getOsds();
         assertEquals(2, osdsInFolder.size());
         // head object is also considered a branch (for legacy reasons):
         assertTrue(osdsInFolder.contains(head));
@@ -185,12 +185,12 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void osdDateFieldsAreFormattedAsIso8601() throws IOException, ParseException {
-        var holder = new TestObjectHolder(client);
-        holder.setAcl(client.getAclByName("creators.acl"))
+        var toh = new TestObjectHolder(client);
+        toh.setAcl(client.getAclByName("creators.acl"))
                 .setUser(userId)
                 .setFolder(createFolderId)
                 .createOsd("osdDateFieldsAreFormattedAsIso8601");
-        var osd = holder.osd;
+        var osd = toh.osd;
         var response = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID,
                 new OsdRequest(List.of(osd.getId()), false, false));
         String           osdResponse      = new String(response.getEntity().getContent().readAllBytes(), Charset.defaultCharset());
@@ -218,12 +218,12 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createObjectWithCustomMetadata() throws IOException {
-        var holder = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
+        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
 
         var metasetType = TestObjectHolder.getMetasetType("comment");
         var metas       = List.of(new Meta(null, metasetType.getId(), "<meta>some data</meta>"));
-        var osd         = holder.setMetas(metas).createOsd("object#1 with custom meta").osd;
-        assertEquals(osd.getMetas().get(0).getContent(), holder.metas.get(0).getContent());
+        var osd         = toh.setMetas(metas).createOsd("object#1 with custom meta").osd;
+        assertEquals(osd.getMetas().get(0).getContent(), toh.metas.get(0).getContent());
         var osdWithMeta = client.getOsdById(osd.getId(), false, true);
         assertEquals(1, osdWithMeta.getMetas().size());
         assertEquals(osd.getMetas().get(0), osdWithMeta.getMetas().get(0));
@@ -231,13 +231,13 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createObjectWithNonUniqueMetasets() throws IOException {
-        var holder = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
+        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
 
         var metasetType = TestObjectHolder.getMetasetType("comment");
         var metas = List.of(new Meta(null, metasetType.getId(), "<meta><comment>first post</comment></meta>"),
                 new Meta(null, metasetType.getId(), "<meta><comment>second post</comment></meta>"));
-        var osd = holder.setMetas(metas).createOsd("object#2 with custom meta").osd;
-        assertEquals(osd.getMetas().get(0).getContent(), holder.metas.get(0).getContent());
+        var osd = toh.setMetas(metas).createOsd("object#2 with custom meta").osd;
+        assertEquals(osd.getMetas().get(0).getContent(), toh.metas.get(0).getContent());
         var osdWithMeta = client.getOsdById(osd.getId(), false, true);
         assertEquals(2, osdWithMeta.getMetas().size());
         assertEquals(osd.getMetas().get(0), osdWithMeta.getMetas().get(0));
@@ -246,12 +246,12 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createObjectWithMultipelUniqueMetasets() throws IOException {
-        var holder = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
+        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
         // license is a unique metaset in our test database
         var metasetType = TestObjectHolder.getMetasetType("license");
         var metas = List.of(new Meta(null, metasetType.getId(), "<gpl/>"),
                 new Meta(null, metasetType.getId(), "<proprietaryLicense/>"));
-        assertClientError(() -> holder.setMetas(metas).createOsd("object#3 with custom meta"), METASET_UNIQUE_CHECK_FAILED);
+        assertClientError(() -> toh.setMetas(metas).createOsd("object#3 with custom meta"), METASET_UNIQUE_CHECK_FAILED);
     }
 
     @Test
@@ -688,16 +688,16 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void deleteAllVersionsHappyPath() throws IOException {
-        var holder = new TestObjectHolder(client);
-        holder.setAcl(client.getAclByName("reviewers.acl"))
+        var toh = new TestObjectHolder(client);
+        toh.setAcl(client.getAclByName("reviewers.acl"))
                 .setUser(userId)
                 .setFolder(createFolderId)
                 .createOsd("delete-all-versions-root");
-        ObjectSystemData version1 = client.version(new CreateNewVersionRequest(holder.osd.getId()));
+        ObjectSystemData version1 = client.version(new CreateNewVersionRequest(toh.osd.getId()));
         ObjectSystemData version2 = client.version(new CreateNewVersionRequest(version1.getId()));
-        ObjectSystemData branch   = client.version(new CreateNewVersionRequest(holder.osd.getId()));
+        ObjectSystemData branch   = client.version(new CreateNewVersionRequest(toh.osd.getId()));
         client.deleteOsd(version2.getId(), true, true);
-        assertTrue(client.getOsds(List.of(holder.osd.getId(), version1.getId(), version2.getId(), branch.getId()), false, false).isEmpty());
+        assertTrue(client.getOsds(List.of(toh.osd.getId(), version1.getId(), version2.getId(), branch.getId()), false, false).isEmpty());
     }
 
     @Test
@@ -947,29 +947,48 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void versionWithoutVersionPermission() throws IOException {
-        CreateNewVersionRequest versionRequest  = new CreateNewVersionRequest(44L);
-        HttpEntity              request         = createMultipartEntityWithFileBody(CREATE_NEW_VERSION, versionRequest);
-        HttpResponse            versionResponse = sendStandardMultipartRequest(UrlMapping.OSD__VERSION, request);
-        assertCinnamonError(versionResponse, ErrorCode.NO_VERSION_PERMISSION);
+        var toh = new TestObjectHolder(adminClient, "reviewers.acl", userId, createFolderId);
+        toh.createAcl("versionWithoutVersionPermission")
+                .createGroup("no version permission for version test")
+                .createAclGroup().addUserToGroup(userId)
+                .addPermissions(List.of(CREATE_OBJECT))
+                .createOsd("version without version permission");
+        CreateNewVersionRequest versionRequest  = new CreateNewVersionRequest(toh.osd.getId());
+        var ex = assertThrows(CinnamonClientException.class, () -> client.version(versionRequest));
+        assertEquals(NO_VERSION_PERMISSION, ex.getErrorCode());
+    }
+
+    @Test
+    public void versionWithoutCreatePermission() throws IOException {
+        var toh = new TestObjectHolder(adminClient, "reviewers.acl", userId, createFolderId);
+        toh.createAcl("versionWithoutCreatePermission")
+                .createGroup("no create permission for version test")
+                .createAclGroup().addUserToGroup(userId)
+                .createFolder("versionWithoutCreatePermission", createFolderId)
+                .createOsd("version without create permission");
+        CreateNewVersionRequest versionRequest  = new CreateNewVersionRequest(toh.osd.getId());
+        var ex = assertThrows(CinnamonClientException.class, () -> client.version(versionRequest));
+        assertEquals(NO_CREATE_PERMISSION, ex.getErrorCode());
     }
 
     @Test
     public void versionWithBrokenMetaRequests() throws IOException {
-        CreateNewVersionRequest          versionRequest = new CreateNewVersionRequest(45L);
+        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
+        toh.createOsd("version with broken meta");
+        CreateNewVersionRequest          versionRequest = new CreateNewVersionRequest(toh.osd.getId());
         CreateNewVersionRequest.Metadata metadata       = new CreateNewVersionRequest.Metadata();
         metadata.setContent("");
         metadata.setTypeId(Long.MAX_VALUE);
         versionRequest.getMetaRequests().add(metadata);
-        HttpEntity   entity          = createMultipartEntityWithFileBody(CREATE_NEW_VERSION, versionRequest);
-        HttpResponse versionResponse = sendStandardMultipartRequest(UrlMapping.OSD__VERSION, entity);
-        assertCinnamonError(versionResponse, ErrorCode.METASET_TYPE_NOT_FOUND);
+        var ex = assertThrows(CinnamonClientException.class, () -> client.version(versionRequest));
+        assertEquals(METASET_TYPE_NOT_FOUND, ex.getErrorCode());
     }
 
     @Test
     public void versionWithMetaRequests() throws IOException {
-        var holder = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
-        holder.createOsd("versionWithMetaRequests");
-        CreateNewVersionRequest          versionRequest = new CreateNewVersionRequest(holder.osd.getId());
+        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
+        toh.createOsd("versionWithMetaRequests");
+        CreateNewVersionRequest          versionRequest = new CreateNewVersionRequest(toh.osd.getId());
         CreateNewVersionRequest.Metadata metadata       = new CreateNewVersionRequest.Metadata();
         metadata.setContent("<comment>cool</comment>");
         metadata.setTypeId(1L);
@@ -982,7 +1001,9 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void versionWithoutMultipartContentType() throws IOException {
-        CreateNewVersionRequest          versionRequest = new CreateNewVersionRequest(45L);
+        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
+        toh.createOsd("version without multipart content type");
+        CreateNewVersionRequest          versionRequest = new CreateNewVersionRequest(toh.osd.getId());
         CreateNewVersionRequest.Metadata metadata       = new CreateNewVersionRequest.Metadata();
         versionRequest.getMetaRequests().add(metadata);
         HttpResponse versionResponse = sendStandardRequest(UrlMapping.OSD__VERSION, versionRequest);
@@ -991,33 +1012,24 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void happyVersionWithMultipartWihFileUploadAndLifecycleState() throws IOException {
-        CreateNewVersionRequest versionRequest = new CreateNewVersionRequest(45L);
+        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
+        toh.createOsd("happy version with content and lifecycle state");
+        adminClient.attachLifecycle(toh.osd.getId(), 1L, 1L, true);
+        CreateNewVersionRequest versionRequest = new CreateNewVersionRequest(toh.osd.getId());
         versionRequest.setFormatId(PLAINTEXT_FORMAT_ID);
-        File     pomXml   = new File("pom.xml");
-        FileBody fileBody = new FileBody(pomXml);
-        MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
-                .addPart("file", fileBody)
-                .addTextBody(CREATE_NEW_VERSION, mapper.writeValueAsString(versionRequest),
-                        APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
-        HttpResponse response = sendStandardMultipartRequest(UrlMapping.OSD__VERSION, entityBuilder.build());
-        assertResponseOkay(response);
-        List<ObjectSystemData> objectSystemData = unwrapOsds(response, 1);
-        ObjectSystemData       osd              = objectSystemData.get(0);
+        ObjectSystemData osd = client.versionWithContent(versionRequest, new File("pom.xml"));
         assertEquals(Long.valueOf(getPomXml().length()), osd.getContentSize());
         assertEquals(PLAINTEXT_FORMAT_ID, osd.getFormatId());
     }
 
     @Test
     public void versionWithMultipartWihFileUploadButWithoutFormat() throws IOException {
-        CreateNewVersionRequest versionRequest = new CreateNewVersionRequest(45L);
-        File                    pomXml         = new File("pom.xml");
-        FileBody                fileBody       = new FileBody(pomXml);
-        MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
-                .addPart("file", fileBody)
-                .addTextBody(CREATE_NEW_VERSION, mapper.writeValueAsString(versionRequest),
-                        APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
-        HttpResponse response = sendStandardMultipartRequest(UrlMapping.OSD__VERSION, entityBuilder.build());
-        assertCinnamonError(response, ErrorCode.FORMAT_NOT_FOUND);
+        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
+        toh.createOsd("multipart version without format");
+        adminClient.attachLifecycle(toh.osd.getId(), 1L, 1L, true);
+        CreateNewVersionRequest versionRequest = new CreateNewVersionRequest(toh.osd.getId());
+        var                     ex             = assertThrows(CinnamonClientException.class, () -> client.versionWithContent(versionRequest, new File("pom.xml")));
+        assertEquals(FORMAT_NOT_FOUND, ex.getErrorCode());
     }
 
     @Disabled("Currently no easy way to setup DB to ignore FK-constraint on lifecycle so we would get a missing LC exception")
@@ -1036,9 +1048,9 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void testVersionNumbering() throws IOException {
-        var holder = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
+        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
 
-        ObjectSystemData initialVersion = holder.createOsd("testVersionNumbering").osd;
+        ObjectSystemData initialVersion = toh.createOsd("testVersionNumbering").osd;
         assertEquals("1", initialVersion.getCmnVersion());
         CreateNewVersionRequest versionRequest = new CreateNewVersionRequest(initialVersion.getId());
         ObjectSystemData        v2             = client.version(versionRequest);
@@ -1072,8 +1084,8 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void versionWithFailingLifecycleStateChange() throws IOException {
-        var holder = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
-        var osd = holder.createOsd("versionWithFailingLifecycleStateChange").osd;
+        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
+        var osd = toh.createOsd("versionWithFailingLifecycleStateChange").osd;
         adminClient.attachLifecycle(osd.getId(), 4L, 4L, true);
         CreateNewVersionRequest versionRequest = new CreateNewVersionRequest(osd.getId());
         versionRequest.setFormatId(PLAINTEXT_FORMAT_ID);
@@ -1177,16 +1189,16 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateOsdWithoutWriteSysMetaPermission() throws IOException {
-        var holder = new TestObjectHolder(adminClient, "no-permissions.acl", adminId, createFolderId);
+        var toh = new TestObjectHolder(adminClient, "no-permissions.acl", adminId, createFolderId);
 
-        holder.createAcl("updateOsdWithoutWriteSysMetaPermission")
+        toh.createAcl("updateOsdWithoutWriteSysMetaPermission")
                 .createGroup("test-updateOsdWithoutWriteSysMetaPermission")
                 .createAclGroup()
                 .addPermissions(List.of(BROWSE_OBJECT, LOCK))
                 .addUserToGroup(userId)
                 .createOsd("osd-update-forbidden");
 
-        var id = holder.osd.getId();
+        var id = toh.osd.getId();
         client.lockOsd(id);
 
         UpdateOsdRequest request = new UpdateOsdRequest(id, 1L, "-", 1L, 1L, 1L, 1L);
@@ -1195,16 +1207,16 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateOsdWithParentFolderNotFound() throws IOException {
-        var holder = new TestObjectHolder(adminClient, "no-permissions.acl", adminId, createFolderId);
+        var toh = new TestObjectHolder(adminClient, "no-permissions.acl", adminId, createFolderId);
 
-        holder.createAcl("updateOsdWithParentFolderNotFound")
+        toh.createAcl("updateOsdWithParentFolderNotFound")
                 .createGroup("test-updateOsdWithParentFolderNotFound")
                 .createAclGroup()
                 .addPermissions(List.of(BROWSE_OBJECT, LOCK, WRITE_OBJECT_SYS_METADATA))
                 .addUserToGroup(userId)
                 .createOsd("osd-new-parent-missing");
 
-        var id = holder.osd.getId();
+        var id = toh.osd.getId();
         client.lockOsd(id);
 
         UpdateOsdRequest request = new UpdateOsdRequest(id, Long.MAX_VALUE, "-", 1L, 1L, 1L, 1L);
@@ -1213,16 +1225,16 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateOsdWithoutCreateInFolderPermission() throws IOException {
-        var holder = new TestObjectHolder(adminClient, "no-permissions.acl", adminId, createFolderId);
+        var toh = new TestObjectHolder(adminClient, "no-permissions.acl", adminId, createFolderId);
 
-        holder.createAcl("updateOsdWithoutCreateInFolderPermission")
+        toh.createAcl("updateOsdWithoutCreateInFolderPermission")
                 .createGroup("test-updateOsdWithoutCreateInFolderPermission")
                 .createAclGroup()
                 .addPermissions(List.of(BROWSE_OBJECT, LOCK, WRITE_OBJECT_SYS_METADATA))
                 .addUserToGroup(userId)
                 .createOsd("update-osd-no-create-permission");
 
-        var id = holder.osd.getId();
+        var id = toh.osd.getId();
         client.lockOsd(id);
 
         UpdateOsdRequest request = new UpdateOsdRequest(id, 1L, "-", 1L, 1L, 1L, 1L);
@@ -1231,16 +1243,16 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateOsdWithoutMovePermission() throws IOException {
-        var holder = new TestObjectHolder(adminClient, "no-permissions.acl", adminId, createFolderId);
+        var toh = new TestObjectHolder(adminClient, "no-permissions.acl", adminId, createFolderId);
 
-        holder.createAcl("updateOsdWithoutMovePermission")
+        toh.createAcl("updateOsdWithoutMovePermission")
                 .createGroup("test-updateOsdWithoutMovePermission")
                 .createAclGroup()
                 .addPermissions(List.of(BROWSE_OBJECT, LOCK, WRITE_OBJECT_SYS_METADATA))
                 .addUserToGroup(userId)
                 .createOsd("update-osd-no-move-permission");
 
-        var id = holder.osd.getId();
+        var id = toh.osd.getId();
         client.lockOsd(id);
 
         var request = new UpdateOsdRequest(id, createFolderId, "-", 1L, 1L, 1L, 1L);
@@ -1249,9 +1261,9 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateOsdWithMovePermission() throws IOException {
-        var holder = new TestObjectHolder(adminClient, "no-permissions.acl", adminId, createFolderId);
+        var toh = new TestObjectHolder(adminClient, "no-permissions.acl", adminId, createFolderId);
 
-        holder.createAcl("updateOsdWithMovePermission")
+        toh.createAcl("updateOsdWithMovePermission")
                 .createGroup("test-updateOsdWithMovePermission")
                 .createAclGroup()
                 .addPermissions(List.of(BROWSE_OBJECT, BROWSE_FOLDER, LOCK, WRITE_OBJECT_SYS_METADATA, MOVE, CREATE_OBJECT))
@@ -1259,22 +1271,22 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
                 .createOsd("update-osd-move-permission")
                 .createFolder("target-of-update-osd-by-move", createFolderId);
 
-        var id = holder.osd.getId();
+        var id = toh.osd.getId();
         client.lockOsd(id);
 
-        var request = new UpdateOsdRequest(id, holder.folder.getId(), null, null, null, null, null);
+        var request = new UpdateOsdRequest(id, toh.folder.getId(), null, null, null, null, null);
         client.updateOsd(request);
         var osd = client.getOsdById(id, false, false);
-        assertEquals(holder.folder.getId(), osd.getParentId());
+        assertEquals(toh.folder.getId(), osd.getParentId());
     }
 
     @Test
     public void updateOsdChangeName() throws IOException {
-        var holder = new TestObjectHolder(client, "reviewers.acl", adminId, createFolderId);
+        var toh = new TestObjectHolder(client, "reviewers.acl", adminId, createFolderId);
 
-        holder.createOsd("update-osd-rename")
+        toh.createOsd("update-osd-rename")
                 .lockOsd();
-        var id = holder.osd.getId();
+        var id = toh.osd.getId();
 
         var request = new UpdateOsdRequest(id, null, "new name", null, null, null, null);
         client.updateOsd(request);
@@ -1284,11 +1296,11 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateOsdChangeTypeNotFound() throws IOException {
-        var holder = new TestObjectHolder(client, "reviewers.acl", adminId, createFolderId);
+        var toh = new TestObjectHolder(client, "reviewers.acl", adminId, createFolderId);
 
-        holder.createOsd("update-osd-rename")
+        toh.createOsd("update-osd-rename")
                 .lockOsd();
-        var id = holder.osd.getId();
+        var id = toh.osd.getId();
 
         var request = new UpdateOsdRequest(id, null, null, null, null, Long.MAX_VALUE, null);
         assertClientError(() -> client.updateOsd(request), OBJECT_TYPE_NOT_FOUND);
@@ -1296,45 +1308,45 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateOsdChangeType() throws IOException {
-        var holder = new TestObjectHolder(adminClient, "reviewers.acl", adminId, createFolderId);
+        var toh = new TestObjectHolder(adminClient, "reviewers.acl", adminId, createFolderId);
 
-        holder.createOsd("update-osd-rename")
+        toh.createOsd("update-osd-rename")
                 .createObjectType("update-osd-type");
 
-        var id = holder.osd.getId();
+        var id = toh.osd.getId();
         client.lockOsd(id);
 
         var request = new UpdateOsdRequest(id, null, null, null, null,
-                holder.objectType.getId(), null);
+                toh.objectType.getId(), null);
         client.updateOsd(request);
         var osd = client.getOsdById(id, false, false);
-        assertEquals(holder.objectType.getId(), osd.getTypeId());
+        assertEquals(toh.objectType.getId(), osd.getTypeId());
     }
 
     @Test
     public void updateOsdChangeAclNoPermission() throws IOException {
-        var holder = new TestObjectHolder(adminClient, "reviewers.acl", adminId, createFolderId);
+        var toh = new TestObjectHolder(adminClient, "reviewers.acl", adminId, createFolderId);
 
-        holder.createAcl("updateOsdChangeAclNoPermission")
+        toh.createAcl("updateOsdChangeAclNoPermission")
                 .createGroup("test-updateOsdChangeAclNoPermission")
                 .createAclGroup()
                 .addPermissions(List.of(BROWSE_OBJECT, LOCK, WRITE_OBJECT_SYS_METADATA, MOVE, CREATE_OBJECT))
                 .addUserToGroup(userId)
                 .createOsd("update-osd-updateOsdChangeAclNoPermission");
 
-        holder.createOsd("updateOsdChangeAclNoPermission");
-        var id = holder.osd.getId();
+        toh.createOsd("updateOsdChangeAclNoPermission");
+        var id = toh.osd.getId();
         client.lockOsd(id);
 
-        var request = new UpdateOsdRequest(id, null, null, null, holder.acl.getId(), null, null);
+        var request = new UpdateOsdRequest(id, null, null, null, toh.acl.getId(), null, null);
         assertClientError(() -> client.updateOsd(request), MISSING_SET_ACL_PERMISSION);
     }
 
     @Test
     public void updateOsdChangeAclNotFound() throws IOException {
-        var holder = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
-        holder.createOsd("updateOsdChangeAclNoPermission");
-        var id = holder.osd.getId();
+        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
+        toh.createOsd("updateOsdChangeAclNoPermission");
+        var id = toh.osd.getId();
         client.lockOsd(id);
 
         var request = new UpdateOsdRequest(id, null, null, null, Long.MAX_VALUE, null, null);
@@ -1343,29 +1355,29 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateOsdChangeAcl() throws IOException {
-        var holder = new TestObjectHolder(adminClient, "reviewers.acl", adminId, createFolderId);
-        holder.createAcl("updateOsdChangeAcl")
+        var toh = new TestObjectHolder(adminClient, "reviewers.acl", adminId, createFolderId);
+        toh.createAcl("updateOsdChangeAcl")
                 .createGroup("test-updateOsdChangeAcl")
                 .createAclGroup()
                 .addPermissions(List.of(BROWSE_OBJECT, LOCK, SET_ACL, WRITE_OBJECT_SYS_METADATA, MOVE, CREATE_OBJECT))
                 .addUserToGroup(userId)
                 .createOsd("update-osd-updateOsdChangeAcl");
 
-        holder.createOsd("updateOsdChangeAclNoPermission");
-        var id = holder.osd.getId();
+        toh.createOsd("updateOsdChangeAclNoPermission");
+        var id = toh.osd.getId();
         client.lockOsd(id);
 
-        var request = new UpdateOsdRequest(id, null, null, null, holder.acl.getId(), null, null);
+        var request = new UpdateOsdRequest(id, null, null, null, toh.acl.getId(), null, null);
         client.updateOsd(request);
         var osd = client.getOsdById(id, false, false);
-        assertEquals(holder.acl.getId(), osd.getAclId());
+        assertEquals(toh.acl.getId(), osd.getAclId());
     }
 
     @Test
     public void updateOsdChangeUserNotFound() throws IOException {
-        var holder = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
-        holder.createOsd("updateOsdChangeUserNotFound");
-        var id = holder.osd.getId();
+        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
+        toh.createOsd("updateOsdChangeUserNotFound");
+        var id = toh.osd.getId();
         client.lockOsd(id);
 
         var request = new UpdateOsdRequest(id, null, null, Long.MAX_VALUE, null, null, null);
@@ -1374,9 +1386,9 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateOsdChangeUser() throws IOException {
-        var holder = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
-        holder.createOsd("updateOsdChangeUserNotFound");
-        var id = holder.osd.getId();
+        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
+        toh.createOsd("updateOsdChangeUserNotFound");
+        var id = toh.osd.getId();
         client.lockOsd(id);
 
         var request = new UpdateOsdRequest(id, null, null, adminId, null, null, null);
@@ -1387,9 +1399,9 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateOsdChangeLanguageNotFound() throws IOException {
-        var holder = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
-        holder.createOsd("updateOsdChangeLanguageNotFound");
-        var id = holder.osd.getId();
+        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
+        toh.createOsd("updateOsdChangeLanguageNotFound");
+        var id = toh.osd.getId();
         client.lockOsd(id);
 
         var request = new UpdateOsdRequest(id, null, null, null, null, null, Long.MAX_VALUE);
@@ -1398,14 +1410,14 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateOsdChangeLanguage() throws IOException {
-        var holder = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
-        holder.createOsd("updateOsdChangeUserNotFound");
-        var id = holder.osd.getId();
+        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
+        toh.createOsd("updateOsdChangeUserNotFound");
+        var id = toh.osd.getId();
         client.lockOsd(id);
 
         List<Language> languages = client.listLanguages();
         var            newLang   = languages.get(1);
-        assertNotEquals(holder.osd.getLanguageId(), newLang.getId());
+        assertNotEquals(toh.osd.getLanguageId(), newLang.getId());
 
         var request = new UpdateOsdRequest(id, null, null, null, null, null, newLang.getId());
         client.updateOsd(request);
@@ -1415,9 +1427,9 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateOsdLockedByOtherUser() throws IOException {
-        var holder = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
-        holder.createOsd("osd-update-forbidden");
-        var id = holder.osd.getId();
+        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
+        toh.createOsd("osd-update-forbidden");
+        var id = toh.osd.getId();
         adminClient.lockOsd(id);
         var request = new UpdateOsdRequest(id, 1L, "-", 1L, 1L, 1L, 1L);
         assertClientError(() -> client.updateOsd(request), OBJECT_LOCKED_BY_OTHER_USER);
@@ -1425,78 +1437,78 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateOsdWithoutLockingIt() throws IOException {
-        var holder = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
-        holder.createOsd("osd-update-forbidden");
-        var id      = holder.osd.getId();
+        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
+        toh.createOsd("osd-update-forbidden");
+        var id      = toh.osd.getId();
         var request = new UpdateOsdRequest(id, 1L, "-", 1L, 1L, 1L, 1L);
         assertClientError(() -> client.updateOsd(request), OBJECT_MUST_BE_LOCKED_BY_USER);
     }
 
     @Test
     public void deleteOsdHappyPath() throws IOException {
-        var holder = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
-        holder.createOsd("deleteOsdHappyPath");
-        assertTrue(client.deleteOsd(holder.osd.getId()));
+        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
+        toh.createOsd("deleteOsdHappyPath");
+        assertTrue(client.deleteOsd(toh.osd.getId()));
     }
 
     @Test
     public void deleteOsdWithCustomMetadata() throws IOException {
-        var holder = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
+        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
 
         var metasetType = TestObjectHolder.getMetasetType("comment");
         var metas       = List.of(new Meta(null, metasetType.getId(), "<meta>some data</meta>"));
-        var osd         = holder.setMetas(metas).createOsd("object#1 with custom meta").osd;
+        var osd         = toh.setMetas(metas).createOsd("object#1 with custom meta").osd;
         client.deleteOsd(osd.getId());
         assertClientError(() -> client.getOsdById(osd.getId(), false, false), OBJECT_NOT_FOUND);
     }
 
     @Test
     public void deleteOsdsNoDeletePermission() throws IOException {
-        var holder = new TestObjectHolder(adminClient);
-        holder.createAcl("no-delete-perm-acl").createGroup("no-delete-group-acl").createAclGroup()
+        var toh = new TestObjectHolder(adminClient);
+        toh.createAcl("no-delete-perm-acl").createGroup("no-delete-group-acl").createAclGroup()
                 .setUser(userId)
                 .setFolder(createFolderId)
                 .createOsd("U-no-delete-me");
-        ObjectSystemData osd = holder.osd;
+        ObjectSystemData osd = toh.osd;
         assertClientError(() -> client.deleteOsd(osd.getId()), CANNOT_DELETE_DUE_TO_ERRORS, NO_DELETE_PERMISSION);
     }
 
     @Test
     public void deleteOsdWithDescendantsFailsWithoutDeleteDescendantsFlag() throws IOException {
-        var holder = new TestObjectHolder(adminClient);
-        holder.setAcl(client.getAclByName("reviewers.acl"))
+        var toh = new TestObjectHolder(adminClient);
+        toh.setAcl(client.getAclByName("reviewers.acl"))
                 .setUser(userId)
                 .setFolder(createFolderId)
                 .createOsd("version-me-for-descendant");
-        ObjectSystemData version1 = client.version(new CreateNewVersionRequest(holder.osd.getId()));
+        ObjectSystemData version1 = client.version(new CreateNewVersionRequest(toh.osd.getId()));
         ObjectSystemData version2 = client.version(new CreateNewVersionRequest(version1.getId()));
-        assertClientError(() -> client.deleteOsd(holder.osd.getId()), CANNOT_DELETE_DUE_TO_ERRORS, OBJECT_HAS_DESCENDANTS);
+        assertClientError(() -> client.deleteOsd(toh.osd.getId()), CANNOT_DELETE_DUE_TO_ERRORS, OBJECT_HAS_DESCENDANTS);
     }
 
     @Test
     public void deleteOsdWithDescendantsHappyPath() throws IOException {
-        var holder = new TestObjectHolder(adminClient);
-        holder.setAcl(client.getAclByName("reviewers.acl"))
+        var toh = new TestObjectHolder(adminClient);
+        toh.setAcl(client.getAclByName("reviewers.acl"))
                 .setUser(userId)
                 .setFolder(createFolderId)
                 .createOsd("version-me-for-descendant");
-        ObjectSystemData version1 = client.version(new CreateNewVersionRequest(holder.osd.getId()));
+        ObjectSystemData version1 = client.version(new CreateNewVersionRequest(toh.osd.getId()));
         ObjectSystemData version2 = client.version(new CreateNewVersionRequest(version1.getId()));
-        client.deleteOsd(holder.osd.getId(), true);
+        client.deleteOsd(toh.osd.getId(), true);
     }
 
     @Test
     public void deleteOsdWithUnprotectedRelations() throws IOException {
         addUserToAclGroupWithPermissions("deleteOsdWithUnprotectedRelations", List.of(READ_OBJECT_SYS_METADATA,
                 RELATION_CHILD_ADD, RELATION_PARENT_ADD, DELETE_OBJECT));
-        var holder = new TestObjectHolder(adminClient);
-        holder.setAcl(client.getAclByName("deleteOsdWithUnprotectedRelations"))
+        var toh = new TestObjectHolder(adminClient);
+        toh.setAcl(client.getAclByName("deleteOsdWithUnprotectedRelations"))
                 .setUser(userId)
                 .setFolder(createFolderId)
                 .createOsd("left-osd-unprotected");
-        ObjectSystemData leftOsd = holder.osd;
-        holder.createOsd("right-osd-protected");
-        ObjectSystemData rightOsd = holder.osd;
+        ObjectSystemData leftOsd = toh.osd;
+        toh.createOsd("right-osd-protected");
+        ObjectSystemData rightOsd = toh.osd;
 
         RelationType rt = new RelationType("left-rt-protected", true, false, false, false, false, false);
         rt = adminClient.createRelationTypes(List.of(rt)).get(0);
@@ -1508,14 +1520,14 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     public void deleteTwoOsdsWhoseRelationsProtectEachOther() throws IOException {
         addUserToAclGroupWithPermissions("deleteTwoOsdsWhoseRelationsProtectEachOther", List.of(READ_OBJECT_SYS_METADATA,
                 RELATION_CHILD_ADD, RELATION_PARENT_ADD, DELETE_OBJECT));
-        var holder = new TestObjectHolder(adminClient);
-        holder.setAcl(client.getAclByName("deleteTwoOsdsWhoseRelationsProtectEachOther"))
+        var toh = new TestObjectHolder(adminClient);
+        toh.setAcl(client.getAclByName("deleteTwoOsdsWhoseRelationsProtectEachOther"))
                 .setUser(userId)
                 .setFolder(createFolderId)
                 .createOsd("has-only-protected-relations");
-        ObjectSystemData leftOsd = holder.osd;
-        holder.createOsd("right-osd-protected-all");
-        ObjectSystemData rightOsd = holder.osd;
+        ObjectSystemData leftOsd = toh.osd;
+        toh.createOsd("right-osd-protected-all");
+        ObjectSystemData rightOsd = toh.osd;
 
         RelationType rt = new RelationType("all-protected-delete", true, true, false, false, false, false);
         rt = adminClient.createRelationTypes(List.of(rt)).get(0);
@@ -1527,14 +1539,14 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     public void deleteTwoOsdsThatAreProtectedByLeftObject() throws IOException {
         addUserToAclGroupWithPermissions("deleteTwoOsdsThatAreProtectedByLeftObject", List.of(READ_OBJECT_SYS_METADATA,
                 RELATION_CHILD_ADD, RELATION_PARENT_ADD, DELETE_OBJECT));
-        var holder = new TestObjectHolder(adminClient);
-        holder.setAcl(client.getAclByName("deleteTwoOsdsThatAreProtectedByLeftObject"))
+        var toh = new TestObjectHolder(adminClient);
+        toh.setAcl(client.getAclByName("deleteTwoOsdsThatAreProtectedByLeftObject"))
                 .setUser(userId)
                 .setFolder(createFolderId)
                 .createOsd("has-left-protected-relations");
-        ObjectSystemData leftOsd = holder.osd;
-        holder.createOsd("right-osd");
-        ObjectSystemData rightOsd = holder.osd;
+        ObjectSystemData leftOsd = toh.osd;
+        toh.createOsd("right-osd");
+        ObjectSystemData rightOsd = toh.osd;
 
         RelationType rt = new RelationType("left-protected-delete", true, false, false, false, false, false);
         rt = adminClient.createRelationTypes(List.of(rt)).get(0);
@@ -1546,14 +1558,14 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     public void deleteTwoOsdsThatAreProtectedByRightObject() throws IOException {
         var aclId = addUserToAclGroupWithPermissions("deleteTwoOsdsThatAreProtectedByRightObject", List.of(READ_OBJECT_SYS_METADATA,
                 RELATION_CHILD_ADD, RELATION_PARENT_ADD, DELETE_OBJECT));
-        var holder = new TestObjectHolder(adminClient);
-        holder.setAcl(client.getAclById(aclId))
+        var toh = new TestObjectHolder(adminClient);
+        toh.setAcl(client.getAclById(aclId))
                 .setUser(userId)
                 .setFolder(createFolderId)
                 .createOsd("has-right-protected-relations");
-        ObjectSystemData leftOsd = holder.osd;
-        holder.createOsd("right-osd");
-        ObjectSystemData rightOsd = holder.osd;
+        ObjectSystemData leftOsd = toh.osd;
+        toh.createOsd("right-osd");
+        ObjectSystemData rightOsd = toh.osd;
 
         RelationType rt = new RelationType("right-protected-delete", false, true, false, false, false, false);
         rt = adminClient.createRelationTypes(List.of(rt)).get(0);
@@ -1565,14 +1577,14 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     public void deleteTwoOsdsWithUnprotectedRelation() throws IOException {
         var aclId = addUserToAclGroupWithPermissions("deleteTwoOsdsWithUnprotectedRelation", List.of(READ_OBJECT_SYS_METADATA,
                 RELATION_CHILD_ADD, RELATION_PARENT_ADD, DELETE_OBJECT));
-        var holder = new TestObjectHolder(adminClient);
-        holder.setAcl(client.getAclById(aclId))
+        var toh = new TestObjectHolder(adminClient);
+        toh.setAcl(client.getAclById(aclId))
                 .setUser(userId)
                 .setFolder(createFolderId)
                 .createOsd("has-right-unprotected-relations");
-        ObjectSystemData leftOsd = holder.osd;
-        holder.createOsd("right-osd");
-        ObjectSystemData rightOsd = holder.osd;
+        ObjectSystemData leftOsd = toh.osd;
+        toh.createOsd("right-osd");
+        ObjectSystemData rightOsd = toh.osd;
 
         RelationType rt = new RelationType("un-protected-delete", false, false, false, false, false, false);
         rt = adminClient.createRelationTypes(List.of(rt)).get(0);
@@ -1584,14 +1596,14 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     public void deleteOsdThatIsProtectedByRightObject() throws IOException {
         addUserToAclGroupWithPermissions("deleteOsdThatIsProtectedByRightObject", List.of(READ_OBJECT_SYS_METADATA,
                 RELATION_CHILD_ADD, RELATION_PARENT_ADD, DELETE_OBJECT));
-        var holder = new TestObjectHolder(adminClient);
-        holder.setAcl(client.getAclByName("deleteOsdThatIsProtectedByRightObject"))
+        var toh = new TestObjectHolder(adminClient);
+        toh.setAcl(client.getAclByName("deleteOsdThatIsProtectedByRightObject"))
                 .setUser(userId)
                 .setFolder(createFolderId)
                 .createOsd("protects-right");
-        ObjectSystemData leftOsd = holder.osd;
-        holder.createOsd("right-osd-protected-by-left");
-        ObjectSystemData rightOsd = holder.osd;
+        ObjectSystemData leftOsd = toh.osd;
+        toh.createOsd("right-osd-protected-by-left");
+        ObjectSystemData rightOsd = toh.osd;
 
         RelationType rt = new RelationType("right-only-protected-delete", false, true, false, false, false, false);
         rt = adminClient.createRelationTypes(List.of(rt)).get(0);
@@ -1605,14 +1617,14 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     public void deleteOsdThatIsNotProtectedByRightObject() throws IOException {
         addUserToAclGroupWithPermissions("deleteOsdThatIsNotProtectedByRightObject", List.of(READ_OBJECT_SYS_METADATA,
                 RELATION_CHILD_ADD, RELATION_PARENT_ADD, DELETE_OBJECT));
-        var holder = new TestObjectHolder(adminClient);
-        holder.setAcl(client.getAclByName("deleteOsdThatIsNotProtectedByRightObject"))
+        var toh = new TestObjectHolder(adminClient);
+        toh.setAcl(client.getAclByName("deleteOsdThatIsNotProtectedByRightObject"))
                 .setUser(userId)
                 .setFolder(createFolderId)
                 .createOsd("protects-right");
-        ObjectSystemData leftOsd = holder.osd;
-        holder.createOsd("right-osd-protected-by-left");
-        ObjectSystemData rightOsd = holder.osd;
+        ObjectSystemData leftOsd = toh.osd;
+        toh.createOsd("right-osd-protected-by-left");
+        ObjectSystemData rightOsd = toh.osd;
 
         RelationType rt = new RelationType("right-only-protected-delete2", true, false, false, false, false, false);
         rt = adminClient.createRelationTypes(List.of(rt)).get(0);
@@ -1624,14 +1636,14 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     public void deleteOsdThatIsNotProtectedByLeftObject() throws IOException {
         addUserToAclGroupWithPermissions("deleteOsdThatIsNotProtectedByLeftObject", List.of(READ_OBJECT_SYS_METADATA,
                 RELATION_CHILD_ADD, RELATION_PARENT_ADD, DELETE_OBJECT));
-        var holder = new TestObjectHolder(adminClient);
-        holder.setAcl(client.getAclByName("deleteOsdThatIsNotProtectedByLeftObject"))
+        var toh = new TestObjectHolder(adminClient);
+        toh.setAcl(client.getAclByName("deleteOsdThatIsNotProtectedByLeftObject"))
                 .setUser(userId)
                 .setFolder(createFolderId)
                 .createOsd("protects-right");
-        ObjectSystemData leftOsd = holder.osd;
-        holder.createOsd("right-osd-protected-by-left");
-        ObjectSystemData rightOsd = holder.osd;
+        ObjectSystemData leftOsd = toh.osd;
+        toh.createOsd("right-osd-protected-by-left");
+        ObjectSystemData rightOsd = toh.osd;
 
         RelationType rt = new RelationType("left-only-protected-delete2", false, true, false, false, false, false);
         rt = adminClient.createRelationTypes(List.of(rt)).get(0);
@@ -1643,14 +1655,14 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     public void deleteLeftOsdThatIsProtectedByLeftObject() throws IOException {
         addUserToAclGroupWithPermissions("deleteLeftOsdThatIsProtectedByLeftObject", List.of(READ_OBJECT_SYS_METADATA,
                 RELATION_CHILD_ADD, RELATION_PARENT_ADD, DELETE_OBJECT));
-        var holder = new TestObjectHolder(adminClient);
-        holder.setAcl(client.getAclByName("deleteLeftOsdThatIsProtectedByLeftObject"))
+        var toh = new TestObjectHolder(adminClient);
+        toh.setAcl(client.getAclByName("deleteLeftOsdThatIsProtectedByLeftObject"))
                 .setUser(userId)
                 .setFolder(createFolderId)
                 .createOsd("protects-right");
-        ObjectSystemData leftOsd = holder.osd;
-        holder.createOsd("right-osd-protected-by-left");
-        ObjectSystemData rightOsd = holder.osd;
+        ObjectSystemData leftOsd = toh.osd;
+        toh.createOsd("right-osd-protected-by-left");
+        ObjectSystemData rightOsd = toh.osd;
 
         RelationType rt = new RelationType("left-only-protected-delete", true, false, false, false, false, false);
         rt = adminClient.createRelationTypes(List.of(rt)).get(0);
@@ -1661,12 +1673,12 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void deleteWithLockedObject() throws IOException {
-        var holder = new TestObjectHolder(adminClient);
-        holder.setAcl(client.getAclByName("reviewers.acl"))
+        var toh = new TestObjectHolder(adminClient);
+        toh.setAcl(client.getAclByName("reviewers.acl"))
                 .setUser(userId)
                 .setFolder(createFolderId)
                 .createOsd("protects-right");
-        var osd = holder.osd;
+        var osd = toh.osd;
         adminClient.lockOsd(osd.getId());
         assertClientError(() -> client.deleteOsds(List.of(osd.getId()), false),
                 CANNOT_DELETE_DUE_TO_ERRORS, OBJECT_LOCKED_BY_OTHER_USER);
@@ -1674,24 +1686,24 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void deleteWithLockedObjectsAsAdmin() throws IOException {
-        var holder = new TestObjectHolder(adminClient);
-        holder.setAcl(client.getAclByName("reviewers.acl"))
+        var toh = new TestObjectHolder(adminClient);
+        toh.setAcl(client.getAclByName("reviewers.acl"))
                 .setUser(userId)
                 .setFolder(createFolderId)
                 .createOsd("protects-right");
-        var osd = holder.osd;
+        var osd = toh.osd;
         adminClient.lockOsd(osd.getId());
         adminClient.deleteOsds(List.of(osd.getId()), false);
     }
 
     @Test
     public void deleteWithLockedObjectByCurrentUser() throws IOException {
-        var holder = new TestObjectHolder(adminClient);
-        holder.setAcl(client.getAclByName("reviewers.acl"))
+        var toh = new TestObjectHolder(adminClient);
+        toh.setAcl(client.getAclByName("reviewers.acl"))
                 .setUser(userId)
                 .setFolder(createFolderId)
                 .createOsd("protects-right");
-        var osd = holder.osd;
+        var osd = toh.osd;
         client.lockOsd(osd.getId());
         client.deleteOsds(List.of(osd.getId()), false);
     }
@@ -1927,7 +1939,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void newVersionHasValidRootId() throws IOException{
+    public void newVersionHasValidRootId() throws IOException {
         // new version of an OSD should have predecessor as rootId:
         ObjectSystemData osd = client.createOsd(new CreateOsdRequest("osd for new-version with root id test", createFolderId, userId, 1L,
                 1L, null, 1L, null, "<sum/>"));
@@ -1936,9 +1948,9 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void newObjectIsLatestHead() throws IOException{
-        TestObjectHolder toh = new TestObjectHolder(client, "reviewers.acl", userId,createFolderId);
-        var osd = toh.createOsd("should-be-latest-head").osd;
+    public void newObjectIsLatestHead() throws IOException {
+        TestObjectHolder toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
+        var              osd = toh.createOsd("should-be-latest-head").osd;
         assertTrue(osd.isLatestHead());
     }
 

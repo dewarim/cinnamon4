@@ -90,6 +90,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static com.dewarim.cinnamon.ErrorCode.*;
 import static com.dewarim.cinnamon.api.Constants.LANGUAGE_UNDETERMINED_ISO_CODE;
 import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
 import static jakarta.servlet.http.HttpServletResponse.SC_OK;
@@ -197,7 +198,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         // get target folder
         FolderDao folderDao = new FolderDao();
         Folder targetFolder = folderDao.getFolderById(copyOsdRequest.getTargetFolderId())
-                .orElseThrow(ErrorCode.FOLDER_NOT_FOUND.getException());
+                .orElseThrow(FOLDER_NOT_FOUND.getException());
         if (!accessFilter.hasPermissionOnOwnable(targetFolder, DefaultPermission.CREATE_OBJECT, targetFolder)) {
             ErrorCode.NO_CREATE_PERMISSION.throwUp();
             return;
@@ -763,8 +764,12 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         CreateNewVersionRequest versionRequest = xmlMapper.readValue(contentRequest.getInputStream(), CreateNewVersionRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         ObjectSystemData preOsd = osdDao.getObjectById(versionRequest.getId()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
+        FolderDao folderDao = new FolderDao();
+        Folder folder = folderDao.getFolderById(preOsd.getParentId()).orElseThrow(FOLDER_NOT_FOUND::exception);
+        authorizationService.throwUpUnlessUserOrOwnerHasPermission(folder, DefaultPermission.CREATE_OBJECT, user,
+                NO_CREATE_PERMISSION);
         authorizationService.throwUpUnlessUserOrOwnerHasPermission(preOsd, DefaultPermission.VERSION_OBJECT, user,
-                ErrorCode.NO_VERSION_PERMISSION);
+                NO_VERSION_PERMISSION);
 
         Optional<String> lastDescendantVersion = osdDao.findLastDescendantVersion(preOsd.getId());
         ObjectSystemData osd                   = preOsd.createNewVersion(user, lastDescendantVersion.orElse(null));
