@@ -77,6 +77,7 @@ import com.dewarim.cinnamon.model.request.lifecycle.LifecycleRequest;
 import com.dewarim.cinnamon.model.request.lifecycle.ListLifecycleRequest;
 import com.dewarim.cinnamon.model.request.lifecycle.UpdateLifecycleRequest;
 import com.dewarim.cinnamon.model.request.lifecycleState.AttachLifecycleRequest;
+import com.dewarim.cinnamon.model.request.lifecycleState.ChangeLifecycleStateRequest;
 import com.dewarim.cinnamon.model.request.lifecycleState.CreateLifecycleStateRequest;
 import com.dewarim.cinnamon.model.request.lifecycleState.UpdateLifecycleStateRequest;
 import com.dewarim.cinnamon.model.request.link.CreateLinkRequest;
@@ -979,6 +980,12 @@ public class CinnamonClient {
         return lifecycleStateUnwrapper.unwrap(response, 1).get(0);
     }
 
+    public void changeLifecycleState(Long osdId, Long stateId) throws IOException{
+        var request = new ChangeLifecycleStateRequest(osdId,stateId);
+        var response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__CHANGE_STATE, request);
+        verifyResponseIsOkay(response);
+    }
+
     public void attachLifecycle(Long osdId, Long lifecycleId, Long lifecycleStateId, boolean forceChange) throws IOException {
         var request  = new AttachLifecycleRequest(osdId, lifecycleId, lifecycleStateId, forceChange);
         var response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__ATTACH_LIFECYCLE, request);
@@ -1016,8 +1023,8 @@ public class CinnamonClient {
         verifyDeleteResponse(response);
     }
 
-    public List<LifecycleState> getNextLifecycleStates(long lifecycleStateId) throws IOException {
-        var request  = new IdRequest(lifecycleStateId);
+    public List<LifecycleState> getNextLifecycleStates(long osdId) throws IOException {
+        var request  = new IdRequest(osdId);
         var response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__GET_NEXT_STATES, request);
         return lifecycleStateUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }

@@ -1037,20 +1037,20 @@ insert into objects (id, created, latest_branch, latest_head, modified, name, cr
                      owner_id, parent_id, type_id, acl_id)
 values (nextval('seq_object_id'), now(), true, true, now(), 'fail-state-attach-test', 1, 1, 1, 1, 6, 1, 2);
 
--- #34 empty test object to test unhappy path in change lifecycle  state (in creation folder #6)
-insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
-                     owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_object_id'), now(), true, true, now(), 'fail-state-attach-test', 1, 1, 1, 1, 6, 1, 2);
+-- -- #34 empty test object to test unhappy path in change lifecycle  state (in creation folder #6)
+-- insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+--                      owner_id, parent_id, type_id, acl_id)
+-- values (nextval('seq_object_id'), now(), true, true, now(), 'fail-state-attach-test', 1, 1, 1, 1, 6, 1, 2);
 
--- #35 empty test object to test getNextState lifecycle  state (in creation folder #6)
-insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
-                     owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_object_id'), now(), true, true, now(), 'has-lifecycle-state-authoring', 1, 1, 1, 1, 6, 1, 2);
+-- -- #35 empty test object to test getNextState lifecycle  state (in creation folder #6)
+-- insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+--                      owner_id, parent_id, type_id, acl_id)
+-- values (nextval('seq_object_id'), now(), true, true, now(), 'has-lifecycle-state-authoring', 1, 1, 1, 1, 6, 1, 2);
 
--- #36 empty test object with osd_meta for getMeta test
-insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
-                     owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_object_id'), now(), true, true, now(), 'has-meta', 1, 1, 1, 1, 6, 1, 2);
+-- -- #36 empty test object with osd_meta for getMeta test
+-- insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+--                      owner_id, parent_id, type_id, acl_id)
+-- values (nextval('seq_object_id'), now(), true, true, now(), 'has-meta', 1, 1, 1, 1, 6, 1, 2);
 
 -- -- #37 object with no permissions, used in getMeta and createMeta test
 -- insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
@@ -1286,7 +1286,7 @@ insert into lifecycle_states(id, name, config, state_class, life_cycle_id, copy_
                                                              '</config>', 'com.dewarim.cinnamon.lifecycle.ChangeAclState', 3, currval('seq_lifecycle_state_id'));
 update lifecycles set default_state_id=1 where id=3;
 update objects set state_id=2 where id=31;
-update objects set state_id=2 where id=35;
+-- update objects set state_id=2 where id=35;
 
 -- #3 second lifecycle_state of lc 3 with ChangeAclState
 insert into lifecycle_states(id, name, config, state_class, life_cycle_id, copy_state_id )
@@ -1307,13 +1307,13 @@ insert into metaset_types(id, name, is_unique) VALUES (nextval('seq_metaset_type
 -- #2 metaset type 'license' (note: in production, this may be a better stored in a relation)
 insert into metaset_types(id, name, is_unique) VALUES (nextval('seq_metaset_type_id'), 'license', true);
 
--- #1 osd_meta with metaset_type#1 comment #1 for osd#36
-insert into osd_meta(id, osd_id, content, type_id)
-values (nextval('seq_osd_meta_id'), 36, '<metaset><p>Good Test</p></metaset>', 1);
-
--- #2 osd meta with metaset_type#2 license for osd#36
-insert into osd_meta(id, osd_id, content, type_id)
-values (nextval('seq_osd_meta_id'), 36, '<metaset><license>GPL</license></metaset>', 2);
+-- -- #1 osd_meta with metaset_type#1 comment #1 for osd#36
+-- insert into osd_meta(id, osd_id, content, type_id)
+-- values (nextval('seq_osd_meta_id'), 36, '<metaset><p>Good Test</p></metaset>', 1);
+--
+-- -- #2 osd meta with metaset_type#2 license for osd#36
+-- insert into osd_meta(id, osd_id, content, type_id)
+-- values (nextval('seq_osd_meta_id'), 36, '<metaset><license>GPL</license></metaset>', 2);
 
 -- -- #3 osd_meta
 -- insert into osd_meta(id,osd_id,content,type_id)

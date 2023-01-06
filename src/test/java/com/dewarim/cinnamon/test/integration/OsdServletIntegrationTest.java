@@ -567,7 +567,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void getMetaWithoutReadPermission() throws IOException {
         MetasetType metasetType = adminClient.createMetasetType("not-readable", true);
-        var toh = new TestObjectHolder(adminClient, "reviewers.acl", userId, createFolderId);
+        var         toh         = new TestObjectHolder(adminClient, "reviewers.acl", userId, createFolderId);
         toh.createAcl("getMetaWithoutReadPermission")
                 .createGroup("getMetaWithoutReadPermission")
                 .createAclGroup().addUserToGroup(userId)
@@ -580,7 +580,16 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getMetaHappyPathAllMeta() throws IOException {
-        List<Meta>   osdMetas = client.getOsdMetas(36L);
+        MetasetType metasetType1 = adminClient.createMetasetType("type1", true);
+        MetasetType metasetType2 = adminClient.createMetasetType("type2", true);
+        var         toh          = new TestObjectHolder(adminClient, "reviewers.acl", userId, createFolderId);
+        toh.createOsd("getMetaHappyPathAllMeta")
+                .setMetasetType(metasetType1)
+                .createOsdMeta("<metaset><p>Good Test</p></metaset>")
+                .setMetasetType(metasetType2)
+                .createOsdMeta("<metaset><license>GPL</license></metaset>");
+
+        List<Meta>   osdMetas = client.getOsdMetas(toh.osd.getId());
         List<String> content  = osdMetas.stream().map(Meta::getContent).toList();
         assertTrue(content.contains("<metaset><p>Good Test</p></metaset>"));
         assertTrue(content.contains("<metaset><license>GPL</license></metaset>"));
@@ -609,12 +618,12 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void createMetaObjectNotWritable() throws IOException {
         MetasetType metasetType = adminClient.createMetasetType("not-writable", true);
-        var toh = new TestObjectHolder(adminClient, "reviewers.acl", userId, createFolderId);
+        var         toh         = new TestObjectHolder(adminClient, "reviewers.acl", userId, createFolderId);
         toh.createAcl("createMetaObjectNotWritable")
                 .createGroup("createMetaObjectNotWritable")
                 .createAclGroup().addUserToGroup(userId)
                 .createOsd("createMetaObjectNotWritable");
-        var ex = assertThrows(CinnamonClientException.class, () -> client.createOsdMeta(toh.osd.getId(),"unwritten",metasetType.getId()));
+        var ex = assertThrows(CinnamonClientException.class, () -> client.createOsdMeta(toh.osd.getId(), "unwritten", metasetType.getId()));
         assertEquals(NO_WRITE_CUSTOM_METADATA_PERMISSION, ex.getErrorCode());
     }
 

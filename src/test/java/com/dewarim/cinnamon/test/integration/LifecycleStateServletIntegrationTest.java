@@ -11,6 +11,7 @@ import com.dewarim.cinnamon.model.request.IdRequest;
 import com.dewarim.cinnamon.model.request.lifecycle.ListLifecycleRequest;
 import com.dewarim.cinnamon.model.request.lifecycleState.AttachLifecycleRequest;
 import com.dewarim.cinnamon.model.request.lifecycleState.ChangeLifecycleStateRequest;
+import com.dewarim.cinnamon.test.TestObjectHolder;
 import org.apache.http.HttpResponse;
 import org.junit.jupiter.api.Test;
 
@@ -18,6 +19,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+import static com.dewarim.cinnamon.ErrorCode.INVALID_REQUEST;
+import static com.dewarim.cinnamon.ErrorCode.LIFECYCLE_STATE_NOT_FOUND;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTest {
@@ -28,7 +31,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
     @Test
     public void getLifecycleStateWithInvalidRequest() {
         var ex = assertThrows(CinnamonClientException.class, () -> client.getLifecycle(-1L));
-        assertEquals(ErrorCode.INVALID_REQUEST, ex.getErrorCode());
+        assertEquals(INVALID_REQUEST, ex.getErrorCode());
     }
 
     @Test
@@ -57,15 +60,15 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
         // TODO: add unit test for ALR to cover all branches of invalid requests.
         AttachLifecycleRequest badOsd   = new AttachLifecycleRequest(null, 1L, 1L, false);
         HttpResponse           response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__ATTACH_LIFECYCLE, badOsd);
-        assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
+        assertCinnamonError(response, INVALID_REQUEST);
 
         AttachLifecycleRequest badLifecycle = new AttachLifecycleRequest(28L, null, 1L, false);
         response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__ATTACH_LIFECYCLE, badLifecycle);
-        assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
+        assertCinnamonError(response, INVALID_REQUEST);
 
         AttachLifecycleRequest badLifecycleState = new AttachLifecycleRequest(28L, 1L, 0L, false);
         response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__ATTACH_LIFECYCLE, badLifecycleState);
-        assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
+        assertCinnamonError(response, INVALID_REQUEST);
     }
 
     @Test
@@ -110,7 +113,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
     public void attachLifecycleMissingLifecycleState() throws IOException {
         AttachLifecycleRequest badOsd   = new AttachLifecycleRequest(28L, 2L, null, false);
         HttpResponse           response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__ATTACH_LIFECYCLE, badOsd);
-        assertCinnamonError(response, ErrorCode.LIFECYCLE_STATE_NOT_FOUND);
+        assertCinnamonError(response, LIFECYCLE_STATE_NOT_FOUND);
     }
 
     @Test
@@ -139,7 +142,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
     public void detachLifecycleInvalidRequest() throws IOException {
         IdRequest    idRequest      = new IdRequest(0L);
         HttpResponse detachResponse = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__DETACH_LIFECYCLE, idRequest);
-        assertCinnamonError(detachResponse, ErrorCode.INVALID_REQUEST);
+        assertCinnamonError(detachResponse, INVALID_REQUEST);
     }
 
     @Test
@@ -167,10 +170,9 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
     }
 
     @Test
-    public void changeStateInvalidRequest() throws IOException {
-        ChangeLifecycleStateRequest attachRequest = new ChangeLifecycleStateRequest(34L, null);
-        HttpResponse                response      = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__CHANGE_STATE, attachRequest);
-        assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
+    public void changeStateInvalidRequest()  {
+        var ex = assertThrows(CinnamonClientException.class,() -> client.changeLifecycleState(null,null));
+        assertEquals(INVALID_REQUEST,ex.getErrorCode());
     }
 
     @Test
@@ -182,9 +184,10 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
 
     @Test
     public void changeStateWithStateNotFound() throws IOException {
-        ChangeLifecycleStateRequest attachRequest = new ChangeLifecycleStateRequest(34L,  Long.MAX_VALUE);
-        HttpResponse                response      = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__CHANGE_STATE, attachRequest);
-        assertCinnamonError(response, ErrorCode.LIFECYCLE_STATE_NOT_FOUND);
+        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId)
+                .createOsd("changeStateWithStateNotFound");
+        var ex = assertThrows(CinnamonClientException.class,() -> client.changeLifecycleState(toh.osd.getId(), Long.MAX_VALUE));
+        assertEquals(LIFECYCLE_STATE_NOT_FOUND,ex.getErrorCode());
     }
 
     @Test
@@ -205,7 +208,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
     public void getNextStatesInvalidRequest() throws IOException {
         IdRequest    request  = new IdRequest();
         HttpResponse response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__GET_NEXT_STATES, request);
-        assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
+        assertCinnamonError(response, INVALID_REQUEST);
     }
 
     @Test
@@ -217,10 +220,10 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
 
     @Test
     public void getNextStatesLifecycleStateNotFound() throws IOException {
-        // osd#34 also used in changeStateWithStateNotFound
-        IdRequest    request  = new IdRequest(34L);
-        HttpResponse response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__GET_NEXT_STATES, request);
-        assertCinnamonError(response, ErrorCode.LIFECYCLE_STATE_NOT_FOUND);
+        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId)
+                .createOsd("getNextStatesLifecycleStateNotFound");
+        var ex = assertThrows(CinnamonClientException.class, () -> client.getNextLifecycleStates(toh.osd.getId()));
+        assertEquals(LIFECYCLE_STATE_NOT_FOUND, ex.getErrorCode());
     }
 
     @Test
@@ -232,7 +235,11 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
 
     @Test
     public void getNextStatesHappyPath() throws IOException {
-        List<LifecycleState> lifecycleStates = client.getNextLifecycleStates(35L);
+        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId)
+                          .createOsd("getNextStatesHappyPath");
+        Long osdId = toh.osd.getId();
+        adminClient.attachLifecycle(osdId,3L,2L,true);
+        List<LifecycleState> lifecycleStates = client.getNextLifecycleStates(osdId);
         assertTrue(lifecycleStates.size() > 0);
         LifecycleState state = lifecycleStates.get(0);
         assertEquals("published", state.getName());
@@ -260,7 +267,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
     @Test
     public void createLifecycleStateInvalidRequest() {
         var ex = assertThrows(CinnamonClientException.class, () -> adminClient.createLifecycleState(new LifecycleState()));
-        assertEquals(ErrorCode.INVALID_REQUEST, ex.getErrorCode());
+        assertEquals(INVALID_REQUEST, ex.getErrorCode());
     }
 
     @Test
@@ -286,7 +293,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
     @Test
     public void updateLifecycleStateInvalidRequest() {
         var ex = assertThrows(CinnamonClientException.class, () -> adminClient.updateLifecycleState(new LifecycleState()));
-        assertEquals(ErrorCode.INVALID_REQUEST, ex.getErrorCode());
+        assertEquals(INVALID_REQUEST, ex.getErrorCode());
     }
 
     @Test
@@ -321,7 +328,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
     @Test
     public void deleteLifecycleStateInvalidRequest() {
         var ex = assertThrows(CinnamonClientException.class, () -> adminClient.deleteLifecycleState(-1L));
-        assertEquals(ErrorCode.INVALID_REQUEST, ex.getErrorCode());
+        assertEquals(INVALID_REQUEST, ex.getErrorCode());
     }
 
     @Test
