@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.test.integration;
 
+import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonServer;
@@ -305,15 +306,17 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getContentHappyPath() throws IOException {
-        createTestContentOnOsd(22L, false);
+        long osdId = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId)
+                .createOsd("getContentHappyPath").osd.getId();
+        createTestContentOnOsd(osdId, false);
 
-        IdRequest    idRequest = new IdRequest(22L);
-        HttpResponse response  = sendStandardRequest(UrlMapping.OSD__GET_CONTENT, idRequest);
+        // do not use cinnamonClient as we want to verify content-type header.
+        HttpResponse response = sendStandardRequest(UrlMapping.OSD__GET_CONTENT, new IdRequest(osdId));
         assertResponseOkay(response);
         Header contentType = response.getFirstHeader(CONTENT_TYPE);
         assertEquals(APPLICATION_XML.getMimeType(), contentType.getValue());
         Header           contentDisposition = response.getFirstHeader(CONTENT_DISPOSITION);
-        ObjectSystemData osd                = client.getOsdById(22L, false, false);
+        ObjectSystemData osd                = client.getOsdById(osdId, false, false);
         assertEquals("attachment; filename=\"" + osd.getName() + "\"", contentDisposition.getValue());
         File tempFile = Files.createTempFile("cinnamon-test-get-content-", ".xml").toFile();
         try (FileOutputStream fos = new FileOutputStream(tempFile)) {
@@ -335,9 +338,11 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getContentWithoutReadPermission() throws IOException {
-        IdRequest    idRequest = new IdRequest(24L);
-        HttpResponse response  = sendStandardRequest(UrlMapping.OSD__GET_CONTENT, idRequest);
-        assertCinnamonError(response, ErrorCode.NO_READ_PERMISSION);
+        var toh = new TestObjectHolder(adminClient, "reviewers.acl", userId, createFolderId)
+                .createAcl("no-content-read-permission")
+                .createOsd("getContentWithoutReadPermission");
+        var ex = assertThrows(CinnamonClientException.class, () -> client.getContent(toh.osd.getId()));
+        assertEquals(NO_READ_PERMISSION, ex.getErrorCode());
     }
 
     @Test
@@ -356,21 +361,20 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getContentWithoutContent() throws IOException {
-        IdRequest    idRequest = new IdRequest(25L);
-        HttpResponse response  = sendStandardRequest(UrlMapping.OSD__GET_CONTENT, idRequest);
-        assertCinnamonError(response, ErrorCode.OBJECT_HAS_NO_CONTENT);
+        long osdId = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId)
+                .createOsd("getContentWithoutContent").osd.getId();
+        var ex = assertThrows(CinnamonClientException.class, () -> client.getContent(osdId));
+        assertEquals(OBJECT_HAS_NO_CONTENT, ex.getErrorCode());
     }
 
     @Test
     public void setContentWithDefaultContentProviderHappyPath() throws IOException {
-        createTestContentOnOsd(22L, false);
+        long osdId = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId)
+                .createOsd("setContentWithDefaultContentProviderHappyPath").osd.getId();
+        createTestContentOnOsd(osdId, false);
 
         // check data is in content store:
-        OsdRequest osdRequest = new OsdRequest();
-        osdRequest.setIds(List.of(22L));
-        HttpResponse osdResponse = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
-        assertResponseOkay(osdResponse);
-        ObjectSystemData osd         = unwrapOsds(osdResponse, 1).get(0);
+        ObjectSystemData osd         = client.getOsdById(osdId, false, false);
         String           contentPath = osd.getContentPath();
         String           dataRoot    = CinnamonServer.config.getServerConfig().getDataRoot();
         File             content     = new File(dataRoot, contentPath);
@@ -403,7 +407,10 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void setContentWithoutFile() throws IOException {
-        SetContentRequest contentRequest = new SetContentRequest(22L, 1L);
+        long osdId = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId)
+                .createOsd("setContentWithDefaultContentProviderHappyPath").osd.getId();
+
+        SetContentRequest contentRequest = new SetContentRequest(osdId, 1L);
         StringBody        setContentBody = new StringBody(mapper.writeValueAsString(contentRequest), APPLICATION_XML);
         HttpEntity multipartEntity = MultipartEntityBuilder.create().
                 addPart("setContentRequest", setContentBody).build();
@@ -427,107 +434,118 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void setContentWithUnknownFormatId() throws IOException {
-        Long id = 22L;
-        client.lockOsd(id);
-        SetContentRequest contentRequest = new SetContentRequest(id, Long.MAX_VALUE);
-        HttpResponse      response       = sendStandardMultipartRequest(UrlMapping.OSD__SET_CONTENT, createMultipartEntityWithFileBody("setContentRequest", contentRequest));
-        assertCinnamonError(response, ErrorCode.FORMAT_NOT_FOUND);
-        client.unlockOsd(id);
+        long osdId = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId)
+                .createOsd("setContentWithDefaultContentProviderHappyPath").osd.getId();
+        client.lockOsd(osdId);
+        var ex = assertThrows(CinnamonClientException.class, () -> client.setContentOnLockedOsd(osdId, Long.MAX_VALUE, new File("pom.xml")));
+        assertEquals(FORMAT_NOT_FOUND, ex.getErrorCode());
     }
 
     @Test
     public void setContentWithoutWritePermission() throws IOException {
-        SetContentRequest contentRequest = new SetContentRequest(23L, 1L);
-        HttpResponse      response       = sendStandardMultipartRequest(UrlMapping.OSD__SET_CONTENT, createMultipartEntityWithFileBody("setContentRequest", contentRequest));
-        assertCinnamonError(response, ErrorCode.NO_WRITE_PERMISSION);
+        long osdId = new TestObjectHolder(adminClient, "reviewers.acl", userId, createFolderId)
+                .createAcl("setContentWithoutWritePermission")
+                .createGroup("setContentWithoutWritePermission")
+                .createAclGroup()
+                .addUserToGroup(userId)
+                .addPermissions(List.of(LOCK))
+                .createOsd("setContentWithoutWritePermission").osd.getId();
+        client.lockOsd(osdId);
+        var ex = assertThrows(CinnamonClientException.class,
+                () -> client.setContentOnLockedOsd(osdId, 1L, new File("pom.xml")));
+        assertEquals(NO_WRITE_PERMISSION, ex.getErrorCode());
+
     }
 
     @Test
     public void lockAndUnlockObject() throws IOException {
-        IdRequest    idRequest    = new IdRequest(26L);
-        HttpResponse lockResponse = sendStandardRequest(UrlMapping.OSD__LOCK, idRequest);
-        assertResponseOkay(lockResponse);
+        long osdId = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId)
+                .createOsd("lockAndUnlockObject").osd.getId();
+        client.lockOsd(osdId);
+        // verify:
+        ObjectSystemData osd = new OsdServletIntegrationTest().fetchSingleOsd(osdId);
+        assertEquals(userId, osd.getLockerId());
 
-        HttpResponse unlockResponse = sendStandardRequest(UrlMapping.OSD__UNLOCK, idRequest);
-        assertResponseOkay(unlockResponse);
+        client.unlockOsd(osdId);
+        osd = new OsdServletIntegrationTest().fetchSingleOsd(osdId);
+        assertNull(osd.getLockerId());
     }
 
     @Test
     public void lockTwice() throws IOException {
-        IdRequest    idRequest    = new IdRequest(26L);
-        HttpResponse lockResponse = sendStandardRequest(UrlMapping.OSD__LOCK, idRequest);
-        assertResponseOkay(lockResponse);
-        lockResponse = sendStandardRequest(UrlMapping.OSD__LOCK, idRequest);
-        assertResponseOkay(lockResponse);
-
-        // cleanup
-        HttpResponse unlockResponse = sendStandardRequest(UrlMapping.OSD__UNLOCK, idRequest);
-        assertResponseOkay(unlockResponse);
+        long osdId = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId)
+                .createOsd("lockTwice").osd.getId();
+        client.lockOsd(osdId);
+        client.lockOsd(osdId);
+        // verify:
+        ObjectSystemData osd = new OsdServletIntegrationTest().fetchSingleOsd(osdId);
+        assertEquals(userId, osd.getLockerId());
     }
 
     @Test
     public void unlockTwice() throws IOException {
-        IdRequest    idRequest      = new IdRequest(26L);
-        HttpResponse unlockResponse = sendStandardRequest(UrlMapping.OSD__UNLOCK, idRequest);
-        assertResponseOkay(unlockResponse);
-        unlockResponse = sendStandardRequest(UrlMapping.OSD__UNLOCK, idRequest);
-        assertResponseOkay(unlockResponse);
+        long osdId = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId)
+                .createOsd("unlockTwice").osd.getId();
+        client.lockOsd(osdId);
+        client.unlockOsd(osdId);
+        client.unlockOsd(osdId);
+        // verify:
+        ObjectSystemData osd = new OsdServletIntegrationTest().fetchSingleOsd(osdId);
+        assertNull(osd.getLockerId());
     }
 
     @Test
     public void overwriteOtherUsersLockShouldFail() throws IOException {
-        // first, make sure it is unlocked:
-        IdRequest    idRequest      = new IdRequest(26L);
-        HttpResponse unlockResponse = sendStandardRequest(UrlMapping.OSD__UNLOCK, idRequest);
-        assertResponseOkay(unlockResponse);
-
-        // lock by admin:
-        HttpResponse lockResponse = sendAdminRequest(UrlMapping.OSD__LOCK, idRequest);
-        assertResponseOkay(lockResponse);
+        long osdId = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId)
+                .createOsd("overwriteOtherUsersLockShouldFail").osd.getId();
+        adminClient.lockOsd(osdId);
 
         // try to overwrite admin's lock:
-        lockResponse = sendStandardRequest(UrlMapping.OSD__LOCK, idRequest);
-        assertCinnamonError(lockResponse, ErrorCode.OBJECT_LOCKED_BY_OTHER_USER);
-
-        // cleanup:
-        unlockResponse = sendAdminRequest(UrlMapping.OSD__UNLOCK, idRequest);
-        assertResponseOkay(unlockResponse);
+        var ex = assertThrows(CinnamonClientException.class, () -> client.lockOsd(osdId));
+        assertEquals(OBJECT_LOCKED_BY_OTHER_USER, ex.getErrorCode());
     }
 
     @Test
     public void unlockOtherUsersLockShouldFail() throws IOException {
-        // lock by first user:
-        IdRequest    idRequest    = new IdRequest(26L);
-        HttpResponse lockResponse = sendAdminRequest(UrlMapping.OSD__LOCK, idRequest);
-        assertResponseOkay(lockResponse);
+        long osdId = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId)
+                .createOsd("unlockOtherUsersLockShouldFail").osd.getId();
+        adminClient.lockOsd(osdId);
 
-        // try to unlock other user's lock:
-        lockResponse = sendStandardRequest(UrlMapping.OSD__UNLOCK, idRequest);
-        assertCinnamonError(lockResponse, ErrorCode.OBJECT_LOCKED_BY_OTHER_USER);
-
-        // cleanup:
-        HttpResponse unlockResponse = sendAdminRequest(UrlMapping.OSD__UNLOCK, idRequest);
-        assertResponseOkay(unlockResponse);
+        // try to unlock admin's lock:
+        var ex = assertThrows(CinnamonClientException.class, () -> client.unlockOsd(osdId));
+        assertEquals(OBJECT_LOCKED_BY_OTHER_USER, ex.getErrorCode());
     }
 
     @Test
     public void lockAndUnlockShouldFailWithInvalidRequest() throws IOException {
-        IdRequest    idRequest    = new IdRequest(0L);
-        HttpResponse lockResponse = sendStandardRequest(UrlMapping.OSD__LOCK, idRequest);
-        assertCinnamonError(lockResponse, ErrorCode.INVALID_REQUEST);
-
-        HttpResponse unlockResponse = sendStandardRequest(UrlMapping.OSD__UNLOCK, idRequest);
-        assertCinnamonError(unlockResponse, ErrorCode.INVALID_REQUEST);
+        var exLock = assertThrows(CinnamonClientException.class, () -> client.lockOsd(null));
+        assertEquals(INVALID_REQUEST, exLock.getErrorCode());
+        var exUnlock = assertThrows(CinnamonClientException.class, () -> client.unlockOsd(null));
+        assertEquals(INVALID_REQUEST, exUnlock.getErrorCode());
     }
 
     @Test
     public void lockAndUnlockShouldFailWithoutPermission() throws IOException {
-        IdRequest    idRequest    = new IdRequest(27L);
-        HttpResponse lockResponse = sendStandardRequest(UrlMapping.OSD__LOCK, idRequest);
-        assertCinnamonError(lockResponse, ErrorCode.NO_LOCK_PERMISSION);
+        var toh = new TestObjectHolder(adminClient, "reviewers.acl", adminId, createFolderId)
+                .createAcl("lockAndUnlockShouldFailWithoutPermission")
+                .createGroup("lockAndUnlockShouldFailWithoutPermission")
+                .createAclGroup()
+                .addUserToGroup(userId)
+                .addPermissions(List.of(DefaultPermission.READ_OBJECT_SYS_METADATA))
+                .createOsd("lockAndUnlockShouldFailWithoutPermission");
+        long osdId = toh.osd.getId();
 
-        HttpResponse unlockResponse = sendStandardRequest(UrlMapping.OSD__UNLOCK, idRequest);
-        assertCinnamonError(unlockResponse, ErrorCode.NO_LOCK_PERMISSION);
+        var ex = assertThrows(CinnamonClientException.class,
+                () -> client.lockOsd(osdId));
+        assertEquals(NO_LOCK_PERMISSION, ex.getErrorCode());
+
+        toh.addPermissions(List.of(LOCK));
+        client.lockOsd(osdId);
+        toh.removePermissions(List.of(LOCK));
+
+        ex = assertThrows(CinnamonClientException.class,
+                () -> client.unlockOsd(osdId));
+        assertEquals(NO_LOCK_PERMISSION, ex.getErrorCode());
     }
 
     @Test
@@ -542,12 +560,10 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void superuserHasMasterKeyForUnlock() throws IOException {
-        IdRequest    idRequest    = new IdRequest(25L);
-        HttpResponse lockResponse = sendStandardRequest(UrlMapping.OSD__LOCK, idRequest);
-        assertResponseOkay(lockResponse);
-
-        HttpResponse unlockResponse = sendAdminRequest(UrlMapping.OSD__UNLOCK, idRequest);
-        assertResponseOkay(unlockResponse);
+        long osdId = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId)
+                .createOsd("superuserHasMasterKeyForUnlock").osd.getId();
+        client.lockOsd(osdId);
+        adminClient.unlockOsd(osdId);
     }
 
     @Test
@@ -597,7 +613,13 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getMetaHappyPathSingleMeta() throws IOException, ParsingException {
-        List<Meta> osdMetas = client.getOsdMetas(36L, List.of(2L));
+        MetasetType metasetType1 = adminClient.createMetasetType("getMetaHappyPathSingleMeta", true);
+        var toh = new TestObjectHolder(adminClient, "reviewers.acl", userId, createFolderId)
+                .createOsd("getMetaHappyPathAllMeta")
+                .setMetasetType(metasetType1)
+                .createOsdMeta("<metaset><p>Good Test</p></metaset>");
+
+        List<Meta> osdMetas = client.getOsdMetas(toh.osd.getId(), List.of(metasetType1.getId()));
         assertEquals(1, osdMetas.size());
     }
 

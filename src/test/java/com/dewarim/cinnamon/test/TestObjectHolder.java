@@ -158,13 +158,25 @@ public class TestObjectHolder {
         return this;
     }
 
-    public TestObjectHolder addPermissionsByName(List<String> names) throws IOException {
-        client.addAndRemovePermissions(aclGroup.getId(), permissions.stream().filter(p -> names.contains(p.getName())).map(Permission::getId).collect(Collectors.toList()), List.of());
+    public TestObjectHolder addPermissionsByName(List<String> permissionsToAdd) throws IOException {
+        addAndRemovePermissionsByName(permissionsToAdd, List.of());
+        return this;
+    }
+
+    public TestObjectHolder addAndRemovePermissionsByName(List<String> permissionsToAdd, List<String> permissionsToRemove) throws IOException {
+        client.addAndRemovePermissions(aclGroup.getId(),
+                permissions.stream().filter(p -> permissionsToAdd.contains(p.getName())).map(Permission::getId).collect(Collectors.toList()),
+                permissions.stream().filter(p -> permissionsToRemove.contains(p.getName())).map(Permission::getId).collect(Collectors.toList()));
         return this;
     }
 
     public TestObjectHolder addPermissions(List<DefaultPermission> permissionList) throws IOException {
-        addPermissionsByName(permissionList.stream().map(DefaultPermission::getName).toList());
+        addAndRemovePermissionsByName(permissionList.stream().map(DefaultPermission::getName).toList(), List.of());
+        return this;
+    }
+
+    public TestObjectHolder removePermissions(List<DefaultPermission> permissionList) throws IOException {
+        addAndRemovePermissionsByName(List.of(), permissionList.stream().map(DefaultPermission::getName).toList());
         return this;
     }
 

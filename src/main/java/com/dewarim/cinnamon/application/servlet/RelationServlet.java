@@ -108,10 +108,10 @@ public class RelationServlet extends HttpServlet implements CruddyServlet<Relati
         List<Relation> relations;
         if (relationRequest.isOrMode()) {
             relations = relationDao.getRelationsOrMode(relationRequest.getLeftIds(), relationRequest.getRightIds(),
-                    relationRequest.getNames(), relationRequest.isIncludeMetadata());
+                    relationRequest.getRelationTypeIds(), relationRequest.isIncludeMetadata());
         } else {
             relations = relationDao.getRelations(relationRequest.getLeftIds(), relationRequest.getRightIds(),
-                    relationRequest.getNames(), relationRequest.isIncludeMetadata());
+                    relationRequest.getRelationTypeIds(), relationRequest.isIncludeMetadata());
         }
         RelationWrapper wrapper = new RelationWrapper(relations);
         response.setWrapper(wrapper);

@@ -12,18 +12,18 @@ import java.util.Map;
 
 public class RelationDao implements CrudDao<Relation> {
 
-    public List<Relation> getRelations(Collection<Long> leftIds, Collection<Long> rightIds, Collection<String> names, boolean includeMetadata) {
+    public List<Relation> getRelations(Collection<Long> leftIds, Collection<Long> rightIds, Collection<Long> relationTypeIds, boolean includeMetadata) {
         Map<String, Object> params = new HashMap<>();
         params.put("leftIds", leftIds);
         params.put("rightIds", rightIds);
-        params.put("names", names);
+        params.put("typeIds", relationTypeIds);
         params.put("includeMetadata", includeMetadata);
 
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
         return sqlSession.selectList("com.dewarim.cinnamon.model.relations.Relation.getRelationsWithCriteria", params);
     }
 
-    public List<Relation> getRelationsOrMode(Collection<Long> leftIds, Collection<Long> rightIds, Collection<String> names, boolean includeMetadata) {
+    public List<Relation> getRelationsOrMode(Collection<Long> leftIds, Collection<Long> rightIds, Collection<Long> relationTypeIds, boolean includeMetadata) {
         Map<String, Object> params = new HashMap<>();
         if (CollectionUtils.isNotEmpty(leftIds)) {
             params.put("leftIds", leftIds);
@@ -31,8 +31,8 @@ public class RelationDao implements CrudDao<Relation> {
         if (CollectionUtils.isNotEmpty(rightIds)) {
             params.put("rightIds", rightIds);
         }
-        if (CollectionUtils.isNotEmpty(names)) {
-            params.put("names", names);
+        if (CollectionUtils.isNotEmpty(relationTypeIds)) {
+            params.put("typeIds", relationTypeIds);
         }
         params.put("includeMetadata", includeMetadata);
 

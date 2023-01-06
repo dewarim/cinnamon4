@@ -962,9 +962,9 @@ public class CinnamonClient {
         return relationUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
-    public List<Relation> getRelationsWithCriteria(List<Long> leftIds, List<Long> rightIds, Collection<String> names, boolean includeMetadata, boolean orMode) throws IOException {
-        var request  = new SearchRelationRequest(leftIds, rightIds, names, includeMetadata, orMode);
-        var response = sendStandardRequest(UrlMapping.OSD__GET_RELATIONS, request);
+    public List<Relation> searchRelations(List<Long> leftIds, List<Long> rightIds, Collection<Long> relationTypeIds, boolean includeMetadata, boolean orMode) throws IOException {
+        var request  = new SearchRelationRequest(leftIds, rightIds, relationTypeIds, includeMetadata, orMode);
+        var response = sendStandardRequest(RELATION__SEARCH, request);
         return relationUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 

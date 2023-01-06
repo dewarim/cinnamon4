@@ -33,9 +33,9 @@ public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void getRelationsByName() throws IOException {
+    public void getRelationsByTypeId() throws IOException {
         SearchRelationRequest request = new SearchRelationRequest();
-        request.setNames(Collections.singletonList(firstRelationTypeName));
+        request.setRelationTypeIds(Collections.singletonList(1L));
         HttpResponse    response = sendStandardRequest(UrlMapping.RELATION__SEARCH, request);
         RelationWrapper wrapper  = parseResponse(response);
         Relation        relation = wrapper.getRelations().get(0);
@@ -49,20 +49,30 @@ public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getRelationsByLeftIds() throws IOException {
-        SearchRelationRequest request = new SearchRelationRequest();
-        request.setLeftIds(Collections.singletonList(19L));
-        HttpResponse    response = sendStandardRequest(UrlMapping.RELATION__SEARCH, request);
-        RelationWrapper wrapper  = parseResponse(response);
-        Relation        relation = wrapper.getRelations().get(0);
+        var toh = new TestObjectHolder(adminClient, "reviewers.acl", userId, createFolderId)
+                .createAcl("with-add-child-permission")
+                .createGroup("with-add-child-permission")
+                .addUserToGroup(userId)
+                .createAclGroup()
+                .addPermissions(List.of(RELATION_CHILD_ADD, RELATION_PARENT_ADD));
+        var leftOsd = toh.createOsd("left").osd;
+        var rightOsd = toh.createOsd("right").osd;
+
+        client.createRelation(leftOsd.getId(), rightOsd.getId(), 1L, "<none/>");
+
+        List<Relation> relations = client.searchRelations(List.of(leftOsd.getId()), null,null,false,false);
+        assertEquals(1,relations.size());
+
+        Relation        relation = relations.get(0);
         Long            typeId   = relation.getTypeId();
         assertNotNull(typeId);
-        assertEquals(2L, (long) typeId);
+        assertEquals(1L, (long) typeId);
         Long leftId = relation.getLeftId();
         assertNotNull(leftId);
-        assertEquals(19L, (long) leftId);
+        assertEquals(leftOsd.getId(), leftId);
         Long rightId = relation.getRightId();
         assertNotNull(rightId);
-        assertEquals(20L, (long) rightId);
+        assertEquals(rightOsd.getId(), rightId);
 
     }
 
@@ -90,7 +100,7 @@ public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
         request.setLeftIds(Collections.singletonList(20L));
         request.setRightIds(Collections.singletonList(19L));
         request.setIncludeMetadata(true);
-        request.setNames(Collections.singletonList(firstRelationTypeName));
+        request.setRelationTypeIds(Collections.singletonList(1L));
         HttpResponse    response = sendStandardRequest(UrlMapping.RELATION__SEARCH, request);
         RelationWrapper wrapper  = parseResponse(response);
         Relation        relation = wrapper.getRelations().get(0);
@@ -151,7 +161,7 @@ public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
         request.setLeftIds(Collections.singletonList(leftOsd.getId()));
         request.setRightIds(Collections.singletonList(rightOsd.getId()));
         request.setIncludeMetadata(true);
-        request.setNames(Collections.singletonList(firstRelationTypeName));
+        request.setRelationTypeIds(Collections.singletonList(1L));
         HttpResponse    response = sendStandardRequest(UrlMapping.RELATION__SEARCH, request);
         RelationWrapper wrapper  = parseResponse(response);
         Relation        relation = wrapper.getRelations().get(0);

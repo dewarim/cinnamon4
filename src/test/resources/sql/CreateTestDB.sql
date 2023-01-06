@@ -971,36 +971,36 @@ values (nextval('seq_object_id'), now(), true, true, now(), 'right-related', 1, 
 insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
                      owner_id, parent_id, type_id, acl_id)
 values (nextval('seq_object_id'), now(), true, true, now(), 'left-related', 1, 1, 1, 1, 6, 1, 1);
+--
+-- -- #21 test object for create-delete relations (target: osd#20) in creation folder #6
+-- insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+--                      owner_id, parent_id, type_id, acl_id)
+-- values (nextval('seq_object_id'), now(), true, true, now(), 'related', 1, 1, 1, 1, 6, 1, 1);
 
--- #21 test object for create-delete relations (target: osd#20) in creation folder #6
-insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
-                     owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_object_id'), now(), true, true, now(), 'related', 1, 1, 1, 1, 6, 1, 1);
+-- -- #22 test object for setContent/getContent in creation folder #6
+-- insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+--                      owner_id, parent_id, type_id, acl_id)
+-- values (nextval('seq_object_id'), now(), true, true, now(), 'content-holder', 1, 1, 1, 1, 6, 1, 2);
 
--- #22 test object for setContent/getContent in creation folder #6
-insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
-                     owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_object_id'), now(), true, true, now(), 'content-holder', 1, 1, 1, 1, 6, 1, 2);
+-- -- #23 test object for setContent/getContent without write permission for reviewers in creation folder #6
+-- insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+--                      owner_id, parent_id, type_id, acl_id)
+-- values (nextval('seq_object_id'), now(), true, true, now(), 'content-holder', 1, 1, 1, 1, 6, 1, 1);
 
--- #23 test object for setContent/getContent without write permission for reviewers in creation folder #6
-insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
-                     owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_object_id'), now(), true, true, now(), 'content-holder', 1, 1, 1, 1, 6, 1, 1);
+-- -- #24 test object for getContent without read/write permission for reviewers in creation folder #6
+-- insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+--                      owner_id, parent_id, type_id, acl_id, locker_id)
+-- values (nextval('seq_object_id'), now(), true, true, now(), 'content-holder', 1, 1, 1, 1, 6, 1, 1, 2);
 
--- #24 test object for getContent without read/write permission for reviewers in creation folder #6
-insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
-                     owner_id, parent_id, type_id, acl_id, locker_id)
-values (nextval('seq_object_id'), now(), true, true, now(), 'content-holder', 1, 1, 1, 1, 6, 1, 1, 2);
+-- -- #25 empty test object for getContent test in creation folder #6
+-- insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+--                      owner_id, parent_id, type_id, acl_id)
+-- values (nextval('seq_object_id'), now(), true, true, now(), 'content-holder', 1, 1, 1, 1, 6, 1, 2);
 
--- #25 empty test object for getContent test in creation folder #6
-insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
-                     owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_object_id'), now(), true, true, now(), 'content-holder', 1, 1, 1, 1, 6, 1, 2);
-
--- #26 empty test object for lock/unlock test in creation folder #6
-insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
-                     owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_object_id'), now(), true, true, now(), 'lock-me', 1, 1, 1, 1, 6, 1, 2);
+-- -- #26 empty test object for lock/unlock test in creation folder #6
+-- insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+--                      owner_id, parent_id, type_id, acl_id)
+-- values (nextval('seq_object_id'), now(), true, true, now(), 'lock-me', 1, 1, 1, 1, 6, 1, 2);
 
 -- -- #27 empty test object without permissions for lock/unlock and attachLifecycle/getNextStates tests in creation folder #6
 -- insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,

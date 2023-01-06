@@ -88,8 +88,8 @@
                     AND
                 </if>
             </if>
-            <if test="names != null">
-                rt.name IN
+            <if test="types != null">
+                rt.id IN
                 <foreach item="item" index="index" collection="names"
                          open="(" separator="," close=")">
                     #{item}
@@ -129,8 +129,8 @@
                     OR
                 </if>
             </if>
-            <if test="names != null">
-                rt.name IN
+            <if test="typeIds != null">
+                rt.id IN
                 <foreach item="item" index="index" collection="names"
                          open="(" separator="," close=")">
                     #{item}

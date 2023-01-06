@@ -12,22 +12,22 @@ import java.util.Optional;
 @JacksonXmlRootElement(localName = "searchRelationRequest")
 public class SearchRelationRequest implements ApiRequest<Relation> {
 
-    private Collection<Long>   leftIds;
-    private Collection<Long>   rightIds;
-    private Collection<String> names;
-    private boolean            includeMetadata;
-    private boolean            orMode = false;
+    private Collection<Long> leftIds;
+    private Collection<Long> rightIds;
+    private Collection<Long> relationTypeIds;
+    private boolean          includeMetadata;
+    private boolean          orMode = false;
 
     public SearchRelationRequest() {
     }
 
-    public SearchRelationRequest(Collection<Long> leftIds, Collection<Long> rightIds, Collection<String> names,
+    public SearchRelationRequest(Collection<Long> leftIds, Collection<Long> rightIds, Collection<Long> relationTypeIds,
                                  boolean includeMetadata, boolean orMode) {
         this.leftIds = leftIds;
         this.rightIds = rightIds;
-        this.names = names;
         this.includeMetadata = includeMetadata;
         this.orMode = orMode;
+        this.relationTypeIds=relationTypeIds;
     }
 
     public Collection<Long> getLeftIds() {
@@ -38,8 +38,12 @@ public class SearchRelationRequest implements ApiRequest<Relation> {
         return rightIds;
     }
 
-    public Collection<String> getNames() {
-        return names;
+    public Collection<Long> getRelationTypeIds() {
+        return relationTypeIds;
+    }
+
+    public void setRelationTypeIds(Collection<Long> relationTypeIds) {
+        this.relationTypeIds = relationTypeIds;
     }
 
     public boolean isIncludeMetadata() {
@@ -54,24 +58,18 @@ public class SearchRelationRequest implements ApiRequest<Relation> {
         this.rightIds = rightIds;
     }
 
-    public void setNames(Collection<String> names) {
-        this.names = names;
-    }
 
     public void setIncludeMetadata(boolean includeMetadata) {
         this.includeMetadata = includeMetadata;
     }
 
     public boolean validated() {
-        return longCollectionIsValid(leftIds) || longCollectionIsValid(rightIds) || stringCollectionIsValid(names);
+        // TODO: change validation to accept empty lists?
+        return longCollectionIsValid(leftIds) || longCollectionIsValid(rightIds) || longCollectionIsValid(relationTypeIds);
     }
 
     private boolean longCollectionIsValid(Collection<Long> ids) {
         return Objects.nonNull(ids) && !ids.isEmpty() && ids.stream().noneMatch(o -> Objects.isNull(o) || o < 1);
-    }
-
-    private boolean stringCollectionIsValid(Collection<String> names) {
-        return Objects.nonNull(names) && !names.isEmpty() && names.stream().noneMatch(o -> Objects.isNull(o) || o.trim().length() == 0);
     }
 
     public boolean isOrMode() {
@@ -92,7 +90,7 @@ public class SearchRelationRequest implements ApiRequest<Relation> {
 
     @Override
     public List<ApiRequest<Relation>> examples() {
-        return List.of(new SearchRelationRequest(List.of(1L,2L,3L), List.of(4L,5L,6L),
-                List.of("pdf-rendition - note: searching by name is deprecated, will be replaced by relationTypeIds"), true,true));
+        return List.of(new SearchRelationRequest(List.of(1L, 2L, 3L), List.of(4L, 5L, 6L),
+                List.of(2L), true, true));
     }
 }
