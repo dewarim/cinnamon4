@@ -136,6 +136,7 @@ public class LifecycleStateServlet extends BaseServlet implements CruddyServlet<
         AttachLifecycleRequest attachReq = xmlMapper.readValue(request.getInputStream(), AttachLifecycleRequest.class);
         if (attachReq.validated()) {
             ObjectSystemData osd = osdDao.getObjectById(attachReq.getOsdId()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
+            // TODO: should we check for readSysMeta, i.e. if OSD is browsable?
             throwUnlessSysMetadataIsWritable(osd);
 
             Lifecycle lifecycle = lifecycleDao.getLifecycleById(attachReq.getLifecycleId())

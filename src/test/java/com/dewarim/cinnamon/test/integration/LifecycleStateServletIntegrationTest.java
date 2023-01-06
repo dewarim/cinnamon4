@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.test.integration;
 
+import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.api.lifecycle.LifecycleStateConfig;
@@ -19,8 +20,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-import static com.dewarim.cinnamon.ErrorCode.INVALID_REQUEST;
-import static com.dewarim.cinnamon.ErrorCode.LIFECYCLE_STATE_NOT_FOUND;
+import static com.dewarim.cinnamon.ErrorCode.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTest {
@@ -57,18 +57,20 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
 
     @Test
     public void attachLifecycleInvalidRequest() throws IOException {
-        // TODO: add unit test for ALR to cover all branches of invalid requests.
-        AttachLifecycleRequest badOsd   = new AttachLifecycleRequest(null, 1L, 1L, false);
-        HttpResponse           response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__ATTACH_LIFECYCLE, badOsd);
-        assertCinnamonError(response, INVALID_REQUEST);
+        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId)
+                .createOsd("attachLifecycleInvalidRequest");
+        long osdId = toh.osd.getId();
+        var ex = assertThrows(CinnamonClientException.class,
+                () -> client.attachLifecycle(null,1L,1L,false));
+        assertEquals(INVALID_REQUEST, ex.getErrorCode());
 
-        AttachLifecycleRequest badLifecycle = new AttachLifecycleRequest(28L, null, 1L, false);
-        response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__ATTACH_LIFECYCLE, badLifecycle);
-        assertCinnamonError(response, INVALID_REQUEST);
+        ex = assertThrows(CinnamonClientException.class,
+                () -> client.attachLifecycle(osdId,null,1L,false));
+        assertEquals(INVALID_REQUEST, ex.getErrorCode());
 
-        AttachLifecycleRequest badLifecycleState = new AttachLifecycleRequest(28L, 1L, 0L, false);
-        response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__ATTACH_LIFECYCLE, badLifecycleState);
-        assertCinnamonError(response, INVALID_REQUEST);
+        ex = assertThrows(CinnamonClientException.class,
+                () -> client.attachLifecycle(osdId,1L,0L,false));
+        assertEquals(INVALID_REQUEST, ex.getErrorCode());
     }
 
     @Test
@@ -80,61 +82,81 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
 
     @Test
     public void attachLifecycleMissingLifecycle() throws IOException {
-        AttachLifecycleRequest badOsd   = new AttachLifecycleRequest(28L, Long.MAX_VALUE, 1L, false);
-        HttpResponse           response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__ATTACH_LIFECYCLE, badOsd);
-        assertCinnamonError(response, ErrorCode.LIFECYCLE_NOT_FOUND);
+        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId)
+                .createOsd("attachLifecycleInvalidRequest");
+        long osdId = toh.osd.getId();
+        var ex = assertThrows(CinnamonClientException.class,
+                () -> client.attachLifecycle(osdId,Long.MAX_VALUE,1L,false));
+        assertEquals(LIFECYCLE_NOT_FOUND, ex.getErrorCode());
     }
 
     @Test
     public void attachLifecycleMissingWritePermission() throws IOException {
-        AttachLifecycleRequest badOsd   = new AttachLifecycleRequest(27L, 1L, 1L, false);
-        HttpResponse           response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__ATTACH_LIFECYCLE, badOsd);
-        assertCinnamonError(response, ErrorCode.NO_WRITE_SYS_METADATA_PERMISSION);
+        var toh = new TestObjectHolder(adminClient, "reviewers.acl", adminId, createFolderId)
+                .createAcl("attachLifecycleMissingWritePermission")
+                .createGroup("attachLifecycleMissingWritePermission")
+                .createAclGroup()
+                .addUserToGroup(userId)
+                .addPermissions(List.of(DefaultPermission.READ_OBJECT_SYS_METADATA))
+                .createOsd("attachLifecycleMissingWritePermission");
+        long osdId = toh.osd.getId();
+
+        var ex = assertThrows(CinnamonClientException.class,
+                () -> client.attachLifecycle(osdId, 1L,1L,false));
+        assertEquals(NO_WRITE_SYS_METADATA_PERMISSION, ex.getErrorCode());
     }
 
     @Test
     public void changeStateFailInStateClass() throws IOException {
         // should fail on oldState.exit
-        ChangeLifecycleStateRequest attachRequest = new ChangeLifecycleStateRequest(32L, 4L);
-        HttpResponse                response      = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__CHANGE_STATE, attachRequest);
-        assertCinnamonError(response, ErrorCode.LIFECYCLE_STATE_EXIT_FAILED);
-
+        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId)
+                .createOsd("changeStateFailInStateClass");
+        adminClient.attachLifecycle(toh.osd.getId(), 4L,4L,true);
+        var ex = assertThrows(CinnamonClientException.class,
+                () -> client.changeLifecycleState(toh.osd.getId(), 4L ));
+        assertEquals(ErrorCode.LIFECYCLE_STATE_EXIT_FAILED, ex.getErrorCode());
     }
 
     @Test
     public void attachLifecycleStateChangeFailed() throws IOException {
         // should fail on newState.enter
-        ChangeLifecycleStateRequest attachRequest = new ChangeLifecycleStateRequest(33L, 4L);
-        HttpResponse                response      = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__CHANGE_STATE, attachRequest);
-        assertCinnamonError(response, ErrorCode.LIFECYCLE_STATE_CHANGE_FAILED);
+        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId)
+                .createOsd("attachLifecycleStateChangeFailed");
+        var ex = assertThrows(CinnamonClientException.class,
+                () -> client.attachLifecycle(toh.osd.getId(), 4L,4L,false ));
+        assertEquals(ErrorCode.LIFECYCLE_STATE_CHANGE_FAILED, ex.getErrorCode());
     }
 
     @Test
     public void attachLifecycleMissingLifecycleState() throws IOException {
-        AttachLifecycleRequest badOsd   = new AttachLifecycleRequest(28L, 2L, null, false);
-        HttpResponse           response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__ATTACH_LIFECYCLE, badOsd);
-        assertCinnamonError(response, LIFECYCLE_STATE_NOT_FOUND);
+        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId)
+                .createOsd("attachLifecycleMissingLifecycleState");
+        long osdId = toh.osd.getId();
+        var ex = assertThrows(CinnamonClientException.class,
+                () -> client.attachLifecycle(osdId,2L,null,false));
+        assertEquals(LIFECYCLE_STATE_NOT_FOUND, ex.getErrorCode());
     }
 
     @Test
     public void attachLifecycleHappyPathDefaultState() throws IOException {
-        AttachLifecycleRequest attachRequest = new AttachLifecycleRequest(28L, 1L, null, false);
-        HttpResponse           response      = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__ATTACH_LIFECYCLE, attachRequest);
-        parseGenericResponse(response);
-
+        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId)
+                .createOsd("attachLifecycleMissingLifecycleState");
+        long osdId = toh.osd.getId();
+        client.attachLifecycle(osdId, 1L,null,false);
         // check if lifecycle state is really attached to OSD:
-        ObjectSystemData osd = new OsdServletIntegrationTest().fetchSingleOsd(28L);
+        ObjectSystemData osd = new OsdServletIntegrationTest().fetchSingleOsd(osdId);
         assertEquals((Long) 1L, osd.getLifecycleStateId());
     }
 
     @Test
     public void attachLifecycleHappyPathWithNonDefaultState() throws IOException {
-        AttachLifecycleRequest attachRequest = new AttachLifecycleRequest(30L, 3L, 2L, false);
-        HttpResponse           response      = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__ATTACH_LIFECYCLE, attachRequest);
-        parseGenericResponse(response);
+        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId)
+                .createOsd("attachLifecycleHappyPathWithNonDefaultState");
+        long osdId = toh.osd.getId();
+        client.attachLifecycle(osdId, 3L,2L,false);
+        ObjectSystemData osd = client.getOsdById(osdId, false, false);
 
         // check if lifecycle state is really attached to OSD:
-        ObjectSystemData osd = new OsdServletIntegrationTest().fetchSingleOsd(30L);
         assertEquals((Long) 2L, osd.getLifecycleStateId());
     }
 
@@ -154,18 +176,18 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
 
     @Test
     public void detachLifecycleHappyPath() throws IOException {
+        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId)
+                .createOsd("detachLifecycleHappyPath");
+        long osdId = toh.osd.getId();
+
         // attach lifecycle:
-        AttachLifecycleRequest attachRequest = new AttachLifecycleRequest(29L, 1L, null, false);
-        HttpResponse           response      = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__ATTACH_LIFECYCLE, attachRequest);
-        assertResponseOkay(response);
+        client.attachLifecycle(osdId, 1L,null,false);
 
         // detach lifecycle
-        IdRequest    idRequest      = new IdRequest(29L);
-        HttpResponse detachResponse = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__DETACH_LIFECYCLE, idRequest);
-        assertResponseOkay(detachResponse);
+        client.detachLifecycle(osdId);
 
         // check if lifecycle state is really detached from OSD:
-        ObjectSystemData osd = new OsdServletIntegrationTest().fetchSingleOsd(29L);
+        ObjectSystemData osd = client.getOsdById(osdId, false, false);
         assertNull(osd.getLifecycleStateId());
     }
 
@@ -192,15 +214,14 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
 
     @Test
     public void changeStateHappyPath() throws IOException {
-        ChangeLifecycleStateRequest attachRequest = new ChangeLifecycleStateRequest(31L,  3L);
-        HttpResponse                response      = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__CHANGE_STATE, attachRequest);
-        parseGenericResponse(response);
-
-        // check if lifecycle state is really set on the OSD:
-        ObjectSystemData osd = new OsdServletIntegrationTest().fetchSingleOsd(31L);
-        assertEquals((Long) 3L, osd.getLifecycleStateId());
-
-        // check if ACL has changed:
+        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId)
+                .createOsd("changeStateHappyPath");
+        long osdId = toh.osd.getId();
+        adminClient.attachLifecycle(osdId, 2L,2L,true);
+        client.changeLifecycleState(osdId, 3L);
+        ObjectSystemData osd = client.getOsdById(osdId, false, false);
+        assertEquals(3L, osd.getLifecycleStateId());
+        // should change acl:
         assertEquals((Long) 1L, osd.getAclId());
     }
 
@@ -228,9 +249,11 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
 
     @Test
     public void getNextStatesRequiresReadPermission() throws IOException {
-        IdRequest    request  = new IdRequest(27L);
-        HttpResponse response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__GET_NEXT_STATES, request);
-        assertCinnamonError(response, ErrorCode.NO_READ_OBJECT_SYS_METADATA_PERMISSION);
+        var toh = new TestObjectHolder(adminClient, "reviewers.acl", adminId, createFolderId)
+                .createAcl("no permissions for read system meta")
+                .createOsd("getNextStatesRequiresReadPermission");
+        var ex = assertThrows(CinnamonClientException.class, () -> client.getNextLifecycleStates(toh.osd.getId()));
+        assertEquals(NO_READ_OBJECT_SYS_METADATA_PERMISSION, ex.getErrorCode());
     }
 
     @Test

@@ -992,6 +992,12 @@ public class CinnamonClient {
         verifyResponseIsOkay(response);
     }
 
+    public void detachLifecycle(Long osdId) throws IOException {
+        var request  = new IdRequest(osdId);
+        var response = sendStandardRequest(LIFECYCLE_STATE__DETACH_LIFECYCLE, request);
+        verifyResponseIsOkay(response);
+    }
+
     public List<Lifecycle> listLifecycles() throws IOException {
         var request  = new ListLifecycleRequest();
         var response = sendStandardRequest(UrlMapping.LIFECYCLE__LIST, request);
