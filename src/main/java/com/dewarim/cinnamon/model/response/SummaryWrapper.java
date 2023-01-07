@@ -25,7 +25,7 @@ public class SummaryWrapper implements Wrapper<Summary>, ApiResponse {
 
     @Override
     public List<Summary> list() {
-        return null;
+        return summaries;
     }
 
     @Override

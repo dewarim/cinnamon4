@@ -230,6 +230,15 @@ public class CinnamonIntegrationTest {
                 .acl.getId();
     }
 
+    protected TestObjectHolder prepareAclGroupWithPermissions(String name, List<DefaultPermission> permissions) throws IOException {
+        return new TestObjectHolder(adminClient, "reviewers.acl", userId, createFolderId)
+                .createAcl(name)
+                .createGroup(name)
+                .addUserToGroup(userId)
+                .createAclGroup()
+                .addPermissions(permissions);
+    }
+
     protected Acl getReviewerAcl() {
         return new TestObjectHolder(client).getAcls().stream().filter(a -> a.getName().equals("reviewers.acl")).toList().get(0);
     }

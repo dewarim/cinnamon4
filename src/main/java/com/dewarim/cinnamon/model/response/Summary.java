@@ -1,5 +1,8 @@
 package com.dewarim.cinnamon.model.response;
 
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+
+@JacksonXmlRootElement(localName = "summary")
 public class Summary {
     private Long   id;
     private String content;

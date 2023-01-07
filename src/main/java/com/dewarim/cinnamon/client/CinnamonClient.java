@@ -30,6 +30,7 @@ import com.dewarim.cinnamon.model.request.DeleteMetaRequest;
 import com.dewarim.cinnamon.model.request.IdListRequest;
 import com.dewarim.cinnamon.model.request.IdRequest;
 import com.dewarim.cinnamon.model.request.MetaRequest;
+import com.dewarim.cinnamon.model.request.SetSummaryRequest;
 import com.dewarim.cinnamon.model.request.acl.AclInfoRequest;
 import com.dewarim.cinnamon.model.request.acl.CreateAclRequest;
 import com.dewarim.cinnamon.model.request.acl.DeleteAclRequest;
@@ -310,6 +311,12 @@ public class CinnamonClient {
         return unwrapOsds(response, EXPECTED_SIZE_ANY);
     }
 
+    public void setSummary(Long osdId, String summary) throws IOException {
+        SetSummaryRequest summaryRequest = new SetSummaryRequest(osdId, summary);
+        HttpResponse      response       = sendStandardRequest(UrlMapping.OSD__SET_SUMMARY, summaryRequest);
+        verifyResponseIsOkay(response);
+    }
+
     public OsdWrapper getOsdsInFolder(Long folderId, boolean includeSummary, boolean linksAsOsd, boolean includeCustomMetadata,
                                       VersionPredicate versionPredicate) throws IOException {
         OsdByFolderRequest osdRequest = new OsdByFolderRequest(folderId, includeSummary, linksAsOsd, includeCustomMetadata, versionPredicate);
@@ -445,7 +452,7 @@ public class CinnamonClient {
         return parseGenericResponse(response).isSuccessful();
     }
 
-    public boolean unlockOsd(Long id) throws IOException{
+    public boolean unlockOsd(Long id) throws IOException {
         IdRequest idRequest = new IdRequest(id);
         var       response  = sendStandardRequest(UrlMapping.OSD__UNLOCK, idRequest);
         return parseGenericResponse(response).isSuccessful();
@@ -456,8 +463,8 @@ public class CinnamonClient {
         return parseGenericResponse(response).isSuccessful();
     }
 
-    public boolean setPassword(Long userId, String password) throws IOException{
-        HttpResponse response=sendStandardRequest(USER__SET_PASSWORD, new SetPasswordRequest(userId,password));
+    public boolean setPassword(Long userId, String password) throws IOException {
+        HttpResponse response = sendStandardRequest(USER__SET_PASSWORD, new SetPasswordRequest(userId, password));
         return parseGenericResponse(response).isSuccessful();
     }
 
@@ -872,7 +879,7 @@ public class CinnamonClient {
     }
 
     public List<ConfigEntry> getConfigEntries(List<Long> ids) throws IOException {
-        var request  = new ConfigEntryRequest();
+        var request = new ConfigEntryRequest();
         request.getIds().addAll(ids);
         var response = sendStandardRequest(UrlMapping.CONFIG_ENTRY__GET, request);
         return configEntryUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
@@ -902,6 +909,7 @@ public class CinnamonClient {
         var response = sendStandardRequest(UrlMapping.OSD__GET_META, request);
         return metaUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
+
     public List<Meta> getOsdMetas(Long id, List<Long> typeIds) throws IOException {
         var request  = new MetaRequest(id, typeIds);
         var response = sendStandardRequest(UrlMapping.OSD__GET_META, request);
@@ -980,8 +988,8 @@ public class CinnamonClient {
         return lifecycleStateUnwrapper.unwrap(response, 1).get(0);
     }
 
-    public void changeLifecycleState(Long osdId, Long stateId) throws IOException{
-        var request = new ChangeLifecycleStateRequest(osdId,stateId);
+    public void changeLifecycleState(Long osdId, Long stateId) throws IOException {
+        var request  = new ChangeLifecycleStateRequest(osdId, stateId);
         var response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__CHANGE_STATE, request);
         verifyResponseIsOkay(response);
     }
@@ -1059,6 +1067,12 @@ public class CinnamonClient {
         return summaryUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
+    public List<Summary> getOsdSummaries(List<Long> osdIds) throws IOException {
+        var request  = new IdListRequest(osdIds);
+        var response = sendStandardRequest(UrlMapping.OSD__GET_SUMMARIES, request);
+        return summaryUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
+    }
+
     public void deleteFolderMeta(Long metaId) throws IOException {
         var request  = new DeleteMetaRequest(metaId);
         var response = sendStandardRequest(UrlMapping.FOLDER__DELETE_META, request);
@@ -1070,6 +1084,7 @@ public class CinnamonClient {
         var response = sendStandardRequest(FOLDER__DELETE_ALL_METAS, request);
         verifyDeleteResponse(response);
     }
+
     public void deleteAllOsdMeta(Long osdId) throws IOException {
         var request  = new DeleteAllMetasRequest(osdId);
         var response = sendStandardRequest(OSD__DELETE_ALL_METAS, request);
@@ -1092,64 +1107,64 @@ public class CinnamonClient {
         deleteFolder(List.of(folderId), deleteRecursively, deleteContent);
     }
 
-    public List<IndexItem> listIndexItems() throws IOException{
-        var request = new ListIndexItemRequest();
+    public List<IndexItem> listIndexItems() throws IOException {
+        var request  = new ListIndexItemRequest();
         var response = sendStandardRequest(UrlMapping.INDEX_ITEM__LIST, request);
         return indexItemUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
     public IndexItem createIndexItem(IndexItem indexItem) throws IOException {
-        var request = new CreateIndexItemRequest(List.of(indexItem));
+        var request  = new CreateIndexItemRequest(List.of(indexItem));
         var response = sendStandardRequest(UrlMapping.INDEX_ITEM__CREATE, request);
         return indexItemUnwrapper.unwrap(response, 1).get(0);
     }
 
-    public void deleteIndexItem(Long id) throws IOException{
-        var request = new DeleteIndexItemRequest(id);
-        var response = sendStandardRequest(UrlMapping.INDEX_ITEM__DELETE,request);
+    public void deleteIndexItem(Long id) throws IOException {
+        var request  = new DeleteIndexItemRequest(id);
+        var response = sendStandardRequest(UrlMapping.INDEX_ITEM__DELETE, request);
         verifyDeleteResponse(response);
     }
 
     public IndexItem updateIndexItem(IndexItem indexItem) throws IOException {
-        var request = new UpdateIndexItemRequest(List.of(indexItem));
-        var response = sendStandardRequest(UrlMapping.INDEX_ITEM__UPDATE,request);
-        return indexItemUnwrapper.unwrap(response,1).get(0);
+        var request  = new UpdateIndexItemRequest(List.of(indexItem));
+        var response = sendStandardRequest(UrlMapping.INDEX_ITEM__UPDATE, request);
+        return indexItemUnwrapper.unwrap(response, 1).get(0);
     }
 
     public void deleteRelation(Long id) throws IOException {
-        var request = new DeleteRelationRequest(id);
+        var request  = new DeleteRelationRequest(id);
         var response = sendStandardRequest(UrlMapping.RELATION__DELETE, request);
         verifyDeleteResponse(response);
     }
 
-    public void setUserConfig(Long userId, String config) throws IOException{
-        var request = new SetUserConfigRequest(userId, config);
+    public void setUserConfig(Long userId, String config) throws IOException {
+        var request  = new SetUserConfigRequest(userId, config);
         var response = sendStandardRequest(USER__SET_CONFIG, request);
         verifyResponseIsOkay(response);
     }
 
-    public IndexInfoResponse getIndexInfo(boolean countDocuments) throws IOException{
-        var request = new IndexInfoRequest(countDocuments);
+    public IndexInfoResponse getIndexInfo(boolean countDocuments) throws IOException {
+        var          request  = new IndexInfoRequest(countDocuments);
         HttpResponse response = sendStandardRequest(INDEX__INFO, request);
         return new SingletonUnwrapper<IndexInfoResponse>(IndexInfoResponse.class).unwrap(response);
     }
 
-    public ReindexResponse reindex( ReindexRequest request) throws IOException {
+    public ReindexResponse reindex(ReindexRequest request) throws IOException {
         HttpResponse response = sendStandardRequest(INDEX__REINDEX, request);
         return new SingletonUnwrapper<ReindexResponse>(ReindexResponse.class).unwrap(response);
     }
 
     public SearchIdsResponse search(String query, SearchType searchType) throws IOException {
-        SearchIdsRequest request = new SearchIdsRequest(searchType, query);
-        HttpResponse response = sendStandardRequest(SEARCH__IDS, request);
+        SearchIdsRequest request  = new SearchIdsRequest(searchType, query);
+        HttpResponse     response = sendStandardRequest(SEARCH__IDS, request);
         return new SingletonUnwrapper<SearchIdsResponse>(SearchIdsResponse.class).unwrap(response);
     }
 
-    static class SingletonUnwrapper<S>{
+    static class SingletonUnwrapper<S> {
 
         private final Class<? extends S> clazz;
 
-        private final static XmlMapper mapper   = XML_MAPPER;
+        private final static XmlMapper mapper = XML_MAPPER;
 
         SingletonUnwrapper(Class<? extends S> clazz) {
             this.clazz = clazz;
@@ -1164,7 +1179,7 @@ public class CinnamonClient {
     static void checkResponseForErrors(HttpResponse response, XmlMapper mapper) throws IOException {
         if (response.containsHeader(HEADER_FIELD_CINNAMON_ERROR)) {
             CinnamonErrorWrapper wrapper = mapper.readValue(response.getEntity().getContent(), CinnamonErrorWrapper.class);
-            log.warn("Found errors: "+wrapper.getErrors().stream().map(CinnamonError::toString).collect(Collectors.joining(",")));
+            log.warn("Found errors: " + wrapper.getErrors().stream().map(CinnamonError::toString).collect(Collectors.joining(",")));
             throw new CinnamonClientException(wrapper);
         }
         if (response.getStatusLine().getStatusCode() != SC_OK) {

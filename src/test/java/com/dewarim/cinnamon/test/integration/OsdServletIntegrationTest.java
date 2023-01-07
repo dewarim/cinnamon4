@@ -257,22 +257,21 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void setSummaryHappyPath() throws IOException {
-        SetSummaryRequest summaryRequest = new SetSummaryRequest(17L, "a summary");
-        HttpResponse      response       = sendStandardRequest(UrlMapping.OSD__SET_SUMMARY, summaryRequest);
-        assertResponseOkay(response);
-
-        IdListRequest idListRequest  = new IdListRequest(Collections.singletonList(17L));
-        HttpResponse  verifyResponse = sendStandardRequest(UrlMapping.OSD__GET_SUMMARIES, idListRequest);
-        assertResponseOkay(verifyResponse);
-        SummaryWrapper wrapper = mapper.readValue(verifyResponse.getEntity().getContent(), SummaryWrapper.class);
-        assertThat(wrapper.getSummaries().get(0).getContent(), equalTo("a summary"));
+        var osdId = prepareAclGroupWithPermissions("setSummaryHappyPath", List.of(
+                WRITE_OBJECT_SYS_METADATA, READ_OBJECT_SYS_METADATA
+        )).createOsd("setSummaryHappyPath").osd.getId();
+        client.setSummary(osdId, "<sum>sum</sum>");
+        List<Summary> summaries = client.getOsdSummaries(List.of(osdId));
+        assertFalse(summaries.isEmpty());
+        assertEquals(summaries.get(0).getContent(), "<sum>sum</sum>");
     }
 
     @Test
     public void setSummaryMissingPermission() throws IOException {
-        SetSummaryRequest summaryRequest = new SetSummaryRequest(18L, "a summary");
-        HttpResponse      response       = sendStandardRequest(UrlMapping.OSD__SET_SUMMARY, summaryRequest);
-        assertCinnamonError(response, ErrorCode.NO_WRITE_SYS_METADATA_PERMISSION);
+        var toh = prepareAclGroupWithPermissions("setSummaryMissingPermission", List.of(BROWSE_OBJECT))
+                .createOsd("setSummaryMissingPermission");
+        var ex = assertThrows(CinnamonClientException.class, () -> client.setSummary(toh.osd.getId(), "a summary"));
+        assertEquals(NO_WRITE_SYS_METADATA_PERMISSION, ex.getErrorCode());
     }
 
     @Test
@@ -296,12 +295,14 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getSummariesMissingPermission() throws IOException {
-        IdListRequest idListRequest = new IdListRequest(Collections.singletonList(18L));
-        HttpResponse  response      = sendStandardRequest(UrlMapping.OSD__GET_SUMMARIES, idListRequest);
-        assertResponseOkay(response);
-        SummaryWrapper wrapper = mapper.readValue(response.getEntity().getContent(), SummaryWrapper.class);
+        long osdId = prepareAclGroupWithPermissions("getSummariesMissingPermission", List.of(WRITE_OBJECT_SYS_METADATA))
+                .createOsd("getSummariesMissingPermission")
+                .osd.getId();
+        client.setSummary(osdId, "<foo/>");
+        List<Summary> summaries = client.getOsdSummaries(List.of(osdId));
         // when all ids are non-readable, return an empty list:
-        assertNull(wrapper.getSummaries());
+        // TODO: would it be better to throw an Exception if missing READ_OBJECT_SYS_METADATA permission?
+        assertTrue(summaries.isEmpty());
     }
 
     @Test

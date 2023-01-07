@@ -1,6 +1,5 @@
 package com.dewarim.cinnamon.test.integration;
 
-import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.client.CinnamonClientException;
@@ -47,7 +46,7 @@ public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getRelationsByLeftIds() throws IOException {
-        var toh      = prepareAclGroupWithPermissions("getRelationsByLeftIds");
+        var toh      = prepareAclWithDefaultRelationPermissions("getRelationsByLeftIds");
         var leftOsd  = toh.createOsd("left").osd;
         var rightOsd = toh.createOsd("right").osd;
 
@@ -70,7 +69,7 @@ public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getRelationsByRightIds() throws IOException {
-        var toh      = prepareAclGroupWithPermissions("getRelationsByRightIds");
+        var toh      = prepareAclWithDefaultRelationPermissions("getRelationsByRightIds");
         var leftOsd  = toh.createOsd("left").osd;
         var rightOsd = toh.createOsd("right").osd;
 
@@ -91,22 +90,13 @@ public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
         assertEquals(rightOsd.getId(), rightId);
     }
 
-    private TestObjectHolder prepareAclGroupWithPermissions(String name) throws IOException {
+    private TestObjectHolder prepareAclWithDefaultRelationPermissions(String name) throws IOException {
         return prepareAclGroupWithPermissions(name, List.of(RELATION_CHILD_ADD, RELATION_PARENT_ADD));
-    }
-
-    private TestObjectHolder prepareAclGroupWithPermissions(String name, List<DefaultPermission> permissions) throws IOException {
-        return new TestObjectHolder(adminClient, "reviewers.acl", userId, createFolderId)
-                .createAcl(name)
-                .createGroup(name)
-                .addUserToGroup(userId)
-                .createAclGroup()
-                .addPermissions(permissions);
     }
 
     @Test
     public void getRelationsWithAllParameters() throws IOException {
-        var toh      = prepareAclGroupWithPermissions("getRelationsWithAllParameters");
+        var toh      = prepareAclWithDefaultRelationPermissions("getRelationsWithAllParameters");
         var leftOsd  = toh.createOsd("left").osd;
         var rightOsd = toh.createOsd("right").osd;
 
@@ -259,7 +249,7 @@ public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getRelationsInOrMode() throws IOException {
-        var toh    =prepareAclGroupWithPermissions("getRelationsInOrMode");
+        var toh    = prepareAclWithDefaultRelationPermissions("getRelationsInOrMode");
         var left1  = toh.createOsd("left or 1").osd;
         var left2  = toh.createOsd("left or 2").osd;
         var right1 = toh.createOsd("right or 1").osd;

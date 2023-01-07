@@ -44,7 +44,8 @@ public class Unwrapper<T, W extends Wrapper<T>> {
 
     public List<T> unwrap(HttpResponse response, Integer expectedSize) throws IOException {
         CinnamonClient.checkResponseForErrors(response, mapper);
-        List<T> items = mapper.readValue(response.getEntity().getContent(), clazz).list();
+        String content = new String(response.getEntity().getContent().readAllBytes());
+        List<T> items = mapper.readValue(content, clazz).list();
         return checkList(items, expectedSize);
     }
 
