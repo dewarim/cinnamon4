@@ -962,15 +962,15 @@ insert into objects (id, created, latest_branch, latest_head, modified, name, cr
                      owner_id, parent_id, type_id, acl_id, summary)
 values (nextval('seq_object_id'), now(), true, true, now(), 'no-perm-summary', 1, 1, 1, 1, 6, 1, 1,'no summary');
 
--- #19 test object for relations (as rightId) in creation folder #6
-insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
-                     owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_object_id'), now(), true, true, now(), 'right-related', 1, 1, 1, 1, 6, 1, 1);
+-- -- #19 test object for relations (as rightId) in creation folder #6
+-- insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+--                      owner_id, parent_id, type_id, acl_id)
+-- values (nextval('seq_object_id'), now(), true, true, now(), 'right-related', 1, 1, 1, 1, 6, 1, 1);
 
--- #20 test object for relations (as leftId) in creation folder #6
-insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
-                     owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_object_id'), now(), true, true, now(), 'left-related', 1, 1, 1, 1, 6, 1, 1);
+-- -- #20 test object for relations (as leftId) in creation folder #6
+-- insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+--                      owner_id, parent_id, type_id, acl_id)
+-- values (nextval('seq_object_id'), now(), true, true, now(), 'left-related', 1, 1, 1, 1, 6, 1, 1);
 --
 -- -- #21 test object for create-delete relations (target: osd#20) in creation folder #6
 -- insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
@@ -1256,9 +1256,9 @@ values (nextval('seq_index_item_id'), 'acl', false,false,true,false,'index.acl',
 );
 
 -- #1 relation: type 1 relation
-insert into relations(id,left_id, right_id, type_id, metadata) VALUES (nextval('seq_relation_id'),20,19,1,'<meta>important</meta>' );;
+-- insert into relations(id,left_id, right_id, type_id, metadata) VALUES (nextval('seq_relation_id'),20,19,1,'<meta>important</meta>' );;
 -- #2 relation: type 2 relation
-insert into relations(id,left_id, right_id, type_id, metadata) VALUES (nextval('seq_relation_id'),19,20,2,'<meta>ignore</meta>' );
+-- insert into relations(id,left_id, right_id, type_id, metadata) VALUES (nextval('seq_relation_id'),19,20,2,'<meta>ignore</meta>' );
 
 
 -- #1 lifecycle review.lc (lifecycle_state #1 will be configured as default state, see below).

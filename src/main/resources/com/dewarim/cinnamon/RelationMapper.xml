@@ -74,7 +74,7 @@
                          open="(" separator="," close=")">
                     #{item}
                 </foreach>
-                <if test="rightIds != null or names != null">
+                <if test="rightIds != null or typeIds != null">
                     AND
                 </if>
             </if>
@@ -84,13 +84,13 @@
                          open="(" separator="," close=")">
                     #{item}
                 </foreach>
-                <if test="names != null">
+                <if test="typeIds != null">
                     AND
                 </if>
             </if>
-            <if test="types != null">
+            <if test="typeIds != null">
                 rt.id IN
-                <foreach item="item" index="index" collection="names"
+                <foreach item="item" index="index" collection="typeIds"
                          open="(" separator="," close=")">
                     #{item}
                 </foreach>
@@ -115,7 +115,7 @@
                          open="(" separator="," close=")">
                     #{item}
                 </foreach>
-                <if test="rightIds != null or names != null">
+                <if test="rightIds != null or typeIds != null">
                     OR
                 </if>
             </if>
@@ -125,13 +125,13 @@
                          open="(" separator="," close=")">
                     #{item}
                 </foreach>
-                <if test="names != null">
+                <if test="typeIds != null">
                     OR
                 </if>
             </if>
             <if test="typeIds != null">
                 rt.id IN
-                <foreach item="item" index="index" collection="names"
+                <foreach item="item" index="index" collection="typeIds"
                          open="(" separator="," close=")">
                     #{item}
                 </foreach>
