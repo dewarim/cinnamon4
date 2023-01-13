@@ -105,8 +105,8 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void newFolderShouldNotHaveSubfolder() throws IOException{
-        Folder newFolder = client.createFolder(createFolderId,"new-folder-without-subfolder",userId,1L,1L);
+    public void newFolderShouldNotHaveSubfolder() throws IOException {
+        Folder newFolder = client.createFolder(createFolderId, "new-folder-without-subfolder", userId, 1L, 1L);
         assertFalse(newFolder.isHasSubfolders());
     }
 
@@ -282,14 +282,11 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createOsdMetasetHappyPath() throws IOException {
-        CreateMetaRequest request      = new CreateMetaRequest(17L, "new license meta", 2L);
-        HttpResponse      metaResponse = sendStandardRequest(UrlMapping.OSD__CREATE_META, request);
-        assertResponseOkay(metaResponse);
-        MetaWrapper metaWrapper = mapper.readValue(metaResponse.getEntity().getContent(), MetaWrapper.class);
-        assertEquals(1, metaWrapper.getMetasets().size());
-        Meta meta = metaWrapper.getMetasets().get(0);
-        assertEquals("new license meta", meta.getContent());
-        assertEquals(2, meta.getTypeId().longValue());
+        long osdId = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId)
+                .createOsd("createOsdMetasetHappyPath").osd.getId();
+        Meta licenseMeta = client.createOsdMeta(osdId, "new license meta", 2L);
+        assertEquals("new license meta", licenseMeta.getContent());
+        assertEquals(2, licenseMeta.getTypeId());
     }
 
     @Test
@@ -770,7 +767,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
                 .createFolder("delete-with-outside-link", createFolderId)
                 .createOsd("delete-with-outside-link")
                 .addUserToGroup(userId);
-        Link link = adminClient.createLink(createFolderId, LinkType.OBJECT, toh.acl.getId(), userId, null, toh.osd.getId());
+        Link link = adminClient.createLinkToOsd(createFolderId, LinkType.OBJECT, toh.acl.getId(), userId, toh.osd.getId());
         client.deleteFolder(toh.folder.getId(), false, true);
         CinnamonClientException ce = assertThrows(CinnamonClientException.class, () -> client.getLinksById(List.of(link.getId()), false));
         assertEquals(OBJECT_NOT_FOUND, ce.getErrorCode());

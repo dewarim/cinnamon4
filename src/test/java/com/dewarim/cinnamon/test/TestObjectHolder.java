@@ -240,7 +240,7 @@ public class TestObjectHolder {
      * New link object is stored in TOH.link field.
      */
     public TestObjectHolder createLinkToOsd(ObjectSystemData osd) throws IOException {
-        link = client.createLink(folder.getId(), LinkType.OBJECT, acl.getId(), user.getId(), null, osd.getId());
+        link = client.createLinkToOsd(folder.getId(), LinkType.OBJECT, acl.getId(), user.getId(), osd.getId());
         return this;
     }
 

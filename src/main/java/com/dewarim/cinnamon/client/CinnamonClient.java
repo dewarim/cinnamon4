@@ -640,8 +640,15 @@ public class CinnamonClient {
         return linkUnwrapper.unwrap(response, links.size());
     }
 
-    public Link createLink(Long parentId, LinkType type, Long aclId, Long ownerId, Long folderId, Long objectId) throws IOException {
-        var link              = new Link(type, ownerId, aclId, parentId, folderId, objectId);
+    public Link createLinkToFolder(Long parentId, LinkType type, Long aclId, Long ownerId, Long folderId) throws IOException {
+        var link              = new Link(type, ownerId, aclId, parentId, folderId, null);
+        var createLinkRequest = new CreateLinkRequest(List.of(link));
+        var response          = sendStandardRequest(UrlMapping.LINK__CREATE, createLinkRequest);
+        return linkUnwrapper.unwrap(response, 1).get(0);
+    }
+
+    public Link createLinkToOsd(Long parentId, LinkType type, Long aclId, Long ownerId, Long objectId) throws IOException {
+        var link              = new Link(type, ownerId, aclId, parentId, null, objectId);
         var createLinkRequest = new CreateLinkRequest(List.of(link));
         var response          = sendStandardRequest(UrlMapping.LINK__CREATE, createLinkRequest);
         return linkUnwrapper.unwrap(response, 1).get(0);

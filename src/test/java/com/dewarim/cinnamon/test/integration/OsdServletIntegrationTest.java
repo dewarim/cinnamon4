@@ -18,7 +18,6 @@ import com.dewarim.cinnamon.model.relations.RelationType;
 import com.dewarim.cinnamon.model.request.CreateMetaRequest;
 import com.dewarim.cinnamon.model.request.CreateNewVersionRequest;
 import com.dewarim.cinnamon.model.request.DeleteMetaRequest;
-import com.dewarim.cinnamon.model.request.IdListRequest;
 import com.dewarim.cinnamon.model.request.IdRequest;
 import com.dewarim.cinnamon.model.request.MetaRequest;
 import com.dewarim.cinnamon.model.request.SetSummaryRequest;
@@ -30,7 +29,6 @@ import com.dewarim.cinnamon.model.request.osd.UpdateOsdRequest;
 import com.dewarim.cinnamon.model.response.MetaWrapper;
 import com.dewarim.cinnamon.model.response.OsdWrapper;
 import com.dewarim.cinnamon.model.response.Summary;
-import com.dewarim.cinnamon.model.response.SummaryWrapper;
 import com.dewarim.cinnamon.test.TestObjectHolder;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.http.Header;
@@ -283,14 +281,13 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getSummaryHappyPath() throws IOException {
-        IdListRequest idListRequest = new IdListRequest(Collections.singletonList(16L));
-        HttpResponse  response      = sendStandardRequest(UrlMapping.OSD__GET_SUMMARIES, idListRequest);
-        assertResponseOkay(response);
-        SummaryWrapper wrapper   = mapper.readValue(response.getEntity().getContent(), SummaryWrapper.class);
-        List<Summary>  summaries = wrapper.getSummaries();
+        long osdId = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId)
+                .createOsd("getSummaryHappyPath").osd.getId();
+        client.setSummary(osdId, "<my-sum/>");
+        List<Summary> summaries  = client.getOsdSummaries(List.of(osdId));
         assertNotNull(summaries);
         assertFalse(summaries.isEmpty());
-        assertThat(wrapper.getSummaries().get(0).getContent(), equalTo("<sum>7</sum>"));
+        assertThat(summaries.get(0).getContent(), equalTo("<my-sum/>"));
     }
 
     @Test

@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.util.List;
 
+import static com.dewarim.cinnamon.DefaultPermission.*;
 import static com.dewarim.cinnamon.ErrorCode.*;
 import static com.dewarim.cinnamon.api.Constants.DEFAULT_SUMMARY;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -201,7 +202,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void createLinkWithInvalidRequest() throws IOException {
         // invalid target id
-        assertClientError(() -> client.createLink(6L, LinkType.OBJECT, 1L, 1L, null, 0L), INVALID_REQUEST);
+        assertClientError(() -> client.createLinkToOsd(6L, LinkType.OBJECT, 1L, 1L, 0L), INVALID_REQUEST);
 
         // invalid parent folder id
         CreateLinkRequest crlParentId      = new CreateLinkRequest(0L, LinkType.OBJECT, 1, 1, null, 13L);
@@ -410,8 +411,16 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateLinkToObject() throws IOException {
-        var linkResponse = client.getLinkById(21L, false);
-        linkResponse.setObjectId(15L);
+        var toh = prepareAclGroupWithPermissions("updateLinkToObject", List.of(
+                BROWSE_FOLDER, CREATE_OBJECT, BROWSE_OBJECT, WRITE_OBJECT_SYS_METADATA
+        ));
+
+        long osdId        = toh.createOsd("updateLinkToObject").osd.getId();
+        long linkFolderId = toh.createFolder("folder with a link", createFolderId).folder.getId();
+        Link link         = client.createLinkToOsd(linkFolderId, LinkType.OBJECT, toh.acl.getId(), userId, osdId);
+        long secondOsdId  = toh.createOsd("second-link-osd").osd.getId();
+        var  linkResponse = client.getLinkById(link.getId(), false);
+        linkResponse.setObjectId(secondOsdId);
         assertEquals(new Link(linkResponse), client.updateLink(new Link(linkResponse)));
     }
 

@@ -942,15 +942,15 @@ insert into objects (id, created, latest_branch, latest_head, modified, name, cr
                      owner_id, parent_id, type_id, acl_id)
 values (nextval('seq_object_id'), now(), true, true, now(), 'linked-to-me-3', 1, 1, 1, 1, 7, 1, 1);
 
--- #15 test object for update link to object,  default acl in creation folder#6  
-insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
-                     owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_object_id'), now(), true, true, now(), 'linked-to-me-2', 1, 1, 1, 1, 6, 1, 1);
+-- -- #15 test object for update link to object,  default acl in creation folder#6
+-- insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+--                      owner_id, parent_id, type_id, acl_id)
+-- values (nextval('seq_object_id'), now(), true, true, now(), 'linked-to-me-2', 1, 1, 1, 1, 6, 1, 1);
 
--- #16 test object for getSummaries,  reviewer acl in creation folder#6  
-insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
-                     owner_id, parent_id, type_id, acl_id, summary)
-values (nextval('seq_object_id'), now(), true, true, now(), '7th-sum-of-a-7th-sum', 1, 1, 1, 1, 6, 1, 2,'<sum>7</sum>');
+-- -- #16 test object for getSummaries,  reviewer acl in creation folder#6
+-- insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+--                      owner_id, parent_id, type_id, acl_id, summary)
+-- values (nextval('seq_object_id'), now(), true, true, now(), '7th-sum-of-a-7th-sum', 1, 1, 1, 1, 6, 1, 2,'<sum>7</sum>');
 
 -- -- #17 test object for setSummary,  reviewer acl in creation folder#6
 -- insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,

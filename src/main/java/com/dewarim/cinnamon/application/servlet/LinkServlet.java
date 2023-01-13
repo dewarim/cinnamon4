@@ -119,7 +119,6 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
                 Optional<Folder> folderOpt = folderDao.getFolderById(link.getFolderId());
                 if (folderOpt.isPresent()) {
                     folder = folderOpt.get();
-
                     accessFilter.verifyHasPermissionOnOwnable(folder, DefaultPermission.BROWSE_FOLDER, folder, ErrorCode.UNAUTHORIZED);
                 } else {
                     ErrorCode.FOLDER_NOT_FOUND.throwUp();
