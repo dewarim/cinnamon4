@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static com.dewarim.cinnamon.api.Constants.DEFAULT_SUMMARY;
+
 @JacksonXmlRootElement(localName = "createOsdRequest")
 public class CreateOsdRequest implements ApiRequest {
 
@@ -19,7 +21,7 @@ public class CreateOsdRequest implements ApiRequest {
     private Long       formatId;
     private Long       languageId;
     private Long       lifecycleStateId;
-    private String     summary = "<summary />";
+    private String     summary = DEFAULT_SUMMARY;
     private List<Meta> metas;
 
     public CreateOsdRequest() {

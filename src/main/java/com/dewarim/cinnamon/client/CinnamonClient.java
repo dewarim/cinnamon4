@@ -225,6 +225,14 @@ public class CinnamonClient {
     public CinnamonClient() {
     }
 
+    public CinnamonClient(CinnamonClient otherClient, String username, String password) {
+        this.port = otherClient.port;
+        this.host = otherClient.host;
+        this.protocol = otherClient.protocol;
+        this.username = username;
+        this.password = password;
+    }
+
     public CinnamonClient(int port, String host, String protocol, String username, String password) {
         this.port = port;
         this.host = host;
@@ -314,6 +322,12 @@ public class CinnamonClient {
     public void setSummary(Long osdId, String summary) throws IOException {
         SetSummaryRequest summaryRequest = new SetSummaryRequest(osdId, summary);
         HttpResponse      response       = sendStandardRequest(UrlMapping.OSD__SET_SUMMARY, summaryRequest);
+        verifyResponseIsOkay(response);
+    }
+
+    public void setFolderSummary(Long folderId, String summary) throws IOException {
+        SetSummaryRequest summaryRequest = new SetSummaryRequest(folderId, summary);
+        HttpResponse      response       = sendStandardRequest(FOLDER__SET_SUMMARY, summaryRequest);
         verifyResponseIsOkay(response);
     }
 
@@ -640,15 +654,15 @@ public class CinnamonClient {
         return linkUnwrapper.unwrap(response, links.size());
     }
 
-    public Link createLinkToFolder(Long parentId, LinkType type, Long aclId, Long ownerId, Long folderId) throws IOException {
-        var link              = new Link(type, ownerId, aclId, parentId, folderId, null);
+    public Link createLinkToFolder(Long parentId, Long aclId, Long ownerId, Long folderId) throws IOException {
+        var link              = new Link(LinkType.FOLDER, ownerId, aclId, parentId, folderId, null);
         var createLinkRequest = new CreateLinkRequest(List.of(link));
         var response          = sendStandardRequest(UrlMapping.LINK__CREATE, createLinkRequest);
         return linkUnwrapper.unwrap(response, 1).get(0);
     }
 
-    public Link createLinkToOsd(Long parentId, LinkType type, Long aclId, Long ownerId, Long objectId) throws IOException {
-        var link              = new Link(type, ownerId, aclId, parentId, null, objectId);
+    public Link createLinkToOsd(Long parentId, Long aclId, Long ownerId, Long objectId) throws IOException {
+        var link              = new Link(LinkType.OBJECT, ownerId, aclId, parentId, null, objectId);
         var createLinkRequest = new CreateLinkRequest(List.of(link));
         var response          = sendStandardRequest(UrlMapping.LINK__CREATE, createLinkRequest);
         return linkUnwrapper.unwrap(response, 1).get(0);

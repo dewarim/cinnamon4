@@ -2,15 +2,16 @@ package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
+import com.dewarim.cinnamon.client.CinnamonClientException;
 import com.dewarim.cinnamon.model.Folder;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.links.LinkType;
 import com.dewarim.cinnamon.model.request.link.CreateLinkRequest;
 import com.dewarim.cinnamon.model.request.link.DeleteLinkRequest;
-import com.dewarim.cinnamon.model.request.link.GetLinksRequest;
 import com.dewarim.cinnamon.model.response.LinkResponse;
 import com.dewarim.cinnamon.model.response.LinkResponseWrapper;
+import com.dewarim.cinnamon.test.TestObjectHolder;
 import org.apache.http.HttpResponse;
 import org.junit.jupiter.api.Test;
 
@@ -19,9 +20,9 @@ import java.util.List;
 
 import static com.dewarim.cinnamon.DefaultPermission.*;
 import static com.dewarim.cinnamon.ErrorCode.*;
+import static com.dewarim.cinnamon.api.Constants.ALIAS_OWNER;
 import static com.dewarim.cinnamon.api.Constants.DEFAULT_SUMMARY;
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -35,85 +36,130 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getLinkByIdForObject() throws IOException {
-        // request the first link, which points to the first test object with default acl:
-        GetLinksRequest     linkRequest = new GetLinksRequest(1L, true);
-        HttpResponse        response    = sendStandardRequest(UrlMapping.LINK__GET_LINKS_BY_ID, linkRequest);
-        LinkResponseWrapper linkWrapper = parseResponse(response);
-        assertThat(linkWrapper.getLinks().size(), equalTo(1));
-        Link link = linkWrapper.getLinks().get(0);
-        assertThat(link.getFolderId(), nullValue());
-        assertThat(link.getType(), equalTo(LinkType.OBJECT));
+        String summary = "<summary>sum of a sum</summary>";
+        var toh = prepareAclGroupWithPermissions("getLinkByIdForObject",
+                List.of(BROWSE_OBJECT, WRITE_OBJECT_SYS_METADATA));
+        ObjectSystemData linkTarget = toh.createOsd("getLinkByIdForObject-target").osd;
+        Long linkId = toh.createFolder("getLinkByIdForObject", createFolderId)
+                .createLinkToOsd(linkTarget)
+                .link.getId();
+        client.setSummary(linkTarget.getId(), summary);
+        Link link = new Link(client.getLinkById(linkId, false));
+
+        assertNull(link.getFolderId());
+        assertEquals(LinkType.OBJECT,link.getType());
         assertNotNull(link.getObjectId());
         ObjectSystemData osd = client.getOsdById(link.getObjectId(), true, false);
-        assertThat(osd.getSummary(), equalTo("<summary>sum of sum</summary>"));
+        assertEquals(summary, osd.getSummary());
     }
 
     @Test
     public void getLinkByIdForObjectWithoutSummary() throws IOException {
-        // request the first link, which points to the first test object with default acl:
-        var              linkResponse = client.getLinkById(1L, false);
-        Link             link         = new Link(linkResponse);
+        var toh = prepareAclGroupWithPermissions("getLinkByIdForObjectWithoutSummary",
+                List.of(BROWSE_OBJECT));
+        ObjectSystemData linkTarget = toh.createOsd("getLinkByIdForObjectWithoutSummary-target").osd;
+        Long linkId = toh.createFolder("getLinkByIdForObjectWithoutSummary", createFolderId)
+                .createLinkToOsd(linkTarget)
+                .link.getId();
+        Link link = new Link(client.getLinkById(linkId, false));
         ObjectSystemData osd          = client.getOsdById(link.getObjectId(), false, false);
-        assertThat(osd.getSummary(), equalTo("<summary/>"));
+        assertEquals(DEFAULT_SUMMARY, osd.getSummary());
     }
 
     @Test
     public void getLinkByIdForFolder() throws IOException {
-        // request link #2, which points to the "home" folder with default acl:
-        LinkResponse linkResponse = client.getLinkById(2L, true);
+        var toh = prepareAclGroupWithPermissions("getLinkByIdForFolder",
+                List.of(BROWSE_OBJECT, BROWSE_FOLDER, CREATE_OBJECT, CREATE_FOLDER, WRITE_OBJECT_SYS_METADATA));
+        // Create target folder, then a folder and inside a link to the target folder.
+        Folder linkTarget = toh.createFolder("folderAsLinkTarget", createFolderId).folder;
+        toh.createFolder("getLinkByIdForFolder", createFolderId)
+                .createLinkToFolder(linkTarget);
+        client.setFolderSummary(linkTarget.getId(), "<summary>stuff</summary>");
+        client.getLinkById(toh.link.getId(), true);
 
-        assertThat(linkResponse.getObjectId(), nullValue());
-        assertThat(linkResponse.getType(), equalTo(LinkType.FOLDER));
+        LinkResponse linkResponse = client.getLinkById(toh.link.getId(), true);
+        assertNull(linkResponse.getObjectId());
+        assertEquals(LinkType.FOLDER, linkResponse.getType());
         Folder folder = client.getFolderById(linkResponse.getFolderId(), true);
         assertNotNull(folder);
-        assertThat(folder.getName(), equalTo("home"));
+        assertThat(folder.getName(), equalTo("folderAsLinkTarget"));
         assertThat(folder.getSummary(), equalTo("<summary>stuff</summary>"));
     }
 
     @Test
     public void getLinkByIdForFolderWithoutSummary() throws IOException {
-        // request link #2, which points to the "home" folder with default acl:
-        GetLinksRequest     linkRequest = new GetLinksRequest(2L, false);
-        HttpResponse        response    = sendStandardRequest(UrlMapping.LINK__GET_LINKS_BY_ID, linkRequest);
-        LinkResponseWrapper linkWrapper = parseResponse(response);
-        Link                link        = linkWrapper.getLinks().get(0);
-        assertThat(link.getType(), equalTo(LinkType.FOLDER));
+        var toh = prepareAclGroupWithPermissions("getLinkByIdForFolderWithoutSummary",
+                List.of(BROWSE_OBJECT, BROWSE_FOLDER, CREATE_OBJECT, CREATE_FOLDER, WRITE_OBJECT_SYS_METADATA));
+        // Create target folder, then a folder and inside a link to the target folder.
+        Folder linkTarget = toh.createFolder("getLinkByIdForFolderWithoutSummary-target", createFolderId).folder;
+        toh.createFolder("getLinkByIdForFolderWithoutSummary-container", createFolderId)
+                .createLinkToFolder(linkTarget);
+        client.setFolderSummary(linkTarget.getId(), "<summary>stuff</summary>");
+        LinkResponse linkResponse = client.getLinkById(toh.link.getId(), true);
+        Link link = new Link(linkResponse);
+        assertEquals(LinkType.FOLDER,link.getType());
         Folder folder = client.getFolderById(link.getFolderId(), false);
         assertEquals(DEFAULT_SUMMARY, folder.getSummary());
     }
 
     @Test
-    public void getLinkWhereOnlyOwnerHasBrowsePermission() throws IOException {
-        // request link #14, which points to the "home" folder with default acl:
-        var linkResponse = client.getLinkById(14L, false);
+    public void getLinkWhereOnlyOwnerHasBrowsePermissionForOsd() throws IOException {
+        var toh = new TestObjectHolder(adminClient, "reviewers.acl", userId, createFolderId)
+                .createAcl("owner-acl-for-link");
+        // set current group to owner-group:
+        toh.group = TestObjectHolder.groups.stream()
+                .filter(group -> group.getName().equals(ALIAS_OWNER)).findFirst().orElseThrow();
+        // join acl to owner group:
+        toh.createAclGroup()
+                .addUserToGroup(userId)
+                // add browse permission to the given acl-owner-group combination:
+                .addPermissions(List.of(BROWSE_OBJECT))
+                // create link target
+                .createOsd("getLinkWhereOnlyOwnerHasBrowsePermissionForOsd")
+                // create folder which will contain the link (cannot have link + target in same folder)
+                .createFolder("getLinkWhereOnlyOwnerHasBrowsePermissionForOsd", createFolderId);
+        ;
+        toh.createLinkToOsd(toh.osd);
+
+        var linkResponse = client.getLinkById(toh.link.getId(), false);
         var link         = new Link(linkResponse);
-        assertThat(link.getType(), equalTo(LinkType.OBJECT));
-        ObjectSystemData osd = client.getOsdById(link.getObjectId(), true, false);
-        assertThat(osd.getSummary(), equalTo("<summary/>"));
+        assertEquals(LinkType.OBJECT, link.getType());
     }
 
     @Test
     public void aclOnLinkForbidsAccess() throws IOException {
-        // request link #2, which points to the "home" folder with default acl:
-        GetLinksRequest linkRequest = new GetLinksRequest(3L, false);
-        HttpResponse    response    = sendStandardRequest(UrlMapping.LINK__GET_LINKS_BY_ID, linkRequest);
-        assertCinnamonError(response, NO_BROWSE_PERMISSION);
+        var toh = prepareAclGroupWithPermissions("aclOnLinkForbidsAccess", List.of())
+                .createOsd("aclOnLinkForbidsAccess")
+                .createFolder("aclOnLinkForbidsAccess", createFolderId);
+        toh.createLinkToOsd(toh.osd);
+        var ex = assertThrows(CinnamonClientException.class, () -> client.getLinkById(toh.link.getId(), false));
+        assertEquals(NO_BROWSE_PERMISSION, ex.getErrorCode());
     }
 
     @Test
     public void aclOnObjectForbidsAccess() throws IOException {
-        // request link #4, which points to object #7 with acl "unseen" #7:
-        GetLinksRequest linkRequest = new GetLinksRequest(4L, false);
-        HttpResponse    response    = sendStandardRequest(UrlMapping.LINK__GET_LINKS_BY_ID, linkRequest);
-        assertCinnamonError(response, ErrorCode.UNAUTHORIZED);
+        // we need 2 acls: the link itself is browsable, but the object behind it is not
+        var toh = prepareAclGroupWithPermissions("aclOnObjectForbidsAccess", List.of())
+                .createOsd("aclOnObjectForbidsAccess")
+                .createFolder("aclOnObjectForbidsAccess", createFolderId);
+        var toh2 = prepareAclGroupWithPermissions("aclOnObjectForbidsAccess2",
+                List.of(BROWSE_OBJECT));
+        toh2.createLinkToOsd(toh.osd);
+        var ex = assertThrows(CinnamonClientException.class, () -> client.getLinkById(toh2.link.getId(), false));
+        assertEquals(UNAUTHORIZED, ex.getErrorCode());
     }
 
     @Test
     public void aclOnFolderForbidsAccess() throws IOException {
-        // request link #5, which points to folder #3 with acl "unseen" #7:
-        GetLinksRequest linkRequest = new GetLinksRequest(5L, false);
-        HttpResponse    response    = sendStandardRequest(UrlMapping.LINK__GET_LINKS_BY_ID, linkRequest);
-        assertCinnamonError(response, ErrorCode.UNAUTHORIZED);
+        // we need 2 acls: the link itself is browsable, but the folder behind it is not
+        var toh          = prepareAclGroupWithPermissions("aclOnFolderForbidsAccess", List.of());
+        var targetFolder = toh.createFolder("aclOnFolderForbidsAccess-target", createFolderId).folder;
+        toh.createFolder("aclOnFolderForbidsAccess-container", createFolderId);
+        var toh2 = prepareAclGroupWithPermissions("aclOnFolderForbidsAccess2",
+                List.of(BROWSE_FOLDER));
+        toh2.createLinkToFolder(targetFolder);
+        var ex = assertThrows(CinnamonClientException.class, () -> client.getLinkById(toh2.link.getId(), false));
+        assertEquals(UNAUTHORIZED, ex.getErrorCode());
     }
 
     @Test
@@ -157,18 +203,30 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void deleteObjectLinkHappyPath() throws IOException {
-        assertTrue(client.deleteLinks(List.of(9L)));
+        var toh = prepareAclGroupWithPermissions("deleteObjectLinkHappyPath",
+                List.of(BROWSE_OBJECT, BROWSE_FOLDER, DELETE_OBJECT));
+        ObjectSystemData linkTarget = toh.createOsd("deleteObjectLinkHappyPathTarget").osd;
+        Long linkId = toh.createFolder("deleteObjectLinkHappyPath", createFolderId)
+                .createLinkToOsd(linkTarget)
+                .link.getId();
+        assertTrue(client.deleteLinks(List.of(linkId)));
 
         // verify delete:
-        assertClientError(() -> client.getLinksById(List.of(9L), true), ErrorCode.OBJECT_NOT_FOUND);
+        assertClientError(() -> client.getLinksById(List.of(linkId), true), ErrorCode.OBJECT_NOT_FOUND);
     }
 
     @Test
     public void deleteFolderLinkHappyPath() throws IOException {
-        assertTrue(client.deleteLinks(List.of(10L)));
+        var toh = prepareAclGroupWithPermissions("deleteFolderLinkHappyPath",
+                List.of(BROWSE_OBJECT, BROWSE_FOLDER, DELETE_FOLDER));
+        Folder linkTarget = toh.createFolder("deleteFolderLinkHappyPathTarget", createFolderId).folder;
+        Long linkId = toh.createFolder("deleteFolderLinkHappyPath", createFolderId)
+                .createLinkToFolder(linkTarget)
+                .link.getId();
+        assertTrue(client.deleteLinks(List.of(linkId)));
 
         // verify delete:
-        assertClientError(() -> client.getLinksById(List.of(10L), true), ErrorCode.OBJECT_NOT_FOUND);
+        assertClientError(() -> client.getLinksById(List.of(linkId), true), ErrorCode.OBJECT_NOT_FOUND);
     }
 
     @Test
@@ -202,7 +260,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void createLinkWithInvalidRequest() throws IOException {
         // invalid target id
-        assertClientError(() -> client.createLinkToOsd(6L, LinkType.OBJECT, 1L, 1L, 0L), INVALID_REQUEST);
+        assertClientError(() -> client.createLinkToOsd(6L, 1L, 1L, 0L), INVALID_REQUEST);
 
         // invalid parent folder id
         CreateLinkRequest crlParentId      = new CreateLinkRequest(0L, LinkType.OBJECT, 1, 1, null, 13L);
@@ -261,10 +319,11 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void createLinkToFolderWithoutBrowsePermission() throws IOException {
-        CreateLinkRequest crlId    = new CreateLinkRequest(6, LinkType.FOLDER, 1, 1, 7L, null);
-        HttpResponse      response = sendStandardRequest(UrlMapping.LINK__CREATE, crlId);
-        assertCinnamonError(response, ErrorCode.UNAUTHORIZED);
+    public void createLinkToFolderWithoutBrowseFolderPermission() throws IOException {
+        var toh    = prepareAclGroupWithPermissions("createLinkToFolderWithoutBrowseFolderPermission", List.of());
+        var folder = toh.createFolder("createLinkToFolderWithoutBrowsePermission", createFolderId);
+        var ex     = assertThrows(CinnamonClientException.class, () -> client.createLinkToFolder(createFolderId, 1L, adminId, toh.folder.getId()));
+        assertEquals(UNAUTHORIZED, ex.getErrorCode());
     }
 
     @Test
@@ -328,9 +387,15 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateLinkAclWithoutSetAclPermission() throws IOException {
-        var link = client.getLinksById(List.of(18L), false).get(0);
-        link.setAclId(1L);
-        assertClientError(() -> client.updateLink(link), MISSING_SET_ACL_PERMISSION);
+        var toh = prepareAclGroupWithPermissions("updateLinkAclWithoutSetAclPermission",
+                List.of(BROWSE_OBJECT, BROWSE_FOLDER, CREATE_OBJECT, CREATE_FOLDER, WRITE_OBJECT_SYS_METADATA));
+        // Create an OSD, then a folder and inside a link to the osd.
+        // Then try to update the link's ACL without permission:
+        toh.createOsd("osdAsLinkTarget")
+                .createFolder("updateLinkAclWithoutSetAclPermission", createFolderId)
+                .createLinkToOsd(toh.osd)
+                .link.setAclId(1L);
+        assertClientError(() -> client.updateLink(toh.link), MISSING_SET_ACL_PERMISSION);
     }
 
     @Test
@@ -373,8 +438,14 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateLinkOwner() throws IOException {
-        var linkResponse = client.getLinkById(21L, false);
-        linkResponse.setOwnerId(2L);
+        var toh = prepareAclGroupWithPermissions("updateLinkOwner",
+                List.of(BROWSE_OBJECT, BROWSE_FOLDER, CREATE_OBJECT, CREATE_FOLDER, WRITE_OBJECT_SYS_METADATA));
+        // Create target folder, then a folder and inside a link to the target folder.
+        Folder linkTarget = toh.createFolder("updateLinkOwnerTarget", createFolderId).folder;
+        toh.createFolder("updateLinkOwner", createFolderId)
+                .createLinkToFolder(linkTarget);
+        var linkResponse = client.getLinkById(toh.link.getId(), true);
+        linkResponse.setOwnerId(adminId);
         var  link        = new Link(linkResponse);
         Link updatedLink = client.updateLink(link);
         assertEquals(link, updatedLink);
@@ -403,8 +474,15 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateLinkParentFolder() throws IOException {
-        var linkResponse = client.getLinkById(21L, false);
-        linkResponse.setParentId(6L);
+        var toh = prepareAclGroupWithPermissions("updateLinkParentFolder",
+                List.of(BROWSE_OBJECT, BROWSE_FOLDER, CREATE_OBJECT, CREATE_FOLDER, WRITE_OBJECT_SYS_METADATA));
+        // Create target folder, then a folder and inside a link to the target folder.
+        Folder linkTarget  = toh.createFolder("updateLinkParentFolderTarget", createFolderId).folder;
+        Long   newParentId = toh.createFolder("parent folder for update", linkTarget.getId()).folder.getId();
+        toh.createFolder("updateLinkParentFolder", createFolderId)
+                .createLinkToFolder(linkTarget);
+        var linkResponse = client.getLinkById(toh.link.getId(), true);
+        linkResponse.setParentId(newParentId);
         var link = new Link(linkResponse);
         assertEquals(link, client.updateLink(link));
     }
@@ -417,7 +495,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
 
         long osdId        = toh.createOsd("updateLinkToObject").osd.getId();
         long linkFolderId = toh.createFolder("folder with a link", createFolderId).folder.getId();
-        Link link         = client.createLinkToOsd(linkFolderId, LinkType.OBJECT, toh.acl.getId(), userId, osdId);
+        Link link         = client.createLinkToOsd(linkFolderId, toh.acl.getId(), userId, osdId);
         long secondOsdId  = toh.createOsd("second-link-osd").osd.getId();
         var  linkResponse = client.getLinkById(link.getId(), false);
         linkResponse.setObjectId(secondOsdId);

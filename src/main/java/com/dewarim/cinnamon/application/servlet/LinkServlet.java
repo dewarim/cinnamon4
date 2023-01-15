@@ -310,8 +310,7 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
         ObjectSystemData       osd    = osds.get(0);
 
         AccessFilter accessFilter = AccessFilter.getInstance(ThreadLocalSqlSession.getCurrentUser());
-        // TODO: check browse permission of owner (#57)
-        if (accessFilter.hasUserBrowsePermission(osd.getAclId())) {
+        if (accessFilter.hasBrowsePermissionForOwnable(osd)) {
             LinkResponse linkResponse = new LinkResponse();
             linkResponse.setType(LinkType.OBJECT);
             linkResponse.setOsd(osd);

@@ -22,7 +22,6 @@ import com.dewarim.cinnamon.model.request.IdRequest;
 import com.dewarim.cinnamon.model.request.MetaRequest;
 import com.dewarim.cinnamon.model.request.SetSummaryRequest;
 import com.dewarim.cinnamon.model.request.osd.CreateOsdRequest;
-import com.dewarim.cinnamon.model.request.osd.OsdByFolderRequest;
 import com.dewarim.cinnamon.model.request.osd.OsdRequest;
 import com.dewarim.cinnamon.model.request.osd.SetContentRequest;
 import com.dewarim.cinnamon.model.request.osd.UpdateOsdRequest;
@@ -141,13 +140,24 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getObjectsByFolderId() throws IOException {
-        OsdByFolderRequest     osdRequest = new OsdByFolderRequest(4L, true, false, false, ALL);
-        HttpResponse           response   = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_FOLDER_ID, osdRequest);
-        List<ObjectSystemData> dataList   = unwrapOsds(response, 2);
-        List<Link>             links      = unwrapLinks(response, 1);
-        assertTrue(dataList.stream().anyMatch(osd -> osd.getSummary().equals("<summary>child@archive</summary>")));
-        // link.objectId is #10, because it's yet unresolved (latest_head would be osd#11).
-        assertThat(links.get(0).getObjectId(), equalTo(10L));
+        var toh = prepareAclGroupWithPermissions("getObjectsByFolderId",
+                List.of(BROWSE_OBJECT, BROWSE_FOLDER, CREATE_OBJECT, CREATE_FOLDER, WRITE_OBJECT_SYS_METADATA));
+        var osdAsLinkTarget = toh.createOsd("osdAsLinkTarget").osd;
+        var folder          = toh.createFolder("getObjectsByFolderId", createFolderId).folder;
+        var osd1            = toh.createOsd("osd-1-by-folder-id").osd;
+        client.setSummary(osd1.getId(), "<summary>child@archive</summary>");
+        var                    osd2         = toh.createOsd("osd-2-by-folder-id").osd;
+        var                    link         = toh.createLinkToOsd(osdAsLinkTarget).link;
+        OsdWrapper             osdWrapper   = client.getOsdsInFolder(folder.getId(), true, false, false, ALL);
+        List<ObjectSystemData> osdsInFolder = osdWrapper.getOsds();
+
+        assertEquals(2, osdsInFolder.size());
+        assertEquals(1, osdWrapper.getLinks().size());
+        assertTrue(osdsInFolder.stream().anyMatch(osd -> osd.getSummary().equals("<summary>child@archive</summary>")));
+        assertTrue(osdsInFolder.stream().map(ObjectSystemData::getId).anyMatch(o -> o.equals(osd1.getId())));
+        assertTrue(osdsInFolder.stream().map(ObjectSystemData::getId).anyMatch(o -> o.equals(osd2.getId())));
+        assertEquals(link.getId(), osdWrapper.getLinks().get(0).getId());
+        assertEquals(link.getObjectId(), osdAsLinkTarget.getId());
     }
 
     @Test
@@ -208,11 +218,18 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getObjectsByFolderIdWithLinksAsOsds() throws IOException {
-        OsdWrapper             wrapper    = client.getOsdsInFolderWrapped(4L, true, true, false);
-        List<Link>             links      = wrapper.getLinks();
-        List<ObjectSystemData> linkedOsds = wrapper.getReferences();
+        var toh = prepareAclGroupWithPermissions("getObjectsByFolderIdWithLinksAsOsds",
+                List.of(BROWSE_OBJECT, BROWSE_FOLDER, CREATE_OBJECT, CREATE_FOLDER, WRITE_OBJECT_SYS_METADATA));
+        var osdAsLinkTarget = toh.createOsd("osdAsLinkTarget").osd;
+        var folder          = toh.createFolder("getObjectsByFolderIdWithLinksAsOsds", createFolderId).folder;
+        toh.createOsd("osd-x-by-folder-id")
+                .createLinkToOsd(osdAsLinkTarget);
+        OsdWrapper             osdWrapper = client.getOsdsInFolder(folder.getId(), true, true, false, ALL);
+        List<Link>             links      = osdWrapper.getLinks();
+        List<ObjectSystemData> linkedOsds = osdWrapper.getReferences();
         assertEquals(1, links.size());
-        links.forEach(link -> assertTrue(linkedOsds.stream().anyMatch(osd -> osd.getId().equals(link.getObjectId()))));
+        assertEquals(1, linkedOsds.size());
+        assertEquals(toh.link.getObjectId(), linkedOsds.get(0).getId());
     }
 
     @Test
@@ -284,7 +301,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         long osdId = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId)
                 .createOsd("getSummaryHappyPath").osd.getId();
         client.setSummary(osdId, "<my-sum/>");
-        List<Summary> summaries  = client.getOsdSummaries(List.of(osdId));
+        List<Summary> summaries = client.getOsdSummaries(List.of(osdId));
         assertNotNull(summaries);
         assertFalse(summaries.isEmpty());
         assertThat(summaries.get(0).getContent(), equalTo("<my-sum/>"));

@@ -17,6 +17,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
+import static com.dewarim.cinnamon.api.Constants.DEFAULT_SUMMARY;
+
 /**
  * Core Cinnamon object, contains the system's data of an object (document, media file, other resource).
  * It's abbreviated to OSD.
@@ -69,7 +71,7 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject, Identi
     private boolean metadataChanged = false;
     private String  cmnVersion      = "1";
     private Long    lifecycleStateId;
-    private String  summary         = "<summary/>";
+    private String  summary         = DEFAULT_SUMMARY;
 
     private String contentHash;
 

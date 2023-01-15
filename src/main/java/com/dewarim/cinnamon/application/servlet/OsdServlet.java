@@ -91,8 +91,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.dewarim.cinnamon.ErrorCode.*;
-import static com.dewarim.cinnamon.api.Constants.LANGUAGE_UNDETERMINED_ISO_CODE;
-import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
+import static com.dewarim.cinnamon.api.Constants.*;
 import static jakarta.servlet.http.HttpServletResponse.SC_OK;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static org.apache.http.entity.mime.MIME.CONTENT_DISPOSITION;
@@ -369,7 +368,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
 
         osd.setCreatorId(user.getId());
         osd.setModifierId(user.getId());
-        osd.setSummary(Objects.requireNonNullElse(createRequest.getSummary(), "<summary/>"));
+        osd.setSummary(Objects.requireNonNullElse(createRequest.getSummary(), DEFAULT_SUMMARY));
 
         osd = osdDao.saveOsd(osd);
 

@@ -19,7 +19,6 @@ import com.dewarim.cinnamon.model.ObjectType;
 import com.dewarim.cinnamon.model.Permission;
 import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.links.Link;
-import com.dewarim.cinnamon.model.links.LinkType;
 import com.dewarim.cinnamon.model.request.folder.UpdateFolderRequest;
 import com.dewarim.cinnamon.model.request.osd.CreateOsdRequest;
 
@@ -28,6 +27,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static com.dewarim.cinnamon.api.Constants.DEFAULT_SUMMARY;
 import static com.dewarim.cinnamon.api.Constants.FOLDER_TYPE_DEFAULT;
 
 public class TestObjectHolder {
@@ -36,6 +36,7 @@ public class TestObjectHolder {
     static        boolean           initialized = false;
     static public List<Permission>  permissions;
     static public List<Format>      formats;
+    static public List<Group>      groups;
     static public List<Language>    languages;
     static public List<ObjectType>  objectTypes;
     static public List<MetasetType> metasetTypes;
@@ -58,7 +59,7 @@ public class TestObjectHolder {
     public Link             link;
 
     public  List<Meta>  metas;
-    public  String      summary = "<summary/>";
+    public  String      summary = DEFAULT_SUMMARY;
     private MetasetType metasetType;
 
     /**
@@ -109,6 +110,7 @@ public class TestObjectHolder {
                     folderTypes = client.listFolderTypes();
                     languages = client.listLanguages();
                     acls = client.listAcls();
+                    groups = client.listGroups();
                 } catch (IOException e) {
                     throw new IllegalStateException("Failed to initialize test object holder", e);
                 }
@@ -164,6 +166,10 @@ public class TestObjectHolder {
     }
 
     public TestObjectHolder addAndRemovePermissionsByName(List<String> permissionsToAdd, List<String> permissionsToRemove) throws IOException {
+        if(permissionsToAdd.isEmpty() && permissionsToRemove.isEmpty()){
+            // do nothing
+            return this;
+        }
         client.addAndRemovePermissions(aclGroup.getId(),
                 permissions.stream().filter(p -> permissionsToAdd.contains(p.getName())).map(Permission::getId).collect(Collectors.toList()),
                 permissions.stream().filter(p -> permissionsToRemove.contains(p.getName())).map(Permission::getId).collect(Collectors.toList()));
@@ -240,7 +246,16 @@ public class TestObjectHolder {
      * New link object is stored in TOH.link field.
      */
     public TestObjectHolder createLinkToOsd(ObjectSystemData osd) throws IOException {
-        link = client.createLinkToOsd(folder.getId(), LinkType.OBJECT, acl.getId(), user.getId(), osd.getId());
+        link = client.createLinkToOsd(folder.getId(), acl.getId(), user.getId(), osd.getId());
+        return this;
+    }
+
+    /**
+     * Create a link to the given folder using the current folder, acl, owner.
+     * New link object is stored in TOH.link field.
+     */
+    public TestObjectHolder createLinkToFolder(Folder folder) throws IOException {
+        link = client.createLinkToFolder(folder.getId(), acl.getId(), user.getId(), folder.getId());
         return this;
     }
 

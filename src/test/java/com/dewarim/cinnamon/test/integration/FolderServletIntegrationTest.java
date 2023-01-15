@@ -10,7 +10,6 @@ import com.dewarim.cinnamon.model.Meta;
 import com.dewarim.cinnamon.model.MetasetType;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.links.Link;
-import com.dewarim.cinnamon.model.links.LinkType;
 import com.dewarim.cinnamon.model.relations.Relation;
 import com.dewarim.cinnamon.model.relations.RelationType;
 import com.dewarim.cinnamon.model.request.CreateMetaRequest;
@@ -767,7 +766,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
                 .createFolder("delete-with-outside-link", createFolderId)
                 .createOsd("delete-with-outside-link")
                 .addUserToGroup(userId);
-        Link link = adminClient.createLinkToOsd(createFolderId, LinkType.OBJECT, toh.acl.getId(), userId, toh.osd.getId());
+        Link link = adminClient.createLinkToOsd(createFolderId, toh.acl.getId(), userId, toh.osd.getId());
         client.deleteFolder(toh.folder.getId(), false, true);
         CinnamonClientException ce = assertThrows(CinnamonClientException.class, () -> client.getLinksById(List.of(link.getId()), false));
         assertEquals(OBJECT_NOT_FOUND, ce.getErrorCode());

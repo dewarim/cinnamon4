@@ -18,8 +18,6 @@ import java.util.List;
 @JacksonXmlRootElement(localName = "createFolderRequest")
 public class CreateFolderRequest implements CreateRequest<Folder>, ApiRequest<Folder> {
 
-    private static final String DEFAULT_SUMMARY = "<summary />";
-
     @JacksonXmlElementWrapper(localName = "folders")
     @JacksonXmlProperty(localName = "folder")
     private List<Folder> folders = new ArrayList<>();
