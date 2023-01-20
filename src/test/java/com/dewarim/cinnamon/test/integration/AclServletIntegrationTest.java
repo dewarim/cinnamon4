@@ -46,14 +46,14 @@ public class AclServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void createAclTest() throws IOException {
         String        aclName = "test_acl_" + Math.random();
-        List<Acl>     acls    = adminClient.createAcl(List.of(aclName));
+        List<Acl>     acls    = adminClient.createAcls(List.of(aclName));
         Optional<Acl> testAcl = acls.stream().filter(acl -> acl.getName().equals(aclName)).findFirst();
         assertTrue(testAcl.isPresent());
     }
 
     @Test
     public void createAclShouldFailOnInvalidName() {
-        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> adminClient.createAcl(List.of("")));
+        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> adminClient.createAcls(List.of("")));
         assertEquals(ErrorCode.INVALID_REQUEST, ex.getErrorCode());
     }
 

@@ -17,25 +17,18 @@ import java.util.stream.Collectors;
 public class AuthorizationService {
 
     public List<Folder> filterFoldersByBrowsePermission(List<Folder> folders, UserAccount user) {
-        AccessFilter accessFilter = AccessFilter.getInstance(user);
-        return folders.stream().filter(accessFilter::hasBrowsePermissionForOwnable).collect(Collectors.toList());
+        return folders.stream().filter(folder -> hasUserOrOwnerPermission(folder, DefaultPermission.BROWSE, user)).collect(Collectors.toList());
     }
 
     public List<ObjectSystemData> filterObjectsByBrowsePermission(List<ObjectSystemData> osds, UserAccount user) {
-        AccessFilter accessFilter = AccessFilter.getInstance(user);
-        return osds.stream().filter(accessFilter::hasBrowsePermissionForOwnable).collect(Collectors.toList());
+        return osds.stream().filter(osd -> hasUserOrOwnerPermission(osd, DefaultPermission.BROWSE, user)).collect(Collectors.toList());
     }
 
+    // TODO: refactor to filterOwnableByBrowsePermission
     public List<Link> filterLinksByBrowsePermission(List<Link> links, UserAccount user) {
-        AccessFilter accessFilter = AccessFilter.getInstance(user);
-        return links.stream().filter(link ->
-                switch (link.getType()) {
-                    case FOLDER -> accessFilter.hasFolderBrowsePermission(link.getAclId())
-                            || (link.getOwnerId().equals(user.getId()) && accessFilter.hasOwnerBrowsePermission(link.getAclId()));
-                    case OBJECT -> accessFilter.hasBrowsePermissionForOwnable(link)
-                            || (link.getOwnerId().equals(user.getId()) && accessFilter.hasPermission(link.getAclId(), DefaultPermission.BROWSE_FOLDER, true));
-                }
-        ).collect(Collectors.toList());
+        return links.stream()
+                .filter(link -> hasUserOrOwnerPermission(link, DefaultPermission.BROWSE, user))
+                .collect(Collectors.toList());
     }
 
     public boolean userHasPermission(Long aclId, DefaultPermission permission, UserAccount user) {

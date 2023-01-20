@@ -82,6 +82,7 @@ relation.parent.remove
      * queried for the content of a folder or when a search for turns up this
      * object.
      */
+    @Deprecated
     BROWSE_OBJECT("_browse"),
 
     /**
@@ -105,10 +106,12 @@ relation.parent.remove
     EDIT_FOLDER("_edit_folder"),
 
     /**
-     * Permission to browse this folder, that is: the folder will be
-     * displayed in a list of its parent's content or may turn up
-     * during a search.
+     * Permission to browse an object (OSD, folder, link etc), that is: the server will list it when
+     * queried for the content of a folder or when a search for turns up this
+     * object.
      */
+    BROWSE("node.browse"),
+    @Deprecated
     BROWSE_FOLDER("_browse_folder"),
 
     /**

@@ -536,10 +536,15 @@ public class CinnamonClient {
     }
 
     // Acls
-    public List<Acl> createAcl(List<String> names) throws IOException {
+    public List<Acl> createAcls(List<String> names) throws IOException {
         CreateAclRequest aclRequest = new CreateAclRequest(names.stream().map(Acl::new).collect(Collectors.toList()));
         HttpResponse     response   = sendStandardRequest(UrlMapping.ACL__CREATE, aclRequest);
         return aclUnwrapper.unwrap(response, aclRequest.list().size());
+    }
+    public Acl createAcl(String name) throws IOException {
+        CreateAclRequest aclRequest = new CreateAclRequest(List.of(new Acl(name)));
+        HttpResponse     response   = sendStandardRequest(UrlMapping.ACL__CREATE, aclRequest);
+        return aclUnwrapper.unwrap(response, 1).get(0);
     }
 
     public boolean deleteAcl(List<Long> ids) throws IOException {

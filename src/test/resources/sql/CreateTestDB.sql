@@ -209,7 +209,6 @@ create table objects
   latest_head boolean not null,
   modified timestamp not null,
   name varchar(128) not null,
-  version bigint default 0,
   cmn_version varchar(1024) default '1' not null,
   acl_id bigint not null
     constraint fk9d13c5143e44742f
@@ -639,6 +638,7 @@ insert into permissions values (nextval('seq_permission_id'),'relation.child.add
 insert into permissions values (nextval('seq_permission_id'),'relation.parent.add'); -- #19
 insert into permissions values (nextval('seq_permission_id'),'relation.child.remove'); -- #20
 insert into permissions values (nextval('seq_permission_id'),'relation.parent.remove'); -- #21
+insert into permissions values (nextval('seq_permission_id'),'node.browse'); -- #22
 
 -- note: personal user groups are deprecated. Add user to normal groups instead.
 -- #1 browse permission for doe's group + default_acl:

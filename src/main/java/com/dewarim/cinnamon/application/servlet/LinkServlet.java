@@ -92,7 +92,7 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
 
         Folder       parentFolder     = parentFolders.get(0);
         AccessFilter accessFilter     = AccessFilter.getInstance(user);
-        boolean      browsePermission = accessFilter.hasPermissionOnOwnable(parentFolder, DefaultPermission.BROWSE_FOLDER, parentFolder);
+        boolean      browsePermission = accessFilter.hasPermissionOnOwnable(parentFolder, DefaultPermission.BROWSE, parentFolder);
         boolean      writePermission  = accessFilter.hasPermissionOnOwnable(parentFolder, DefaultPermission.CREATE_OBJECT, parentFolder);
         if (!(browsePermission && writePermission)) {
             ErrorCode.UNAUTHORIZED.throwUp();
@@ -119,7 +119,7 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
                 Optional<Folder> folderOpt = folderDao.getFolderById(link.getFolderId());
                 if (folderOpt.isPresent()) {
                     folder = folderOpt.get();
-                    accessFilter.verifyHasPermissionOnOwnable(folder, DefaultPermission.BROWSE_FOLDER, folder, ErrorCode.UNAUTHORIZED);
+                    accessFilter.verifyHasPermissionOnOwnable(folder, DefaultPermission.BROWSE, folder, ErrorCode.UNAUTHORIZED);
                 } else {
                     ErrorCode.FOLDER_NOT_FOUND.throwUp();
                 }
@@ -127,7 +127,7 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
             case OBJECT -> {
                 Optional<ObjectSystemData> osdOpt = osdDao.getObjectById(link.getObjectId());
                 osd = osdOpt.orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
-                accessFilter.verifyHasPermissionOnOwnable(osd, DefaultPermission.BROWSE_OBJECT, osd, ErrorCode.UNAUTHORIZED);
+                accessFilter.verifyHasPermissionOnOwnable(osd, DefaultPermission.BROWSE, osd, ErrorCode.UNAUTHORIZED);
             }
             default -> throw new IllegalStateException("invalid link type: " + link.getType());
         }
@@ -153,7 +153,7 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
         }
 
         // no update allowed for links that the user cannot even see:
-        accessFilter.verifyHasPermissionOnOwnable(link, DefaultPermission.BROWSE_OBJECT, link, ErrorCode.NO_BROWSE_PERMISSION);
+        accessFilter.verifyHasPermissionOnOwnable(link, DefaultPermission.BROWSE, link, ErrorCode.NO_BROWSE_PERMISSION);
         accessFilter.verifyHasPermissionOnOwnable(link, DefaultPermission.WRITE_OBJECT_SYS_METADATA, link, ErrorCode.NO_WRITE_SYS_METADATA_PERMISSION);
 
         if (!Objects.equals(link.getAclId(), update.getAclId())) {
@@ -182,7 +182,7 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
         Folder       folder       = new FolderDao().getFolderById(updateRequest.getFolderId()).orElseThrow(ErrorCode.FOLDER_NOT_FOUND.getException());
         UserAccount  user         = ThreadLocalSqlSession.getCurrentUser();
         AccessFilter accessFilter = AccessFilter.getInstance(user);
-        accessFilter.verifyHasPermissionOnOwnable(folder, DefaultPermission.BROWSE_FOLDER, folder, ErrorCode.NO_BROWSE_PERMISSION);
+        accessFilter.verifyHasPermissionOnOwnable(folder, DefaultPermission.BROWSE, folder, ErrorCode.NO_BROWSE_PERMISSION);
         link.setFolderId(updateRequest.getFolderId());
         if (linkDao.updateLink(link) != UPDATED_ONE_ROW) {
             log.debug("Folder update did not change the link.");
@@ -193,7 +193,7 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
         Folder       parentFolder = new FolderDao().getFolderById(updateRequest.getParentId()).orElseThrow(ErrorCode.FOLDER_NOT_FOUND.getException());
         UserAccount  user         = ThreadLocalSqlSession.getCurrentUser();
         AccessFilter accessFilter = AccessFilter.getInstance(user);
-        accessFilter.verifyHasPermissionOnOwnable(parentFolder, DefaultPermission.BROWSE_FOLDER, parentFolder, ErrorCode.NO_BROWSE_PERMISSION);
+        accessFilter.verifyHasPermissionOnOwnable(parentFolder, DefaultPermission.BROWSE, parentFolder, ErrorCode.NO_BROWSE_PERMISSION);
         accessFilter.verifyHasPermissionOnOwnable(parentFolder, DefaultPermission.CREATE_OBJECT, parentFolder, ErrorCode.NO_CREATE_PERMISSION);
         link.setParentId(parentFolder.getId());
         if (linkDao.updateLink(link) != UPDATED_ONE_ROW) {
@@ -207,7 +207,7 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
             link.setType(LinkType.OBJECT);
         }
         ObjectSystemData osd = new OsdDao().getObjectById(updateRequest.getObjectId()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
-        AccessFilter.getInstance(ThreadLocalSqlSession.getCurrentUser()).verifyHasPermissionOnOwnable(osd, DefaultPermission.BROWSE_OBJECT, osd, ErrorCode.NO_BROWSE_PERMISSION);
+        AccessFilter.getInstance(ThreadLocalSqlSession.getCurrentUser()).verifyHasPermissionOnOwnable(osd, DefaultPermission.BROWSE, osd, ErrorCode.NO_BROWSE_PERMISSION);
         link.setObjectId(updateRequest.getObjectId());
         if (linkDao.updateLink(link) != UPDATED_ONE_ROW) {
             log.debug("OSD update did not change the link.");
@@ -273,8 +273,8 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
         boolean            includeSummary = linkRequest.isIncludeSummary();
         filteredLinks.forEach(link -> {
             switch (link.getType()) {
-                case FOLDER -> linkResponses.add(handleFolderLink(link, includeSummary));
-                case OBJECT -> linkResponses.add(handleOsdLink(link, includeSummary));
+                case FOLDER -> linkResponses.add(handleFolderLink(link, user, includeSummary));
+                case OBJECT -> linkResponses.add(handleOsdLink(link, user, includeSummary));
                 default -> throw new IllegalStateException("unknown link type");
             }
         });
@@ -283,14 +283,13 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
         response.setWrapper(wrapper);
     }
 
-    private LinkResponse handleFolderLink(Link link, boolean includeSummary) {
+    private LinkResponse handleFolderLink(Link link, UserAccount user, boolean includeSummary) {
         FolderDao    folderDao = new FolderDao();
         List<Folder> folders   = folderDao.getFoldersById(Collections.singletonList(link.getFolderId()), includeSummary);
         // existence of folder should be guaranteed by foreign key constraint in DB.
-        Folder       folder       = folders.get(0);
-        AccessFilter accessFilter = AccessFilter.getInstance(ThreadLocalSqlSession.getCurrentUser());
-        // TODO: check browse permission of owner (#57)
-        if (accessFilter.hasFolderBrowsePermission(folder.getAclId())) {
+        Folder folder = folders.get(0);
+
+        if (authorizationService.hasUserOrOwnerPermission(folder, DefaultPermission.BROWSE, user)) {
             LinkResponse linkResponse = new LinkResponse();
             linkResponse.setType(LinkType.FOLDER);
             linkResponse.setFolder(folder);
@@ -304,13 +303,12 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
         throw ErrorCode.UNAUTHORIZED.getException().get();
     }
 
-    private LinkResponse handleOsdLink(Link link, boolean includeSummary) {
+    private LinkResponse handleOsdLink(Link link, UserAccount user, boolean includeSummary) {
         OsdDao                 osdDao = new OsdDao();
         List<ObjectSystemData> osds   = osdDao.getObjectsById(Collections.singletonList(link.getObjectId()), includeSummary);
         ObjectSystemData       osd    = osds.get(0);
 
-        AccessFilter accessFilter = AccessFilter.getInstance(ThreadLocalSqlSession.getCurrentUser());
-        if (accessFilter.hasBrowsePermissionForOwnable(osd)) {
+        if (authorizationService.hasUserOrOwnerPermission(link, DefaultPermission.BROWSE, user)) {
             LinkResponse linkResponse = new LinkResponse();
             linkResponse.setType(LinkType.OBJECT);
             linkResponse.setOsd(osd);

@@ -65,7 +65,7 @@ public class AclGroupServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     @Order(1)
     public void createAclGroup() throws IOException {
-        acls = adminClient.createAcl(List.of("a1", "a2"));
+        acls = adminClient.createAcls(List.of("a1", "a2"));
         Acl a1 = acls.get(0);
         Acl a2 = acls.get(1);
         groups = adminClient.createGroupsByName(List.of("g1", "g2"));

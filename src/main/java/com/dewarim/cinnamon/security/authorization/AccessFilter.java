@@ -202,7 +202,6 @@ public class AccessFilter {
             ownerAclsWithBrowsePermissionCache.put(userId, generateOwnerAclIdSet(browsePermission, user));
             long endTime = System.currentTimeMillis();
             log.info("owner acl list generated in " + (endTime - startTime) + " ms");
-
         }
         return ownerAclsWithBrowsePermissionCache.get(userId);
     }

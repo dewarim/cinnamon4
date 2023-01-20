@@ -25,6 +25,7 @@ import com.dewarim.cinnamon.model.request.osd.CreateOsdRequest;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static com.dewarim.cinnamon.api.Constants.DEFAULT_SUMMARY;
@@ -33,10 +34,13 @@ import static com.dewarim.cinnamon.api.Constants.FOLDER_TYPE_DEFAULT;
 public class TestObjectHolder {
 
     static final  Object            SYNC_OBJECT = new Object();
+    public static Long              defaultCreationAclId;
+    public static long              defaultCreationFolderId;
+    public static Acl               defaultAcl;
     static        boolean           initialized = false;
     static public List<Permission>  permissions;
     static public List<Format>      formats;
-    static public List<Group>      groups;
+    static public List<Group>       groups;
     static public List<Language>    languages;
     static public List<ObjectType>  objectTypes;
     static public List<MetasetType> metasetTypes;
@@ -99,6 +103,18 @@ public class TestObjectHolder {
                 type.getName().equals(FOLDER_TYPE_DEFAULT)).findFirst().orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
     }
 
+    public TestObjectHolder(CinnamonClient client, Long userId) throws IOException {
+        this.client = client;
+        this.acl = defaultAcl;
+        setUser(userId);
+        setFolder(defaultCreationFolderId);
+        initialize();
+        objectType = objectTypes.stream().filter(type ->
+                type.getName().equals(Constants.OBJTYPE_DEFAULT)).findFirst().orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
+        folderType = folderTypes.stream().filter(type ->
+                type.getName().equals(FOLDER_TYPE_DEFAULT)).findFirst().orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
+    }
+
     private void initialize() {
         if (!initialized) {
             synchronized (SYNC_OBJECT) {
@@ -125,6 +141,14 @@ public class TestObjectHolder {
         return this;
     }
 
+    private String createRandomName() {
+        return UUID.randomUUID().toString();
+    }
+
+    public TestObjectHolder createOsd() throws IOException {
+        return createOsd(createRandomName());
+    }
+
     public TestObjectHolder createOsd(String name) throws IOException {
         CreateOsdRequest request = new CreateOsdRequest(name, folder.getId(), user.getId(), acl.getId(),
                 objectType.getId(),
@@ -139,6 +163,15 @@ public class TestObjectHolder {
         return this;
     }
 
+    public TestObjectHolder createFolder(Long parentId) throws IOException {
+        return createFolder(createRandomName(), parentId);
+    }
+
+    public TestObjectHolder createFolder() throws IOException {
+        Objects.requireNonNull(folder);
+        return createFolder(createRandomName(), folder.getId());
+    }
+
     public TestObjectHolder createFolder(String name, Long parentId) throws IOException {
         var defaultFolderType = folderTypes.stream().filter(ft -> ft.getName().equals(FOLDER_TYPE_DEFAULT)).findFirst().orElseThrow();
         folder = client.createFolder(parentId, name, user.getId(), acl.getId(), defaultFolderType.getId());
@@ -146,7 +179,7 @@ public class TestObjectHolder {
     }
 
     public TestObjectHolder createAcl(String name) throws IOException {
-        acl = client.createAcl(List.of(name)).get(0);
+        acl = client.createAcls(List.of(name)).get(0);
         return this;
     }
 
@@ -166,7 +199,7 @@ public class TestObjectHolder {
     }
 
     public TestObjectHolder addAndRemovePermissionsByName(List<String> permissionsToAdd, List<String> permissionsToRemove) throws IOException {
-        if(permissionsToAdd.isEmpty() && permissionsToRemove.isEmpty()){
+        if (permissionsToAdd.isEmpty() && permissionsToRemove.isEmpty()) {
             // do nothing
             return this;
         }

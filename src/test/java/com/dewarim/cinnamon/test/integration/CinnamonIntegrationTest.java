@@ -8,6 +8,7 @@ import com.dewarim.cinnamon.application.DbSessionFactory;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.client.CinnamonClient;
 import com.dewarim.cinnamon.client.CinnamonClientException;
+import com.dewarim.cinnamon.dao.GroupDao;
 import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.response.CinnamonConnection;
 import com.dewarim.cinnamon.model.response.CinnamonError;
@@ -39,6 +40,7 @@ import java.nio.file.Path;
 import java.sql.Connection;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
@@ -68,7 +70,7 @@ public class CinnamonIntegrationTest {
     /**
      * id of folder where the standard test user can create test objects
      */
-    static long           createFolderId   = 6L;
+    static long           createFolderId   = 0;
 
     @BeforeAll
     public static void setUpServer() throws Exception {
@@ -78,8 +80,8 @@ public class CinnamonIntegrationTest {
 
             DbSessionFactory dbSessionFactory = new DbSessionFactory("sql/mybatis.test.properties.xml");
 
-            SqlSession   session          = dbSessionFactory.getSqlSessionFactory().openSession(true);
-            Connection   conn             = session.getConnection();
+            SqlSession session = dbSessionFactory.getSqlSessionFactory().openSession(true);
+            Connection conn    = session.getConnection();
             try (Reader reader = Resources.getResourceAsReader("sql/CreateTestDB.sql")) {
                 ScriptRunner runner           = new ScriptRunner(conn);
                 PrintWriter  errorPrintWriter = new PrintWriter(System.out);
@@ -104,6 +106,13 @@ public class CinnamonIntegrationTest {
 
             client = new CinnamonClient(cinnamonTestPort, "localhost", "http", "doe", "admin");
             adminClient = new CinnamonClient(cinnamonTestPort, "localhost", "http", "admin", "admin");
+            // TODO: rename to value of DEFAULT_ACL once CreateTestDb is cleaned up.
+            TestObjectHolder.defaultAcl = adminClient.createAcl("default.acl");
+            createFolderId = adminClient.createFolder(1L, "creation", adminId, TestObjectHolder.defaultAcl.getId(), 1L).getId();
+            TestObjectHolder.defaultCreationFolderId = createFolderId;
+            var toh = prepareAclGroupWithPermissions(Arrays.stream(DefaultPermission.values()).toList());
+            TestObjectHolder.defaultCreationAclId = toh.acl.getId();
+
         }
     }
 
@@ -220,7 +229,8 @@ public class CinnamonIntegrationTest {
     }
 
     // TODO: use this in FolderServletIntegrationTests, too
-    protected Long addUserToAclGroupWithPermissions(String aclName, List<DefaultPermission> permissions) throws IOException {
+
+    protected static Long addUserToAclGroupWithPermissions(String aclName, List<DefaultPermission> permissions) throws IOException {
         TestObjectHolder toh = new TestObjectHolder(adminClient, null, userId, createFolderId);
         return toh.createAcl(aclName)
                 .createGroup(aclName)
@@ -230,13 +240,30 @@ public class CinnamonIntegrationTest {
                 .acl.getId();
     }
 
-    protected TestObjectHolder prepareAclGroupWithPermissions(String name, List<DefaultPermission> permissions) throws IOException {
-        return new TestObjectHolder(adminClient, "reviewers.acl", userId, createFolderId)
+    protected static TestObjectHolder prepareAclGroupWithPermissions(List<DefaultPermission> permissions) throws IOException {
+        return prepareAclGroupWithPermissions(UUID.randomUUID().toString(), permissions);
+    }
+
+    protected static TestObjectHolder prepareAclGroupWithPermissions(String name, List<DefaultPermission> permissions) throws IOException {
+        return new TestObjectHolder(adminClient, userId)
                 .createAcl(name)
                 .createGroup(name)
                 .addUserToGroup(userId)
                 .createAclGroup()
                 .addPermissions(permissions);
+    }
+
+    protected static TestObjectHolder prepareAclGroupWithOwnerPermissions(List<DefaultPermission> permissions) throws IOException {
+        return prepareAclGroupWithOwnerPermissions(UUID.randomUUID().toString(), permissions);
+    }
+
+    protected static TestObjectHolder prepareAclGroupWithOwnerPermissions(String name, List<DefaultPermission> permissions) throws IOException {
+        var toh = new TestObjectHolder(adminClient, userId);
+        toh.group = new GroupDao().getOwnerGroup();
+        toh.createAcl(name)
+                .createAclGroup()
+                .addPermissions(permissions);
+        return toh;
     }
 
     protected Acl getReviewerAcl() {
