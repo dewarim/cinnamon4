@@ -44,7 +44,6 @@
         latest_head,
         modified,
         name,
-        version,
         cmn_version,
         acl_id,
         creator_id,
@@ -97,7 +96,6 @@
                latest_head,
                modified,
                name,
-               version,
                cmn_version,
                acl_id,
                creator_id,
@@ -138,7 +136,6 @@
         order by id desc
     </select>
 
-    <!-- TODO: perhaps implement safe version (checking for osd.version=version) -->
     <update id="updateOsd">
         UPDATE objects
         SET content_hash     = #{contentHash},
@@ -149,7 +146,6 @@
             latest_head      = #{latestHead},
             modified         = #{modified},
             name             = #{name},
-            version          = version + 1,
             cmn_version      = #{cmnVersion},
             acl_id           = #{aclId},
             creator_id       = #{creatorId},
@@ -174,14 +170,14 @@
             select nextval('seq_object_id')
         </selectKey>
         INSERT INTO objects
-        (id,name,version,content_hash,content_size,content_path,
+        (id,name, content_hash,content_size,content_path,
         created, latest_branch, latest_head,modified, modifier_id,
         cmn_version, acl_id, creator_id,format_id,
         language_id, owner_id,parent_id,
         predecessor_id, root_id, type_id, state_id,
         content_changed, metadata_changed, summary
         )
-        values (#{id}, #{name}, 0, #{contentHash}, #{contentSize}, #{contentPath},
+        values (#{id}, #{name}, #{contentHash}, #{contentSize}, #{contentPath},
         #{created}, #{latestBranch}, #{latestHead}, #{modified}, #{modifierId},
         #{cmnVersion}, #{aclId}, #{creatorId}, #{formatId},
         #{languageId}, #{ownerId}, #{parentId},
