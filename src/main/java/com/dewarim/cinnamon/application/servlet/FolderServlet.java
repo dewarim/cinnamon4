@@ -268,8 +268,14 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
         // change name
         String name = updateRequest.getName();
         if (name != null) {
-            Folder parentFolder = folderDao.getFolderById(folder.getParentId())
-                    .orElseThrow(ErrorCode.PARENT_FOLDER_NOT_FOUND.getException());
+            Folder parentFolder;
+            if(folder.getParentId() == null){
+                parentFolder = folderDao.getRootFolder(false);
+            }
+            else{
+                parentFolder = folderDao.getFolderById(folder.getParentId())
+                        .orElseThrow(ErrorCode.PARENT_FOLDER_NOT_FOUND.getException());
+            }
             // check if name is valid, otherwise user gets a confusing duplicate field db exception:
             folderDao.getFolderByParentAndName(parentFolder.getId(), name, false)
                     .ifPresent(f -> ErrorCode.DUPLICATE_FOLDER_NAME_FORBIDDEN.throwUp());

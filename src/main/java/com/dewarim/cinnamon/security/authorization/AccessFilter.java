@@ -36,18 +36,14 @@ public class AccessFilter {
 
     private static List<Acl>  acls;
     private static Permission browsePermission;
-    private static Permission folderBrowsePermission;
     private static Group      ownerGroup;
 
     private final        Set<Long>                   objectAclsWithBrowsePermissions;
     private final        Set<Long>                   ownerAclsWithBrowsePermissions;
-    private final        Set<Long>                   folderAclsWithBrowsePermissions;
-    private final        Map<AclPermission, Boolean> checkedOwnerPermissions                 = new ConcurrentHashMap<>();
     private final        Map<AclPermission, Boolean> checkedPermissions                      = new ConcurrentHashMap<>();
     private final        UserAccount                 user;
     private final        boolean                     superuser;
     private static final Map<Long, Set<Long>>        userAclsWithBrowsePermissionCache       = new ConcurrentHashMap<>();
-    private static final Map<Long, Set<Long>>        userAclsWithFolderBrowsePermissionCache = new ConcurrentHashMap<>();
     private static final Map<Long, Set<Long>>        ownerAclsWithBrowsePermissionCache      = new ConcurrentHashMap<>();
     private static final Map<String, Permission>     nameToPermissionMapping                 = new ConcurrentHashMap<>();
     private static final Map<Long, Acl>              idToAclMapping                          = new ConcurrentHashMap<>();
@@ -59,7 +55,6 @@ public class AccessFilter {
         this.user = user;
         objectAclsWithBrowsePermissions = getUserAclsWithBrowsePermissions(user);
         ownerAclsWithBrowsePermissions = getOwnerAclsWithBrowsePermissions(user);
-        folderAclsWithBrowsePermissions = getFolderAclsWithBrowsePermissions(user);
         superuser = new UserAccountDao().isSuperuser(user);
     }
 
@@ -78,10 +73,6 @@ public class AccessFilter {
 
     public boolean hasOwnerBrowsePermission(Long aclId) {
         return ownerAclsWithBrowsePermissions.contains(aclId);
-    }
-
-    public boolean hasFolderBrowsePermission(Long aclId) {
-        return folderAclsWithBrowsePermissions.contains(aclId);
     }
 
     /**
@@ -151,14 +142,13 @@ public class AccessFilter {
     public static void reloadUser(Long userId) {
         userAclsWithBrowsePermissionCache.remove(userId);
         ownerAclsWithBrowsePermissionCache.remove(userId);
-        userAclsWithFolderBrowsePermissionCache.remove(userId);
     }
 
     private static void initialize() {
         synchronized (INITIALIZING) {
             PermissionDao permissionDao = new PermissionDao();
-            browsePermission = permissionDao.getPermissionByName(DefaultPermission.BROWSE_OBJECT.getName());
-            folderBrowsePermission = permissionDao.getPermissionByName(DefaultPermission.BROWSE_FOLDER.getName());
+            // TODO: unify browse permission
+            browsePermission = permissionDao.getPermissionByName(DefaultPermission.BROWSE.getName());
             AclDao aclDao = new AclDao();
             acls = aclDao.list();
             acls.forEach(acl -> idToAclMapping.put(acl.getId(), acl));
@@ -182,17 +172,7 @@ public class AccessFilter {
         return userAclsWithBrowsePermissionCache.get(userId);
     }
 
-    private static Set<Long> getFolderAclsWithBrowsePermissions(UserAccount user) {
-        Long userId = user.getId();
-        if (!userAclsWithFolderBrowsePermissionCache.containsKey(userId)) {
-            long startTime = System.currentTimeMillis();
-            log.info("Generating object acls list with folder browse permissions for user " + user);
-            userAclsWithFolderBrowsePermissionCache.put(userId, generateObjectAclSet(folderBrowsePermission, user));
-            long endTime = System.currentTimeMillis();
-            log.info("folder acl list generated in " + (endTime - startTime) + " ms");
-        }
-        return userAclsWithFolderBrowsePermissionCache.get(userId);
-    }
+
 
     private static Set<Long> getOwnerAclsWithBrowsePermissions(UserAccount user) {
         Long userId = user.getId();

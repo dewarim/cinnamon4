@@ -21,7 +21,6 @@ import static com.dewarim.cinnamon.DefaultPermission.*;
 import static com.dewarim.cinnamon.ErrorCode.*;
 import static com.dewarim.cinnamon.api.Constants.ALIAS_OWNER;
 import static com.dewarim.cinnamon.api.Constants.DEFAULT_SUMMARY;
-import static com.dewarim.cinnamon.test.TestObjectHolder.defaultCreationAclId;
 import static com.dewarim.cinnamon.test.TestObjectHolder.defaultCreationFolderId;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -97,7 +96,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getLinkWhereOnlyOwnerHasBrowsePermissionForOsd() throws IOException {
-        var toh = new TestObjectHolder(adminClient, "reviewers.acl", userId, createFolderId)
+        var toh = new TestObjectHolder(adminClient, userId)
                 .createAcl("owner-acl-for-link");
         // set current group to owner-group:
         toh.group = TestObjectHolder.groups.stream()
@@ -248,12 +247,12 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
                 .createOsd()
                 .createFolder();
         ObjectSystemData osd  = toh.osd;
-        Link             link = client.createLinkToOsd(toh.folder.getId(), defaultCreationAclId, userId, osd.getId());
+        Link             link = client.createLinkToOsd(toh.folder.getId(), defaultCreationAcl.getId(), userId, osd.getId());
 
         assertEquals(osd.getId(), link.getObjectId());
         assertEquals(toh.folder.getId(), link.getParentId());
         assertEquals(LinkType.OBJECT, link.getType());
-        assertEquals(defaultCreationAclId, link.getAclId());
+        assertEquals(defaultCreationAcl.getId(), link.getAclId());
         assertEquals(userId, link.getOwnerId());
         assertNull(link.getFolderId());
     }
@@ -266,12 +265,12 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
                 .createFolder();
         var  targetFolder    = toh.folder;
         var  containerFolder = toh.createFolder(defaultCreationFolderId).folder;
-        Link link            = client.createLinkToFolder(containerFolder.getId(), defaultCreationAclId, userId, targetFolder.getId());
+        Link link            = client.createLinkToFolder(containerFolder.getId(), defaultCreationAcl.getId(), userId, targetFolder.getId());
 
         assertEquals(targetFolder.getId(), link.getFolderId());
         assertEquals(containerFolder.getId(), link.getParentId());
         assertEquals(LinkType.FOLDER, link.getType());
-        assertEquals(defaultCreationAclId, link.getAclId());
+        assertEquals(defaultCreationAcl.getId(), link.getAclId());
         assertEquals(userId, link.getOwnerId());
         assertNull(link.getObjectId());
     }
@@ -336,8 +335,9 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void createLinkWithinParentFolderWithoutCreatePermission() throws IOException {
         var toh = prepareAclGroupWithPermissions(List.of(BROWSE))
-                .createOsd();
-        assertClientError(() -> client.createLinkToOsd(createFolderId, toh.acl.getId(), userId, toh.osd.getId()), UNAUTHORIZED);
+                .createOsd()
+                .createFolder();
+        assertClientError(() -> client.createLinkToOsd(toh.folder.getId(), toh.acl.getId(), userId, toh.osd.getId()), UNAUTHORIZED);
     }
 
     @Test

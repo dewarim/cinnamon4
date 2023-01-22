@@ -82,7 +82,7 @@ public class LanguageServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void deleteLanguageWhichIsInUse() throws IOException {
-        var toh = new TestObjectHolder(adminClient,"reviewers.acl",userId, createFolderId);
+        var toh = new TestObjectHolder(adminClient,userId);
         var osd = toh.createOsd("delete-language-in-use-test").osd;
         var language = adminClient.createLanguage("test");
         var updateRequest = new UpdateOsdRequest(osd.getId(), null,null,null,null,null,language.getId());

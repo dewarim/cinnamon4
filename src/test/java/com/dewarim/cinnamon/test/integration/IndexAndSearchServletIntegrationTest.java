@@ -34,7 +34,7 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
 
     @BeforeAll
     public static void initializeObjects() throws IOException, InterruptedException {
-        TestObjectHolder toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId);
+        TestObjectHolder toh = new TestObjectHolder(client, userId);
         toh.createOsd("search-me-osd")
                 .createFolder("search-me-folder", createFolderId);
         osdId = toh.osd.getId();
@@ -124,7 +124,7 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
     // but then, folderPath is currently only used in IndexService.
     @Test
     public void verifyFolderPathOrdering() throws IOException{
-        TestObjectHolder toh = new TestObjectHolder(adminClient, "reviewers.acl", adminId,createFolderId);
+        TestObjectHolder toh = new TestObjectHolder(adminClient, adminId);
         toh.createFolder("f1", 1L)
         .createFolder("f2", toh.folder.getId())
         .createFolder("f3", toh.folder.getId())

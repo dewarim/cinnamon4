@@ -81,7 +81,7 @@ public class MetasetTypeServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void deleteMetasetTypeWhichIsInUse() throws IOException {
-        var toh         = new TestObjectHolder(adminClient, "reviewers.acl", userId, createFolderId);
+        var toh         = new TestObjectHolder(client, userId);
         var osd         = toh.createOsd("delete-metasetType-in-use-test").osd;
         var metasetType = adminClient.createMetasetType("test-in-use", false);
         client.lockOsd(osd.getId());

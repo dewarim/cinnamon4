@@ -35,8 +35,15 @@ public class TestObjectHolder {
 
     static final  Object            SYNC_OBJECT = new Object();
     public static Long              defaultCreationAclId;
-    public static long              defaultCreationFolderId;
+    public static Long              defaultCreationFolderId;
+    /**
+     * The default ACL with no permissions for a normal user
+     */
     public static Acl               defaultAcl;
+    /**
+     * The default creation ACL with all permissions for a normal user
+     */
+    public static Acl               defaultCreationAcl;
     static        boolean           initialized = false;
     static public List<Permission>  permissions;
     static public List<Format>      formats;
@@ -83,31 +90,20 @@ public class TestObjectHolder {
 
     /**
      * Initialize a new TestObjectHolder with default values, using the given client
-     * as background client to perform requests, but set acl, user and createFolder to be used
+     * as background client to perform requests, but set acl and user  to be used
      * for requests separately.
      * <p>
      * This results in a TOH ready to create objects and folders and such which require an ACL,
      * base folder and user (for ownerId etc)
      */
-    public TestObjectHolder(CinnamonClient client, String aclName, Long userId, Long createFolderId) throws IOException {
-        this.client = client;
-        if (aclName != null) {
-            this.acl = client.getAclByName(aclName);
-        }
-        setUser(userId);
-        setFolder(createFolderId);
-        initialize();
-        objectType = objectTypes.stream().filter(type ->
-                type.getName().equals(Constants.OBJTYPE_DEFAULT)).findFirst().orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
-        folderType = folderTypes.stream().filter(type ->
-                type.getName().equals(FOLDER_TYPE_DEFAULT)).findFirst().orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
-    }
-
     public TestObjectHolder(CinnamonClient client, Long userId) throws IOException {
         this.client = client;
-        this.acl = defaultAcl;
+        setAcl(defaultCreationAcl);
         setUser(userId);
-        setFolder(defaultCreationFolderId);
+        // during initial test class setup, defaultCreationFolderId is still null.
+        if(defaultCreationFolderId != null) {
+            setFolder(defaultCreationFolderId);
+        }
         initialize();
         objectType = objectTypes.stream().filter(type ->
                 type.getName().equals(Constants.OBJTYPE_DEFAULT)).findFirst().orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
@@ -260,7 +256,7 @@ public class TestObjectHolder {
 
     public TestObjectHolder setAclOnFolder(Long aclId, Long folderId) throws IOException {
         UpdateFolderRequest request = new UpdateFolderRequest(folderId, null, null, null, null, aclId);
-        client.updateFolders(request);
+        client.updateFolder(request);
         return this;
     }
 
@@ -282,6 +278,10 @@ public class TestObjectHolder {
         link = client.createLinkToOsd(folder.getId(), acl.getId(), user.getId(), osd.getId());
         return this;
     }
+    public TestObjectHolder createLinkToOsd() throws IOException {
+        link = client.createLinkToOsd(folder.getId(), acl.getId(), user.getId(), osd.getId());
+        return this;
+    }
 
     /**
      * Create a link to the given folder using the current folder, acl, owner.
@@ -298,6 +298,11 @@ public class TestObjectHolder {
 
     public TestObjectHolder setMetasetType(MetasetType metasetType) {
         this.metasetType = metasetType;
+        return this;
+    }
+
+    public TestObjectHolder setGroup(Group group) {
+        this.group=group;
         return this;
     }
 }

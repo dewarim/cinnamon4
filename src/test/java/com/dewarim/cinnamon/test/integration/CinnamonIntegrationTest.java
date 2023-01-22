@@ -10,6 +10,7 @@ import com.dewarim.cinnamon.client.CinnamonClient;
 import com.dewarim.cinnamon.client.CinnamonClientException;
 import com.dewarim.cinnamon.dao.GroupDao;
 import com.dewarim.cinnamon.model.Acl;
+import com.dewarim.cinnamon.model.Folder;
 import com.dewarim.cinnamon.model.response.CinnamonConnection;
 import com.dewarim.cinnamon.model.response.CinnamonError;
 import com.dewarim.cinnamon.model.response.CinnamonErrorWrapper;
@@ -43,6 +44,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static com.dewarim.cinnamon.DefaultPermission.BROWSE;
 import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -71,6 +73,13 @@ public class CinnamonIntegrationTest {
      * id of folder where the standard test user can create test objects
      */
     static long           createFolderId   = 0;
+    static Folder creationFolder;
+
+    /**
+     * An ACL with all permissions for the test user.
+     * Whenever we are not explicitly testing permissions, we should use this.
+     */
+    static Acl defaultCreationAcl;
 
     @BeforeAll
     public static void setUpServer() throws Exception {
@@ -107,12 +116,20 @@ public class CinnamonIntegrationTest {
             client = new CinnamonClient(cinnamonTestPort, "localhost", "http", "doe", "admin");
             adminClient = new CinnamonClient(cinnamonTestPort, "localhost", "http", "admin", "admin");
             // TODO: rename to value of DEFAULT_ACL once CreateTestDb is cleaned up.
-            TestObjectHolder.defaultAcl = adminClient.createAcl("default.acl");
-            createFolderId = adminClient.createFolder(1L, "creation", adminId, TestObjectHolder.defaultAcl.getId(), 1L).getId();
-            TestObjectHolder.defaultCreationFolderId = createFolderId;
-            var toh = prepareAclGroupWithPermissions(Arrays.stream(DefaultPermission.values()).toList());
-            TestObjectHolder.defaultCreationAclId = toh.acl.getId();
+            // create a default ACL with browse permissions
+            TestObjectHolder.defaultAcl = prepareAclGroupWithPermissions("default.acl", List.of(BROWSE))
+                    .acl;
+            // set the root folder to use the default ACL, so it is visible for the normale user
+            Folder root = adminClient.getFolderById(1L,false);
+            root.setAclId(TestObjectHolder.defaultAcl.getId());
+            adminClient.updateFolder(root);
 
+            var toh = prepareAclGroupWithPermissions("creation.acl",Arrays.stream(DefaultPermission.values()).toList());
+            defaultCreationAcl = toh.acl;
+            creationFolder = adminClient.createFolder(1L, "creation", adminId, defaultCreationAcl.getId(), 1L);
+            createFolderId = creationFolder.getId();
+            TestObjectHolder.defaultCreationFolderId = createFolderId;
+            TestObjectHolder.defaultCreationAcl = defaultCreationAcl;
         }
     }
 
@@ -231,7 +248,7 @@ public class CinnamonIntegrationTest {
     // TODO: use this in FolderServletIntegrationTests, too
 
     protected static Long addUserToAclGroupWithPermissions(String aclName, List<DefaultPermission> permissions) throws IOException {
-        TestObjectHolder toh = new TestObjectHolder(adminClient, null, userId, createFolderId);
+        TestObjectHolder toh = new TestObjectHolder(adminClient, userId);
         return toh.createAcl(aclName)
                 .createGroup(aclName)
                 .createAclGroup()

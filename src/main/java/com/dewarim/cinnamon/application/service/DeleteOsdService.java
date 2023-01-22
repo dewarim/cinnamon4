@@ -128,7 +128,7 @@ public class DeleteOsdService {
         for (ObjectSystemData osd : osds) {
             Long osdId = osd.getId();
             // - check permission for delete
-            boolean deleteAllowed = authorizationService.userHasPermission(osd.getAclId(), DefaultPermission.DELETE_OBJECT, user);
+            boolean deleteAllowed = authorizationService.hasUserOrOwnerPermission(osd, DefaultPermission.DELETE_OBJECT, user);
             if (!deleteAllowed) {
                 CinnamonError error = new CinnamonError(ErrorCode.NO_DELETE_PERMISSION.getCode(), osdId);
                 errors.add(error);

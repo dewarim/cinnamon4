@@ -57,7 +57,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
 
     @Test
     public void attachLifecycleInvalidRequest() throws IOException {
-        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId)
+        var toh = new TestObjectHolder(client, userId)
                 .createOsd("attachLifecycleInvalidRequest");
         long osdId = toh.osd.getId();
         var ex = assertThrows(CinnamonClientException.class,
@@ -82,7 +82,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
 
     @Test
     public void attachLifecycleMissingLifecycle() throws IOException {
-        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId)
+        var toh = new TestObjectHolder(client, userId)
                 .createOsd("attachLifecycleInvalidRequest");
         long osdId = toh.osd.getId();
         var ex = assertThrows(CinnamonClientException.class,
@@ -92,7 +92,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
 
     @Test
     public void attachLifecycleMissingWritePermission() throws IOException {
-        var toh = new TestObjectHolder(adminClient, "reviewers.acl", adminId, createFolderId)
+        var toh = new TestObjectHolder(adminClient, adminId)
                 .createAcl("attachLifecycleMissingWritePermission")
                 .createGroup("attachLifecycleMissingWritePermission")
                 .createAclGroup()
@@ -109,7 +109,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
     @Test
     public void changeStateFailInStateClass() throws IOException {
         // should fail on oldState.exit
-        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId)
+        var toh = new TestObjectHolder(client, userId)
                 .createOsd("changeStateFailInStateClass");
         adminClient.attachLifecycle(toh.osd.getId(), 4L,4L,true);
         var ex = assertThrows(CinnamonClientException.class,
@@ -120,7 +120,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
     @Test
     public void attachLifecycleStateChangeFailed() throws IOException {
         // should fail on newState.enter
-        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId)
+        var toh = new TestObjectHolder(client, userId)
                 .createOsd("attachLifecycleStateChangeFailed");
         var ex = assertThrows(CinnamonClientException.class,
                 () -> client.attachLifecycle(toh.osd.getId(), 4L,4L,false ));
@@ -129,7 +129,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
 
     @Test
     public void attachLifecycleMissingLifecycleState() throws IOException {
-        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId)
+        var toh = new TestObjectHolder(client, userId)
                 .createOsd("attachLifecycleMissingLifecycleState");
         long osdId = toh.osd.getId();
         var ex = assertThrows(CinnamonClientException.class,
@@ -139,7 +139,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
 
     @Test
     public void attachLifecycleHappyPathDefaultState() throws IOException {
-        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId)
+        var toh = new TestObjectHolder(client, userId)
                 .createOsd("attachLifecycleMissingLifecycleState");
         long osdId = toh.osd.getId();
         client.attachLifecycle(osdId, 1L,null,false);
@@ -150,14 +150,15 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
 
     @Test
     public void attachLifecycleHappyPathWithNonDefaultState() throws IOException {
-        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId)
+        var toh = new TestObjectHolder(client, userId)
                 .createOsd("attachLifecycleHappyPathWithNonDefaultState");
         long osdId = toh.osd.getId();
         client.attachLifecycle(osdId, 3L,2L,false);
-        ObjectSystemData osd = client.getOsdById(osdId, false, false);
+        ObjectSystemData osd = adminClient.getOsdById(osdId, false, false);
 
         // check if lifecycle state is really attached to OSD:
-        assertEquals((Long) 2L, osd.getLifecycleStateId());
+        assertEquals(2L, osd.getLifecycleStateId());
+        assertEquals(2L, osd.getAclId());
     }
 
     @Test
@@ -176,7 +177,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
 
     @Test
     public void detachLifecycleHappyPath() throws IOException {
-        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId)
+        var toh = new TestObjectHolder(client, userId)
                 .createOsd("detachLifecycleHappyPath");
         long osdId = toh.osd.getId();
 
@@ -206,7 +207,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
 
     @Test
     public void changeStateWithStateNotFound() throws IOException {
-        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId)
+        var toh = new TestObjectHolder(client, userId)
                 .createOsd("changeStateWithStateNotFound");
         var ex = assertThrows(CinnamonClientException.class,() -> client.changeLifecycleState(toh.osd.getId(), Long.MAX_VALUE));
         assertEquals(LIFECYCLE_STATE_NOT_FOUND,ex.getErrorCode());
@@ -214,12 +215,14 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
 
     @Test
     public void changeStateHappyPath() throws IOException {
-        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId)
+        var toh = new TestObjectHolder(client, userId)
                 .createOsd("changeStateHappyPath");
         long osdId = toh.osd.getId();
         adminClient.attachLifecycle(osdId, 2L,2L,true);
         client.changeLifecycleState(osdId, 3L);
-        ObjectSystemData osd = client.getOsdById(osdId, false, false);
+        // we have to fetch the OSD via adminClient, because after change to ACL#1, it's no longer browsable
+        // for the normal test user
+        ObjectSystemData osd = adminClient.getOsdById(osdId, false, false);
         assertEquals(3L, osd.getLifecycleStateId());
         // should change acl:
         assertEquals((Long) 1L, osd.getAclId());
@@ -241,7 +244,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
 
     @Test
     public void getNextStatesLifecycleStateNotFound() throws IOException {
-        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId)
+        var toh = new TestObjectHolder(client, userId)
                 .createOsd("getNextStatesLifecycleStateNotFound");
         var ex = assertThrows(CinnamonClientException.class, () -> client.getNextLifecycleStates(toh.osd.getId()));
         assertEquals(LIFECYCLE_STATE_NOT_FOUND, ex.getErrorCode());
@@ -249,7 +252,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
 
     @Test
     public void getNextStatesRequiresReadPermission() throws IOException {
-        var toh = new TestObjectHolder(adminClient, "reviewers.acl", adminId, createFolderId)
+        var toh = new TestObjectHolder(adminClient, adminId)
                 .createAcl("no permissions for read system meta")
                 .createOsd("getNextStatesRequiresReadPermission");
         var ex = assertThrows(CinnamonClientException.class, () -> client.getNextLifecycleStates(toh.osd.getId()));
@@ -258,7 +261,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
 
     @Test
     public void getNextStatesHappyPath() throws IOException {
-        var toh = new TestObjectHolder(client, "reviewers.acl", userId, createFolderId)
+        var toh = new TestObjectHolder(client, userId)
                           .createOsd("getNextStatesHappyPath");
         Long osdId = toh.osd.getId();
         adminClient.attachLifecycle(osdId,3L,2L,true);

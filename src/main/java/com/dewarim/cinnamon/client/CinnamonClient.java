@@ -46,7 +46,9 @@ import com.dewarim.cinnamon.model.request.configEntry.ListConfigEntryRequest;
 import com.dewarim.cinnamon.model.request.configEntry.UpdateConfigEntryRequest;
 import com.dewarim.cinnamon.model.request.folder.CreateFolderRequest;
 import com.dewarim.cinnamon.model.request.folder.DeleteFolderRequest;
+import com.dewarim.cinnamon.model.request.folder.FolderPathRequest;
 import com.dewarim.cinnamon.model.request.folder.FolderRequest;
+import com.dewarim.cinnamon.model.request.folder.SingleFolderRequest;
 import com.dewarim.cinnamon.model.request.folder.UpdateFolderRequest;
 import com.dewarim.cinnamon.model.request.folderType.CreateFolderTypeRequest;
 import com.dewarim.cinnamon.model.request.folderType.DeleteFolderTypeRequest;
@@ -296,6 +298,12 @@ public class CinnamonClient {
         return unwrapOsds(response, 1).get(0);
     }
 
+    public List<ObjectSystemData> getOsdsById(List<Long> ids, boolean includeSummary, boolean includeCustomMetadata) throws IOException {
+        OsdRequest   osdRequest = new OsdRequest(ids, includeSummary, includeCustomMetadata);
+        HttpResponse response   = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
+        return unwrapOsds(response, EXPECTED_SIZE_ANY);
+    }
+
     /**
      * Get a list of OSDs. Do not check if all requested OSDs are returned.
      */
@@ -487,6 +495,12 @@ public class CinnamonClient {
         return getFolders(Collections.singletonList(id), includeSummary).get(0);
     }
 
+    public List<Folder> getFolderByIdWithAncestors(Long id, boolean includeSummary) throws IOException {
+        SingleFolderRequest request= new SingleFolderRequest(id,includeSummary);
+        var response = sendStandardRequest(UrlMapping.FOLDER__GET_FOLDER, request);
+        return folderUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
+    }
+
     public Folder createFolder(Long parentId, String name, Long ownerId, Long aclId, Long typeId) throws IOException {
         var request  = new CreateFolderRequest(name, parentId, null, ownerId, aclId, typeId);
         var response = sendStandardRequest(UrlMapping.FOLDER__CREATE, request);
@@ -513,8 +527,14 @@ public class CinnamonClient {
         return createOsdMeta(new CreateMetaRequest(osdId, content, metaTypeId)).get(0);
     }
 
-    public void updateFolders(UpdateFolderRequest updateFolderRequest) throws IOException {
+    public void updateFolder(UpdateFolderRequest updateFolderRequest) throws IOException {
         HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__UPDATE, updateFolderRequest);
+        verifyResponseIsOkay(response);
+    }
+    public void updateFolder(Folder folder) throws IOException {
+        UpdateFolderRequest request = new UpdateFolderRequest(folder.getId(), folder.getParentId(), folder.getName(),
+                folder.getOwnerId(), folder.getTypeId(), folder.getAclId());
+        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__UPDATE, request);
         verifyResponseIsOkay(response);
     }
 
@@ -1184,6 +1204,25 @@ public class CinnamonClient {
         SearchIdsRequest request  = new SearchIdsRequest(searchType, query);
         HttpResponse     response = sendStandardRequest(SEARCH__IDS, request);
         return new SingletonUnwrapper<SearchIdsResponse>(SearchIdsResponse.class).unwrap(response);
+    }
+
+    public List<Folder> getFoldersByPath(String path, boolean includeSummary) throws IOException {
+        var request = new FolderPathRequest(path,includeSummary);
+        HttpResponse response = sendStandardRequest(FOLDER__GET_FOLDER_BY_PATH, request);
+        return folderUnwrapper.unwrap(response,EXPECTED_SIZE_ANY);
+    }
+
+    /**
+     * Fetch folders by path without summary.
+     */
+    public List<Folder> getFoldersByPath(String path) throws IOException {
+        return getFoldersByPath(path,false);
+    }
+
+    public List<Folder> getSubFolders(Long parentFolderId, boolean includeSummary) throws IOException{
+        SingleFolderRequest request = new SingleFolderRequest(parentFolderId, includeSummary);
+        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__GET_SUBFOLDERS, request);
+        return folderUnwrapper.unwrap(response,EXPECTED_SIZE_ANY);
     }
 
     static class SingletonUnwrapper<S> {

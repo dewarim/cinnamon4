@@ -89,12 +89,12 @@ public class FolderTypeServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void deleteFolderTypeWhichIsInUse() throws IOException{
+    public void deleteFolderTypeWhichIsInUse() throws IOException {
         var folderType = adminClient.createFolderTypes(List.of("in-use-folder-type")).get(0);
-        var toh = new TestObjectHolder(client, "reviewers.acl",userId,createFolderId);
-        toh.createFolder("in-use-folder-type-test", createFolderId);
+        var toh = new TestObjectHolder(client, userId)
+                .createFolder();
         var folder = toh.folder;
-        client.updateFolders(new UpdateFolderRequest(folder.getId(), null,null,null,folderType.getId(), null));
+        client.updateFolder(new UpdateFolderRequest(folder.getId(), null, null, null, folderType.getId(), null));
         var ex = assertThrows(CinnamonClientException.class,
                 () -> adminClient.deleteFolderTypes(List.of(folderType.getId())));
         assertEquals(ErrorCode.DB_DELETE_FAILED, ex.getErrorCode());
