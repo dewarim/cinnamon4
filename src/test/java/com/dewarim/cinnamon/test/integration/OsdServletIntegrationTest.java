@@ -84,11 +84,10 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     /**
      * This folder's ACL does not permit object creation inside.
      */
-    private static final Long NO_CREATE_FOLDER_ID               = 8L;
+    private static final Long NO_createFolderId               = 8L;
     /**
      * This folder's ACL allows object creation.
      */
-    private static final Long CREATE_FOLDER_ID                  = 6L;
     private static final Long NEW_RENDERTASK_LIFECYCLE_STATE_ID = 1L;
     private static final Long GERMAN_LANGUAGE_ID                = 1L;
 
@@ -112,26 +111,15 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
                 .createOsd();
         ObjectSystemData everyone     = tohAdmin.osd;
         ObjectSystemData notBrowsable = prepareAclGroupWithPermissions(List.of()).createOsd("unbrowsable").osd;
-        List<ObjectSystemData> osds = client.getOsdsById(
-                List.of(osd1.getId(), osd2.getId(), osd3.getId(),
-                        owned.getId(), everyone.getId(), notBrowsable.getId()), false, false);
+        List<Long> osdIds =                 List.of(osd1.getId(), osd2.getId(), osd3.getId(),
+                owned.getId(), everyone.getId(), notBrowsable.getId());
+        List<ObjectSystemData> osds = client.getOsdsById(osdIds, false, false);
         assertFalse(osds.stream().anyMatch(osd -> osd.getName().equals("unbrowsable")));
         assertEquals(5, osds.size());
         assertTrue(osds.containsAll(List.of(osd1, osd2, osd3, owned, everyone)));
-    }
-
-    @Test
-    public void getObjectsByIdForAdmin() throws IOException {
-        OsdRequest osdRequest = new OsdRequest();
-        osdRequest.setIds(List.of(1L, 2L, 3L, 4L, 5L, 6L));
-        HttpResponse           response = sendAdminRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
-        List<ObjectSystemData> dataList = unwrapOsds(response, 6);
-        // admin is exempt from permission checks, should get everything:
-        assertTrue(dataList.stream().anyMatch(osd -> osd.getName().equals("unbrowsable-test")));
-
-        // test for dynamic groups:
-        assertTrue(dataList.stream().anyMatch(osd -> osd.getName().equals("owned-by-doe")));
-        assertTrue(dataList.stream().anyMatch(osd -> osd.getName().equals("acl-for-everyone")));
+        var adminOsds = adminClient.getOsdsById(osdIds, false,false);
+        assertEquals(6,adminOsds.size() );
+        assertTrue(adminOsds.containsAll(List.of(osd1, osd2, osd3, owned, everyone, notBrowsable)));
     }
 
     @Test
@@ -818,7 +806,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         request.setAclId(CREATE_ACL_ID);
         request.setName("new osd");
         request.setOwnerId(STANDARD_USER_ID);
-        request.setParentId(NO_CREATE_FOLDER_ID);
+        request.setParentId(NO_createFolderId);
         request.setFormatId(PLAINTEXT_FORMAT_ID);
         request.setTypeId(DEFAULT_OBJECT_TYPE_ID);
         MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
@@ -834,7 +822,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         request.setAclId(Long.MAX_VALUE);
         request.setName("new osd");
         request.setOwnerId(STANDARD_USER_ID);
-        request.setParentId(CREATE_FOLDER_ID);
+        request.setParentId(createFolderId);
         request.setFormatId(PLAINTEXT_FORMAT_ID);
         request.setTypeId(DEFAULT_OBJECT_TYPE_ID);
         MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
@@ -850,7 +838,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         request.setAclId(CREATE_ACL_ID);
         request.setName("new osd");
         request.setOwnerId(Long.MAX_VALUE);
-        request.setParentId(CREATE_FOLDER_ID);
+        request.setParentId(createFolderId);
         request.setFormatId(PLAINTEXT_FORMAT_ID);
         request.setTypeId(DEFAULT_OBJECT_TYPE_ID);
         MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
@@ -866,7 +854,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         request.setAclId(CREATE_ACL_ID);
         request.setName("new osd");
         request.setOwnerId(STANDARD_USER_ID);
-        request.setParentId(CREATE_FOLDER_ID);
+        request.setParentId(createFolderId);
         request.setFormatId(PLAINTEXT_FORMAT_ID);
         request.setTypeId(Long.MAX_VALUE);
         MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
@@ -882,7 +870,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         request.setAclId(CREATE_ACL_ID);
         request.setName("new osd");
         request.setOwnerId(STANDARD_USER_ID);
-        request.setParentId(CREATE_FOLDER_ID);
+        request.setParentId(createFolderId);
         request.setFormatId(PLAINTEXT_FORMAT_ID);
         request.setTypeId(DEFAULT_OBJECT_TYPE_ID);
         request.setLifecycleStateId(Long.MAX_VALUE);
@@ -899,7 +887,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         request.setAclId(CREATE_ACL_ID);
         request.setName("new osd");
         request.setOwnerId(STANDARD_USER_ID);
-        request.setParentId(CREATE_FOLDER_ID);
+        request.setParentId(createFolderId);
         request.setFormatId(PLAINTEXT_FORMAT_ID);
         request.setTypeId(DEFAULT_OBJECT_TYPE_ID);
         request.setLifecycleStateId(NEW_RENDERTASK_LIFECYCLE_STATE_ID);
@@ -917,7 +905,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         request.setAclId(CREATE_ACL_ID);
         request.setName("new osd");
         request.setOwnerId(STANDARD_USER_ID);
-        request.setParentId(CREATE_FOLDER_ID);
+        request.setParentId(createFolderId);
         request.setTypeId(DEFAULT_OBJECT_TYPE_ID);
         MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
                 .addTextBody("createOsdRequest", mapper.writeValueAsString(request),
@@ -931,7 +919,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         assertEquals(STANDARD_USER_ID, osd.getModifierId());
         assertEquals(CREATE_ACL_ID, osd.getAclId());
         assertEquals(DEFAULT_OBJECT_TYPE_ID, osd.getTypeId());
-        assertEquals(CREATE_FOLDER_ID, osd.getParentId());
+        assertEquals(createFolderId, osd.getParentId());
     }
 
     @Test
@@ -940,7 +928,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         request.setAclId(CREATE_ACL_ID);
         request.setName("new osd");
         request.setOwnerId(STANDARD_USER_ID);
-        request.setParentId(CREATE_FOLDER_ID);
+        request.setParentId(createFolderId);
         request.setTypeId(DEFAULT_OBJECT_TYPE_ID);
         request.setLifecycleStateId(NEW_RENDERTASK_LIFECYCLE_STATE_ID);
         request.setLanguageId(GERMAN_LANGUAGE_ID);
@@ -960,7 +948,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         request.setAclId(CREATE_ACL_ID);
         request.setName("new osd");
         request.setOwnerId(STANDARD_USER_ID);
-        request.setParentId(CREATE_FOLDER_ID);
+        request.setParentId(createFolderId);
         request.setTypeId(DEFAULT_OBJECT_TYPE_ID);
         request.setLifecycleStateId(NEW_RENDERTASK_LIFECYCLE_STATE_ID);
         request.setLanguageId(GERMAN_LANGUAGE_ID);

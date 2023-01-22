@@ -750,117 +750,117 @@ insert into folder_types(id,name) values(nextval('seq_folder_type_id'),'_archive
 insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
 values(nextval('seq_folder_id'),'root',1,1,null,1);
 
--- #2 home folder inside root folder
-insert into folders(id,name,acl_id,owner_id,parent_id,type_id, summary)
-values(nextval('seq_folder_id'),'home',1,1,1,1, '<summary>stuff</summary>');
-
--- #3 unseen folder inside home folder with acl #7 (no-permissions.acl)
-insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
-values(nextval('seq_folder_id'),'unseen',7,1,2,1);
-
--- #4 archive folder with some objects to test getObjectsByFolderId
-insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
-values(nextval('seq_folder_id'),'archive',1,1,2,1);
-
--- #5 deletion folder with some objects to test deletion of links/objects
-insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
-values(nextval('seq_folder_id'),'deletion',1,1,2,1);
-
--- #6 creation folder to test creation of links/objects
-insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
-values(nextval('seq_folder_id'),'creation',8,1,2,1);
-
--- #7 folder in creation folder#6, acl#10 to test lack of browse permission for links
-insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
-values(nextval('seq_folder_id'),'u-no-browse',10,1,6,1);
-
--- #8 folder in creation folder#6, acl#9 to test lack of create object permission for links
-insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
-values(nextval('seq_folder_id'),'u-no-create',9,1,6,1);
-
--- #9 folder in creation folder#6, acl#1 to test lack of create object permission for links
-insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
-values(nextval('seq_folder_id'),'link-this-folder',1,1,6,1);
-
--- #10 folder in creaton folder#6, only-owner-acl#5 - for create link to owner-folder test
-insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
-values(nextval('seq_folder_id'),'only-owner-links-to-me',5,2,6,1);
-
--- #11 folder for setSummary test in creaton folder#6, reviewer-acl#2 -
-insert into folders(id,name,acl_id,owner_id,parent_id,type_id, summary)
-values(nextval('seq_folder_id'),'set-my-summary',2,1,6,1, 'no-sum');
-
--- #12 folder for get/setSummaryMissingPermission test in creaton folder#6, default-acl#1
-insert into folders(id,name,acl_id,owner_id,parent_id,type_id, summary)
-values(nextval('seq_folder_id'),'cannot set-my-summary',1,1,6,1, 'no-sum');
-
--- #13 folder for getSummary test in creaton folder#6, reviewer-acl#2
-insert into folders(id,name,acl_id,owner_id,parent_id,type_id, summary)
-values(nextval('seq_folder_id'),'get-my-summary',2,1,6,1, '<sum>folder</sum>');
-
--- #14 folder in creation folder#6 for getFolderByPath
-insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
-values(nextval('seq_folder_id'),'some-sub-folder',1,1,6,1);
-
--- #15 folder in creation folder#6 for getMeta / createMeta test without permissions
-insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
-values(nextval('seq_folder_id'),'u-no-read-meta',7,1,6,1);
-
--- #16 folder in creation folder#6 for getMetaHappyPath test (other getMeta-Tests: see OsdServletIntegrationTest)
-insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
-values(nextval('seq_folder_id'),'have-me-some-meta',2,1,6,1);
-
--- #17 folder in creation folder#6 for createMeta test
-insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
-values(nextval('seq_folder_id'),'create-me-a-meta',2,1,6,1);
-
--- #18 folder in creation folder#6 for createMeta test: has unique meta set
-insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
-values(nextval('seq_folder_id'),'has-a-meta-already',2,1,6,1);
-
--- #19 folder in creation folder#6 for createMeta test: has non-unique meta set
-insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
-values(nextval('seq_folder_id'),'comment-metaset',2,1,6,1);
-
--- #20 folder in creation folder#6 for deleteMeta test: has no permissions
-insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
-values(nextval('seq_folder_id'),'delete-my-meta-no-permission',7,1,6,1);
-
--- #21 folder in creation folder#6 for createMeta test: has three metasets (2x comment, 1x license)
-insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
-values(nextval('seq_folder_id'),'delete-my-meta',2,1,6,1);
-
--- #22 folder in creation folder#6 for updateFolder tests: has no permissions
-insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
-values(nextval('seq_folder_id'),'update-without-permission',7,1,6,1);
-
--- #23 folder in creation folder#6 for updateFolder test: has no set_acl permission
-insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
-values(nextval('seq_folder_id'),'update-acl-without-permission',14,1,6,1);
-
--- #24 folder in creation folder#6 for updateFolder test: has set_acl permission
-insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
-values(nextval('seq_folder_id'),'update-acl-with-permission',2,1,6,1);
-
--- #25 folder in creation folder#6 for updateFolder test: happy path
-insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
-values(nextval('seq_folder_id'),'happy update folder',2,1,6,1);
-
--- #26 folder in creation folder#6 for updateFolder test: no write sysmeta permission
-insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
-values(nextval('seq_folder_id'),'folder-update no write sysmeta',12,1,6,1);
-
--- #27 folder in creation folder6 as target for moving a folder to (happy path)
-insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
-values(nextval('seq_folder_id'),'move here',2,1,6,1);
-
--- #28 folder in creation folder6 has no-move-permission
-insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
-values(nextval('seq_folder_id'),'unmovable move me',13,1,6,1);
-
--- #29 folder in creation folder6 for duplicate name check
-insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
-values(nextval('seq_folder_id'),'duplicate name',2,1,6,1);
+-- -- #2 home folder inside root folder
+-- insert into folders(id,name,acl_id,owner_id,parent_id,type_id, summary)
+-- values(nextval('seq_folder_id'),'home',1,1,1,1, '<summary>stuff</summary>');
+--
+-- -- #3 unseen folder inside home folder with acl #7 (no-permissions.acl)
+-- insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
+-- values(nextval('seq_folder_id'),'unseen',7,1,2,1);
+--
+-- -- #4 archive folder with some objects to test getObjectsByFolderId
+-- insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
+-- values(nextval('seq_folder_id'),'archive',1,1,2,1);
+--
+-- -- #5 deletion folder with some objects to test deletion of links/objects
+-- insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
+-- values(nextval('seq_folder_id'),'deletion',1,1,2,1);
+--
+-- -- #6 creation folder to test creation of links/objects
+-- insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
+-- values(nextval('seq_folder_id'),'creation',8,1,2,1);
+--
+-- -- #7 folder in creation folder#6, acl#10 to test lack of browse permission for links
+-- insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
+-- values(nextval('seq_folder_id'),'u-no-browse',10,1,6,1);
+--
+-- -- #8 folder in creation folder#6, acl#9 to test lack of create object permission for links
+-- insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
+-- values(nextval('seq_folder_id'),'u-no-create',9,1,6,1);
+--
+-- -- #9 folder in creation folder#6, acl#1 to test lack of create object permission for links
+-- insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
+-- values(nextval('seq_folder_id'),'link-this-folder',1,1,6,1);
+--
+-- -- #10 folder in creaton folder#6, only-owner-acl#5 - for create link to owner-folder test
+-- insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
+-- values(nextval('seq_folder_id'),'only-owner-links-to-me',5,2,6,1);
+--
+-- -- #11 folder for setSummary test in creaton folder#6, reviewer-acl#2 -
+-- insert into folders(id,name,acl_id,owner_id,parent_id,type_id, summary)
+-- values(nextval('seq_folder_id'),'set-my-summary',2,1,6,1, 'no-sum');
+--
+-- -- #12 folder for get/setSummaryMissingPermission test in creaton folder#6, default-acl#1
+-- insert into folders(id,name,acl_id,owner_id,parent_id,type_id, summary)
+-- values(nextval('seq_folder_id'),'cannot set-my-summary',1,1,6,1, 'no-sum');
+--
+-- -- #13 folder for getSummary test in creaton folder#6, reviewer-acl#2
+-- insert into folders(id,name,acl_id,owner_id,parent_id,type_id, summary)
+-- values(nextval('seq_folder_id'),'get-my-summary',2,1,6,1, '<sum>folder</sum>');
+--
+-- -- #14 folder in creation folder#6 for getFolderByPath
+-- insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
+-- values(nextval('seq_folder_id'),'some-sub-folder',1,1,6,1);
+--
+-- -- #15 folder in creation folder#6 for getMeta / createMeta test without permissions
+-- insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
+-- values(nextval('seq_folder_id'),'u-no-read-meta',7,1,6,1);
+--
+-- -- #16 folder in creation folder#6 for getMetaHappyPath test (other getMeta-Tests: see OsdServletIntegrationTest)
+-- insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
+-- values(nextval('seq_folder_id'),'have-me-some-meta',2,1,6,1);
+--
+-- -- #17 folder in creation folder#6 for createMeta test
+-- insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
+-- values(nextval('seq_folder_id'),'create-me-a-meta',2,1,6,1);
+--
+-- -- #18 folder in creation folder#6 for createMeta test: has unique meta set
+-- insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
+-- values(nextval('seq_folder_id'),'has-a-meta-already',2,1,6,1);
+--
+-- -- #19 folder in creation folder#6 for createMeta test: has non-unique meta set
+-- insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
+-- values(nextval('seq_folder_id'),'comment-metaset',2,1,6,1);
+--
+-- -- #20 folder in creation folder#6 for deleteMeta test: has no permissions
+-- insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
+-- values(nextval('seq_folder_id'),'delete-my-meta-no-permission',7,1,6,1);
+--
+-- -- #21 folder in creation folder#6 for createMeta test: has three metasets (2x comment, 1x license)
+-- insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
+-- values(nextval('seq_folder_id'),'delete-my-meta',2,1,6,1);
+--
+-- -- #22 folder in creation folder#6 for updateFolder tests: has no permissions
+-- insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
+-- values(nextval('seq_folder_id'),'update-without-permission',7,1,6,1);
+--
+-- -- #23 folder in creation folder#6 for updateFolder test: has no set_acl permission
+-- insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
+-- values(nextval('seq_folder_id'),'update-acl-without-permission',14,1,6,1);
+--
+-- -- #24 folder in creation folder#6 for updateFolder test: has set_acl permission
+-- insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
+-- values(nextval('seq_folder_id'),'update-acl-with-permission',2,1,6,1);
+--
+-- -- #25 folder in creation folder#6 for updateFolder test: happy path
+-- insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
+-- values(nextval('seq_folder_id'),'happy update folder',2,1,6,1);
+--
+-- -- #26 folder in creation folder#6 for updateFolder test: no write sysmeta permission
+-- insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
+-- values(nextval('seq_folder_id'),'folder-update no write sysmeta',12,1,6,1);
+--
+-- -- #27 folder in creation folder6 as target for moving a folder to (happy path)
+-- insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
+-- values(nextval('seq_folder_id'),'move here',2,1,6,1);
+--
+-- -- #28 folder in creation folder6 has no-move-permission
+-- insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
+-- values(nextval('seq_folder_id'),'unmovable move me',13,1,6,1);
+--
+-- -- #29 folder in creation folder6 for duplicate name check
+-- insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
+-- values(nextval('seq_folder_id'),'duplicate name',2,1,6,1);
 
 
 -- #1 language de
@@ -874,63 +874,63 @@ insert into languages (id,iso_code) values (nextval('seq_language_id'), 'und');
 -- #5 language: no-language
 insert into languages (id,iso_code) values (nextval('seq_language_id'), 'zxx');
 
--- #1 test object with summary, default acl in root folder
-insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
-                     owner_id, parent_id, type_id, acl_id, summary)
-values (nextval('seq_object_id'), now(), true, true, now(), 'test-1', 1, 1, 1, 1, 1, 1, 1, '<summary>sum of sum</summary>');
--- #2
-insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
-                     owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_object_id'), now(), true, true, now(), 'test-2', 1, 1, 1, 1, 1, 1, 1);
--- #3
-insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
-                     owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_object_id'), now(), true, true, now(), 'test-3', 1, 1, 1, 1, 1, 1, 1);
-
--- #4 object with no permissions, used in getObjectsById tests and create/update-Link test
-insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
-                     owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_object_id'), now(), true, true, now(), 'unbrowsable-test', 1, 1, 1, 1, 1, 1, 5);
-
--- #5 - acl #5 has no permission for user Doe, but allows owners to view the item, so Doe should see it anyway.
-insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
-                     owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_object_id'), now(), true, true, now(), 'owned-by-doe', 1, 1, 1, 2, 1, 1, 5);
-
--- #6 - acl #6 has no permission for user Doe, but allows "_everyone" to view the item, so Doe should see it anyway.
-insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
-                     owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_object_id'), now(), true, true, now(), 'acl-for-everyone', 1, 1, 1, 1, 1, 1, 6);
-
--- #7 - acl #7 has no permission for anyone.
-insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
-                     owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_object_id'), now(), true, true, now(), 'see-me-not', 1, 1, 1, 1, 1, 1, 7);
-
--- #8 parent for #9  default acl in root folder
-insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
-                     owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_object_id'), now(), false, false, now(), 'test-parent', 1, 1, 1, 1, 1, 1, 1);
-
--- #9 child object for #8
-insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
-                     owner_id, parent_id, type_id, acl_id, root_id)
-values (nextval('seq_object_id'), now(), true, true, now(), 'test-child', 1, 1, 1, 1, 1, 1, 1, 8);
-
--- #10 parent for osd#11 in archive folder#4
-insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
-                     owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_object_id'), now(), false, false, now(), 'test-parent', 1, 1, 1, 1, 4, 1, 1);
-
--- #11 child object for #10, also in archive folder#4
-insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
-                     owner_id, parent_id, type_id, acl_id, root_id, summary)
-values (nextval('seq_object_id'), now(), true, true, now(), 'test-child', 1, 1, 1, 1, 4, 1, 1, 10,'<summary>child@archive</summary>');
-
--- #12 test object for deletion,  default acl in deletion folder#5 -> currently used as target for deleteLink-Test
-insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
-                     owner_id, parent_id, type_id, acl_id)
-values (nextval('seq_object_id'), now(), true, true, now(), 'linked-to-me', 1, 1, 1, 1, 5, 1, 1);
+-- -- #1 test object with summary, default acl in root folder
+-- insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+--                      owner_id, parent_id, type_id, acl_id, summary)
+-- values (nextval('seq_object_id'), now(), true, true, now(), 'test-1', 1, 1, 1, 1, 1, 1, 1, '<summary>sum of sum</summary>');
+-- -- #2
+-- insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+--                      owner_id, parent_id, type_id, acl_id)
+-- values (nextval('seq_object_id'), now(), true, true, now(), 'test-2', 1, 1, 1, 1, 1, 1, 1);
+-- -- #3
+-- insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+--                      owner_id, parent_id, type_id, acl_id)
+-- values (nextval('seq_object_id'), now(), true, true, now(), 'test-3', 1, 1, 1, 1, 1, 1, 1);
+--
+-- -- #4 object with no permissions, used in getObjectsById tests and create/update-Link test
+-- insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+--                      owner_id, parent_id, type_id, acl_id)
+-- values (nextval('seq_object_id'), now(), true, true, now(), 'unbrowsable-test', 1, 1, 1, 1, 1, 1, 5);
+--
+-- -- #5 - acl #5 has no permission for user Doe, but allows owners to view the item, so Doe should see it anyway.
+-- insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+--                      owner_id, parent_id, type_id, acl_id)
+-- values (nextval('seq_object_id'), now(), true, true, now(), 'owned-by-doe', 1, 1, 1, 2, 1, 1, 5);
+--
+-- -- #6 - acl #6 has no permission for user Doe, but allows "_everyone" to view the item, so Doe should see it anyway.
+-- insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+--                      owner_id, parent_id, type_id, acl_id)
+-- values (nextval('seq_object_id'), now(), true, true, now(), 'acl-for-everyone', 1, 1, 1, 1, 1, 1, 6);
+--
+-- -- #7 - acl #7 has no permission for anyone.
+-- insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+--                      owner_id, parent_id, type_id, acl_id)
+-- values (nextval('seq_object_id'), now(), true, true, now(), 'see-me-not', 1, 1, 1, 1, 1, 1, 7);
+--
+-- -- #8 parent for #9  default acl in root folder
+-- insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+--                      owner_id, parent_id, type_id, acl_id)
+-- values (nextval('seq_object_id'), now(), false, false, now(), 'test-parent', 1, 1, 1, 1, 1, 1, 1);
+--
+-- -- #9 child object for #8
+-- insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+--                      owner_id, parent_id, type_id, acl_id, root_id)
+-- values (nextval('seq_object_id'), now(), true, true, now(), 'test-child', 1, 1, 1, 1, 1, 1, 1, 8);
+--
+-- -- #10 parent for osd#11 in archive folder#4
+-- insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+--                      owner_id, parent_id, type_id, acl_id)
+-- values (nextval('seq_object_id'), now(), false, false, now(), 'test-parent', 1, 1, 1, 1, 4, 1, 1);
+--
+-- -- #11 child object for #10, also in archive folder#4
+-- insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+--                      owner_id, parent_id, type_id, acl_id, root_id, summary)
+-- values (nextval('seq_object_id'), now(), true, true, now(), 'test-child', 1, 1, 1, 1, 4, 1, 1, 10,'<summary>child@archive</summary>');
+--
+-- -- #12 test object for deletion,  default acl in deletion folder#5 -> currently used as target for deleteLink-Test
+-- insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
+--                      owner_id, parent_id, type_id, acl_id)
+-- values (nextval('seq_object_id'), now(), true, true, now(), 'linked-to-me', 1, 1, 1, 1, 5, 1, 1);
 
 -- -- #13 test object for create link,  default acl in creation folder#6
 -- insert into objects (id, created, latest_branch, latest_head, modified, name, creator_id, language_id, modifier_id,
@@ -1339,33 +1339,33 @@ insert into metaset_types(id, name, is_unique) VALUES (nextval('seq_metaset_type
 -- insert into osd_meta(id,osd_id,content,type_id)
 -- values (nextval('seq_osd_meta_id'), 42, '<license>LGPL</license>>',2);
 
-
--- #1 folder_meta
-insert into folder_meta(id, folder_id, content, type_id)
-values (nextval('seq_folder_meta_id'), 16, '<metaset><p>Good Folder Meta Test</p></metaset>', 1);
-
--- #2 folder_meta - unique metaset_type
-insert into folder_meta(id, folder_id, content, type_id)
-values (nextval('seq_folder_meta_id'), 18, 'duplicate license meta (forbidden)', 2);
-
--- #3 folder_meta - non-unique metaset_type
-insert into folder_meta(id, folder_id, content, type_id)
-values (nextval('seq_folder_meta_id'), 19, 'duplicate comment (allowed)', 1);
-
--- #4 folder_meta - no permission (to delete)
-insert into folder_meta(id, folder_id, content, type_id)
-values (nextval('seq_folder_meta_id'), 20, 'do not delete', 1);
-
--- #5 folder_meta - comment #1 for deleteMeta
-insert into folder_meta(id, folder_id, content, type_id)
-values (nextval('seq_folder_meta_id'), 21, 'comment #2', 1);
-
--- #6 folder_meta - comment #2 for deleteMeta
-insert into folder_meta(id, folder_id, content, type_id)
-values (nextval('seq_folder_meta_id'), 21, 'comment #2', 1);
-
--- #7 folder_meta - license #1 for deleteMeta
-insert into folder_meta(id, folder_id, content, type_id)
-values (nextval('seq_folder_meta_id'), 21, '<license>public domain</license>', 2);
+--
+-- -- #1 folder_meta
+-- insert into folder_meta(id, folder_id, content, type_id)
+-- values (nextval('seq_folder_meta_id'), 16, '<metaset><p>Good Folder Meta Test</p></metaset>', 1);
+--
+-- -- #2 folder_meta - unique metaset_type
+-- insert into folder_meta(id, folder_id, content, type_id)
+-- values (nextval('seq_folder_meta_id'), 18, 'duplicate license meta (forbidden)', 2);
+--
+-- -- #3 folder_meta - non-unique metaset_type
+-- insert into folder_meta(id, folder_id, content, type_id)
+-- values (nextval('seq_folder_meta_id'), 19, 'duplicate comment (allowed)', 1);
+--
+-- -- #4 folder_meta - no permission (to delete)
+-- insert into folder_meta(id, folder_id, content, type_id)
+-- values (nextval('seq_folder_meta_id'), 20, 'do not delete', 1);
+--
+-- -- #5 folder_meta - comment #1 for deleteMeta
+-- insert into folder_meta(id, folder_id, content, type_id)
+-- values (nextval('seq_folder_meta_id'), 21, 'comment #2', 1);
+--
+-- -- #6 folder_meta - comment #2 for deleteMeta
+-- insert into folder_meta(id, folder_id, content, type_id)
+-- values (nextval('seq_folder_meta_id'), 21, 'comment #2', 1);
+--
+-- -- #7 folder_meta - license #1 for deleteMeta
+-- insert into folder_meta(id, folder_id, content, type_id)
+-- values (nextval('seq_folder_meta_id'), 21, '<license>public domain</license>', 2);
 
 
