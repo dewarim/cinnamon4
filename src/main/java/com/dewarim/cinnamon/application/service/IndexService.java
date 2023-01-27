@@ -47,6 +47,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -109,6 +110,7 @@ public class IndexService implements Runnable {
                             break;
                         }
                         boolean indexChanged = false;
+                        List<IndexJob> jobsToDelete = new ArrayList<>();
                         for (IndexJob job : jobs) {
                             IndexKey indexKey = new IndexKey(job.getJobType(), job.getItemId());
                             if (seen.contains(indexKey)) {
@@ -122,7 +124,7 @@ public class IndexService implements Runnable {
                                     case DELETE -> deleteFromIndex(indexKey);
                                     case CREATE, UPDATE -> handleIndexItem(job, indexKey, indexItems);
                                 }
-                                jobDao.delete(job);
+                                jobsToDelete.add(job);
                                 indexChanged = true;
                             } catch (Exception e) {
                                 log.info("IndexJob failed with: ", e);
@@ -132,12 +134,13 @@ public class IndexService implements Runnable {
                             seen.add(indexKey);
                         }
                         if (indexChanged) {
-                            jobDao.commit();
                             long sequenceNr = indexWriter.commit();
                             log.debug("sequenceNr: " + sequenceNr);
                         } else {
                             log.debug("no change to index");
                         }
+                        jobsToDelete.forEach(jobDao::delete);
+                        jobDao.commit();
                     }
                     indexWriter.close();
                     // TODO: avoid busy waiting

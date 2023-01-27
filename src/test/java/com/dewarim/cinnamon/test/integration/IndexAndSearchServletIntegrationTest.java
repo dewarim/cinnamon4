@@ -34,6 +34,13 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
 
     @BeforeAll
     public static void initializeObjects() throws IOException, InterruptedException {
+        // create indexItem for xml-content
+        Format xml = adminClient.createFormat("text/xml", "xml", "xml-content", 1L);
+        adminClient.createIndexItem(new IndexItem("xml_content",true,false,false,
+                true,"Xml Content Index", "/objectSystemData/content/descendant::*", "boolean(/objectSystemData/formatId[text()='"+xml.getId()+"'])", false, IndexType.DEFAULT_INDEXER ));
+        // wait for SearchService to refresh session and pick up new index item
+        Thread.sleep(1000);
+
         TestObjectHolder toh = new TestObjectHolder(client, userId);
         toh.createOsd("search-me-osd")
                 .createFolder("search-me-folder", createFolderId);
@@ -41,10 +48,6 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
         folderId = toh.folder.getId();
         log.info("created search-me objects: osd: " + osdId + " folder: " + folderId);
 
-        // create indexItem for xml-content
-        Format xml = adminClient.createFormat("text/xml", "xml", "xml-content", 1L);
-        adminClient.createIndexItem(new IndexItem("xml_content",true,false,false,
-                true,"Xml Content Index", "/objectSystemData/content/descendant::*", "boolean(/objectSystemData/formatId[text()='"+xml.getId()+"'])", false, IndexType.DEFAULT_INDEXER ));
         // set xml-content:
         client.lockOsd(osdId);
         client.setContentOnLockedOsd(osdId, xml.getId(), new File("pom.xml"));
@@ -87,7 +90,7 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
 
     @Test
     public void searchForContent() throws IOException{
-        SearchIdsResponse response = client.search("<BooleanQuery><Clause occurs='must'><TermQuery fieldName='xml_content'>maven</TermQuery></Clause></BooleanQuery>", SearchType.OSD);
+        SearchIdsResponse response = client.search("<BooleanQuery><Clause occurs='must'><TermQuery fieldName='xml_content'>cinnamon</TermQuery></Clause></BooleanQuery>", SearchType.OSD);
         assertEquals(1, response.getOsdIds().size());
         assertEquals(osdId, response.getOsdIds().get(0));
     }
