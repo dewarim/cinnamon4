@@ -22,7 +22,6 @@ import com.dewarim.cinnamon.model.request.folder.FolderRequest;
 import com.dewarim.cinnamon.model.request.folder.SingleFolderRequest;
 import com.dewarim.cinnamon.model.request.folder.UpdateFolderRequest;
 import com.dewarim.cinnamon.model.response.FolderWrapper;
-import com.dewarim.cinnamon.model.response.MetaWrapper;
 import com.dewarim.cinnamon.model.response.Summary;
 import com.dewarim.cinnamon.model.response.SummaryWrapper;
 import com.dewarim.cinnamon.test.TestObjectHolder;
@@ -35,6 +34,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static com.dewarim.cinnamon.DefaultPermission.*;
 import static com.dewarim.cinnamon.ErrorCode.*;
 import static com.dewarim.cinnamon.api.Constants.ROOT_FOLDER_NAME;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -58,9 +58,8 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void setSummaryMissingPermission() throws IOException {
-        SetSummaryRequest summaryRequest = new SetSummaryRequest(12L, "a summary");
-        HttpResponse      response       = sendStandardRequest(UrlMapping.FOLDER__SET_SUMMARY, summaryRequest);
-        assertCinnamonError(response, ErrorCode.NO_WRITE_SYS_METADATA_PERMISSION);
+        var folderId = prepareAclGroupWithPermissions(List.of()).createFolder().folder.getId();
+        assertClientError(() -> client.setFolderSummary(folderId, "a summary"), NO_WRITE_SYS_METADATA_PERMISSION);
     }
 
     @Test
@@ -72,20 +71,18 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getSummaryHappyPath() throws IOException {
-        IdListRequest idListRequest = new IdListRequest(Collections.singletonList(13L));
-        HttpResponse  response      = sendStandardRequest(UrlMapping.FOLDER__GET_SUMMARIES, idListRequest);
-        assertResponseOkay(response);
-        SummaryWrapper wrapper   = mapper.readValue(response.getEntity().getContent(), SummaryWrapper.class);
-        List<Summary>  summaries = wrapper.getSummaries();
+        var           toh       = new TestObjectHolder(client, userId).createFolder().setSummaryOnFolder("foo-folder");
+        List<Summary> summaries = client.getFolderSummaries(List.of(toh.folder.getId()));
         assertNotNull(summaries);
         assertFalse(summaries.isEmpty());
-        assertThat(wrapper.getSummaries().get(0).getContent(), equalTo("<sum>folder</sum>"));
+        assertThat(summaries.get(0).getContent(), equalTo("foo-folder"));
     }
 
     @Test
-    public void getSummariesMissingPermission() {
-        var ex = assertThrows(CinnamonClientException.class, () -> client.getFolderSummaries(List.of(12L)));
-        assertEquals(NO_READ_OBJECT_SYS_METADATA_PERMISSION, ex.getErrorCode());
+    public void getSummariesMissingPermission() throws IOException {
+        var folderId = prepareAclGroupWithPermissions(List.of(DefaultPermission.WRITE_OBJECT_SYS_METADATA))
+                .createFolder().setSummaryOnFolder("foo").folder.getId();
+        assertClientError(() -> client.getFolderSummaries(List.of(folderId)), NO_READ_OBJECT_SYS_METADATA_PERMISSION);
     }
 
     @Test
@@ -211,9 +208,10 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getMetaHappyPath() throws IOException {
-        MetaRequest request    = new MetaRequest(16L, null);
-        Meta        folderMeta = client.getFolderMetas(16L).get(0);
-        assertEquals("<metaset><p>Good Folder Meta Test</p></metaset>", folderMeta.getContent());
+        var folder = prepareAclGroupWithPermissions(List.of(READ_OBJECT_CUSTOM_METADATA))
+                .createFolder().createFolderMeta("my meta").folder;
+        Meta folderMeta = client.getFolderMetas(folder.getId()).get(0);
+        assertEquals("my meta", folderMeta.getContent());
     }
 
     @Test
@@ -237,20 +235,17 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void createMetaObjectNotWritable() {
-        CreateMetaRequest request = new CreateMetaRequest(15L, "foo", 1L);
+    public void createMetaObjectNotWritable() throws IOException {
+        var folderId = prepareAclGroupWithPermissions(List.of())
+                .createFolder().folder.getId();
+        CreateMetaRequest request = new CreateMetaRequest(folderId, "foo", 1L);
         assertClientError(() -> client.createFolderMeta(request), NO_WRITE_CUSTOM_METADATA_PERMISSION);
     }
 
     @Test
-    public void createMetaMetasetTypeByIdNotFound() {
-        CreateMetaRequest request = new CreateMetaRequest(17L, "foo", Long.MAX_VALUE);
-        assertClientError(() -> client.createFolderMeta(request), METASET_TYPE_NOT_FOUND);
-    }
-
-    @Test
-    public void createMetaMetasetTypeByNameNotFound() {
-        CreateMetaRequest request = new CreateMetaRequest(17L, "foo", Long.MAX_VALUE);
+    public void createMetaMetasetTypeByIdNotFound() throws IOException {
+        var               folderId = new TestObjectHolder(client, userId).createFolder().folder.getId();
+        CreateMetaRequest request  = new CreateMetaRequest(folderId, "foo", Long.MAX_VALUE);
         assertClientError(() -> client.createFolderMeta(request), METASET_TYPE_NOT_FOUND);
     }
 
@@ -268,14 +263,12 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createFolderMetasetHappyWithExistingMeta() throws IOException {
-        CreateMetaRequest request      = new CreateMetaRequest(19L, "duplicate comment", 1L);
-        HttpResponse      metaResponse = sendStandardRequest(UrlMapping.FOLDER__CREATE_META, request);
-        assertResponseOkay(metaResponse);
-        MetaRequest  metaRequest     = new MetaRequest(19L, Collections.singletonList(1L));
-        HttpResponse commentResponse = sendStandardRequest(UrlMapping.FOLDER__GET_META, metaRequest);
-        assertResponseOkay(commentResponse);
-        MetaWrapper metaWrapper = mapper.readValue(commentResponse.getEntity().getContent(), MetaWrapper.class);
-        assertEquals(2, metaWrapper.getMetasets().size());
+        var folderId = new TestObjectHolder(client, userId)
+                .createFolder().folder.getId();
+        client.createFolderMeta(folderId, "comment 1", 1L);
+        client.createFolderMeta(folderId, "comment 2", 1L);
+        List<Meta> folderMetas = client.getFolderMetas(folderId);
+        assertTrue(folderMetas.stream().map(Meta::getContent).toList().containsAll(List.of("comment 1", "comment 2")));
     }
 
     @Test
@@ -305,9 +298,9 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void deleteMetaWithoutPermission() throws IOException {
-        DeleteMetaRequest deleteRequest = new DeleteMetaRequest(4L);
-        HttpResponse      metaResponse  = sendStandardRequest(UrlMapping.FOLDER__DELETE_META, deleteRequest);
-        assertCinnamonError(metaResponse, NO_WRITE_CUSTOM_METADATA_PERMISSION);
+        var meta = prepareAclGroupWithPermissions(List.of())
+                .createFolder().createFolderMeta("some meta").meta;
+        assertClientError(() -> client.deleteFolderMeta(meta.getId()), NO_WRITE_CUSTOM_METADATA_PERMISSION);
     }
 
     @Test
@@ -319,8 +312,10 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void deleteMetaHappyPathById() throws IOException {
-        // #7 folder_meta = metaset_type license
-        client.deleteFolderMeta(7L);
+        var meta = new TestObjectHolder(client, userId)
+                .createFolder()
+                .createFolderMeta("my meta").meta;
+        client.deleteFolderMeta(meta.getId());
     }
 
     @Test
@@ -346,140 +341,114 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateFolderNoEditPermission() throws IOException {
+        var folderId = prepareAclGroupWithPermissions(List.of()).createFolder().folder.getId();
         UpdateFolderRequest request = new UpdateFolderRequest(
-                22L, null, null, null, null, null);
-        try {
-            client.updateFolder(request);
-        } catch (CinnamonClientException e) {
-            assertEquals(e.getErrorCode(), ErrorCode.NO_EDIT_FOLDER_PERMISSION);
-        }
+                folderId, null, null, null, null, null);
+        assertClientError(() -> client.updateFolder(request), NO_EDIT_FOLDER_PERMISSION);
     }
 
     @Test
     public void updateFolderNotWritable() throws IOException {
+        var folderId = prepareAclGroupWithPermissions(List.of(CREATE_FOLDER, EDIT_FOLDER))
+                .createFolder()
+                .folder.getId();
         UpdateFolderRequest request = new UpdateFolderRequest(
-                26L, null, null, null, null, null);
-        try {
-            client.updateFolder(request);
-        } catch (CinnamonClientException e) {
-            assertEquals(e.getErrorCode(), ErrorCode.NO_WRITE_SYS_METADATA_PERMISSION);
-        }
+                folderId, null, null, null, null, null);
+        assertClientError(() -> client.updateFolder(request), NO_WRITE_SYS_METADATA_PERMISSION);
     }
 
     @Test
     public void updateFolderCannotMoveFolderIntoItself() throws IOException {
-        UpdateFolderRequest request = new UpdateFolderRequest(25L, 25L, null, null, null, null);
-        try {
-            client.updateFolder(request);
-        } catch (CinnamonClientException e) {
-            assertEquals(e.getErrorCode(), ErrorCode.CANNOT_MOVE_FOLDER_INTO_ITSELF);
-        }
+        var                 folderId = new TestObjectHolder(client, userId).createFolder().folder.getId();
+        UpdateFolderRequest request  = new UpdateFolderRequest(folderId, folderId, null, null, null, null);
+        assertClientError(() -> client.updateFolder(request), CANNOT_MOVE_FOLDER_INTO_ITSELF);
     }
 
     @Test
     public void updateFolderNoCreatePermission() throws IOException {
+        var folder = prepareAclGroupWithPermissions(List.of(EDIT_FOLDER, WRITE_OBJECT_SYS_METADATA))
+                .createFolder().createFolder().folder;
         UpdateFolderRequest request = new UpdateFolderRequest(
-                25L, 22L, null, null, null, null);
-        try {
-            client.updateFolder(request);
-        } catch (CinnamonClientException e) {
-            assertEquals(e.getErrorCode(), ErrorCode.NO_CREATE_PERMISSION);
-        }
+                folder.getId(), folder.getParentId(), null, null, null, null);
+        assertClientError(() -> client.updateFolder(request), NO_CREATE_PERMISSION);
     }
 
     @Test
     public void updateFolderParentFolderNotFound() throws IOException {
+        var folderId = new TestObjectHolder(client, userId)
+                .createFolder().folder.getId();
         UpdateFolderRequest request = new UpdateFolderRequest(
-                25L, Long.MAX_VALUE, null, null, null, null);
-        try {
-            client.updateFolder(request);
-        } catch (CinnamonClientException e) {
-            assertEquals(e.getErrorCode(), ErrorCode.PARENT_FOLDER_NOT_FOUND);
-        }
+                folderId, Long.MAX_VALUE, null, null, null, null);
+        assertClientError(() -> client.updateFolder(request), PARENT_FOLDER_NOT_FOUND);
     }
 
     @Test
     public void updateFolderNoMovePermission() throws IOException {
+        var targetFolder    = new TestObjectHolder(client, userId).createFolder().folder;
+        var unmovableFolder = prepareAclGroupWithPermissions(List.of(EDIT_FOLDER, WRITE_OBJECT_SYS_METADATA)).createFolder().folder;
         UpdateFolderRequest request = new UpdateFolderRequest(
-                28L, 27L, null, null, null, null);
-        try {
-            client.updateFolder(request);
-        } catch (CinnamonClientException e) {
-            assertEquals(e.getErrorCode(), ErrorCode.NO_MOVE_PERMISSION);
-        }
+                unmovableFolder.getId(), targetFolder.getId(), null, null, null, null);
+        assertClientError(() -> client.updateFolder(request), NO_MOVE_PERMISSION);
     }
 
     @Test
     public void updateFolderDuplicateFolderName() throws IOException {
+        var folder = new TestObjectHolder(client, userId).createFolder().folder;
         UpdateFolderRequest request = new UpdateFolderRequest(
-                25L, null, "move here", null, null, null
+                folder.getId(), null, folder.getName(), null, null, null
         );
-        try {
-            client.updateFolder(request);
-        } catch (CinnamonClientException e) {
-            assertEquals(e.getErrorCode(), ErrorCode.DUPLICATE_FOLDER_NAME_FORBIDDEN);
-        }
+        assertClientError(() -> client.updateFolder(request), DUPLICATE_FOLDER_NAME_FORBIDDEN);
     }
 
     @Test
     public void updateFolderFolderTypeNotFound() throws IOException {
+        var folder = new TestObjectHolder(client, userId).createFolder().folder;
         UpdateFolderRequest request = new UpdateFolderRequest(
-                25L, null, null, null, Long.MAX_VALUE, null
+                folder.getId(), null, null, null, Long.MAX_VALUE, null
         );
-        try {
-            client.updateFolder(request);
-        } catch (CinnamonClientException e) {
-            assertEquals(e.getErrorCode(), ErrorCode.FOLDER_TYPE_NOT_FOUND);
-        }
+        assertClientError(() -> client.updateFolder(request), FOLDER_TYPE_NOT_FOUND);
     }
 
     @Test
     public void updateFolderMissingSetAclPermission() throws IOException {
+        var folder = prepareAclGroupWithPermissions(List.of(CREATE_FOLDER, EDIT_FOLDER, WRITE_OBJECT_SYS_METADATA)).createFolder().folder;
         UpdateFolderRequest request = new UpdateFolderRequest(
-                23L, null, null, null, null, 1L
+                folder.getId(), null, null, null, null, 1L
         );
-
-        try {
-            client.updateFolder(request);
-        } catch (CinnamonClientException e) {
-            assertEquals(e.getErrorCode(), ErrorCode.MISSING_SET_ACL_PERMISSION);
-        }
+        assertClientError(() -> client.updateFolder(request), MISSING_SET_ACL_PERMISSION);
     }
 
     @Test
     public void updateFolderAclNotFound() throws IOException {
+        var folder = new TestObjectHolder(client, userId).createFolder().folder;
         UpdateFolderRequest request = new UpdateFolderRequest(
-                24L, null, null, null, null, Long.MAX_VALUE
+                folder.getId(), null, null, null, null, Long.MAX_VALUE
         );
-
-        try {
-            client.updateFolder(request);
-        } catch (CinnamonClientException e) {
-            assertEquals(e.getErrorCode(), ErrorCode.ACL_NOT_FOUND);
-        }
+        assertClientError(() -> client.updateFolder(request), ACL_NOT_FOUND);
     }
 
     @Test
     public void updateFolderUserAccountNotFound() throws IOException {
+        var folder = new TestObjectHolder(client, userId).createFolder().folder;
         UpdateFolderRequest request = new UpdateFolderRequest(
-                23L, null, null, Long.MAX_VALUE, null, null
+                folder.getId(), null, null, Long.MAX_VALUE, null, null
         );
-        try {
-            client.updateFolder(request);
-        } catch (CinnamonClientException e) {
-            assertEquals(e.getErrorCode(), ErrorCode.USER_ACCOUNT_NOT_FOUND);
-        }
+        assertClientError(() -> client.updateFolder(request), USER_ACCOUNT_NOT_FOUND);
     }
 
     @Test
     public void updateFolderHappyPath() throws IOException {
+        var targetFolderId = new TestObjectHolder(client, userId).createFolder().folder.getId();
+        var adminToh = prepareAclGroupWithPermissions(List.of(EDIT_FOLDER, MOVE, BROWSE,
+                WRITE_OBJECT_SYS_METADATA, SET_ACL))
+                .createFolder();
         UpdateFolderRequest request = new UpdateFolderRequest(
-                25L, 27L, "new-name-for-happy-folder", 1L, 2L, 13L
+                adminToh.folder.getId(), targetFolderId, "new-name-for-happy-folder", 1L, 2L,
+                adminToh.acl.getId()
         );
-        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__UPDATE, request);
-        parseGenericResponse(response);
-        Folder updatedFolder = adminClient.getFolderById(25L, false);
-        assertEquals(27L, updatedFolder.getParentId());
+        client.updateFolder(request);
+        Folder updatedFolder = client.getFolderById(request.getId(), false);
+        assertEquals(targetFolderId, updatedFolder.getParentId());
     }
 
     @Test
@@ -532,9 +501,10 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createFolderDuplicateName() throws IOException {
-        CreateFolderRequest request  = new CreateFolderRequest("duplicate name", 6L, "<sum/>", null, null, null);
-        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__CREATE, request);
-        assertCinnamonError(response, ErrorCode.DUPLICATE_FOLDER_NAME_FORBIDDEN);
+        var folder = new TestObjectHolder(client, userId)
+                .createFolder().folder;
+        assertClientError(() -> client.createFolder(createFolderId, folder.getName(), null, null, null),
+                DUPLICATE_FOLDER_NAME_FORBIDDEN);
     }
 
     @Test

@@ -13,6 +13,8 @@ import jakarta.servlet.http.HttpServlet;
 
 import java.util.List;
 
+import static com.dewarim.cinnamon.ErrorCode.NO_READ_CUSTOM_METADATA_PERMISSION;
+
 public class BaseServlet extends HttpServlet {
 
     static final AuthorizationService authorizationService = new AuthorizationService();
@@ -34,11 +36,9 @@ public class BaseServlet extends HttpServlet {
     }
 
     static void throwUnlessCustomMetaIsReadable(Ownable ownable) {
-        UserAccount user        = ThreadLocalSqlSession.getCurrentUser();
-        boolean     readAllowed = authorizationService.hasUserOrOwnerPermission(ownable, DefaultPermission.READ_OBJECT_CUSTOM_METADATA, user);
-        if (!readAllowed) {
-            throw ErrorCode.NO_READ_CUSTOM_METADATA_PERMISSION.getException().get();
-        }
+        UserAccount user = ThreadLocalSqlSession.getCurrentUser();
+        authorizationService.throwUpUnlessUserOrOwnerHasPermission(ownable,
+                DefaultPermission.READ_OBJECT_CUSTOM_METADATA, user, NO_READ_CUSTOM_METADATA_PERMISSION);
     }
 
     static void throwUnlessCustomMetaIsWritable(Ownable ownable, UserAccount user) {
@@ -48,7 +48,7 @@ public class BaseServlet extends HttpServlet {
         }
     }
 
-    static void createMetaResponse( CinnamonResponse response, List<Meta> metaList) {
+    static void createMetaResponse(CinnamonResponse response, List<Meta> metaList) {
         MetaWrapper wrapper = new MetaWrapper(metaList);
         response.setWrapper(wrapper);
     }

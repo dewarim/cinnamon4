@@ -269,6 +269,10 @@ public class TestObjectHolder {
         meta = client.createOsdMeta(osd.getId(), content, Objects.requireNonNullElse(metasetType, metasetTypes.get(0)).getId());
         return this;
     }
+    public TestObjectHolder createFolderMeta(String content) throws IOException {
+        meta = client.createFolderMeta(folder.getId(), content, Objects.requireNonNullElse(metasetType, metasetTypes.get(0)).getId()).get(0);
+        return this;
+    }
 
     /**
      * Create a link to the given osd using the current folder, acl, owner.
@@ -303,6 +307,15 @@ public class TestObjectHolder {
 
     public TestObjectHolder setGroup(Group group) {
         this.group=group;
+        return this;
+    }
+
+    public TestObjectHolder setSummaryOnFolder(String foo) throws IOException {
+        client.setFolderSummary(folder.getId(), foo);
+        return this;
+    }
+    public TestObjectHolder setSummaryOnOsd(String foo) throws IOException {
+        client.setSummary(osd.getId(), foo);
         return this;
     }
 }

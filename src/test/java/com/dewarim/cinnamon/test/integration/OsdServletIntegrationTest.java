@@ -60,8 +60,7 @@ import java.util.List;
 
 import static com.dewarim.cinnamon.DefaultPermission.*;
 import static com.dewarim.cinnamon.ErrorCode.*;
-import static com.dewarim.cinnamon.api.Constants.ALIAS_EVERYONE;
-import static com.dewarim.cinnamon.api.Constants.CREATE_NEW_VERSION;
+import static com.dewarim.cinnamon.api.Constants.*;
 import static com.dewarim.cinnamon.model.request.osd.VersionPredicate.*;
 import static org.apache.http.HttpHeaders.CONTENT_TYPE;
 import static org.apache.http.entity.ContentType.APPLICATION_XML;
@@ -134,12 +133,9 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getObjectsByIdIncludingSummary() throws IOException {
-        OsdRequest osdRequest = new OsdRequest();
-        osdRequest.setIds(List.of(1L));
-        osdRequest.setIncludeSummary(true);
-        HttpResponse           response = sendAdminRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
-        List<ObjectSystemData> dataList = unwrapOsds(response, 1);
-        assertTrue(dataList.stream().anyMatch(osd -> osd.getSummary().equals("<summary>sum of sum</summary>")));
+        var osdId = new TestObjectHolder(client,userId)
+                .createOsd().setSummaryOnOsd("xxx").osd.getId();
+        assertTrue(client.getOsdSummaries(List.of(osdId)).stream().anyMatch(s -> s.getContent().equals("xxx")));
     }
 
     @Test
@@ -802,18 +798,11 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createOsdNoCreatePermission() throws IOException {
-        CreateOsdRequest request = new CreateOsdRequest();
-        request.setAclId(CREATE_ACL_ID);
-        request.setName("new osd");
-        request.setOwnerId(STANDARD_USER_ID);
-        request.setParentId(NO_createFolderId);
-        request.setFormatId(PLAINTEXT_FORMAT_ID);
-        request.setTypeId(DEFAULT_OBJECT_TYPE_ID);
-        MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
-                .addTextBody("createOsdRequest", mapper.writeValueAsString(request),
-                        APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
-        HttpResponse response = sendStandardMultipartRequest(UrlMapping.OSD__CREATE_OSD, entityBuilder.build());
-        assertCinnamonError(response, ErrorCode.NO_CREATE_PERMISSION);
+        var parentId = prepareAclGroupWithPermissions(List.of())
+                .createFolder().folder.getId();
+        assertClientError(() -> client.createOsd(new CreateOsdRequest("forbidden", parentId, userId,
+                1L, 1L, null, 1L, null, DEFAULT_SUMMARY)),
+                NO_CREATE_PERMISSION);
     }
 
     @Test

@@ -517,6 +517,11 @@ public class CinnamonClient {
         HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__CREATE_META, metaRequest);
         return metaUnwrapper.unwrap(response, 1);
     }
+    public List<Meta> createFolderMeta(Long folderId,String content, Long metaTypeId ) throws IOException {
+        CreateMetaRequest metaRequest = new CreateMetaRequest(folderId, content, metaTypeId);
+        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__CREATE_META, metaRequest);
+        return metaUnwrapper.unwrap(response, 1);
+    }
 
     public List<Meta> createOsdMeta(CreateMetaRequest metaRequest) throws IOException {
         HttpResponse response = sendStandardRequest(UrlMapping.OSD__CREATE_META, metaRequest);
