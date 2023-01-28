@@ -1,16 +1,20 @@
 package com.dewarim.cinnamon.test.integration;
 
+import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.AclGroup;
 import com.dewarim.cinnamon.model.Group;
 import com.dewarim.cinnamon.model.Permission;
+import com.dewarim.cinnamon.test.TestObjectHolder;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
+import static com.dewarim.cinnamon.DefaultPermission.RELATION_CHILD_REMOVE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -51,6 +55,27 @@ public class PermissionServletIntegrationTest extends CinnamonIntegrationTest {
          */
         List<Permission> reviewerPermissions = client.getUserPermissions(2L, 2L);
         assertEquals(13, reviewerPermissions.size());
+    }
+
+    @Test
+    public void userShouldInheritPermissionsFromParentGroup() throws IOException {
+        var permissions = List.of(DefaultPermission.BROWSE, RELATION_CHILD_REMOVE);
+        var toh         = new TestObjectHolder(adminClient, adminId);
+        var parentGroup = toh.createGroup()
+                .createAcl()
+                .createAclGroup()
+                .addPermissions(permissions)
+                .group;
+        // no permissions from unconnected group:
+        assertEquals(0, client.getUserPermissions(userId, toh.acl.getId()).size());
+
+        toh.createGroup(parentGroup.getId()).addUserToGroup(userId);
+        List<Permission> userPermissions = client.getUserPermissions(userId, toh.acl.getId());
+        // check inherited permissions:
+        assertEquals(
+                permissions.stream().map(DefaultPermission::getName).collect(Collectors.toSet()),
+                userPermissions.stream().map(Permission::getName).collect(Collectors.toSet())
+        );
     }
 
     @Test

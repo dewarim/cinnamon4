@@ -137,7 +137,7 @@ public class TestObjectHolder {
         return this;
     }
 
-    private String createRandomName() {
+    public String createRandomName() {
         return UUID.randomUUID().toString();
     }
 
@@ -178,9 +178,20 @@ public class TestObjectHolder {
         acl = client.createAcls(List.of(name)).get(0);
         return this;
     }
+    public TestObjectHolder createAcl() throws IOException {
+        return createAcl(createRandomName());
+    }
 
     public TestObjectHolder createGroup(String name) throws IOException {
         group = client.createGroupsByName(List.of(name)).get(0);
+        return this;
+    }
+
+    public TestObjectHolder createGroup() throws IOException {
+        return createGroup(createRandomName());
+    }
+    public TestObjectHolder createGroup(Long parentId) throws IOException {
+        group = client.createGroup(new Group(createRandomName(), parentId));
         return this;
     }
 

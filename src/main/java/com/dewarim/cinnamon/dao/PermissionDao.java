@@ -17,12 +17,12 @@ public class PermissionDao implements CrudDao<Permission> {
 
     public List<Permission> getUserPermissionForAcl(long userId, long aclId) {
         GroupDao   groupDao = new GroupDao();
-        Set<Group> groups      = groupDao.getGroupsWithAncestorsOfUserById(userId);
-        List<Long>  groupIds    = groups.stream().map(Group::getId).collect(Collectors.toList());
+        Set<Group> groups   = groupDao.getGroupsWithAncestorsOfUserById(userId);
+        List<Long> groupIds = groups.stream().map(Group::getId).collect(Collectors.toList());
 
-        AclGroupDao aclGroupDao = new AclGroupDao();
-        List<AclGroup> aclGroups = aclGroupDao.getAclGroupsByGroupIdsAndAcl(groupIds,aclId);
-        if(aclGroups.isEmpty()){
+        AclGroupDao    aclGroupDao = new AclGroupDao();
+        List<AclGroup> aclGroups   = aclGroupDao.getAclGroupsByGroupIdsAndAcl(groupIds, aclId);
+        if (aclGroups.isEmpty()) {
             // if the user has no connection to the given acl, he won't have any permissions.
             return Collections.emptyList();
         }
@@ -30,9 +30,9 @@ public class PermissionDao implements CrudDao<Permission> {
         return sqlSession.selectList("com.dewarim.cinnamon.model.Permission.getUserPermissionsForAclGroups", aclGroups);
     }
 
-    public Permission getPermissionByName(String name){
+    public Permission getPermissionByName(String name) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        return sqlSession.selectOne("com.dewarim.cinnamon.model.Permission.getPermissionByName",name);
+        return sqlSession.selectOne("com.dewarim.cinnamon.model.Permission.getPermissionByName", name);
     }
 
     @Override

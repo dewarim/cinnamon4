@@ -27,8 +27,8 @@ public class AclDao implements CrudDao<Acl> {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
         GroupDao   groupDao   = new GroupDao();
         Set<Group> groups     = groupDao.getGroupsWithAncestorsOfUserById(userId);
-        List<Long>  groupIds = groups.stream().map(Group::getId).collect(Collectors.toList());
-        List<Acl>   acls     = sqlSession.selectList("com.dewarim.cinnamon.model.Acl.getUserAcls", groupIds);
+        List<Long> groupIds   = groups.stream().map(Group::getId).collect(Collectors.toList());
+        List<Acl>  acls       = sqlSession.selectList("com.dewarim.cinnamon.model.Acl.getUserAcls", groupIds);
         return acls.stream().distinct().collect(Collectors.toList());
     }
 
