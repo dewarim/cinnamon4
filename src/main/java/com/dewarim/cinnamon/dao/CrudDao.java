@@ -39,6 +39,10 @@ public interface CrudDao<T extends Identifiable> {
     }
 
     default int delete(List<Long> ids) {
+        if(ids.isEmpty()){
+            // upstream code may filter the list of ids to 0.
+            return 0;
+        }
         SqlSession       sqlSession  = getSqlSession();
         List<List<Long>> partitions  = partitionLongList(ids);
         AtomicInteger    deleteCount = new AtomicInteger(0);

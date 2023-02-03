@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 public class MetaService<T extends CrudDao<Meta> & MetaDao, O extends CrudDao<? extends Ownable>> {
 
     private final AuthorizationService authorizationService = new AuthorizationService();
+
     void throwUnlessCustomMetaIsWritable(Ownable ownable, UserAccount user) {
         boolean readAllowed = authorizationService.hasUserOrOwnerPermission(ownable, DefaultPermission.READ_OBJECT_CUSTOM_METADATA, user);
         if (!readAllowed) {
@@ -27,19 +28,21 @@ public class MetaService<T extends CrudDao<Meta> & MetaDao, O extends CrudDao<? 
         }
     }
 
-    public void deleteMeta(T dao, List<Long> ids, O ownableDao, UserAccount user){
-        List<Meta> metas = dao.getObjectsById(ids);
-        if (metas.isEmpty() || metas.size() != ids.size()) {
-            throw ErrorCode.METASET_NOT_FOUND.exception();
+    public void deleteMetas(T metaDao, List<Meta> metas, O ownableDao, UserAccount user) {
+        if (metas.isEmpty()) {
+            return;
         }
-        List<? extends Ownable> ownables = ownableDao.getObjectsById(metas.stream().map(Meta::getObjectId).collect(Collectors.toList()));
-        ownables.forEach(ownable -> throwUnlessCustomMetaIsWritable(ownable, user));
-        dao.delete(ids);
+        List<Long>              objectIds = metas.stream().map(Meta::getObjectId).toList();
+        List<? extends Ownable> ownables  = ownableDao.getObjectsById(objectIds);
+        for (Ownable ownable : ownables) {
+            throwUnlessCustomMetaIsWritable(ownable, user);
+        }
+        metaDao.delete(metas.stream().map(Meta::getId).toList());
     }
 
-    public List<Meta> createMeta(T dao, List<Meta> metas, O ownableDao, UserAccount user){
+    public List<Meta> createMeta(T dao, List<Meta> metas, O ownableDao, UserAccount user) {
         // load objects
-        List<Long> ownableIds = metas.stream().map(Meta::getObjectId).collect(Collectors.toList());
+        List<Long>              ownableIds = metas.stream().map(Meta::getObjectId).collect(Collectors.toList());
         List<? extends Ownable> ownables   = ownableDao.getObjectsById(ownableIds);
         if (ownables.size() != ownableIds.size()) {
             throw ErrorCode.OBJECT_NOT_FOUND.getException().get();

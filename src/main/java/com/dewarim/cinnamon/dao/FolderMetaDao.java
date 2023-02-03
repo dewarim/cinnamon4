@@ -27,7 +27,7 @@ public class FolderMetaDao implements CrudDao<Meta>, MetaDao{
         return sqlSession.delete("com.dewarim.cinnamon.model.FolderMeta.deleteById",metaId);
     }
 
-    public List<Meta> listByObjectIds(List<Long> folderIds) {
+    public List<Meta> listMetaByObjectIds(List<Long> folderIds) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
         return sqlSession.selectList("com.dewarim.cinnamon.model.FolderMeta.listByFolderIds", folderIds);
     }

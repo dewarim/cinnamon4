@@ -201,9 +201,8 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getMetaWithoutReadPermission() throws IOException {
-        MetaRequest  request      = new MetaRequest(15L, null);
-        HttpResponse metaResponse = sendStandardRequest(UrlMapping.FOLDER__GET_META, request);
-        assertCinnamonError(metaResponse, ErrorCode.NO_READ_CUSTOM_METADATA_PERMISSION);
+        var folderId = prepareAclGroupWithPermissions(List.of(BROWSE)).createFolder().folder.getId();
+        assertClientError(() -> client.getFolderMetas(folderId), ErrorCode.NO_READ_CUSTOM_METADATA_PERMISSION);
     }
 
     @Test

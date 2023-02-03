@@ -3,11 +3,12 @@ package com.dewarim.cinnamon.model.request;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class DeleteByIdRequest<T> implements DeleteRequest<T>{
+public abstract class DeleteByIdRequest<T> implements DeleteRequest<T> {
 
-    private boolean ignoreNotFound =false;
+    private boolean ignoreNotFound = false;
 
     private List<Long> ids = new ArrayList<>();
+
     @Override
     public List<Long> list() {
         return ids;
@@ -20,13 +21,18 @@ public abstract class DeleteByIdRequest<T> implements DeleteRequest<T>{
         this.ids = ids;
     }
 
-    public DeleteByIdRequest(Long id){
+    public DeleteByIdRequest(Long id) {
         ids.add(id);
+    }
+
+    public DeleteByIdRequest(Long id, boolean ignoreNotFound) {
+        ids.add(id);
+        this.ignoreNotFound = ignoreNotFound;
     }
 
     @Override
     public boolean validated() {
-        return ids != null && ids.stream().allMatch(id -> id != null && id > 0 );
+        return ids != null && ids.stream().allMatch(id -> id != null && id > 0);
     }
 
     public List<Long> getIds() {
@@ -39,5 +45,13 @@ public abstract class DeleteByIdRequest<T> implements DeleteRequest<T>{
 
     public void setIgnoreNotFound(boolean ignoreNotFound) {
         this.ignoreNotFound = ignoreNotFound;
+    }
+
+    @Override
+    public String toString() {
+        return "DeleteByIdRequest{" +
+                "ignoreNotFound=" + ignoreNotFound +
+                ", ids=" + ids +
+                '}';
     }
 }

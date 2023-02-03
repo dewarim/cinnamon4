@@ -8,5 +8,5 @@ public interface MetaDao {
 
     List<Long> getUniqueMetaTypeIdsOfObject(Long id);
 
-    List<Meta> listByObjectIds(List<Long> objectIds);
+    List<Meta> listMetaByObjectIds(List<Long> objectIds);
 }

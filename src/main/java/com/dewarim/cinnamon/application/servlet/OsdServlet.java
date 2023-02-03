@@ -145,8 +145,8 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
         OsdMetaDao metaDao = new OsdMetaDao();
-        List<Long> metaIds = metaDao.listByObjectIds(metaRequest.getIds()).stream().map(Meta::getId).collect(Collectors.toList());
-        new MetaService<>().deleteMeta(metaDao, metaIds, osdDao, user);
+        List<Meta> metas = metaDao.listMetaByObjectIds(metaRequest.getIds());
+        new MetaService<>().deleteMetas(metaDao, metas, osdDao, user);
         cinnamonResponse.setWrapper(new DeleteResponse(true));
     }
 
@@ -408,11 +408,14 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
             IOException {
         DeleteMetaRequest metaRequest = (DeleteMetaRequest) getMapper().readValue(request.getInputStream(), DeleteMetaRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
-        // TODO: does deleteMeta need to check if the parent OSD/Folder is browsable? Or does WRITE_CUSTOM_METADATA suffice?
-        OsdMetaDao metaDao = new OsdMetaDao();
-        new MetaService<>().deleteMeta(metaDao, metaRequest.getIds(), osdDao, user);
-        var deleteResponse = new DeleteResponse(true);
-        response.setWrapper(deleteResponse);
+
+        OsdMetaDao osdMetaDao = new OsdMetaDao();
+        List<Meta> metas = osdMetaDao.getObjectsById(metaRequest.getIds());
+        if(metas.size() != metaRequest.getIds().size() && !metaRequest.isIgnoreNotFound()){
+            throw ErrorCode.METASET_NOT_FOUND.exception();
+        }
+        new MetaService<>().deleteMetas(osdMetaDao, metas, osdDao, user);
+        response.setResponse(new DeleteResponse(true));
     }
 
     /**

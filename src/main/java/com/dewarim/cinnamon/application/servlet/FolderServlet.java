@@ -95,8 +95,8 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
         FolderMetaDao metaDao = new FolderMetaDao();
-        List<Long> metaIds = metaDao.listByObjectIds(metaRequest.getIds()).stream().map(Meta::getId).collect(Collectors.toList());
-        new MetaService<>().deleteMeta(metaDao, metaIds, folderDao, user );
+        List<Meta>    metas   = metaDao.listMetaByObjectIds(metaRequest.getIds());
+        new MetaService<>().deleteMetas(metaDao, metas, folderDao, user);
         cinnamonResponse.setWrapper(new DeleteResponse(true));
     }
 
@@ -269,10 +269,9 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
         String name = updateRequest.getName();
         if (name != null) {
             Folder parentFolder;
-            if(folder.getParentId() == null){
+            if (folder.getParentId() == null) {
                 parentFolder = folderDao.getRootFolder(false);
-            }
-            else{
+            } else {
                 parentFolder = folderDao.getFolderById(folder.getParentId())
                         .orElseThrow(ErrorCode.PARENT_FOLDER_NOT_FOUND.getException());
             }
@@ -324,10 +323,13 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
         DeleteMetaRequest metaRequest = (DeleteMetaRequest) getMapper().readValue(request.getInputStream(), DeleteMetaRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
-        FolderMetaDao metaDao = new FolderMetaDao();
-        new MetaService<>().deleteMeta(metaDao, metaRequest.getIds(), folderDao, user );
-        var deleteResponse = new DeleteResponse(true);
-        response.setWrapper(deleteResponse);
+        FolderMetaDao folderMetaDao = new FolderMetaDao();
+        List<Meta> metas = folderMetaDao.getObjectsById(metaRequest.getIds());
+        if(metas.size() != metaRequest.getIds().size() && !metaRequest.isIgnoreNotFound()){
+            throw ErrorCode.METASET_NOT_FOUND.exception();
+        }
+        new MetaService<>().deleteMetas(folderMetaDao, metas, folderDao, user);
+        response.setResponse(new DeleteResponse(true));
     }
 
     /**
