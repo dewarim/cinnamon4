@@ -80,10 +80,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     private static final Long STANDARD_USER_ID                  = 2L;
     private static final Long PLAINTEXT_FORMAT_ID               = 2L;
     private static final Long DEFAULT_OBJECT_TYPE_ID            = 1L;
-    /**
-     * This folder's ACL does not permit object creation inside.
-     */
-    private static final Long NO_createFolderId               = 8L;
+
     /**
      * This folder's ACL allows object creation.
      */
@@ -110,21 +107,22 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
                 .createOsd();
         ObjectSystemData everyone     = tohAdmin.osd;
         ObjectSystemData notBrowsable = prepareAclGroupWithPermissions(List.of()).createOsd("unbrowsable").osd;
-        List<Long> osdIds =                 List.of(osd1.getId(), osd2.getId(), osd3.getId(),
+        List<Long> osdIds = List.of(osd1.getId(), osd2.getId(), osd3.getId(),
                 owned.getId(), everyone.getId(), notBrowsable.getId());
         List<ObjectSystemData> osds = client.getOsdsById(osdIds, false, false);
         assertFalse(osds.stream().anyMatch(osd -> osd.getName().equals("unbrowsable")));
         assertEquals(5, osds.size());
         assertTrue(osds.containsAll(List.of(osd1, osd2, osd3, owned, everyone)));
-        var adminOsds = adminClient.getOsdsById(osdIds, false,false);
-        assertEquals(6,adminOsds.size() );
+        var adminOsds = adminClient.getOsdsById(osdIds, false, false);
+        assertEquals(6, adminOsds.size());
         assertTrue(adminOsds.containsAll(List.of(osd1, osd2, osd3, owned, everyone, notBrowsable)));
     }
 
     @Test
     public void getObjectsByIdWithDefaultSummary() throws IOException {
+        var        osdId      = new TestObjectHolder(client, userId).createOsd().osd.getId();
         OsdRequest osdRequest = new OsdRequest();
-        osdRequest.setIds(List.of(1L));
+        osdRequest.setIds(List.of(osdId));
         osdRequest.setIncludeSummary(false);
         HttpResponse           response = sendAdminRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
         List<ObjectSystemData> dataList = unwrapOsds(response, 1);
@@ -133,7 +131,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getObjectsByIdIncludingSummary() throws IOException {
-        var osdId = new TestObjectHolder(client,userId)
+        var osdId = new TestObjectHolder(client, userId)
                 .createOsd().setSummaryOnOsd("xxx").osd.getId();
         assertTrue(client.getOsdSummaries(List.of(osdId)).stream().anyMatch(s -> s.getContent().equals("xxx")));
     }
@@ -518,7 +516,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void lockAndUnlockShouldFailWithInvalidRequest() throws IOException {
+    public void lockAndUnlockShouldFailWithInvalidRequest() {
         var exLock = assertThrows(CinnamonClientException.class, () -> client.lockOsd(null));
         assertEquals(INVALID_REQUEST, exLock.getErrorCode());
         var exUnlock = assertThrows(CinnamonClientException.class, () -> client.unlockOsd(null));
@@ -801,7 +799,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var parentId = prepareAclGroupWithPermissions(List.of())
                 .createFolder().folder.getId();
         assertClientError(() -> client.createOsd(new CreateOsdRequest("forbidden", parentId, userId,
-                1L, 1L, null, 1L, null, DEFAULT_SUMMARY)),
+                        1L, 1L, null, 1L, null, DEFAULT_SUMMARY)),
                 NO_CREATE_PERMISSION);
     }
 
@@ -1180,15 +1178,15 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         // admin without changeTracking
         SetSummaryRequest summaryRequest = new SetSummaryRequest(osd.getId(), "a summary");
         adminClient.setSummary(osd.getId(), "a summary");
-        var updatedOsd = client.getOsdById(osd.getId(), false,false);
+        var updatedOsd = client.getOsdById(osd.getId(), false, false);
         assertThat(updatedOsd.getModifierId(), equalTo(osd.getModifierId()));
         assertThat(updatedOsd.getModified(), equalTo(osd.getModified()));
 
         Thread.sleep(1000);
 
         // standard user should have changeTracking
-        client.setSummary(osd.getId(),  "new summary");
-        osd = client.getOsdById(osd.getId(), false,false);
+        client.setSummary(osd.getId(), "new summary");
+        osd = client.getOsdById(osd.getId(), false, false);
         assertThat(updatedOsd.getModifierId(), equalTo(osd.getModifierId()));
         assertThat(updatedOsd.getModified(), not(equalTo(osd.getModified())));
     }
@@ -1219,7 +1217,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateOsdWithParentFolderNotFound() throws IOException {
-        var toh = prepareAclGroupWithPermissions(List.of(BROWSE_OBJECT, LOCK, WRITE_OBJECT_SYS_METADATA))
+        var toh = prepareAclGroupWithPermissions(List.of(BROWSE, LOCK, WRITE_OBJECT_SYS_METADATA))
                 .createOsd("osd-new-parent-missing");
 
         var id = toh.osd.getId();
@@ -1930,11 +1928,6 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         assertTrue(osd.isLatestHead());
     }
 
-    private HttpResponse sendAdminMultipartRequest(UrlMapping url, HttpEntity multipartEntity) throws IOException {
-        return Request.Post("http://localhost:" + cinnamonTestPort + url.getPath())
-                .addHeader("ticket", getAdminTicket())
-                .body(multipartEntity).execute().returnResponse();
-    }
 
     private HttpResponse sendStandardMultipartRequest(UrlMapping urlMapping, HttpEntity multipartEntity) throws IOException {
         return Request.Post("http://localhost:" + cinnamonTestPort + urlMapping.getPath())

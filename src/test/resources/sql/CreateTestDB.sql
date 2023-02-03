@@ -1,6 +1,10 @@
 -------------------------
 --- table definitions ---
 -------------------------
+drop sequence if exists seq_folder_and_object_ids;
+create sequence seq_folder_and_object_ids start with 1;
+drop sequence if exists seq_object_id;
+drop sequence if exists seq_folder_id;
 
 -- users --
 drop table if exists users cascade;
@@ -118,8 +122,8 @@ create table folders
   constraint folders_name_key
   unique (name, parent_id)
 );
-drop sequence if exists seq_folder_id;
-create sequence seq_folder_id start with 1;
+-- drop sequence if exists seq_folder_id;
+-- create sequence seq_folder_id start with 1;
 
 
 -- object_types --
@@ -251,9 +255,8 @@ create table objects
   summary text default '<summary />' not null,
   content_hash varchar(128)
 );
-drop sequence if exists seq_object_id;
-create sequence seq_object_id start with 1;
-
+-- drop sequence if exists seq_object_id;
+-- create sequence seq_object_id start with 1;
 
 -- links --
 drop table if exists links cascade ;
@@ -748,7 +751,7 @@ insert into folder_types(id,name) values(nextval('seq_folder_type_id'),'_archive
 
 -- #1 root folder
 insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
-values(nextval('seq_folder_id'),'root',1,1,null,1);
+values(nextval('seq_folder_and_object_ids'),'root',1,1,null,1);
 
 -- #1 language de
 insert into languages (id,iso_code) values (nextval('seq_language_id'), 'de_DE');

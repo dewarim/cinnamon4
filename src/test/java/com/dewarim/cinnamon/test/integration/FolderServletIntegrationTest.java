@@ -45,11 +45,12 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void setSummaryHappyPath() throws IOException {
-        SetSummaryRequest summaryRequest = new SetSummaryRequest(11L, "a summary");
+        var folderId = new TestObjectHolder(client,userId).createFolder().folder.getId();
+        SetSummaryRequest summaryRequest = new SetSummaryRequest(folderId, "a summary");
         HttpResponse      response       = sendStandardRequest(UrlMapping.FOLDER__SET_SUMMARY, summaryRequest);
         assertResponseOkay(response);
 
-        IdListRequest idListRequest  = new IdListRequest(Collections.singletonList(11L));
+        IdListRequest idListRequest  = new IdListRequest(Collections.singletonList(folderId));
         HttpResponse  verifyResponse = sendStandardRequest(UrlMapping.FOLDER__GET_SUMMARIES, idListRequest);
         assertResponseOkay(verifyResponse);
         SummaryWrapper wrapper = mapper.readValue(verifyResponse.getEntity().getContent(), SummaryWrapper.class);

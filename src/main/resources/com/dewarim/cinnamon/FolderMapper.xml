@@ -223,7 +223,7 @@
 
     <insert id="insertFolder" parameterType="com.dewarim.cinnamon.model.Folder">
         <selectKey keyProperty="id" resultType="long" order="BEFORE">
-            select nextval('seq_folder_id')
+            select nextval('seq_folder_and_object_ids')
         </selectKey>
         INSERT INTO folders
         (id, name, acl_id, owner_id, parent_id, type_id, metadata_changed, summary, created)
