@@ -59,6 +59,8 @@ public class UpdateMetaRequest implements ApiRequest, UpdateRequest<Meta> {
 
     @Override
     public List<ApiRequest> examples() {
-        return List.of(new UpdateMetaRequest(List.of(new Meta(1L,2L,"meta content update"))));
+        Meta meta = new Meta(1L, 2L, "meta content update");
+        meta.setId(123L);
+        return List.of(new UpdateMetaRequest(List.of(meta)));
     }
 }

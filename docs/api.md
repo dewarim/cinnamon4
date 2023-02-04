@@ -1182,16 +1182,16 @@ Update the content of a given folder metaset
 ## Request
 
 ```xml
-<UpdateMetaRequest>
+<updateMetaRequest>
   <metas>
     <meta>
-      <id/>
+      <id>123</id>
       <objectId>1</objectId>
       <typeId>2</typeId>
       <content>meta content update</content>
     </meta>
   </metas>
-</UpdateMetaRequest>
+</updateMetaRequest>
 
 ```
 
@@ -3127,16 +3127,16 @@ Update the content of a given OSD metaset
 ## Request
 
 ```xml
-<UpdateMetaRequest>
+<updateMetaRequest>
   <metas>
     <meta>
-      <id/>
+      <id>123</id>
       <objectId>1</objectId>
       <typeId>2</typeId>
       <content>meta content update</content>
     </meta>
   </metas>
-</UpdateMetaRequest>
+</updateMetaRequest>
 
 ```
 
