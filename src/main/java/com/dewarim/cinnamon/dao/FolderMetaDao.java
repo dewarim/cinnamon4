@@ -9,6 +9,7 @@ import org.apache.ibatis.session.SqlSession;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class FolderMetaDao implements CrudDao<Meta>, MetaDao{
 
@@ -17,9 +18,9 @@ public class FolderMetaDao implements CrudDao<Meta>, MetaDao{
         return sqlSession.selectList("com.dewarim.cinnamon.model.FolderMeta.listByFolderId", id);
     }
 
-    public Meta getFolderMetaById(Long metaId) {
+    public Optional<Meta> getMetaById(Long metaId) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        return sqlSession.selectOne("com.dewarim.cinnamon.model.FolderMeta.getMetasetById", metaId);
+        return Optional.ofNullable(sqlSession.selectOne("com.dewarim.cinnamon.model.FolderMeta.getMetasetById", metaId));
     }
 
     public int deleteById(Long metaId) {

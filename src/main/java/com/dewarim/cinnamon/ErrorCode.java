@@ -11,28 +11,28 @@ public enum ErrorCode {
 
     ACL_GROUP_NOT_FOUND("the requested acl group was not found in the database", HttpServletResponse.SC_NOT_FOUND),
     ACL_NOT_FOUND("error.acl.not_found", HttpServletResponse.SC_NOT_FOUND),
-    AUTHENTICATION_FAIL_NO_TICKET_GIVEN("empty or null ticket given", HttpServletResponse.SC_FORBIDDEN),
     AUTHENTICATION_FAIL_NO_SESSION_FOUND("no session found", HttpServletResponse.SC_FORBIDDEN),
+    AUTHENTICATION_FAIL_NO_TICKET_GIVEN("empty or null ticket given", HttpServletResponse.SC_FORBIDDEN),
     AUTHENTICATION_FAIL_SESSION_EXPIRED("session expired", HttpServletResponse.SC_FORBIDDEN),
     AUTHENTICATION_FAIL_USER_NOT_FOUND("user not found or inactive", HttpServletResponse.SC_FORBIDDEN),
-    CANNOT_MOVE_FOLDER_INTO_ITSELF("source and parent folder are identical", HttpServletResponse.SC_BAD_REQUEST),
-    CANNOT_DELETE_DUE_TO_ERRORS("delete operation encountered errors", HttpServletResponse.SC_CONFLICT),
     CANNOT_CHANGE_LINK_TYPE("Will not change link type: please delete old link and create a new one.", HttpServletResponse.SC_BAD_REQUEST),
+    CANNOT_DELETE_DUE_TO_ERRORS("delete operation encountered errors", HttpServletResponse.SC_CONFLICT),
+    CANNOT_MOVE_FOLDER_INTO_ITSELF("source and parent folder are identical", HttpServletResponse.SC_BAD_REQUEST),
     CONNECTION_FAIL_ACCOUNT_INACTIVE("account inactive", HttpServletResponse.SC_UNAUTHORIZED),
-    CONNECTION_FAIL_INVALID_USERNAME("invalid username", HttpServletResponse.SC_UNAUTHORIZED),
     CONNECTION_FAIL_ACCOUNT_LOCKED("account locked", HttpServletResponse.SC_UNAUTHORIZED),
+    CONNECTION_FAIL_INVALID_USERNAME("invalid username", HttpServletResponse.SC_UNAUTHORIZED),
     CONNECTION_FAIL_WRONG_PASSWORD("wrong password", HttpServletResponse.SC_UNAUTHORIZED),
-    //    DB_UPDATE_CHANGED_NOTHING("The update succeeded, but did not change anything. This may happen when you save the same value again."),
-    DB_UPDATE_FAILED("db update failed", HttpServletResponse.SC_INTERNAL_SERVER_ERROR),
     DB_DELETE_FAILED("db delete failed", HttpServletResponse.SC_INTERNAL_SERVER_ERROR),
     DB_INSERT_FAILED("db insert failed", HttpServletResponse.SC_INTERNAL_SERVER_ERROR),
     DB_IS_MISSING_LANGUAGE_CODE("db does not contain ISO code for undetermined language.", HttpServletResponse.SC_INTERNAL_SERVER_ERROR),
+    DB_UPDATE_FAILED("db update failed", HttpServletResponse.SC_INTERNAL_SERVER_ERROR) //    DB_UPDATE_CHANGED_NOTHING("The update succeeded, but did not change anything. This may happen when you save the same value again."),
+    ,
     DELETE_AFFECTED_MULTIPLE_ROWS("Delete succeeded, but seems to have deleted more than the expected single row. Contact your administrator.", HttpServletResponse.SC_INTERNAL_SERVER_ERROR),
     DELETE_REQUEST_WITHOUT_ID("delete request needs id parameter", HttpServletResponse.SC_BAD_REQUEST),
-    FILE_NOT_FOUND("file not found", HttpServletResponse.SC_NOT_FOUND),
-    FOLDER_IS_NOT_EMPTY("folder has objects inside - will not delete non-empty folder deleteContent=true", HttpServletResponse.SC_FORBIDDEN),
-    FOLDER_HAS_SUBFOLDERS("folder has subfolders - will not delete unless deleteRecursively=true", HttpServletResponse.SC_FORBIDDEN),
     DUPLICATE_FOLDER_NAME_FORBIDDEN("You cannot have two folders with the same name with the same parent folder", HttpServletResponse.SC_BAD_REQUEST),
+    FILE_NOT_FOUND("file not found", HttpServletResponse.SC_NOT_FOUND),
+    FOLDER_HAS_SUBFOLDERS("folder has subfolders - will not delete unless deleteRecursively=true", HttpServletResponse.SC_FORBIDDEN),
+    FOLDER_IS_NOT_EMPTY("folder has objects inside - will not delete non-empty folder deleteContent=true", HttpServletResponse.SC_FORBIDDEN),
     FOLDER_NOT_FOUND("folder was not found", HttpServletResponse.SC_NOT_FOUND),
     FOLDER_TYPE_NOT_FOUND("folder type was not found", HttpServletResponse.SC_NOT_FOUND),
     FORBIDDEN("user is authenticated, but access is not allowed", HttpServletResponse.SC_FORBIDDEN),
@@ -41,9 +41,11 @@ public enum ErrorCode {
     ILLEGAL_STATE("reached illegal state, please contact administrator", HttpServletResponse.SC_INTERNAL_SERVER_ERROR),
     INTERNAL_SERVER_ERROR_TRY_AGAIN_LATER("internal server  please retry later", HttpServletResponse.SC_INTERNAL_SERVER_ERROR),
     INVALID_FOLDER_PATH_STRUCTURE("Invalid folder path structure.", HttpServletResponse.SC_BAD_REQUEST),
-    INVALID_LINK_RESOLVER("Links to folders must have LinkResolver.FIXED.", HttpServletResponse.SC_BAD_REQUEST),
     INVALID_ID_TYPE("Invalid id type in request object", HttpServletResponse.SC_BAD_REQUEST),
+    INVALID_LINK_RESOLVER("Links to folders must have LinkResolver.FIXED.", HttpServletResponse.SC_BAD_REQUEST),
     INVALID_REQUEST("request is invalid check parameters", HttpServletResponse.SC_BAD_REQUEST),
+    INVALID_UPDATE("You are trying to update an object in a way that is not implemented yet, for example changing the type of a folder's metaset",
+            HttpServletResponse.SC_BAD_REQUEST),
     LANGUAGE_NOT_FOUND("language was not found in the database", HttpServletResponse.SC_NOT_FOUND),
     LIFECYCLE_NOT_FOUND("Lifecycle was not found in the database", HttpServletResponse.SC_NOT_FOUND),
     LIFECYCLE_STATE_CHANGE_FAILED("Lifecycle state change failed.", HttpServletResponse.SC_BAD_REQUEST),
@@ -56,34 +58,30 @@ public enum ErrorCode {
     METASET_TYPE_NOT_FOUND("metaset type was not found", HttpServletResponse.SC_NOT_FOUND),
     METASET_UNIQUE_CHECK_FAILED("Cannot create multiple unique metasets", HttpServletResponse.SC_BAD_REQUEST),
     MISSING_FILE_PARAMETER("parameter 'file' for uploaded content is missing", HttpServletResponse.SC_BAD_REQUEST),
+    MISSING_REQUEST_PAYLOAD("request is missing request data", HttpServletResponse.SC_BAD_REQUEST),
     MISSING_SET_ACL_PERMISSION("missing set_acl permission", HttpServletResponse.SC_UNAUTHORIZED),
     MISSING_WRITE_OBJECT_SYS_METADATA("missing write_object_sys_metadata", HttpServletResponse.SC_UNAUTHORIZED),
     NAME_PARAM_IS_INVALID("name param is invalid", HttpServletResponse.SC_BAD_REQUEST),
-    /**
-     * Only to be used as default value if no other error is specified (see: CinnamonClientException with causes != known errors)
-     */
-    UNKNOWN_ERROR_TYPE("undefined error", HttpServletResponse.SC_INTERNAL_SERVER_ERROR),
-    MISSING_REQUEST_PAYLOAD("request is missing request data", HttpServletResponse.SC_BAD_REQUEST),
+    NOT_MULTIPART_UPLOAD("the request must have the contentType multipart/form-data", HttpServletResponse.SC_BAD_REQUEST),
     NO_BROWSE_PERMISSION("missing browse permission", HttpServletResponse.SC_UNAUTHORIZED),
     NO_CONTENT_TYPE_IN_HEADER("missing content-type field in header", HttpServletResponse.SC_BAD_REQUEST),
     NO_CREATE_PERMISSION("missing permission to create an object inside a folder", HttpServletResponse.SC_UNAUTHORIZED),
-    NO_DELETE_PERMISSION("missing permission to delete this item", HttpServletResponse.SC_UNAUTHORIZED),
     NO_DELETE_LINK_PERMISSION("missing permission to delete this link", HttpServletResponse.SC_UNAUTHORIZED),
+    NO_DELETE_PERMISSION("missing permission to delete this item", HttpServletResponse.SC_UNAUTHORIZED),
     NO_EDIT_FOLDER_PERMISSION("missing permission to edit the folder", HttpServletResponse.SC_UNAUTHORIZED),
     NO_LOCK_PERMISSION("missing permission to (un)lock this object", HttpServletResponse.SC_UNAUTHORIZED),
     NO_MOVE_PERMISSION("missing permission to move object", HttpServletResponse.SC_UNAUTHORIZED),
-    NO_READ_PERMISSION("missing read content permission for current object", HttpServletResponse.SC_UNAUTHORIZED),
-    NO_RELATION_CHILD_ADD_PERMISSION("missing relation.child.add permission", HttpServletResponse.SC_UNAUTHORIZED),
-    NO_RELATION_PARENT_ADD_PERMISSION("missing relation.parent.add permission", HttpServletResponse.SC_UNAUTHORIZED),
-    NO_RELATION_CHILD_REMOVE_PERMISSION("missing relation.child.remove permission", HttpServletResponse.SC_UNAUTHORIZED),
-    NO_RELATION_PARENT_REMOVE_PERMISSION("missing relation.parent.remove permission", HttpServletResponse.SC_UNAUTHORIZED),
     NO_READ_CUSTOM_METADATA_PERMISSION("missing permission to read custom metadata", HttpServletResponse.SC_UNAUTHORIZED),
     NO_READ_OBJECT_SYS_METADATA_PERMISSION("missing permission to read system metadata", HttpServletResponse.SC_UNAUTHORIZED),
+    NO_READ_PERMISSION("missing read content permission for current object", HttpServletResponse.SC_UNAUTHORIZED),
+    NO_RELATION_CHILD_ADD_PERMISSION("missing relation.child.add permission", HttpServletResponse.SC_UNAUTHORIZED),
+    NO_RELATION_CHILD_REMOVE_PERMISSION("missing relation.child.remove permission", HttpServletResponse.SC_UNAUTHORIZED),
+    NO_RELATION_PARENT_ADD_PERMISSION("missing relation.parent.add permission", HttpServletResponse.SC_UNAUTHORIZED),
+    NO_RELATION_PARENT_REMOVE_PERMISSION("missing relation.parent.remove permission", HttpServletResponse.SC_UNAUTHORIZED),
     NO_VERSION_PERMISSION("missing permission to version target object", HttpServletResponse.SC_UNAUTHORIZED),
     NO_WRITE_CUSTOM_METADATA_PERMISSION("missing permission to write custom metadata", HttpServletResponse.SC_UNAUTHORIZED),
     NO_WRITE_PERMISSION("missing write content permission for current object", HttpServletResponse.SC_UNAUTHORIZED),
     NO_WRITE_SYS_METADATA_PERMISSION("Required permission to write system metadata was not found.", HttpServletResponse.SC_UNAUTHORIZED),
-    NOT_MULTIPART_UPLOAD("the request must have the contentType multipart/form-data", HttpServletResponse.SC_BAD_REQUEST),
     OBJECT_HAS_DESCENDANTS("this object has descendants", HttpServletResponse.SC_BAD_REQUEST),
     OBJECT_HAS_NO_CONTENT("this object has no content", HttpServletResponse.SC_NOT_FOUND),
     OBJECT_HAS_PROTECTED_RELATIONS("this object has protected relations", HttpServletResponse.SC_UNAUTHORIZED),
@@ -92,29 +90,32 @@ public enum ErrorCode {
     OBJECT_MUST_BE_LOCKED_BY_USER("object must be locked by current user before setContent is allowed", HttpServletResponse.SC_FORBIDDEN),
     OBJECT_NOT_FOUND("object not found", HttpServletResponse.SC_NOT_FOUND),
     OBJECT_NOT_FOUND_OR_GONE("object not found (perhaps already deleted)", HttpServletResponse.SC_NOT_FOUND),
-    OBJECT_WITH_FILE_NEEDS_FORMAT("object with file data must have valid format", HttpServletResponse.SC_BAD_REQUEST),
     OBJECT_TYPE_NOT_FOUND("object type was not found", HttpServletResponse.SC_NOT_FOUND),
+    OBJECT_WITH_FILE_NEEDS_FORMAT("object with file data must have valid format", HttpServletResponse.SC_BAD_REQUEST),
     OWNER_NOT_FOUND("owner not found", HttpServletResponse.SC_BAD_REQUEST),
-    PASSWORD_TOO_SHORT("password is too short - default minimum length is 8", HttpServletResponse.SC_BAD_REQUEST),
     PARENT_FOLDER_NOT_FOUND("parent folder not found", HttpServletResponse.SC_BAD_REQUEST),
+    PASSWORD_TOO_SHORT("password is too short - default minimum length is 8", HttpServletResponse.SC_BAD_REQUEST),
     PERMISSIONS_NOT_FOUND("no permissions found for user and acl", HttpServletResponse.SC_BAD_REQUEST),
     RELATION_TYPE_NOT_FOUND("RelationType was not found.", HttpServletResponse.SC_NOT_FOUND),
-    RESOURCE_NOT_FOUND("No code path maps to this URL path", HttpServletResponse.SC_NOT_FOUND),
     REQUIRES_SUPERUSER_STATUS("action requires superuser status", HttpServletResponse.SC_FORBIDDEN),
+    RESOURCE_NOT_FOUND("No code path maps to this URL path", HttpServletResponse.SC_NOT_FOUND),
     SESSION_NOT_FOUND("session not found", HttpServletResponse.SC_NOT_FOUND),
     STATIC__NO_PATH_TRAVERSAL("no path traversal allowed", HttpServletResponse.SC_FORBIDDEN),
     UNAUTHORIZED("access not allowed", HttpServletResponse.SC_UNAUTHORIZED),
-    USER_INFO_REQUEST_WITHOUT_NAME_OR_ID("userInfoRequest missing id or name", HttpServletResponse.SC_BAD_REQUEST),
+    /**
+     * Only to be used as default value if no other error is specified (see: CinnamonClientException with causes != known errors)
+     */
+    UNKNOWN_ERROR_TYPE("undefined error", HttpServletResponse.SC_INTERNAL_SERVER_ERROR),
     USER_ACCOUNT_NOT_FOUND("userInfoRequest invalid id or name", HttpServletResponse.SC_NOT_FOUND),
     USER_ACCOUNT_SET_PASSWORD_NOT_ALLOWED("""
-    You can only set a password on a user with original Cinnamon login,
-     Cinnamon cannot change your password on an external login provider like LDAP.""", HttpServletResponse.SC_BAD_REQUEST)
-    ;
+            You can only set a password on a user with original Cinnamon login,
+             Cinnamon cannot change your password on an external login provider like LDAP.""", HttpServletResponse.SC_BAD_REQUEST),
+    USER_INFO_REQUEST_WITHOUT_NAME_OR_ID("userInfoRequest missing id or name", HttpServletResponse.SC_BAD_REQUEST);
 
-    private static final Map<String, ErrorCode> codeMapping = new ConcurrentHashMap<>();
-    final String description;
-    final int                              httpResponseCode;
-    final Supplier<FailedRequestException> exceptionSupplier;
+    private static final Map<String, ErrorCode>           codeMapping = new ConcurrentHashMap<>();
+    final                String                           description;
+    final                int                              httpResponseCode;
+    final                Supplier<FailedRequestException> exceptionSupplier;
 
     ErrorCode(String description, int httpResponseCode) {
         this.description = description;

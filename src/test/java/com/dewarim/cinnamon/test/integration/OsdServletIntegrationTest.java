@@ -54,6 +54,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -73,13 +74,13 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     private final static Logger log = LogManager.getLogger(OsdServletIntegrationTest.class);
 
-    private static final Long CREATE_ACL_ID                     = 8L;
+    private static final Long CREATE_ACL_ID          = 8L;
     /**
      * Non-Admin user id
      */
-    private static final Long STANDARD_USER_ID                  = 2L;
-    private static final Long PLAINTEXT_FORMAT_ID               = 2L;
-    private static final Long DEFAULT_OBJECT_TYPE_ID            = 1L;
+    private static final Long STANDARD_USER_ID       = 2L;
+    private static final Long PLAINTEXT_FORMAT_ID    = 2L;
+    private static final Long DEFAULT_OBJECT_TYPE_ID = 1L;
 
     /**
      * This folder's ACL allows object creation.
@@ -2004,6 +2005,77 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         HttpResponse osdResponse = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
         assertResponseOkay(osdResponse);
         return unwrapOsds(osdResponse, 1).get(0);
+    }
+
+    @Test
+    public void fetchLargeCountOfOsds() throws IOException {
+        List<Long> ids = new ArrayList<>(2000);
+        for (long i = 0; i < 2000; i++) {
+            ids.add(i);
+        }
+        // exercise the batchMode of CrudDao.partitionLongList()
+        client.getOsds(ids, false, false);
+        // TODO: maybe create PerformanceIntegrationTest and actually measure how long it takes to do CRUD on a 1000+ objects
+    }
+
+    // TODO: maybe move OsdMeta & FolderMeta into a separate test and remove redundant tests?
+    // on the other hand, below the MetaService used by both, there are separate database tables
+    // for osd_meta and folder_meta, so it's a good idea to verify both work.
+    @Test
+    public void updateOsdMetaHappyPath() throws IOException {
+        var toh = new TestObjectHolder(client, userId)
+                .createOsd()
+                .createOsdMeta("some meta content");
+        Meta meta = toh.meta;
+        meta.setContent("updated meta");
+        client.updateOsdMeta(meta);
+        Meta updatedMeta = client.getOsdMetas(toh.osd.getId()).get(0);
+        assertEquals(meta, updatedMeta);
+    }
+
+    @Test
+    public void updateOsdMetaNoWritePermission() throws IOException {
+        var toh = prepareAclGroupWithPermissions(List.of(BROWSE))
+                .createOsd()
+                .createOsdMeta("some meta content");
+        Meta meta = toh.meta;
+        meta.setContent("updated meta");
+        assertClientError(() -> client.updateOsdMeta(meta), NO_WRITE_CUSTOM_METADATA_PERMISSION);
+    }
+
+    @Test
+    public void updateOsdMetaUpdateOsdIdFail() throws IOException {
+        var toh = new TestObjectHolder(client, userId)
+                .createOsd()
+                .createOsdMeta("some meta content");
+        Meta meta = toh.meta;
+        meta.setObjectId(1L);
+        assertClientError(() -> client.updateOsdMeta(meta), INVALID_UPDATE);
+    }
+
+    @Test
+    public void updateOsdMetaUpdateTypeFail() throws IOException {
+        var toh = new TestObjectHolder(client, userId)
+                .createOsd()
+                .createOsdMeta("some meta content");
+        Meta meta = toh.meta;
+        meta.setTypeId(Long.MAX_VALUE);
+        assertClientError(() -> client.updateOsdMeta(meta), INVALID_UPDATE);
+    }
+
+    @Test
+    public void updateOsdMetaUpdateMetaNotFound() throws IOException {
+        var toh = new TestObjectHolder(client, userId)
+                .createOsd()
+                .createOsdMeta("some meta content");
+        Meta meta = toh.meta;
+        meta.setId(Long.MAX_VALUE);
+        assertClientError(() -> client.updateOsdMeta(meta), METASET_NOT_FOUND);
+    }
+
+    @Test
+    public void updateOsdMetaInvalidRequest() {
+        assertClientError(() -> client.updateOsdMeta(new Meta()), INVALID_REQUEST);
     }
 
 }

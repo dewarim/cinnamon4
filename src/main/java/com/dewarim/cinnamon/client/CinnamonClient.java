@@ -31,6 +31,7 @@ import com.dewarim.cinnamon.model.request.IdListRequest;
 import com.dewarim.cinnamon.model.request.IdRequest;
 import com.dewarim.cinnamon.model.request.MetaRequest;
 import com.dewarim.cinnamon.model.request.SetSummaryRequest;
+import com.dewarim.cinnamon.model.request.UpdateMetaRequest;
 import com.dewarim.cinnamon.model.request.acl.AclInfoRequest;
 import com.dewarim.cinnamon.model.request.acl.CreateAclRequest;
 import com.dewarim.cinnamon.model.request.acl.DeleteAclRequest;
@@ -227,13 +228,6 @@ public class CinnamonClient {
     public CinnamonClient() {
     }
 
-    public CinnamonClient(CinnamonClient otherClient, String username, String password) {
-        this.port = otherClient.port;
-        this.host = otherClient.host;
-        this.protocol = otherClient.protocol;
-        this.username = username;
-        this.password = password;
-    }
 
     public CinnamonClient(int port, String host, String protocol, String username, String password) {
         this.port = port;
@@ -496,8 +490,8 @@ public class CinnamonClient {
     }
 
     public List<Folder> getFolderByIdWithAncestors(Long id, boolean includeSummary) throws IOException {
-        SingleFolderRequest request= new SingleFolderRequest(id,includeSummary);
-        var response = sendStandardRequest(UrlMapping.FOLDER__GET_FOLDER, request);
+        SingleFolderRequest request  = new SingleFolderRequest(id, includeSummary);
+        var                 response = sendStandardRequest(UrlMapping.FOLDER__GET_FOLDER, request);
         return folderUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
@@ -517,9 +511,10 @@ public class CinnamonClient {
         HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__CREATE_META, metaRequest);
         return metaUnwrapper.unwrap(response, 1);
     }
-    public List<Meta> createFolderMeta(Long folderId,String content, Long metaTypeId ) throws IOException {
+
+    public List<Meta> createFolderMeta(Long folderId, String content, Long metaTypeId) throws IOException {
         CreateMetaRequest metaRequest = new CreateMetaRequest(folderId, content, metaTypeId);
-        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__CREATE_META, metaRequest);
+        HttpResponse      response    = sendStandardRequest(UrlMapping.FOLDER__CREATE_META, metaRequest);
         return metaUnwrapper.unwrap(response, 1);
     }
 
@@ -536,6 +531,7 @@ public class CinnamonClient {
         HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__UPDATE, updateFolderRequest);
         verifyResponseIsOkay(response);
     }
+
     public void updateFolder(Folder folder) throws IOException {
         UpdateFolderRequest request = new UpdateFolderRequest(folder.getId(), folder.getParentId(), folder.getName(),
                 folder.getOwnerId(), folder.getTypeId(), folder.getAclId());
@@ -566,6 +562,7 @@ public class CinnamonClient {
         HttpResponse     response   = sendStandardRequest(UrlMapping.ACL__CREATE, aclRequest);
         return aclUnwrapper.unwrap(response, aclRequest.list().size());
     }
+
     public Acl createAcl(String name) throws IOException {
         CreateAclRequest aclRequest = new CreateAclRequest(List.of(new Acl(name)));
         HttpResponse     response   = sendStandardRequest(UrlMapping.ACL__CREATE, aclRequest);
@@ -1197,37 +1194,49 @@ public class CinnamonClient {
     public IndexInfoResponse getIndexInfo(boolean countDocuments) throws IOException {
         var          request  = new IndexInfoRequest(countDocuments);
         HttpResponse response = sendStandardRequest(INDEX__INFO, request);
-        return new SingletonUnwrapper<IndexInfoResponse>(IndexInfoResponse.class).unwrap(response);
+        return new SingletonUnwrapper<>(IndexInfoResponse.class).unwrap(response);
     }
 
     public ReindexResponse reindex(ReindexRequest request) throws IOException {
         HttpResponse response = sendStandardRequest(INDEX__REINDEX, request);
-        return new SingletonUnwrapper<ReindexResponse>(ReindexResponse.class).unwrap(response);
+        return new SingletonUnwrapper<>(ReindexResponse.class).unwrap(response);
     }
 
     public SearchIdsResponse search(String query, SearchType searchType) throws IOException {
         SearchIdsRequest request  = new SearchIdsRequest(searchType, query);
         HttpResponse     response = sendStandardRequest(SEARCH__IDS, request);
-        return new SingletonUnwrapper<SearchIdsResponse>(SearchIdsResponse.class).unwrap(response);
+        return new SingletonUnwrapper<>(SearchIdsResponse.class).unwrap(response);
     }
 
     public List<Folder> getFoldersByPath(String path, boolean includeSummary) throws IOException {
-        var request = new FolderPathRequest(path,includeSummary);
+        var          request  = new FolderPathRequest(path, includeSummary);
         HttpResponse response = sendStandardRequest(FOLDER__GET_FOLDER_BY_PATH, request);
-        return folderUnwrapper.unwrap(response,EXPECTED_SIZE_ANY);
+        return folderUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
     /**
      * Fetch folders by path without summary.
      */
     public List<Folder> getFoldersByPath(String path) throws IOException {
-        return getFoldersByPath(path,false);
+        return getFoldersByPath(path, false);
     }
 
-    public List<Folder> getSubFolders(Long parentFolderId, boolean includeSummary) throws IOException{
-        SingleFolderRequest request = new SingleFolderRequest(parentFolderId, includeSummary);
+    public List<Folder> getSubFolders(Long parentFolderId, boolean includeSummary) throws IOException {
+        SingleFolderRequest request  = new SingleFolderRequest(parentFolderId, includeSummary);
         HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__GET_SUBFOLDERS, request);
-        return folderUnwrapper.unwrap(response,EXPECTED_SIZE_ANY);
+        return folderUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
+    }
+
+    public void updateFolderMeta(Meta meta) throws IOException {
+        UpdateMetaRequest request  = new UpdateMetaRequest(List.of(meta));
+        HttpResponse      response = sendStandardRequest(FOLDER__UPDATE_META_CONTENT, request);
+        verifyResponseIsOkay(response);
+    }
+
+    public void updateOsdMeta(Meta meta) throws IOException {
+        UpdateMetaRequest request  = new UpdateMetaRequest(List.of(meta));
+        HttpResponse      response = sendStandardRequest(OSD__UPDATE_META_CONTENT, request);
+        verifyResponseIsOkay(response);
     }
 
     static class SingletonUnwrapper<S> {

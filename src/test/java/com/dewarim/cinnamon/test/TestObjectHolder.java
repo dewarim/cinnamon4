@@ -71,7 +71,7 @@ public class TestObjectHolder {
 
     public  List<Meta>  metas;
     public  String      summary = DEFAULT_SUMMARY;
-    private MetasetType metasetType;
+    public MetasetType metasetType;
 
     /**
      * Initialize a new TestObjectHolder with default values, using the given client
@@ -327,6 +327,15 @@ public class TestObjectHolder {
     }
     public TestObjectHolder setSummaryOnOsd(String foo) throws IOException {
         client.setSummary(osd.getId(), foo);
+        return this;
+    }
+
+    public TestObjectHolder createMetaSetType(boolean unique) throws IOException{
+        createMetaSetType(createRandomName(),unique);
+        return this;
+    }
+    public TestObjectHolder createMetaSetType(String name, boolean unique) throws IOException{
+        metasetType = client.createMetasetType(name, unique);
         return this;
     }
 }

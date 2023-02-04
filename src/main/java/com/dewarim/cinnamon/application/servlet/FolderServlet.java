@@ -31,6 +31,7 @@ import com.dewarim.cinnamon.model.request.DeleteMetaRequest;
 import com.dewarim.cinnamon.model.request.IdListRequest;
 import com.dewarim.cinnamon.model.request.MetaRequest;
 import com.dewarim.cinnamon.model.request.SetSummaryRequest;
+import com.dewarim.cinnamon.model.request.UpdateMetaRequest;
 import com.dewarim.cinnamon.model.request.folder.CreateFolderRequest;
 import com.dewarim.cinnamon.model.request.folder.DeleteFolderRequest;
 import com.dewarim.cinnamon.model.request.folder.FolderPathRequest;
@@ -40,6 +41,7 @@ import com.dewarim.cinnamon.model.request.folder.UpdateFolderRequest;
 import com.dewarim.cinnamon.model.request.osd.VersionPredicate;
 import com.dewarim.cinnamon.model.response.DeleteResponse;
 import com.dewarim.cinnamon.model.response.FolderWrapper;
+import com.dewarim.cinnamon.model.response.GenericResponse;
 import com.dewarim.cinnamon.model.response.Summary;
 import com.dewarim.cinnamon.model.response.SummaryWrapper;
 import com.dewarim.cinnamon.security.authorization.AccessFilter;
@@ -48,6 +50,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -59,6 +63,7 @@ import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
 
 @WebServlet(name = "Folder", urlPatterns = "/")
 public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> {
+    private static final Logger log = LogManager.getLogger(FolderServlet.class);
 
     private final ObjectMapper         xmlMapper            = XML_MAPPER;
     private final AuthorizationService authorizationService = new AuthorizationService();
@@ -86,8 +91,17 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
             case FOLDER__SET_SUMMARY -> setSummary(request, cinnamonResponse, user, folderDao);
             case FOLDER__GET_SUMMARIES -> getSummaries(request, cinnamonResponse, user, folderDao);
             case FOLDER__UPDATE -> updateFolder(request, cinnamonResponse, user, folderDao);
+            case FOLDER__UPDATE_META_CONTENT -> updateMetaContent(request, cinnamonResponse, user, folderDao);
             default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
+    }
+
+    private void updateMetaContent(HttpServletRequest request, CinnamonResponse cinnamonResponse, UserAccount user, FolderDao folderDao) throws IOException {
+        UpdateMetaRequest metaRequest = (UpdateMetaRequest) getMapper().readValue(request.getInputStream(), UpdateMetaRequest.class)
+                .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
+        FolderMetaDao folderMetaDao = new FolderMetaDao();
+        new MetaService<>().updateMeta(folderMetaDao, metaRequest.getMetas(), folderDao, user);
+        cinnamonResponse.setResponse(new GenericResponse(true));
     }
 
     private void deleteAllMetas(HttpServletRequest request, CinnamonResponse cinnamonResponse, UserAccount user, FolderDao folderDao) throws IOException {
@@ -324,8 +338,8 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
         FolderMetaDao folderMetaDao = new FolderMetaDao();
-        List<Meta> metas = folderMetaDao.getObjectsById(metaRequest.getIds());
-        if(metas.size() != metaRequest.getIds().size() && !metaRequest.isIgnoreNotFound()){
+        List<Meta>    metas         = folderMetaDao.getObjectsById(metaRequest.getIds());
+        if (metas.size() != metaRequest.getIds().size() && !metaRequest.isIgnoreNotFound()) {
             throw ErrorCode.METASET_NOT_FOUND.exception();
         }
         new MetaService<>().deleteMetas(folderMetaDao, metas, folderDao, user);

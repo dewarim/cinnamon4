@@ -99,4 +99,10 @@
         FROM osd_meta
     </select>
 
+    <update id="update" parameterType="com.dewarim.cinnamon.model.Meta">
+        UPDATE osd_meta
+        SET content = #{content}
+        WHERE id = #{id}
+    </update>
+
 </mapper>

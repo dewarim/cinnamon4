@@ -2,6 +2,7 @@ package com.dewarim.cinnamon.application.service;
 
 import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.ErrorCode;
+import com.dewarim.cinnamon.FailedRequestException;
 import com.dewarim.cinnamon.api.Ownable;
 import com.dewarim.cinnamon.dao.CrudDao;
 import com.dewarim.cinnamon.dao.MetaDao;
@@ -10,14 +11,21 @@ import com.dewarim.cinnamon.model.Meta;
 import com.dewarim.cinnamon.model.MetasetType;
 import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.security.authorization.AuthorizationService;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static com.dewarim.cinnamon.ErrorCode.OBJECT_NOT_FOUND;
+
 public class MetaService<T extends CrudDao<Meta> & MetaDao, O extends CrudDao<? extends Ownable>> {
+    private static final Logger log = LogManager.getLogger(MetaService.class);
 
     private final AuthorizationService authorizationService = new AuthorizationService();
 
@@ -75,4 +83,32 @@ public class MetaService<T extends CrudDao<Meta> & MetaDao, O extends CrudDao<? 
         return dao.create(metasToCreate);
     }
 
+    public void updateMeta(T dao, List<Meta> metas, O ownableDao, UserAccount user) {
+
+        List<Meta> updates = new ArrayList<>();
+        for (Meta metaUpdate : metas) {
+            Meta meta = dao.getMetaById(metaUpdate.getId())
+                    .orElseThrow(ErrorCode.METASET_NOT_FOUND.getException());
+            Ownable ownable = ownableDao.getObjectById(meta.getObjectId())
+                    .orElseThrow(OBJECT_NOT_FOUND.getException());
+            if (!ownable.getId().equals(metaUpdate.getObjectId()) ||
+                    !meta.getTypeId().equals(metaUpdate.getTypeId())) {
+                // changing the type or moving a metaset to another owning object has no use case yet,
+                // so let's not do that until we require it.
+                throw ErrorCode.INVALID_UPDATE.exception();
+            }
+            throwUnlessCustomMetaIsWritable(ownable, user);
+            meta.setContent(metaUpdate.getContent());
+            updates.add(metaUpdate);
+        }
+
+        try{
+            dao.update(updates);
+        }
+        catch (SQLException e){
+            log.warn(String.format("DB update failed: %s with status %s and error code %d",
+                    e.getMessage(), e.getSQLState(), e.getErrorCode()),e);
+            throw new FailedRequestException(ErrorCode.DB_UPDATE_FAILED, e);
+        }
+    }
 }

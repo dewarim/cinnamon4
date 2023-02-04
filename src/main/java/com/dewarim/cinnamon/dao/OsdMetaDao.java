@@ -9,6 +9,7 @@ import org.apache.ibatis.session.SqlSession;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class OsdMetaDao implements CrudDao<Meta>, MetaDao{
 
@@ -16,6 +17,12 @@ public class OsdMetaDao implements CrudDao<Meta>, MetaDao{
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
         return sqlSession.selectList("com.dewarim.cinnamon.model.OsdMeta.listByOsd", id);
     }
+
+    public Optional<Meta> getMetaById(Long metaId) {
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        return Optional.ofNullable(sqlSession.selectOne("com.dewarim.cinnamon.model.OsdMeta.getMetasetById", metaId));
+    }
+
     @Override
     public List<Meta> listMetaByObjectIds(List<Long> ids) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();

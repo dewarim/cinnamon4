@@ -6,6 +6,7 @@ import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.client.CinnamonClientException;
 import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.Folder;
+import com.dewarim.cinnamon.model.FolderType;
 import com.dewarim.cinnamon.model.Meta;
 import com.dewarim.cinnamon.model.MetasetType;
 import com.dewarim.cinnamon.model.ObjectSystemData;
@@ -21,7 +22,6 @@ import com.dewarim.cinnamon.model.request.folder.FolderPathRequest;
 import com.dewarim.cinnamon.model.request.folder.FolderRequest;
 import com.dewarim.cinnamon.model.request.folder.SingleFolderRequest;
 import com.dewarim.cinnamon.model.request.folder.UpdateFolderRequest;
-import com.dewarim.cinnamon.model.response.FolderWrapper;
 import com.dewarim.cinnamon.model.response.Summary;
 import com.dewarim.cinnamon.model.response.SummaryWrapper;
 import com.dewarim.cinnamon.test.TestObjectHolder;
@@ -45,7 +45,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void setSummaryHappyPath() throws IOException {
-        var folderId = new TestObjectHolder(client,userId).createFolder().folder.getId();
+        var               folderId       = new TestObjectHolder(client, userId).createFolder().folder.getId();
         SetSummaryRequest summaryRequest = new SetSummaryRequest(folderId, "a summary");
         HttpResponse      response       = sendStandardRequest(UrlMapping.FOLDER__SET_SUMMARY, summaryRequest);
         assertResponseOkay(response);
@@ -530,20 +530,16 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createFolderHappyPathInheriting() throws IOException {
-        CreateFolderRequest request  = new CreateFolderRequest("create happy folder inherit", createFolderId, "<sum/>", null, null, null);
-        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__CREATE, request);
-        List<Folder>        folders  = unwrapFolders(response, 1);
-        Folder              folder   = folders.get(0);
+        Folder folder = client.createFolder(createFolderId, "create happy folder inherit", null, null, null);
         assertEquals("create happy folder inherit", folder.getName());
         assertThat("new folder must have id", folder.getId() > 0);
     }
 
     @Test
     public void createFolderHappyPath() throws IOException {
-        CreateFolderRequest request  = new CreateFolderRequest("create happy folder", createFolderId, "<sum/>", 2L, 2L, 2L);
-        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__CREATE, request);
-        List<Folder>        folders  = unwrapFolders(response, 1);
-        Folder              folder   = folders.get(0);
+        FolderType myArchiveType = adminClient.createFolderTypes(List.of("my_archive_type")).get(0);
+        Folder folder = client.createFolder(createFolderId, "create happy folder", userId, getReviewerAcl().getId(),
+                myArchiveType.getId());
         assertEquals("create happy folder", folder.getName());
         assertThat("new folder must have id", folder.getId() > 0);
     }
@@ -737,14 +733,61 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         client.deleteFolder(toh.folder.getId(), false, true);
     }
 
-    private List<Folder> unwrapFolders(HttpResponse response, Integer expectedSize) throws IOException {
-        assertResponseOkay(response);
-        List<Folder> folders = mapper.readValue(response.getEntity().getContent(), FolderWrapper.class).getFolders();
-        if (expectedSize != null) {
-            assertNotNull(folders);
-            assertFalse(folders.isEmpty());
-            assertThat(folders.size(), equalTo(expectedSize));
-        }
-        return folders;
+    @Test
+    public void updateFolderMetaHappyPath() throws IOException {
+        var toh = new TestObjectHolder(client, userId)
+                .createFolder()
+                .createFolderMeta("some meta content");
+        Meta meta = toh.meta;
+        meta.setContent("updated meta");
+        client.updateFolderMeta(meta);
+        Meta updatedMeta = client.getFolderMetas(toh.folder.getId()).get(0);
+        assertEquals(meta, updatedMeta);
     }
+
+    @Test
+    public void updateFolderMetaNoWritePermission() throws IOException {
+        var toh = prepareAclGroupWithPermissions(List.of(BROWSE))
+                .createFolder()
+                .createFolderMeta("some meta content");
+        Meta meta = toh.meta;
+        meta.setContent("updated meta");
+        assertClientError(() -> client.updateFolderMeta(meta), NO_WRITE_CUSTOM_METADATA_PERMISSION);
+    }
+
+    @Test
+    public void updateFolderMetaUpdateFolderIdFail() throws IOException {
+        var toh = new TestObjectHolder(client, userId)
+                .createFolder()
+                .createFolderMeta("some meta content");
+        Meta meta = toh.meta;
+        meta.setObjectId(1L);
+        assertClientError(() -> client.updateFolderMeta(meta), INVALID_UPDATE);
+    }
+
+    @Test
+    public void updateFolderMetaUpdateTypeFail() throws IOException {
+        var toh = new TestObjectHolder(client, userId)
+                .createFolder()
+                .createFolderMeta("some meta content");
+        Meta meta = toh.meta;
+        meta.setTypeId(Long.MAX_VALUE);
+        assertClientError(() -> client.updateFolderMeta(meta), INVALID_UPDATE);
+    }
+
+    @Test
+    public void updateFolderMetaUpdateMetaNotFound() throws IOException {
+        var toh = new TestObjectHolder(client, userId)
+                .createFolder()
+                .createFolderMeta("some meta content");
+        Meta meta = toh.meta;
+        meta.setId(Long.MAX_VALUE);
+        assertClientError(() -> client.updateFolderMeta(meta), METASET_NOT_FOUND);
+    }
+
+    @Test
+    public void updateFolderMetaInvalidRequest() {
+        assertClientError(() -> client.updateFolderMeta(new Meta()), INVALID_REQUEST);
+    }
+
 }

@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -29,8 +30,7 @@ public interface CrudDao<T extends Identifiable> {
             String sqlAction = getMapperNamespace(INSERT);
             try {
                 sqlSession.insert(sqlAction, item);
-            }
-            catch (PersistenceException e){
+            } catch (PersistenceException e) {
                 throw new FailedRequestException(ErrorCode.DB_INSERT_FAILED, e);
             }
             createdItems.add(item);
@@ -39,7 +39,7 @@ public interface CrudDao<T extends Identifiable> {
     }
 
     default int delete(List<Long> ids) {
-        if(ids.isEmpty()){
+        if (ids.isEmpty()) {
             // upstream code may filter the list of ids to 0.
             return 0;
         }
@@ -49,8 +49,7 @@ public interface CrudDao<T extends Identifiable> {
         partitions.forEach(partition -> {
             try {
                 deleteCount.getAndAdd(sqlSession.delete(getMapperNamespace(DELETE), partition));
-            }
-            catch (PersistenceException e){
+            } catch (PersistenceException e) {
                 throw new FailedRequestException(ErrorCode.DB_DELETE_FAILED, e);
             }
         });
@@ -66,8 +65,22 @@ public interface CrudDao<T extends Identifiable> {
         List<List<Long>> partitions = partitionLongList(ids);
         SqlSession       sqlSession = getSqlSession();
         List<T>          results    = new ArrayList<>(ids.size());
-        partitions.forEach(partition -> results.addAll(sqlSession.selectList(getMapperNamespace(GET_ALL_BY_ID), partition)));
+        partitions.forEach(partition -> {
+            if (!partition.isEmpty()) {
+                results.addAll(sqlSession.selectList(getMapperNamespace(GET_ALL_BY_ID), partition));
+            }
+        });
         return results;
+    }
+
+    default Optional<T> getObjectById(Long id) {
+        List<T> items = getObjectsById(List.of(id));
+        if (items.size() == 0) {
+            return Optional.empty();
+        } else {
+            // since ids are unique primary keys, we do not have to check for size() > 1.
+            return Optional.of(items.get(0));
+        }
     }
 
     default List<List<T>> partitionList(List<T> items) {
@@ -100,6 +113,9 @@ public interface CrudDao<T extends Identifiable> {
     }
 
     static List<List<Long>> partitionLongList(List<Long> ids) {
+        if (ids.size() < BATCH_SIZE) {
+            return List.of(ids);
+        }
         List<List<Long>> partitions  = new ArrayList<>(ids.size() / BATCH_SIZE);
         int              requestSize = ids.size();
         int              rowCount    = 0;
@@ -135,8 +151,7 @@ public interface CrudDao<T extends Identifiable> {
                         throw new FailedRequestException(ErrorCode.DB_UPDATE_FAILED, "update failed on item " + item.getId());
                     }
                 }
-            }
-            catch (PersistenceException e){
+            } catch (PersistenceException e) {
                 throw new FailedRequestException(ErrorCode.DB_UPDATE_FAILED, e);
             }
             updatedItems.add(item);
@@ -147,7 +162,7 @@ public interface CrudDao<T extends Identifiable> {
     /**
      * Check if all objects from a list of ids actually exist.
      */
-    default boolean verifyAllObjectsFromSetExist(List<Long> ids){
+    default boolean verifyAllObjectsFromSetExist(List<Long> ids) {
         Set<Long> idSet = new HashSet<>(ids);
         return getObjectsById(ids).size() == idSet.size();
     }
@@ -160,7 +175,7 @@ public interface CrudDao<T extends Identifiable> {
         return CinnamonServer.config.getServerConfig().isIgnoreNopUpdates();
     }
 
-    default SqlSession getSqlSession(){
+    default SqlSession getSqlSession() {
         return ThreadLocalSqlSession.getSqlSession();
     }
 }

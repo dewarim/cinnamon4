@@ -46,6 +46,7 @@ import com.dewarim.cinnamon.model.request.IdListRequest;
 import com.dewarim.cinnamon.model.request.IdRequest;
 import com.dewarim.cinnamon.model.request.MetaRequest;
 import com.dewarim.cinnamon.model.request.SetSummaryRequest;
+import com.dewarim.cinnamon.model.request.UpdateMetaRequest;
 import com.dewarim.cinnamon.model.request.osd.CopyOsdRequest;
 import com.dewarim.cinnamon.model.request.osd.CreateOsdRequest;
 import com.dewarim.cinnamon.model.request.osd.DeleteOsdRequest;
@@ -55,6 +56,7 @@ import com.dewarim.cinnamon.model.request.osd.OsdRequest;
 import com.dewarim.cinnamon.model.request.osd.SetContentRequest;
 import com.dewarim.cinnamon.model.request.osd.UpdateOsdRequest;
 import com.dewarim.cinnamon.model.response.DeleteResponse;
+import com.dewarim.cinnamon.model.response.GenericResponse;
 import com.dewarim.cinnamon.model.response.OsdWrapper;
 import com.dewarim.cinnamon.model.response.RelationWrapper;
 import com.dewarim.cinnamon.model.response.Summary;
@@ -135,9 +137,18 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
             case OSD__SET_SUMMARY -> setSummary(request, cinnamonResponse, user, osdDao);
             case OSD__UNLOCK -> unlock(request, cinnamonResponse, user, osdDao);
             case OSD__UPDATE -> update(request, cinnamonResponse, user, osdDao);
+            case OSD__UPDATE_META_CONTENT -> updateMetaContent(request, cinnamonResponse, user, osdDao);
             case OSD__VERSION -> newVersion(request, cinnamonResponse, user, osdDao);
             default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
+    }
+
+    private void updateMetaContent(HttpServletRequest request, CinnamonResponse cinnamonResponse, UserAccount user, OsdDao osdDao) throws IOException {
+        UpdateMetaRequest metaRequest = (UpdateMetaRequest) getMapper().readValue(request.getInputStream(), UpdateMetaRequest.class)
+                .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
+        OsdMetaDao osdMetaDao = new OsdMetaDao();
+        new MetaService<>().updateMeta(osdMetaDao, metaRequest.getMetas(), osdDao, user);
+        cinnamonResponse.setResponse(new GenericResponse(true));
     }
 
     private void deleteAllMetas(HttpServletRequest request, CinnamonResponse cinnamonResponse, UserAccount user, OsdDao osdDao) throws IOException {
@@ -145,7 +156,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
         OsdMetaDao metaDao = new OsdMetaDao();
-        List<Meta> metas = metaDao.listMetaByObjectIds(metaRequest.getIds());
+        List<Meta> metas   = metaDao.listMetaByObjectIds(metaRequest.getIds());
         new MetaService<>().deleteMetas(metaDao, metas, osdDao, user);
         cinnamonResponse.setWrapper(new DeleteResponse(true));
     }
@@ -410,8 +421,8 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
         OsdMetaDao osdMetaDao = new OsdMetaDao();
-        List<Meta> metas = osdMetaDao.getObjectsById(metaRequest.getIds());
-        if(metas.size() != metaRequest.getIds().size() && !metaRequest.isIgnoreNotFound()){
+        List<Meta> metas      = osdMetaDao.getObjectsById(metaRequest.getIds());
+        if (metas.size() != metaRequest.getIds().size() && !metaRequest.isIgnoreNotFound()) {
             throw ErrorCode.METASET_NOT_FOUND.exception();
         }
         new MetaService<>().deleteMetas(osdMetaDao, metas, osdDao, user);
@@ -765,9 +776,9 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         Part contentRequest = request.getPart("createNewVersionRequest");
         CreateNewVersionRequest versionRequest = xmlMapper.readValue(contentRequest.getInputStream(), CreateNewVersionRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
-        ObjectSystemData preOsd = osdDao.getObjectById(versionRequest.getId()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
-        FolderDao folderDao = new FolderDao();
-        Folder folder = folderDao.getFolderById(preOsd.getParentId()).orElseThrow(FOLDER_NOT_FOUND::exception);
+        ObjectSystemData preOsd    = osdDao.getObjectById(versionRequest.getId()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
+        FolderDao        folderDao = new FolderDao();
+        Folder           folder    = folderDao.getFolderById(preOsd.getParentId()).orElseThrow(FOLDER_NOT_FOUND::exception);
         authorizationService.throwUpUnlessUserOrOwnerHasPermission(folder, DefaultPermission.CREATE_OBJECT, user,
                 NO_CREATE_PERMISSION);
         authorizationService.throwUpUnlessUserOrOwnerHasPermission(preOsd, DefaultPermission.VERSION_OBJECT, user,

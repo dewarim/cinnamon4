@@ -746,8 +746,6 @@ insert into acl_group_permissions(id, acl_group_id, permission_id) values (nextv
 
 -- #1 default folder type
 insert into folder_types(id,name) values(nextval('seq_folder_type_id'),'_default_folder_type');
--- #2 archive folder type
-insert into folder_types(id,name) values(nextval('seq_folder_type_id'),'_archive_folder_type');
 
 -- #1 root folder
 insert into folders(id,name,acl_id,owner_id,parent_id,type_id)
