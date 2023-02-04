@@ -381,50 +381,6 @@ Retrieve the server version and build number.
 
 ---
 
-# /api/configEntry/get
-Retrieve a config entries by names or ids
-
-## Request
-
-```xml
-<configEntryRequest>
-  <names/>
-  <ids>
-    <id>123</id>
-  </ids>
-</configEntryRequest>
-
-```
-```xml
-<configEntryRequest>
-  <names>
-    <name>default-ui-settings</name>
-  </names>
-  <ids/>
-</configEntryRequest>
-
-```
-
-
-## Response
-
-```xml
-<cinnamon>
-  <configEntries>
-    <configEntry>
-      <id>1</id>
-      <name>default-ui-settings</name>
-      <config>&lt;xml>&lt;show-logo>true&lt;/show-logo>&lt;/xml></config>
-      <publicVisibility>true</publicVisibility>
-    </configEntry>
-  </configEntries>
-</cinnamon>
-
-```
-
-
----
-
 # /api/configEntry/create
 Create a new config entry
 
@@ -454,6 +410,76 @@ Create a new config entry
     </configEntry>
   </configEntries>
 </createConfigEntryRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <configEntries>
+    <configEntry>
+      <id>1</id>
+      <name>default-ui-settings</name>
+      <config>&lt;xml>&lt;show-logo>true&lt;/show-logo>&lt;/xml></config>
+      <publicVisibility>true</publicVisibility>
+    </configEntry>
+  </configEntries>
+</cinnamon>
+
+```
+
+
+---
+
+# /api/configEntry/delete
+Delete a list of config entries
+
+## Request
+
+```xml
+<DeleteConfigEntryRequest>
+  <ignoreNotFound>false</ignoreNotFound>
+  <ids/>
+</DeleteConfigEntryRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <success>false</success>
+</cinnamon>
+
+```
+
+
+---
+
+# /api/configEntry/get
+Retrieve a config entries by names or ids
+
+## Request
+
+```xml
+<configEntryRequest>
+  <names/>
+  <ids>
+    <id>123</id>
+  </ids>
+</configEntryRequest>
+
+```
+```xml
+<configEntryRequest>
+  <names>
+    <name>default-ui-settings</name>
+  </names>
+  <ids/>
+</configEntryRequest>
 
 ```
 
@@ -554,32 +580,6 @@ Update a list of config entries
       <publicVisibility>true</publicVisibility>
     </configEntry>
   </configEntries>
-</cinnamon>
-
-```
-
-
----
-
-# /api/configEntry/delete
-Delete a list of config entries
-
-## Request
-
-```xml
-<DeleteConfigEntryRequest>
-  <ignoreNotFound>false</ignoreNotFound>
-  <ids/>
-</DeleteConfigEntryRequest>
-
-```
-
-
-## Response
-
-```xml
-<cinnamon>
-  <success>false</success>
 </cinnamon>
 
 ```
@@ -775,7 +775,7 @@ Create a new folder.
       <parentId>2</parentId>
       <typeId>2</typeId>
       <metadataChanged>false</metadataChanged>
-      <summary>&lt;summary /></summary>
+      <summary>&lt;summary/></summary>
       <hasSubfolders>false</hasSubfolders>
       <created>2022-08-10T01:21:00+0000</created>
     </folder>
@@ -867,20 +867,19 @@ Create a new folder.
 
 ---
 
-# /api/folder/deleteMeta
-
+# /api/folder/deleteAllMetas
+Delete all metasets linked to the given Folder ids. Parameter ignoreNotFound is not used.
 
 ## Request
 
 ```xml
-<deleteMetaRequest>
+<deleteAllMetasRequest>
   <ignoreNotFound>false</ignoreNotFound>
   <ids>
-    <ids>3</ids>
-    <ids>5</ids>
-    <ids>6</ids>
+    <ids>14</ids>
+    <ids>15</ids>
   </ids>
-</deleteMetaRequest>
+</deleteAllMetasRequest>
 
 ```
 
@@ -897,19 +896,29 @@ Create a new folder.
 
 ---
 
-# /api/folder/deleteAllMetas
-
+# /api/folder/deleteMeta
+Delete the folder metasets with the given meta ids.
 
 ## Request
 
 ```xml
-<deleteAllMetasRequest>
+<deleteMetaRequest>
   <ignoreNotFound>false</ignoreNotFound>
   <ids>
-    <ids>14</ids>
-    <ids>15</ids>
+    <ids>3</ids>
+    <ids>5</ids>
+    <ids>6</ids>
   </ids>
-</deleteAllMetasRequest>
+</deleteMetaRequest>
+
+```
+```xml
+<deleteMetaRequest>
+  <ignoreNotFound>false</ignoreNotFound>
+  <ids>
+    <ids>1</ids>
+  </ids>
+</deleteMetaRequest>
 
 ```
 
@@ -1167,15 +1176,22 @@ Add a summary to an object, for example a short description of this folder's con
 
 ---
 
-# /api/format/list
-
+# /api/folder/updateMetaContent
+Update the content of a given folder metaset
 
 ## Request
 
 ```xml
-<listFormatRequest>
-  <type>FULL</type>
-</listFormatRequest>
+<UpdateMetaRequest>
+  <metas>
+    <meta>
+      <id/>
+      <objectId>1</objectId>
+      <typeId>2</typeId>
+      <content>meta content update</content>
+    </meta>
+  </metas>
+</UpdateMetaRequest>
 
 ```
 
@@ -1183,9 +1199,10 @@ Add a summary to an object, for example a short description of this folder's con
 ## Response
 
 ```xml
-<cinnamon>
-  <formats/>
-</cinnamon>
+<genericResponse>
+  <message/>
+  <successful>false</successful>
+</genericResponse>
 
 ```
 
@@ -1201,31 +1218,6 @@ Add a summary to an object, for example a short description of this folder's con
 <createFormatRequest>
   <formats/>
 </createFormatRequest>
-
-```
-
-
-## Response
-
-```xml
-<cinnamon>
-  <formats/>
-</cinnamon>
-
-```
-
-
----
-
-# /api/format/update
-
-
-## Request
-
-```xml
-<updateFormatRequest>
-  <formats/>
-</updateFormatRequest>
 
 ```
 
@@ -1261,6 +1253,56 @@ Add a summary to an object, for example a short description of this folder's con
 ```xml
 <cinnamon>
   <success>false</success>
+</cinnamon>
+
+```
+
+
+---
+
+# /api/format/list
+
+
+## Request
+
+```xml
+<listFormatRequest>
+  <type>FULL</type>
+</listFormatRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <formats/>
+</cinnamon>
+
+```
+
+
+---
+
+# /api/format/update
+
+
+## Request
+
+```xml
+<updateFormatRequest>
+  <formats/>
+</updateFormatRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <formats/>
 </cinnamon>
 
 ```
@@ -1486,6 +1528,108 @@ Add a summary to an object, for example a short description of this folder's con
 
 ---
 
+# /api/indexItem/create
+
+
+## Request
+
+```xml
+<createIndexItemRequest>
+  <indexItems/>
+</createIndexItemRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <indexItems/>
+</cinnamon>
+
+```
+
+
+---
+
+# /api/indexItem/delete
+
+
+## Request
+
+```xml
+<deleteIndexItemRequest>
+  <ignoreNotFound>false</ignoreNotFound>
+  <ids/>
+</deleteIndexItemRequest>
+
+```
+
+
+## Response
+
+```xml
+<genericResponse>
+  <message/>
+  <successful>false</successful>
+</genericResponse>
+
+```
+
+
+---
+
+# /api/indexItem/list
+
+
+## Request
+
+```xml
+<listIndexItemRequest>
+  <type>FULL</type>
+</listIndexItemRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <indexItems/>
+</cinnamon>
+
+```
+
+
+---
+
+# /api/indexItem/udpate
+
+
+## Request
+
+```xml
+<updateIndexItemRequest>
+  <indexItems/>
+</updateIndexItemRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <indexItems/>
+</cinnamon>
+
+```
+
+
+---
+
 # /api/index/info
 Provides information on the status of the Lucene search index
 
@@ -1554,133 +1698,6 @@ Rebuild the Lucene search index in parts or completely. When reindexing large nu
 
 ---
 
-# /api/indexItem/list
-
-
-## Request
-
-```xml
-<listIndexItemRequest>
-  <type>FULL</type>
-</listIndexItemRequest>
-
-```
-
-
-## Response
-
-```xml
-<cinnamon>
-  <indexItems/>
-</cinnamon>
-
-```
-
-
----
-
-# /api/indexItem/create
-
-
-## Request
-
-```xml
-<createIndexItemRequest>
-  <indexItems/>
-</createIndexItemRequest>
-
-```
-
-
-## Response
-
-```xml
-<cinnamon>
-  <indexItems/>
-</cinnamon>
-
-```
-
-
----
-
-# /api/indexItem/udpate
-
-
-## Request
-
-```xml
-<updateIndexItemRequest>
-  <indexItems/>
-</updateIndexItemRequest>
-
-```
-
-
-## Response
-
-```xml
-<cinnamon>
-  <indexItems/>
-</cinnamon>
-
-```
-
-
----
-
-# /api/indexItem/delete
-
-
-## Request
-
-```xml
-<deleteIndexItemRequest>
-  <ignoreNotFound>false</ignoreNotFound>
-  <ids/>
-</deleteIndexItemRequest>
-
-```
-
-
-## Response
-
-```xml
-<genericResponse>
-  <message/>
-  <successful>false</successful>
-</genericResponse>
-
-```
-
-
----
-
-# /api/language/list
-
-
-## Request
-
-```xml
-<listLanguageRequest>
-  <type>FULL</type>
-</listLanguageRequest>
-
-```
-
-
-## Response
-
-```xml
-<cinnamon>
-  <languages/>
-</cinnamon>
-
-```
-
-
----
-
 # /api/language/create
 
 
@@ -1703,6 +1720,57 @@ Rebuild the Lucene search index in parts or completely. When reindexing large nu
     </language>
   </languages>
 </createLanguageRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <languages/>
+</cinnamon>
+
+```
+
+
+---
+
+# /api/language/delete
+
+
+## Request
+
+```xml
+<deleteLanguageRequest>
+  <ignoreNotFound>false</ignoreNotFound>
+  <ids/>
+</deleteLanguageRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <success>false</success>
+</cinnamon>
+
+```
+
+
+---
+
+# /api/language/list
+
+
+## Request
+
+```xml
+<listLanguageRequest>
+  <type>FULL</type>
+</listLanguageRequest>
 
 ```
 
@@ -1749,16 +1817,18 @@ Rebuild the Lucene search index in parts or completely. When reindexing large nu
 
 ---
 
-# /api/language/delete
-
+# /api/lifecycleState/attachLifecycle
+Only superusers may use forceChange parameter to attach any state without verification.
 
 ## Request
 
 ```xml
-<deleteLanguageRequest>
-  <ignoreNotFound>false</ignoreNotFound>
-  <ids/>
-</deleteLanguageRequest>
+<attachLifecycleRequest>
+  <osdId/>
+  <lifecycleId/>
+  <lifecycleStateId/>
+  <forceChange>false</forceChange>
+</attachLifecycleRequest>
 
 ```
 
@@ -1766,9 +1836,37 @@ Rebuild the Lucene search index in parts or completely. When reindexing large nu
 ## Response
 
 ```xml
-<cinnamon>
-  <success>false</success>
-</cinnamon>
+<genericResponse>
+  <message/>
+  <successful>false</successful>
+</genericResponse>
+
+```
+
+
+---
+
+# /api/lifecycleState/changeState
+
+
+## Request
+
+```xml
+<changeLifecycleStateRequest>
+  <osdId/>
+  <stateId/>
+</changeLifecycleStateRequest>
+
+```
+
+
+## Response
+
+```xml
+<genericResponse>
+  <message/>
+  <successful>false</successful>
+</genericResponse>
 
 ```
 
@@ -1837,120 +1935,6 @@ Rebuild the Lucene search index in parts or completely. When reindexing large nu
 <cinnamon>
   <success>false</success>
 </cinnamon>
-
-```
-
-
----
-
-# /api/lifecycleState/list
-
-
-## Request
-
-```xml
-<listLifecycleStateRequest>
-  <type>FULL</type>
-</listLifecycleStateRequest>
-
-```
-
-
-## Response
-
-```xml
-<cinnamon>
-  <lifecycleStates/>
-</cinnamon>
-
-```
-
-
----
-
-# /api/lifecycleState/update
-
-
-## Request
-
-```xml
-<updateLifecycleStateRequest>
-  <lifecycleStates>
-    <lifecycleStates>
-      <id>232</id>
-      <name>review-state-update</name>
-      <config>&lt;config/></config>
-      <stateClass>com.dewarim.cinnamon.lifecycle.ChangeAclState</stateClass>
-      <lifecycleId>1</lifecycleId>
-      <lifecycleStateForCopyId/>
-    </lifecycleStates>
-  </lifecycleStates>
-</updateLifecycleStateRequest>
-
-```
-
-
-## Response
-
-```xml
-<cinnamon>
-  <lifecycleStates/>
-</cinnamon>
-
-```
-
-
----
-
-# /api/lifecycleState/attachLifecycle
-
-
-## Request
-
-```xml
-<attachLifecycleRequest>
-  <osdId/>
-  <lifecycleId/>
-  <lifecycleStateId/>
-</attachLifecycleRequest>
-
-```
-
-
-## Response
-
-```xml
-<genericResponse>
-  <message/>
-  <successful>false</successful>
-</genericResponse>
-
-```
-
-
----
-
-# /api/lifecycleState/changeState
-
-
-## Request
-
-```xml
-<changeLifecycleStateRequest>
-  <osdId/>
-  <stateId/>
-</changeLifecycleStateRequest>
-
-```
-
-
-## Response
-
-```xml
-<genericResponse>
-  <message/>
-  <successful>false</successful>
-</genericResponse>
 
 ```
 
@@ -2033,16 +2017,15 @@ Rebuild the Lucene search index in parts or completely. When reindexing large nu
 
 ---
 
-# /api/lifecycle/get
+# /api/lifecycleState/list
 
 
 ## Request
 
 ```xml
-<lifecycleRequest>
-  <id/>
-  <name/>
-</lifecycleRequest>
+<listLifecycleStateRequest>
+  <type>FULL</type>
+</listLifecycleStateRequest>
 
 ```
 
@@ -2051,7 +2034,41 @@ Rebuild the Lucene search index in parts or completely. When reindexing large nu
 
 ```xml
 <cinnamon>
-  <lifecycles/>
+  <lifecycleStates/>
+</cinnamon>
+
+```
+
+
+---
+
+# /api/lifecycleState/update
+
+
+## Request
+
+```xml
+<updateLifecycleStateRequest>
+  <lifecycleStates>
+    <lifecycleStates>
+      <id>232</id>
+      <name>review-state-update</name>
+      <config>&lt;config/></config>
+      <stateClass>com.dewarim.cinnamon.lifecycle.ChangeAclState</stateClass>
+      <lifecycleId>1</lifecycleId>
+      <lifecycleStateForCopyId/>
+    </lifecycleStates>
+  </lifecycleStates>
+</updateLifecycleStateRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <lifecycleStates/>
 </cinnamon>
 
 ```
@@ -2123,15 +2140,16 @@ Delete lifecycles
 
 ---
 
-# /api/lifecycle/update
-Update lifecycles. Note: does not update lifecycle states 
+# /api/lifecycle/get
+
 
 ## Request
 
 ```xml
-<updateLifecycleRequest>
-  <lifecycles/>
-</updateLifecycleRequest>
+<lifecycleRequest>
+  <id/>
+  <name/>
+</lifecycleRequest>
 
 ```
 
@@ -2157,6 +2175,31 @@ List lifecycles
 <listLifecycleRequest>
   <type>FULL</type>
 </listLifecycleRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <lifecycles/>
+</cinnamon>
+
+```
+
+
+---
+
+# /api/lifecycle/update
+Update lifecycles. Note: does not update lifecycle states 
+
+## Request
+
+```xml
+<updateLifecycleRequest>
+  <lifecycles/>
+</updateLifecycleRequest>
 
 ```
 
@@ -2427,31 +2470,6 @@ List lifecycles
 
 ---
 
-# /api/objectType/list
-
-
-## Request
-
-```xml
-<listObjectTypeRequest>
-  <type>FULL</type>
-</listObjectTypeRequest>
-
-```
-
-
-## Response
-
-```xml
-<cinnamon>
-  <objectTypes/>
-</cinnamon>
-
-```
-
-
----
-
 # /api/objectType/create
 
 
@@ -2470,6 +2488,57 @@ List lifecycles
     </objectType>
   </objectTypes>
 </createObjectTypeRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <objectTypes/>
+</cinnamon>
+
+```
+
+
+---
+
+# /api/objectType/delete
+
+
+## Request
+
+```xml
+<deleteObjectTypeRequest>
+  <ignoreNotFound>false</ignoreNotFound>
+  <ids/>
+</deleteObjectTypeRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <success>false</success>
+</cinnamon>
+
+```
+
+
+---
+
+# /api/objectType/list
+
+
+## Request
+
+```xml
+<listObjectTypeRequest>
+  <type>FULL</type>
+</listObjectTypeRequest>
 
 ```
 
@@ -2516,32 +2585,6 @@ List lifecycles
 
 ---
 
-# /api/objectType/delete
-
-
-## Request
-
-```xml
-<deleteObjectTypeRequest>
-  <ignoreNotFound>false</ignoreNotFound>
-  <ids/>
-</deleteObjectTypeRequest>
-
-```
-
-
-## Response
-
-```xml
-<cinnamon>
-  <success>false</success>
-</cinnamon>
-
-```
-
-
----
-
 # /api/osd/copy
 
 
@@ -2572,6 +2615,7 @@ List lifecycles
   <osds/>
   <links/>
   <references/>
+  <relations/>
 </cinnamon>
 
 ```
@@ -2655,6 +2699,7 @@ should contain data.
   <osds/>
   <links/>
   <references/>
+  <relations/>
 </cinnamon>
 
 ```
@@ -2662,20 +2707,17 @@ should contain data.
 
 ---
 
-# /api/osd/deleteMeta
+# /api/osd/delete
 
 
 ## Request
 
 ```xml
-<deleteMetaRequest>
-  <ignoreNotFound>false</ignoreNotFound>
-  <ids>
-    <ids>3</ids>
-    <ids>5</ids>
-    <ids>6</ids>
-  </ids>
-</deleteMetaRequest>
+<deleteOsdRequest>
+  <ids/>
+  <deleteDescendants>false</deleteDescendants>
+  <deleteAllVersions>false</deleteAllVersions>
+</deleteOsdRequest>
 
 ```
 
@@ -2693,7 +2735,7 @@ should contain data.
 ---
 
 # /api/osd/deleteAllMetas
-
+Delete all metasets linked to the given OSD ids. Parameter ignoreNotFound is not used.
 
 ## Request
 
@@ -2721,17 +2763,29 @@ should contain data.
 
 ---
 
-# /api/osd/delete
-
+# /api/osd/deleteMeta
+Delete the OSD metasets with the given meta ids.
 
 ## Request
 
 ```xml
-<deleteOsdRequest>
-  <ids/>
-  <deleteDescendants>false</deleteDescendants>
-  <deleteAllVersions>false</deleteAllVersions>
-</deleteOsdRequest>
+<deleteMetaRequest>
+  <ignoreNotFound>false</ignoreNotFound>
+  <ids>
+    <ids>3</ids>
+    <ids>5</ids>
+    <ids>6</ids>
+  </ids>
+</deleteMetaRequest>
+
+```
+```xml
+<deleteMetaRequest>
+  <ignoreNotFound>false</ignoreNotFound>
+  <ids>
+    <ids>1</ids>
+  </ids>
+</deleteMetaRequest>
 
 ```
 
@@ -2826,6 +2880,7 @@ Returns an OSD's content according to it's format's content type.
   <osds/>
   <links/>
   <references/>
+  <relations/>
 </cinnamon>
 
 ```
@@ -2855,6 +2910,7 @@ Returns an OSD's content according to it's format's content type.
   <osds/>
   <links/>
   <references/>
+  <relations/>
 </cinnamon>
 
 ```
@@ -3065,6 +3121,39 @@ Add a summary to an object, for example a short description of the content.
 
 ---
 
+# /api/osd/updateMetaContent
+Update the content of a given OSD metaset
+
+## Request
+
+```xml
+<UpdateMetaRequest>
+  <metas>
+    <meta>
+      <id/>
+      <objectId>1</objectId>
+      <typeId>2</typeId>
+      <content>meta content update</content>
+    </meta>
+  </metas>
+</UpdateMetaRequest>
+
+```
+
+
+## Response
+
+```xml
+<genericResponse>
+  <message/>
+  <successful>false</successful>
+</genericResponse>
+
+```
+
+
+---
+
 # /api/osd/version
 Create a new version of an OSD. Requires a multipart-mime request, with part "createNewVersionRequest" and optional
 part "file", if the new version should contain data.
@@ -3089,6 +3178,7 @@ part "file", if the new version should contain data.
   <osds/>
   <links/>
   <references/>
+  <relations/>
 </cinnamon>
 
 ```
@@ -3175,31 +3265,6 @@ part "file", if the new version should contain data.
 
 ---
 
-# /api/relationType/list
-
-
-## Request
-
-```xml
-<listRelationTypeRequest>
-  <type>FULL</type>
-</listRelationTypeRequest>
-
-```
-
-
-## Response
-
-```xml
-<cinnamon>
-  <relationTypes/>
-</cinnamon>
-
-```
-
-
----
-
 # /api/relationType/create
 
 
@@ -3220,6 +3285,57 @@ part "file", if the new version should contain data.
     </relationType>
   </relationTypes>
 </createRelationTypeRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <relationTypes/>
+</cinnamon>
+
+```
+
+
+---
+
+# /api/relationType/delete
+
+
+## Request
+
+```xml
+<deleteRelationTypeRequest>
+  <ignoreNotFound>false</ignoreNotFound>
+  <ids/>
+</deleteRelationTypeRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <success>false</success>
+</cinnamon>
+
+```
+
+
+---
+
+# /api/relationType/list
+
+
+## Request
+
+```xml
+<listRelationTypeRequest>
+  <type>FULL</type>
+</listRelationTypeRequest>
 
 ```
 
@@ -3265,32 +3381,6 @@ part "file", if the new version should contain data.
 ```xml
 <cinnamon>
   <relationTypes/>
-</cinnamon>
-
-```
-
-
----
-
-# /api/relationType/delete
-
-
-## Request
-
-```xml
-<deleteRelationTypeRequest>
-  <ignoreNotFound>false</ignoreNotFound>
-  <ids/>
-</deleteRelationTypeRequest>
-
-```
-
-
-## Response
-
-```xml
-<cinnamon>
-  <success>false</success>
 </cinnamon>
 
 ```
@@ -3393,9 +3483,9 @@ Search for relations matching all( with orMode=false) or some (with orMode=true)
     <rightIds>5</rightIds>
     <rightIds>6</rightIds>
   </rightIds>
-  <names>
-    <names>pdf-rendition - note: searching by name is deprecated, will be replaced by relationTypeIds</names>
-  </names>
+  <relationTypeIds>
+    <relationTypeIds>2</relationTypeIds>
+  </relationTypeIds>
   <includeMetadata>true</includeMetadata>
   <orMode>true</orMode>
 </searchRelationRequest>
@@ -3529,31 +3619,6 @@ Returns status code 400
 
 ---
 
-# /api/uiLanguage/list
-
-
-## Request
-
-```xml
-<listUiLanguageRequest>
-  <type>FULL</type>
-</listUiLanguageRequest>
-
-```
-
-
-## Response
-
-```xml
-<cinnamon>
-  <uiLanguages/>
-</cinnamon>
-
-```
-
-
----
-
 # /api/uiLanguage/create
 
 
@@ -3576,6 +3641,57 @@ Returns status code 400
     </uiLanguage>
   </uiLanguages>
 </createUiLanguageRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <uiLanguages/>
+</cinnamon>
+
+```
+
+
+---
+
+# /api/uiLanguage/delete
+
+
+## Request
+
+```xml
+<deleteUiLanguageRequest>
+  <ignoreNotFound>false</ignoreNotFound>
+  <ids/>
+</deleteUiLanguageRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <success>false</success>
+</cinnamon>
+
+```
+
+
+---
+
+# /api/uiLanguage/list
+
+
+## Request
+
+```xml
+<listUiLanguageRequest>
+  <type>FULL</type>
+</listUiLanguageRequest>
 
 ```
 
@@ -3619,32 +3735,6 @@ Returns status code 400
 ```xml
 <cinnamon>
   <uiLanguages/>
-</cinnamon>
-
-```
-
-
----
-
-# /api/uiLanguage/delete
-
-
-## Request
-
-```xml
-<deleteUiLanguageRequest>
-  <ignoreNotFound>false</ignoreNotFound>
-  <ids/>
-</deleteUiLanguageRequest>
-
-```
-
-
-## Response
-
-```xml
-<cinnamon>
-  <success>false</success>
 </cinnamon>
 
 ```
@@ -3711,42 +3801,23 @@ Returns status code 400
 
 ---
 
-# /api/user/setConfig
-Update a user's individual configuration
-
-## Request
-
-```xml
-<setUserConfigRequest>
-  <userId>123</userId>
-  <config>&lt;config>&lt;lastSearches>&lt;search>foo&lt;/search>&lt;/lastSearches>&lt;/config></config>
-</setUserConfigRequest>
-
-```
-
-
-## Response
-
-```xml
-<genericResponse>
-  <message/>
-  <successful>false</successful>
-</genericResponse>
-
-```
-
-
----
-
-# /api/user/update
+# /api/user/get
 
 
 ## Request
 
 ```xml
-<updateUserAccountRequest>
-  <userAccounts/>
-</updateUserAccountRequest>
+<getUserAccountRequest>
+  <userId>1</userId>
+  <username/>
+</getUserAccountRequest>
+
+```
+```xml
+<getUserAccountRequest>
+  <userId/>
+  <username>by-name</username>
+</getUserAccountRequest>
 
 ```
 
@@ -3822,6 +3893,33 @@ Update a user's individual configuration
 
 ---
 
+# /api/user/setConfig
+Update a user's individual configuration
+
+## Request
+
+```xml
+<setUserConfigRequest>
+  <userId>123</userId>
+  <config>&lt;config>&lt;lastSearches>&lt;search>foo&lt;/search>&lt;/lastSearches>&lt;/config></config>
+</setUserConfigRequest>
+
+```
+
+
+## Response
+
+```xml
+<genericResponse>
+  <message/>
+  <successful>false</successful>
+</genericResponse>
+
+```
+
+
+---
+
 # /api/user/setPassword
 
 
@@ -3849,23 +3947,15 @@ Update a user's individual configuration
 
 ---
 
-# /api/user/get
+# /api/user/update
 
 
 ## Request
 
 ```xml
-<getUserAccountRequest>
-  <userId>1</userId>
-  <username/>
-</getUserAccountRequest>
-
-```
-```xml
-<getUserAccountRequest>
-  <userId/>
-  <username>by-name</username>
-</getUserAccountRequest>
+<updateUserAccountRequest>
+  <userAccounts/>
+</updateUserAccountRequest>
 
 ```
 
