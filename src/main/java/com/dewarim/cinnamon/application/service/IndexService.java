@@ -51,9 +51,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static com.dewarim.cinnamon.api.Constants.LUCENE_FIELD_CINNAMON_CLASS;
 import static com.dewarim.cinnamon.api.Constants.LUCENE_FIELD_UNIQUE_ID;
@@ -72,6 +75,8 @@ public class IndexService implements Runnable {
     private final Path         indexPath;
     private final XmlMapper    xmlMapper = new XmlMapper();
 
+    private final List<IndexItem> indexItems;
+
     public IndexService(LuceneConfig config) {
         this.config = config;
         indexPath = Paths.get(config.getIndexPath());
@@ -81,6 +86,7 @@ public class IndexService implements Runnable {
                 throw new IllegalStateException("Could not create path to index: " + indexPath.toAbsolutePath());
             }
         }
+        indexItems = new IndexItemDao().list();
     }
 
 
@@ -101,7 +107,6 @@ public class IndexService implements Runnable {
                     IndexJobDao   jobDao = new IndexJobDao().setSqlSession(sqlSession);
                     osdDao.setSqlSession(sqlSession);
                     folderDao.setSqlSession(sqlSession);
-                    List<IndexItem> indexItems = new IndexItemDao().setSqlSession(sqlSession).list();
 
                     while (jobDao.countJobs() > 0) {
                         List<IndexJob> jobs = jobDao.getIndexJobsByFailedCountWithLimit(0, limit);
@@ -109,7 +114,7 @@ public class IndexService implements Runnable {
                         if (jobs.size() == 0) {
                             break;
                         }
-                        boolean indexChanged = false;
+                        boolean        indexChanged = false;
                         List<IndexJob> jobsToDelete = new ArrayList<>();
                         for (IndexJob job : jobs) {
                             IndexKey indexKey = new IndexKey(job.getJobType(), job.getItemId());
@@ -313,12 +318,11 @@ public class IndexService implements Runnable {
             String fieldName    = indexItem.getFieldName();
             String searchString = indexItem.getSearchString();
             // TODO: check search condition, probably with xmlDoc
-            if(xmlDoc.valueOf(indexItem.getSearchCondition()) .equals( "true")) {
+            if (xmlDoc.valueOf(indexItem.getSearchCondition()).equals("true")) {
                 indexItem.getIndexType().getIndexer()
                         .indexObject(xmlDoc, contentContainer.asNode(), luceneDoc, fieldName, searchString, indexItem.isMultipleResults());
-            }
-            else{
-                log.debug("searchCondition failed: "+indexItem.getSearchCondition());
+            } else {
+                log.debug("searchCondition failed: " + indexItem.getSearchCondition());
             }
         }
     }
@@ -366,5 +370,22 @@ public class IndexService implements Runnable {
 
     enum IndexMode {
         CREATE, UPDATE
+    }
+
+    public void addIndexItems(List<IndexItem> indexItems) {
+        this.indexItems.addAll(indexItems);
+    }
+    public void removeIndexItems(List<Long> ids){
+        this.indexItems.removeAll(this.indexItems.stream().filter(item -> ids.contains(item.getId())).collect(Collectors.toSet()));
+    }
+    public void updateIndexItems(List<IndexItem> indexItems){
+        Map<Long,IndexItem> newItems = indexItems.stream().collect(Collectors.toMap(IndexItem::getId, Function.identity()));
+        Map<Long,IndexItem> oldItems = this.indexItems.stream().collect(Collectors.toMap(IndexItem::getId, Function.identity()));
+        newItems.forEach( (id,value) -> {
+            if(oldItems.containsKey(id)){
+                this.indexItems.remove(oldItems.get(id));
+                this.indexItems.add(value);
+            }
+        });
     }
 }

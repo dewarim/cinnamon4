@@ -24,9 +24,10 @@ import java.util.List;
  */
 public interface CruddyServlet<T extends Identifiable> {
 
-    default void create(CreateRequest<T> createRequest, CrudDao<T> dao, CinnamonResponse cinnamonResponse) {
+    default List<T> create(CreateRequest<T> createRequest, CrudDao<T> dao, CinnamonResponse cinnamonResponse) {
         List<T> ts = dao.create(createRequest.list());
         cinnamonResponse.setWrapper(createRequest.fetchResponseWrapper().setList(ts));
+        return ts;
     }
 
     default CreateRequest<T> convertCreateRequest(HttpServletRequest request, Class<? extends CreateRequest<T>> clazz) throws IOException {
@@ -51,7 +52,7 @@ public interface CruddyServlet<T extends Identifiable> {
 
     ObjectMapper getMapper();
 
-    default void delete(DeleteRequest<T> deleteRequest, CrudDao<T> dao, CinnamonResponse cinnamonResponse) {
+    default List<Long> delete(DeleteRequest<T> deleteRequest, CrudDao<T> dao, CinnamonResponse cinnamonResponse) {
         try {
             int deletedRows = dao.delete(deleteRequest.list());
             if (deletedRows != deleteRequest.list().size() && !deleteRequest.isIgnoreNotFound()) {
@@ -61,6 +62,7 @@ public interface CruddyServlet<T extends Identifiable> {
             throw new FailedRequestException(ErrorCode.DB_DELETE_FAILED, e);
         }
         cinnamonResponse.setWrapper(deleteRequest.fetchResponseWrapper());
+        return deleteRequest.list();
     }
 
     default void superuserCheck() {
@@ -76,10 +78,11 @@ public interface CruddyServlet<T extends Identifiable> {
         cinnamonResponse.setWrapper(wrapper);
     }
 
-    default void update(UpdateRequest<T> updateRequest, CrudDao<T> dao, CinnamonResponse cinnamonResponse){
+    default List<T> update(UpdateRequest<T> updateRequest, CrudDao<T> dao, CinnamonResponse cinnamonResponse){
         try {
             List<T> updatedItems = dao.update(updateRequest.list());
             cinnamonResponse.setWrapper(updateRequest.fetchResponseWrapper().setList(updatedItems));
+            return updatedItems;
         }
         catch (PersistenceException | SQLException e){
             throw new FailedRequestException(ErrorCode.DB_UPDATE_FAILED, e.getMessage());

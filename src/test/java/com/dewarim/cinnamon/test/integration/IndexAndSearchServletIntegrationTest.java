@@ -38,8 +38,6 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
         Format xml = adminClient.createFormat("text/xml", "xml", "xml-content", 1L);
         adminClient.createIndexItem(new IndexItem("xml_content",true,false,false,
                 true,"Xml Content Index", "/objectSystemData/content/descendant::*", "boolean(/objectSystemData/formatId[text()='"+xml.getId()+"'])", false, IndexType.DEFAULT_INDEXER ));
-        // wait for SearchService to refresh session and pick up new index item
-        Thread.sleep(1000);
 
         TestObjectHolder toh = new TestObjectHolder(client, userId);
         toh.createOsd("search-me-osd")

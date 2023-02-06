@@ -74,7 +74,7 @@ public class CinnamonServer {
 
     private static final Logger log = LogManager.getLogger(CinnamonServer.class);
 
-    public static final String           VERSION       = "0.4.10.1";
+    public static final String           VERSION       = "0.4.11";
     private final       int              port;
     private             Server           server;
     private             DbSessionFactory dbSessionFactory;
@@ -142,6 +142,7 @@ public class CinnamonServer {
 
         searchService = new SearchService(config.getLuceneConfig());
         webAppContext.setAttribute(SEARCH_SERVICE, searchService);
+        webAppContext.setAttribute(INDEX_SERVICE, indexService);
         webAppContext.setAttribute(CINNAMON_CONFIG, config);
 
         // test query:
@@ -343,5 +344,9 @@ public class CinnamonServer {
 
         @Parameter(names = {"--api"}, description = "Print API documentation")
         boolean api;
+    }
+
+    public IndexService getIndexService() {
+        return indexService;
     }
 }
