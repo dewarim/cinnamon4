@@ -1,6 +1,7 @@
 package com.dewarim.cinnamon.filter;
 
 import com.dewarim.cinnamon.ErrorCode;
+import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.application.ErrorResponseGenerator;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.dao.SessionDao;
@@ -48,7 +49,8 @@ public class AuthenticationFilter implements Filter {
                 return;
             }
 
-            if (cinnamonSession.getExpires().getTime() < new Date().getTime()) {
+            long currentTime = new Date().getTime();
+            if (cinnamonSession.getExpires().getTime() < currentTime) {
                 failAuthentication(servletResponse, ErrorCode.AUTHENTICATION_FAIL_SESSION_EXPIRED);
                 return;
             }
@@ -58,7 +60,9 @@ public class AuthenticationFilter implements Filter {
                 failAuthentication(servletResponse, ErrorCode.AUTHENTICATION_FAIL_USER_NOT_FOUND);
                 return;
             }
-            
+            Date expirationDate = new Date(currentTime+ CinnamonServer.config.getSecurityConfig().getSessionLengthInMillis());
+            cinnamonSession.setExpires(expirationDate);
+            new SessionDao().update(cinnamonSession);
             ThreadLocalSqlSession.setCurrentUser(userAccountOpt.get());
             chain.doFilter(request, response);
         } finally {
