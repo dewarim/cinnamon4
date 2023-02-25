@@ -154,78 +154,66 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
 
         // no update allowed for links that the user cannot even see:
         accessFilter.verifyHasPermissionOnOwnable(link, DefaultPermission.BROWSE, link, ErrorCode.NO_BROWSE_PERMISSION);
-        accessFilter.verifyHasPermissionOnOwnable(link, DefaultPermission.WRITE_OBJECT_SYS_METADATA, link, ErrorCode.NO_WRITE_SYS_METADATA_PERMISSION);
 
         if (!Objects.equals(link.getAclId(), update.getAclId())) {
-            updateAcl(update, link, linkDao);
+            updateAcl(update, link, linkDao, accessFilter);
         }
         if (link.getType() == FOLDER && !Objects.equals(link.getFolderId(), update.getFolderId())) {
-            updateFolder(update, link, linkDao);
+            updateFolder(update, link, linkDao, accessFilter);
         } else if (!Objects.equals(link.getObjectId(), update.getObjectId())) {
-            updateObject(update, link, linkDao);
+            updateObject(update, link, linkDao, accessFilter);
         }
         if (!Objects.equals(link.getParentId(), update.getParentId())) {
-            updateParent(update, link, linkDao);
+            updateParent(update, link, linkDao, accessFilter);
         }
         if (!Objects.equals(link.getOwnerId(), update.getOwnerId())) {
-            updateOwner(update, link, linkDao);
+            updateOwner(update, link, linkDao, accessFilter);
         }
         return link;
     }
 
-    private void updateFolder(Link updateRequest, Link link, LinkDao linkDao) {
-        if (link.getObjectId() != null) {
-            // link can point either to folder OR object.
-            link.setObjectId(null);
-            link.setType(FOLDER);
-        }
-        Folder       folder       = new FolderDao().getFolderById(updateRequest.getFolderId()).orElseThrow(ErrorCode.FOLDER_NOT_FOUND.getException());
-        UserAccount  user         = ThreadLocalSqlSession.getCurrentUser();
-        AccessFilter accessFilter = AccessFilter.getInstance(user);
+    private void updateFolder(Link updateRequest, Link link, LinkDao linkDao, AccessFilter accessFilter) {
+        Folder folder = new FolderDao().getFolderById(updateRequest.getFolderId()).orElseThrow(ErrorCode.FOLDER_NOT_FOUND.getException());
         accessFilter.verifyHasPermissionOnOwnable(folder, DefaultPermission.BROWSE, folder, ErrorCode.NO_BROWSE_PERMISSION);
+        accessFilter.verifyHasPermissionOnOwnable(link, DefaultPermission.SET_LINK_TARGET, link, ErrorCode.NO_SET_LINK_TARGET_PERMISSION);
         link.setFolderId(updateRequest.getFolderId());
         if (linkDao.updateLink(link) != UPDATED_ONE_ROW) {
             log.debug("Folder update did not change the link.");
         }
     }
 
-    private void updateParent(Link updateRequest, Link link, LinkDao linkDao) {
-        Folder       parentFolder = new FolderDao().getFolderById(updateRequest.getParentId()).orElseThrow(ErrorCode.FOLDER_NOT_FOUND.getException());
-        UserAccount  user         = ThreadLocalSqlSession.getCurrentUser();
-        AccessFilter accessFilter = AccessFilter.getInstance(user);
+    private void updateParent(Link updateRequest, Link link, LinkDao linkDao, AccessFilter accessFilter) {
+        Folder      parentFolder = new FolderDao().getFolderById(updateRequest.getParentId()).orElseThrow(ErrorCode.FOLDER_NOT_FOUND.getException());
         accessFilter.verifyHasPermissionOnOwnable(parentFolder, DefaultPermission.BROWSE, parentFolder, ErrorCode.NO_BROWSE_PERMISSION);
         accessFilter.verifyHasPermissionOnOwnable(parentFolder, DefaultPermission.CREATE_OBJECT, parentFolder, ErrorCode.NO_CREATE_PERMISSION);
+        accessFilter.verifyHasPermissionOnOwnable(link, DefaultPermission.SET_PARENT, link, ErrorCode.NO_SET_PARENT_PERMISSION);
         link.setParentId(parentFolder.getId());
         if (linkDao.updateLink(link) != UPDATED_ONE_ROW) {
             log.debug("Folder parent update did not change the link.");
         }
     }
 
-    private void updateObject(Link updateRequest, Link link, LinkDao linkDao) {
-        if (link.getFolderId() != null) {
-            link.setFolderId(null);
-            link.setType(LinkType.OBJECT);
-        }
+    private void updateObject(Link updateRequest, Link link, LinkDao linkDao, AccessFilter accessFilter) {
         ObjectSystemData osd = new OsdDao().getObjectById(updateRequest.getObjectId()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
-        AccessFilter.getInstance(ThreadLocalSqlSession.getCurrentUser()).verifyHasPermissionOnOwnable(osd, DefaultPermission.BROWSE, osd, ErrorCode.NO_BROWSE_PERMISSION);
+        accessFilter.verifyHasPermissionOnOwnable(osd, DefaultPermission.BROWSE, osd, ErrorCode.NO_BROWSE_PERMISSION);
+        accessFilter.verifyHasPermissionOnOwnable(link, DefaultPermission.SET_LINK_TARGET, osd, ErrorCode.NO_SET_LINK_TARGET_PERMISSION);
         link.setObjectId(updateRequest.getObjectId());
         if (linkDao.updateLink(link) != UPDATED_ONE_ROW) {
             log.debug("OSD update did not change the link.");
         }
     }
 
-    private void updateOwner(Link updateRequest, Link link, LinkDao linkDao) {
+    private void updateOwner(Link updateRequest, Link link, LinkDao linkDao, AccessFilter accessFilter) {
         Optional<UserAccount> ownerOpt = new UserAccountDao().getUserAccountById(updateRequest.getOwnerId());
         link.setOwnerId(ownerOpt.orElseThrow(ErrorCode.OWNER_NOT_FOUND.getException()).getId());
+        accessFilter.verifyHasPermissionOnOwnable(link, DefaultPermission.SET_OWNER, link, ErrorCode.NO_SET_OWNER_PERMISSION);
         if (linkDao.updateLink(link) != UPDATED_ONE_ROW) {
             log.debug("update owner did not change link");
         }
     }
 
-    private void updateAcl(Link updateRequest, Link link, LinkDao linkDao) {
-        Acl          acl          = new AclDao().getAclById(updateRequest.getAclId()).orElseThrow(ErrorCode.ACL_NOT_FOUND.getException());
-        UserAccount  user         = ThreadLocalSqlSession.getCurrentUser();
-        AccessFilter accessFilter = AccessFilter.getInstance(user);
+    private void updateAcl(Link updateRequest, Link link, LinkDao linkDao, AccessFilter accessFilter) {
+        Acl acl = new AclDao().getAclById(updateRequest.getAclId()).orElseThrow(ErrorCode.ACL_NOT_FOUND.getException());
         accessFilter.verifyHasPermissionOnOwnable(link, DefaultPermission.SET_ACL, link, ErrorCode.MISSING_SET_ACL_PERMISSION);
         link.setAclId(acl.getId());
         if (linkDao.updateLink(link) != 1) {

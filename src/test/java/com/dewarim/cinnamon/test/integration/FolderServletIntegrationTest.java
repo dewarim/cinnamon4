@@ -60,7 +60,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void setSummaryMissingPermission() throws IOException {
         var folderId = prepareAclGroupWithPermissions(List.of()).createFolder().folder.getId();
-        assertClientError(() -> client.setFolderSummary(folderId, "a summary"), NO_WRITE_SYS_METADATA_PERMISSION);
+        assertClientError(() -> client.setFolderSummary(folderId, "a summary"), NO_SET_SUMMARY_PERMISSION);
     }
 
     @Test
@@ -81,7 +81,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getSummariesMissingPermission() throws IOException {
-        var folderId = prepareAclGroupWithPermissions(List.of(DefaultPermission.WRITE_OBJECT_SYS_METADATA))
+        var folderId = prepareAclGroupWithPermissions(List.of())
                 .createFolder().setSummaryOnFolder("foo").folder.getId();
         assertClientError(() -> client.getFolderSummaries(List.of(folderId)), NO_READ_OBJECT_SYS_METADATA_PERMISSION);
     }
@@ -347,7 +347,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
                 .folder.getId();
         UpdateFolderRequest request = new UpdateFolderRequest(
                 folderId, null, null, 1L, null, null);
-        assertClientError(() -> client.updateFolder(request), NO_WRITE_SYS_METADATA_PERMISSION);
+        assertClientError(() -> client.updateFolder(request), NO_SET_OWNER_PERMISSION);
     }
 
     @Test
@@ -359,7 +359,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateFolderNoCreatePermission() throws IOException {
-        var folder = prepareAclGroupWithPermissions(List.of(WRITE_OBJECT_SYS_METADATA))
+        var folder = prepareAclGroupWithPermissions(List.of())
                 .createFolder().createFolder().folder;
         UpdateFolderRequest request = new UpdateFolderRequest(
                 folder.getId(), folder.getParentId(), null, null, null, null);
@@ -378,10 +378,10 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void updateFolderNoMovePermission() throws IOException {
         var targetFolder    = new TestObjectHolder(client, userId).createFolder().folder;
-        var unmovableFolder = prepareAclGroupWithPermissions(List.of(WRITE_OBJECT_SYS_METADATA)).createFolder().folder;
+        var unmovableFolder = prepareAclGroupWithPermissions(List.of()).createFolder().folder;
         UpdateFolderRequest request = new UpdateFolderRequest(
                 unmovableFolder.getId(), targetFolder.getId(), null, null, null, null);
-        assertClientError(() -> client.updateFolder(request), NO_MOVE_PERMISSION);
+        assertClientError(() -> client.updateFolder(request), NO_SET_PARENT_PERMISSION);
     }
 
     @Test
@@ -405,7 +405,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateFolderFolderTypeNotFound() throws IOException {
-        var folder = prepareAclGroupWithPermissions(List.of(TYPE_WRITE))
+        var folder = prepareAclGroupWithPermissions(List.of(SET_TYPE))
                 .createFolder().folder;
         UpdateFolderRequest request = new UpdateFolderRequest(
                 folder.getId(), null, null, null, Long.MAX_VALUE, null
@@ -425,7 +425,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateFolderMissingSetAclPermission() throws IOException {
-        var folder = prepareAclGroupWithPermissions(List.of(CREATE_FOLDER, WRITE_OBJECT_SYS_METADATA)).createFolder().folder;
+        var folder = prepareAclGroupWithPermissions(List.of(CREATE_FOLDER)).createFolder().folder;
         UpdateFolderRequest request = new UpdateFolderRequest(
                 folder.getId(), null, null, null, null, 1L
         );
@@ -453,8 +453,8 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void updateFolderHappyPath() throws IOException {
         var targetFolderId = new TestObjectHolder(client, userId).createFolder().folder.getId();
-        var adminToh = prepareAclGroupWithPermissions(List.of(MOVE, BROWSE,
-                WRITE_OBJECT_SYS_METADATA, SET_ACL, NAME_WRITE, TYPE_WRITE))
+        var adminToh = prepareAclGroupWithPermissions(List.of(SET_PARENT, BROWSE,
+                SET_OWNER, SET_ACL, SET_NAME, SET_TYPE))
                 .createFolderType()
                 .createFolder();
         UpdateFolderRequest request = new UpdateFolderRequest(

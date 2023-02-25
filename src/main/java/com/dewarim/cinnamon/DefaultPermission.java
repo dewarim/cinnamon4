@@ -5,60 +5,6 @@ package com.dewarim.cinnamon;
  */
 public enum DefaultPermission {
 
-    /*
-
-planned:
-folder.createfolder
-folder.createobject
-node.acl.write
-node.browse
-node.delete
-node.metadata.read
-node.metadata.write
-node.move
-node.name.write
-node.parentfolder.write
-node.sysmetadata.read
-node.type.write
-object.content.read
-object.content.write
-object.lifecyclestate.write
-object.lock
-object.version
-relation.child.add
-relation.child.remove
-relation.parent.add
-relation.parent.remove
-
-Abweichungen:
-folder.createfolder -> folder.create.folder
-folder.createobject -> folder.create.object
-node.sysmetadata.write -> fehlte noch (um language, owner, ... zu setzen)
-node.parentfolder.write -> entfällt, da es node.move gibt.
-
-relation.child.add
-relation.parent.add
-relation.child.remove
-relation.parent.remove
-folder.createfolder
-folder.createobject
-node.browse
-node.delete
-object.lock
-node.sysmetadata.read
-node.acl.write
-node.move
-object.content.write
-object.content.read
-object.version
-node.metadata.write
-node.metadata.read
-object.lifecyclestate.write
-node.name.write
-node.type.write
-
-     */
-
     /**
      * Permission to browse an object (OSD, folder, link etc), that is: the server will list it when
      * queried for the content of a folder or when a search for turns up this
@@ -88,12 +34,6 @@ node.type.write
      */
     LOCK("object.lock"),
 
-    /**
-     * Permission to move an object or folder, depending on which it is set.
-     */
-    MOVE("node.move"),
-
-    NAME_WRITE("node.name.write"),
 
     /**
      * Permission to read to an object's content.
@@ -104,7 +44,6 @@ node.type.write
      * Permission to read an object's custom metadata
      */
     READ_OBJECT_CUSTOM_METADATA("node.metadata.read"),
-
     /**
      * Permission to read an object's system metadata
      */
@@ -122,7 +61,19 @@ node.type.write
      * Permission to change an object's or folder's ACL.
      */
     SET_ACL("node.acl.write"),
-    TYPE_WRITE("node.type.write"),
+
+    SET_LANGUAGE("object.language.write"),
+
+    SET_LINK_TARGET("link.target.write"),
+    SET_NAME("node.name.write"),
+    SET_OWNER("node.owner.write"),
+    /**
+     * Permission to move an object or folder, depending on which it is set.
+     */
+    SET_PARENT("parent_folder.write"),
+    SET_SUMMARY("node.summary.write"),
+
+    SET_TYPE("node.type.write"),
     /**
      * Permission to create a new version of an object.
      */
@@ -134,11 +85,7 @@ node.type.write
     /**
      * Permission to change an object's custom metadata
      */
-    WRITE_OBJECT_CUSTOM_METADATA("node.metadata.write"),
-    /**
-     * Permission to change an object's system metadata
-     */
-    WRITE_OBJECT_SYS_METADATA("node.sysmetadata.write");
+    WRITE_OBJECT_CUSTOM_METADATA("node.metadata.write");
 
     final String name;
 

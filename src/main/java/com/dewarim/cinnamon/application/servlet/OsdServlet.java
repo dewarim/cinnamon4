@@ -608,8 +608,8 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
             IOException {
         SetSummaryRequest summaryRequest = xmlMapper.readValue(request.getInputStream(), SetSummaryRequest.class);
         ObjectSystemData  osd            = osdDao.getObjectById(summaryRequest.getId()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
-        authorizationService.throwUpUnlessUserOrOwnerHasPermission(osd, DefaultPermission.WRITE_OBJECT_SYS_METADATA, user,
-                ErrorCode.NO_WRITE_SYS_METADATA_PERMISSION);
+        authorizationService.throwUpUnlessUserOrOwnerHasPermission(osd, DefaultPermission.SET_SUMMARY, user,
+                ErrorCode.NO_SET_SUMMARY_PERMISSION);
         osd.setSummary(summaryRequest.getSummary());
         osdDao.updateOsd(osd, true);
         response.responseIsGenericOkay();
@@ -644,10 +644,6 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
             return;
         }
 
-        if(updateChangesMetadata(updateRequest) ) {
-            throwUnlessSysMetadataIsWritable(osd);
-        }
-
         AccessFilter accessFilter = AccessFilter.getInstance(user);
         FolderDao    folderDao    = new FolderDao();
 
@@ -660,8 +656,8 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
             if (!accessFilter.hasPermissionOnOwnable(parentFolder, DefaultPermission.CREATE_OBJECT, parentFolder)) {
                 ErrorCode.NO_CREATE_PERMISSION.throwUp();
             }
-            if (!accessFilter.hasPermissionOnOwnable(osd, DefaultPermission.MOVE, osd)) {
-                ErrorCode.NO_MOVE_PERMISSION.throwUp();
+            if (!accessFilter.hasPermissionOnOwnable(osd, DefaultPermission.SET_PARENT, osd)) {
+                ErrorCode.NO_SET_PARENT_PERMISSION.throwUp();
             }
             osd.setParentId(parentFolder.getId());
             changed = true;
@@ -670,7 +666,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         // change name
         String name = updateRequest.getName();
         if (name != null) {
-            if (!accessFilter.hasPermissionOnOwnable(osd, DefaultPermission.NAME_WRITE, osd)) {
+            if (!accessFilter.hasPermissionOnOwnable(osd, DefaultPermission.SET_NAME, osd)) {
                 throw ErrorCode.NO_NAME_WRITE_PERMISSION.exception();
             }
             osd.setName(name);
@@ -680,7 +676,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         // change type
         Long typeId = updateRequest.getObjectTypeId();
         if (typeId != null) {
-            if (!accessFilter.hasPermissionOnOwnable(osd, DefaultPermission.TYPE_WRITE, osd)) {
+            if (!accessFilter.hasPermissionOnOwnable(osd, DefaultPermission.SET_TYPE, osd)) {
                 throw NO_TYPE_WRITE_PERMISSION.exception();
             }
             ObjectType type = new ObjectTypeDao().getObjectTypeById(typeId)
@@ -704,6 +700,9 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         // change owner
         Long ownerId = updateRequest.getOwnerId();
         if (ownerId != null) {
+            if (!accessFilter.hasPermissionOnOwnable(osd, DefaultPermission.SET_OWNER, osd)) {
+                NO_SET_OWNER_PERMISSION.throwUp();
+            }
             UserAccount owner = new UserAccountDao().getUserAccountById(ownerId)
                     .orElseThrow(ErrorCode.USER_ACCOUNT_NOT_FOUND.getException());
             osd.setOwnerId(owner.getId());
@@ -713,6 +712,9 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         // change language
         Long languageId = updateRequest.getLanguageId();
         if (languageId != null) {
+            if (!accessFilter.hasPermissionOnOwnable(osd, DefaultPermission.SET_LANGUAGE, osd)) {
+                NO_UPDATE_LANGUAGE_PERMISSION.throwUp();
+            }
             Language language = new LanguageDao().getLanguageById(languageId)
                     .orElseThrow(ErrorCode.LANGUAGE_NOT_FOUND.getException());
             osd.setLanguageId(language.getId());

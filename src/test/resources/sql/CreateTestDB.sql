@@ -582,26 +582,29 @@ insert into acl_groups(id,acl_id,group_id) values (nextval('seq_acl_group_id'),2
 -- #4 reviewers are connected to reviewers acl:
 insert into acl_groups(id,acl_id,group_id) values (nextval('seq_acl_group_id'),2,5);
 
-insert into permissions values (nextval('seq_permission_id'),'node.browse'); -- #1
+insert into permissions values (nextval('seq_permission_id'),'node.browse');
 insert into permissions values (nextval('seq_permission_id'),'folder.create.folder');
 insert into permissions values (nextval('seq_permission_id'),'folder.create.object');
 insert into permissions values (nextval('seq_permission_id'),'node.delete');
 insert into permissions values (nextval('seq_permission_id'),'node.name.write');
 insert into permissions values (nextval('seq_permission_id'),'node.type.write');
-insert into permissions values (nextval('seq_permission_id'),'object.lock'); -- #8
-insert into permissions values (nextval('seq_permission_id'),'node.move'); -- #9
-insert into permissions values (nextval('seq_permission_id'),'object.content.read'); -- #10
-insert into permissions values (nextval('seq_permission_id'),'node.metadata.read'); -- #11
-insert into permissions values (nextval('seq_permission_id'),'node.sysmetadata.read'); -- #12
-insert into permissions values (nextval('seq_permission_id'),'node.acl.write'); -- #13
-insert into permissions values (nextval('seq_permission_id'),'object.version'); -- #14
-insert into permissions values (nextval('seq_permission_id'),'object.content.write'); -- #15
-insert into permissions values (nextval('seq_permission_id'),'node.metadata.write'); -- #16
-insert into permissions values (nextval('seq_permission_id'),'node.sysmetadata.write'); -- #17
-insert into permissions values (nextval('seq_permission_id'),'relation.child.add'); -- #18
-insert into permissions values (nextval('seq_permission_id'),'relation.parent.add'); -- #19
-insert into permissions values (nextval('seq_permission_id'),'relation.child.remove'); -- #20
-insert into permissions values (nextval('seq_permission_id'),'relation.parent.remove'); -- #21
+insert into permissions values (nextval('seq_permission_id'),'object.lock');
+insert into permissions values (nextval('seq_permission_id'),'object.language.write');
+insert into permissions values (nextval('seq_permission_id'),'link.target.write');
+insert into permissions values (nextval('seq_permission_id'),'parent_folder.write');
+insert into permissions values (nextval('seq_permission_id'),'object.content.read');
+insert into permissions values (nextval('seq_permission_id'),'node.metadata.read');
+insert into permissions values (nextval('seq_permission_id'),'node.sysmetadata.read');
+insert into permissions values (nextval('seq_permission_id'),'node.acl.write');
+insert into permissions values (nextval('seq_permission_id'),'node.summary.write');
+insert into permissions values (nextval('seq_permission_id'),'node.owner.write');
+insert into permissions values (nextval('seq_permission_id'),'object.version');
+insert into permissions values (nextval('seq_permission_id'),'object.content.write');
+insert into permissions values (nextval('seq_permission_id'),'node.metadata.write');
+insert into permissions values (nextval('seq_permission_id'),'relation.child.add');
+insert into permissions values (nextval('seq_permission_id'),'relation.parent.add');
+insert into permissions values (nextval('seq_permission_id'),'relation.child.remove');
+insert into permissions values (nextval('seq_permission_id'),'relation.parent.remove');
 insert into permissions values (nextval('seq_permission_id'),'object.lifecyclestate.write');
 
 -- #1 default folder type

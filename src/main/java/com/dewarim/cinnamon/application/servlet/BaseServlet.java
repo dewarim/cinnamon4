@@ -14,20 +14,11 @@ import jakarta.servlet.http.HttpServlet;
 import java.util.List;
 
 import static com.dewarim.cinnamon.DefaultPermission.READ_OBJECT_SYS_METADATA;
-import static com.dewarim.cinnamon.DefaultPermission.WRITE_OBJECT_SYS_METADATA;
 import static com.dewarim.cinnamon.ErrorCode.NO_READ_CUSTOM_METADATA_PERMISSION;
 
 public class BaseServlet extends HttpServlet {
 
     static final AuthorizationService authorizationService = new AuthorizationService();
-
-    static void throwUnlessSysMetadataIsWritable(Ownable ownable) {
-        UserAccount user         = ThreadLocalSqlSession.getCurrentUser();
-        boolean     writeAllowed = authorizationService.hasUserOrOwnerPermission(ownable, WRITE_OBJECT_SYS_METADATA, user);
-        if (!writeAllowed) {
-            throw ErrorCode.NO_WRITE_SYS_METADATA_PERMISSION.getException().get();
-        }
-    }
 
     static void throwUnlessSysMetadataIsReadable(Ownable ownable) {
         UserAccount user        = ThreadLocalSqlSession.getCurrentUser();

@@ -24,6 +24,7 @@ import com.dewarim.cinnamon.model.request.lifecycleState.ListLifecycleStateReque
 import com.dewarim.cinnamon.model.request.lifecycleState.UpdateLifecycleStateRequest;
 import com.dewarim.cinnamon.model.response.LifecycleStateWrapper;
 import com.dewarim.cinnamon.provider.StateProviderService;
+import com.dewarim.cinnamon.security.authorization.AccessFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -49,12 +50,13 @@ public class LifecycleStateServlet extends BaseServlet implements CruddyServlet<
         LifecycleStateDao stateDao         = new LifecycleStateDao();
         UrlMapping        mapping          = UrlMapping.getByPath(request.getRequestURI());
         CinnamonResponse  cinnamonResponse = (CinnamonResponse) response;
+        UserAccount       user             = ThreadLocalSqlSession.getCurrentUser();
 
         switch (mapping) {
             case LIFECYCLE_STATE__ATTACH_LIFECYCLE ->
-                    attachLifecycleState(request, cinnamonResponse, osdDao, lifecycleDao, stateDao);
-            case LIFECYCLE_STATE__CHANGE_STATE -> changeState(request, cinnamonResponse, osdDao, stateDao);
-            case LIFECYCLE_STATE__DETACH_LIFECYCLE -> detachLifecycleState(request, cinnamonResponse, osdDao);
+                    attachLifecycleState(request, cinnamonResponse, osdDao, lifecycleDao, stateDao, user);
+            case LIFECYCLE_STATE__CHANGE_STATE -> changeState(request, cinnamonResponse, osdDao, stateDao, user);
+            case LIFECYCLE_STATE__DETACH_LIFECYCLE -> detachLifecycleState(request, cinnamonResponse, osdDao, user);
             case LIFECYCLE_STATE__GET -> getLifecycleState(request, cinnamonResponse);
             case LIFECYCLE_STATE__CREATE -> {
                 superuserCheck();
@@ -88,16 +90,15 @@ public class LifecycleStateServlet extends BaseServlet implements CruddyServlet<
         response.setWrapper(wrapper);
     }
 
-    private void changeState(HttpServletRequest request, CinnamonResponse response, OsdDao osdDao, LifecycleStateDao stateDao) throws IOException {
+    private void changeState(HttpServletRequest request, CinnamonResponse response, OsdDao osdDao, LifecycleStateDao stateDao, UserAccount user) throws IOException {
         ChangeLifecycleStateRequest changeRequest = xmlMapper.readValue(request.getInputStream(), ChangeLifecycleStateRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         Long             osdId   = changeRequest.getOsdId();
         Long             stateId = changeRequest.getStateId();
         ObjectSystemData osd     = osdDao.getObjectById(osdId).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
 
-        UserAccount user = ThreadLocalSqlSession.getCurrentUser();
-        boolean     writeAllowed = authorizationService.hasUserOrOwnerPermission(osd, LIFECYCLE_STATE_WRITE, user);
-        if(!writeAllowed){
+        boolean writeAllowed = authorizationService.hasUserOrOwnerPermission(osd, LIFECYCLE_STATE_WRITE, user);
+        if (!writeAllowed) {
             throw ErrorCode.NO_LIFECYCLE_STATE_WRITE_PERMISSION.exception();
         }
 
@@ -128,24 +129,30 @@ public class LifecycleStateServlet extends BaseServlet implements CruddyServlet<
         }
     }
 
-    private void detachLifecycleState(HttpServletRequest request, CinnamonResponse response, OsdDao osdDao) throws IOException {
+    private void detachLifecycleState(HttpServletRequest request, CinnamonResponse response, OsdDao osdDao, UserAccount user) throws IOException {
         IdRequest detachReq = xmlMapper.readValue(request.getInputStream(), IdRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         Long             id  = detachReq.getId();
         ObjectSystemData osd = osdDao.getObjectById(id).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
-        throwUnlessSysMetadataIsWritable(osd);
-
+        verifyWritePermissionForLifecycleState(osd, user);
         osd.setLifecycleStateId(null);
         osdDao.updateOsd(osd, true);
         response.responseIsGenericOkay();
     }
 
-    private void attachLifecycleState(HttpServletRequest request, CinnamonResponse response, OsdDao osdDao, LifecycleDao lifecycleDao, LifecycleStateDao stateDao) throws IOException {
+    private void verifyWritePermissionForLifecycleState(ObjectSystemData osd, UserAccount user) {
+        var accessFilter = AccessFilter.getInstance(user);
+        if (!accessFilter.hasPermissionOnOwnable(osd, LIFECYCLE_STATE_WRITE, osd)) {
+            throw ErrorCode.NO_LIFECYCLE_STATE_WRITE_PERMISSION.exception();
+        }
+    }
+
+    private void attachLifecycleState(HttpServletRequest request, CinnamonResponse response, OsdDao osdDao, LifecycleDao lifecycleDao, LifecycleStateDao stateDao, UserAccount user) throws IOException {
         AttachLifecycleRequest attachReq = xmlMapper.readValue(request.getInputStream(), AttachLifecycleRequest.class);
         if (attachReq.validated()) {
             ObjectSystemData osd = osdDao.getObjectById(attachReq.getOsdId()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
             // TODO: should we check for readSysMeta, i.e. if OSD is browsable?
-            throwUnlessSysMetadataIsWritable(osd);
+            verifyWritePermissionForLifecycleState(osd, user);
 
             Lifecycle lifecycle = lifecycleDao.getLifecycleById(attachReq.getLifecycleId())
                     .orElseThrow(ErrorCode.LIFECYCLE_NOT_FOUND.getException());

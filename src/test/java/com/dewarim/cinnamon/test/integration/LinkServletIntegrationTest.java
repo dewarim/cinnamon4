@@ -30,7 +30,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void getLinkByIdForObject() throws IOException {
         String           summary    = "<summary>sum of a sum</summary>";
-        var              toh        = prepareAclGroupWithPermissions(List.of(BROWSE, WRITE_OBJECT_SYS_METADATA));
+        var              toh        = prepareAclGroupWithPermissions(List.of(BROWSE, SET_SUMMARY));
         ObjectSystemData linkTarget = toh.createOsd().osd;
         Long linkId = toh.createFolder()
                 .createLinkToOsd(linkTarget)
@@ -60,7 +60,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void getLinkByIdForFolder() throws IOException {
         var toh = prepareAclGroupWithPermissions(
-                List.of(BROWSE, CREATE_OBJECT, CREATE_FOLDER, WRITE_OBJECT_SYS_METADATA));
+                List.of(BROWSE, CREATE_OBJECT, CREATE_FOLDER, SET_SUMMARY));
         // Create target folder, then a folder and inside a link to the target folder.
         Folder linkTarget = toh.createFolder().folder;
         assertNotNull(client.getFolderById(linkTarget.getId(), false));
@@ -81,7 +81,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void getLinkByIdForFolderWithoutSummary() throws IOException {
         var toh = prepareAclGroupWithPermissions(
-                List.of(BROWSE, CREATE_OBJECT, CREATE_FOLDER, WRITE_OBJECT_SYS_METADATA));
+                List.of(BROWSE, CREATE_OBJECT, CREATE_FOLDER, SET_SUMMARY));
         // Create target folder, then a folder and inside a link to the target folder.
         Folder linkTarget = toh.createFolder(createFolderId).folder;
         toh.createFolder(createFolderId)
@@ -424,13 +424,13 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
                 .createLinkToOsd(toh.osd)
                 .link;
         link.setOwnerId(1L);
-        assertClientError(() -> client.updateLink(link), NO_WRITE_SYS_METADATA_PERMISSION);
+        assertClientError(() -> client.updateLink(link), NO_SET_OWNER_PERMISSION);
     }
 
     @Test
     public void updateLinkAclWithoutSetAclPermission() throws IOException {
         var toh = prepareAclGroupWithPermissions(
-                List.of(BROWSE, CREATE_OBJECT, CREATE_FOLDER, WRITE_OBJECT_SYS_METADATA));
+                List.of(BROWSE, CREATE_OBJECT, CREATE_FOLDER));
         // Create an OSD, then a folder and inside a link to the osd.
         // Then try to update the link's ACL without permission:
         toh.createOsd()
@@ -443,7 +443,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void updateLinkAclWithPermission() throws IOException {
         var toh = prepareAclGroupWithPermissions(
-                List.of(BROWSE, WRITE_OBJECT_SYS_METADATA, SET_ACL))
+                List.of(BROWSE, SET_ACL))
                 .createOsd()
                 .createFolder();
         Link link = toh.createLinkToOsd(toh.osd).link;
@@ -455,7 +455,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void updateLinkAclWithNonExistentAcl() throws IOException {
         var toh = prepareAclGroupWithPermissions(
-                List.of(BROWSE, WRITE_OBJECT_SYS_METADATA, SET_ACL))
+                List.of(BROWSE, SET_ACL))
                 .createOsd()
                 .createFolder();
         Link link = toh.createLinkToOsd(toh.osd).link;
@@ -465,7 +465,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateLinkFolderWithNonExistentFolder() throws IOException {
-        var toh          = prepareAclGroupWithPermissions(List.of(BROWSE, WRITE_OBJECT_SYS_METADATA));
+        var toh          = prepareAclGroupWithPermissions(List.of(BROWSE));
         var targetFolder = toh.createFolder().folder;
         var link = toh.createFolder()
                 .createLinkToFolder(targetFolder).link;
@@ -475,7 +475,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateLinkFolderWithoutFolderBrowsePermission() throws IOException {
-        var toh = prepareAclGroupWithPermissions(List.of(BROWSE, WRITE_OBJECT_SYS_METADATA));
+        var toh = prepareAclGroupWithPermissions(List.of(BROWSE));
         var targetFolder = toh
                 .createFolder()
                 .folder;
@@ -492,7 +492,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void updateLinkOwnerWithNonExistentOwner() throws IOException {
         var toh = prepareAclGroupWithPermissions(
-                List.of(BROWSE, WRITE_OBJECT_SYS_METADATA))
+                List.of(BROWSE))
                 .createOsd()
                 .createFolder();
         Link link = toh.createLinkToOsd(toh.osd).link;
@@ -503,7 +503,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void updateLinkOwner() throws IOException {
         var toh = prepareAclGroupWithPermissions(
-                List.of(BROWSE, CREATE_OBJECT, CREATE_FOLDER, WRITE_OBJECT_SYS_METADATA));
+                List.of(BROWSE, CREATE_OBJECT, CREATE_FOLDER, SET_OWNER));
         // Create target folder, then a folder and inside a link to the target folder.
         Folder linkTarget = toh.createFolder().folder;
         toh.createFolder()
@@ -518,7 +518,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void updateLinkParentIntoFolderWithoutBrowsePermission() throws IOException {
         var toh = prepareAclGroupWithPermissions(
-                List.of(BROWSE, WRITE_OBJECT_SYS_METADATA))
+                List.of(BROWSE))
                 .createOsd()
                 .createFolder();
         Link link = toh.createLinkToOsd(toh.osd).link;
@@ -532,7 +532,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void updateLinkParentIntoFolderWithoutCreatePermission() throws IOException {
         var toh = prepareAclGroupWithPermissions(
-                List.of(BROWSE, WRITE_OBJECT_SYS_METADATA))
+                List.of(BROWSE))
                 .createOsd()
                 .createFolder();
         Link link = toh.createLinkToOsd(toh.osd).link;
@@ -545,7 +545,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateLinkParentIntoFolderWithNonExistentParentFolder() throws IOException {
-        var toh = prepareAclGroupWithPermissions(List.of(BROWSE, WRITE_OBJECT_SYS_METADATA))
+        var toh = prepareAclGroupWithPermissions(List.of(BROWSE))
                 .createOsd()
                 .createFolder();
         Link link = toh.createLinkToOsd(toh.osd).link;
@@ -556,12 +556,11 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void updateLinkParentFolder() throws IOException {
         var toh = prepareAclGroupWithPermissions(
-                List.of(BROWSE, CREATE_OBJECT, CREATE_FOLDER, WRITE_OBJECT_SYS_METADATA));
+                List.of(BROWSE, CREATE_OBJECT, CREATE_FOLDER,SET_PARENT ));
         // Create target folder, then a folder and inside a link to the target folder.
         Folder linkTarget  = toh.createFolder().folder;
         Long   newParentId = toh.createFolder("parent folder for update", linkTarget.getId()).folder.getId();
-        toh.createFolder()
-                .createLinkToFolder(linkTarget);
+        toh.createFolder().createLinkToFolder(linkTarget);
         var linkResponse = client.getLinkById(toh.link.getId(), true);
         linkResponse.setParentId(newParentId);
         var link = new Link(linkResponse);
@@ -571,7 +570,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void updateLinkToObject() throws IOException {
         var toh = prepareAclGroupWithPermissions(List.of(
-                BROWSE, CREATE_OBJECT, WRITE_OBJECT_SYS_METADATA
+                BROWSE, CREATE_OBJECT, SET_LINK_TARGET
         ));
 
         long osdId        = toh.createOsd("updateLinkToObject").osd.getId();
@@ -585,7 +584,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateLinkToObjectFromFolderIsForbidden() throws IOException {
-        var toh = prepareAclGroupWithPermissions(List.of(BROWSE, WRITE_OBJECT_SYS_METADATA))
+        var toh = prepareAclGroupWithPermissions(List.of(BROWSE))
                 .createOsd()
                 .createFolder();
         var targetFolder = toh.folder;
@@ -599,7 +598,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateLinkToFolderFromObjectIsForbidden() throws IOException {
-        var toh = prepareAclGroupWithPermissions(List.of(BROWSE, WRITE_OBJECT_SYS_METADATA))
+        var toh = prepareAclGroupWithPermissions(List.of(BROWSE))
                 .createOsd()
                 .createFolder();
         var targetFolder = toh.createFolder(createFolderId).folder;
@@ -614,7 +613,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void updateLinkToObjectWithNonExistentObject() throws IOException {
         var toh = prepareAclGroupWithPermissions(
-                List.of(BROWSE, WRITE_OBJECT_SYS_METADATA))
+                List.of(BROWSE))
                 .createOsd()
                 .createFolder();
         var link = toh.createLinkToOsd(toh.osd).link;
@@ -624,7 +623,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateLinkToObjectWithUnbrowsableObject() throws IOException {
-        var toh = prepareAclGroupWithPermissions(List.of(BROWSE, WRITE_OBJECT_SYS_METADATA))
+        var toh = prepareAclGroupWithPermissions(List.of(CREATE_OBJECT))
                 .createOsd()
                 .createFolder();
         Link link = toh.createLinkToOsd(toh.osd).link;

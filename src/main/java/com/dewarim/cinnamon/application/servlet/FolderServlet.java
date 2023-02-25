@@ -59,7 +59,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static com.dewarim.cinnamon.DefaultPermission.TYPE_WRITE;
+import static com.dewarim.cinnamon.DefaultPermission.SET_TYPE;
 import static com.dewarim.cinnamon.ErrorCode.NO_TYPE_WRITE_PERMISSION;
 import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
 
@@ -88,7 +88,7 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
             case FOLDER__GET_FOLDER -> getFolder(request, cinnamonResponse, user, folderDao);
             case FOLDER__GET_FOLDER_BY_PATH -> getFolderByPath(request, cinnamonResponse, user, folderDao);
             case FOLDER__GET_FOLDERS -> getFolders(request, cinnamonResponse, user, folderDao);
-            case FOLDER__GET_META -> getMeta(request, cinnamonResponse, user, folderDao);
+            case FOLDER__GET_META -> getMeta(request, cinnamonResponse, folderDao);
             case FOLDER__GET_SUBFOLDERS -> getSubFolders(request, cinnamonResponse, user, folderDao);
             case FOLDER__SET_SUMMARY -> setSummary(request, cinnamonResponse, user, folderDao);
             case FOLDER__GET_SUMMARIES -> getSummaries(request, cinnamonResponse, user, folderDao);
@@ -268,8 +268,8 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
             if (!accessFilter.hasPermissionOnOwnable(parentFolder, DefaultPermission.CREATE_FOLDER, parentFolder)) {
                 ErrorCode.NO_CREATE_PERMISSION.throwUp();
             }
-            if (!accessFilter.hasPermissionOnOwnable(folder, DefaultPermission.MOVE, folder)) {
-                ErrorCode.NO_MOVE_PERMISSION.throwUp();
+            if (!accessFilter.hasPermissionOnOwnable(folder, DefaultPermission.SET_PARENT, folder)) {
+                ErrorCode.NO_SET_PARENT_PERMISSION.throwUp();
             }
             folder.setParentId(parentFolder.getId());
             changed = true;
@@ -278,7 +278,7 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
         // change name
         String name = updateRequest.getName();
         if (name != null) {
-            if (!accessFilter.hasPermissionOnOwnable(folder, DefaultPermission.NAME_WRITE, folder)) {
+            if (!accessFilter.hasPermissionOnOwnable(folder, DefaultPermission.SET_NAME, folder)) {
                 throw ErrorCode.NO_NAME_WRITE_PERMISSION.exception();
             }
             Folder parentFolder;
@@ -298,7 +298,7 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
         // change type
         Long typeId = updateRequest.getTypeId();
         if (typeId != null) {
-            if (!accessFilter.hasPermissionOnOwnable(folder, TYPE_WRITE, folder)) {
+            if (!accessFilter.hasPermissionOnOwnable(folder, SET_TYPE, folder)) {
                 throw NO_TYPE_WRITE_PERMISSION.exception();
             }
             FolderType type = new FolderTypeDao().getFolderTypeById(typeId)
@@ -322,7 +322,9 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
         // change owner
         Long ownerId = updateRequest.getOwnerId();
         if (ownerId != null) {
-            throwUnlessSysMetadataIsWritable(folder);
+            if (!accessFilter.hasPermissionOnOwnable(folder, DefaultPermission.SET_OWNER, folder)) {
+                ErrorCode.NO_SET_OWNER_PERMISSION.throwUp();
+            }
             UserAccount owner = new UserAccountDao().getUserAccountById(ownerId)
                     .orElseThrow(ErrorCode.USER_ACCOUNT_NOT_FOUND.getException());
             folder.setOwnerId(owner.getId());
@@ -356,7 +358,7 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
      * This requires assembling a new DOM tree in memory for each request to getMeta, which is not something you
      * want to see with large metasets.
      */
-    private void getMeta(HttpServletRequest request, CinnamonResponse response, UserAccount user, FolderDao folderDao) throws IOException {
+    private void getMeta(HttpServletRequest request, CinnamonResponse response, FolderDao folderDao) throws IOException {
         MetaRequest metaRequest = xmlMapper.readValue(request.getInputStream(), MetaRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
@@ -439,13 +441,13 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
         Optional<Folder>  folderOpt      = folderDao.getFolderById(summaryRequest.getId());
         if (folderOpt.isPresent()) {
             Folder folder = folderOpt.get();
-            if (authorizationService.hasUserOrOwnerPermission(folder, DefaultPermission.WRITE_OBJECT_SYS_METADATA, user)) {
+            if (authorizationService.hasUserOrOwnerPermission(folder, DefaultPermission.SET_SUMMARY, user)) {
                 folder.setSummary(summaryRequest.getSummary());
                 folderDao.updateFolder(folder);
                 response.responseIsGenericOkay();
                 return;
             } else {
-                throw ErrorCode.NO_WRITE_SYS_METADATA_PERMISSION.exception();
+                throw ErrorCode.NO_SET_SUMMARY_PERMISSION.exception();
             }
         }
         ErrorCode.OBJECT_NOT_FOUND.throwUp();

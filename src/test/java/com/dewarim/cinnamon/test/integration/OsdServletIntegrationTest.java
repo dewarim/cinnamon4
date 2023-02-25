@@ -140,7 +140,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void getObjectsByFolderId() throws IOException {
         var toh = prepareAclGroupWithPermissions("getObjectsByFolderId",
-                List.of(BROWSE, CREATE_OBJECT, CREATE_FOLDER, WRITE_OBJECT_SYS_METADATA));
+                List.of(BROWSE, CREATE_OBJECT, CREATE_FOLDER, SET_SUMMARY));
         var osdAsLinkTarget = toh.createOsd("osdAsLinkTarget").osd;
         var folder          = toh.createFolder("getObjectsByFolderId", createFolderId).folder;
         var osd1            = toh.createOsd("osd-1-by-folder-id").osd;
@@ -210,7 +210,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void getObjectsByFolderIdWithLinksAsOsds() throws IOException {
         var toh = prepareAclGroupWithPermissions("getObjectsByFolderIdWithLinksAsOsds",
-                List.of(BROWSE, CREATE_OBJECT, CREATE_FOLDER, WRITE_OBJECT_SYS_METADATA));
+                List.of(BROWSE, CREATE_OBJECT, CREATE_FOLDER));
         var osdAsLinkTarget = toh.createOsd("osdAsLinkTarget").osd;
         var folder          = toh.createFolder("getObjectsByFolderIdWithLinksAsOsds", createFolderId).folder;
         toh.createOsd("osd-x-by-folder-id")
@@ -264,7 +264,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void setSummaryHappyPath() throws IOException {
         var osdId = prepareAclGroupWithPermissions("setSummaryHappyPath", List.of(
-                WRITE_OBJECT_SYS_METADATA, READ_OBJECT_SYS_METADATA
+                 READ_OBJECT_SYS_METADATA, SET_SUMMARY
         )).createOsd("setSummaryHappyPath").osd.getId();
         client.setSummary(osdId, "<sum>sum</sum>");
         List<Summary> summaries = client.getOsdSummaries(List.of(osdId));
@@ -276,8 +276,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     public void setSummaryMissingPermission() throws IOException {
         var toh = prepareAclGroupWithPermissions("setSummaryMissingPermission", List.of(BROWSE))
                 .createOsd("setSummaryMissingPermission");
-        var ex = assertThrows(CinnamonClientException.class, () -> client.setSummary(toh.osd.getId(), "a summary"));
-        assertEquals(NO_WRITE_SYS_METADATA_PERMISSION, ex.getErrorCode());
+        assertClientError(() -> client.setSummary(toh.osd.getId(), "a summary"),NO_SET_SUMMARY_PERMISSION);
     }
 
     @Test
@@ -300,7 +299,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getSummariesMissingPermission() throws IOException {
-        long osdId = prepareAclGroupWithPermissions("getSummariesMissingPermission", List.of(WRITE_OBJECT_SYS_METADATA))
+        long osdId = prepareAclGroupWithPermissions("getSummariesMissingPermission", List.of(SET_SUMMARY))
                 .createOsd("getSummariesMissingPermission")
                 .osd.getId();
         client.setSummary(osdId, "<foo/>");
@@ -1202,20 +1201,8 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void updateOsdWithoutWriteSysMetaPermission() throws IOException {
-        var toh = prepareAclGroupWithPermissions(List.of(BROWSE, LOCK))
-                .createOsd("osd-update-forbidden");
-
-        var id = toh.osd.getId();
-        client.lockOsd(id);
-
-        UpdateOsdRequest request = new UpdateOsdRequest(id, 1L, "-", 1L, 1L, 1L, 1L);
-        assertClientError(() -> client.updateOsd(request), NO_WRITE_SYS_METADATA_PERMISSION);
-    }
-
-    @Test
     public void updateOsdWithParentFolderNotFound() throws IOException {
-        var toh = prepareAclGroupWithPermissions(List.of(BROWSE, LOCK, WRITE_OBJECT_SYS_METADATA))
+        var toh = prepareAclGroupWithPermissions(List.of(BROWSE, LOCK ))
                 .createOsd("osd-new-parent-missing");
 
         var id = toh.osd.getId();
@@ -1227,7 +1214,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateOsdWithoutCreateInFolderPermission() throws IOException {
-        var toh = prepareAclGroupWithPermissions(List.of(BROWSE, LOCK, WRITE_OBJECT_SYS_METADATA))
+        var toh = prepareAclGroupWithPermissions(List.of(BROWSE, LOCK ))
                 .createOsd("update-osd-no-create-permission");
 
         var id = toh.osd.getId();
@@ -1239,19 +1226,20 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateOsdWithoutMovePermission() throws IOException {
-        var toh = prepareAclGroupWithPermissions(List.of(BROWSE, LOCK, WRITE_OBJECT_SYS_METADATA))
+        var toh = prepareAclGroupWithPermissions(List.of(BROWSE, LOCK ))
                 .createOsd("update-osd-no-move-permission");
 
         var id = toh.osd.getId();
         client.lockOsd(id);
 
         var request = new UpdateOsdRequest(id, createFolderId, "-", 1L, 1L, 1L, 1L);
-        assertClientError(() -> client.updateOsd(request), NO_MOVE_PERMISSION);
+        assertClientError(() -> client.updateOsd(request), NO_SET_PARENT_PERMISSION);
     }
 
     @Test
     public void updateOsdWithMovePermission() throws IOException {
-        var toh = prepareAclGroupWithPermissions(List.of(BROWSE, LOCK, WRITE_OBJECT_SYS_METADATA, MOVE, CREATE_OBJECT))
+        var toh = prepareAclGroupWithPermissions(List.of(BROWSE, LOCK,
+                SET_PARENT, CREATE_OBJECT))
                 .createOsd("update-osd-move-permission")
                 .createFolder("target-of-update-osd-by-move", createFolderId);
 
@@ -1266,7 +1254,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateOsdChangeName() throws IOException {
-        var toh = prepareAclGroupWithPermissions(List.of(NAME_WRITE, LOCK, BROWSE))
+        var toh = prepareAclGroupWithPermissions(List.of(SET_NAME, LOCK, BROWSE))
                 .createOsd("update-osd-rename");
         var id = toh.osd.getId();
 
@@ -1289,7 +1277,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateOsdChangeTypeNotFound() throws IOException {
-        var toh = prepareAclGroupWithPermissions(List.of(TYPE_WRITE, LOCK)).createOsd("update-osd-rename");
+        var toh = prepareAclGroupWithPermissions(List.of(SET_TYPE, LOCK)).createOsd("update-osd-rename");
         var id  = toh.osd.getId();
 
         var request = new UpdateOsdRequest(id, null, null, null, null, Long.MAX_VALUE, null);
@@ -1312,7 +1300,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateOsdChangeType() throws IOException {
-        var toh = prepareAclGroupWithPermissions(List.of(LOCK, TYPE_WRITE, BROWSE))
+        var toh = prepareAclGroupWithPermissions(List.of(LOCK, SET_TYPE, BROWSE))
                 .createOsd()
                 .createObjectType();
         var id = toh.osd.getId();
@@ -1332,7 +1320,8 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         toh.createAcl("updateOsdChangeAclNoPermission")
                 .createGroup("test-updateOsdChangeAclNoPermission")
                 .createAclGroup()
-                .addPermissions(List.of(BROWSE, LOCK, WRITE_OBJECT_SYS_METADATA, MOVE, CREATE_OBJECT))
+                .addPermissions(List.of(BROWSE, LOCK,
+                        SET_PARENT, CREATE_OBJECT))
                 .addUserToGroup(userId)
                 .createOsd("update-osd-updateOsdChangeAclNoPermission");
 
@@ -1358,7 +1347,8 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void updateOsdChangeAcl() throws IOException {
         var toh = prepareAclGroupWithPermissions(
-                List.of(BROWSE, LOCK, SET_ACL, WRITE_OBJECT_SYS_METADATA, MOVE, CREATE_OBJECT))
+                List.of(BROWSE, LOCK, SET_ACL,
+                        SET_PARENT, CREATE_OBJECT))
                 .createOsd("update-osd-updateOsdChangeAcl");
         var id = toh.osd.getId();
         client.lockOsd(id);

@@ -106,7 +106,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
 
         var ex = assertThrows(CinnamonClientException.class,
                 () -> client.attachLifecycle(osdId, 1L, 1L, false));
-        assertEquals(NO_WRITE_SYS_METADATA_PERMISSION, ex.getErrorCode());
+        assertEquals(NO_LIFECYCLE_STATE_WRITE_PERMISSION, ex.getErrorCode());
     }
 
     @Test
