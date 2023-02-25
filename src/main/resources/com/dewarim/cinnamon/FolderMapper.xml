@@ -267,4 +267,19 @@
         </foreach>
     </select>
 
+    <select id="getRecursiveSubFolderIds" parameterType="long" resultType="long">
+        with recursive sub_folders(id, name, parent_id)
+                           as (select f.id, name, parent_id
+                               from folders f
+                               where f.id = #{id}
+                               union all
+                               select child.id,
+                                      child.name,
+                                      child.parent_id
+                               from folders child
+                                        inner join sub_folders sf on sf.id = child.parent_id)
+        select id
+        from sub_folders;
+    </select>
+
 </mapper>

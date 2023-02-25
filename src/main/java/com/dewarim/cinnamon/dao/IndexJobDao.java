@@ -1,7 +1,9 @@
 package com.dewarim.cinnamon.dao;
 
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
+import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.index.IndexJob;
+import com.dewarim.cinnamon.model.request.osd.VersionPredicate;
 import org.apache.ibatis.session.RowBounds;
 import org.apache.ibatis.session.SqlSession;
 
@@ -82,9 +84,19 @@ public class IndexJobDao {
         return session.insert("com.dewarim.cinnamon.model.index.IndexJob.countFailedJobs");
     }
 
+
+    public void reIndexFolderContent(Long folderId) {
+        List<Long> ids = new OsdDao().getObjectsByFolderId(folderId, false, VersionPredicate.ALL).stream().map(ObjectSystemData::getId).toList();
+        if(ids.isEmpty()){
+            return;
+        }
+        reindexOsds(ids);
+    }
+
+
     public static class IndexRows {
-        private int folders;
-        private int osds;
+        private final int folders;
+        private final int osds;
 
         public IndexRows(int folders, int osds) {
             this.folders = folders;

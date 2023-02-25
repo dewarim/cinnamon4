@@ -202,4 +202,8 @@ public class FolderDao implements CrudDao<Folder> {
         }
         return ThreadLocalSqlSession.getSqlSession();
     }
+
+    public List<Long> getRecursiveSubFolderIds(Long folderId) {
+        return getSqlSession().selectList("com.dewarim.cinnamon.model.Folder.getRecursiveSubFolderIds", folderId);
+    }
 }

@@ -14,6 +14,7 @@ import com.dewarim.cinnamon.dao.AclDao;
 import com.dewarim.cinnamon.dao.FolderDao;
 import com.dewarim.cinnamon.dao.FolderMetaDao;
 import com.dewarim.cinnamon.dao.FolderTypeDao;
+import com.dewarim.cinnamon.dao.IndexJobDao;
 import com.dewarim.cinnamon.dao.LinkDao;
 import com.dewarim.cinnamon.dao.OsdDao;
 import com.dewarim.cinnamon.dao.UserAccountDao;
@@ -23,6 +24,9 @@ import com.dewarim.cinnamon.model.FolderType;
 import com.dewarim.cinnamon.model.Meta;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.UserAccount;
+import com.dewarim.cinnamon.model.index.IndexJob;
+import com.dewarim.cinnamon.model.index.IndexJobAction;
+import com.dewarim.cinnamon.model.index.IndexJobType;
 import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.request.CreateMetaRequest;
 import com.dewarim.cinnamon.model.request.CreateRequest;
@@ -256,6 +260,7 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
         Folder       folder       = folderDao.getFolderById(folderId, true).orElseThrow(ErrorCode.FOLDER_NOT_FOUND.getException());
         AccessFilter accessFilter = AccessFilter.getInstance(user);
 
+        boolean reIndexSubfolders = false;
         boolean changed = false;
         // change parent folder
         Long parentId = updateRequest.getParentId();
@@ -271,7 +276,9 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
             if (!accessFilter.hasPermissionOnOwnable(folder, DefaultPermission.SET_PARENT, folder)) {
                 ErrorCode.NO_SET_PARENT_PERMISSION.throwUp();
             }
+
             folder.setParentId(parentFolder.getId());
+            reIndexSubfolders = true;
             changed = true;
         }
 
@@ -293,6 +300,7 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
                     .ifPresent(f -> ErrorCode.DUPLICATE_FOLDER_NAME_FORBIDDEN.throwUp());
             folder.setName(name);
             changed = true;
+            reIndexSubfolders = true;
         }
 
         // change type
@@ -334,6 +342,19 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
         // update folder:
         if (changed) {
             folderDao.updateFolder(folder);
+            if(reIndexSubfolders){
+                // the folder path changes for this folder and everything inside it, so we have to be re-index.
+                IndexJobDao indexJobDao = new IndexJobDao();
+                indexJobDao.reIndexFolderContent(folderId);
+                List<Long> subFolderIds = folderDao.getRecursiveSubFolderIds(folderId);
+                if(!subFolderIds.isEmpty()) {
+                    indexJobDao.reindexFolders(subFolderIds);
+                    for (Long subFolderId : subFolderIds) {
+                        indexJobDao.insertIndexJob(new IndexJob(IndexJobType.FOLDER, subFolderId, IndexJobAction.UPDATE));
+                        indexJobDao.reIndexFolderContent(subFolderId);
+                    }
+                }
+            }
         }
         response.responseIsGenericOkay();
     }
