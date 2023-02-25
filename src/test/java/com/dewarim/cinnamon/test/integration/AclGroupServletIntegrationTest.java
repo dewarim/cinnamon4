@@ -10,8 +10,6 @@ import com.dewarim.cinnamon.model.request.aclGroup.AclGroupListRequest;
 import com.dewarim.cinnamon.model.request.aclGroup.UpdateAclGroupRequest;
 import com.dewarim.cinnamon.model.response.AclGroupWrapper;
 import org.apache.http.HttpResponse;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -27,8 +25,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class AclGroupServletIntegrationTest extends CinnamonIntegrationTest {
 
-    private final static Logger log = LogManager.getLogger(AclGroupServletIntegrationTest.class);
-
     static List<Acl>      acls       = new ArrayList<>();
     static List<Group>    groups     = new ArrayList<>();
     static List<AclGroup> aclGroups = new ArrayList<>();
@@ -37,7 +33,7 @@ public class AclGroupServletIntegrationTest extends CinnamonIntegrationTest {
     public void testListAclGroupByAclId() throws IOException {
         AclGroupListRequest listRequest  = new AclGroupListRequest(1L, AclGroupListRequest.IdType.ACL);
         HttpResponse        httpResponse = sendStandardRequest(UrlMapping.ACL_GROUP__LIST_BY_GROUP_OR_ACL, listRequest);
-        List<AclGroup>      aclGroups   = unwrapAclGroups(httpResponse, 3);
+        List<AclGroup>      aclGroups   = unwrapAclGroups(httpResponse, 1);
         aclGroups.forEach(entry -> assertEquals(Long.valueOf(1), entry.getAclId()));
     }
 
@@ -45,7 +41,7 @@ public class AclGroupServletIntegrationTest extends CinnamonIntegrationTest {
     public void testListAclGroupByGroupId() throws IOException {
         AclGroupListRequest listRequest  = new AclGroupListRequest(4L, AclGroupListRequest.IdType.GROUP);
         HttpResponse        httpResponse = sendStandardRequest(UrlMapping.ACL_GROUP__LIST_BY_GROUP_OR_ACL, listRequest);
-        List<AclGroup>      aclGroups   = unwrapAclGroups(httpResponse, 5);
+        List<AclGroup>      aclGroups   = unwrapAclGroups(httpResponse, 1);
         aclGroups.forEach(entry -> assertEquals(Long.valueOf(4), entry.getGroupId()));
     }
 

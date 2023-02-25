@@ -12,9 +12,8 @@ import com.dewarim.cinnamon.model.request.acl.DeleteAclRequest;
 import com.dewarim.cinnamon.model.request.acl.ListAclRequest;
 import com.dewarim.cinnamon.model.request.acl.UpdateAclRequest;
 import com.dewarim.cinnamon.model.response.AclWrapper;
+import com.dewarim.cinnamon.test.TestObjectHolder;
 import org.apache.http.HttpResponse;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -29,7 +28,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class AclServletIntegrationTest extends CinnamonIntegrationTest {
 
-    private final Logger                     log          = LogManager.getLogger(AclServletIntegrationTest.class);
     private final Unwrapper<Acl, AclWrapper> aclUnWrapper = new Unwrapper<>(AclWrapper.class);
 
     @Test
@@ -149,8 +147,8 @@ public class AclServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void deleteAcl() throws IOException {
-        // aclId 3 is "delete.me.acl" in test db
-        assertTrue(adminClient.deleteAcl(Collections.singletonList(3L)));
+        Long aclId = adminClient.createAcl(new TestObjectHolder(client,userId).createRandomName()).getId();
+        assertTrue(adminClient.deleteAcl(Collections.singletonList(aclId)));
     }
 
     @Test

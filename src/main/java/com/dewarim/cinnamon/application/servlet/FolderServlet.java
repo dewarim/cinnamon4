@@ -59,6 +59,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static com.dewarim.cinnamon.DefaultPermission.TYPE_WRITE;
+import static com.dewarim.cinnamon.ErrorCode.NO_TYPE_WRITE_PERMISSION;
 import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
 
 @WebServlet(name = "Folder", urlPatterns = "/")
@@ -123,7 +125,7 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
         List<Folder> folders = loadFolders(deleteRequest.getIds(), deleteRecursively, deleteContent, folderDao);
 
         for (Folder folder : folders) {
-            authorizationService.throwUpUnlessUserOrOwnerHasPermission(folder, DefaultPermission.DELETE_FOLDER, user, ErrorCode.NO_DELETE_PERMISSION);
+            authorizationService.throwUpUnlessUserOrOwnerHasPermission(folder, DefaultPermission.DELETE, user, ErrorCode.NO_DELETE_PERMISSION);
         }
 
         List<Long> folderIds = folders.stream().map(Folder::getId).collect(Collectors.toList());
@@ -254,12 +256,6 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
         Folder       folder       = folderDao.getFolderById(folderId, true).orElseThrow(ErrorCode.FOLDER_NOT_FOUND.getException());
         AccessFilter accessFilter = AccessFilter.getInstance(user);
 
-        if (!accessFilter.hasPermissionOnOwnable(folder, DefaultPermission.EDIT_FOLDER, folder)) {
-            throw ErrorCode.NO_EDIT_FOLDER_PERMISSION.exception();
-        }
-
-        throwUnlessSysMetadataIsWritable(folder);
-
         boolean changed = false;
         // change parent folder
         Long parentId = updateRequest.getParentId();
@@ -282,6 +278,9 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
         // change name
         String name = updateRequest.getName();
         if (name != null) {
+            if (!accessFilter.hasPermissionOnOwnable(folder, DefaultPermission.NAME_WRITE, folder)) {
+                throw ErrorCode.NO_NAME_WRITE_PERMISSION.exception();
+            }
             Folder parentFolder;
             if (folder.getParentId() == null) {
                 parentFolder = folderDao.getRootFolder(false);
@@ -299,6 +298,9 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
         // change type
         Long typeId = updateRequest.getTypeId();
         if (typeId != null) {
+            if (!accessFilter.hasPermissionOnOwnable(folder, TYPE_WRITE, folder)) {
+                throw NO_TYPE_WRITE_PERMISSION.exception();
+            }
             FolderType type = new FolderTypeDao().getFolderTypeById(typeId)
                     .orElseThrow(ErrorCode.FOLDER_TYPE_NOT_FOUND.getException());
             folder.setTypeId(type.getId());
@@ -320,6 +322,7 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
         // change owner
         Long ownerId = updateRequest.getOwnerId();
         if (ownerId != null) {
+            throwUnlessSysMetadataIsWritable(folder);
             UserAccount owner = new UserAccountDao().getUserAccountById(ownerId)
                     .orElseThrow(ErrorCode.USER_ACCOUNT_NOT_FOUND.getException());
             folder.setOwnerId(owner.getId());

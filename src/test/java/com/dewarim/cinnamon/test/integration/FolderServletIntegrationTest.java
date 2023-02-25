@@ -251,7 +251,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createMetaMetasetIsUniqueAndExists() throws IOException {
-        Acl acl = getReviewerAcl();
+        Acl acl = prepareAclGroupWithPermissions(List.of(BROWSE, WRITE_OBJECT_CUSTOM_METADATA)).acl;
         Folder folder = client.createFolder(createFolderId, "createMetaMetasetIsUniqueAndExists",
                 userId, acl.getId(), 1L);
         MetasetType type = adminClient.createMetasetType("unique metaset type", true);
@@ -282,7 +282,8 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void deleteAllMetas() throws IOException {
-        Folder folder = client.createFolder(createFolderId, "folder-deleteAllMetas", userId, getReviewerAcl().getId(), 1L);
+        Acl    acl    = prepareAclGroupWithPermissions(List.of(READ_OBJECT_CUSTOM_METADATA, WRITE_OBJECT_CUSTOM_METADATA)).acl;
+        Folder folder = client.createFolder(createFolderId, "folder-deleteAllMetas", userId, acl.getId(), 1L);
         client.createFolderMeta(new CreateMetaRequest(folder.getId(), "...", 1L));
         client.createFolderMeta(new CreateMetaRequest(folder.getId(), "...", 1L));
         client.deleteAllFolderMeta(folder.getId());
@@ -340,20 +341,12 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void updateFolderNoEditPermission() throws IOException {
-        var folderId = prepareAclGroupWithPermissions(List.of()).createFolder().folder.getId();
-        UpdateFolderRequest request = new UpdateFolderRequest(
-                folderId, null, null, null, null, null);
-        assertClientError(() -> client.updateFolder(request), NO_EDIT_FOLDER_PERMISSION);
-    }
-
-    @Test
     public void updateFolderNotWritable() throws IOException {
-        var folderId = prepareAclGroupWithPermissions(List.of(CREATE_FOLDER, EDIT_FOLDER))
+        var folderId = prepareAclGroupWithPermissions(List.of(CREATE_FOLDER))
                 .createFolder()
                 .folder.getId();
         UpdateFolderRequest request = new UpdateFolderRequest(
-                folderId, null, null, null, null, null);
+                folderId, null, null, 1L, null, null);
         assertClientError(() -> client.updateFolder(request), NO_WRITE_SYS_METADATA_PERMISSION);
     }
 
@@ -366,7 +359,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateFolderNoCreatePermission() throws IOException {
-        var folder = prepareAclGroupWithPermissions(List.of(EDIT_FOLDER, WRITE_OBJECT_SYS_METADATA))
+        var folder = prepareAclGroupWithPermissions(List.of(WRITE_OBJECT_SYS_METADATA))
                 .createFolder().createFolder().folder;
         UpdateFolderRequest request = new UpdateFolderRequest(
                 folder.getId(), folder.getParentId(), null, null, null, null);
@@ -385,10 +378,20 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void updateFolderNoMovePermission() throws IOException {
         var targetFolder    = new TestObjectHolder(client, userId).createFolder().folder;
-        var unmovableFolder = prepareAclGroupWithPermissions(List.of(EDIT_FOLDER, WRITE_OBJECT_SYS_METADATA)).createFolder().folder;
+        var unmovableFolder = prepareAclGroupWithPermissions(List.of(WRITE_OBJECT_SYS_METADATA)).createFolder().folder;
         UpdateFolderRequest request = new UpdateFolderRequest(
                 unmovableFolder.getId(), targetFolder.getId(), null, null, null, null);
         assertClientError(() -> client.updateFolder(request), NO_MOVE_PERMISSION);
+    }
+
+    @Test
+    public void updateFolderNameWithoutPermission() throws IOException {
+        var folder = prepareAclGroupWithPermissions(List.of())
+                .createFolder().folder;
+        UpdateFolderRequest request = new UpdateFolderRequest(
+                folder.getId(), null, "updateFolderNameWithoutPermission", null, null, null
+        );
+        assertClientError(() -> client.updateFolder(request), NO_NAME_WRITE_PERMISSION);
     }
 
     @Test
@@ -402,7 +405,8 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateFolderFolderTypeNotFound() throws IOException {
-        var folder = new TestObjectHolder(client, userId).createFolder().folder;
+        var folder = prepareAclGroupWithPermissions(List.of(TYPE_WRITE))
+                .createFolder().folder;
         UpdateFolderRequest request = new UpdateFolderRequest(
                 folder.getId(), null, null, null, Long.MAX_VALUE, null
         );
@@ -410,8 +414,18 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
+    public void updateFolderTypeWithoutTypeWritePermission() throws IOException {
+        var folder = prepareAclGroupWithPermissions(List.of())
+                .createFolder().folder;
+        UpdateFolderRequest request = new UpdateFolderRequest(
+                folder.getId(), null, null, null, Long.MAX_VALUE, null
+        );
+        assertClientError(() -> client.updateFolder(request), NO_TYPE_WRITE_PERMISSION);
+    }
+
+    @Test
     public void updateFolderMissingSetAclPermission() throws IOException {
-        var folder = prepareAclGroupWithPermissions(List.of(CREATE_FOLDER, EDIT_FOLDER, WRITE_OBJECT_SYS_METADATA)).createFolder().folder;
+        var folder = prepareAclGroupWithPermissions(List.of(CREATE_FOLDER, WRITE_OBJECT_SYS_METADATA)).createFolder().folder;
         UpdateFolderRequest request = new UpdateFolderRequest(
                 folder.getId(), null, null, null, null, 1L
         );
@@ -439,12 +453,13 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void updateFolderHappyPath() throws IOException {
         var targetFolderId = new TestObjectHolder(client, userId).createFolder().folder.getId();
-        var adminToh = prepareAclGroupWithPermissions(List.of(EDIT_FOLDER, MOVE, BROWSE,
-                WRITE_OBJECT_SYS_METADATA, SET_ACL))
+        var adminToh = prepareAclGroupWithPermissions(List.of(MOVE, BROWSE,
+                WRITE_OBJECT_SYS_METADATA, SET_ACL, NAME_WRITE, TYPE_WRITE))
+                .createFolderType()
                 .createFolder();
         UpdateFolderRequest request = new UpdateFolderRequest(
-                adminToh.folder.getId(), targetFolderId, "new-name-for-happy-folder", 1L, 2L,
-                adminToh.acl.getId()
+                adminToh.folder.getId(), targetFolderId, "new-name-for-happy-folder", 1L,
+                adminToh.folderType.getId(), adminToh.acl.getId()
         );
         client.updateFolder(request);
         Folder updatedFolder = client.getFolderById(request.getId(), false);
@@ -575,12 +590,13 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void deleteEmptyFolder() throws IOException {
-        var emptyFolder = prepareAclGroupWithOwnerPermissions(List.of(DefaultPermission.DELETE_FOLDER))
+        var emptyFolder = prepareAclGroupWithPermissions(List.of(DefaultPermission.DELETE))
                 .createFolder("deleteEmptyFolder", createFolderId)
                 .folder;
         client.deleteFolder(emptyFolder.getId(), false, false);
         assertClientError(() -> client.getFolderById(emptyFolder.getId(), false),
                 FOLDER_NOT_FOUND);
+        // TODO: test with prepareOwnerPermissions
     }
 
     /**
@@ -588,7 +604,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
      */
     @Test
     public void deleteFolderFailWithSubfolderNonRecursively() throws IOException {
-        TestObjectHolder toh                 = prepareAclGroupWithOwnerPermissions(List.of(DefaultPermission.DELETE_FOLDER, DefaultPermission.CREATE_FOLDER));
+        TestObjectHolder toh                 = prepareAclGroupWithOwnerPermissions(List.of(DefaultPermission.DELETE, DefaultPermission.CREATE_FOLDER));
         Folder           folderWithSubfolder = toh.createFolder("folderWithSubfolderFail", createFolderId).folder;
         client.createFolder(folderWithSubfolder.getId(), "subfolder", userId, toh.acl.getId(), folderWithSubfolder.getTypeId());
 
@@ -602,7 +618,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
      */
     @Test
     public void deleteFolderWithSubfoldersRecursively() throws IOException {
-        TestObjectHolder toh                 = prepareAclGroupWithOwnerPermissions(List.of(DefaultPermission.DELETE_FOLDER, DefaultPermission.CREATE_FOLDER));
+        TestObjectHolder toh                 = prepareAclGroupWithOwnerPermissions(List.of(DefaultPermission.DELETE, DefaultPermission.CREATE_FOLDER));
         Folder           folderWithSubfolder = toh.createFolder("folderWithSubfolder", createFolderId).folder;
         client.createFolder(folderWithSubfolder.getId(), "subfolder", userId, toh.acl.getId(), folderWithSubfolder.getTypeId());
         client.deleteFolder(folderWithSubfolder.getId(), true, false);
@@ -615,7 +631,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
      */
     @Test
     public void deleteFolderWithContentButWithoutDeleteContentParameterFail() throws IOException {
-        TestObjectHolder toh = prepareAclGroupWithOwnerPermissions(List.of(DefaultPermission.DELETE_FOLDER))
+        TestObjectHolder toh = prepareAclGroupWithOwnerPermissions(List.of(DefaultPermission.DELETE))
                 .createFolder("folderWithContentFail", createFolderId)
                 .createOsd("undeleted");
         var ex = assertThrows(CinnamonClientException.class, () -> client.deleteFolder(toh.folder.getId(), false, false));
@@ -627,7 +643,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
      */
     @Test
     public void deleteFolderWithContentWithDeleteContentParameter() throws IOException {
-        TestObjectHolder toh = prepareAclGroupWithPermissions(List.of(DefaultPermission.DELETE_FOLDER, DefaultPermission.DELETE_OBJECT))
+        TestObjectHolder toh = prepareAclGroupWithPermissions(List.of(DefaultPermission.DELETE))
                 .createFolder("folderWithContent", createFolderId)
                 .createOsd("delete-me");
         client.deleteFolder(toh.folder.getId(), false, true);
@@ -639,8 +655,10 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
      */
     @Test
     public void deleteFolderWithContentWithDeleteContentParameterButMissingPermission() throws IOException {
-        TestObjectHolder toh = prepareAclGroupWithPermissions(List.of(DefaultPermission.DELETE_FOLDER))
-                .createFolder("folderWithContentMissingPermission", createFolderId)
+        TestObjectHolder toh = prepareAclGroupWithPermissions(List.of(DefaultPermission.BROWSE, DELETE))
+                .createFolder("folderWithContentMissingPermission", createFolderId);
+        prepareAclGroupWithPermissions(List.of())
+                .setFolder(toh.folder.getId())
                 .createOsd("delete-me");
         var ex = assertThrows(CinnamonClientException.class, () -> client.deleteFolder(toh.folder.getId(), false, true));
         assertEquals(CANNOT_DELETE_DUE_TO_ERRORS, ex.getErrorCode());
@@ -652,9 +670,11 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
      */
     @Test
     public void deleteFolderWithLinksWithoutDeleteLinkAclPermission() throws IOException {
-        TestObjectHolder toh = prepareAclGroupWithOwnerPermissions(List.of(DefaultPermission.DELETE_FOLDER))
+        var toh = prepareAclGroupWithPermissions(List.of(DELETE))
+                .createFolder();
+        prepareAclGroupWithOwnerPermissions(List.of(BROWSE))
                 .createOsd("outside-of-deleteFolder-folder-as-link-target")
-                .createFolder("deleteFolderWithLinksWithoutDeleteLinkAclPermission", createFolderId)
+                .setFolder(toh.folder.getId())
                 .createLinkToOsd();
         // at the moment, links without delete permission will not return a list of errors
         //  assertEquals(CANNOT_DELETE_DUE_TO_ERRORS, ex.getErrorCode());
@@ -666,7 +686,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
      */
     @Test
     public void deleteFolderWithLinksWithDeleteLinkAclPermission() throws IOException {
-        TestObjectHolder toh = prepareAclGroupWithPermissions(List.of(DefaultPermission.DELETE_FOLDER, DefaultPermission.DELETE_OBJECT))
+        TestObjectHolder toh = prepareAclGroupWithPermissions(List.of(DefaultPermission.DELETE))
                 .createOsd()
                 .createFolder()
                 .createLinkToOsd();
@@ -681,7 +701,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void deleteFolderWithOutsideLinkToContainedObject() throws IOException {
         TestObjectHolder toh = prepareAclGroupWithPermissions(
-                List.of(DefaultPermission.DELETE_FOLDER, DefaultPermission.DELETE_OBJECT))
+                List.of(DefaultPermission.DELETE))
                 .createFolder()
                 .createOsd("osd with link pointing to it");
         Folder folderWithOsdInside = toh.folder;
@@ -693,7 +713,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void deleteFolderWithContentProtectedByRelation() throws IOException {
-        TestObjectHolder toh = prepareAclGroupWithPermissions(List.of(DefaultPermission.DELETE_FOLDER, DefaultPermission.DELETE_OBJECT))
+        TestObjectHolder toh = prepareAclGroupWithPermissions(List.of(DefaultPermission.DELETE))
                 .createFolder("folder with relation source", createFolderId)
                 .createOsd("relation-source");
         ObjectSystemData relationSource = toh.osd;
@@ -720,7 +740,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void deleteFolderWithContentWithUnprotectedRelation() throws IOException {
         TestObjectHolder toh = prepareAclGroupWithPermissions(
-                List.of(DefaultPermission.DELETE_FOLDER, DefaultPermission.DELETE_OBJECT))
+                List.of(DefaultPermission.DELETE))
                 .createFolder("folder with other relation source", createFolderId)
                 .createOsd("relation-source");
         ObjectSystemData relationSource = toh.osd;

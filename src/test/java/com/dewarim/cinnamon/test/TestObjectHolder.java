@@ -34,7 +34,6 @@ import static com.dewarim.cinnamon.api.Constants.FOLDER_TYPE_DEFAULT;
 public class TestObjectHolder {
 
     static final  Object            SYNC_OBJECT = new Object();
-    public static Long              defaultCreationAclId;
     public static Long              defaultCreationFolderId;
     /**
      * The default ACL with no permissions for a normal user
@@ -168,6 +167,11 @@ public class TestObjectHolder {
         return createFolder(createRandomName(), folder.getId());
     }
 
+    public TestObjectHolder createFolderType() throws IOException {
+        folderType = client.createFolderTypes(List.of(createRandomName())).get(0);
+        return this;
+    }
+
     public TestObjectHolder createFolder(String name, Long parentId) throws IOException {
         var defaultFolderType = folderTypes.stream().filter(ft -> ft.getName().equals(FOLDER_TYPE_DEFAULT)).findFirst().orElseThrow();
         folder = client.createFolder(parentId, name, user.getId(), acl.getId(), defaultFolderType.getId());
@@ -274,6 +278,9 @@ public class TestObjectHolder {
     public TestObjectHolder createObjectType(String name) throws IOException {
         objectType = client.createObjectTypes(List.of(name)).get(0);
         return this;
+    }
+    public TestObjectHolder createObjectType() throws IOException {
+        return createObjectType(createRandomName());
     }
 
     public TestObjectHolder createOsdMeta(String content) throws IOException {

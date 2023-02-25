@@ -30,80 +30,34 @@ relation.child.remove
 relation.parent.add
 relation.parent.remove
 
-     */
+Abweichungen:
+folder.createfolder -> folder.create.folder
+folder.createobject -> folder.create.object
+node.sysmetadata.write -> fehlte noch (um language, owner, ... zu setzen)
+node.parentfolder.write -> entfällt, da es node.move gibt.
 
-    /**
-     * Permission to lock an object. Implies permission to unlock the user's own locks.
-     */
-    LOCK("_lock"),
+relation.child.add
+relation.parent.add
+relation.child.remove
+relation.parent.remove
+folder.createfolder
+folder.createobject
+node.browse
+node.delete
+object.lock
+node.sysmetadata.read
+node.acl.write
+node.move
+object.content.write
+object.content.read
+object.version
+node.metadata.write
+node.metadata.read
+object.lifecyclestate.write
+node.name.write
+node.type.write
 
-    /**
-     * Permission to write to an object, that is: change its content.
      */
-    WRITE_OBJECT_CONTENT("_write_object_content"),
-
-    /**
-     * Permission to read to an object's content.
-     */
-    READ_OBJECT_CONTENT("_read_object_content"),
-
-    /**
-     * Permission to change an object's system metadata
-     */
-    WRITE_OBJECT_SYS_METADATA("_write_object_sysmeta"),
-
-    /**
-     * Permission to read an object's system metadata
-     */
-    READ_OBJECT_SYS_METADATA("_read_object_sysmeta"),
-
-    /**
-     * Permission to change an object's custom metadata
-     */
-    WRITE_OBJECT_CUSTOM_METADATA("_write_object_custom_metadata"),
-
-    /**
-     * Permission to read an object's custom metadata
-     */
-    READ_OBJECT_CUSTOM_METADATA("_read_object_custom_metadata"),
-
-    /**
-     * Permission to create a new version of an object.
-     */
-    VERSION_OBJECT("_version"),
-
-    /**
-     * Permission to delete an object.
-     */
-    DELETE_OBJECT("_delete_object"),
-
-    /**
-     * Permission to browse an object, that is: the server will list it when
-     * queried for the content of a folder or when a search for turns up this
-     * object.
-     */
-    @Deprecated
-    BROWSE_OBJECT("_browse"),
-
-    /**
-     * Permission to create a folder inside the current one.
-     */
-    CREATE_FOLDER("_create_folder"),
-
-    /**
-     * Permission to delete a folder.
-     */
-    DELETE_FOLDER("_delete_folder"),
-
-    /**
-     * Permission to create an object inside a folder.
-     */
-    CREATE_OBJECT("_create_inside_folder"), // create_object_inside_folder
-
-    /**
-     * Permission to edit a folder (change name, change metadata).
-     */
-    EDIT_FOLDER("_edit_folder"),
 
     /**
      * Permission to browse an object (OSD, folder, link etc), that is: the server will list it when
@@ -111,26 +65,82 @@ relation.parent.remove
      * object.
      */
     BROWSE("node.browse"),
-    @Deprecated
-    BROWSE_FOLDER("_browse_folder"),
+
+    /**
+     * Permission to create a folder inside the current one.
+     */
+    CREATE_FOLDER("folder.create.folder"),
+
+    /**
+     * Permission to create an object inside a folder.
+     */
+    CREATE_OBJECT("folder.create.object"), // create_object_inside_folder
+
+    /**
+     * Permission to delete an object.
+     */
+    DELETE("node.delete"),
+
+    LIFECYCLE_STATE_WRITE("object.lifecyclestate.write"),
+
+    /**
+     * Permission to lock an object. Implies permission to unlock the user's own locks.
+     */
+    LOCK("object.lock"),
 
     /**
      * Permission to move an object or folder, depending on which it is set.
      */
-    MOVE("_move"),
+    MOVE("node.move"),
+
+    NAME_WRITE("node.name.write"),
+
+    /**
+     * Permission to read to an object's content.
+     */
+    READ_OBJECT_CONTENT("object.content.read"),
+
+    /**
+     * Permission to read an object's custom metadata
+     */
+    READ_OBJECT_CUSTOM_METADATA("node.metadata.read"),
+
+    /**
+     * Permission to read an object's system metadata
+     */
+    READ_OBJECT_SYS_METADATA("node.sysmetadata.read"),
+
+    RELATION_CHILD_ADD("relation.child.add"),
+
+    RELATION_CHILD_REMOVE("relation.child.remove"),
+
+    RELATION_PARENT_ADD("relation.parent.add"),
+
+    RELATION_PARENT_REMOVE("relation.parent.remove"),
 
     /**
      * Permission to change an object's or folder's ACL.
      */
-    SET_ACL("_set_acl"),
+    SET_ACL("node.acl.write"),
+    TYPE_WRITE("node.type.write"),
+    /**
+     * Permission to create a new version of an object.
+     */
+    VERSION_OBJECT("object.version"),
+    /**
+     * Permission to write to an object, that is: change its content.
+     */
+    WRITE_OBJECT_CONTENT("object.content.write"),
+    /**
+     * Permission to change an object's custom metadata
+     */
+    WRITE_OBJECT_CUSTOM_METADATA("node.metadata.write"),
+    /**
+     * Permission to change an object's system metadata
+     */
+    WRITE_OBJECT_SYS_METADATA("node.sysmetadata.write");
 
-    RELATION_CHILD_ADD("relation.child.add"),
-    RELATION_CHILD_REMOVE("relation.child.remove"),
-    RELATION_PARENT_ADD("relation.parent.add"),
-    RELATION_PARENT_REMOVE("relation.parent.remove"),
-    ;
-
-    String name;
+    final String name;
 
     DefaultPermission(String name) {
         this.name = name;

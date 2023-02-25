@@ -734,10 +734,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void deleteAllVersionsHappyPath() throws IOException {
-        var toh = new TestObjectHolder(client);
-        toh.setAcl(client.getAclByName("reviewers.acl"))
-                .setUser(userId)
-                .setFolder(createFolderId)
+        var toh = prepareAclGroupWithPermissions(List.of(CREATE_OBJECT, VERSION_OBJECT, DELETE))
                 .createOsd("delete-all-versions-root");
         ObjectSystemData version1 = client.version(new CreateNewVersionRequest(toh.osd.getId()));
         ObjectSystemData version2 = client.version(new CreateNewVersionRequest(version1.getId()));
@@ -1269,36 +1266,55 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateOsdChangeName() throws IOException {
-        var toh = new TestObjectHolder(client, adminId);
-        toh.createOsd("update-osd-rename")
-                .lockOsd();
+        var toh = prepareAclGroupWithPermissions(List.of(NAME_WRITE, LOCK, BROWSE))
+                .createOsd("update-osd-rename");
         var id = toh.osd.getId();
 
         var request = new UpdateOsdRequest(id, null, "new name", null, null, null, null);
+        client.lockOsd(id);
         client.updateOsd(request);
         var osd = client.getOsdById(id, false, false);
         assertEquals("new name", osd.getName());
     }
 
     @Test
-    public void updateOsdChangeTypeNotFound() throws IOException {
-        var toh = new TestObjectHolder(client, adminId);
-
-        toh.createOsd("update-osd-rename")
-                .lockOsd();
+    public void updateOsdChangeNameNoRenamePermission() throws IOException {
+        var toh = prepareAclGroupWithPermissions(List.of(LOCK))
+                .createOsd("update-osd-rename-no-perm");
         var id = toh.osd.getId();
+        client.lockOsd(id);
+        var request = new UpdateOsdRequest(id, null, "new name", null, null, null, null);
+        assertClientError(() -> client.updateOsd(request), NO_NAME_WRITE_PERMISSION);
+    }
+
+    @Test
+    public void updateOsdChangeTypeNotFound() throws IOException {
+        var toh = prepareAclGroupWithPermissions(List.of(TYPE_WRITE, LOCK)).createOsd("update-osd-rename");
+        var id  = toh.osd.getId();
 
         var request = new UpdateOsdRequest(id, null, null, null, null, Long.MAX_VALUE, null);
+        client.lockOsd(id);
         assertClientError(() -> client.updateOsd(request), OBJECT_TYPE_NOT_FOUND);
     }
 
     @Test
+    public void updateOsdChangeTypeNoTypeWritePermission() throws IOException {
+        var toh = prepareAclGroupWithPermissions(List.of(LOCK))
+                .createOsd()
+                .createObjectType();
+
+        var id = toh.osd.getId();
+        client.lockOsd(id);
+        var request = new UpdateOsdRequest(id, null, null, null, null,
+                toh.objectType.getId(), null);
+        assertClientError(() -> client.updateOsd(request), NO_TYPE_WRITE_PERMISSION);
+    }
+
+    @Test
     public void updateOsdChangeType() throws IOException {
-        var toh = new TestObjectHolder(adminClient, adminId);
-
-        toh.createOsd("update-osd-rename")
-                .createObjectType("update-osd-type");
-
+        var toh = prepareAclGroupWithPermissions(List.of(LOCK, TYPE_WRITE, BROWSE))
+                .createOsd()
+                .createObjectType();
         var id = toh.osd.getId();
         client.lockOsd(id);
 
@@ -1455,11 +1471,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void deleteOsdWithDescendantsFailsWithoutDeleteDescendantsFlag() throws IOException {
-        var toh = new TestObjectHolder(adminClient);
-        toh.setAcl(client.getAclByName("reviewers.acl"))
-                .setUser(userId)
-                .setFolder(createFolderId)
-                .createOsd("version-me-for-descendant");
+        var              toh      = prepareAclGroupWithPermissions(List.of(DELETE, VERSION_OBJECT)).createOsd();
         ObjectSystemData version1 = client.version(new CreateNewVersionRequest(toh.osd.getId()));
         ObjectSystemData version2 = client.version(new CreateNewVersionRequest(version1.getId()));
         assertClientError(() -> client.deleteOsd(toh.osd.getId()), CANNOT_DELETE_DUE_TO_ERRORS, OBJECT_HAS_DESCENDANTS);
@@ -1467,11 +1479,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void deleteOsdWithDescendantsHappyPath() throws IOException {
-        var toh = new TestObjectHolder(adminClient);
-        toh.setAcl(client.getAclByName("reviewers.acl"))
-                .setUser(userId)
-                .setFolder(createFolderId)
-                .createOsd("version-me-for-descendant");
+        var              toh      = prepareAclGroupWithPermissions(List.of(DELETE, VERSION_OBJECT)).createOsd();
         ObjectSystemData version1 = client.version(new CreateNewVersionRequest(toh.osd.getId()));
         ObjectSystemData version2 = client.version(new CreateNewVersionRequest(version1.getId()));
         client.deleteOsd(toh.osd.getId(), true);
@@ -1480,7 +1488,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void deleteOsdWithUnprotectedRelations() throws IOException {
         addUserToAclGroupWithPermissions("deleteOsdWithUnprotectedRelations", List.of(READ_OBJECT_SYS_METADATA,
-                RELATION_CHILD_ADD, RELATION_PARENT_ADD, DELETE_OBJECT));
+                RELATION_CHILD_ADD, RELATION_PARENT_ADD, DELETE));
         var toh = new TestObjectHolder(adminClient);
         toh.setAcl(client.getAclByName("deleteOsdWithUnprotectedRelations"))
                 .setUser(userId)
@@ -1499,7 +1507,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void deleteTwoOsdsWhoseRelationsProtectEachOther() throws IOException {
         addUserToAclGroupWithPermissions("deleteTwoOsdsWhoseRelationsProtectEachOther", List.of(READ_OBJECT_SYS_METADATA,
-                RELATION_CHILD_ADD, RELATION_PARENT_ADD, DELETE_OBJECT));
+                RELATION_CHILD_ADD, RELATION_PARENT_ADD, DELETE));
         var toh = new TestObjectHolder(adminClient);
         toh.setAcl(client.getAclByName("deleteTwoOsdsWhoseRelationsProtectEachOther"))
                 .setUser(userId)
@@ -1518,7 +1526,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void deleteTwoOsdsThatAreProtectedByLeftObject() throws IOException {
         addUserToAclGroupWithPermissions("deleteTwoOsdsThatAreProtectedByLeftObject", List.of(READ_OBJECT_SYS_METADATA,
-                RELATION_CHILD_ADD, RELATION_PARENT_ADD, DELETE_OBJECT));
+                RELATION_CHILD_ADD, RELATION_PARENT_ADD, DELETE));
         var toh = new TestObjectHolder(adminClient);
         toh.setAcl(client.getAclByName("deleteTwoOsdsThatAreProtectedByLeftObject"))
                 .setUser(userId)
@@ -1537,7 +1545,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void deleteTwoOsdsThatAreProtectedByRightObject() throws IOException {
         var aclId = addUserToAclGroupWithPermissions("deleteTwoOsdsThatAreProtectedByRightObject", List.of(READ_OBJECT_SYS_METADATA,
-                RELATION_CHILD_ADD, RELATION_PARENT_ADD, DELETE_OBJECT));
+                RELATION_CHILD_ADD, RELATION_PARENT_ADD, DELETE));
         var toh = new TestObjectHolder(adminClient);
         toh.setAcl(client.getAclById(aclId))
                 .setUser(userId)
@@ -1556,7 +1564,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void deleteTwoOsdsWithUnprotectedRelation() throws IOException {
         var aclId = addUserToAclGroupWithPermissions("deleteTwoOsdsWithUnprotectedRelation", List.of(READ_OBJECT_SYS_METADATA,
-                RELATION_CHILD_ADD, RELATION_PARENT_ADD, DELETE_OBJECT));
+                RELATION_CHILD_ADD, RELATION_PARENT_ADD, DELETE));
         var toh = new TestObjectHolder(adminClient);
         toh.setAcl(client.getAclById(aclId))
                 .setUser(userId)
@@ -1575,7 +1583,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void deleteOsdThatIsProtectedByRightObject() throws IOException {
         addUserToAclGroupWithPermissions("deleteOsdThatIsProtectedByRightObject", List.of(READ_OBJECT_SYS_METADATA,
-                RELATION_CHILD_ADD, RELATION_PARENT_ADD, DELETE_OBJECT));
+                RELATION_CHILD_ADD, RELATION_PARENT_ADD, DELETE));
         var toh = new TestObjectHolder(adminClient);
         toh.setAcl(client.getAclByName("deleteOsdThatIsProtectedByRightObject"))
                 .setUser(userId)
@@ -1596,7 +1604,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void deleteOsdThatIsNotProtectedByRightObject() throws IOException {
         addUserToAclGroupWithPermissions("deleteOsdThatIsNotProtectedByRightObject", List.of(READ_OBJECT_SYS_METADATA,
-                RELATION_CHILD_ADD, RELATION_PARENT_ADD, DELETE_OBJECT));
+                RELATION_CHILD_ADD, RELATION_PARENT_ADD, DELETE));
         var toh = new TestObjectHolder(adminClient);
         toh.setAcl(client.getAclByName("deleteOsdThatIsNotProtectedByRightObject"))
                 .setUser(userId)
@@ -1615,7 +1623,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void deleteOsdThatIsNotProtectedByLeftObject() throws IOException {
         addUserToAclGroupWithPermissions("deleteOsdThatIsNotProtectedByLeftObject", List.of(READ_OBJECT_SYS_METADATA,
-                RELATION_CHILD_ADD, RELATION_PARENT_ADD, DELETE_OBJECT));
+                RELATION_CHILD_ADD, RELATION_PARENT_ADD, DELETE));
         var toh = new TestObjectHolder(adminClient);
         toh.setAcl(client.getAclByName("deleteOsdThatIsNotProtectedByLeftObject"))
                 .setUser(userId)
@@ -1634,7 +1642,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void deleteLeftOsdThatIsProtectedByLeftObject() throws IOException {
         addUserToAclGroupWithPermissions("deleteLeftOsdThatIsProtectedByLeftObject", List.of(READ_OBJECT_SYS_METADATA,
-                RELATION_CHILD_ADD, RELATION_PARENT_ADD, DELETE_OBJECT));
+                RELATION_CHILD_ADD, RELATION_PARENT_ADD, DELETE));
         var toh = new TestObjectHolder(adminClient);
         toh.setAcl(client.getAclByName("deleteLeftOsdThatIsProtectedByLeftObject"))
                 .setUser(userId)
@@ -1678,11 +1686,8 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void deleteWithLockedObjectByCurrentUser() throws IOException {
-        var toh = new TestObjectHolder(adminClient);
-        toh.setAcl(client.getAclByName("reviewers.acl"))
-                .setUser(userId)
-                .setFolder(createFolderId)
-                .createOsd("protects-right");
+        var toh = prepareAclGroupWithPermissions(List.of(CREATE_OBJECT, LOCK, DELETE))
+                .createOsd();
         var osd = toh.osd;
         client.lockOsd(osd.getId());
         client.deleteOsds(List.of(osd.getId()), false);
@@ -1703,9 +1708,8 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var toh = prepareAclGroupWithPermissions(List.of(BROWSE))
                 .createOsd("with-custom-meta")
                 .createOsdMeta(content);
-        var ex = assertThrows(CinnamonClientException.class,
-                () -> client.getOsdMetas(toh.osd.getId()));
-        assertEquals(NO_READ_CUSTOM_METADATA_PERMISSION, ex.getErrorCode());
+        assertClientError(() -> client.getOsdMetas(toh.osd.getId()),
+                NO_READ_CUSTOM_METADATA_PERMISSION);
     }
 
     @Test
@@ -1756,8 +1760,8 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     public void copyWithoutReadSysMetaPermission() throws IOException {
         var toh = createCopySourceObject("copyWithoutReadSysMetaPermission")
                 .addPermissionsByName(List.of(READ_OBJECT_CONTENT.getName(), READ_OBJECT_CUSTOM_METADATA.getName()));
-        var ex = assertThrows(CinnamonClientException.class, () -> client.copyOsds(createFolderId, List.of(toh.osd.getId())));
-        assertEquals(NO_READ_OBJECT_SYS_METADATA_PERMISSION, ex.getErrorCode());
+        assertClientError(() -> client.copyOsds(createFolderId, List.of(toh.osd.getId())),
+                NO_READ_OBJECT_SYS_METADATA_PERMISSION);
     }
 
     @Test

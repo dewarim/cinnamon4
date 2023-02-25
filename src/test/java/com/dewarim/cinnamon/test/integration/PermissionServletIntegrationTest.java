@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static com.dewarim.cinnamon.DefaultPermission.BROWSE;
 import static com.dewarim.cinnamon.DefaultPermission.RELATION_CHILD_REMOVE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -24,37 +25,16 @@ public class PermissionServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void listPermissions() throws IOException {
         List<Permission> permissions = client.listPermissions();
-        assertEquals(22, permissions.size());
+        assertEquals(DefaultPermission.values().length, permissions.size());
     }
 
     @Test
     public void getUsersPermissions() throws IOException {
-        // user doe @ default acl: should have browse and browse_folder as well as 
-        // delete_object and delete_folder permission
-        List<Permission>     permissions = client.getUserPermissions(2L, 1L);
-        Optional<Permission> browse      = permissions.stream().filter(s -> s.getName().equals("_browse")).findFirst();
+        List<Permission>     permissions = client.getUserPermissions(2L, defaultCreationAcl.getId() );
+        Optional<Permission> browse      = permissions.stream().filter(s -> s.getName().equals(BROWSE.getName())).findFirst();
         assertTrue(browse.isPresent());
-        Optional<Permission> browseFolder = permissions.stream().filter(s -> s.getName().equals("_browse_folder")).findFirst();
-        assertTrue(browseFolder.isPresent());
-
-        /* user doe @ reviewers acl: should have 
-        - browse
-        - create folder,
-        - write_object_sysmeta
-        - browse permission
-        - read_object_sysmeta
-        - read_object_content
-        - write_object_content
-        - lock
-        - read_object_custom_meta
-        - edit_folder
-        - set_acl
-        - move
-        - version
-        - delete_object
-         */
-        List<Permission> reviewerPermissions = client.getUserPermissions(2L, 2L);
-        assertEquals(13, reviewerPermissions.size());
+        List<Permission> reviewerPermissions = client.getUserPermissions(2L, defaultCreationAcl.getId() );
+        assertEquals(DefaultPermission.values().length, reviewerPermissions.size());
     }
 
     @Test
@@ -80,8 +60,8 @@ public class PermissionServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getUsersPermissionsForMissingAcl() throws IOException {
-        // user doe @ rename.me.acl: should have no permissions
-        List<Permission> permissions = client.getUserPermissions(2L, 4L);
+        Long aclId = prepareAclGroupWithPermissions(List.of()).acl.getId();
+        List<Permission> permissions = client.getUserPermissions(userId, aclId);
         assertTrue(permissions.isEmpty());
     }
 

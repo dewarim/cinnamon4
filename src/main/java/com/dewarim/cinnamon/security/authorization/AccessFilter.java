@@ -241,6 +241,19 @@ public class AccessFilter {
         }
     }
 
+    /**
+     * Verify if user has permission to change / access an object.
+     * Check both permissions of the owner (if the user is the owner)
+     * and the generic acl permission.
+     * @param accessible an object that gives us the ACL to use
+     * @param permission the permission we want to check
+     * @param ownable the ownable, which may be different from the accessible (for
+     *                example, a link may have an ACL but point to an ownable OSD)
+     * @return true if the user has permission
+     * <p>
+     * TODO: refactor, the use case of ownable != accessible seems no longer to be checked with this method,
+     * so accessible=ownable in all existing use cases -> we can remove one parameter
+     */
     public boolean hasPermissionOnOwnable(Accessible accessible, DefaultPermission permission, Ownable ownable) {
         if (superuser) {
             return true;

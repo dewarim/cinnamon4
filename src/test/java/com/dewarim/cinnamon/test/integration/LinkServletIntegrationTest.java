@@ -186,7 +186,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void deleteLinkToObjectWithOwnerPermission() throws IOException {
         var toh = prepareAclGroupWithOwnerPermissions(
-                List.of(BROWSE, CREATE_OBJECT, DELETE_OBJECT))
+                List.of(BROWSE, CREATE_OBJECT, DELETE))
                 .createOsd()
                 .createFolder();
         Link link = client.createLinkToOsd(toh.folder.getId(), toh.acl.getId(), userId, toh.osd.getId());
@@ -196,7 +196,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void deleteLinkToFolderWithOwnerPermission() throws IOException {
         var toh = prepareAclGroupWithOwnerPermissions(
-                List.of(BROWSE, CREATE_FOLDER, CREATE_OBJECT, DELETE_FOLDER))
+                List.of(BROWSE, CREATE_FOLDER, CREATE_OBJECT, DELETE))
                 .createFolder();
         var targetFolder = toh.folder;
         toh.createFolder();
@@ -216,7 +216,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void deleteObjectLinkHappyPath() throws IOException {
-        var              toh        = prepareAclGroupWithPermissions(List.of(BROWSE, DELETE_OBJECT));
+        var              toh        = prepareAclGroupWithPermissions(List.of(BROWSE, DELETE));
         ObjectSystemData linkTarget = toh.createOsd().osd;
         Long linkId = toh.createFolder()
                 .createLinkToOsd(linkTarget)
@@ -229,7 +229,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void deleteFolderLinkHappyPath() throws IOException {
-        var    toh        = prepareAclGroupWithPermissions(List.of(BROWSE, DELETE_FOLDER));
+        var    toh        = prepareAclGroupWithPermissions(List.of(BROWSE, DELETE));
         Folder linkTarget = toh.createFolder(createFolderId).folder;
         Long linkId = toh.createFolder()
                 .createLinkToFolder(linkTarget)

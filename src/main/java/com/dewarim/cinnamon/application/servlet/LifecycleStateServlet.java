@@ -7,12 +7,14 @@ import com.dewarim.cinnamon.api.lifecycle.State;
 import com.dewarim.cinnamon.api.lifecycle.StateChangeResult;
 import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.application.ErrorResponseGenerator;
+import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.dao.LifecycleDao;
 import com.dewarim.cinnamon.dao.LifecycleStateDao;
 import com.dewarim.cinnamon.dao.OsdDao;
 import com.dewarim.cinnamon.model.Lifecycle;
 import com.dewarim.cinnamon.model.LifecycleState;
 import com.dewarim.cinnamon.model.ObjectSystemData;
+import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.request.IdRequest;
 import com.dewarim.cinnamon.model.request.lifecycleState.AttachLifecycleRequest;
 import com.dewarim.cinnamon.model.request.lifecycleState.ChangeLifecycleStateRequest;
@@ -32,6 +34,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import static com.dewarim.cinnamon.DefaultPermission.LIFECYCLE_STATE_WRITE;
 import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
 
 @WebServlet(name = "LifecycleState", urlPatterns = "/")
@@ -91,7 +94,12 @@ public class LifecycleStateServlet extends BaseServlet implements CruddyServlet<
         Long             osdId   = changeRequest.getOsdId();
         Long             stateId = changeRequest.getStateId();
         ObjectSystemData osd     = osdDao.getObjectById(osdId).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
-        throwUnlessSysMetadataIsWritable(osd);
+
+        UserAccount user = ThreadLocalSqlSession.getCurrentUser();
+        boolean     writeAllowed = authorizationService.hasUserOrOwnerPermission(osd, LIFECYCLE_STATE_WRITE, user);
+        if(!writeAllowed){
+            throw ErrorCode.NO_LIFECYCLE_STATE_WRITE_PERMISSION.exception();
+        }
 
         LifecycleState           newLcState = stateDao.getLifecycleStateById(stateId).orElseThrow(ErrorCode.LIFECYCLE_STATE_NOT_FOUND.getException());
         State                    newState   = StateProviderService.getInstance().getStateProvider(newLcState.getStateClass()).getState();

@@ -552,19 +552,6 @@ VALUES ( nextval('seq_user_id'),'locked user','$2a$10$VG9LCf6h/Qwb7Y.pafHkaepdnJ
 
 insert into acls(id,name) values(nextval('seq_acl_id'),'_default_acl'); -- 1
 insert into acls(id,name) values(nextval('seq_acl_id'),'reviewers.acl'); -- 2
-insert into acls(id,name) values(nextval('seq_acl_id'),'delete.me.acl'); -- 3
-insert into acls(id,name) values(nextval('seq_acl_id'),'rename.me.acl'); -- 4
-insert into acls(id,name) values(nextval('seq_acl_id'),'no-permissions-except-owner.acl'); -- 5
-insert into acls(id,name) values(nextval('seq_acl_id'),'no-permissions-except-everyone.acl'); -- 6
-insert into acls(id,name) values(nextval('seq_acl_id'),'no-permissions.acl'); -- 7
-insert into acls(id,name) values(nextval('seq_acl_id'),'creators.acl'); -- 8
-insert into acls(id,name) values(nextval('seq_acl_id'),'browse.but.no.create.acl'); -- 9
-insert into acls(id,name) values(nextval('seq_acl_id'),'create.but.no.browse.acl'); -- 10
-insert into acls(id,name) values(nextval('seq_acl_id'),'set.acl.allowed'); -- 11
-insert into acls(id,name) values(nextval('seq_acl_id'),'edit_folder.allowed'); -- 12
-insert into acls(id,name) values(nextval('seq_acl_id'),'no.move.allowed'); -- 13
-insert into acls(id,name) values(nextval('seq_acl_id'),'no.set.acl.allowed'); -- 14
-
 
 -- #1
 insert into object_types(id,name) values(nextval('seq_obj_type_id'),'_default_objtype');
@@ -578,13 +565,13 @@ insert into groups(id,name) values (nextval('seq_group_id'),'_everyone'); -- #6
 insert into groups(id,name) values (nextval('seq_group_id'),'_owner'); -- #7
 
 -- #1 admin is member of superuser group:
-insert into group_users VALUES(nextval('seq_group_user_id'),1,1);
+insert into group_users(id, user_id, group_id) VALUES(nextval('seq_group_user_id'),1,1);
 -- #2 admin is member of admin group:
-insert into group_users VALUES(nextval('seq_group_user_id'),1,2);
+insert into group_users(id, user_id, group_id) VALUES(nextval('seq_group_user_id'),1,2);
 -- #3 doe is member of his own group:
-insert into group_users VALUES (nextval('seq_group_user_id'),2,4);
+insert into group_users(id, user_id, group_id) VALUES (nextval('seq_group_user_id'),2,4);
 -- #4 doe is member of reviewers:
-insert into group_users values (nextval('seq_group_user_id'),2,5);
+insert into group_users(id, user_id, group_id) values (nextval('seq_group_user_id'),2,5);
 
 -- #1 link superusers group to default acl:
 insert into acl_groups(id,acl_id,group_id) values (nextval('seq_acl_group_id'),1,1);
@@ -592,157 +579,30 @@ insert into acl_groups(id,acl_id,group_id) values (nextval('seq_acl_group_id'),1
 insert into acl_groups(id,acl_id,group_id) values (nextval('seq_acl_group_id'),2,2);
 -- #3 doe's group is connected to reviewers.acl
 insert into acl_groups(id,acl_id,group_id) values (nextval('seq_acl_group_id'),2,4);
--- #4 admin's child group is connected to rename.me.acl:
-insert into acl_groups(id,acl_id,group_id) values (nextval('seq_acl_group_id'),4,3);
--- #5 reviewers are connected to reviewers acl:
+-- #4 reviewers are connected to reviewers acl:
 insert into acl_groups(id,acl_id,group_id) values (nextval('seq_acl_group_id'),2,5);
--- #6 doe's group is connected to default acl
-insert into acl_groups(id,acl_id,group_id) values (nextval('seq_acl_group_id'),1,4);
--- #7 reviewers also have the default acl
-insert into acl_groups(id,acl_id,group_id) values (nextval('seq_acl_group_id'),1,5);
--- #8 _owner is connected to the no-permission-except-owner.acl
-insert into acl_groups(id,acl_id,group_id) values (nextval('seq_acl_group_id'),5,7);
--- #9 _everyone is connected to no-permission-except-everyone.acl
-insert into acl_groups(id,acl_id,group_id) values (nextval('seq_acl_group_id'),6,6);
--- #10 doe's group linked to creation acl#8 
-insert into acl_groups(id,acl_id,group_id) values (nextval('seq_acl_group_id'),8,4);
--- #11 doe's group linked to no-browse.acl#9 
-insert into acl_groups(id,acl_id,group_id) values (nextval('seq_acl_group_id'),9,4);
--- #12 doe's group linked to no-create.acl#10 
-insert into acl_groups(id,acl_id,group_id) values (nextval('seq_acl_group_id'),10,4);
--- #13 reviewers connected to set.acl.allowed#
-insert into acl_groups(id,acl_id,group_id) values (nextval('seq_acl_group_id'),11,5);
--- #14 reviewers connected to set.edit_folder but not write sys meta
-insert into acl_groups(id,acl_id,group_id) values (nextval('seq_acl_group_id'),12,5);
--- #15 reviewers connected to no.move.allowed acl (with setAcl allowed)
-insert into acl_groups(id,acl_id,group_id) values (nextval('seq_acl_group_id'),13,5);
--- #16 reviewers connected to acl#14 no set acl allowed
-insert into acl_groups(id,acl_id,group_id) values (nextval('seq_acl_group_id'),14,5);
 
-
-insert into permissions values (nextval('seq_permission_id'),'_browse'); -- #1
-insert into permissions values (nextval('seq_permission_id'),'_browse_folder'); -- #2
-insert into permissions values (nextval('seq_permission_id'),'_create_folder'); -- #3
-insert into permissions values (nextval('seq_permission_id'),'_create_inside_folder'); -- #4
-insert into permissions values (nextval('seq_permission_id'),'_delete_folder'); -- #5
-insert into permissions values (nextval('seq_permission_id'),'_delete_object'); -- #6
-insert into permissions values (nextval('seq_permission_id'),'_edit_folder'); -- #7
-insert into permissions values (nextval('seq_permission_id'),'_lock'); -- #8
-insert into permissions values (nextval('seq_permission_id'),'_move'); -- #9
-insert into permissions values (nextval('seq_permission_id'),'_read_object_content'); -- #10
-insert into permissions values (nextval('seq_permission_id'),'_read_object_custom_metadata'); -- #11
-insert into permissions values (nextval('seq_permission_id'),'_read_object_sysmeta'); -- #12
-insert into permissions values (nextval('seq_permission_id'),'_set_acl'); -- #13
-insert into permissions values (nextval('seq_permission_id'),'_version'); -- #14
-insert into permissions values (nextval('seq_permission_id'),'_write_object_content'); -- #15
-insert into permissions values (nextval('seq_permission_id'),'_write_object_custom_metadata'); -- #16
-insert into permissions values (nextval('seq_permission_id'),'_write_object_sysmeta'); -- #17
+insert into permissions values (nextval('seq_permission_id'),'node.browse'); -- #1
+insert into permissions values (nextval('seq_permission_id'),'folder.create.folder');
+insert into permissions values (nextval('seq_permission_id'),'folder.create.object');
+insert into permissions values (nextval('seq_permission_id'),'node.delete');
+insert into permissions values (nextval('seq_permission_id'),'node.name.write');
+insert into permissions values (nextval('seq_permission_id'),'node.type.write');
+insert into permissions values (nextval('seq_permission_id'),'object.lock'); -- #8
+insert into permissions values (nextval('seq_permission_id'),'node.move'); -- #9
+insert into permissions values (nextval('seq_permission_id'),'object.content.read'); -- #10
+insert into permissions values (nextval('seq_permission_id'),'node.metadata.read'); -- #11
+insert into permissions values (nextval('seq_permission_id'),'node.sysmetadata.read'); -- #12
+insert into permissions values (nextval('seq_permission_id'),'node.acl.write'); -- #13
+insert into permissions values (nextval('seq_permission_id'),'object.version'); -- #14
+insert into permissions values (nextval('seq_permission_id'),'object.content.write'); -- #15
+insert into permissions values (nextval('seq_permission_id'),'node.metadata.write'); -- #16
+insert into permissions values (nextval('seq_permission_id'),'node.sysmetadata.write'); -- #17
 insert into permissions values (nextval('seq_permission_id'),'relation.child.add'); -- #18
 insert into permissions values (nextval('seq_permission_id'),'relation.parent.add'); -- #19
 insert into permissions values (nextval('seq_permission_id'),'relation.child.remove'); -- #20
 insert into permissions values (nextval('seq_permission_id'),'relation.parent.remove'); -- #21
-insert into permissions values (nextval('seq_permission_id'),'node.browse'); -- #22
-
--- note: personal user groups are deprecated. Add user to normal groups instead.
--- #1 browse permission for doe's group + default_acl:
-insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),6,1);
--- #2 browse_folder permission for doe's group + default_acl:: 
-insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),6,2);
--- #3 create folder permission for reviewers group + reviewers acl:
-insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),5,3);
--- #4 add browse permission for _owner to view the objects with no-permission-except-owner acl:  
-insert into acl_group_permissions(id,acl_group_id,permission_id) values (nextval('seq_acl_group_permission_id'),8,1);
--- #5 add browse permission for _everyone to view the objects with no-permission-except-everyone acl
-insert into acl_group_permissions(id, acl_group_id,permission_id) values (nextval('seq_acl_group_permission_id'),9,1);
--- #6 delete_object permission for doe's group + default_acl:
-insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),6,6);
--- #7 delete folder permission for doe's group + default_acl:
-insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),6,5);
--- #8 browse permission for doe's group + creation.acl#8:
-insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),10,1);
--- #9 browse_folder permission for doe's group + creation.acl#8: 
-insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),10,2);
--- #10 create object permission for doe's group + creation.acl#8: 
-insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),10,4);
--- #11 browse but no create permission for doe's group + no-creation.acl#9: (testing create link) 
-insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),11,2);
--- #12 create but no browse permission for doe's group + no-creation.acl#10:  (testing create link)
-insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),12,4);
--- #13 add delete_folder permission to no-permission-except-owner acl:
-insert into acl_group_permissions(id,acl_group_id,permission_id) values (nextval('seq_acl_group_permission_id'),8,5);
--- #14 add delete_object permission to no-permission-except-owner acl:
-insert into acl_group_permissions(id,acl_group_id,permission_id) values (nextval('seq_acl_group_permission_id'),8,6);
--- #15 add write_object_sysmeta permission to reviewers.acl:
-insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),5,17);
--- #16 add version permission to reviewers.acl
-insert into acl_group_permissions values(nextval('seq_acl_group_permission_id'), 5,14);
--- #17 write-sys-metadata for doe's group + creation.acl#8
-insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),10,17);
--- #18 version for doe's group + creation.acl#8
-insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),10,14);
-
-
----- set.acl.allowed acl#11
--- #16 add write_object_sysmeta to set.acl.allowed acl #11 with reviewers group
-insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),13,17);
--- #17 add set_acl to set.acl.allowed acl #11 with reviewers group
-insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),13,13);
--- #18 add browse permission to set.acl.allowed acl #11 with reviewers group
-insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),13,1);
-
--- #19 add browse permission to reviewers.acl with reviewer group:
-insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),5,1);
--- #20 add browse_folder permission to set.acl.allowed acl #11 with reviewers group
-insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),13,2);
--- #21 add browse_folder permission for _owner to view folders with no-permission-except-owner acl:  
-insert into acl_group_permissions(id,acl_group_id,permission_id) values (nextval('seq_acl_group_permission_id'),8,2);
--- #22 add read_object_metadata permission for _owner to view summary with no-permission-except-owner acl:  
-insert into acl_group_permissions(id,acl_group_id,permission_id) values (nextval('seq_acl_group_permission_id'),8,12);
--- #23 add write_object_metadata permission for _owner to view summary with no-permission-except-owner acl:  
-insert into acl_group_permissions(id,acl_group_id,permission_id) values (nextval('seq_acl_group_permission_id'),8,17);
--- #24 add read_object_sysmeta permission to reviewers.acl:
-insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),5,12);
--- #25 add write_object_content to reviewers.acl
-insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),5,15);
--- #26 add read_object_content to reviewers.acl
-insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),5,10);
--- #27 add lock permission to reviewers.acl
-insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),5,8);
--- #28 add read_custom_metadata to reviewers.acl
-insert into acl_group_permissions values (nextval('seq_acl_group_permission_id'),5,11);
--- #29 add edit_folder to edit_folder acl:
-insert into acl_group_permissions(id, acl_group_id, permission_id) values (nextval('seq_acl_group_permission_id'),14,7);
--- #30 add edit_folder to reviewers.acl
-insert into acl_group_permissions(id, acl_group_id, permission_id) values (nextval('seq_acl_group_permission_id'),5,7);
-
--- permissions for reviewers on no.move.allowed acl#13
--- #31 write sys meta
-insert into acl_group_permissions(id, acl_group_id, permission_id) values (nextval('seq_acl_group_permission_id'),15,17);
--- #32 create inside folder
-insert into acl_group_permissions(id, acl_group_id, permission_id) values (nextval('seq_acl_group_permission_id'),15,3);
--- #33 edit_folder
-insert into acl_group_permissions(id, acl_group_id, permission_id) values (nextval('seq_acl_group_permission_id'),15,7);
-
--- #34 set_acl for reviewers.acl
-insert into acl_group_permissions(id, acl_group_id, permission_id) values (nextval('seq_acl_group_permission_id'),5,13);
-
--- permissions for reviewers on no.set.acl.allowed acl#14
--- #35 write sys meta
-insert into acl_group_permissions(id, acl_group_id, permission_id) values (nextval('seq_acl_group_permission_id'),16,17);
--- #36 edit_folder
-insert into acl_group_permissions(id, acl_group_id, permission_id) values (nextval('seq_acl_group_permission_id'),16,7);
--- #37 browse
-insert into acl_group_permissions(id, acl_group_id, permission_id) values (nextval('seq_acl_group_permission_id'),16,1);
-
--- #38 move permission for reviewers on reviewer.acl
-insert into acl_group_permissions(id, acl_group_id, permission_id) values (nextval('seq_acl_group_permission_id'),5,9);
-
--- #39 create permission for reviewers on create.acl
-insert into acl_group_permissions(id, acl_group_id, permission_id) values (nextval('seq_acl_group_permission_id'),10,3);
-
--- #40 delete permission for reviewers on reviewer.acl #2
-insert into acl_group_permissions(id, acl_group_id, permission_id) values (nextval('seq_acl_group_permission_id'),5,6);
-
+insert into permissions values (nextval('seq_permission_id'),'object.lifecyclestate.write');
 
 -- #1 default folder type
 insert into folder_types(id,name) values(nextval('seq_folder_type_id'),'_default_folder_type');
@@ -815,12 +675,10 @@ update lifecycles set default_state_id=1 where id=1;
 -- #2 first lifecycle_state of lc 3 with ChangeAclState
 insert into lifecycle_states(id, name, config, state_class, life_cycle_id, copy_state_id )
     values (nextval('seq_lifecycle_state_id'), 'authoring', '<config>' ||
-                                                             '<properties><property><name>aclName</name><value>reviewers.acl</value></property></properties>' ||
+                                                             '<properties><property><name>aclName</name><value>creation.acl</value></property></properties>' ||
                                                              '<nextStates><name>published</name></nextStates>' ||
                                                              '</config>', 'com.dewarim.cinnamon.lifecycle.ChangeAclState', 3, currval('seq_lifecycle_state_id'));
 update lifecycles set default_state_id=1 where id=3;
--- update objects set state_id=2 where id=31;
--- update objects set state_id=2 where id=35;
 
 -- #3 second lifecycle_state of lc 3 with ChangeAclState
 insert into lifecycle_states(id, name, config, state_class, life_cycle_id, copy_state_id )
@@ -837,5 +695,3 @@ values (nextval('seq_lifecycle_state_id'), 'failed', '<config></config>', 'com.d
 insert into metaset_types(id, name, is_unique) VALUES (nextval('seq_metaset_type_id'), 'comment', false );
 -- #2 metaset type 'license' (note: in production, this may be a better stored in a relation)
 insert into metaset_types(id, name, is_unique) VALUES (nextval('seq_metaset_type_id'), 'license', true);
-
-

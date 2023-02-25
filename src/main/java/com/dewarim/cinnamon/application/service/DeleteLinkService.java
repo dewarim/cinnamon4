@@ -1,6 +1,5 @@
 package com.dewarim.cinnamon.application.service;
 
-import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.dao.LinkDao;
 import com.dewarim.cinnamon.model.UserAccount;
@@ -12,8 +11,7 @@ import org.apache.logging.log4j.Logger;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.dewarim.cinnamon.DefaultPermission.DELETE_FOLDER;
-import static com.dewarim.cinnamon.DefaultPermission.DELETE_OBJECT;
+import static com.dewarim.cinnamon.DefaultPermission.DELETE;
 import static com.dewarim.cinnamon.model.links.LinkType.FOLDER;
 import static com.dewarim.cinnamon.model.links.LinkType.OBJECT;
 
@@ -24,9 +22,9 @@ public class DeleteLinkService {
     public void verifyAndDelete(List<Link> links, UserAccount user, LinkDao linkDao) {
 
         List<Link> folderLinks           = links.stream().filter(link -> link.getType().equals(FOLDER)).collect(Collectors.toList());
-        boolean    deleteFolderLinksOkay = deleteOkay(folderLinks, DELETE_FOLDER, user);
+        boolean    deleteFolderLinksOkay = deleteOkay(folderLinks, user);
         List<Link> osdLinks              = links.stream().filter(link -> link.getType().equals(OBJECT)).collect(Collectors.toList());
-        boolean    deleteObjectLinksOkay = deleteOkay(osdLinks, DELETE_OBJECT, user);
+        boolean    deleteObjectLinksOkay = deleteOkay(osdLinks, user);
         if (deleteFolderLinksOkay && deleteObjectLinksOkay) {
             linkDao.delete(folderLinks.stream().map(Link::getId).collect(Collectors.toList()));
             linkDao.delete(osdLinks.stream().map(Link::getId).collect(Collectors.toList()));
@@ -37,9 +35,9 @@ public class DeleteLinkService {
         }
     }
 
-    private boolean deleteOkay(List<Link> links, DefaultPermission permission, UserAccount user) {
+    private boolean deleteOkay(List<Link> links, UserAccount user) {
         return links.stream().allMatch(link ->
-                authorizationService.hasUserOrOwnerPermission(link, permission, user)
+                authorizationService.hasUserOrOwnerPermission(link, DELETE, user)
         );
     }
 

@@ -57,6 +57,9 @@ public class AclGroupPermissionDao {
     }
 
     public Map<Long, List<Long>> listPermissionsOfAclGroups(List<Long> aclGroupIds) {
+        if(aclGroupIds.isEmpty()){
+            return Collections.emptyMap();
+        }
         SqlSession               sqlSession                = ThreadLocalSqlSession.getSqlSession();
         Map<Long, List<Long>>    aclGroupIdToPermissionIds = new HashMap<>();
         List<AclGroupPermission> agpList                   = sqlSession.selectList("com.dewarim.cinnamon.model.AclGroupPermission.listByAclGroupIds", aclGroupIds);

@@ -30,7 +30,7 @@ public class MetaService<T extends CrudDao<Meta> & MetaDao, O extends CrudDao<? 
     private final AuthorizationService authorizationService = new AuthorizationService();
 
     void throwUnlessCustomMetaIsWritable(Ownable ownable, UserAccount user) {
-        boolean readAllowed = authorizationService.hasUserOrOwnerPermission(ownable, DefaultPermission.READ_OBJECT_CUSTOM_METADATA, user);
+        boolean readAllowed = authorizationService.hasUserOrOwnerPermission(ownable, DefaultPermission.WRITE_OBJECT_CUSTOM_METADATA, user);
         if (!readAllowed) {
             throw ErrorCode.NO_WRITE_CUSTOM_METADATA_PERMISSION.getException().get();
         }

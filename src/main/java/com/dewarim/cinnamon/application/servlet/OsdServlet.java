@@ -91,6 +91,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.dewarim.cinnamon.ErrorCode.*;
 import static com.dewarim.cinnamon.api.Constants.*;
@@ -642,7 +643,10 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
             ErrorCode.OBJECT_MUST_BE_LOCKED_BY_USER.throwUp();
             return;
         }
-        throwUnlessSysMetadataIsWritable(osd);
+
+        if(updateChangesMetadata(updateRequest) ) {
+            throwUnlessSysMetadataIsWritable(osd);
+        }
 
         AccessFilter accessFilter = AccessFilter.getInstance(user);
         FolderDao    folderDao    = new FolderDao();
@@ -666,6 +670,9 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         // change name
         String name = updateRequest.getName();
         if (name != null) {
+            if (!accessFilter.hasPermissionOnOwnable(osd, DefaultPermission.NAME_WRITE, osd)) {
+                throw ErrorCode.NO_NAME_WRITE_PERMISSION.exception();
+            }
             osd.setName(name);
             changed = true;
         }
@@ -673,6 +680,9 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         // change type
         Long typeId = updateRequest.getObjectTypeId();
         if (typeId != null) {
+            if (!accessFilter.hasPermissionOnOwnable(osd, DefaultPermission.TYPE_WRITE, osd)) {
+                throw NO_TYPE_WRITE_PERMISSION.exception();
+            }
             ObjectType type = new ObjectTypeDao().getObjectTypeById(typeId)
                     .orElseThrow(ErrorCode.OBJECT_TYPE_NOT_FOUND.getException());
             osd.setTypeId(type.getId());
@@ -878,5 +888,9 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
     @Override
     public ObjectMapper getMapper() {
         return xmlMapper;
+    }
+
+    private boolean updateChangesMetadata(UpdateOsdRequest updateRequest ){
+        return Stream.of(updateRequest.getOwnerId(), updateRequest.getLanguageId()).anyMatch(Objects::nonNull);
     }
 }
