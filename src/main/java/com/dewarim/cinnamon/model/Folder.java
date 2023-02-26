@@ -5,6 +5,7 @@ import com.dewarim.cinnamon.api.Ownable;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.Date;
 import java.util.List;
@@ -12,6 +13,7 @@ import java.util.Objects;
 
 import static com.dewarim.cinnamon.api.Constants.DEFAULT_SUMMARY;
 
+@JacksonXmlRootElement(localName = "folder")
 public class Folder implements Ownable, Identifiable {
 
     private Long    id;

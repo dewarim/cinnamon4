@@ -4,6 +4,9 @@ import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.client.CinnamonClientException;
 import com.dewarim.cinnamon.model.IndexItem;
 import com.dewarim.cinnamon.model.index.IndexType;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -16,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class IndexItemServletIntegrationTest extends CinnamonIntegrationTest {
 
+    private final static Logger log = LogManager.getLogger(IndexItemServletIntegrationTest.class);
     @Test
     public void listIndexItems() throws IOException {
         List<IndexItem> indexItems = client.listIndexItems();
@@ -36,6 +40,8 @@ public class IndexItemServletIntegrationTest extends CinnamonIntegrationTest {
         assertThat(item.getSearchString(), equalTo("/sysMeta/object/aclId"));
         assertThat(item.getSearchCondition(), equalTo("true()"));
         assertTrue(item.isStoreField());
+
+        log.info("Found IndexItem: "+mapper.configure(SerializationFeature.INDENT_OUTPUT, true).writeValueAsString(item));
     }
 
     @Test

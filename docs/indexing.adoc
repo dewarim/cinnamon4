@@ -1,0 +1,184 @@
+= Indexing in Cinnamon
+
+Before you can search for an object, it has to be indexed. This process is highly customizable. Cinnamon uses Apache Lucene as its search backend.
+
+At the moment (Cinnamon 4 Server version 0.4.x), we focus on indexing XML content.
+
+== IndexItem
+
+The process of indexing your objects (which, at the moment, are documents and folders) is configured via the database table index_items. The API http endpoints are:
+
+* /api/indexItem/create
+* /api/indexItem/list
+* /api/indexItem/update
+* /api/indexItem/delete
+
+Those are only accessible for administrators.
+
+=== What's an Index Item?
+
+[source,xml]
+----
+<indexItem>
+  <id>1</id>
+  <name>index.acl</name>
+  <fieldName>acl</fieldName>
+  <searchString>/sysMeta/object/aclId</searchString>
+  <searchCondition>true()</searchCondition>
+  <multipleResults>false</multipleResults>
+  <indexType>DEFAULT_INDEXER</indexType>
+  <forContent>false</forContent>
+  <forMetadata>false</forMetadata>
+  <forSysMetadata>true</forSysMetadata>
+  <storeField>true</storeField>
+</indexItem>
+----
+
+Each IndexItem is the configuration of one specific way to store information about your data in the Lucene index, where it may be searched for later. You can create as many items as you need.
+
+The fields are:
+
+id:: The database id, a unique integer value
+name:: The name of the IndexItem, which can be used by the client to help you configure complex search requests.
+fieldName::
+The name of an index field in which to store the information.
++
+In this example, we want to store information about ACLs (Access Control Lists) in the index under "acl". Later on, when you search for all documents with an ACL id of "32", Lucene will look into this field and only this field. Unless otherwise configured, the server will not search for ids in other fields, so if your content contains the number "32", it will not be added as a search result.
++
+FieldNames are useful to separate categories - you can store user:1, acl:1, serial_number:1 and still search for user #1 without getting your search results polluted with all the other things that contain "1".
++
+The reverse is also true: you can just index everything into a generic field like "content" and get something like a fulltext search over everything.
+searchString::
+An XPath expression to select specific XML nodes. The default indexer will then extract the text content of this and all child nodes for indexing.
++
+In this example, we select the ACL id via `/sysMeta/object/aclId`. If you want to index the title element of an XML document, you could use something like //title to select it.
++
+See below for an example of an XML representation of an OSD (ObjectSystemData) which contains the data of a document.
+
+searchCondition::
+When the indexer finds a node matching the search string, it checks if the search condition is met. This is an XPath statement which should return true or false.
++
+Use case: for example, you have a document with `<name>` elements, but you only want to index the name of Authors who have a valid email address, with a structure like
+`<author><name>Bilbo</name><email>baggins@the-shire</email></author>`.
+You could craft an XPath expression to detect if the email element is empty or not via `string-length(//author/email/text())` (note: for many cases, you can also just use a more specific searchString which includes the condition)
++
+Also, the example above would only work if there is just one <author> element.
+
+multipleResults::
+If true, the default indexer will query for a list of nodes matching the search string and add all results to the field.
+
+indexType::
+Indexing text elements is different from indexing numbers or date-time fields. Also, the default indexer will tokenize the input, which is probably not what you want when indexing a field like `<serial-number>ACME 32 D 5993</serial-number>.
+
+forContent::
+If true, this item is used to index an object's content.
+
+forMetadata::
+If true, this item is used to index an object's metadata fields.
+
+forSysMetadata::
+If true, this item is used to index an object's system data (for example, the name or owner). See below for a list of built-in index items that are always evaluated.
+
+storeField::
+ true::: the content should be stored in the index for later retrieval (for example, the client could show highlighted snippets of the search result text [not implemented yet])
+ false::: do not store content (Lucene will just return the document, not the content itself). This setting will keep your index small and fast, so only store stuff that you know you will need.
+
+=== OSD XML
+
+An OSD document as seen by the index service:
+[source,xml]
+----
+<?xml version="1.0" encoding="UTF-8"?>
+<objectSystemData>
+    <id>4</id>
+    <name>search-me-osd</name>
+    <contentPath>c0/17/86/c01786fb-8ea1-457d-b7bf-c6d727a0ff7e</contentPath>
+    <contentSize>13521</contentSize>
+    <predecessorId/>
+    <rootId>4</rootId>
+    <creatorId>1</creatorId>
+    <modifierId>2</modifierId>
+    <ownerId>2</ownerId>
+    <lockerId>2</lockerId>
+    <created>2023-02-26T11:38:11+0000</created>
+    <modified>2023-02-26T11:38:11+0000</modified>
+    <languageId>1</languageId>
+    <aclId>4</aclId>
+    <parentId>2</parentId>
+    <formatId>3</formatId>
+    <typeId>1</typeId>
+    <latestHead>true</latestHead>
+    <latestBranch>true</latestBranch>
+    <contentChanged>false</contentChanged>
+    <metadataChanged>false</metadataChanged>
+    <cmnVersion>1</cmnVersion>
+    <lifecycleStateId/>
+    <summary>&lt;summary/&gt;</summary>
+    <contentHash>88f743bb6ca59eaf4b88efba76a4f1d28dea5749a0d94e8a654b7d6d197e9ee3</contentHash>
+    <contentProvider>FILE_SYSTEM</contentProvider>
+    <metasets>
+        <meta>
+            <id>1</id>
+            <objectId>4</objectId>
+            <typeId>3</typeId>
+            <content>&lt;xml&gt;&lt;copyright&gt;ACME Inc., 2023&lt;/copyright&gt;&lt;/xml&gt;</content>
+        </meta>
+    </metasets>
+    <relations>
+        <relation>
+            <id>1</id>
+            <leftId>4</leftId>
+            <rightId>3</rightId>
+            <typeId>3</typeId>
+            <metadata>&lt;xml&gt;&lt;imageSize x='100' y='200'/&gt;&lt;/xml&gt;</metadata>
+        </relation>
+    </relations>
+    <content>
+        <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+            <modelVersion>4.0.0</modelVersion>
+
+            <groupId>com.dewarim.cinnamon</groupId>
+            <artifactId>cinnamon-cms</artifactId>
+            <packaging>jar</packaging>
+            <version>0.4.12</version>
+            <name>Cinnamon CMS</name>
+
+            <!-- ... many more lines -->
+        </project>
+    </content>
+    <folderPath>/root/home/user/foo</folderPath>
+</objectSystemData>
+----
+
+=== Folder XML
+
+A folder document as seen by the index service
+
+[source,xml]
+----
+<folder>
+    <id>5</id>
+    <name>search-me-folder</name>
+    <aclId>4</aclId>
+    <ownerId>2</ownerId>
+    <parentId>2</parentId>
+    <typeId>1</typeId>
+    <metadataChanged>false</metadataChanged>
+    <summary>&lt;summary/&gt;</summary>
+    <hasSubfolders>false</hasSubfolders>
+    <created>2023-02-26T18:00:29+0000</created>
+    <metasets>
+        <meta>
+            <id>1</id>
+            <objectId>5</objectId>
+            <typeId>3</typeId>
+            <content>&lt;xml&gt;&lt;folder-meta-data archived='no'/&gt;&lt;/meta&gt;</content>
+        </meta>
+    </metasets>
+    <content>
+        <empty/>
+    </content>
+    <folderPath>/root/creation</folderPath>
+</folder>
+----

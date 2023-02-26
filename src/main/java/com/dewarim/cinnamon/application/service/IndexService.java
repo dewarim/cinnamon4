@@ -222,7 +222,7 @@ public class IndexService implements Runnable {
 
         List<Meta> metas = new FolderMetaDao().listByFolderId(folder.getId());
         folder.setMetas(metas);
-        applyIndexItems(doc, indexItems, xmlMapper.writeValueAsString(folder), NO_CONTENT);
+        applyIndexItems(doc, indexItems, xmlMapper.writeValueAsString(folder), NO_CONTENT, folderPath);
         return true;
     }
 
@@ -304,14 +304,14 @@ public class IndexService implements Runnable {
                 throw new CinnamonException("Failed to load content for OSD " + osd.getId() + " at " + osd.getContentPath(), e);
             }
         }
-        applyIndexItems(doc, indexItems, xmlMapper.writeValueAsString(osd), content);
+        applyIndexItems(doc, indexItems, xmlMapper.writeValueAsString(osd), content, folderPath);
         return true;
 
     }
 
     private void applyIndexItems(Document luceneDoc, List<IndexItem> indexItems,
-                                 String objectAsString, byte[] content) {
-        ContentContainer   contentContainer = new ContentContainer(objectAsString, content);
+                                 String objectAsString, byte[] content, String folderPath) {
+        ContentContainer   contentContainer = new ContentContainer(objectAsString, content, folderPath);
         org.dom4j.Document xmlDoc           = contentContainer.getCombinedDocument();
 
         for (IndexItem indexItem : indexItems) {

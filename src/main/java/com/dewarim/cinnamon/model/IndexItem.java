@@ -2,22 +2,25 @@ package com.dewarim.cinnamon.model;
 
 import com.dewarim.cinnamon.api.Identifiable;
 import com.dewarim.cinnamon.model.index.IndexType;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.Objects;
 
 @JacksonXmlRootElement(localName = "indexItem")
+@JsonPropertyOrder({"id", "name", "fieldName", "searchString", "searchCondition", "multipleResults", "indexType",
+        "forContent", "forMetadata", "forSysMetadata", "storeField"})
 public class IndexItem implements Identifiable {
 
-    private Long    id;
-    private String  fieldName;
-    private boolean forContent;
-    private boolean forMetadata;
-    private boolean forSysMetadata;
-    private boolean multipleResults;
-    private String  name;
-    private String  searchString;
-    private String  searchCondition;
+    private Long      id;
+    private String    fieldName;
+    private boolean   forContent;
+    private boolean   forMetadata;
+    private boolean   forSysMetadata;
+    private boolean   multipleResults;
+    private String    name;
+    private String    searchString;
+    private String    searchCondition;
     private boolean   storeField;
     private IndexType indexType;
 

@@ -19,6 +19,8 @@ import com.dewarim.cinnamon.model.ObjectType;
 import com.dewarim.cinnamon.model.Permission;
 import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.links.Link;
+import com.dewarim.cinnamon.model.relations.Relation;
+import com.dewarim.cinnamon.model.relations.RelationType;
 import com.dewarim.cinnamon.model.request.folder.UpdateFolderRequest;
 import com.dewarim.cinnamon.model.request.osd.CreateOsdRequest;
 
@@ -71,6 +73,8 @@ public class TestObjectHolder {
     public  List<Meta>  metas;
     public  String      summary = DEFAULT_SUMMARY;
     public MetasetType metasetType;
+    public Relation     relation;
+    public RelationType relationType;
 
     /**
      * Initialize a new TestObjectHolder with default values, using the given client
@@ -345,4 +349,19 @@ public class TestObjectHolder {
         metasetType = client.createMetasetType(name, unique);
         return this;
     }
+
+    /**
+     * Create a relation type with random name and all flags set to true
+     */
+    public TestObjectHolder createRelationType() throws IOException{
+        relationType = client.createRelationType(new RelationType(createRandomName(), true,true,true,true,true,true));
+        return this;
+    }
+
+    public TestObjectHolder createRelation(Long rightId, String metadata) throws IOException{
+        relation = client.createRelation(osd.getId(), rightId, relationType.getId(), metadata);
+        return this;
+    }
+
+
 }

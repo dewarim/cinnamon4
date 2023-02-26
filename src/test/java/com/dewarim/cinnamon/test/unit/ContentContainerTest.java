@@ -16,6 +16,7 @@ public class ContentContainerTest {
 
     private static final ObjectSystemData osd       = new ObjectSystemData();
     private static final XmlMapper        xmlMapper = new XmlMapper();
+    private final String folderPath = "/home/user/test";
 
     @BeforeAll
     public static void setup() {
@@ -24,21 +25,21 @@ public class ContentContainerTest {
 
     @Test
     public void osdWithoutContentToDocument() throws JsonProcessingException {
-        ContentContainer contentContainer = new ContentContainer(xmlMapper.writeValueAsString(osd), NO_CONTENT);
+        ContentContainer contentContainer = new ContentContainer(xmlMapper.writeValueAsString(osd), NO_CONTENT, folderPath);
         assertTrue(contentContainer.getCombinedDocument().asXML().contains("<content><empty/></content>"));
     }
 
     @Test
     public void osdWithContentToDocument() throws JsonProcessingException {
         byte[]           content          = "<xml>test-string</xml>".getBytes(StandardCharsets.UTF_8);
-        ContentContainer contentContainer = new ContentContainer(xmlMapper.writeValueAsString(osd), content);
+        ContentContainer contentContainer = new ContentContainer(xmlMapper.writeValueAsString(osd), content, folderPath);
         assertTrue(contentContainer.getCombinedDocument().asXML().contains("<content><xml>test-string</xml></content>"));
     }
 
     @Test
     public void osdWithBinaryContentToDocument() throws JsonProcessingException {
         byte[]           content          = new byte[]{0, 1, 2, 3, 4};
-        ContentContainer contentContainer = new ContentContainer(xmlMapper.writeValueAsString(osd), content);
+        ContentContainer contentContainer = new ContentContainer(xmlMapper.writeValueAsString(osd), content, folderPath);
         assertTrue(contentContainer.getCombinedDocument().asXML().contains("<content><empty/></content>"));
     }
 

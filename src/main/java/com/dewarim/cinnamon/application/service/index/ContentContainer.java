@@ -19,27 +19,33 @@ import static com.dewarim.cinnamon.application.service.IndexService.NO_CONTENT;
  */
 public class ContentContainer {
 
-    private final static Logger   log            = LogManager.getLogger(ContentContainer.class);
+    private final static Logger   log = LogManager.getLogger(ContentContainer.class);
     private final        byte[]   content;
     private              String   contentAsString;
     private              Document contentAsDocument;
     private final        String   sysMeta;
+    private final        String   folderPath;
 
     /**
      * Instantiate a new ContentContainer object and set the content with a byte[] array.
      *
-     * @param content a byte array which holds the content
+     * @param content    a byte array which holds the content
+     * @param folderPath
      */
-    public ContentContainer(String sysMeta, byte[] content) {
+    public ContentContainer(String sysMeta, byte[] content, String folderPath) {
         this.content = content;
         this.sysMeta = sysMeta;
+        this.folderPath = folderPath;
     }
 
     public Document getCombinedDocument() {
         Document combinedDoc = ParamParser.parseXmlToDocument(sysMeta);
-        Element contentNode = new DefaultElement("content");
+        Element  contentNode = new DefaultElement("content");
         contentNode.add(asNode());
         combinedDoc.getRootElement().add(contentNode);
+        Element folderPathNode = new DefaultElement("folderPath");
+        folderPathNode.addText(folderPath);
+        combinedDoc.getRootElement().add(folderPathNode);
         log.debug("combinedDocument:\n" + combinedDoc.asXML());
         return combinedDoc;
     }

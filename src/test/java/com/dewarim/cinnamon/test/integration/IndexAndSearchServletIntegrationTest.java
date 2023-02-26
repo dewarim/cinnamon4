@@ -36,12 +36,18 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
     public static void initializeObjects() throws IOException, InterruptedException {
         // create indexItem for xml-content
         Format xml = adminClient.createFormat("text/xml", "xml", "xml-content", 1L);
-        adminClient.createIndexItem(new IndexItem("xml_content",true,false,false,
-                true,"Xml Content Index", "/objectSystemData/content/descendant::*", "boolean(/objectSystemData/formatId[text()='"+xml.getId()+"'])", false, IndexType.DEFAULT_INDEXER ));
+        adminClient.createIndexItem(new IndexItem("xml_content", true, false, false,
+                true, "Xml Content Index", "/objectSystemData/content/descendant::*", "boolean(/objectSystemData/formatId[text()='" + xml.getId() + "'])", false, IndexType.DEFAULT_INDEXER));
 
-        TestObjectHolder toh = new TestObjectHolder(client, userId);
+        TestObjectHolder toh        = new TestObjectHolder(adminClient, userId);
+        Long             relatedOsd = toh.createOsd("related image").osd.getId();
         toh.createOsd("search-me-osd")
-                .createFolder("search-me-folder", createFolderId);
+                .createMetaSetType(true)
+                .createRelationType()
+                .createOsdMeta("<xml><copyright>ACME Inc., 2023</copyright></xml>")
+                .createRelation(relatedOsd, "<xml><imageSize x='100' y='200'/></xml>")
+                .createFolder("search-me-folder", createFolderId)
+                .createFolderMeta("<xml><folder-meta-data archived='no'/></meta>");
         osdId = toh.osd.getId();
         folderId = toh.folder.getId();
         log.info("created search-me objects: osd: " + osdId + " folder: " + folderId);
@@ -87,7 +93,7 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
     }
 
     @Test
-    public void searchForContent() throws IOException{
+    public void searchForContent() throws IOException {
         SearchIdsResponse response = client.search("<BooleanQuery><Clause occurs='must'><TermQuery fieldName='xml_content'>cinnamon</TermQuery></Clause></BooleanQuery>", SearchType.OSD);
         assertEquals(1, response.getOsdIds().size());
         assertEquals(osdId, response.getOsdIds().get(0));
@@ -124,13 +130,13 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
     // TODO: maybe move to a FolderDaoIntegrationTest
     // but then, folderPath is currently only used in IndexService.
     @Test
-    public void verifyFolderPathOrdering() throws IOException{
+    public void verifyFolderPathOrdering() throws IOException {
         TestObjectHolder toh = new TestObjectHolder(adminClient, adminId);
         toh.createFolder("f1", 1L)
-        .createFolder("f2", toh.folder.getId())
-        .createFolder("f3", toh.folder.getId())
-        .createFolder("f4", toh.folder.getId())
-        .createFolder("f5", toh.folder.getId());
+                .createFolder("f2", toh.folder.getId())
+                .createFolder("f3", toh.folder.getId())
+                .createFolder("f4", toh.folder.getId())
+                .createFolder("f5", toh.folder.getId());
         String withAncestors = new FolderDao().setSqlSession(null).getFolderPath(toh.folder.getId());
         assertEquals("/root/f1/f2/f3/f4/f5", withAncestors);
     }
