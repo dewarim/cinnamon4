@@ -28,6 +28,7 @@ import java.util.Optional;
 import java.util.Properties;
 
 import static com.dewarim.cinnamon.ErrorCode.CONNECTION_FAIL_WRONG_PASSWORD;
+import static com.dewarim.cinnamon.api.Constants.CONTENT_TYPE_PLAIN_TEXT;
 import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
 
 /**
@@ -75,9 +76,10 @@ public class CinnamonServlet extends HttpServlet {
         response.getWriter().println("<h1>Cinnamon 4 Server</h1>");
     }
 
-    private void connect(HttpServletRequest request, CinnamonResponse response) {
+    private void connect(HttpServletRequest request, CinnamonResponse response) throws IOException {
         String username = request.getParameter("user");
         String password = request.getParameter("password");
+        String format   = request.getParameter("format");
         // TODO: maybe add a ConnectionRequest object (with fields user & password) for consistency
         SecurityConfig securityConfig = CinnamonServer.config.getSecurityConfig();
 
@@ -101,9 +103,17 @@ public class CinnamonServlet extends HttpServlet {
 
         if (authenticate(user, password)) {
             // TODO: get optional uiLanguageParam.
-            long               sessionLengthInMillis = securityConfig.getSessionLengthInMillis();
-            Session            session               = new SessionDao().save(new Session(user.getId(), sessionLengthInMillis));
-            CinnamonConnection cinnamonConnection    = new CinnamonConnection(session.getTicket());
+            long    sessionLengthInMillis = securityConfig.getSessionLengthInMillis();
+            Session session               = new SessionDao().save(new Session(user.getId(), sessionLengthInMillis));
+
+            if (format != null && format.equals("text")) {
+                response.setContentType(CONTENT_TYPE_PLAIN_TEXT);
+                response.setStatus(HttpServletResponse.SC_OK);
+                response.getWriter().write(session.getTicket());
+                return;
+            }
+
+            CinnamonConnection cinnamonConnection = new CinnamonConnection(session.getTicket());
             response.setWrapper(cinnamonConnection);
         } else {
             CONNECTION_FAIL_WRONG_PASSWORD.throwUp();

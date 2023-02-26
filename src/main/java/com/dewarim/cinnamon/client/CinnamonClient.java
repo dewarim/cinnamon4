@@ -175,6 +175,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static com.dewarim.cinnamon.api.Constants.*;
@@ -796,8 +797,34 @@ public class CinnamonClient {
         return disconnectUnwrapper.unwrap(response, 1).get(0).isDisconnectSuccessful();
     }
 
+    /**
+     * re-connect this client with the server, using the stored username/password.
+     * The new ticket will be saved internally.
+     */
     public void connect() throws IOException {
         getTicket(true);
+    }
+
+    /**
+     * Connect to a server and return the response.
+     * @param username the username
+     * @param password the password
+     * @param format optional format: if null, use "xml". Currently implemented alternatives to xml: "text"
+     * @return the raw response as a String (depending on format, may be XML or plain text)
+     * @throws IOException if connection fails
+     */
+    public String connect(String username, String password, String format) throws IOException {
+        String responseFormat = Objects.requireNonNullElse(format,  "xml");
+        String url = "http://localhost:" + port + UrlMapping.CINNAMON__CONNECT.getPath();
+        var response = Request.Post(url)
+                .bodyForm(Form.form()
+                        .add("user", username)
+                        .add("password", password)
+                        .add("format", responseFormat)
+                        .build())
+                .execute().returnResponse();
+        verifyResponseIsOkay(response);
+        return new String(response.getEntity().getContent().readAllBytes());
     }
 
     public List<ObjectType> createObjectTypes(List<String> names) throws IOException {

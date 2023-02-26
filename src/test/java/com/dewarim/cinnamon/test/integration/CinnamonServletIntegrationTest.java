@@ -4,6 +4,7 @@ import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.servlet.CinnamonServlet;
 import com.dewarim.cinnamon.client.CinnamonClient;
+import com.dewarim.cinnamon.model.response.CinnamonConnection;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
 import org.junit.jupiter.api.Test;
@@ -12,10 +13,11 @@ import java.io.IOException;
 import java.util.Objects;
 
 import static com.dewarim.cinnamon.ErrorCode.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class CinnamonServletIntegrationTest extends CinnamonIntegrationTest {
+
+    private static final String UUID_PATTERN = "\\w+-\\w+-\\w+-\\w+-\\w+";
 
     @Test
     public void connectFailsWithoutValidUsername() {
@@ -71,6 +73,21 @@ public class CinnamonServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void connectSucceedsWithValidUsernameAndPassword() {
         Objects.requireNonNull(ticket);
+    }
+
+    @Test
+    public void connectWithFormatParameter() throws IOException {
+        String plainTextSession = client.connect("admin", "admin", "text");
+        assertNotNull(plainTextSession);
+        assertTrue(plainTextSession.matches(UUID_PATTERN));
+    }
+
+    @Test
+    public void connectWithoutFormatParameter() throws IOException {
+        String rawResponse = client.connect("admin", "admin", null);
+        assertNotNull(rawResponse);
+        CinnamonConnection connection = mapper.readValue(rawResponse, CinnamonConnection.class);
+        assertTrue(connection.getTicket().matches(UUID_PATTERN));
     }
 
     @Test

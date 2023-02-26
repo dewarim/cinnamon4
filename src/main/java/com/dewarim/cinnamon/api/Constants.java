@@ -19,6 +19,7 @@ public class Constants {
     public static final String ADMIN_USER_NAME = "admin";
 
     public static final String CONTENT_TYPE_XML = "application/xml";
+    public static final String CONTENT_TYPE_PLAIN_TEXT = "text/plain";
 
     public static final String LANGUAGE_UNDETERMINED_ISO_CODE = "und";
 

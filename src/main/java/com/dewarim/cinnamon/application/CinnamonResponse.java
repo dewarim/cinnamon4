@@ -23,8 +23,8 @@ public class CinnamonResponse extends HttpServletResponseWrapper {
     private final ObjectMapper        xmlMapper  = XML_MAPPER;
     private final HttpServletResponse servletResponse;
     private       Wrapper<?>          wrapper;
-    private int         statusCode = HttpStatus.SC_OK;
-    private ApiResponse response;
+    private       int                 statusCode = HttpStatus.SC_OK;
+    private       ApiResponse         response;
 
     public CinnamonResponse(HttpServletResponse servletResponse) {
         super(servletResponse);
