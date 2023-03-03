@@ -66,7 +66,7 @@ public class CreateIndexItemRequest implements CreateRequest<IndexItem>, ApiRequ
 
     @Override
     public List<ApiRequest> examples() {
-        IndexItem item = new IndexItem("title", false, true, "Titles",
+        IndexItem item = new IndexItem("title", true, "Titles",
                 "//title/text()","true()", false, IndexType.DEFAULT_INDEXER );
         return List.of(new CreateIndexItemRequest(List.of(item)));
     }

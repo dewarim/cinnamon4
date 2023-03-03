@@ -36,7 +36,7 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
     public static void initializeObjects() throws IOException, InterruptedException {
         // create indexItem for xml-content
         Format xml = adminClient.createFormat("text/xml", "xml", "xml-content", 1L);
-        adminClient.createIndexItem(new IndexItem("xml_content", false,
+        adminClient.createIndexItem(new IndexItem("xml_content",
                 true, "Xml Content Index", "/objectSystemData/content/descendant::*", "boolean(/objectSystemData/formatId[text()='" + xml.getId() + "'])", false, IndexType.DEFAULT_INDEXER));
 
         TestObjectHolder toh        = new TestObjectHolder(adminClient, userId);

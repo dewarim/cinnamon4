@@ -1544,7 +1544,6 @@ Update the content of a given folder metaset
       <searchCondition>true()</searchCondition>
       <multipleResults>true</multipleResults>
       <indexType>DEFAULT_INDEXER</indexType>
-      <forSysMetadata>false</forSysMetadata>
       <storeField>false</storeField>
     </indexItem>
   </indexItems>
@@ -1564,7 +1563,6 @@ Update the content of a given folder metaset
   <searchCondition>true()</searchCondition>
   <multipleResults>true</multipleResults>
   <indexType>DEFAULT_INDEXER</indexType>
-  <forSysMetadata>false</forSysMetadata>
   <storeField>false</storeField>
 </indexItem>
 
@@ -1624,7 +1622,6 @@ Update the content of a given folder metaset
   <searchCondition>true()</searchCondition>
   <multipleResults>true</multipleResults>
   <indexType>DEFAULT_INDEXER</indexType>
-  <forSysMetadata>false</forSysMetadata>
   <storeField>false</storeField>
 </indexItem>
 
@@ -1657,7 +1654,6 @@ Update the content of a given folder metaset
   <searchCondition>true()</searchCondition>
   <multipleResults>true</multipleResults>
   <indexType>DEFAULT_INDEXER</indexType>
-  <forSysMetadata>false</forSysMetadata>
   <storeField>false</storeField>
 </indexItem>
 
@@ -2975,13 +2971,13 @@ Returns an OSD's content according to it's format's content type.
 ## Response
 
 ```xml
-<Relation>
+<relation>
   <id>399</id>
   <leftId>1</leftId>
   <rightId>4</rightId>
   <typeId>1</typeId>
   <metadata>&lt;generatedBy>PDF Renderer&lt;/generatedBy</metadata>
-</Relation>
+</relation>
 
 ```
 
@@ -3462,13 +3458,13 @@ part "file", if the new version should contain data.
 ## Response
 
 ```xml
-<Relation>
+<relation>
   <id>399</id>
   <leftId>1</leftId>
   <rightId>4</rightId>
   <typeId>1</typeId>
   <metadata>&lt;generatedBy>PDF Renderer&lt;/generatedBy</metadata>
-</Relation>
+</relation>
 
 ```
 
@@ -3532,13 +3528,13 @@ Search for relations matching all( with orMode=false) or some (with orMode=true)
 ## Response
 
 ```xml
-<Relation>
+<relation>
   <id>399</id>
   <leftId>1</leftId>
   <rightId>4</rightId>
   <typeId>1</typeId>
   <metadata>&lt;generatedBy>PDF Renderer&lt;/generatedBy</metadata>
-</Relation>
+</relation>
 
 ```
 

@@ -39,7 +39,7 @@ public class IndexItemWrapper implements Wrapper<IndexItem>, ApiResponse {
 
     @Override
     public List<Object> examples() {
-        IndexItem item = new IndexItem("title", false, true, "Titles",
+        IndexItem item = new IndexItem("title", true, "Titles",
                 "//title/text()","true()", false, IndexType.DEFAULT_INDEXER );
         item.setId(43L);
         return List.of(item);

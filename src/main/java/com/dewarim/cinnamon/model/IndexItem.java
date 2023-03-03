@@ -9,12 +9,11 @@ import java.util.Objects;
 
 @JacksonXmlRootElement(localName = "indexItem")
 @JsonPropertyOrder({"id", "name", "fieldName", "searchString", "searchCondition", "multipleResults", "indexType",
-        "forSysMetadata", "storeField"})
+        "storeField"})
 public class IndexItem implements Identifiable {
 
     private Long      id;
     private String    fieldName;
-    private boolean   forSysMetadata;
     private boolean   multipleResults;
     private String    name;
     private String    searchString;
@@ -25,17 +24,16 @@ public class IndexItem implements Identifiable {
     public IndexItem() {
     }
 
-    public IndexItem(String fieldName, boolean forSysMetadata, boolean multipleResults, String name,
+    public IndexItem(String fieldName, boolean multipleResults, String name,
                      String searchString, String searchCondition,
                      boolean storeField, IndexType indexType) {
-        this.fieldName = fieldName;
-        this.forSysMetadata = forSysMetadata;
+        this.fieldName = Objects.requireNonNull(fieldName);
         this.multipleResults = multipleResults;
-        this.name = name;
-        this.searchString = searchString;
+        this.name = Objects.requireNonNull(name);
+        this.searchString = Objects.requireNonNull(searchString);
         this.searchCondition = searchCondition;
         this.storeField = storeField;
-        this.indexType = indexType;
+        this.indexType = Objects.requireNonNull(indexType);
     }
 
     public Long getId() {
@@ -52,14 +50,6 @@ public class IndexItem implements Identifiable {
 
     public void setFieldName(String fieldName) {
         this.fieldName = fieldName;
-    }
-
-    public boolean isForSysMetadata() {
-        return forSysMetadata;
-    }
-
-    public void setForSysMetadata(boolean forSysMetadata) {
-        this.forSysMetadata = forSysMetadata;
     }
 
     public boolean isMultipleResults() {
@@ -119,8 +109,7 @@ public class IndexItem implements Identifiable {
             return false;
         }
         IndexItem indexItem = (IndexItem) o;
-        return forSysMetadata == indexItem.forSysMetadata &&
-                multipleResults == indexItem.multipleResults &&
+        return multipleResults == indexItem.multipleResults &&
                 storeField == indexItem.storeField &&
                 Objects.equals(id, indexItem.id) &&
                 Objects.equals(fieldName, indexItem.fieldName) &&
@@ -132,7 +121,7 @@ public class IndexItem implements Identifiable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, fieldName, forSysMetadata, multipleResults, name, searchString, searchCondition, storeField, indexType);
+        return Objects.hash(id, fieldName, multipleResults, name, searchString, searchCondition, storeField, indexType);
     }
 
     @Override
@@ -140,7 +129,6 @@ public class IndexItem implements Identifiable {
         return "IndexItem{" +
                 "id=" + id +
                 ", fieldName='" + fieldName + '\'' +
-                ", forSysMetadata=" + forSysMetadata +
                 ", multipleResults=" + multipleResults +
                 ", name='" + name + '\'' +
                 ", searchString='" + searchString + '\'' +

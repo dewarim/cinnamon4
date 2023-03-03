@@ -15,6 +15,8 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.util.List;
@@ -24,6 +26,7 @@ import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
 
 @WebServlet(name = "IndexItem", urlPatterns = "/")
 public class IndexItemServlet extends HttpServlet implements CruddyServlet<IndexItem> {
+    private static final Logger log = LogManager.getLogger(IndexItemServlet.class);
 
     private       IndexService indexService;
     private final ObjectMapper xmlMapper = XML_MAPPER;
@@ -35,8 +38,10 @@ public class IndexItemServlet extends HttpServlet implements CruddyServlet<Index
 
         UrlMapping mapping = UrlMapping.getByPath(request.getRequestURI());
         switch (mapping) {
-            case INDEX_ITEM__LIST ->
-                    list(convertListRequest(request, ListIndexItemRequest.class), indexItemDao, cinnamonResponse);
+            case INDEX_ITEM__LIST -> {
+                list(convertListRequest(request, ListIndexItemRequest.class), indexItemDao, cinnamonResponse);
+                log.info("Sending list index item response: "+xmlMapper.writeValueAsString(cinnamonResponse.getWrapper()));
+            }
             case INDEX_ITEM__CREATE -> {
                 superuserCheck();
                 List<IndexItem> items = create(convertCreateRequest(request, CreateIndexItemRequest.class), indexItemDao, cinnamonResponse);
