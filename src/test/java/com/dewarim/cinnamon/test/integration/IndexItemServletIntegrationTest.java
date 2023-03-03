@@ -33,8 +33,6 @@ public class IndexItemServletIntegrationTest extends CinnamonIntegrationTest {
         IndexItem item = itemOpt.get();
         assertThat(item.getId(), equalTo(1L));
         assertThat(item.getFieldName(), equalTo("acl"));
-        assertFalse(item.isForContent());
-        assertFalse(item.isForMetadata());
         assertTrue(item.isForSysMetadata());
         assertFalse(item.isMultipleResults());
         assertThat(item.getSearchString(), equalTo("/sysMeta/object/aclId"));
@@ -52,20 +50,20 @@ public class IndexItemServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createIndexItemHappyPath() throws IOException {
-        IndexItem item = adminClient.createIndexItem(new IndexItem("test", true, true, true, true, "test.field", "/test", "true()", true, IndexType.DEFAULT_INDEXER));
-        assertTrue(client.listIndexItems().stream().anyMatch(i -> i.getName().equals("test.field")));
+        IndexItem item = adminClient.createIndexItem(new IndexItem("test", true, true, "test.field", "/test", "true()", true, IndexType.DEFAULT_INDEXER));
+        assertTrue(client.listIndexItems().stream().anyMatch(i -> i.getName().equals(item.getName())));
     }
 
     @Test
     public void deleteIndexItemHappyPath() throws IOException {
-        IndexItem item = adminClient.createIndexItem(new IndexItem("test", true, true, true, true, "test.field.delete", "/test", "true()", true, IndexType.DEFAULT_INDEXER));
+        IndexItem item = adminClient.createIndexItem(new IndexItem("test", true, true, "test.field.delete", "/test", "true()", true, IndexType.DEFAULT_INDEXER));
         adminClient.deleteIndexItem(item.getId());
         assertTrue(client.listIndexItems().stream().noneMatch(i -> i.getName().equals("test.field.delete")));
     }
 
     @Test
     public void updateIndexItemHappyPath() throws IOException {
-        IndexItem item = adminClient.createIndexItem(new IndexItem("test", true, true, true, true, "test.field.update", "/test",  "true()", true, IndexType.DEFAULT_INDEXER));
+        IndexItem item = adminClient.createIndexItem(new IndexItem("test", true, true, "test.field.update", "/test",  "true()", true, IndexType.DEFAULT_INDEXER));
         item.setName("update.index.name");
         adminClient.updateIndexItem(item);
         List<IndexItem> items = client.listIndexItems();

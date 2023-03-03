@@ -444,8 +444,6 @@ create table index_items
     constraint index_items_pkey
     primary key,
   fieldname varchar(255) not null,
-  for_content boolean not null,
-  for_metadata boolean not null,
   for_sys_meta boolean not null,
   multiple_results boolean not null,
   name varchar(128) not null
@@ -652,9 +650,9 @@ insert into ui_languages (id,iso_code) values (nextval('seq_ui_language_id'), 'D
 insert into ui_languages (id,iso_code) values (nextval('seq_ui_language_id'), 'EN');
 
 -- #1 index_item
-insert into index_items(id, fieldname, for_content, for_metadata, for_sys_meta, multiple_results,
+insert into index_items(id, fieldname, for_sys_meta, multiple_results,
    name, search_string, search_condition, store_field, index_type)
-values (nextval('seq_index_item_id'), 'acl', false,false,true,false,'index.acl',
+values (nextval('seq_index_item_id'), 'acl', true,false,'index.acl',
   '/sysMeta/object/aclId', 'true()',true, 'DEFAULT_INDEXER'
 );
 

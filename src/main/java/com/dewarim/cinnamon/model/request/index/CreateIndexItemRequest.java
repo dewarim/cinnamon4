@@ -2,6 +2,7 @@ package com.dewarim.cinnamon.model.request.index;
 
 import com.dewarim.cinnamon.api.ApiRequest;
 import com.dewarim.cinnamon.model.IndexItem;
+import com.dewarim.cinnamon.model.index.IndexType;
 import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.response.IndexItemWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
@@ -61,5 +62,12 @@ public class CreateIndexItemRequest implements CreateRequest<IndexItem>, ApiRequ
     @Override
     public Wrapper<IndexItem> fetchResponseWrapper() {
         return new IndexItemWrapper();
+    }
+
+    @Override
+    public List<ApiRequest> examples() {
+        IndexItem item = new IndexItem("title", false, true, "Titles",
+                "//title/text()","true()", false, IndexType.DEFAULT_INDEXER );
+        return List.of(new CreateIndexItemRequest(List.of(item)));
     }
 }

@@ -1535,7 +1535,19 @@ Update the content of a given folder metaset
 
 ```xml
 <createIndexItemRequest>
-  <indexItems/>
+  <indexItems>
+    <indexItem>
+      <id/>
+      <name>Titles</name>
+      <fieldName>title</fieldName>
+      <searchString>//title/text()</searchString>
+      <searchCondition>true()</searchCondition>
+      <multipleResults>true</multipleResults>
+      <indexType>DEFAULT_INDEXER</indexType>
+      <forSysMetadata>false</forSysMetadata>
+      <storeField>false</storeField>
+    </indexItem>
+  </indexItems>
 </createIndexItemRequest>
 
 ```
@@ -1544,9 +1556,17 @@ Update the content of a given folder metaset
 ## Response
 
 ```xml
-<cinnamon>
-  <indexItems/>
-</cinnamon>
+<indexItem>
+  <id>43</id>
+  <name>Titles</name>
+  <fieldName>title</fieldName>
+  <searchString>//title/text()</searchString>
+  <searchCondition>true()</searchCondition>
+  <multipleResults>true</multipleResults>
+  <indexType>DEFAULT_INDEXER</indexType>
+  <forSysMetadata>false</forSysMetadata>
+  <storeField>false</storeField>
+</indexItem>
 
 ```
 
@@ -1596,9 +1616,17 @@ Update the content of a given folder metaset
 ## Response
 
 ```xml
-<cinnamon>
-  <indexItems/>
-</cinnamon>
+<indexItem>
+  <id>43</id>
+  <name>Titles</name>
+  <fieldName>title</fieldName>
+  <searchString>//title/text()</searchString>
+  <searchCondition>true()</searchCondition>
+  <multipleResults>true</multipleResults>
+  <indexType>DEFAULT_INDEXER</indexType>
+  <forSysMetadata>false</forSysMetadata>
+  <storeField>false</storeField>
+</indexItem>
 
 ```
 
@@ -1621,9 +1649,17 @@ Update the content of a given folder metaset
 ## Response
 
 ```xml
-<cinnamon>
-  <indexItems/>
-</cinnamon>
+<indexItem>
+  <id>43</id>
+  <name>Titles</name>
+  <fieldName>title</fieldName>
+  <searchString>//title/text()</searchString>
+  <searchCondition>true()</searchCondition>
+  <multipleResults>true</multipleResults>
+  <indexType>DEFAULT_INDEXER</indexType>
+  <forSysMetadata>false</forSysMetadata>
+  <storeField>false</storeField>
+</indexItem>
 
 ```
 

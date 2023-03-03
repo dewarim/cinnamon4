@@ -9,8 +9,6 @@
         <id property="id" column="id"/>
         <result property="name" column="name"/>
         <result property="fieldName" column="fieldname"/>
-        <result property="forContent" column="for_content"/>
-        <result property="forMetadata" column="for_metadata"/>
         <result property="forSysMetadata" column="for_sys_meta"/>
         <result property="multipleResults" column="multiple_results"/>
         <result property="searchString" column="search_string"/>
@@ -44,8 +42,6 @@
         UPDATE index_items
         SET name             = #{name},
             fieldname        = #{fieldName},
-            for_content      = #{forContent},
-            for_metadata     = #{forMetadata},
             for_sys_meta     = #{forSysMetadata},
             multiple_results = #{multipleResults},
             search_string    = #{searchString},
@@ -59,9 +55,9 @@
         <selectKey keyProperty="id" resultType="long" order="BEFORE">
             select nextval('seq_index_item_id')
         </selectKey>
-        INSERT INTO index_items(id, fieldname, for_content, for_metadata, for_sys_meta, multiple_results,
+        INSERT INTO index_items(id, fieldname, for_sys_meta, multiple_results,
         name, search_string, search_condition, store_field, index_type)
-        values (#{id}, #{fieldName},#{forContent},#{forMetadata},#{forSysMetadata},#{multipleResults},
+        values (#{id}, #{fieldName},#{forSysMetadata},#{multipleResults},
         #{name}, #{searchString},#{searchCondition},#{storeField}, #{indexType} )
     </insert>
 

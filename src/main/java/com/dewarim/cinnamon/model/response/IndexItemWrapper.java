@@ -3,6 +3,7 @@ package com.dewarim.cinnamon.model.response;
 
 import com.dewarim.cinnamon.api.ApiResponse;
 import com.dewarim.cinnamon.model.IndexItem;
+import com.dewarim.cinnamon.model.index.IndexType;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
@@ -34,5 +35,13 @@ public class IndexItemWrapper implements Wrapper<IndexItem>, ApiResponse {
     public Wrapper<IndexItem> setList(List<IndexItem> indexItems) {
         setIndexItems(indexItems);
         return this;
+    }
+
+    @Override
+    public List<Object> examples() {
+        IndexItem item = new IndexItem("title", false, true, "Titles",
+                "//title/text()","true()", false, IndexType.DEFAULT_INDEXER );
+        item.setId(43L);
+        return List.of(item);
     }
 }
