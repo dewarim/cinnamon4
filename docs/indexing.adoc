@@ -121,7 +121,7 @@ An OSD document as seen by the index service:
             <id>1</id>
             <objectId>4</objectId>
             <typeId>3</typeId>
-            <content>&lt;xml&gt;&lt;copyright&gt;ACME Inc., 2023&lt;/copyright&gt;&lt;/xml&gt;</content>
+            <content><xml><copyright>ACME Inc., 2023</copyright></xml></content>
         </meta>
     </metasets>
     <relations>
@@ -130,7 +130,7 @@ An OSD document as seen by the index service:
             <leftId>4</leftId>
             <rightId>3</rightId>
             <typeId>3</typeId>
-            <metadata>&lt;xml&gt;&lt;imageSize x='100' y='200'/&gt;&lt;/xml&gt;</metadata>
+            <metadata><xml><imageSize x='100' y='200'/></xml></metadata>
         </relation>
     </relations>
     <content>
@@ -173,7 +173,7 @@ A folder document as seen by the index service
             <id>1</id>
             <objectId>5</objectId>
             <typeId>3</typeId>
-            <content>&lt;xml&gt;&lt;folder-meta-data archived='no'/&gt;&lt;/meta&gt;</content>
+            <content><xml><folder-meta-data archived='no'/></xml></content>
         </meta>
     </metasets>
     <content>

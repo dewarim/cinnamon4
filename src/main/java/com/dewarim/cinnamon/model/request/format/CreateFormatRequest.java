@@ -51,6 +51,7 @@ public class CreateFormatRequest implements CreateRequest<Format>, ApiRequest {
                         Objects.isNull(format.getContentType()) ||
                         Objects.isNull(format.getExtension()) ||
                         Objects.isNull(format.getDefaultObjectTypeId()) ||
+                        Objects.isNull(format.getIndexMode()) ||
                         format.getName().isBlank() ||
                         format.getContentType().isBlank() ||
                         format.getExtension().isBlank() ||

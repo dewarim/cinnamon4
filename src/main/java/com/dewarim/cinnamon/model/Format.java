@@ -5,21 +5,23 @@ import com.dewarim.cinnamon.api.Identifiable;
 import java.util.Objects;
 
 public class Format implements Identifiable {
-    
-    private Long id;
-    private String contentType;
-    private String extension;
-    private String name;
-    private Long defaultObjectTypeId;
+
+    private Long      id;
+    private String    contentType;
+    private String    extension;
+    private String    name;
+    private Long      defaultObjectTypeId;
+    private IndexMode indexMode;
 
     public Format() {
     }
 
-    public Format(String contentType, String extension, String name, Long defaultObjectTypeId) {
+    public Format(String contentType, String extension, String name, Long defaultObjectTypeId, IndexMode indexMode) {
         this.contentType = contentType;
         this.extension = extension;
         this.name = name;
         this.defaultObjectTypeId = defaultObjectTypeId;
+        this.indexMode = indexMode;
     }
 
     public Long getId() {
@@ -62,6 +64,14 @@ public class Format implements Identifiable {
         this.defaultObjectTypeId = defaultObjectTypeId;
     }
 
+    public IndexMode getIndexMode() {
+        return indexMode;
+    }
+
+    public void setIndexMode(IndexMode indexMode) {
+        this.indexMode = indexMode;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -72,9 +82,10 @@ public class Format implements Identifiable {
         }
         Format format = (Format) o;
         return Objects.equals(contentType, format.contentType) &&
-               Objects.equals(extension, format.extension) &&
-               Objects.equals(name, format.name) &&
-               Objects.equals(defaultObjectTypeId, format.defaultObjectTypeId);
+                Objects.equals(extension, format.extension) &&
+                Objects.equals(name, format.name) &&
+                Objects.equals(indexMode, format.indexMode) &&
+                Objects.equals(defaultObjectTypeId, format.defaultObjectTypeId);
     }
 
     @Override
@@ -85,11 +96,12 @@ public class Format implements Identifiable {
     @Override
     public String toString() {
         return "Format{" +
-               "id=" + id +
-               ", contentType='" + contentType + '\'' +
-               ", extension='" + extension + '\'' +
-               ", name='" + name + '\'' +
-               ", defaultObjectTypeId=" + defaultObjectTypeId +
-               '}';
+                "id=" + id +
+                ", contentType='" + contentType + '\'' +
+                ", extension='" + extension + '\'' +
+                ", name='" + name + '\'' +
+                ", defaultObjectTypeId=" + defaultObjectTypeId +
+                ", indexMode=" + indexMode +
+                '}';
     }
 }

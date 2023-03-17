@@ -7,6 +7,7 @@ import com.dewarim.cinnamon.client.CinnamonClientException;
 import com.dewarim.cinnamon.dao.FolderDao;
 import com.dewarim.cinnamon.model.Format;
 import com.dewarim.cinnamon.model.IndexItem;
+import com.dewarim.cinnamon.model.IndexMode;
 import com.dewarim.cinnamon.model.index.IndexType;
 import com.dewarim.cinnamon.model.request.index.ReindexRequest;
 import com.dewarim.cinnamon.model.request.search.SearchType;
@@ -35,7 +36,7 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
     @BeforeAll
     public static void initializeObjects() throws IOException, InterruptedException {
         // create indexItem for xml-content
-        Format xml = adminClient.createFormat("text/xml", "xml", "xml-content", 1L);
+        Format xml = adminClient.createFormat("text/xml", "xml", "xml-content", 1L, IndexMode.XML );
         adminClient.createIndexItem(new IndexItem("xml_content",
                 true, "Xml Content Index", "/objectSystemData/content/descendant::*", "boolean(/objectSystemData/formatId[text()='" + xml.getId() + "'])", false, IndexType.DEFAULT_INDEXER));
 
@@ -47,7 +48,7 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
                 .createOsdMeta("<xml><copyright>ACME Inc., 2023</copyright></xml>")
                 .createRelation(relatedOsd, "<xml><imageSize x='100' y='200'/></xml>")
                 .createFolder("search-me-folder", createFolderId)
-                .createFolderMeta("<xml><folder-meta-data archived='no'/></meta>");
+                .createFolderMeta("<xml><folder-meta-data archived='no'/></xml>");
         osdId = toh.osd.getId();
         folderId = toh.folder.getId();
         log.info("created search-me objects: osd: " + osdId + " folder: " + folderId);

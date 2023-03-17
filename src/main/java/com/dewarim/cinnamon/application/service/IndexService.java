@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.application.service;
 
+import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.content.ContentProvider;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.application.exception.CinnamonException;
@@ -7,12 +8,14 @@ import com.dewarim.cinnamon.application.service.index.ContentContainer;
 import com.dewarim.cinnamon.configuration.LuceneConfig;
 import com.dewarim.cinnamon.dao.FolderDao;
 import com.dewarim.cinnamon.dao.FolderMetaDao;
+import com.dewarim.cinnamon.dao.FormatDao;
 import com.dewarim.cinnamon.dao.IndexItemDao;
 import com.dewarim.cinnamon.dao.IndexJobDao;
 import com.dewarim.cinnamon.dao.OsdDao;
 import com.dewarim.cinnamon.dao.OsdMetaDao;
 import com.dewarim.cinnamon.dao.RelationDao;
 import com.dewarim.cinnamon.model.Folder;
+import com.dewarim.cinnamon.model.Format;
 import com.dewarim.cinnamon.model.IndexItem;
 import com.dewarim.cinnamon.model.Meta;
 import com.dewarim.cinnamon.model.ObjectSystemData;
@@ -45,6 +48,7 @@ import org.apache.lucene.store.SingleInstanceLockFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -291,15 +295,15 @@ public class IndexService implements Runnable {
         osd.setMetas(metas);
 
         byte[] content = NO_CONTENT;
-        if (osd.getContentPath() != null) {
+        if (osd.getContentPath() != null && osd.getFormatId() != null) {
+            Format format = new FormatDao().getFormatById(osd.getFormatId()).orElseThrow(ErrorCode.FORMAT_NOT_FOUND.getException());
             ContentProvider contentProvider = ContentProviderService.getInstance().getContentProvider(osd.getContentProvider());
-            // TODO: depending on contenttype, load content or use NO_CONTENT
-            // for example, do not try to parse JPEG to XML (we will use Apache Tika to create a metaset for the metadata)
-            // LuceneConfig should have list of contenttypes which may be indexed - as long as a flag "pure text" for
-            // content that needs to be wrapped as <content>$PURE_TEXT_CONTENT</content> for proper parsing.
             try (InputStream contentStream = contentProvider.getContentStream(osd)) {
-                // performance: maybe detect <xml>-Content here before reading all the bytes of a DVD.iso etc.
-                content = contentStream.readAllBytes();
+                switch (format.getIndexMode()){
+                    case XML -> content = contentStream.readAllBytes();
+                    case TIKA, NONE -> content = NO_CONTENT;
+                    case PLAIN_TEXT -> content = ("<plainText>" + new String(contentStream.readAllBytes(), StandardCharsets.UTF_8) + "</plainText>").getBytes(StandardCharsets.UTF_8);
+                }
             } catch (IOException e) {
                 throw new CinnamonException("Failed to load content for OSD " + osd.getId() + " at " + osd.getContentPath(), e);
             }
@@ -365,11 +369,6 @@ public class IndexService implements Runnable {
         public String toString() {
             return type.name() + "#" + itemId;
         }
-    }
-
-
-    enum IndexMode {
-        CREATE, UPDATE
     }
 
     public void addIndexItems(List<IndexItem> indexItems) {

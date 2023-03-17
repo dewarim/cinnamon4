@@ -155,7 +155,8 @@ create table formats
     unique,
   default_object_type_id bigint
     constraint defaultobjecttype
-    references object_types
+    references object_types,
+ index_mode varchar(255) not null default 'NONE'
 );
 drop sequence if exists seq_format_id;
 create sequence seq_format_id start with 1;
@@ -623,12 +624,12 @@ insert into languages (id,iso_code) values (nextval('seq_language_id'), 'und');
 insert into languages (id,iso_code) values (nextval('seq_language_id'), 'zxx');
 
 -- #1 add format: xml
-insert into formats(id, contenttype, extension, name, default_object_type_id)
-VALUES (nextval('seq_format_id'),'application/xml','xml', 'xml', 1);
+insert into formats(id, contenttype, extension, name, default_object_type_id, index_mode)
+VALUES (nextval('seq_format_id'),'application/xml','xml', 'xml', 1, 'XML');
 
 -- #2 format: text/plain
-insert into formats(id, contenttype, extension, name, default_object_type_id)
-VALUES (nextval('seq_format_id'),'text/plain','txt', 'plaintext', 1);
+insert into formats(id, contenttype, extension, name, default_object_type_id, index_mode)
+VALUES (nextval('seq_format_id'),'text/plain','txt', 'plaintext', 1, 'PLAIN_TEXT');
 
 -- #1 relation_type: protect all & clone always
 insert into relation_types (id, left_object_protected, name, right_object_protected,

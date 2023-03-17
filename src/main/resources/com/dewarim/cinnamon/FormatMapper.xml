@@ -11,6 +11,7 @@
         <result property="extension" column="extension"/>
         <result property="name" column="name"/>
         <result property="defaultObjectTypeId" column="default_object_type_id"/>
+        <result property="indexMode" column="index_mode"/>
     </resultMap>
 
     <select id="list" parameterType="map" resultMap="formatMap">
@@ -33,7 +34,8 @@
         SET name                   = #{name},
             contenttype            = #{contentType},
             extension              = #{extension},
-            default_object_type_id = #{defaultObjectTypeId}
+            default_object_type_id = #{defaultObjectTypeId},
+            index_mode             = #{indexMode}
         WHERE id = #{id}
     </update>
 
@@ -41,8 +43,8 @@
         <selectKey keyProperty="id" resultType="long" order="BEFORE">
             select nextval('seq_format_id')
         </selectKey>
-        INSERT INTO formats(id, name, contenttype, extension, default_object_type_id)
-        VALUES (#{id}, #{name}, #{contentType}, #{extension}, #{defaultObjectTypeId})
+        INSERT INTO formats(id, name, contenttype, extension, default_object_type_id, index_mode)
+        VALUES (#{id}, #{name}, #{contentType}, #{extension}, #{defaultObjectTypeId}, #{indexMode})
     </insert>
 
     <select id="getAllById" parameterType="list" resultMap="formatMap">
