@@ -4,6 +4,7 @@ import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.api.lifecycle.LifecycleStateConfig;
+import com.dewarim.cinnamon.application.service.index.ParamParser;
 import com.dewarim.cinnamon.client.CinnamonClientException;
 import com.dewarim.cinnamon.lifecycle.NopState;
 import com.dewarim.cinnamon.model.LifecycleState;
@@ -15,6 +16,10 @@ import com.dewarim.cinnamon.model.request.lifecycleState.ChangeLifecycleStateReq
 import com.dewarim.cinnamon.model.request.osd.UpdateOsdRequest;
 import com.dewarim.cinnamon.test.TestObjectHolder;
 import org.apache.http.HttpResponse;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.dom4j.Document;
+import org.dom4j.Node;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -27,9 +32,9 @@ import static com.dewarim.cinnamon.ErrorCode.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTest {
-
-    public static final String CONFIG    = "<config/>";
-    public static final String NOP_STATE = NopState.class.getName();
+    private final static Logger log       = LogManager.getLogger(LifecycleStateServletIntegrationTest.class);
+    public static final  String CONFIG    = "<config/>";
+    public static final  String NOP_STATE = NopState.class.getName();
 
     @Test
     public void getLifecycleStateWithInvalidRequest() {
@@ -225,7 +230,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
         // when the test-lifecycle is attached, it changes the ACL to one with all permissions, so
         // we need to change to a more restricted here to verify LIFECYCLE_STATE_WRITE is allowed.
         adminClient.lockOsd(osdId);
-        adminClient.updateOsd(new UpdateOsdRequest(osdId, null,null,null,toh.acl.getId(), null, null));
+        adminClient.updateOsd(new UpdateOsdRequest(osdId, null, null, null, toh.acl.getId(), null, null));
         client.changeLifecycleState(osdId, 3L);
         // we have to fetch the OSD via adminClient, because after change to ACL#1, it's no longer browsable
         // for the normal test user
@@ -244,7 +249,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
         // when the test-lifecycle is attached, it changes the ACL to one with all permissions, so
         // we need to change to a more restricted here to verify LIFECYCLE_STATE_WRITE is allowed.
         adminClient.lockOsd(osdId);
-        adminClient.updateOsd(new UpdateOsdRequest(osdId, null,null,null,toh.acl.getId(), null, null));
+        adminClient.updateOsd(new UpdateOsdRequest(osdId, null, null, null, toh.acl.getId(), null, null));
         var ex = assertThrows(CinnamonClientException.class, () -> client.changeLifecycleState(osdId, 3L));
         assertEquals(NO_LIFECYCLE_STATE_WRITE_PERMISSION, ex.getErrorCode());
     }
@@ -282,7 +287,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
 
     @Test
     public void getNextStatesHappyPath() throws IOException {
-        var toh = new TestObjectHolder(client,userId).createOsd("getNextStatesHappyPath");
+        var  toh   = new TestObjectHolder(client, userId).createOsd("getNextStatesHappyPath");
         Long osdId = toh.osd.getId();
         adminClient.attachLifecycle(osdId, 3L, 2L, true);
         List<LifecycleState> lifecycleStates = client.getNextLifecycleStates(osdId);
@@ -381,7 +386,9 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
     public void verifySerialization() throws IOException {
         HttpResponse response    = sendStandardRequest(UrlMapping.LIFECYCLE__LIST, new ListLifecycleRequest());
         String       xmlResponse = new String(response.getEntity().getContent().readAllBytes(), StandardCharsets.UTF_8);
-        // <lifecycleState> was shown as <lifecycleStates>
-        assertTrue(xmlResponse.contains("<lifecycleStates><lifecycleState>"));
+        Document     document    = ParamParser.parseXmlToDocument(xmlResponse);
+        log.info("xmlResponse: " + xmlResponse);
+        List<Node> nodes = document.selectNodes("//lifecycleStates/lifecycleState");
+        assertTrue(nodes.size() > 0);
     }
 }

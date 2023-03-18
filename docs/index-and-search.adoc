@@ -45,9 +45,6 @@ Given an link:../src/main/java/com/dewarim/cinnamon/model/IndexItem.java[IndexIt
     <indexItem>
     <id>1</id>
     <fieldName>xml_content</fieldName>
-    <forContent>true</forContent>
-    <forMetadata>false</forMetadata>
-    <forSysMetadata>false</forSysMetadata>
     <multipleResults>true</multipleResults>
     <name>Xml Content Index</name>
     <searchString>/objectSystemData/content/descendant::*</searchString>
@@ -76,3 +73,65 @@ The query itself has to be encoded and should specify the name of the field used
     </BooleanQuery>
 
 For a list of always available search fields, see the https://github.com/dewarim/cinnamon4/blob/master/docs/api.md#apisearchobjectids[API doc]
+
+== Search XML
+
+A script for searching via XML queries can be found link:../src/main/script/searchOsd.sh[here]
+
+=== Examples
+
+[source,xml, title='Point Range Query']
+----
+<BooleanQuery>
+  <Clause occurs='must'>
+    <PointRangeQuery fieldName='acl' lowerTerm='1' upperTerm='1' type='long'/>
+  </Clause>
+</BooleanQuery>
+----
+Note: all systemic numeric fields of an OSD (acl, format, language id and so on) can only be searched via PointRangeQuery and ExactPointQuery with type *long*.
+
+Numeric @type attribute must be one of:
+
+* int
+* long
+* double
+* float
+
+With "int" being the default. Trying to search with the wrong data type (for example, aclId with double or int) will not work, the type must match the one used by the indexer.
+
+[source,xml,title='Exact Point Query']
+----
+<BooleanQuery>
+  <Clause occurs='must'>
+    <ExactPointQuery fieldName='id' value='26' type='long'/>
+  </Clause>
+</BooleanQuery>
+----
+
+[source,xml,title='Term Query']
+----
+<BooleanQuery>
+  <Clause occurs='must'>
+    <TermQuery fieldName='name'>test</TermQuery>
+  </Clause>
+</BooleanQuery>
+----
+
+[source,xml,title='Regex Query']
+----
+<BooleanQuery>
+  <Clause occurs='must'>
+    <RegexQuery fieldName='name'>t..t</RegexQuery>
+  </Clause>
+</BooleanQuery>
+----
+See https://lucene.apache.org/core/9_4_2/core/org/apache/lucene/util/automaton/RegExp.html[Lucene Documentation: RegExp] for more details on regex queries.
+
+[source,xml, title='Wildcard Query']
+----
+<BooleanQuery>
+  <Clause occurs='must'>
+    <WildcardQuery fieldName='name'>t*t</WildcardQuery>
+  </Clause>
+</BooleanQuery>
+----

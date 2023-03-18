@@ -35,7 +35,6 @@ import org.apache.lucene.document.DateTools;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.LongPoint;
-import org.apache.lucene.document.NumericDocValuesField;
 import org.apache.lucene.document.StoredField;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
@@ -77,7 +76,7 @@ public class IndexService implements Runnable {
     private final FolderDao    folderDao = new FolderDao();
     private final LuceneConfig config;
     private final Path         indexPath;
-    private final XmlMapper    xmlMapper = new XmlMapper();
+    private final XmlMapper    xmlMapper;
 
     private final List<IndexItem> indexItems;
 
@@ -91,6 +90,11 @@ public class IndexService implements Runnable {
             }
         }
         indexItems = new IndexItemDao().list();
+
+//        SimpleModule simpleModule = new SimpleModule();
+//        simpleModule.addSerializer(Relation.class, new RelationSerializer());
+        xmlMapper = new XmlMapper();
+//        xmlMapper.registerModule(simpleModule);
     }
 
 
@@ -209,20 +213,20 @@ public class IndexService implements Runnable {
         doc.add(new StringField("folderpath", folderPath, Field.Store.NO));
 
         doc.add(new StoredField("acl", folder.getAclId()));
-        doc.add(new NumericDocValuesField("acl", folder.getAclId()));
+        doc.add(new LongPoint("acl", folder.getAclId()));
         // option: add a NumericDocValueField for scoring by age
-        doc.add(new NumericDocValuesField("id", folder.getId()));
+        doc.add(new LongPoint("id", folder.getId()));
         doc.add(new StoredField("id", folder.getId()));
         doc.add(new StringField("created", DateTools.dateToString(folder.getCreated(), DateTools.Resolution.MILLISECOND), Field.Store.NO));
         doc.add(new LongPoint("created", folder.getCreated().getTime()));
         doc.add(new StringField("name", folder.getName(), Field.Store.NO));
-        doc.add(new NumericDocValuesField("owner", folder.getOwnerId()));
+        doc.add(new LongPoint("owner", folder.getOwnerId()));
         doc.add(new StoredField("owner", folder.getOwnerId()));
         if (folder.getParentId() != null) {
-            doc.add(new NumericDocValuesField("parent", folder.getParentId()));
+            doc.add(new LongPoint("parent", folder.getParentId()));
         }
         doc.add(new TextField("summary", folder.getSummary(), Field.Store.NO));
-        doc.add(new NumericDocValuesField("type", folder.getTypeId()));
+        doc.add(new LongPoint("type", folder.getTypeId()));
 
         List<Meta> metas = new FolderMetaDao().listByFolderId(folder.getId());
         folder.setMetas(metas);
@@ -243,11 +247,11 @@ public class IndexService implements Runnable {
         doc.add(new StringField("folderpath", folderPath, Field.Store.NO));
 
         doc.add(new StoredField("acl", osd.getAclId()));
-        doc.add(new NumericDocValuesField("acl", osd.getAclId()));
+        doc.add(new LongPoint("acl", osd.getAclId()));
         doc.add(new StringField("cmn_version", osd.getCmnVersion(), Field.Store.NO));
         doc.add(new StringField("content_changed", String.valueOf(osd.isContentChanged()), Field.Store.NO));
         if (osd.getContentSize() != null) {
-            doc.add(new NumericDocValuesField("content_size", osd.getContentSize()));
+            doc.add(new LongPoint("content_size", osd.getContentSize()));
         }
         // option: add a NumericDocValueField for scoring by age
         doc.add(new StringField("created", DateTools.dateToString(osd.getCreated(), DateTools.Resolution.MILLISECOND), Field.Store.NO));
@@ -255,37 +259,37 @@ public class IndexService implements Runnable {
         doc.add(new StringField("modified", DateTools.dateToString(osd.getCreated(), DateTools.Resolution.MILLISECOND), Field.Store.NO));
         doc.add(new LongPoint("modified", osd.getCreated().getTime()));
 
-        doc.add(new NumericDocValuesField("creator", osd.getCreatorId()));
-        doc.add(new NumericDocValuesField("modifier", osd.getModifierId()));
+        doc.add(new LongPoint("creator", osd.getCreatorId()));
+        doc.add(new LongPoint("modifier", osd.getModifierId()));
         if (osd.getFormatId() != null) {
-            doc.add(new NumericDocValuesField("format", osd.getFormatId()));
+            doc.add(new LongPoint("format", osd.getFormatId()));
         }
-        doc.add(new NumericDocValuesField("id", osd.getId()));
+        doc.add(new LongPoint("id", osd.getId()));
         doc.add(new StoredField("id", osd.getId()));
         if (osd.getLanguageId() != null) {
-            doc.add(new NumericDocValuesField("language", osd.getLanguageId()));
+            doc.add(new LongPoint("language", osd.getLanguageId()));
         }
         doc.add(new StringField("latest_branch", String.valueOf(osd.isLatestBranch()), Field.Store.NO));
         doc.add(new StringField("latest_head", String.valueOf(osd.isLatestHead()), Field.Store.NO));
         if (osd.getLockerId() != null) {
-            doc.add(new NumericDocValuesField("locker", osd.getId()));
+            doc.add(new LongPoint("locker", osd.getId()));
         }
         doc.add(new StringField("metadata_changed", String.valueOf(osd.isMetadataChanged()), Field.Store.NO));
         doc.add(new StringField("name", osd.getName(), Field.Store.NO));
-        doc.add(new NumericDocValuesField("owner", osd.getOwnerId()));
+        doc.add(new LongPoint("owner", osd.getOwnerId()));
         doc.add(new StoredField("owner", osd.getOwnerId()));
-        doc.add(new NumericDocValuesField("parent", osd.getParentId()));
+        doc.add(new LongPoint("parent", osd.getParentId()));
         if (osd.getPredecessorId() != null) {
-            doc.add(new NumericDocValuesField("predecessor", osd.getPredecessorId()));
+            doc.add(new LongPoint("predecessor", osd.getPredecessorId()));
         }
         if (osd.getRootId() != null) {
-            doc.add(new NumericDocValuesField("root", osd.getRootId()));
+            doc.add(new LongPoint("root", osd.getRootId()));
         }
         if (osd.getLifecycleStateId() != null) {
-            doc.add(new NumericDocValuesField("lifecycle_state", osd.getLifecycleStateId()));
+            doc.add(new LongPoint("lifecycle_state", osd.getLifecycleStateId()));
         }
         doc.add(new TextField("summary", osd.getSummary(), Field.Store.NO));
-        doc.add(new NumericDocValuesField("type", osd.getTypeId()));
+        doc.add(new LongPoint("type", osd.getTypeId()));
 
         List<Long>     relationCriteria = List.of(osd.getId());
         List<Relation> relations        = new RelationDao().getRelationsOrMode(relationCriteria, relationCriteria, Collections.emptyList(), true);
@@ -296,7 +300,7 @@ public class IndexService implements Runnable {
 
         byte[] content = NO_CONTENT;
         if (osd.getContentPath() != null && osd.getFormatId() != null) {
-            Format format = new FormatDao().getFormatById(osd.getFormatId()).orElseThrow(ErrorCode.FORMAT_NOT_FOUND.getException());
+            Format format = new FormatDao().getFormatById(osd.getFormatId()).orElseThrow(() -> new CinnamonException(ErrorCode.FORMAT_NOT_FOUND.getCode()));
             ContentProvider contentProvider = ContentProviderService.getInstance().getContentProvider(osd.getContentProvider());
             try (InputStream contentStream = contentProvider.getContentStream(osd)) {
                 switch (format.getIndexMode()){

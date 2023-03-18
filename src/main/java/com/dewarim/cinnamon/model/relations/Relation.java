@@ -1,9 +1,12 @@
 package com.dewarim.cinnamon.model.relations;
 
 import com.dewarim.cinnamon.api.Identifiable;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.Objects;
 
+@JacksonXmlRootElement(localName = "relation")
+//@JsonSerialize(using = RelationSerializer.class)
 public class Relation implements Identifiable {
     
     private Long id;

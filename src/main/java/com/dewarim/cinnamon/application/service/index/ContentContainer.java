@@ -40,6 +40,7 @@ public class ContentContainer {
 
     public Document getCombinedDocument() {
         Document combinedDoc = ParamParser.parseXmlToDocument(sysMeta);
+        convertEncodedFieldsIntoXmlNodes(combinedDoc);
         Element  contentNode = new DefaultElement("content");
         contentNode.add(asNode());
         combinedDoc.getRootElement().add(contentNode);
@@ -48,6 +49,13 @@ public class ContentContainer {
         combinedDoc.getRootElement().add(folderPathNode);
         log.debug("combinedDocument:\n" + combinedDoc.asXML());
         return combinedDoc;
+    }
+
+    private void convertEncodedFieldsIntoXmlNodes(Document combinedDoc) {
+        FieldDecoder fieldDecoder = new FieldDecoder();
+        fieldDecoder.decodeField(combinedDoc, "//relation/metadata");
+        fieldDecoder.decodeField(combinedDoc, "//meta//content");
+        fieldDecoder.decodeField(combinedDoc, "//summary");
     }
 
     /**

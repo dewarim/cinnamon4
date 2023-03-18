@@ -12,5 +12,29 @@
         <Logger name="org.eclipse" level="warn">
             <AppenderRef ref="Console"/>
         </Logger>
+        <Logger name="org.apache.ibatis.transaction" level="info">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="org.apache.ibatis.datasource" level="info">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="com.dewarim.cinnamon.model.index.IndexJob.countJobs" level="info">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="com.dewarim.cinnamon.model.index.IndexJob.getIndexJobsByFailedCount" level="info">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="com.dewarim.cinnamon.model.UserAccount" level="info">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="com.dewarim.cinnamon.SessionMapper" level="info">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="com.dewarim.cinnamon.model.Deletion" level="info">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="com.dewarim.cinnamon.filter" level="info">
+            <AppenderRef ref="Console"/>
+        </Logger>
     </Loggers>
 </Configuration>

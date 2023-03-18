@@ -20,6 +20,8 @@ import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.xml.CoreParser;
+import org.apache.lucene.queryparser.xml.builders.ExacPointQueryBuilder;
+import org.apache.lucene.queryparser.xml.builders.RangeQueryBuilder;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.SearcherFactory;
@@ -90,11 +92,16 @@ public class SearchService {
                 searcherManager.maybeRefreshBlocking();
             }
             searcher = searcherManager.acquire();
+            log.debug("xmlQuery: "+xmlQuery);
             InputStream xmlInputStream = new ByteArrayInputStream(xmlQuery.getBytes(StandardCharsets.UTF_8));
             CoreParser  coreParser     = new CoreParser("content", limitTokenCountAnalyzer);
             coreParser.addQueryBuilder("WildcardQuery", new WildcardQueryBuilder());
             coreParser.addQueryBuilder("RegexQuery", new RegexQueryBuilder());
+            coreParser.addQueryBuilder("PointRangeQuery", new ExacPointQueryBuilder());
+            coreParser.addQueryBuilder("RangeQuery", new RangeQueryBuilder());
+            coreParser.addQueryBuilder("ExactPointQuery", new ExacPointQueryBuilder());
             Query           query     = coreParser.parse(xmlInputStream);
+            log.debug("parsed query: "+query);
             ResultCollector collector = new ResultCollector(searcher);
             searcher.search(query, collector);
             log.debug("Found " + collector.getDocuments().size() + " documents.");

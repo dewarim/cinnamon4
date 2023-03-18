@@ -27,9 +27,6 @@ Those are only accessible for administrators.
   <searchCondition>true()</searchCondition>
   <multipleResults>false</multipleResults>
   <indexType>DEFAULT_INDEXER</indexType>
-  <forContent>false</forContent>
-  <forMetadata>false</forMetadata>
-  <forSysMetadata>true</forSysMetadata>
   <storeField>true</storeField>
 </indexItem>
 ----
@@ -69,15 +66,6 @@ If true, the default indexer will query for a list of nodes matching the search 
 
 indexType::
 Indexing text elements is different from indexing numbers or date-time fields. Also, the default indexer will tokenize the input, which is probably not what you want when indexing a field like `<serial-number>ACME 32 D 5993</serial-number>.
-
-forContent::
-If true, this item is used to index an object's content.
-
-forMetadata::
-If true, this item is used to index an object's metadata fields.
-
-forSysMetadata::
-If true, this item is used to index an object's system data (for example, the name or owner). See below for a list of built-in index items that are always evaluated.
 
 storeField::
  true::: the content should be stored in the index for later retrieval (for example, the client could show highlighted snippets of the search result text [not implemented yet])
@@ -153,7 +141,7 @@ An OSD document as seen by the index service:
 
 === Folder XML
 
-A folder document as seen by the index service
+A folder document as seen by the index service:
 
 [source,xml]
 ----
@@ -182,3 +170,55 @@ A folder document as seen by the index service
     <folderPath>/root/creation</folderPath>
 </folder>
 ----
+
+=== Examples of XPath search strings
+
+For finding all XML nodes in your content:
+
+  /objectSystemData/content/descendant::*
+
+Example of a search condition:
+
+  boolean(string-length(/objectSystemData/formatId[text()])>0)
+
+(this would return true on all objects that have a format set)
+
+
+=== IndexTypes
+
+* DEFAULT_INDEXER: select nodes and indexes their text content (_not_ the text content of their children)
+* DESCENDING_STRING_INDEXER: indexes the text content of all child nodes
+
+=== Built-in index items
+
+--> TODO: add table with fields
+
+ index.folder.name
+index.root
+index.contentsize
+index.created.date
+index.modified.date
+index.created.time
+index.modified.time
+index.latesthead
+index.latestbranch
+index.path
+index.folder.path
+index.procstate
+index.version
+index.name
+index.folder.parentId
+index.parentId
+index.lockedby
+index.creator
+index.modifier
+index.format
+index.objecttype
+index.language
+index.folder.type
+index.lifecycle.state
+index.acl
+index.folder.owner
+index.owner
+child.relations
+parent.relations

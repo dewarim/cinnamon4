@@ -366,9 +366,9 @@ public enum UrlMapping {
     private final        Class<? extends ApiResponse> responseClass;
 
     /**
-     * @param servlet       the servlet handling the url
-     * @param action        the action part of the url (the getUser part in /users/getUser?id=1234)
-     * @param prefix        a prefix for the servlet - for example, all api servlets are prefixed with /api for
+     * @param servlet the servlet handling the url
+     * @param action  the action part of the url (the getUser part in /users/getUser?id=1234)
+     * @param prefix  a prefix for the servlet - for example, all api servlets are prefixed with /api for
      */
     UrlMapping(String servlet, String action, String prefix, String description, Class<? extends ApiRequest> requestClass, Class<? extends ApiResponse> responseClass) {
         this.servlet = servlet;

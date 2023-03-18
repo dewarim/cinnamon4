@@ -9,6 +9,7 @@ import com.dewarim.cinnamon.model.FolderType;
 import com.dewarim.cinnamon.model.Format;
 import com.dewarim.cinnamon.model.Group;
 import com.dewarim.cinnamon.model.IndexItem;
+import com.dewarim.cinnamon.model.IndexMode;
 import com.dewarim.cinnamon.model.Language;
 import com.dewarim.cinnamon.model.Lifecycle;
 import com.dewarim.cinnamon.model.LifecycleState;
@@ -839,8 +840,8 @@ public class CinnamonClient {
         return languageUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
-    public Format createFormat(String contentType, String extension, String name, long defaultObjectTypeId) throws IOException {
-        var request  = new CreateFormatRequest(List.of(new Format(contentType, extension, name, defaultObjectTypeId)));
+    public Format createFormat(String contentType, String extension, String name, long defaultObjectTypeId, IndexMode indexMode) throws IOException {
+        var request  = new CreateFormatRequest(List.of(new Format(contentType, extension, name, defaultObjectTypeId, indexMode)));
         var response = sendStandardRequest(UrlMapping.FORMAT__CREATE, request);
         return formatUnwrapper.unwrap(response, 1).get(0);
     }

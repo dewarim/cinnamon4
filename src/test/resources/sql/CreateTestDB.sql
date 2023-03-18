@@ -655,6 +655,11 @@ insert into index_items(id, fieldname, multiple_results,
 values (nextval('seq_index_item_id'), 'acl', false,'index.acl',
   '/sysMeta/object/aclId', 'true()',true, 'DEFAULT_INDEXER'
 );
+insert into index_items(id, fieldname, multiple_results,
+   name, search_string, search_condition, store_field, index_type)
+values (nextval('seq_index_item_id'), 'xml_content', false,'xml content',
+  '/objectSystemData/content/descendant::*', 'boolean(string-length(/objectSystemData/formatId[text()])>0)',true, 'DESCENDING_STRING_INDEXER'
+);
 
 -- #1 lifecycle review.lc (lifecycle_state #1 will be configured as default state, see below).
 insert into lifecycles(id, name, default_state_id) VALUES (nextval('seq_lifecycle_id'), 'review.lc',null);
