@@ -300,3 +300,14 @@ It's recommended to use a copy of production for testing.
     alter table folders drop column obj_version;
     alter table objects drop column obj_version;
     alter table folder_types drop column obj_version;
+
+    --
+    alter table formats add column index_mode varchar(255) not null default 'NONE';
+
+    --
+    alter table index_items drop column for_sys_meta;
+    alter table index_items drop column for_content;
+    alter table index_items drop column for_metadata;
+
+    -- // the new combined sequence should start with x > max( objects.id, folder.id)
+    create sequence seq_folder_and_object_ids start with 10000000;
