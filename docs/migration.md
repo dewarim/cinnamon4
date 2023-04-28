@@ -276,21 +276,6 @@ It's recommended to use a copy of production for testing.
     alter table users add column activate_triggers boolean not null default true;
 
     ---
-    alter table index_items add column
-      for_osd boolean not null
-      default false; 
-    alter table index_items add column
-      for_folder boolean not null
-      default false;
-    update index_items set for_osd=true where name in ('index.version', 'index.root', 'index.path', 'index.parentId',
-        'index.owner','index.objecttype', 'index.name', index.modifier', index.modified.time', 'index.lockedby',
-        'index.lifecycle.state', 'index.latesthead', 'index.latestbranch', 'index.language', 'index.format',
-        'index.creator', 'index.creaetd.time', 'index.created.date', 'index.contentsize', 'index.acl'); 
-    update index_items set for_folder=true where name in ('index.folder.type', 'index.folder.parentId',
-        'index.folder.path', 'index.folder.owner', 'index.folder.name');
-    update index_items set for_osd=true where name in (select name from index_items where for_content=true);
-
-    ---
     alter table users add column config text default '<config/>' not null;
 
     ---
@@ -311,3 +296,14 @@ It's recommended to use a copy of production for testing.
 
     -- // the new combined sequence should start with x > max( objects.id, folder.id)
     create sequence seq_folder_and_object_ids start with 10000000;
+
+    drop sequence if exists seq_index_job_id;
+    create sequence seq_index_job_id;
+    drop table if exists index_jobs cascade;
+    create table index_jobs(
+        id bigint not null constraint index_job_pkey primary key,
+        job_type varchar(127) not null,
+        item_id bigint not null,
+        failed int not null default 0,
+        action varchar(127) not null
+    );
