@@ -212,7 +212,7 @@ public enum UrlMapping {
     INDEX_ITEM__CREATE("indexItem", "create", "/api", "", CreateIndexItemRequest.class, IndexItemWrapper.class),
     INDEX_ITEM__DELETE("indexItem", "delete", "/api", "", DeleteIndexItemRequest.class, GenericResponse.class),
     INDEX_ITEM__LIST("indexItem", "list", "/api", "", ListIndexItemRequest.class, IndexItemWrapper.class),
-    INDEX_ITEM__UPDATE("indexItem", "udpate", "/api", "", UpdateIndexItemRequest.class, IndexItemWrapper.class),
+    INDEX_ITEM__UPDATE("indexItem", "update", "/api", "", UpdateIndexItemRequest.class, IndexItemWrapper.class),
     INDEX__INFO("index", "info", "/api", "Provides information on the status of the Lucene search index", IndexInfoRequest.class, IndexInfoResponse.class),
     INDEX__REINDEX("index", "reindex", "/api", "Rebuild the Lucene search index in parts or completely. When reindexing large numbers of documents, this will affect the system's performance.", ReindexRequest.class, ReindexResponse.class),
     LANGUAGE__CREATE("language", "create", "/api", "", CreateLanguageRequest.class, LanguageWrapper.class),
