@@ -31,4 +31,8 @@
     <databaseUrl>jdbc:postgresql://127.0.0.1:5432/cinnamon4</databaseUrl>
   </databaseConfig>
   <loginProviders/>
+  <cinnamonTikaConfig>
+    <baseUrl>http://localhost:9998</baseUrl>
+    <useTika>false</useTika>
+  </cinnamonTikaConfig>
 </CinnamonConfig>
