@@ -15,6 +15,8 @@ public class CinnamonConfig {
     private DatabaseConfig databaseConfig = new DatabaseConfig();
 
     private LuceneConfig luceneConfig = new LuceneConfig();
+
+    private CinnamonTikaConfig cinnamonTikaConfig = new CinnamonTikaConfig();
     
     private List<LoginProviderConfig> loginProviders = new ArrayList<>();
     
@@ -72,5 +74,13 @@ public class CinnamonConfig {
 
     public void setLuceneConfig(LuceneConfig luceneConfig) {
         this.luceneConfig = luceneConfig;
+    }
+
+    public CinnamonTikaConfig getCinnamonTikaConfig() {
+        return cinnamonTikaConfig;
+    }
+
+    public void setCinnamonTikaConfig(CinnamonTikaConfig cinnamonTikaConfig) {
+        this.cinnamonTikaConfig = cinnamonTikaConfig;
     }
 }

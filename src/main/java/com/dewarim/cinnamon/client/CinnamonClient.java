@@ -446,6 +446,16 @@ public class CinnamonClient {
         return osdUnwrapper.unwrap(response, 1).get(0);
     }
 
+    public ObjectSystemData createOsdWithContent(CreateOsdRequest createOsdRequest, File content) throws IOException {
+        FileBody fileBody = new FileBody(content);
+        MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
+                .addPart("file", fileBody)
+                .addTextBody("createOsdRequest", mapper.writeValueAsString(createOsdRequest),
+                        APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
+        var response = sendStandardMultipartRequest(OSD__CREATE_OSD, entityBuilder.build());
+        return osdUnwrapper.unwrap(response, 1).get(0);
+    }
+
     public boolean setContentOnLockedOsd(Long osdId, Long formatId, File content) throws IOException {
         FileBody fileBody = new FileBody(content);
         HttpEntity entity = MultipartEntityBuilder.create()

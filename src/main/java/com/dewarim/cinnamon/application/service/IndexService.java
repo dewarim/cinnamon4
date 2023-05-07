@@ -67,17 +67,17 @@ import static com.dewarim.cinnamon.api.Constants.LUCENE_FIELD_UNIQUE_ID;
 public class IndexService implements Runnable {
     private static final Logger log = LogManager.getLogger(IndexService.class);
 
-    public static final byte[]  NO_CONTENT    = new byte[0];
-    public static       boolean isInitialized = false;
+    public static final byte[] NO_CONTENT = new byte[0];
 
-    private       boolean      stopped   = false;
-    private       IndexWriter  indexWriter;
-    private final OsdDao       osdDao    = new OsdDao();
-    private final FolderDao    folderDao = new FolderDao();
-    private final LuceneConfig config;
-    private final Path         indexPath;
-    private final XmlMapper    xmlMapper;
+    public static boolean isInitialized = false;
 
+    private       boolean         stopped   = false;
+    private       IndexWriter     indexWriter;
+    private final OsdDao          osdDao    = new OsdDao();
+    private final FolderDao       folderDao = new FolderDao();
+    private final LuceneConfig    config;
+    private final Path            indexPath;
+    private final XmlMapper       xmlMapper;
     private final List<IndexItem> indexItems;
 
     public IndexService(LuceneConfig config) {
@@ -90,11 +90,7 @@ public class IndexService implements Runnable {
             }
         }
         indexItems = new IndexItemDao().list();
-
-//        SimpleModule simpleModule = new SimpleModule();
-//        simpleModule.addSerializer(Relation.class, new RelationSerializer());
         xmlMapper = new XmlMapper();
-//        xmlMapper.registerModule(simpleModule);
     }
 
 
@@ -210,6 +206,7 @@ public class IndexService implements Runnable {
 
         // folderpath
         String folderPath = folderDao.getFolderPath(folder.getParentId());
+        log.debug("folderpath: "+folderPath);
         doc.add(new StringField("folderpath", folderPath, Field.Store.NO));
 
         doc.add(new StoredField("acl", folder.getAclId()));
@@ -228,8 +225,11 @@ public class IndexService implements Runnable {
         doc.add(new TextField("summary", folder.getSummary(), Field.Store.NO));
         doc.add(new LongPoint("type", folder.getTypeId()));
 
-        List<Meta> metas = new FolderMetaDao().listByFolderId(folder.getId());
+        FolderMetaDao metaDao = new FolderMetaDao(TransactionIsolationLevel.READ_COMMITTED);
+        List<Meta> metas = metaDao.listByFolderId(folder.getId());
+        metaDao.closePrivateSession();
         folder.setMetas(metas);
+
         applyIndexItems(doc, indexItems, xmlMapper.writeValueAsString(folder), NO_CONTENT, folderPath);
         return true;
     }
@@ -295,23 +295,26 @@ public class IndexService implements Runnable {
         List<Relation> relations        = new RelationDao().getRelationsOrMode(relationCriteria, relationCriteria, Collections.emptyList(), true);
         osd.setRelations(relations);
 
-        List<Meta> metas = new OsdMetaDao().listByOsd(osd.getId());
-        osd.setMetas(metas);
-
         byte[] content = NO_CONTENT;
         if (osd.getContentPath() != null && osd.getFormatId() != null) {
-            Format format = new FormatDao().getFormatById(osd.getFormatId()).orElseThrow(() -> new CinnamonException(ErrorCode.FORMAT_NOT_FOUND.getCode()));
+            Format          format          = new FormatDao().getFormatById(osd.getFormatId()).orElseThrow(() -> new CinnamonException(ErrorCode.FORMAT_NOT_FOUND.getCode()));
             ContentProvider contentProvider = ContentProviderService.getInstance().getContentProvider(osd.getContentProvider());
             try (InputStream contentStream = contentProvider.getContentStream(osd)) {
-                switch (format.getIndexMode()){
+                switch (format.getIndexMode()) {
                     case XML -> content = contentStream.readAllBytes();
-                    case TIKA, NONE -> content = NO_CONTENT;
-                    case PLAIN_TEXT -> content = ("<plainText>" + new String(contentStream.readAllBytes(), StandardCharsets.UTF_8) + "</plainText>").getBytes(StandardCharsets.UTF_8);
+                    case TIKA -> log.debug("ignore format with tika flag");
+                    case PLAIN_TEXT ->
+                            content = ("<plainText>" + new String(contentStream.readAllBytes(), StandardCharsets.UTF_8) + "</plainText>").getBytes();
                 }
             } catch (IOException e) {
                 throw new CinnamonException("Failed to load content for OSD " + osd.getId() + " at " + osd.getContentPath(), e);
             }
         }
+        OsdMetaDao metaDao = new OsdMetaDao(TransactionIsolationLevel.READ_COMMITTED);
+        List<Meta> metas = metaDao.listByOsd(osd.getId());
+        metaDao.closePrivateSession();
+        osd.setMetas(metas);
+
         applyIndexItems(doc, indexItems, xmlMapper.writeValueAsString(osd), content, folderPath);
         return true;
 
@@ -325,6 +328,7 @@ public class IndexService implements Runnable {
         for (IndexItem indexItem : indexItems) {
             String fieldName    = indexItem.getFieldName();
             String searchString = indexItem.getSearchString();
+            log.debug("indexing for field: " + fieldName + " with " + searchString);
             // TODO: check search condition, probably with xmlDoc
             if (xmlDoc.valueOf(indexItem.getSearchCondition()).equals("true")) {
                 indexItem.getIndexType().getIndexer()
@@ -378,14 +382,16 @@ public class IndexService implements Runnable {
     public void addIndexItems(List<IndexItem> indexItems) {
         this.indexItems.addAll(indexItems);
     }
-    public void removeIndexItems(List<Long> ids){
+
+    public void removeIndexItems(List<Long> ids) {
         this.indexItems.removeAll(this.indexItems.stream().filter(item -> ids.contains(item.getId())).collect(Collectors.toSet()));
     }
-    public void updateIndexItems(List<IndexItem> indexItems){
-        Map<Long,IndexItem> newItems = indexItems.stream().collect(Collectors.toMap(IndexItem::getId, Function.identity()));
-        Map<Long,IndexItem> oldItems = this.indexItems.stream().collect(Collectors.toMap(IndexItem::getId, Function.identity()));
-        newItems.forEach( (id,value) -> {
-            if(oldItems.containsKey(id)){
+
+    public void updateIndexItems(List<IndexItem> indexItems) {
+        Map<Long, IndexItem> newItems = indexItems.stream().collect(Collectors.toMap(IndexItem::getId, Function.identity()));
+        Map<Long, IndexItem> oldItems = this.indexItems.stream().collect(Collectors.toMap(IndexItem::getId, Function.identity()));
+        newItems.forEach((id, value) -> {
+            if (oldItems.containsKey(id)) {
                 this.indexItems.remove(oldItems.get(id));
                 this.indexItems.add(value);
             }

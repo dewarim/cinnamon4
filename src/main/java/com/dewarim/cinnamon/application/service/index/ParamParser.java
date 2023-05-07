@@ -69,6 +69,7 @@ public class ParamParser {
     }
 
     public static final Pattern bomReplacer = Pattern.compile("^(?:\\xEF\\xBB\\xBF|\uFEFF)");
+	public static final Pattern tikaBadEntityReplacer = Pattern.compile("&#0;");
 	public static Document parseXmlToDocument(String xml, String message){
 		if(message == null){
 			 message = "error.parse.xml";
@@ -77,6 +78,8 @@ public class ParamParser {
             // remove BOM on UTF-8 Strings.
             Matcher matcher = bomReplacer.matcher(xml);
             xml = matcher.replaceAll("");
+			Matcher tikaMatcher = tikaBadEntityReplacer.matcher(xml);
+			xml = tikaMatcher.replaceAll(" ");
 			SAXReader reader = new SAXReader();
 			// ignore dtd-declarations
 			reader.setIncludeExternalDTDDeclarations(false);

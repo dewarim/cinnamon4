@@ -7,11 +7,13 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.FieldType;
 import org.apache.lucene.index.IndexOptions;
+import org.dom4j.Attribute;
 import org.dom4j.Element;
 import org.dom4j.Node;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * <p>The DefaultIndexer expects an XPath parameter as searchString and will stored
@@ -86,6 +88,11 @@ public class DefaultIndexer implements Indexer {
         String text = node.getText();
         if (text != null && text.trim().length() > 0) {
             builder.append(node.getText());
+            builder.append(' ');
+        }
+        String attributeValue = ((Element) node).attributes().stream().map(Attribute::getValue).collect(Collectors.joining(" "));
+        if(!attributeValue.isBlank()){
+            builder.append(attributeValue);
             builder.append(' ');
         }
     }

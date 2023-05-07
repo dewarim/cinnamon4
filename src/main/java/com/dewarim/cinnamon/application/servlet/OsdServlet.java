@@ -10,8 +10,10 @@ import com.dewarim.cinnamon.api.lifecycle.State;
 import com.dewarim.cinnamon.api.lifecycle.StateChangeResult;
 import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
+import com.dewarim.cinnamon.application.exception.CinnamonException;
 import com.dewarim.cinnamon.application.service.DeleteOsdService;
 import com.dewarim.cinnamon.application.service.MetaService;
+import com.dewarim.cinnamon.application.service.TikaService;
 import com.dewarim.cinnamon.dao.AclDao;
 import com.dewarim.cinnamon.dao.FolderDao;
 import com.dewarim.cinnamon.dao.FormatDao;
@@ -28,6 +30,7 @@ import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.Folder;
 import com.dewarim.cinnamon.model.Format;
+import com.dewarim.cinnamon.model.IndexMode;
 import com.dewarim.cinnamon.model.Language;
 import com.dewarim.cinnamon.model.LifecycleState;
 import com.dewarim.cinnamon.model.Meta;
@@ -72,15 +75,18 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Part;
+import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -91,7 +97,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static com.dewarim.cinnamon.ErrorCode.*;
 import static com.dewarim.cinnamon.api.Constants.*;
@@ -108,9 +113,13 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
     private final        DeleteOsdService     deleteOsdService     = new DeleteOsdService();
     private static final Logger               log                  = LogManager.getLogger(OsdServlet.class);
     private static final String               MULTIPART            = "multipart/";
+    private final        Long                 tikaMetasetTypeId;
+    private              TikaService          tikaService;
 
     public OsdServlet() {
         super();
+        Optional<MetasetType> tikaMetasetType = new MetasetTypeDao().list().stream().filter(meta -> meta.getName().equals(TIKA_METASET_NAME)).findFirst();
+        tikaMetasetTypeId = tikaMetasetType.map(MetasetType::getId).orElse(null);
     }
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -291,6 +300,8 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                     copy.setContentSize(metadata.getContentSize());
                     copy.setContentProvider(contentProvider.getName());
                     copy.setFormatId(osd.getFormatId());
+                    Format format = new FormatDao().getFormatById(osd.getFormatId()).orElseThrow();
+                    convertContentToTikaMetaset(osd, contentProvider.getContentStream(metadata), format);
                     osdDao.updateOsd(copy, false);
                 }
             }
@@ -601,7 +612,41 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         osd.setContentPath(metadata.getContentPath());
         osd.setContentSize(metadata.getContentSize());
         osd.setFormatId(format.getId());
+        convertContentToTikaMetaset(osd, new FileInputStream(tempOutputFile), format);
         deleteTempFile(tempOutputFile);
+    }
+
+    private void convertContentToTikaMetaset(ObjectSystemData osd, InputStream contentStream, Format format) throws IOException {
+        OsdMetaDao osdMetaDao = new OsdMetaDao();
+        if (tikaMetasetTypeId != null && format.getIndexMode() == IndexMode.TIKA) {
+            String         tikaMetadata = parseWithTika(contentStream, format);
+            log.debug("Tika returned: "+tikaMetadata);
+            Optional<Meta> tikaMetaset  = osdMetaDao.listByOsd(osd.getId()).stream().filter(meta -> meta.getTypeId().equals(tikaMetasetTypeId)).findFirst();
+            if (tikaMetaset.isPresent()) {
+                Meta tikaMeta = tikaMetaset.get();
+                tikaMeta.setContent(tikaMetadata);
+                try {
+                    osdMetaDao.update(List.of(tikaMeta));
+                } catch (SQLException e) {
+                    throw new CinnamonException("Failed to update tika metaset:", e);
+                }
+            } else {
+                Meta tikaMeta = new Meta(osd.getId(), tikaMetasetTypeId, tikaMetadata);
+                List<Meta> metas = osdMetaDao.create(List.of(tikaMeta));
+                log.debug("tikaMeta: "+metas.get(0));
+            }
+        }
+    }
+
+    private String parseWithTika(InputStream contentStream, Format format) throws IOException {
+        File tempData = File.createTempFile("tika-indexing-", ".data");
+        try (FileOutputStream tempFos = new FileOutputStream(tempData)) {
+            tempFos.write(contentStream.readAllBytes());
+            tempFos.flush();
+            return tikaService.parseData(tempData, format);
+        } finally {
+            FileUtils.delete(tempData);
+        }
     }
 
     private void setSummary(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws
@@ -892,7 +937,8 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         return xmlMapper;
     }
 
-    private boolean updateChangesMetadata(UpdateOsdRequest updateRequest ){
-        return Stream.of(updateRequest.getOwnerId(), updateRequest.getLanguageId()).anyMatch(Objects::nonNull);
+    @Override
+    public void init() {
+        tikaService = ((TikaService) getServletContext().getAttribute(TIKA_SERVICE));
     }
 }

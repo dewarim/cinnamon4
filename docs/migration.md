@@ -307,3 +307,7 @@ It's recommended to use a copy of production for testing.
         failed int not null default 0,
         action varchar(127) not null
     );
+
+    -- tika metaset type
+    -- if necessary:
+    --- insert into metaset_types(id, name, is_unique) VALUES (nextval('seq_metaset_type_id'), 'tika', true);

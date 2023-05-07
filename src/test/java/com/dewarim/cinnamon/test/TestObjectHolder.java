@@ -24,6 +24,7 @@ import com.dewarim.cinnamon.model.relations.RelationType;
 import com.dewarim.cinnamon.model.request.folder.UpdateFolderRequest;
 import com.dewarim.cinnamon.model.request.osd.CreateOsdRequest;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
@@ -159,6 +160,19 @@ public class TestObjectHolder {
             request.setMetas(metas);
         }
         osd = client.createOsd(request);
+        return this;
+    }
+    public TestObjectHolder createOsdWithContent(String name, Format format, File content) throws IOException {
+        CreateOsdRequest request = new CreateOsdRequest(name, folder.getId(), user.getId(), acl.getId(),
+                objectType.getId(),
+                format != null ? format.getId() : null,
+                language != null ? language.getId() : null,
+                lifecycleState != null ? lifecycleState.getId() : null,
+                summary);
+        if (metas != null) {
+            request.setMetas(metas);
+        }
+        osd = client.createOsdWithContent(request, content);
         return this;
     }
 

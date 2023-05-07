@@ -630,6 +630,9 @@ VALUES (nextval('seq_format_id'),'application/xml','xml', 'xml', 1, 'XML');
 -- #2 format: text/plain
 insert into formats(id, contenttype, extension, name, default_object_type_id, index_mode)
 VALUES (nextval('seq_format_id'),'text/plain','txt', 'plaintext', 1, 'PLAIN_TEXT');
+-- #3 format: image/png
+insert into formats(id, contenttype, extension, name, default_object_type_id, index_mode)
+VALUES (nextval('seq_format_id'),'image/png','png', 'image.png', 1, 'TIKA');
 
 -- #1 relation_type: protect all & clone always
 insert into relation_types (id, left_object_protected, name, right_object_protected,
@@ -659,6 +662,11 @@ insert into index_items(id, fieldname, multiple_results,
    name, search_string, search_condition, store_field, index_type)
 values (nextval('seq_index_item_id'), 'xml_content', false,'xml content',
   '/objectSystemData/content/descendant::*', 'boolean(string-length(/objectSystemData/formatId[text()])>0)',true, 'DESCENDING_STRING_INDEXER'
+);
+insert into index_items(id, fieldname, multiple_results,
+   name, search_string, search_condition, store_field, index_type)
+values (nextval('seq_index_item_id'), 'xml_content', false,'xml content:tika',
+  '/objectSystemData/metasets/meta/content/descendant::*', 'true()',true, 'DESCENDING_STRING_INDEXER'
 );
 
 -- #1 lifecycle review.lc (lifecycle_state #1 will be configured as default state, see below).
@@ -701,3 +709,5 @@ values (nextval('seq_lifecycle_state_id'), 'failed', '<config></config>', 'com.d
 insert into metaset_types(id, name, is_unique) VALUES (nextval('seq_metaset_type_id'), 'comment', false );
 -- #2 metaset type 'license' (note: in production, this may be a better stored in a relation)
 insert into metaset_types(id, name, is_unique) VALUES (nextval('seq_metaset_type_id'), 'license', true);
+-- tika metaset type
+insert into metaset_types(id, name, is_unique) VALUES (nextval('seq_metaset_type_id'), 'tika', true);

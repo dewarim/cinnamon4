@@ -7,6 +7,7 @@ import com.dewarim.cinnamon.api.ApiResponse;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.service.IndexService;
 import com.dewarim.cinnamon.application.service.SearchService;
+import com.dewarim.cinnamon.application.service.TikaService;
 import com.dewarim.cinnamon.application.servlet.AclGroupServlet;
 import com.dewarim.cinnamon.application.servlet.AclServlet;
 import com.dewarim.cinnamon.application.servlet.CinnamonServlet;
@@ -46,6 +47,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.dataformat.xml.deser.FromXmlParser;
 import jakarta.servlet.DispatcherType;
+import jakarta.servlet.ServletException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.annotations.AnnotationDecorator;
@@ -84,6 +86,7 @@ public class CinnamonServer {
     public static       CinnamonStats    cinnamonStats = new CinnamonStats();
     private             IndexService     indexService;
     private             SearchService    searchService;
+    private TikaService tikaService;
     private static      Thread           indexServiceThread;
 
     public CinnamonServer(int port) {
@@ -141,6 +144,9 @@ public class CinnamonServer {
         startIndexService();
 
         searchService = new SearchService(config.getLuceneConfig());
+        tikaService = new TikaService(config.getCinnamonTikaConfig());
+
+        webAppContext.setAttribute(TIKA_SERVICE, tikaService);
         webAppContext.setAttribute(SEARCH_SERVICE, searchService);
         webAppContext.setAttribute(INDEX_SERVICE, indexService);
         webAppContext.setAttribute(CINNAMON_CONFIG, config);
@@ -162,7 +168,7 @@ public class CinnamonServer {
         handler.addFilter(RequestResponseFilter.class, "/test/*", EnumSet.of(DispatcherType.REQUEST));
     }
 
-    private void addServlets(WebAppContext handler) {
+    private void addServlets(WebAppContext handler) throws ServletException {
         handler.addServlet(AclServlet.class, "/api/acl/*");
         handler.addServlet(AclGroupServlet.class, "/api/aclGroup/*");
         handler.addServlet(CinnamonServlet.class, "/cinnamon/*");
@@ -305,6 +311,10 @@ public class CinnamonServer {
 
     public Server getServer() {
         return server;
+    }
+
+    public static CinnamonConfig getConfig() {
+        return config;
     }
 
     public static void writeConfig(String filename) {
