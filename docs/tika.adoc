@@ -65,5 +65,3 @@ To stop the container, use:
   sudo docker ps
   # using the Container ID:
   sudo docker stop 8360599b464e
-
-(TODO: how to set up as a background service)
