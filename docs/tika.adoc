@@ -53,9 +53,13 @@ on Ubuntu:
 
 * sudo apt install docker.io
 * sudo docker pull apache/tika:latest-full
-* sudo docker run -d -p 9998:9998 apache/tika:latest-full
+* sudo docker run --restart always -d -p 9998:9998 apache/tika:latest-full
 
-This will run the official Tika image. To stop, use:
+This will run the official Tika image.
+
+The option "--restart always" will configure the docker daemon to start the container after system restarts of if the container crashes for any reason.
+
+To stop the container, use:
 
   # to find the Container ID:
   sudo docker ps
