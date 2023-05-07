@@ -41,4 +41,7 @@ public class TikaService {
         return new String(httpResponse.getEntity().getContent().readAllBytes());
     }
 
+    public boolean isEnabled(){
+        return config.isUseTika();
+    }
 }

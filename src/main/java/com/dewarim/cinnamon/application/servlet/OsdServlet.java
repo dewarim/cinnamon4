@@ -618,7 +618,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
 
     private void convertContentToTikaMetaset(ObjectSystemData osd, InputStream contentStream, Format format) throws IOException {
         OsdMetaDao osdMetaDao = new OsdMetaDao();
-        if (tikaMetasetTypeId != null && format.getIndexMode() == IndexMode.TIKA) {
+        if (tikaService.isEnabled() && tikaMetasetTypeId != null && format.getIndexMode() == IndexMode.TIKA) {
             String         tikaMetadata = parseWithTika(contentStream, format);
             log.debug("Tika returned: "+tikaMetadata);
             Optional<Meta> tikaMetaset  = osdMetaDao.listByOsd(osd.getId()).stream().filter(meta -> meta.getTypeId().equals(tikaMetasetTypeId)).findFirst();
