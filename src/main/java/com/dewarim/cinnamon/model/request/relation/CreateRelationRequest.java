@@ -11,6 +11,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @JacksonXmlRootElement(localName = "createRelationRequest")
 public class CreateRelationRequest implements CreateRequest<Relation>, ApiRequest {
@@ -31,7 +32,7 @@ public class CreateRelationRequest implements CreateRequest<Relation>, ApiReques
     }
 
     public boolean validated() {
-        return relations.stream().noneMatch(r -> r == null ||
+        return Objects.nonNull(relations) && relations.stream().noneMatch(r -> r == null ||
                 r.getLeftId() == null ||
                 r.getRightId() == null ||
                 r.getTypeId() == null ||
