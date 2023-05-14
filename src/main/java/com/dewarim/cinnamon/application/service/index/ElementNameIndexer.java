@@ -23,10 +23,11 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 
+
 /**
  * Index the names of XML elements
  */
-// copied from Cinnamon 3, TODO: refactoring
+// copied from Cinnamon 3
 public class ElementNameIndexer extends DefaultIndexer {
 
     public static final  String  DOCTYPE_ENTITY            = "(<!(?:DOCTYPE|ENTITY)[^>]*>)";
@@ -36,20 +37,24 @@ public class ElementNameIndexer extends DefaultIndexer {
 
     public ElementNameIndexer() {
         fieldType.setTokenized(false);
-        fieldType.setStored(true);
+        fieldType.setStored(false);
     }
 
     @Override
     public void indexObject(org.dom4j.Document xml, Element contentNode, Document luceneDoc, String fieldName,
                             String searchString, Boolean multipleResults) {
         try {
+            if(contentNode == null || contentNode.getName().equals("empty")){
+                return;
+            }
             SAXParserFactory factory    = SAXParserFactory.newInstance();
             SAXParser        saxParser  = factory.newSAXParser();
             LexHandler       lexHandler = new LexHandler();
             saxParser.setProperty("http://xml.org/sax/properties/lexical-handler", lexHandler);
             ElementNameHandler nameHandler    = new ElementNameHandler();
-            // TODO: select content node and parse only that
-            String             withoutDoctype = DOCTYPE_OR_ENTITY_PATTERN.matcher(contentNode.asXML()).replaceAll("");
+            String content = contentNode.asXML();
+            //log.debug("Content for ElementNameIndexer:\n"+content);
+            String             withoutDoctype = DOCTYPE_OR_ENTITY_PATTERN.matcher(content).replaceAll("");
             saxParser.parse(new ByteArrayInputStream(withoutDoctype.getBytes(StandardCharsets.UTF_8)), nameHandler);
             Set<String> elementNames = nameHandler.getNames();
             elementNames.forEach(name -> {
@@ -77,27 +82,27 @@ public class ElementNameIndexer extends DefaultIndexer {
         }
 
         @Override
-        public void endDTD() throws SAXException {
+        public void endDTD() {
 
         }
 
         @Override
-        public void startEntity(String name) throws SAXException {
+        public void startEntity(String name) {
 
         }
 
         @Override
-        public void endEntity(String name) throws SAXException {
+        public void endEntity(String name) {
 
         }
 
         @Override
-        public void startCDATA() throws SAXException {
+        public void startCDATA() {
 
         }
 
         @Override
-        public void endCDATA() throws SAXException {
+        public void endCDATA() {
 
         }
 

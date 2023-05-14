@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -38,9 +39,9 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
         // the indexerService on time (or: in its thread) for when the OSD is created.
 
         TestObjectHolder toh          = new TestObjectHolder(adminClient, userId);
-        File             bun        = new File("data/cinnamon-bun.png");
-        Format           imagePng   = TestObjectHolder.formats.stream().filter(f -> f.getName().equals("image.png")).findFirst().orElseThrow();
-        ObjectSystemData relatedOsd = toh.createOsdWithContent("related image",imagePng, bun ).osd;
+        File             bun          = new File("data/cinnamon-bun.png");
+        Format           imagePng     = TestObjectHolder.formats.stream().filter(f -> f.getName().equals("image.png")).findFirst().orElseThrow();
+        ObjectSystemData relatedOsd   = toh.createOsdWithContent("related image", imagePng, bun).osd;
         Long             relatedOsdId = relatedOsd.getId();
         osdWithContentId = relatedOsdId;
 
@@ -59,7 +60,7 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
         client.lockOsd(osdId);
         client.setContentOnLockedOsd(osdId, 1L, new File("pom.xml"));
 
-        Thread.sleep(CinnamonServer.config.getLuceneConfig().getMillisToWaitBetweenRuns() + 3000L);
+        Thread.sleep(CinnamonServer.config.getLuceneConfig().getMillisToWaitBetweenRuns() + 5000L);
         ThreadLocalSqlSession.refreshSession();
     }
 
@@ -95,12 +96,46 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
         SearchIdsResponse response = client.search("<BooleanQuery><Clause occurs='must'><TermQuery fieldName='xml_content'>cinnamon</TermQuery></Clause></BooleanQuery>", SearchType.OSD);
         log.info("response: " + mapper.writeValueAsString(response));
         assertTrue(response.getOsdIds().size() > 0);
+        long exampleId = response.getOsdIds().get(0);
 
         if (CinnamonServer.getConfig().getCinnamonTikaConfig().isUseTika()) {
             SearchIdsResponse imageSearchResponse = client.search("<BooleanQuery><Clause occurs='must'><TermQuery fieldName='xml_content'>delicious</TermQuery></Clause></BooleanQuery>", SearchType.ALL);
             assertEquals(1, imageSearchResponse.getOsdIds().size());
             assertEquals(osdWithContentId, imageSearchResponse.getOsdIds().get(0));
         }
+        verifyOsdSearchResult(client.search(createTermQuery("is_latest_branch", "true"), SearchType.OSD));
+        verifyOsdSearchResult(client.search(createTermQuery("osd_name", "related image"), SearchType.OSD));
+        verifyOsdSearchResult(client.search(createPointQuery("osd_id", exampleId), SearchType.OSD));
+        LocalDate localDate = LocalDate.now();
+        verifyOsdSearchResult(client.search(createWildcardQuery("osd_created",
+                localDate.toString().replace("-", "") + "*"), SearchType.OSD));
+        // TODO: fix problem with indexing file content and running this search test in the same JVM.
+        // ElementNameIndexer verified manually :/
+        // verifyOsdSearchResult(client.search(createTermQuery("element_names", "dependency"), SearchType.OSD));
+
+    }
+
+    private void verifyOsdSearchResult(SearchIdsResponse response) {
+        assertNotNull(response.getOsdIds());
+        assertFalse(response.getOsdIds().isEmpty());
+    }
+
+    private String createPointQuery(String fieldName, long query) {
+        String pointQuery = "<BooleanQuery><Clause occurs='must'><ExactPointQuery fieldName='" + fieldName + "' value='" + query + "' type='long'/></Clause></BooleanQuery>";
+        log.debug("pointQuery: " + pointQuery);
+        return pointQuery;
+    }
+
+    private String createTermQuery(String fieldName, String query) {
+        String booleanQuery = "<BooleanQuery><Clause occurs='must'><TermQuery fieldName='" + fieldName + "'>" + query + "</TermQuery></Clause></BooleanQuery>";
+        log.debug("createTermQuery: " + booleanQuery);
+        return booleanQuery;
+    }
+
+    private String createWildcardQuery(String fieldName, String query) {
+        String wildQuery = "<BooleanQuery><Clause occurs='must'><WildcardQuery fieldName='" + fieldName + "'>" + query + "</WildcardQuery></Clause></BooleanQuery>";
+        log.debug("wildcardQuery: " + wildQuery);
+        return wildQuery;
     }
 
     @Test

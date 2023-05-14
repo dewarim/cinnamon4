@@ -1,5 +1,7 @@
 package com.dewarim.cinnamon.application.service.index;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.DoublePoint;
 import org.dom4j.Element;
@@ -8,6 +10,7 @@ import org.dom4j.Node;
 import java.util.ArrayList;
 import java.util.List;
 
+// TODO: currently unused/unusable, refactor to use new Lucene API
 /**
  * <p>The DecimalXPathIndexer is based upon the DefaultIndexer and expects an XPath parameter as searchString.
  * It stores the results in the Lucene document under the given name as "Double" length floating point values.</p>
@@ -18,10 +21,12 @@ import java.util.List;
  * corresponds correctly to <i>their and the server's</i> locale.</p>
  * <p>This class will not create proper index entries for decimal values with "." like 1.23.</p> 
  */
-public class DecimalXPathIndexer extends DefaultIndexer{
+public class DecimalIndexer extends DefaultIndexer{
+
+	private static final Logger log = LogManager.getLogger(DecimalIndexer.class);
 
 
-	public DecimalXPathIndexer(){
+	public DecimalIndexer(){
 		fieldType.setTokenized(false);
 	}
 	

@@ -19,7 +19,7 @@ import static com.dewarim.cinnamon.application.service.IndexService.NO_CONTENT;
  */
 public class ContentContainer {
 
-    private final static Logger   log = LogManager.getLogger(ContentContainer.class);
+    private final static Logger   log       = LogManager.getLogger(ContentContainer.class);
     private final        byte[]   content;
     private              String   contentAsString;
     private              Document contentAsDocument;

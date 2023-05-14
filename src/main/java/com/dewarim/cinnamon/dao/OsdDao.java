@@ -87,7 +87,7 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
             }
         }
         sqlSession.update("com.dewarim.cinnamon.model.ObjectSystemData.updateOsd", osd);
-        new IndexJobDao().insertIndexJob(new IndexJob(IndexJobType.FOLDER, osd.getId(), IndexJobAction.UPDATE));
+        new IndexJobDao().insertIndexJob(new IndexJob(IndexJobType.OSD, osd.getId(), IndexJobAction.UPDATE));
     }
 
     public ObjectSystemData saveOsd(ObjectSystemData osd) {

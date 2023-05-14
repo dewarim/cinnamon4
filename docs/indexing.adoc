@@ -188,12 +188,79 @@ Example of a search condition:
 
 * DEFAULT_INDEXER: select nodes and indexes their text content (_not_ the text content of their children)
 * DESCENDING_STRING_INDEXER: indexes the text content of all child nodes
+* BOOLEAN_INDEXER: index true/false values (at the moment, it just trims & lowercases the text found at the XPath nodes it finds, which is identical behavior to Cinnamon 3)
+* COMPLETE_STRING_INDEXER: index values without tokenizing, useful for serial numbers
+* ELEMENT_NAME_INDEXER: indexes element names of XML content. Comments are indexed in the special field "xml.comment"
+* DATE_INDEXER: indexes the date part of text nodes with content in the format 2023-05-14T00:00:23
+* DATE_TIME_INDEXER: converts text nodes in the format 2023-05-14T00:11:12 into a searchable string: 20230514001112
+* INTEGER_INDEXER: indexes integer numbers as long values.
+
+==== Configuration examples for IndexTypes
+
+[source,sql]
+----
+
+insert into index_items(id, fieldname, multiple_results,
+   name, search_string, search_condition, store_field, index_type)
+values (nextval('seq_index_item_id'), 'xml_content', false,'xml content:tika',
+  '/objectSystemData/metasets/meta/content/descendant::*', 'true()',true, 'DESCENDING_STRING_INDEXER'
+);
+insert into index_items(id, fieldname, multiple_results,
+                        name, search_string, search_condition, store_field, index_type)
+values (nextval('seq_index_item_id'), 'is_latest_branch', false,'latest branch item',
+        '/objectSystemData/latestBranch', 'boolean(string-length(/objectSystemData/latestBranch[text()])>0)'
+        ,false, 'BOOLEAN_INDEXER'
+       );
+insert into index_items(id, fieldname, multiple_results,
+   name, search_string, search_condition, store_field, index_type)
+values (nextval('seq_index_item_id'), 'osd_name', false,'name item',
+  '/objectSystemData/name', 'true()',false, 'COMPLETE_STRING_INDEXER'
+);
+
+insert into index_items(id, fieldname, multiple_results,
+   name, search_string, search_condition, store_field, index_type)
+values (nextval('seq_index_item_id'), 'element_names', false,'element name item',
+  '/objectSystemData/content', 'boolean(string-length(/objectSystemData/formatId[text()])>0)',
+        false, 'ELEMENT_NAME_INDEXER'
+);
+insert into index_items(id, fieldname, multiple_results,
+   name, search_string, search_condition, store_field, index_type)
+values (nextval('seq_index_item_id'), 'osd_created', false,'created date item',
+  '/objectSystemData/created', 'true()',false, 'DATE_INDEXER'
+);
+insert into index_items(id, fieldname, multiple_results,
+   name, search_string, search_condition, store_field, index_type)
+values (nextval('seq_index_item_id'), 'date_time', false,'created datetime item',
+  '/objectSystemData/created', 'true()',false, 'DATE_TIME_INDEXER'
+);
+insert into index_items(id, fieldname, multiple_results,
+   name, search_string, search_condition, store_field, index_type)
+values (nextval('seq_index_item_id'), 'osd_id', false,'created id item',
+  '/objectSystemData/id', 'true()',false, 'INTEGER_INDEXER'
+);
+----
+
+==== Search query examples
+
+[cols="1,2"]
+|===
+| Indexer Type | query
+|COMPLETE_STRING_INDEXER|<BooleanQuery><Clause occurs='must'><TermQuery fieldName='osd_name'>related image</TermQuery></Clause></BooleanQuery
+
+|BOOLEAN_INDEXER|<BooleanQuery><Clause occurs='must'><TermQuery fieldName='is_latest_branch'>true</TermQuery></Clause></BooleanQuery>
+
+|INTEGER_INDEXER|<BooleanQuery><Clause occurs='must'><ExactPointQuery fieldName='id' value='4' type='long'/></Clause></BooleanQuery>
+
+|DATE_TIME_INDEXER| <BooleanQuery><Clause occurs='must'><WildcardQuery fieldName='osd_created'>20230514*</WildcardQuery></Clause></BooleanQuery>
+
+|ELEMENT_NAME_INDEXER|(just a normal TermQuery) <BooleanQuery><Clause occurs='must'><TermQuery fieldName='element_names'>dependency</TermQuery></Clause></BooleanQuery>
+|===
 
 === Built-in index items
 
 --> TODO: add table with fields
 
- index.folder.name
+  index.folder.name
 index.root
 index.contentsize
 index.created.date

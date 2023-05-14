@@ -34,7 +34,7 @@ public class DefaultIndexer implements Indexer {
         fieldType.setTokenized(true);
     }
 
-    transient Logger log = LogManager.getLogger(this.getClass());
+    private static final Logger log = LogManager.getLogger(DefaultIndexer.class);
 
     @Override
     public void indexObject(org.dom4j.Document xml, Element contentNode, Document luceneDoc, String fieldName,
@@ -44,8 +44,7 @@ public class DefaultIndexer implements Indexer {
 
         if (multipleResults) {
             hits = xml.selectNodes(searchString);
-        }
-        else {
+        } else {
             Node node = xml.selectSingleNode(searchString);
             if (node != null) {
                 hits.add(node);
@@ -56,12 +55,15 @@ public class DefaultIndexer implements Indexer {
             String nodeValue = convertNodeToString(node);
             if (nodeValue != null && !nodeValue.isBlank()) {
                 log.debug("fieldName: " + fieldName + " value: " + nodeValue + " stored:" + fieldType.stored());
-                luceneDoc.add(new Field(fieldName, nodeValue, fieldType));
-            }
-            else {
+                addToDoc(luceneDoc, fieldName, nodeValue, fieldType);
+            } else {
                 log.debug("nodeValue for '" + searchString + "' is null");
             }
         }
+    }
+
+    protected void addToDoc(Document luceneDoc, String fieldName, String nodeValue, FieldType typeOfField) {
+        luceneDoc.add(new Field(fieldName, nodeValue, typeOfField));
     }
 
     public String convertNodeToString(Node node) {
@@ -69,8 +71,8 @@ public class DefaultIndexer implements Indexer {
     }
 
     public StringBuilder descendIntoNodes(Node node) {
-        List<Node> children = node.selectNodes("descendant::*");
-        StringBuilder result = new StringBuilder();
+        List<Node>    children = node.selectNodes("descendant::*");
+        StringBuilder result   = new StringBuilder();
         appendNonEmptyText(node, result);
         for (Node n : children) {
             appendNonEmptyText(n, result);
@@ -91,7 +93,7 @@ public class DefaultIndexer implements Indexer {
             builder.append(' ');
         }
         String attributeValue = ((Element) node).attributes().stream().map(Attribute::getValue).collect(Collectors.joining(" "));
-        if(!attributeValue.isBlank()){
+        if (!attributeValue.isBlank()) {
             builder.append(attributeValue);
             builder.append(' ');
         }

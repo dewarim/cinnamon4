@@ -18,9 +18,7 @@ import java.util.List;
  * and stored the number.</p>
  */
 public class CountIndexer implements Indexer {
-
-
-    transient Logger log = LoggerFactory.getLogger(this.getClass());
+    private static final Logger log = LoggerFactory.getLogger(CountIndexer.class);
 
     @Override
     public void indexObject(org.dom4j.Document xml, Element contentRoot, Document luceneDoc, String fieldName, String searchString, Boolean multipleResults) {
@@ -36,7 +34,6 @@ public class CountIndexer implements Indexer {
         }
         log.debug("fieldName: " + fieldName + " count:" + hits.size());
         luceneDoc.add(new LongPoint(fieldName, hits.size()));
-
     }
 
     @Override

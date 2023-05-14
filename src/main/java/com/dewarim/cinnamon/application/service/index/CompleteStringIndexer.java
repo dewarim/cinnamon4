@@ -11,18 +11,17 @@ import org.dom4j.Node;
  * the indexed field while the CompleteStringIndexer indexes the field as-is.</p>
  */
 public class CompleteStringIndexer extends DefaultIndexer {
-	
-	public CompleteStringIndexer(){
-		fieldType.setTokenized(false);
-	}
-	
-	public String convertNodeToString(Node node){
-		String stringValue = node.getText();
-		if(stringValue == null){
-			return null;
-		}
-		else{
-			return stringValue.toLowerCase();
-		}
-	}
+
+    public CompleteStringIndexer() {
+        fieldType.setTokenized(false);
+    }
+
+    public String convertNodeToString(Node node) {
+        String stringValue = node.getText();
+        if (stringValue == null) {
+            return null;
+        } else {
+            return stringValue.toLowerCase();
+        }
+    }
 }

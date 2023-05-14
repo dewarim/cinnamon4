@@ -668,6 +668,39 @@ insert into index_items(id, fieldname, multiple_results,
 values (nextval('seq_index_item_id'), 'xml_content', false,'xml content:tika',
   '/objectSystemData/metasets/meta/content/descendant::*', 'true()',true, 'DESCENDING_STRING_INDEXER'
 );
+insert into index_items(id, fieldname, multiple_results,
+                        name, search_string, search_condition, store_field, index_type)
+values (nextval('seq_index_item_id'), 'is_latest_branch', false,'latest branch item',
+        '/objectSystemData/latestBranch', 'boolean(string-length(/objectSystemData/latestBranch[text()])>0)'
+        ,false, 'BOOLEAN_INDEXER'
+       );
+insert into index_items(id, fieldname, multiple_results,
+   name, search_string, search_condition, store_field, index_type)
+values (nextval('seq_index_item_id'), 'osd_name', false,'name item',
+  '/objectSystemData/name', 'true()',false, 'COMPLETE_STRING_INDEXER'
+);
+
+insert into index_items(id, fieldname, multiple_results,
+   name, search_string, search_condition, store_field, index_type)
+values (nextval('seq_index_item_id'), 'element_names', false,'element name item',
+  '/objectSystemData/content', 'boolean(string-length(/objectSystemData/formatId[text()])>0)',
+        false, 'ELEMENT_NAME_INDEXER'
+);
+insert into index_items(id, fieldname, multiple_results,
+   name, search_string, search_condition, store_field, index_type)
+values (nextval('seq_index_item_id'), 'osd_created', false,'created date item',
+  '/objectSystemData/created', 'true()',false, 'DATE_INDEXER'
+);
+insert into index_items(id, fieldname, multiple_results,
+   name, search_string, search_condition, store_field, index_type)
+values (nextval('seq_index_item_id'), 'date_time', false,'created datetime item',
+  '/objectSystemData/created', 'true()',false, 'DATE_TIME_INDEXER'
+);
+insert into index_items(id, fieldname, multiple_results,
+   name, search_string, search_condition, store_field, index_type)
+values (nextval('seq_index_item_id'), 'osd_id', false,'created id item',
+  '/objectSystemData/id', 'true()',false, 'INTEGER_INDEXER'
+);
 
 -- #1 lifecycle review.lc (lifecycle_state #1 will be configured as default state, see below).
 insert into lifecycles(id, name, default_state_id) VALUES (nextval('seq_lifecycle_id'), 'review.lc',null);
