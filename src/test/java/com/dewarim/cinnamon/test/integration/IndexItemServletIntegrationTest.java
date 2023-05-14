@@ -38,7 +38,7 @@ public class IndexItemServletIntegrationTest extends CinnamonIntegrationTest {
         assertThat(item.getSearchString(), equalTo("/sysMeta/object/aclId"));
         assertThat(item.getSearchCondition(), equalTo("true()"));
         assertTrue(item.isStoreField());
-
+        assertEquals(DEFAULT_INDEXER,item.getIndexType());
         log.info("Found IndexItem: " + mapper.configure(SerializationFeature.INDENT_OUTPUT, true).writeValueAsString(item));
     }
 
