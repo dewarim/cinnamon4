@@ -256,36 +256,52 @@ values (nextval('seq_index_item_id'), 'osd_id', false,'created id item',
 |ELEMENT_NAME_INDEXER|(just a normal TermQuery) <BooleanQuery><Clause occurs='must'><TermQuery fieldName='element_names'>dependency</TermQuery></Clause></BooleanQuery>
 |===
 
-=== Built-in index items
+=== Built-in index items/fields
 
---> TODO: add table with fields
+[cols="1,1"]
+.Folder
+|===
+| Index Field | Data Type
 
-  index.folder.name
-index.root
-index.contentsize
-index.created.date
-index.modified.date
-index.created.time
-index.modified.time
-index.latesthead
-index.latestbranch
-index.path
-index.folder.path
-index.procstate
-index.version
-index.name
-index.folder.parentId
-index.parentId
-index.lockedby
-index.creator
-index.modifier
-index.format
-index.objecttype
-index.language
-index.folder.type
-index.lifecycle.state
-index.acl
-index.folder.owner
-index.owner
-child.relations
-parent.relations
+|folderpath|String
+|acl|Integer
+|id|Integer
+|created|DateTime (can also be queried as a long point as Unix epoch milliseconds ) - see DATE_TIME_INDEXER example above on how to query DateTime fields
+|owner|Integer
+|parent|Integer
+|summary|Text
+|type|Integer
+|unique_id|String with formatting: folder#$id, for example: folder#123
+|cinnamon_class|String with value: folder
+|===
+
+[cols="1,1"]
+.ObjectSystemData (OSD)
+|===
+| Index Field | Data Type
+
+|folderpath|String
+|acl|Integer
+|cmn_version|String
+|content_changed|String ("true" or "false")
+|latest_branch|String ("true" or "false")
+|latest_head|String ("true" or "false")
+|content_size|Integer, only indexed if contentSize != null
+|id|Integer
+|created|DateTime (can also be queried as a long point as Unix epoch milliseconds ) - see DATE_TIME_INDEXER example above on how to query DateTime fields
+|modified|DateTime (can also be queried as a long point as Unix epoch milliseconds )
+|owner|Integer
+|creator|Integer
+|locker|Integer
+|modifier|Integer
+|format|Integer, only indexed if != null
+|parent|Integer
+|predecessor|Integer
+|root|Integer (if non-null)
+|lifecycle_state|Integer
+|summary|Text
+|type|Integer
+|unique_id|String with formatting: osd#$id, for example: osd#123
+|cinnamon_class|String with value: osd
+|===
+
