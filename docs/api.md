@@ -1630,7 +1630,7 @@ Update the content of a given folder metaset
 
 ---
 
-# /api/indexItem/udpate
+# /api/indexItem/update
 
 
 ## Request
@@ -1696,14 +1696,14 @@ Rebuild the Lucene search index in parts or completely. When reindexing large nu
 ## Request
 
 ```xml
-<ReindexRequest>
+<reindexRequest>
   <osdIds/>
   <folderIds/>
-</ReindexRequest>
+</reindexRequest>
 
 ```
 ```xml
-<ReindexRequest>
+<reindexRequest>
   <osdIds>
     <osdIds>13</osdIds>
     <osdIds>23</osdIds>
@@ -1712,7 +1712,7 @@ Rebuild the Lucene search index in parts or completely. When reindexing large nu
     <folderIds>43</folderIds>
     <folderIds>2</folderIds>
   </folderIds>
-</ReindexRequest>
+</reindexRequest>
 
 ```
 
