@@ -270,7 +270,7 @@ values (nextval('seq_index_item_id'), 'osd_id', false,'created id item',
 |owner|Integer
 |parent|Integer
 |summary|Text
-|type|Integer
+|folder_type|Integer
 |unique_id|String with formatting: folder#$id, for example: folder#123
 |cinnamon_class|String with value: folder
 |===
@@ -300,7 +300,7 @@ values (nextval('seq_index_item_id'), 'osd_id', false,'created id item',
 |root|Integer (if non-null)
 |lifecycle_state|Integer
 |summary|Text
-|type|Integer
+|object_type|Integer
 |unique_id|String with formatting: osd#$id, for example: osd#123
 |cinnamon_class|String with value: osd
 |===

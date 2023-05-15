@@ -7,7 +7,7 @@
     <groupId>com.dewarim.cinnamon</groupId>
     <artifactId>cinnamon-cms</artifactId>
     <packaging>jar</packaging>
-    <version>0.5.0</version>
+    <version>0.5.1</version>
     <name>Cinnamon CMS</name>
 
     <properties>
