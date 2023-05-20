@@ -74,6 +74,9 @@ public interface CrudDao<T extends Identifiable> {
     }
 
     default Optional<T> getObjectById(Long id) {
+        if(id == null){
+            return Optional.empty();
+        }
         List<T> items = getObjectsById(List.of(id));
         if (items.size() == 0) {
             return Optional.empty();

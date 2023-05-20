@@ -5,7 +5,7 @@ import com.dewarim.cinnamon.model.response.Wrapper;
 import java.util.Optional;
 
 /**
- * A simple list request. Currently this class is empty, but should be used to avoid
+ * A simple list request. Currently, this class is empty, but should be used to avoid
  * sending empty POST requests to the server.
  * <p>
  * Future versions may include filter fields (for example, String nameFilter).

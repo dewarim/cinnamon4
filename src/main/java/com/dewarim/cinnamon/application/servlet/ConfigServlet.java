@@ -18,8 +18,10 @@ import com.dewarim.cinnamon.dao.UiLanguageDao;
 import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.model.ProviderClass;
 import com.dewarim.cinnamon.model.ProviderType;
+import com.dewarim.cinnamon.model.UrlMappingInfo;
 import com.dewarim.cinnamon.model.request.config.ListConfigRequest;
 import com.dewarim.cinnamon.model.response.ConfigWrapper;
+import com.dewarim.cinnamon.model.response.UrlMappingInfoWrapper;
 import com.dewarim.cinnamon.provider.ContentProviderService;
 import com.dewarim.cinnamon.provider.StateProviderService;
 import com.dewarim.cinnamon.security.LoginProviderService;
@@ -31,7 +33,9 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
 
@@ -47,8 +51,16 @@ public class ConfigServlet extends HttpServlet {
         UrlMapping mapping = UrlMapping.getByPath(request.getRequestURI());
         switch (mapping) {
             case CONFIG__LIST_ALL_CONFIGURATIONS -> listAllConfigurations(request, cinnamonResponse);
+            case CONFIG__URL_MAPPINGS -> listUrlMappings(request,cinnamonResponse);
             default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
+    }
+
+    private void listUrlMappings(HttpServletRequest request, CinnamonResponse cinnamonResponse) {
+        List<UrlMappingInfo> urlMappingInfos = Arrays.stream(UrlMapping.values()).toList().stream()
+                .map(urlMapping -> new UrlMappingInfo(urlMapping.getServlet(), urlMapping.getAction(), urlMapping.getPath(), urlMapping.getDescription()))
+                        .collect(Collectors.toList());
+        cinnamonResponse.setWrapper(new UrlMappingInfoWrapper(urlMappingInfos));
     }
 
     private void listAllConfigurations(HttpServletRequest request, CinnamonResponse response) throws IOException {

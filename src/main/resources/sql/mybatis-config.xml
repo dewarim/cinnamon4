@@ -10,6 +10,7 @@
     <typeHandlers>
         <typeHandler javaType="com.dewarim.cinnamon.model.links.LinkType" handler="org.apache.ibatis.type.EnumTypeHandler" jdbcType="VARCHAR"/>
         <typeHandler javaType="com.dewarim.cinnamon.model.IndexMode" handler="org.apache.ibatis.type.EnumTypeHandler" jdbcType="VARCHAR"/>
+        <typeHandler javaType="com.dewarim.cinnamon.model.ChangeTriggerType" handler="org.apache.ibatis.type.EnumTypeHandler" jdbcType="VARCHAR"/>
         <typeHandler javaType="com.dewarim.cinnamon.model.index.IndexType" handler="com.dewarim.cinnamon.model.index.IndexTypeEnumHandler" jdbcType="VARCHAR"/>
         <typeHandler javaType="com.dewarim.cinnamon.model.index.IndexJobType" handler="com.dewarim.cinnamon.model.index.IndexJobTypeEnumHandler" jdbcType="VARCHAR"/>
         <typeHandler javaType="com.dewarim.cinnamon.model.index.IndexJobAction" handler="com.dewarim.cinnamon.model.index.IndexJobActionEnumHandler" jdbcType="VARCHAR"/>
@@ -30,6 +31,7 @@
         <mapper resource="com/dewarim/cinnamon/AclGroupMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/AclGroupPermissionMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/AclMapper.xml"/>
+        <mapper resource="com/dewarim/cinnamon/ChangeTriggerMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/ConfigEntryMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/DeletionMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/GroupMapper.xml"/>

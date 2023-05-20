@@ -3,6 +3,7 @@ package com.dewarim.cinnamon.application.servlet;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonResponse;
+import com.dewarim.cinnamon.application.service.index.ParamParser;
 import com.dewarim.cinnamon.model.response.GenericResponse;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -23,7 +24,7 @@ public class TestServlet extends HttpServlet {
 
     private static final Logger log = LogManager.getLogger(TestServlet.class);
 
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) {
         generateResponse(request, response);
     }
 
@@ -31,15 +32,27 @@ public class TestServlet extends HttpServlet {
         generateResponse(request, response);
     }
 
-    private void generateResponse(HttpServletRequest request, HttpServletResponse response) {
+    private void generateResponse(HttpServletRequest request, HttpServletResponse response)  {
         CinnamonResponse cinnamonResponse = (CinnamonResponse) response;
         UrlMapping       mapping          = UrlMapping.getByPath(request.getRequestURI());
 
-        log.debug("Last-Insert-ID: "+request.getHeader("cinnamon-last-insert-id"));
         switch (mapping) {
+            case TEST__ECHO -> echo(request, cinnamonResponse);
             case TEST__STATUS_200 -> returnStatus(cinnamonResponse, 200, "OK");
             case TEST__STATUS_400 -> returnStatus(cinnamonResponse, 400, "NOT OK");
             default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
+        }
+    }
+
+    private void echo(HttpServletRequest request, CinnamonResponse cinnamonResponse) {
+        try {
+            String input = new String(request.getInputStream().readAllBytes());
+            ParamParser.parseXml(input, "Input is not well-formed XML.");
+            cinnamonResponse.setStatusCode(HttpServletResponse.SC_OK);
+            cinnamonResponse.getWriter().write(input);
+        }
+        catch (Exception e){
+            throw ErrorCode.INVALID_REQUEST.exception();
         }
     }
 

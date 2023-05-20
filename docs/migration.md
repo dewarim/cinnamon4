@@ -311,3 +311,22 @@ It's recommended to use a copy of production for testing.
     -- tika metaset type
     -- if necessary:
     --- insert into metaset_types(id, name, is_unique) VALUES (nextval('seq_metaset_type_id'), 'tika', true);
+
+    drop sequence if exists seq_change_trigger_id;
+    create sequence seq_change_trigger_id;
+    drop table if exists change_triggers;
+    create table change_triggers
+    (
+    id                bigint                          not null
+    primary key,
+    name              varchar(255) unique             not null,
+    active            boolean                         not null,
+    ranking           integer                         not null,
+    action            varchar(255)                    not null,
+    pre_trigger       boolean                         not null,
+    post_trigger      boolean                         not null,
+    copy_file_content boolean                         not null,
+    config            text default '<config />'::text not null,
+    controller        varchar(255)                    not null,
+    trigger_type      varchar(255)                    not null
+    );

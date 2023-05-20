@@ -381,6 +381,135 @@ Retrieve the server version and build number.
 
 ---
 
+# /api/changeTrigger/create
+
+
+## Request
+
+```xml
+<createChangeTriggerRequest>
+  <changeTriggers>
+    <changeTrigger>
+      <id>1</id>
+      <name>triggerThumbnailGenerator</name>
+      <controller>osd</controller>
+      <action>setContent</action>
+      <active>true</active>
+      <preTrigger>false</preTrigger>
+      <postTrigger>true</postTrigger>
+      <copyFileContent>false</copyFileContent>
+      <ranking>100</ranking>
+      <config>&lt;config>&lt;url>http://localhost:64888/createThumbnail&lt;/url>&lt;/config></config>
+      <triggerType>MICROSERVICE</triggerType>
+    </changeTrigger>
+  </changeTriggers>
+</createChangeTriggerRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <changeTriggers/>
+</cinnamon>
+
+```
+
+
+---
+
+# /api/changeTrigger/delete
+
+
+## Request
+
+```xml
+<deleteChangeTriggerRequest>
+  <ignoreNotFound>false</ignoreNotFound>
+  <ids/>
+</deleteChangeTriggerRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <success>false</success>
+</cinnamon>
+
+```
+
+
+---
+
+# /api/changeTrigger/list
+
+
+## Request
+
+```xml
+<listChangeTriggerRequest>
+  <type>FULL</type>
+</listChangeTriggerRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <changeTriggers/>
+</cinnamon>
+
+```
+
+
+---
+
+# /api/changeTrigger/update
+
+
+## Request
+
+```xml
+<updateChangeTriggerRequest>
+  <changeTriggers>
+    <changeTrigger>
+      <id>1</id>
+      <name>triggerThumbnailGenerator</name>
+      <controller>osd</controller>
+      <action>setContent</action>
+      <active>true</active>
+      <preTrigger>false</preTrigger>
+      <postTrigger>true</postTrigger>
+      <copyFileContent>false</copyFileContent>
+      <ranking>100</ranking>
+      <config>&lt;config>&lt;url>http://localhost:64888/createThumbnail&lt;/url>&lt;/config></config>
+      <triggerType>MICROSERVICE</triggerType>
+    </changeTrigger>
+  </changeTriggers>
+</updateChangeTriggerRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <changeTriggers/>
+</cinnamon>
+
+```
+
+
+---
+
 # /api/configEntry/create
 Create a new config entry
 
@@ -619,6 +748,38 @@ List of all objects the client may want to cache, for example users, object type
   <uiLanguages/>
   <users/>
   <providerClasses/>
+</cinnamon>
+
+```
+
+
+---
+
+# /api/config/urlMappings
+List URL Mappings
+
+## Request
+
+```xml
+<listUrlMappingInfoRequest>
+  <type>FULL</type>
+</listUrlMappingInfoRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <urlMappings>
+    <urlMapping>
+      <controller>test</controller>
+      <action>echo</action>
+      <path>/api/test/echo</path>
+      <description>return the posted input xml</description>
+    </urlMapping>
+  </urlMappings>
 </cinnamon>
 
 ```
@@ -3638,6 +3799,11 @@ Field of objects contain the id, so acl field will index the acl.id.
 
 # /static/
 Returns a static file from the server (for example, a favicon.ico if one exists).
+
+---
+
+# /api/test/echo
+return the posted input xml
 
 ---
 

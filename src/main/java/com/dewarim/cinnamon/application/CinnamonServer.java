@@ -8,7 +8,33 @@ import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.service.IndexService;
 import com.dewarim.cinnamon.application.service.SearchService;
 import com.dewarim.cinnamon.application.service.TikaService;
-import com.dewarim.cinnamon.application.servlet.*;
+import com.dewarim.cinnamon.application.servlet.AclGroupServlet;
+import com.dewarim.cinnamon.application.servlet.AclServlet;
+import com.dewarim.cinnamon.application.servlet.ChangeTriggerServlet;
+import com.dewarim.cinnamon.application.servlet.CinnamonServlet;
+import com.dewarim.cinnamon.application.servlet.ConfigEntryServlet;
+import com.dewarim.cinnamon.application.servlet.ConfigServlet;
+import com.dewarim.cinnamon.application.servlet.FolderServlet;
+import com.dewarim.cinnamon.application.servlet.FolderTypeServlet;
+import com.dewarim.cinnamon.application.servlet.FormatServlet;
+import com.dewarim.cinnamon.application.servlet.GroupServlet;
+import com.dewarim.cinnamon.application.servlet.IndexItemServlet;
+import com.dewarim.cinnamon.application.servlet.IndexServlet;
+import com.dewarim.cinnamon.application.servlet.LanguageServlet;
+import com.dewarim.cinnamon.application.servlet.LifecycleServlet;
+import com.dewarim.cinnamon.application.servlet.LifecycleStateServlet;
+import com.dewarim.cinnamon.application.servlet.LinkServlet;
+import com.dewarim.cinnamon.application.servlet.MetasetTypeServlet;
+import com.dewarim.cinnamon.application.servlet.ObjectTypeServlet;
+import com.dewarim.cinnamon.application.servlet.OsdServlet;
+import com.dewarim.cinnamon.application.servlet.PermissionServlet;
+import com.dewarim.cinnamon.application.servlet.RelationServlet;
+import com.dewarim.cinnamon.application.servlet.RelationTypeServlet;
+import com.dewarim.cinnamon.application.servlet.SearchServlet;
+import com.dewarim.cinnamon.application.servlet.StaticServlet;
+import com.dewarim.cinnamon.application.servlet.TestServlet;
+import com.dewarim.cinnamon.application.servlet.UiLanguageServlet;
+import com.dewarim.cinnamon.application.servlet.UserAccountServlet;
 import com.dewarim.cinnamon.configuration.CinnamonConfig;
 import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.filter.AuthenticationFilter;
@@ -22,7 +48,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.dataformat.xml.deser.FromXmlParser;
 import jakarta.servlet.DispatcherType;
-import jakarta.servlet.ServletException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.annotations.AnnotationDecorator;
@@ -51,7 +76,7 @@ public class CinnamonServer {
 
     private static final Logger log = LogManager.getLogger(CinnamonServer.class);
 
-    public static final String           VERSION       = "0.5.1";
+    public static final String           VERSION       = "0.5.2";
     private final       int              port;
     private             Server           server;
     private             DbSessionFactory dbSessionFactory;
@@ -143,10 +168,11 @@ public class CinnamonServer {
         handler.addFilter(RequestResponseFilter.class, "/test/*", EnumSet.of(DispatcherType.REQUEST));
     }
 
-    private void addServlets(WebAppContext handler) throws ServletException {
+    private void addServlets(WebAppContext handler) {
         handler.addServlet(AclServlet.class, "/api/acl/*");
         handler.addServlet(AclGroupServlet.class, "/api/aclGroup/*");
         handler.addServlet(CinnamonServlet.class, "/cinnamon/*");
+        handler.addServlet(ChangeTriggerServlet.class, "/api/changeTrigger/*");
         handler.addServlet(ConfigServlet.class, "/api/config/*");
         handler.addServlet(ConfigEntryServlet.class, "/api/configEntry/*");
         handler.addServlet(FormatServlet.class, "/api/format/*");
@@ -167,7 +193,7 @@ public class CinnamonServer {
         handler.addServlet(RelationTypeServlet.class, "/api/relationType/*");
         handler.addServlet(SearchServlet.class, "/api/search/*");
         handler.addServlet(StaticServlet.class, "/static/*");
-        handler.addServlet(TestServlet.class, "/test/*");
+        handler.addServlet(TestServlet.class, "/api/test/*");
         handler.addServlet(UiLanguageServlet.class, "/api/uiLanguage/*");
         handler.addServlet(UserAccountServlet.class, "/api/user/*");
     }

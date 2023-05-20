@@ -74,7 +74,6 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     private final static Logger log = LogManager.getLogger(OsdServletIntegrationTest.class);
 
-    private static final Long CREATE_ACL_ID          = 8L;
     /**
      * Non-Admin user id
      */
@@ -778,7 +777,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void createOsdParentFolderNotFound() throws IOException {
         CreateOsdRequest request = new CreateOsdRequest();
-        request.setAclId(CREATE_ACL_ID);
+        request.setAclId(defaultCreationAcl.getId());
         request.setName("new osd");
         request.setOwnerId(STANDARD_USER_ID);
         request.setParentId(Long.MAX_VALUE);
@@ -819,7 +818,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void createOsdUserNotFound() throws IOException {
         CreateOsdRequest request = new CreateOsdRequest();
-        request.setAclId(CREATE_ACL_ID);
+        request.setAclId(defaultCreationAcl.getId());
         request.setName("new osd");
         request.setOwnerId(Long.MAX_VALUE);
         request.setParentId(createFolderId);
@@ -835,7 +834,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void createOsdObjectTypeNotFound() throws IOException {
         CreateOsdRequest request = new CreateOsdRequest();
-        request.setAclId(CREATE_ACL_ID);
+        request.setAclId(defaultCreationAcl.getId());
         request.setName("new osd");
         request.setOwnerId(STANDARD_USER_ID);
         request.setParentId(createFolderId);
@@ -851,7 +850,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void createOsdLifecycleStateNotFound() throws IOException {
         CreateOsdRequest request = new CreateOsdRequest();
-        request.setAclId(CREATE_ACL_ID);
+        request.setAclId(defaultCreationAcl.getId());
         request.setName("new osd");
         request.setOwnerId(STANDARD_USER_ID);
         request.setParentId(createFolderId);
@@ -868,7 +867,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void createOsdLanguageNotFound() throws IOException {
         CreateOsdRequest request = new CreateOsdRequest();
-        request.setAclId(CREATE_ACL_ID);
+        request.setAclId(defaultCreationAcl.getId());
         request.setName("new osd");
         request.setOwnerId(STANDARD_USER_ID);
         request.setParentId(createFolderId);
@@ -886,7 +885,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void createOsdHappyCaseNoFile() throws IOException {
         CreateOsdRequest request = new CreateOsdRequest();
-        request.setAclId(CREATE_ACL_ID);
+        request.setAclId(defaultCreationAcl.getId());
         request.setName("new osd");
         request.setOwnerId(STANDARD_USER_ID);
         request.setParentId(createFolderId);
@@ -901,7 +900,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         assertEquals("new osd", osd.getName());
         assertEquals(STANDARD_USER_ID, osd.getOwnerId());
         assertEquals(STANDARD_USER_ID, osd.getModifierId());
-        assertEquals(CREATE_ACL_ID, osd.getAclId());
+        assertEquals(defaultCreationAcl.getId(), osd.getAclId());
         assertEquals(DEFAULT_OBJECT_TYPE_ID, osd.getTypeId());
         assertEquals(createFolderId, osd.getParentId());
     }
@@ -909,7 +908,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void createOsdUploadedFileWithoutFormat() throws IOException {
         CreateOsdRequest request = new CreateOsdRequest();
-        request.setAclId(CREATE_ACL_ID);
+        request.setAclId(defaultCreationAcl.getId());
         request.setName("new osd");
         request.setOwnerId(STANDARD_USER_ID);
         request.setParentId(createFolderId);
@@ -929,7 +928,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void createOsdUploadedFileHappyCase() throws IOException {
         CreateOsdRequest request = new CreateOsdRequest();
-        request.setAclId(CREATE_ACL_ID);
+        request.setAclId(defaultCreationAcl.getId());
         request.setName("new osd");
         request.setOwnerId(STANDARD_USER_ID);
         request.setParentId(createFolderId);

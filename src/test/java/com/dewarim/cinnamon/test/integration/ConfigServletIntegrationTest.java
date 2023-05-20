@@ -2,12 +2,14 @@ package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.model.ProviderType;
+import com.dewarim.cinnamon.model.UrlMappingInfo;
 import com.dewarim.cinnamon.model.request.config.ListConfigRequest;
 import com.dewarim.cinnamon.model.response.ConfigWrapper;
 import org.apache.http.HttpResponse;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -50,6 +52,14 @@ public class ConfigServletIntegrationTest extends CinnamonIntegrationTest {
         ConfigWrapper wrapper = mapper.readValue(response.getEntity().getContent(), ConfigWrapper.class);
         assertNotNull(wrapper);
         return wrapper;
+    }
+
+    @Test
+    public void urlMappings()throws IOException{
+        List<UrlMappingInfo> mappings = client.listUrlMappings();
+        assertEquals(UrlMapping.values().length, mappings.size());
+        UrlMapping echo = UrlMapping.TEST__ECHO;
+        assertTrue(mappings.contains(new UrlMappingInfo(echo.getServlet(), echo.getAction(), echo.getPath(), echo.getDescription())));
     }
 
 

@@ -300,7 +300,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                     copy.setContentSize(metadata.getContentSize());
                     copy.setContentProvider(contentProvider.getName());
                     copy.setFormatId(osd.getFormatId());
-                    Format format = new FormatDao().getFormatById(osd.getFormatId()).orElseThrow();
+                    Format format = new FormatDao().getObjectById(osd.getFormatId()).orElseThrow();
                     convertContentToTikaMetaset(osd, contentProvider.getContentStream(metadata), format);
                     osdDao.updateOsd(copy, false);
                 }
@@ -356,7 +356,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         osd.setLatestHead(true);
 
         // check acl exists
-        Long aclId = new AclDao().getAclById(createRequest.getAclId()).orElseThrow(ErrorCode.ACL_NOT_FOUND.getException())
+        Long aclId = new AclDao().getObjectById(createRequest.getAclId()).orElseThrow(ErrorCode.ACL_NOT_FOUND.getException())
                 .getId();
         osd.setAclId(aclId);
 
@@ -548,7 +548,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         if (osd.getContentSize() == null || osd.getContentSize() == 0) {
             throw ErrorCode.OBJECT_HAS_NO_CONTENT.exception();
         }
-        Optional<Format> formatOpt = new FormatDao().getFormatById(osd.getFormatId());
+        Optional<Format> formatOpt = new FormatDao().getObjectById(osd.getFormatId());
         // no regular error response for missing format - this should only be possible if the database is corrupted.
         Format format = formatOpt.orElseThrow(
                 () -> new ServletException(String.format("Encountered object #%d with content but non-existing formatId #%d.",
@@ -598,7 +598,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
 
     private void storeFileUpload(InputStream inputStream, ObjectSystemData osd, Long formatId) throws IOException {
         FormatDao formatDao = new FormatDao();
-        Format    format    = formatDao.getFormatById(formatId).orElseThrow(ErrorCode.FORMAT_NOT_FOUND.getException());
+        Format    format    = formatDao.getObjectById(formatId).orElseThrow(ErrorCode.FORMAT_NOT_FOUND.getException());
 
         // store file in tmp dir:
         Path tempFile       = Files.createTempFile("cinnamon-upload-", ".data");

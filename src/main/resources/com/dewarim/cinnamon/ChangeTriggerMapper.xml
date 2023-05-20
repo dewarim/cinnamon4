@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dewarim.cinnamon.model.ChangeTrigger">
+
+    <resultMap id="changeTriggerMap" type="com.dewarim.cinnamon.model.ChangeTrigger">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="active" column="active"/>
+        <result property="ranking" column="ranking"/>
+        <result property="preTrigger" column="pre_trigger"/>
+        <result property="postTrigger" column="post_trigger"/>
+        <result property="copyFileContent" column="copy_file_content"/>
+        <result property="config" column="config"/>
+        <result property="controller" column="controller"/>
+        <result property="triggerType" column="trigger_type"/>
+    </resultMap>
+
+    <select id="list" resultMap="changeTriggerMap">
+        SELECT *
+        FROM change_triggers
+    </select>
+
+    <select id="getChangeTriggerById" parameterType="Long" resultMap="changeTriggerMap">
+        SELECT *
+        FROM change_triggers
+        WHERE id = #{id}
+    </select>
+
+    <delete id="delete" parameterType="list">
+        DELETE
+        FROM change_triggers
+        WHERE id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <update id="update" parameterType="com.dewarim.cinnamon.model.ChangeTrigger">
+        UPDATE change_triggers
+        SET name              = #{name},
+            active            = #{active},
+            ranking           = #{ranking},
+            action            = #{action},
+            pre_trigger       = #{preTrigger},
+            post_trigger      = #{postTrigger},
+            copy_file_content = #{copyFileContent},
+            config            = #{config},
+            controller        = #{controller},
+            trigger_type      = #{triggerType}
+        WHERE id = #{id}
+    </update>
+
+    <insert id="insert" parameterType="com.dewarim.cinnamon.model.ChangeTrigger">
+        <selectKey keyProperty="id" resultType="long" order="BEFORE">
+            select nextval('seq_index_item_id')
+        </selectKey>
+        INSERT INTO change_triggers(id, name, active, ranking, action, pre_trigger, post_trigger,
+        copy_file_content, config, controller, trigger_type)
+        values (#{id}, #{name},
+        #{active}, #{ranking}, #{action}, #{preTrigger}, #{postTrigger},
+        #{copyFileContent}, #{config}, #{controller}, #{triggerType} )
+    </insert>
+
+    <select id="getAllById" parameterType="list" resultMap="changeTriggerMap">
+        SELECT *
+        FROM change_triggers
+        WHERE id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+</mapper>

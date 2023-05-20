@@ -6,6 +6,7 @@ import com.dewarim.cinnamon.model.request.DeleteAllMetasRequest;
 import com.dewarim.cinnamon.model.request.DeleteMetaRequest;
 import com.dewarim.cinnamon.model.request.IdListRequest;
 import com.dewarim.cinnamon.model.request.IdRequest;
+import com.dewarim.cinnamon.model.request.ListUrlMappingInfoRequest;
 import com.dewarim.cinnamon.model.request.MetaRequest;
 import com.dewarim.cinnamon.model.request.SetSummaryRequest;
 import com.dewarim.cinnamon.model.request.UpdateMetaRequest;
@@ -19,6 +20,10 @@ import com.dewarim.cinnamon.model.request.aclGroup.CreateAclGroupRequest;
 import com.dewarim.cinnamon.model.request.aclGroup.DeleteAclGroupRequest;
 import com.dewarim.cinnamon.model.request.aclGroup.ListAclGroupRequest;
 import com.dewarim.cinnamon.model.request.aclGroup.UpdateAclGroupRequest;
+import com.dewarim.cinnamon.model.request.changeTrigger.CreateChangeTriggerRequest;
+import com.dewarim.cinnamon.model.request.changeTrigger.DeleteChangeTriggerRequest;
+import com.dewarim.cinnamon.model.request.changeTrigger.ListChangeTriggerRequest;
+import com.dewarim.cinnamon.model.request.changeTrigger.UpdateChangeTriggerRequest;
 import com.dewarim.cinnamon.model.request.config.ListConfigRequest;
 import com.dewarim.cinnamon.model.request.configEntry.ConfigEntryRequest;
 import com.dewarim.cinnamon.model.request.configEntry.CreateConfigEntryRequest;
@@ -110,6 +115,7 @@ import com.dewarim.cinnamon.model.request.user.UpdateUserAccountRequest;
 import com.dewarim.cinnamon.model.request.user.UserPermissionRequest;
 import com.dewarim.cinnamon.model.response.AclGroupWrapper;
 import com.dewarim.cinnamon.model.response.AclWrapper;
+import com.dewarim.cinnamon.model.response.ChangeTriggerWrapper;
 import com.dewarim.cinnamon.model.response.ConfigEntryWrapper;
 import com.dewarim.cinnamon.model.response.ConfigWrapper;
 import com.dewarim.cinnamon.model.response.DeleteResponse;
@@ -133,6 +139,7 @@ import com.dewarim.cinnamon.model.response.RelationWrapper;
 import com.dewarim.cinnamon.model.response.SearchIdsResponse;
 import com.dewarim.cinnamon.model.response.SummaryWrapper;
 import com.dewarim.cinnamon.model.response.UiLanguageWrapper;
+import com.dewarim.cinnamon.model.response.UrlMappingInfoWrapper;
 import com.dewarim.cinnamon.model.response.UserAccountWrapper;
 import com.dewarim.cinnamon.model.response.index.IndexInfoResponse;
 import com.dewarim.cinnamon.model.response.index.ReindexResponse;
@@ -167,6 +174,11 @@ public enum UrlMapping {
     CINNAMON__INFO("cinnamon", "info", "", """
             Retrieve the server version and build number.
             """, null, null),
+    CHANGE_TRIGGER__CREATE("changeTrigger", "create", "/api", "", CreateChangeTriggerRequest.class, ChangeTriggerWrapper.class),
+    CHANGE_TRIGGER__DELETE("changeTrigger", "delete", "/api", "", DeleteChangeTriggerRequest.class, DeleteResponse.class),
+    CHANGE_TRIGGER__LIST("changeTrigger", "list", "/api", "", ListChangeTriggerRequest.class, ChangeTriggerWrapper.class),
+    CHANGE_TRIGGER__UPDATE("changeTrigger", "update", "/api", "", UpdateChangeTriggerRequest.class, ChangeTriggerWrapper.class),
+
     CONFIG_ENTRY__CREATE("configEntry", "create", "/api", "Create a new config entry", CreateConfigEntryRequest.class, ConfigEntryWrapper.class),
     CONFIG_ENTRY__DELETE("configEntry", "delete", "/api", "Delete a list of config entries", DeleteConfigEntryRequest.class, DeleteResponse.class),
     CONFIG_ENTRY__GET("configEntry", "get", "/api", "Retrieve a config entries by names or ids", ConfigEntryRequest.class, ConfigEntryWrapper.class),
@@ -177,6 +189,7 @@ public enum UrlMapping {
     CONFIG__LIST_ALL_CONFIGURATIONS("config", "listAllConfigurations", "/api", """
             List of all objects the client may want to cache, for example users, object types, groups, permissions, languages etc.
             """, ListConfigRequest.class, ConfigWrapper.class),
+    CONFIG__URL_MAPPINGS("config", "urlMappings","/api", "List URL Mappings", ListUrlMappingInfoRequest.class, UrlMappingInfoWrapper.class),
     FOLDER_TYPE__CREATE("folderType", "create", "/api", "Create a new folder type", CreateFolderTypeRequest.class, FolderTypeWrapper.class),
     FOLDER_TYPE__DELETE("folderType", "delete", "/api", "Delete a folder type", DeleteFolderTypeRequest.class, DeleteResponse.class),
     FOLDER_TYPE__LIST("folderType", "list", "/api", "List all folder types", ListFolderTypeRequest.class, FolderTypeWrapper.class),
@@ -343,6 +356,7 @@ public enum UrlMapping {
             """,
             SearchIdsRequest.class, SearchIdsResponse.class),
     STATIC__ROOT("static", "", "", "Returns a static file from the server (for example, a favicon.ico if one exists).", null, null),
+    TEST__ECHO("test", "echo", "/api", "return the posted input xml", null,null),
     TEST__STATUS_200("test", "status200", "", "Returns status code 200", null, null),
     TEST__STATUS_400("test", "status400", "", "Returns status code 400", null, null),
     UI_LANGUAGE__CREATE("uiLanguage", "create", "/api", "", CreateUiLanguageRequest.class, UiLanguageWrapper.class),

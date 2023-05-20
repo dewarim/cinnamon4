@@ -6,8 +6,19 @@ import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.application.exception.CinnamonException;
 import com.dewarim.cinnamon.application.service.index.ContentContainer;
 import com.dewarim.cinnamon.configuration.LuceneConfig;
-import com.dewarim.cinnamon.dao.*;
-import com.dewarim.cinnamon.model.*;
+import com.dewarim.cinnamon.dao.FolderDao;
+import com.dewarim.cinnamon.dao.FolderMetaDao;
+import com.dewarim.cinnamon.dao.FormatDao;
+import com.dewarim.cinnamon.dao.IndexItemDao;
+import com.dewarim.cinnamon.dao.IndexJobDao;
+import com.dewarim.cinnamon.dao.OsdDao;
+import com.dewarim.cinnamon.dao.OsdMetaDao;
+import com.dewarim.cinnamon.dao.RelationDao;
+import com.dewarim.cinnamon.model.Folder;
+import com.dewarim.cinnamon.model.Format;
+import com.dewarim.cinnamon.model.IndexItem;
+import com.dewarim.cinnamon.model.Meta;
+import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.index.IndexJob;
 import com.dewarim.cinnamon.model.index.IndexJobType;
 import com.dewarim.cinnamon.model.relations.Relation;
@@ -20,7 +31,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.document.*;
+import org.apache.lucene.document.DateTools;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.document.LongPoint;
+import org.apache.lucene.document.StoredField;
+import org.apache.lucene.document.StringField;
+import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.Term;
@@ -33,7 +50,14 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -273,7 +297,7 @@ public class IndexService implements Runnable {
 
         byte[] content = NO_CONTENT;
         if (osd.getContentPath() != null && osd.getFormatId() != null) {
-            Format          format          = new FormatDao().getFormatById(osd.getFormatId()).orElseThrow(() -> new CinnamonException(ErrorCode.FORMAT_NOT_FOUND.getCode()));
+            Format          format          = new FormatDao().getObjectById(osd.getFormatId()).orElseThrow(() -> new CinnamonException(ErrorCode.FORMAT_NOT_FOUND.getCode()));
             ContentProvider contentProvider = ContentProviderService.getInstance().getContentProvider(osd.getContentProvider());
             try (InputStream contentStream = contentProvider.getContentStream(osd)) {
                 switch (format.getIndexMode()) {
