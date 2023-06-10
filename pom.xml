@@ -187,19 +187,14 @@
         </dependency>
 
         <!-- http communication -->
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpmime</artifactId>
-            <version>${httpcomponents.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>fluent-hc</artifactId>
-            <version>${httpcomponents.version}</version>
-        </dependency>
 <!--        <dependency>-->
 <!--            <groupId>org.apache.httpcomponents</groupId>-->
-<!--            <artifactId>httpclient</artifactId>-->
+<!--            <artifactId>httpmime</artifactId>-->
+<!--            <version>${httpcomponents.version}</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>org.apache.httpcomponents</groupId>-->
+<!--            <artifactId>fluent-hc</artifactId>-->
 <!--            <version>${httpcomponents.version}</version>-->
 <!--        </dependency>-->
 

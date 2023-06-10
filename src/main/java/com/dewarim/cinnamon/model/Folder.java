@@ -31,7 +31,7 @@ public class Folder implements Ownable, Identifiable {
     private boolean hasSubfolders = false;
 
     @JacksonXmlElementWrapper(localName = "metasets")
-    @JacksonXmlProperty(localName = "meta")
+    @JacksonXmlProperty(localName = "metaset")
     private List<Meta> metas;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssZ")

@@ -28,11 +28,6 @@ public class RequestResponseFilter implements Filter {
     }
 
     @Override
-    public void destroy() {
-
-    }
-
-    @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         CinnamonRequest  cinnamonRequest  = new CinnamonRequest((HttpServletRequest) request);
         CinnamonResponse cinnamonResponse = new CinnamonResponse((HttpServletResponse) response);

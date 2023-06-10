@@ -15,8 +15,8 @@ import java.util.Objects;
 @JacksonXmlRootElement(localName = "updateMetaRequest")
 public class UpdateMetaRequest implements ApiRequest, UpdateRequest<Meta> {
 
-    @JacksonXmlElementWrapper(localName = "metas")
-    @JacksonXmlProperty(localName = "meta")
+    @JacksonXmlElementWrapper(localName = "metasets")
+    @JacksonXmlProperty(localName = "metaset")
     private List<Meta> metas = new ArrayList<>();
 
     public UpdateMetaRequest() {

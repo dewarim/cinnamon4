@@ -15,6 +15,8 @@ import org.eclipse.jetty.http.HttpStatus;
 
 import java.io.IOException;
 
+import static com.dewarim.cinnamon.api.Constants.CONTENT_TYPE_XML;
+
 
 /**
  *
@@ -49,6 +51,8 @@ public class TestServlet extends HttpServlet {
             String input = new String(request.getInputStream().readAllBytes());
             ParamParser.parseXml(input, "Input is not well-formed XML.");
             cinnamonResponse.setStatusCode(HttpServletResponse.SC_OK);
+            cinnamonResponse.setContentType(CONTENT_TYPE_XML);
+            cinnamonResponse.setCharacterEncoding("UTF-8");
             cinnamonResponse.getWriter().write(input);
         }
         catch (Exception e){

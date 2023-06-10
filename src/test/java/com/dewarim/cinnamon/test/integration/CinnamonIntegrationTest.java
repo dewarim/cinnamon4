@@ -18,11 +18,13 @@ import com.dewarim.cinnamon.model.response.GenericResponse;
 import com.dewarim.cinnamon.test.TestObjectHolder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.client.fluent.Form;
-import org.apache.http.client.fluent.Request;
-import org.apache.http.entity.ContentType;
+import org.apache.hc.client5.http.classic.HttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.HttpStatus;
+import org.apache.hc.core5.http.ParseException;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
+import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.jdbc.ScriptRunner;
 import org.apache.ibatis.session.SqlSession;
@@ -69,11 +71,12 @@ public class CinnamonIntegrationTest {
     static CinnamonClient adminClient;
     static long           userId           = 2;
     static long           adminId          = 1;
+    static HttpClient     httpClient       = HttpClients.createDefault();
     /**
      * id of folder where the standard test user can create test objects
      */
     static long           createFolderId   = 0;
-    static Folder creationFolder;
+    static Folder         creationFolder;
 
     /**
      * An ACL with all permissions for the test user.
@@ -120,11 +123,11 @@ public class CinnamonIntegrationTest {
             TestObjectHolder.defaultAcl = prepareAclGroupWithPermissions("default.acl", List.of(BROWSE))
                     .acl;
             // set the root folder to use the default ACL, so it is visible for the normale user
-            Folder root = adminClient.getFolderById(1L,false);
+            Folder root = adminClient.getFolderById(1L, false);
             root.setAclId(TestObjectHolder.defaultAcl.getId());
             adminClient.updateFolder(root);
 
-            var toh = prepareAclGroupWithPermissions("creation.acl",Arrays.stream(DefaultPermission.values()).toList());
+            var toh = prepareAclGroupWithPermissions("creation.acl", Arrays.stream(DefaultPermission.values()).toList());
             defaultCreationAcl = toh.acl;
             creationFolder = adminClient.createFolder(1L, "creation", adminId, defaultCreationAcl.getId(), 1L);
             createFolderId = creationFolder.getId();
@@ -136,14 +139,17 @@ public class CinnamonIntegrationTest {
     /**
      * @return a ticket for the Cinnamon administrator
      */
-    protected static String getAdminTicket() throws IOException {
+    protected static String getAdminTicket() throws IOException, ParseException {
         String url = "http://localhost:" + cinnamonTestPort + UrlMapping.CINNAMON__CONNECT.getPath();
-        String tokenRequestResult = Request.Post(url)
-                .bodyForm(Form.form().add("user", "admin").add("password", "admin").build())
-                .execute().returnContent().asString();
-        XmlMapper          mapper             = XML_MAPPER;
-        CinnamonConnection cinnamonConnection = mapper.readValue(tokenRequestResult, CinnamonConnection.class);
-        return cinnamonConnection.getTicket();
+        try (ClassicHttpResponse response = httpClient.execute(ClassicRequestBuilder.post(url)
+                        .addParameter("user", "admin")
+                        .addParameter("password","admin")
+                .build(), r -> r)) {
+            String tokenRequestResult = EntityUtils.toString(response.getEntity());
+            XmlMapper          mapper             = XML_MAPPER;
+            CinnamonConnection cinnamonConnection = mapper.readValue(tokenRequestResult, CinnamonConnection.class);
+            return cinnamonConnection.getTicket();
+        }
     }
 
     /**
@@ -162,8 +168,8 @@ public class CinnamonIntegrationTest {
         return ticketForDoe;
     }
 
-    protected void assertResponseOkay(HttpResponse response) throws IOException {
-        Integer statusCode = response.getStatusLine().getStatusCode();
+    protected void assertResponseOkay(ClassicHttpResponse response) throws IOException {
+        Integer statusCode = response.getCode();
         if (!statusCode.equals(HttpStatus.SC_OK)) {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             response.getEntity().getContent().transferTo(baos);
@@ -172,10 +178,10 @@ public class CinnamonIntegrationTest {
         }
     }
 
-    protected void assertCinnamonError(HttpResponse response, ErrorCode errorCode) throws IOException {
+    protected void assertCinnamonError(ClassicHttpResponse response, ErrorCode errorCode) throws IOException {
         String responseText = new String(response.getEntity().getContent().readAllBytes());
         assertTrue(responseText.contains(errorCode.getCode()), "response should contain errorCode " + errorCode + " but was " + responseText);
-        assertThat(errorCode.getHttpResponseCode(), equalTo(response.getStatusLine().getStatusCode()));
+        assertThat(errorCode.getHttpResponseCode(), equalTo(response.getCode()));
         CinnamonError cinnamonError = mapper.readValue(response.getEntity().getContent(), CinnamonErrorWrapper.class).getErrors().get(0);
         assertThat(cinnamonError.getCode(), equalTo(errorCode.getCode()));
     }
@@ -204,7 +210,7 @@ public class CinnamonIntegrationTest {
      * @return the server's response.
      * @throws IOException if connection to server fails for some reason
      */
-    protected HttpResponse sendAdminRequest(UrlMapping urlMapping, Object request) throws IOException {
+    protected ClassicHttpResponse sendAdminRequest(UrlMapping urlMapping, Object request) throws IOException {
         String requestStr = mapper.writeValueAsString(request);
         return Request.Post("http://localhost:" + cinnamonTestPort + urlMapping.getPath())
                 .addHeader("ticket", ticket)
@@ -221,7 +227,7 @@ public class CinnamonIntegrationTest {
      * @return the server's response.
      * @throws IOException if connection to server fails for some reason
      */
-    protected HttpResponse sendStandardRequest(UrlMapping urlMapping, Object request) throws IOException {
+    protected ClassicHttpResponse sendStandardRequest(UrlMapping urlMapping, Object request) throws IOException {
         String requestStr = mapper.writeValueAsString(request);
         return Request.Post("http://localhost:" + cinnamonTestPort + urlMapping.getPath())
                 .addHeader("ticket", getDoesTicket(false))
@@ -234,13 +240,13 @@ public class CinnamonIntegrationTest {
                 .addHeader("ticket", getDoesTicket(false));
     }
 
-    protected HttpResponse sendAdminRequest(UrlMapping urlMapping) throws IOException {
+    protected ClassicHttpResponse sendAdminRequest(UrlMapping urlMapping) throws IOException {
         return Request.Post("http://localhost:" + cinnamonTestPort + urlMapping.getPath())
                 .addHeader("ticket", ticket)
                 .execute().returnResponse();
     }
 
-    protected GenericResponse parseGenericResponse(HttpResponse response) throws IOException {
+    protected GenericResponse parseGenericResponse(ClassicHttpResponse response) throws IOException {
         assertResponseOkay(response);
         return mapper.readValue(response.getEntity().getContent(), GenericResponse.class);
     }

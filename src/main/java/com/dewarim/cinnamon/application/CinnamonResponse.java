@@ -10,8 +10,9 @@ import com.dewarim.cinnamon.model.response.Wrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpServletResponseWrapper;
-import org.apache.http.HttpStatus;
+import org.apache.hc.core5.http.HttpStatus;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
@@ -36,6 +37,7 @@ public class CinnamonResponse extends HttpServletResponseWrapper {
     }
 
     public void generateErrorMessage(int statusCode, ErrorCode errorCode, String message, List<CinnamonError> errors) {
+        this.statusCode = statusCode;
         CinnamonError        error   = new CinnamonError(errorCode.getCode(), message);
         CinnamonErrorWrapper wrapper = new CinnamonErrorWrapper();
         wrapper.getErrors().add(error);
@@ -68,7 +70,7 @@ public class CinnamonResponse extends HttpServletResponseWrapper {
     }
 
     /**
-     * If a response is pending, render it. Otherwise we assume that a servlet has already
+     * If a response is pending, render it. Otherwise, we assume that a servlet has already
      * written directly to the underlying OutputStream, which is okay for binary responses
      * and raw data (for example: returning non-wrappable Cinnamon3-style metasets)
      */
@@ -83,8 +85,21 @@ public class CinnamonResponse extends HttpServletResponseWrapper {
         }
     }
 
-    public int getStatusCode() {
-        return statusCode;
+    /**
+     * For ChangeTriggers which need to inspect the response.
+     * @return pending content (wrapper or response) as String
+     */
+    public String getPendingContentAsString() throws IOException{
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        if (hasPendingContent()) {
+            ResponseUtil.responseIsXmlWithStatus(servletResponse, statusCode);
+            if (wrapper != null) {
+                xmlMapper.writeValue(outputStream, wrapper);
+            } else {
+                xmlMapper.writeValue(outputStream, response);
+            }
+        }
+        return outputStream.toString();
     }
 
     public void setStatusCode(int statusCode) {

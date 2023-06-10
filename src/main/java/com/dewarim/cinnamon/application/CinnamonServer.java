@@ -38,6 +38,7 @@ import com.dewarim.cinnamon.application.servlet.UserAccountServlet;
 import com.dewarim.cinnamon.configuration.CinnamonConfig;
 import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.filter.AuthenticationFilter;
+import com.dewarim.cinnamon.filter.ChangeTriggerFilter;
 import com.dewarim.cinnamon.filter.DbSessionFilter;
 import com.dewarim.cinnamon.filter.RequestResponseFilter;
 import com.dewarim.cinnamon.model.UserAccount;
@@ -164,6 +165,9 @@ public class CinnamonServer {
         handler.addFilter(DbSessionFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
         handler.addFilter(AuthenticationFilter.class, "/api/*", EnumSet.of(DispatcherType.REQUEST));
         handler.addFilter(RequestResponseFilter.class, "/api/*", EnumSet.of(DispatcherType.REQUEST));
+        // TODO: it would be cleaner to add filter params to ChangeTriggerFilter here instead of fetching
+        //  the server config statically.
+        handler.addFilter(ChangeTriggerFilter.class, "/api/*", EnumSet.of(DispatcherType.REQUEST));
         handler.addFilter(RequestResponseFilter.class, "/cinnamon/*", EnumSet.of(DispatcherType.REQUEST));
         handler.addFilter(RequestResponseFilter.class, "/test/*", EnumSet.of(DispatcherType.REQUEST));
     }

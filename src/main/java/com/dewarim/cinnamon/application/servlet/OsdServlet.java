@@ -112,7 +112,6 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
     private final        AuthorizationService authorizationService = new AuthorizationService();
     private final        DeleteOsdService     deleteOsdService     = new DeleteOsdService();
     private static final Logger               log                  = LogManager.getLogger(OsdServlet.class);
-    private static final String               MULTIPART            = "multipart/";
     private final        Long                 tikaMetasetTypeId;
     private              TikaService          tikaService;
 
@@ -332,7 +331,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
     private void createOsd(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws
             IOException, ServletException {
         verifyIsMultipart(request);
-        Part contentRequest = request.getPart("createOsdRequest");
+        Part contentRequest = request.getPart(CINNAMON_REQUEST_PART);
         if (contentRequest == null) {
             throw ErrorCode.MISSING_REQUEST_PAYLOAD.exception();
         }
@@ -564,7 +563,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
     private void setContent(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws
             ServletException, IOException {
         verifyIsMultipart(request);
-        Part contentRequest = request.getPart("setContentRequest");
+        Part contentRequest = request.getPart(CINNAMON_REQUEST_PART);
         if (contentRequest == null) {
             throw ErrorCode.INVALID_REQUEST.exception();
         }
@@ -830,7 +829,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
     private void newVersion(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws
             ServletException, IOException {
         verifyIsMultipart(request);
-        Part contentRequest = request.getPart("createNewVersionRequest");
+        Part contentRequest = request.getPart(CINNAMON_REQUEST_PART);
         CreateNewVersionRequest versionRequest = xmlMapper.readValue(contentRequest.getInputStream(), CreateNewVersionRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         ObjectSystemData preOsd    = osdDao.getObjectById(versionRequest.getId()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());

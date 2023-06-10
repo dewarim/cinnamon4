@@ -19,6 +19,8 @@ public class CinnamonConfig {
     private CinnamonTikaConfig cinnamonTikaConfig = new CinnamonTikaConfig();
     
     private List<LoginProviderConfig> loginProviders = new ArrayList<>();
+
+    private ChangeTriggerConfig changeTriggerConfig = new ChangeTriggerConfig();
     
     public String getSystemAdministratorEmail() {
         return systemAdministratorEmail;
@@ -82,5 +84,13 @@ public class CinnamonConfig {
 
     public void setCinnamonTikaConfig(CinnamonTikaConfig cinnamonTikaConfig) {
         this.cinnamonTikaConfig = cinnamonTikaConfig;
+    }
+
+    public ChangeTriggerConfig getChangeTriggerConfig() {
+        return changeTriggerConfig;
+    }
+
+    public void setChangeTriggerConfig(ChangeTriggerConfig changeTriggerConfig) {
+        this.changeTriggerConfig = changeTriggerConfig;
     }
 }

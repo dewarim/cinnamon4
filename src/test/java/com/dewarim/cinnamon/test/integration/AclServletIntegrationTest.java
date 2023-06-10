@@ -13,7 +13,7 @@ import com.dewarim.cinnamon.model.request.acl.ListAclRequest;
 import com.dewarim.cinnamon.model.request.acl.UpdateAclRequest;
 import com.dewarim.cinnamon.model.response.AclWrapper;
 import com.dewarim.cinnamon.test.TestObjectHolder;
-import org.apache.http.HttpResponse;
+import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -32,8 +32,8 @@ public class AclServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void listAclsTest() throws IOException {
-        HttpResponse aclListResponse = sendAdminRequest(UrlMapping.ACL__LIST, new ListAclRequest());
-        List<Acl>    acls            = unwrapAcls(aclListResponse, null);
+        ClassicHttpResponse aclListResponse = sendAdminRequest(UrlMapping.ACL__LIST, new ListAclRequest());
+        List<Acl>           acls            = unwrapAcls(aclListResponse, null);
         assertFalse(acls.isEmpty());
         Optional<Acl> defaultAcl = acls.stream().filter(acl -> acl.getName().equals(ACL_DEFAULT)).findFirst();
         assertTrue(defaultAcl.isPresent());
@@ -59,7 +59,7 @@ public class AclServletIntegrationTest extends CinnamonIntegrationTest {
     public void updateAclTest() throws IOException {
         String           aclName         = "rename.me.acl.new";
         UpdateAclRequest updateRequest   = new UpdateAclRequest(4L, aclName);
-        HttpResponse     aclListResponse = sendAdminRequest(UrlMapping.ACL__UPDATE, updateRequest);
+        ClassicHttpResponse     aclListResponse = sendAdminRequest(UrlMapping.ACL__UPDATE, updateRequest);
         List<Acl>        acls            = aclUnWrapper.unwrap(aclListResponse, 1);
         Optional<Acl>    renamedAcl      = acls.stream().filter(acl -> acl.getName().equals(aclName)).findFirst();
         assertTrue(renamedAcl.isPresent());
@@ -68,28 +68,28 @@ public class AclServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void renameToNullShouldFail() throws IOException {
         UpdateAclRequest updateRequest   = new UpdateAclRequest(4L, null);
-        HttpResponse     aclListResponse = sendAdminRequest(UrlMapping.ACL__UPDATE, updateRequest);
+        ClassicHttpResponse     aclListResponse = sendAdminRequest(UrlMapping.ACL__UPDATE, updateRequest);
         assertCinnamonError(aclListResponse, ErrorCode.INVALID_REQUEST);
     }
 
     @Test
     public void renameNonExistentAclShouldFail() throws IOException {
         UpdateAclRequest updateRequest   = new UpdateAclRequest(Long.MAX_VALUE, "fooXXX");
-        HttpResponse     aclListResponse = sendAdminRequest(UrlMapping.ACL__UPDATE, updateRequest);
+        ClassicHttpResponse     aclListResponse = sendAdminRequest(UrlMapping.ACL__UPDATE, updateRequest);
         assertCinnamonError(aclListResponse, ErrorCode.OBJECT_NOT_FOUND);
     }
 
     @Test
     public void renameToExistingOtherNameShouldFail() throws IOException {
         UpdateAclRequest updateRequest   = new UpdateAclRequest(4L, Constants.ACL_DEFAULT);
-        HttpResponse     aclListResponse = sendAdminRequest(UrlMapping.ACL__UPDATE, updateRequest);
+        ClassicHttpResponse     aclListResponse = sendAdminRequest(UrlMapping.ACL__UPDATE, updateRequest);
         assertCinnamonError(aclListResponse, ErrorCode.DB_UPDATE_FAILED);
     }
 
     @Test
     public void validRequestByAclName() throws IOException {
         AclInfoRequest aclInfoRequest  = new AclInfoRequest(null, Constants.ACL_DEFAULT);
-        HttpResponse   aclListResponse = sendAdminRequest(UrlMapping.ACL__ACL_INFO, aclInfoRequest);
+        ClassicHttpResponse   aclListResponse = sendAdminRequest(UrlMapping.ACL__ACL_INFO, aclInfoRequest);
         List<Acl>      acls            = unwrapAcls(aclListResponse, 1);
         Optional<Acl>  defaultAcl      = acls.stream().filter(acl -> acl.getName().equals(Constants.ACL_DEFAULT)).findFirst();
         assertTrue(defaultAcl.isPresent());
@@ -97,7 +97,7 @@ public class AclServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void validRequestByAclId() throws IOException {
-        HttpResponse  aclListResponse = sendAdminRequest(UrlMapping.ACL__ACL_INFO, new AclInfoRequest(1L, null));
+        ClassicHttpResponse  aclListResponse = sendAdminRequest(UrlMapping.ACL__ACL_INFO, new AclInfoRequest(1L, null));
         List<Acl>     acls            = unwrapAcls(aclListResponse, 1);
         Optional<Acl> defaultAcl      = acls.stream().filter(acl -> acl.getName().equals(Constants.ACL_DEFAULT)).findFirst();
         assertTrue(defaultAcl.isPresent());
@@ -106,13 +106,13 @@ public class AclServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void invalidRequestForAcl() throws IOException {
         AclInfoRequest aclInfoRequest  = new AclInfoRequest(null, null);
-        HttpResponse   aclListResponse = sendAdminRequest(UrlMapping.ACL__ACL_INFO, aclInfoRequest);
+        ClassicHttpResponse   aclListResponse = sendAdminRequest(UrlMapping.ACL__ACL_INFO, aclInfoRequest);
         assertCinnamonError(aclListResponse, ErrorCode.INVALID_REQUEST);
     }
 
     @Test
     public void requestForNonExistentAclShouldFail() throws IOException {
-        HttpResponse aclListResponse = sendAdminRequest(UrlMapping.ACL__ACL_INFO, new AclInfoRequest(null, "unkown acl"));
+        ClassicHttpResponse aclListResponse = sendAdminRequest(UrlMapping.ACL__ACL_INFO, new AclInfoRequest(null, "unkown acl"));
         assertCinnamonError(aclListResponse, ErrorCode.ACL_NOT_FOUND);
     }
 
@@ -120,7 +120,7 @@ public class AclServletIntegrationTest extends CinnamonIntegrationTest {
     public void deleteAclShouldFailOnAclInUse() throws IOException {
         // aclId 1 is default acl in test db, linked to root folder
         DeleteAclRequest deleteAclRequest = new DeleteAclRequest(1L);
-        HttpResponse     response         = sendAdminRequest(UrlMapping.ACL__DELETE, deleteAclRequest);
+        ClassicHttpResponse     response         = sendAdminRequest(UrlMapping.ACL__DELETE, deleteAclRequest);
         assertCinnamonError(response, ErrorCode.DB_DELETE_FAILED);
 
         // TODO: verify delete fails when acl is currently used on object
@@ -132,7 +132,7 @@ public class AclServletIntegrationTest extends CinnamonIntegrationTest {
     public void deleteAclShouldFailOnUnknownAcl() throws IOException {
         // aclId 1 is default acl in test db, linked to root folder
         DeleteAclRequest deleteAclRequest = new DeleteAclRequest(Long.MAX_VALUE);
-        HttpResponse     response         = sendAdminRequest(UrlMapping.ACL__DELETE, deleteAclRequest);
+        ClassicHttpResponse     response         = sendAdminRequest(UrlMapping.ACL__DELETE, deleteAclRequest);
         assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND);
     }
 
@@ -141,7 +141,7 @@ public class AclServletIntegrationTest extends CinnamonIntegrationTest {
         // aclId 1 is default acl in test db, linked to root folder
         DeleteAclRequest deleteAclRequest = new DeleteAclRequest(Long.MAX_VALUE);
         deleteAclRequest.setIgnoreNotFound(true);
-        HttpResponse response = sendAdminRequest(UrlMapping.ACL__DELETE, deleteAclRequest);
+        ClassicHttpResponse response = sendAdminRequest(UrlMapping.ACL__DELETE, deleteAclRequest);
         assertResponseOkay(response);
     }
 
@@ -154,17 +154,17 @@ public class AclServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void getUserAcls() throws IOException {
         // admin should be connected to reviewer.acl and default acl.
-        HttpResponse response = sendAdminRequest(UrlMapping.ACL__GET_USER_ACLS, new IdRequest(1L));
+        ClassicHttpResponse response = sendAdminRequest(UrlMapping.ACL__GET_USER_ACLS, new IdRequest(1L));
         unwrapAcls(response, 2);
     }
 
     @Test
     public void getUserAclsShouldFailWithoutValidId() throws IOException {
-        HttpResponse response = sendAdminRequest(UrlMapping.ACL__GET_USER_ACLS, new IdRequest(-1L));
+        ClassicHttpResponse response = sendAdminRequest(UrlMapping.ACL__GET_USER_ACLS, new IdRequest(-1L));
         assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
     }
 
-    private List<Acl> unwrapAcls(HttpResponse response, Integer expectedSize) throws IOException {
+    private List<Acl> unwrapAcls(ClassicHttpResponse response, Integer expectedSize) throws IOException {
         assertResponseOkay(response);
         List<Acl> acls = mapper.readValue(response.getEntity().getContent(), AclWrapper.class).getAcls();
         if (expectedSize != null) {

@@ -335,7 +335,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var toh = new TestObjectHolder(client, userId)
                 .createOsd("setContentWithoutLockingOsd");
         SetContentRequest setContentRequest  = new SetContentRequest(toh.osd.getId(), 1L);
-        HttpEntity        multipartEntity    = createMultipartEntityWithFileBody("setContentRequest", setContentRequest);
+        HttpEntity        multipartEntity    = createMultipartEntityWithFileBody(CINNAMON_REQUEST_PART, setContentRequest);
         HttpResponse      setContentResponse = sendStandardMultipartRequest(UrlMapping.OSD__SET_CONTENT, multipartEntity);
         assertCinnamonError(setContentResponse, ErrorCode.OBJECT_MUST_BE_LOCKED_BY_USER);
     }
@@ -966,7 +966,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void versionWithInvalidRequest() throws IOException {
         CreateNewVersionRequest versionRequest  = new CreateNewVersionRequest(-1L);
-        HttpEntity              request         = createMultipartEntityWithFileBody(CREATE_NEW_VERSION, versionRequest);
+        HttpEntity              request         = createMultipartEntityWithFileBody(CINNAMON_REQUEST_PART, versionRequest);
         HttpResponse            versionResponse = sendStandardMultipartRequest(UrlMapping.OSD__VERSION, request);
         assertCinnamonError(versionResponse, ErrorCode.INVALID_REQUEST);
     }
@@ -974,7 +974,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void versionWithoutValidTarget() throws IOException {
         CreateNewVersionRequest versionRequest  = new CreateNewVersionRequest(Long.MAX_VALUE);
-        HttpEntity              request         = createMultipartEntityWithFileBody(CREATE_NEW_VERSION, versionRequest);
+        HttpEntity              request         = createMultipartEntityWithFileBody(CINNAMON_REQUEST_PART, versionRequest);
         HttpResponse            versionResponse = sendStandardMultipartRequest(UrlMapping.OSD__VERSION, request);
         assertCinnamonError(versionResponse, ErrorCode.OBJECT_NOT_FOUND);
     }
@@ -1020,7 +1020,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         metadata.setContent("<comment>cool</comment>");
         metadata.setTypeId(1L);
         versionRequest.getMetaRequests().add(metadata);
-        HttpEntity       entity          = createSimpleMultipartEntity(CREATE_NEW_VERSION, versionRequest);
+        HttpEntity       entity          = createSimpleMultipartEntity(CINNAMON_REQUEST_PART, versionRequest);
         HttpResponse     versionResponse = sendStandardMultipartRequest(UrlMapping.OSD__VERSION, entity);
         ObjectSystemData version2        = unwrapOsds(versionResponse, 1).get(0);
         assertEquals("2", version2.getCmnVersion());
@@ -1116,7 +1116,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         adminClient.attachLifecycle(osd.getId(), 4L, 4L, true);
         CreateNewVersionRequest versionRequest = new CreateNewVersionRequest(osd.getId());
         versionRequest.setFormatId(PLAINTEXT_FORMAT_ID);
-        HttpEntity   entity          = createMultipartEntityWithFileBody(CREATE_NEW_VERSION, versionRequest);
+        HttpEntity   entity          = createMultipartEntityWithFileBody(CINNAMON_REQUEST_PART, versionRequest);
         HttpResponse versionResponse = sendStandardMultipartRequest(UrlMapping.OSD__VERSION, entity);
         assertCinnamonError(versionResponse, ErrorCode.LIFECYCLE_STATE_CHANGE_FAILED);
         var ex = assertThrows(CinnamonClientException.class, () -> client.version(versionRequest));

@@ -263,7 +263,7 @@ public enum UrlMapping {
     OSD__COPY("osd", "copy", "/api", "", CopyOsdRequest.class, OsdWrapper.class),
     OSD__CREATE_META("osd", "createMeta", "/api", "", CreateMetaRequest.class, MetaWrapper.class),
     OSD__CREATE_OSD("osd", "createOsd", "/api", """
-            Create a new OSD. Requires: this must be a multipart-mime request, with part "createOsdRequest" and optional part "file" if this object
+            Create a new OSD. Requires: this must be a multipart-mime request, with part "cinnamonRequest" and optional part "file" if this object
             should contain data.
             """,
             CreateOsdRequest.class, OsdWrapper.class),
@@ -278,7 +278,7 @@ public enum UrlMapping {
     OSD__GET_SUMMARIES("osd", "getSummaries", "/api", "", IdListRequest.class, SummaryWrapper.class),
     OSD__LOCK("osd", "lock", "/api", "", IdRequest.class, GenericResponse.class),
     OSD__SET_CONTENT("osd", "setContent", "/api", """
-            Set an OSD's content. Requires a multipart-mime request, with part "setContentRequest" and part "file".
+            Set an OSD's content. Requires a multipart-mime request, with part "cinnamonRequest" and part "file".
             """,
             SetContentRequest.class, GenericResponse.class),
     OSD__SET_SUMMARY("osd", "setSummary", "/api", "Add a summary to an object, for example a short description of the content.", SetSummaryRequest.class, GenericResponse.class),
@@ -288,7 +288,7 @@ public enum UrlMapping {
             "Update the content of a given OSD metaset",
             UpdateMetaRequest.class, GenericResponse.class),
     OSD__VERSION("osd", "version", "/api", """
-            Create a new version of an OSD. Requires a multipart-mime request, with part "createNewVersionRequest" and optional
+            Create a new version of an OSD. Requires a multipart-mime request, with part "cinnamonRequest" and optional
             part "file", if the new version should contain data.
             """, CreateNewVersionRequest.class, OsdWrapper.class),
     PERMISSION__CHANGE_PERMISSIONS("permission", "changePermissions", "/api", "", ChangePermissionsRequest.class, GenericResponse.class),

@@ -166,13 +166,13 @@ import com.dewarim.cinnamon.model.response.UserAccountWrapper;
 import com.dewarim.cinnamon.model.response.index.IndexInfoResponse;
 import com.dewarim.cinnamon.model.response.index.ReindexResponse;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.StatusLine;
-import org.apache.http.client.fluent.Form;
-import org.apache.http.client.fluent.Request;
-import org.apache.http.entity.mime.MultipartEntityBuilder;
-import org.apache.http.entity.mime.content.FileBody;
+import org.apache.hc.client5.http.classic.HttpClient;
+import org.apache.hc.client5.http.entity.mime.FileBody;
+import org.apache.hc.client5.http.entity.mime.MultipartEntityBuilder;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -189,20 +189,21 @@ import java.util.stream.Collectors;
 import static com.dewarim.cinnamon.api.Constants.*;
 import static com.dewarim.cinnamon.api.UrlMapping.*;
 import static com.dewarim.cinnamon.model.request.osd.VersionPredicate.ALL;
-import static org.apache.http.HttpStatus.SC_OK;
-import static org.apache.http.entity.ContentType.APPLICATION_XML;
+import static jakarta.servlet.http.HttpServletResponse.SC_OK;
+import static org.apache.hc.core5.http.ContentType.APPLICATION_XML;
 
 public class CinnamonClient {
 
     private static final Logger log = LogManager.getLogger(CinnamonClient.class);
 
-    private       int       port     = 9090;
-    private       String    host     = "localhost";
-    private       String    protocol = "http";
-    private       String    username = "admin";
-    private       String    password = "admin";
-    private       String    ticket;
-    private final XmlMapper mapper   = XML_MAPPER;
+    private       int        port       = 9090;
+    private       String     host       = "localhost";
+    private       String     protocol   = "http";
+    private       String     username   = "admin";
+    private       String     password   = "admin";
+    private       String     ticket;
+    private final XmlMapper  mapper     = XML_MAPPER;
+    private final HttpClient httpClient = HttpClients.createDefault();
 
     private final Unwrapper<ChangeTrigger, ChangeTriggerWrapper>    changeTriggerUnwrapper         = new Unwrapper<>(ChangeTriggerWrapper.class);
     private final Unwrapper<ConfigEntry, ConfigEntryWrapper>        configEntryUnwrapper           = new Unwrapper<>(ConfigEntryWrapper.class);
@@ -248,10 +249,12 @@ public class CinnamonClient {
         this.password = password;
     }
 
-    private HttpResponse sendStandardMultipartRequest(UrlMapping urlMapping, HttpEntity multipartEntity) throws IOException {
-        return Request.Post(String.format("%s://%s:%s", protocol, host, port) + urlMapping.getPath())
+    private ClassicHttpResponse sendStandardMultipartRequest(UrlMapping urlMapping, HttpEntity multipartEntity) throws IOException {
+        ClassicRequestBuilder requestBuilder = ClassicRequestBuilder.create("POST")
+                .setUri((String.format("%s://%s:%s", protocol, host, port) + urlMapping.getPath()))
                 .addHeader("ticket", getTicket(false))
-                .body(multipartEntity).execute().returnResponse();
+                .setEntity(multipartEntity);
+        return httpClient.execute(requestBuilder.build(), response -> response);
     }
 
     /**
@@ -263,32 +266,35 @@ public class CinnamonClient {
      * @return the server's response.
      * @throws IOException if connection to server fails for some reason
      */
-    protected HttpResponse sendStandardRequest(UrlMapping urlMapping, Object request) throws IOException {
+    protected ClassicHttpResponse sendStandardRequest(UrlMapping urlMapping, Object request) throws IOException {
         String requestStr = mapper.writeValueAsString(request);
-        return Request.Post("http://localhost:" + port + urlMapping.getPath())
+        ClassicRequestBuilder requestBuilder = ClassicRequestBuilder.create("POST")
+                .setUri((String.format("%s://%s:%s", protocol, host, port) + urlMapping.getPath()))
                 .addHeader("ticket", getTicket(false))
-                .bodyString(requestStr, APPLICATION_XML.withCharset(StandardCharsets.UTF_8))
-                .execute().returnResponse();
+                .addHeader("Content-type",APPLICATION_XML.withCharset(StandardCharsets.UTF_8).toString() )
+                .setEntity(requestStr);
+        return httpClient.execute(requestBuilder.build(), response -> response);
     }
 
     public UserAccount getUser(String name) throws IOException {
         GetUserAccountRequest userInfoRequest = new GetUserAccountRequest(null, name);
-        HttpResponse          response        = sendStandardRequest(UrlMapping.USER__GET, userInfoRequest);
+        ClassicHttpResponse   response        = sendStandardRequest(UrlMapping.USER__GET, userInfoRequest);
         return userUnwrapper.unwrap(response, 1).get(0);
     }
 
     public UserAccount getUser(Long id) throws IOException {
         GetUserAccountRequest request  = new GetUserAccountRequest(id, null);
-        HttpResponse          response = sendStandardRequest(UrlMapping.USER__GET, request);
+        ClassicHttpResponse   response = sendStandardRequest(UrlMapping.USER__GET, request);
         return userUnwrapper.unwrap(response, 1).get(0);
     }
 
     protected String getTicket(boolean newTicket) throws IOException {
         if ((ticket == null && generateTicketIfNull) || newTicket) {
             String url = "http://localhost:" + port + UrlMapping.CINNAMON__CONNECT.getPath();
-            var response = Request.Post(url)
-                    .bodyForm(Form.form().add("user", username).add("password", password).build())
-                    .execute().returnResponse();
+            var response = httpClient.execute(ClassicRequestBuilder.post(url)
+                    .addParameter("user", username)
+                    .addParameter("password",password)
+                    .build(), response1 -> response1);
             verifyResponseIsOkay(response);
             String             tokenRequestResult = new String(response.getEntity().getContent().readAllBytes());
             CinnamonConnection cinnamonConnection = mapper.readValue(tokenRequestResult, CinnamonConnection.class);
@@ -298,14 +304,14 @@ public class CinnamonClient {
     }
 
     public ObjectSystemData getOsdById(long id, boolean includeSummary, boolean includeCustomMetadata) throws IOException {
-        OsdRequest   osdRequest = new OsdRequest(Collections.singletonList(id), includeSummary, includeCustomMetadata);
-        HttpResponse response   = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
+        OsdRequest          osdRequest = new OsdRequest(Collections.singletonList(id), includeSummary, includeCustomMetadata);
+        ClassicHttpResponse response   = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
         return unwrapOsds(response, 1).get(0);
     }
 
     public List<ObjectSystemData> getOsdsById(List<Long> ids, boolean includeSummary, boolean includeCustomMetadata) throws IOException {
-        OsdRequest   osdRequest = new OsdRequest(ids, includeSummary, includeCustomMetadata);
-        HttpResponse response   = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
+        OsdRequest          osdRequest = new OsdRequest(ids, includeSummary, includeCustomMetadata);
+        ClassicHttpResponse response   = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
         return unwrapOsds(response, EXPECTED_SIZE_ANY);
     }
 
@@ -313,46 +319,46 @@ public class CinnamonClient {
      * Get a list of OSDs. Do not check if all requested OSDs are returned.
      */
     public List<ObjectSystemData> getOsds(List<Long> ids, boolean includeSummary, boolean includeCustomMetadata) throws IOException {
-        OsdRequest   osdRequest = new OsdRequest(ids, includeSummary, includeCustomMetadata);
-        HttpResponse response   = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
+        OsdRequest          osdRequest = new OsdRequest(ids, includeSummary, includeCustomMetadata);
+        ClassicHttpResponse response   = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
         return unwrapOsds(response, EXPECTED_SIZE_ANY);
     }
 
     public OsdWrapper getOsdsInFolderWrapped(Long folderId, boolean includeSummary, boolean linksAsOsd, boolean includeCustomMetadata) throws IOException {
-        OsdByFolderRequest osdRequest = new OsdByFolderRequest(folderId, includeSummary, linksAsOsd, includeCustomMetadata, ALL);
-        HttpResponse       response   = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_FOLDER_ID, osdRequest);
+        OsdByFolderRequest  osdRequest = new OsdByFolderRequest(folderId, includeSummary, linksAsOsd, includeCustomMetadata, ALL);
+        ClassicHttpResponse response   = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_FOLDER_ID, osdRequest);
         verifyResponseIsOkay(response);
         return mapper.readValue(response.getEntity().getContent(), OsdWrapper.class);
     }
 
     public List<ObjectSystemData> getOsdsInFolder(Long folderId, boolean includeSummary, boolean linksAsOsd, boolean includeCustomMetadata) throws IOException {
-        OsdByFolderRequest osdRequest = new OsdByFolderRequest(folderId, includeSummary, linksAsOsd, includeCustomMetadata, ALL);
-        HttpResponse       response   = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_FOLDER_ID, osdRequest);
+        OsdByFolderRequest  osdRequest = new OsdByFolderRequest(folderId, includeSummary, linksAsOsd, includeCustomMetadata, ALL);
+        ClassicHttpResponse response   = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_FOLDER_ID, osdRequest);
         verifyResponseIsOkay(response);
         return unwrapOsds(response, EXPECTED_SIZE_ANY);
     }
 
     public void setSummary(Long osdId, String summary) throws IOException {
-        SetSummaryRequest summaryRequest = new SetSummaryRequest(osdId, summary);
-        HttpResponse      response       = sendStandardRequest(UrlMapping.OSD__SET_SUMMARY, summaryRequest);
+        SetSummaryRequest   summaryRequest = new SetSummaryRequest(osdId, summary);
+        ClassicHttpResponse response       = sendStandardRequest(UrlMapping.OSD__SET_SUMMARY, summaryRequest);
         verifyResponseIsOkay(response);
     }
 
     public void setFolderSummary(Long folderId, String summary) throws IOException {
-        SetSummaryRequest summaryRequest = new SetSummaryRequest(folderId, summary);
-        HttpResponse      response       = sendStandardRequest(FOLDER__SET_SUMMARY, summaryRequest);
+        SetSummaryRequest   summaryRequest = new SetSummaryRequest(folderId, summary);
+        ClassicHttpResponse response       = sendStandardRequest(FOLDER__SET_SUMMARY, summaryRequest);
         verifyResponseIsOkay(response);
     }
 
     public OsdWrapper getOsdsInFolder(Long folderId, boolean includeSummary, boolean linksAsOsd, boolean includeCustomMetadata,
                                       VersionPredicate versionPredicate) throws IOException {
-        OsdByFolderRequest osdRequest = new OsdByFolderRequest(folderId, includeSummary, linksAsOsd, includeCustomMetadata, versionPredicate);
-        HttpResponse       response   = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_FOLDER_ID, osdRequest);
+        OsdByFolderRequest  osdRequest = new OsdByFolderRequest(folderId, includeSummary, linksAsOsd, includeCustomMetadata, versionPredicate);
+        ClassicHttpResponse response   = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_FOLDER_ID, osdRequest);
         verifyResponseIsOkay(response);
         return mapper.readValue(response.getEntity().getContent(), OsdWrapper.class);
     }
 
-    private List<ObjectSystemData> unwrapOsds(HttpResponse response, Integer expectedSize) throws IOException {
+    private List<ObjectSystemData> unwrapOsds(ClassicHttpResponse response, Integer expectedSize) throws IOException {
         verifyResponseIsOkay(response);
         return osdUnwrapper.unwrap(response, expectedSize);
     }
@@ -378,7 +384,7 @@ public class CinnamonClient {
 //        MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
 //                .addTextBody("createOsdRequest", mapper.writeValueAsString(request),
 //                        APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
-//        HttpResponse response = sendStandardMultipartRequest(UrlMapping.OSD__CREATE_OSD, entityBuilder.build());
+//        ClassicHttpResponse response = sendStandardMultipartRequest(UrlMapping.OSD__CREATE_OSD, entityBuilder.build());
 //        assertResponseOkay(response);
 //        List<ObjectSystemData> objectSystemData = unwrapOsds(response, 1);
 //        ObjectSystemData       osd              = objectSystemData.get(0);
@@ -390,23 +396,23 @@ public class CinnamonClient {
 //        assertEquals(CREATE_FOLDER_ID, osd.getParentId());
 //    }
 
-    private void verifyResponseIsOkay(HttpResponse response) throws IOException {
+    private void verifyResponseIsOkay(ClassicHttpResponse response) throws IOException {
         if (response.containsHeader(HEADER_FIELD_CINNAMON_ERROR)) {
             CinnamonErrorWrapper wrapper = mapper.readValue(response.getEntity().getContent(), CinnamonErrorWrapper.class);
             throw new CinnamonClientException(wrapper);
         }
-        if (response.getStatusLine().getStatusCode() != SC_OK) {
+        if (response.getCode() != SC_OK) {
             log.error(new String(response.getEntity().getContent().readAllBytes()));
-            throw new CinnamonClientException(response.getStatusLine().getReasonPhrase());
+            throw new CinnamonClientException(String.valueOf(response.getCode()));
         }
     }
 
-    private GenericResponse parseGenericResponse(HttpResponse response) throws IOException {
+    private GenericResponse parseGenericResponse(ClassicHttpResponse response) throws IOException {
         verifyResponseIsOkay(response);
         return mapper.readValue(response.getEntity().getContent(), GenericResponse.class);
     }
 
-    private boolean verifyDeleteResponse(HttpResponse response) throws IOException {
+    private boolean verifyDeleteResponse(ClassicHttpResponse response) throws IOException {
         return deleteResponseWrapper.unwrap(response, EXPECTED_SIZE_ANY).get(0).isSuccess();
     }
 
@@ -416,7 +422,7 @@ public class CinnamonClient {
 
     // OSDs
     public ObjectSystemData version(CreateNewVersionRequest versionRequest) throws IOException {
-        HttpEntity request = createSimpleMultipartEntity(CREATE_NEW_VERSION, versionRequest);
+        HttpEntity request = createSimpleMultipartEntity(CINNAMON_REQUEST_PART, versionRequest);
         return unwrapOsds(sendStandardMultipartRequest(UrlMapping.OSD__VERSION, request), 1).get(0);
     }
 
@@ -424,7 +430,7 @@ public class CinnamonClient {
         FileBody fileBody = new FileBody(content);
         MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
                 .addPart("file", fileBody)
-                .addTextBody(CREATE_NEW_VERSION, mapper.writeValueAsString(versionRequest),
+                .addTextBody(CINNAMON_REQUEST_PART, mapper.writeValueAsString(versionRequest),
                         APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
         return unwrapOsds(sendStandardMultipartRequest(UrlMapping.OSD__VERSION, entityBuilder.build()), 1).get(0);
     }
@@ -438,20 +444,20 @@ public class CinnamonClient {
     }
 
     public boolean deleteOsd(Long id, boolean deleteDescendants, boolean deleteAllVersions) throws IOException {
-        DeleteOsdRequest deleteRequest = new DeleteOsdRequest(Collections.singletonList(id), deleteDescendants, deleteAllVersions);
-        HttpResponse     response      = sendStandardRequest(UrlMapping.OSD__DELETE, deleteRequest);
+        DeleteOsdRequest    deleteRequest = new DeleteOsdRequest(Collections.singletonList(id), deleteDescendants, deleteAllVersions);
+        ClassicHttpResponse response      = sendStandardRequest(UrlMapping.OSD__DELETE, deleteRequest);
         return verifyDeleteResponse(response);
     }
 
     public boolean deleteOsds(List<Long> id, boolean deleteDescendants) throws IOException {
-        DeleteOsdRequest deleteRequest = new DeleteOsdRequest(id, deleteDescendants, false);
-        HttpResponse     response      = sendStandardRequest(UrlMapping.OSD__DELETE, deleteRequest);
+        DeleteOsdRequest    deleteRequest = new DeleteOsdRequest(id, deleteDescendants, false);
+        ClassicHttpResponse response      = sendStandardRequest(UrlMapping.OSD__DELETE, deleteRequest);
         return verifyDeleteResponse(response);
     }
 
     public ObjectSystemData createOsd(CreateOsdRequest createOsdRequest) throws IOException {
-        HttpEntity   request  = createSimpleMultipartEntity(CREATE_NEW_OSD, createOsdRequest);
-        HttpResponse response = sendStandardMultipartRequest(OSD__CREATE_OSD, request);
+        HttpEntity          request  = createSimpleMultipartEntity(CINNAMON_REQUEST_PART, createOsdRequest);
+        ClassicHttpResponse response = sendStandardMultipartRequest(OSD__CREATE_OSD, request);
         return osdUnwrapper.unwrap(response, 1).get(0);
     }
 
@@ -459,7 +465,7 @@ public class CinnamonClient {
         FileBody fileBody = new FileBody(content);
         MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
                 .addPart("file", fileBody)
-                .addTextBody("createOsdRequest", mapper.writeValueAsString(createOsdRequest),
+                .addTextBody(CINNAMON_REQUEST_PART, mapper.writeValueAsString(createOsdRequest),
                         APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
         var response = sendStandardMultipartRequest(OSD__CREATE_OSD, entityBuilder.build());
         return osdUnwrapper.unwrap(response, 1).get(0);
@@ -468,7 +474,7 @@ public class CinnamonClient {
     public boolean setContentOnLockedOsd(Long osdId, Long formatId, File content) throws IOException {
         FileBody fileBody = new FileBody(content);
         HttpEntity entity = MultipartEntityBuilder.create()
-                .addTextBody("setContentRequest", mapper.writeValueAsString(new SetContentRequest(osdId, formatId)),
+                .addTextBody(CINNAMON_REQUEST_PART, mapper.writeValueAsString(new SetContentRequest(osdId, formatId)),
                         APPLICATION_XML.withCharset(StandardCharsets.UTF_8))
                 .addPart("file", fileBody)
                 .build();
@@ -477,8 +483,8 @@ public class CinnamonClient {
     }
 
     public InputStream getContent(Long osdId) throws IOException {
-        IdRequest    idRequest = new IdRequest(osdId);
-        HttpResponse response  = sendStandardRequest(UrlMapping.OSD__GET_CONTENT, idRequest);
+        IdRequest           idRequest = new IdRequest(osdId);
+        ClassicHttpResponse response  = sendStandardRequest(UrlMapping.OSD__GET_CONTENT, idRequest);
         verifyResponseIsOkay(response);
         return response.getEntity().getContent();
     }
@@ -496,12 +502,12 @@ public class CinnamonClient {
     }
 
     public boolean updateOsd(UpdateOsdRequest updateOsdRequest) throws IOException {
-        HttpResponse response = sendStandardRequest(OSD__UPDATE, updateOsdRequest);
+        ClassicHttpResponse response = sendStandardRequest(OSD__UPDATE, updateOsdRequest);
         return parseGenericResponse(response).isSuccessful();
     }
 
     public boolean setPassword(Long userId, String password) throws IOException {
-        HttpResponse response = sendStandardRequest(USER__SET_PASSWORD, new SetPasswordRequest(userId, password));
+        ClassicHttpResponse response = sendStandardRequest(USER__SET_PASSWORD, new SetPasswordRequest(userId, password));
         return parseGenericResponse(response).isSuccessful();
     }
 
@@ -523,24 +529,24 @@ public class CinnamonClient {
     }
 
     public List<Folder> getFolders(List<Long> ids, boolean includeSummary) throws IOException {
-        FolderRequest folderRequest = new FolderRequest(ids, includeSummary);
-        HttpResponse  response      = sendStandardRequest(UrlMapping.FOLDER__GET_FOLDERS, folderRequest);
+        FolderRequest       folderRequest = new FolderRequest(ids, includeSummary);
+        ClassicHttpResponse response      = sendStandardRequest(UrlMapping.FOLDER__GET_FOLDERS, folderRequest);
         return folderUnwrapper.unwrap(response, ids.size());
     }
 
     public List<Meta> createFolderMeta(CreateMetaRequest metaRequest) throws IOException {
-        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__CREATE_META, metaRequest);
+        ClassicHttpResponse response = sendStandardRequest(UrlMapping.FOLDER__CREATE_META, metaRequest);
         return metaUnwrapper.unwrap(response, 1);
     }
 
     public List<Meta> createFolderMeta(Long folderId, String content, Long metaTypeId) throws IOException {
-        CreateMetaRequest metaRequest = new CreateMetaRequest(folderId, content, metaTypeId);
-        HttpResponse      response    = sendStandardRequest(UrlMapping.FOLDER__CREATE_META, metaRequest);
+        CreateMetaRequest   metaRequest = new CreateMetaRequest(folderId, content, metaTypeId);
+        ClassicHttpResponse response    = sendStandardRequest(UrlMapping.FOLDER__CREATE_META, metaRequest);
         return metaUnwrapper.unwrap(response, 1);
     }
 
     public List<Meta> createOsdMeta(CreateMetaRequest metaRequest) throws IOException {
-        HttpResponse response = sendStandardRequest(UrlMapping.OSD__CREATE_META, metaRequest);
+        ClassicHttpResponse response = sendStandardRequest(UrlMapping.OSD__CREATE_META, metaRequest);
         return metaUnwrapper.unwrap(response, 1);
     }
 
@@ -549,44 +555,44 @@ public class CinnamonClient {
     }
 
     public void updateFolder(UpdateFolderRequest updateFolderRequest) throws IOException {
-        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__UPDATE, updateFolderRequest);
+        ClassicHttpResponse response = sendStandardRequest(UrlMapping.FOLDER__UPDATE, updateFolderRequest);
         verifyResponseIsOkay(response);
     }
 
     public void updateFolder(Folder folder) throws IOException {
         UpdateFolderRequest request = new UpdateFolderRequest(folder.getId(), folder.getParentId(), folder.getName(),
                 folder.getOwnerId(), folder.getTypeId(), folder.getAclId());
-        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER__UPDATE, request);
+        ClassicHttpResponse response = sendStandardRequest(UrlMapping.FOLDER__UPDATE, request);
         verifyResponseIsOkay(response);
     }
 
     // FolderTypes
     public List<FolderType> createFolderTypes(List<String> names) throws IOException {
-        var          folderTypes = names.stream().map(FolderType::new).collect(Collectors.toList());
-        HttpResponse response    = sendStandardRequest(UrlMapping.FOLDER_TYPE__CREATE, new CreateFolderTypeRequest(folderTypes));
+        var                 folderTypes = names.stream().map(FolderType::new).collect(Collectors.toList());
+        ClassicHttpResponse response    = sendStandardRequest(UrlMapping.FOLDER_TYPE__CREATE, new CreateFolderTypeRequest(folderTypes));
         return folderTypeUnwrapper.unwrap(response, names.size());
     }
 
     public boolean deleteFolderTypes(List<Long> ids) throws IOException {
-        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER_TYPE__DELETE, new DeleteFolderTypeRequest(ids));
+        ClassicHttpResponse response = sendStandardRequest(UrlMapping.FOLDER_TYPE__DELETE, new DeleteFolderTypeRequest(ids));
         return verifyDeleteResponse(response);
     }
 
     public List<FolderType> updateFolderTypes(List<FolderType> types) throws IOException {
-        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER_TYPE__UPDATE, new UpdateFolderTypeRequest(types));
+        ClassicHttpResponse response = sendStandardRequest(UrlMapping.FOLDER_TYPE__UPDATE, new UpdateFolderTypeRequest(types));
         return folderTypeUnwrapper.unwrap(response, types.size());
     }
 
     // Acls
     public List<Acl> createAcls(List<String> names) throws IOException {
-        CreateAclRequest aclRequest = new CreateAclRequest(names.stream().map(Acl::new).collect(Collectors.toList()));
-        HttpResponse     response   = sendStandardRequest(UrlMapping.ACL__CREATE, aclRequest);
+        CreateAclRequest    aclRequest = new CreateAclRequest(names.stream().map(Acl::new).collect(Collectors.toList()));
+        ClassicHttpResponse response   = sendStandardRequest(UrlMapping.ACL__CREATE, aclRequest);
         return aclUnwrapper.unwrap(response, aclRequest.list().size());
     }
 
     public Acl createAcl(String name) throws IOException {
-        CreateAclRequest aclRequest = new CreateAclRequest(List.of(new Acl(name)));
-        HttpResponse     response   = sendStandardRequest(UrlMapping.ACL__CREATE, aclRequest);
+        CreateAclRequest    aclRequest = new CreateAclRequest(List.of(new Acl(name)));
+        ClassicHttpResponse response   = sendStandardRequest(UrlMapping.ACL__CREATE, aclRequest);
         return aclUnwrapper.unwrap(response, 1).get(0);
     }
 
@@ -624,23 +630,23 @@ public class CinnamonClient {
 
     // AclGroups
     public List<AclGroup> listAclGroups() throws IOException {
-        HttpResponse response = sendStandardRequest(UrlMapping.ACL_GROUP__LIST, new ListAclGroupRequest());
+        ClassicHttpResponse response = sendStandardRequest(UrlMapping.ACL_GROUP__LIST, new ListAclGroupRequest());
         return aclGroupUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
     public List<AclGroup> createAclGroups(List<AclGroup> aclGroups) throws IOException {
         CreateAclGroupRequest request  = new CreateAclGroupRequest(aclGroups);
-        HttpResponse          response = sendStandardRequest(UrlMapping.ACL_GROUP__CREATE, request);
+        ClassicHttpResponse   response = sendStandardRequest(UrlMapping.ACL_GROUP__CREATE, request);
         return aclGroupUnwrapper.unwrap(response, aclGroups.size());
     }
 
     public List<AclGroup> updateAclGroups(UpdateAclGroupRequest request) throws IOException {
-        HttpResponse response = sendStandardRequest(UrlMapping.ACL_GROUP__UPDATE, request);
+        ClassicHttpResponse response = sendStandardRequest(UrlMapping.ACL_GROUP__UPDATE, request);
         return aclGroupUnwrapper.unwrap(response, request.list().size());
     }
 
     public boolean deleteAclGroups(List<Long> ids) throws IOException {
-        HttpResponse response = sendStandardRequest(UrlMapping.ACL_GROUP__DELETE, new DeleteAclGroupRequest(ids));
+        ClassicHttpResponse response = sendStandardRequest(UrlMapping.ACL_GROUP__DELETE, new DeleteAclGroupRequest(ids));
         return verifyDeleteResponse(response);
     }
 
@@ -818,7 +824,7 @@ public class CinnamonClient {
     }
 
     public boolean disconnect() throws IOException {
-        HttpResponse response = sendStandardRequest(UrlMapping.CINNAMON__DISCONNECT, null);
+        ClassicHttpResponse response = sendStandardRequest(UrlMapping.CINNAMON__DISCONNECT, null);
         return disconnectUnwrapper.unwrap(response, 1).get(0).isDisconnectSuccessful();
     }
 
@@ -842,13 +848,11 @@ public class CinnamonClient {
     public String connect(String username, String password, String format) throws IOException {
         String responseFormat = Objects.requireNonNullElse(format, "xml");
         String url            = "http://localhost:" + port + UrlMapping.CINNAMON__CONNECT.getPath();
-        var response = Request.Post(url)
-                .bodyForm(Form.form()
-                        .add("user", username)
-                        .add("password", password)
-                        .add("format", responseFormat)
-                        .build())
-                .execute().returnResponse();
+        var response = httpClient.execute(ClassicRequestBuilder.post(url)
+                        .addParameter("user",username)
+                        .addParameter("password",password)
+                        .addParameter("format",responseFormat)
+                        .build(), r -> r);
         verifyResponseIsOkay(response);
         return new String(response.getEntity().getContent().readAllBytes());
     }
@@ -1245,25 +1249,25 @@ public class CinnamonClient {
     }
 
     public IndexInfoResponse getIndexInfo(boolean countDocuments) throws IOException {
-        var          request  = new IndexInfoRequest(countDocuments);
-        HttpResponse response = sendStandardRequest(INDEX__INFO, request);
+        var                 request  = new IndexInfoRequest(countDocuments);
+        ClassicHttpResponse response = sendStandardRequest(INDEX__INFO, request);
         return new SingletonUnwrapper<>(IndexInfoResponse.class).unwrap(response);
     }
 
     public ReindexResponse reindex(ReindexRequest request) throws IOException {
-        HttpResponse response = sendStandardRequest(INDEX__REINDEX, request);
+        ClassicHttpResponse response = sendStandardRequest(INDEX__REINDEX, request);
         return new SingletonUnwrapper<>(ReindexResponse.class).unwrap(response);
     }
 
     public SearchIdsResponse search(String query, SearchType searchType) throws IOException {
-        SearchIdsRequest request  = new SearchIdsRequest(searchType, query);
-        HttpResponse     response = sendStandardRequest(SEARCH__IDS, request);
+        SearchIdsRequest    request  = new SearchIdsRequest(searchType, query);
+        ClassicHttpResponse response = sendStandardRequest(SEARCH__IDS, request);
         return new SingletonUnwrapper<>(SearchIdsResponse.class).unwrap(response);
     }
 
     public List<Folder> getFoldersByPath(String path, boolean includeSummary) throws IOException {
-        var          request  = new FolderPathRequest(path, includeSummary);
-        HttpResponse response = sendStandardRequest(FOLDER__GET_FOLDER_BY_PATH, request);
+        var                 request  = new FolderPathRequest(path, includeSummary);
+        ClassicHttpResponse response = sendStandardRequest(FOLDER__GET_FOLDER_BY_PATH, request);
         return folderUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
@@ -1276,41 +1280,41 @@ public class CinnamonClient {
 
     public List<Folder> getSubFolders(Long parentFolderId, boolean includeSummary) throws IOException {
         SingleFolderRequest request  = new SingleFolderRequest(parentFolderId, includeSummary);
-        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__GET_SUBFOLDERS, request);
+        ClassicHttpResponse response = sendStandardRequest(UrlMapping.FOLDER__GET_SUBFOLDERS, request);
         return folderUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
     public void updateFolderMeta(Meta meta) throws IOException {
-        UpdateMetaRequest request  = new UpdateMetaRequest(List.of(meta));
-        HttpResponse      response = sendStandardRequest(FOLDER__UPDATE_META_CONTENT, request);
+        UpdateMetaRequest   request  = new UpdateMetaRequest(List.of(meta));
+        ClassicHttpResponse response = sendStandardRequest(FOLDER__UPDATE_META_CONTENT, request);
         verifyResponseIsOkay(response);
     }
 
     public void updateOsdMeta(Meta meta) throws IOException {
-        UpdateMetaRequest request  = new UpdateMetaRequest(List.of(meta));
-        HttpResponse      response = sendStandardRequest(OSD__UPDATE_META_CONTENT, request);
+        UpdateMetaRequest   request  = new UpdateMetaRequest(List.of(meta));
+        ClassicHttpResponse response = sendStandardRequest(OSD__UPDATE_META_CONTENT, request);
         verifyResponseIsOkay(response);
     }
 
     public String testEcho(String message) throws IOException {
-        var response = Request.Post("http://localhost:" + port + TEST__ECHO.getPath())
+        var response = httpClient.execute(ClassicRequestBuilder.post("http://localhost:" + port + TEST__ECHO.getPath())
                 .addHeader("ticket", getTicket(false))
-                .bodyString(message, APPLICATION_XML.withCharset(StandardCharsets.UTF_8))
-                .execute().returnResponse();
+                .setEntity(message, APPLICATION_XML.withCharset(StandardCharsets.UTF_8))
+                        .build(),r -> r);
         verifyResponseIsOkay(response);
         return new String(response.getEntity().getContent().readAllBytes());
     }
 
     public List<UrlMappingInfo> listUrlMappings() throws IOException {
-        ListUrlMappingInfoRequest request = new ListUrlMappingInfoRequest();
-        HttpResponse              response = sendStandardRequest(CONFIG__URL_MAPPINGS, request);
-        return urlMappingInfoWrapperUnwrapper.unwrap(response,EXPECTED_SIZE_ANY);
+        ListUrlMappingInfoRequest request  = new ListUrlMappingInfoRequest();
+        ClassicHttpResponse       response = sendStandardRequest(CONFIG__URL_MAPPINGS, request);
+        return urlMappingInfoWrapperUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
     public ChangeTrigger createChangeTrigger(ChangeTrigger changeTrigger) throws IOException {
-        CreateChangeTriggerRequest request = new CreateChangeTriggerRequest(List.of(changeTrigger));
-        HttpResponse response = sendStandardRequest(CHANGE_TRIGGER__CREATE, request);
-        return changeTriggerUnwrapper.unwrap(response,1).get(0);
+        CreateChangeTriggerRequest request  = new CreateChangeTriggerRequest(List.of(changeTrigger));
+        ClassicHttpResponse        response = sendStandardRequest(CHANGE_TRIGGER__CREATE, request);
+        return changeTriggerUnwrapper.unwrap(response, 1).get(0);
     }
 
     static class SingletonUnwrapper<S> {
@@ -1323,21 +1327,20 @@ public class CinnamonClient {
             this.clazz = clazz;
         }
 
-        public S unwrap(HttpResponse response) throws IOException {
+        public S unwrap(ClassicHttpResponse response) throws IOException {
             checkResponseForErrors(response, mapper);
             return mapper.readValue(response.getEntity().getContent(), clazz);
         }
     }
 
-    static void checkResponseForErrors(HttpResponse response, XmlMapper mapper) throws IOException {
+    static void checkResponseForErrors(ClassicHttpResponse response, XmlMapper mapper) throws IOException {
         if (response.containsHeader(HEADER_FIELD_CINNAMON_ERROR)) {
             CinnamonErrorWrapper wrapper = mapper.readValue(response.getEntity().getContent(), CinnamonErrorWrapper.class);
             log.warn("Found errors: " + wrapper.getErrors().stream().map(CinnamonError::toString).collect(Collectors.joining(",")));
             throw new CinnamonClientException(wrapper);
         }
-        if (response.getStatusLine().getStatusCode() != SC_OK) {
-            StatusLine statusLine = response.getStatusLine();
-            String     message    = statusLine.getStatusCode() + " " + statusLine.getReasonPhrase();
+        if (response.getCode() != SC_OK) {
+            String     message    = String.valueOf(response.getCode());
             log.warn("Failed to unwrap non-okay response with status: " + message);
             log.info("Response: " + new String(response.getEntity().getContent().readAllBytes()));
             throw new CinnamonClientException(message);

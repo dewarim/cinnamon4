@@ -71,11 +71,6 @@ public class AuthenticationFilter implements Filter {
 
     }
 
-    @Override
-    public void destroy() {
-
-    }
-
     private void failAuthentication(HttpServletResponse servletResponse, ErrorCode errorCode) {
         ErrorResponseGenerator.generateErrorMessage(servletResponse, errorCode);
     }

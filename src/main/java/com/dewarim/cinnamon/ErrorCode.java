@@ -108,6 +108,7 @@ public enum ErrorCode {
     PARENT_FOLDER_NOT_FOUND("parent folder not found", SC_BAD_REQUEST),
     PASSWORD_TOO_SHORT("password is too short - default minimum length is 8", SC_BAD_REQUEST),
     PERMISSIONS_NOT_FOUND("no permissions found for user and acl", SC_BAD_REQUEST),
+    REQUEST_DENIED_BY_CHANGE_TRIGGER("The request was blocked by a change trigger event.", HttpServletResponse.SC_FORBIDDEN),
     RELATION_TYPE_NOT_FOUND("RelationType was not found.", HttpServletResponse.SC_NOT_FOUND),
     REQUIRES_SUPERUSER_STATUS("action requires superuser status", HttpServletResponse.SC_FORBIDDEN),
     RESOURCE_NOT_FOUND("No code path maps to this URL path", HttpServletResponse.SC_NOT_FOUND),

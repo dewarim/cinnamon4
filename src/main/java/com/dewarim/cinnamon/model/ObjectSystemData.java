@@ -49,7 +49,7 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject, Identi
     private Long typeId;
 
     @JacksonXmlElementWrapper(localName = "metasets")
-    @JacksonXmlProperty(localName = "meta")
+    @JacksonXmlProperty(localName = "metaset")
     private List<Meta>     metas;
 
     @JacksonXmlElementWrapper(localName = "relations")
