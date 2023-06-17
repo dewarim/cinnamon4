@@ -3,9 +3,11 @@ package com.dewarim.cinnamon.application;
 import com.dewarim.cinnamon.model.UserAccount;
 import org.apache.ibatis.session.ExecutorType;
 import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionException;
 import org.apache.ibatis.session.TransactionIsolationLevel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 
 /**
  */
@@ -34,6 +36,16 @@ public class ThreadLocalSqlSession {
      */
     public static void refreshSession(){
         log.debug("Refresh session for thread "+ Thread.currentThread().getName());
+
+        if(localSqlSession.get() != null){
+            try{
+                localSqlSession.get().close();
+            }
+            catch (SqlSessionException e){
+                log.debug("Closing sql session resulted in: ",e);
+            }
+        }
+
         localSqlSession.set(dbSessionFactory.getSqlSessionFactory().openSession(transactionIsolationLevel));
         setTransactionStatus(TransactionStatus.OK);
     }
