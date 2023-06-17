@@ -54,7 +54,12 @@ public class DbSessionFilter implements Filter {
             SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
             if (ThreadLocalSqlSession.getTransactionStatus() == TransactionStatus.OK) {
                 log.debug("commit changes (if any)");
-                sqlSession.commit();
+                try {
+                    sqlSession.commit();
+                }
+                catch (Exception e){
+                    log.warn("Failed to commit DB session: ",e);
+                }
                 // TODO: maybe check if an idling background thread uses less resources
                 List<Deletion> deletions = deletionDao.listPendingDeletions();
                 if (deletions.size() > 0) {
