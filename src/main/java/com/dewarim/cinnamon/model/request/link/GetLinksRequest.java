@@ -1,6 +1,8 @@
 package com.dewarim.cinnamon.model.request.link;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
@@ -12,6 +14,8 @@ public class GetLinksRequest implements ApiRequest {
     
     private boolean includeSummary;
 
+    @JacksonXmlElementWrapper(localName = "ids")
+    @JacksonXmlProperty(localName = "id")
     List<Long> ids = new ArrayList<>();
 
     public GetLinksRequest() {
