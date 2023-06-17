@@ -183,7 +183,7 @@ public class CinnamonIntegrationTest {
         assertTrue(responseText.contains(errorCode.getCode()), "response should contain errorCode " + errorCode + " but was " + responseText);
         assertThat(errorCode.getHttpResponseCode(), equalTo(response.getCode()));
         CinnamonError cinnamonError = mapper.readValue(response.getEntity().getContent(), CinnamonErrorWrapper.class).getErrors().get(0);
-        assertThat(cinnamonError.getCode(), equalTo(errorCode.getCode()));
+        assertEquals(errorCode.getCode(),cinnamonError.getCode());
     }
 
     protected void assertClientError(Executable executable, ErrorCode... errorCode) {
