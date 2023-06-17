@@ -1,6 +1,8 @@
 package com.dewarim.cinnamon.model.request.permission;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
@@ -12,7 +14,13 @@ import java.util.Optional;
 public class ChangePermissionsRequest implements ApiRequest {
 
     private Long aclGroupId;
+
+    @JacksonXmlElementWrapper(localName = "addPermissions")
+    @JacksonXmlProperty(localName = "addId")
     private List<Long> add = new ArrayList<>();
+
+    @JacksonXmlElementWrapper(localName = "removePermissions")
+    @JacksonXmlProperty(localName = "removeId")
     private List<Long> remove = new ArrayList<>();
 
     public ChangePermissionsRequest() {
@@ -59,4 +67,10 @@ public class ChangePermissionsRequest implements ApiRequest {
             return Optional.empty();
         }
     }
+
+    @Override
+    public List<ApiRequest> examples() {
+        return List.of(new ChangePermissionsRequest(3L, List.of(4L,5L,6L),List.of(7L,8L,9L)));
+    }
+
 }
