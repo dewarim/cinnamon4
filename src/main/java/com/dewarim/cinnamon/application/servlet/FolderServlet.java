@@ -10,44 +10,16 @@ import com.dewarim.cinnamon.application.exception.BadArgumentException;
 import com.dewarim.cinnamon.application.service.DeleteLinkService;
 import com.dewarim.cinnamon.application.service.DeleteOsdService;
 import com.dewarim.cinnamon.application.service.MetaService;
-import com.dewarim.cinnamon.dao.AclDao;
-import com.dewarim.cinnamon.dao.FolderDao;
-import com.dewarim.cinnamon.dao.FolderMetaDao;
-import com.dewarim.cinnamon.dao.FolderTypeDao;
-import com.dewarim.cinnamon.dao.IndexJobDao;
-import com.dewarim.cinnamon.dao.LinkDao;
-import com.dewarim.cinnamon.dao.OsdDao;
-import com.dewarim.cinnamon.dao.UserAccountDao;
-import com.dewarim.cinnamon.model.Acl;
-import com.dewarim.cinnamon.model.Folder;
-import com.dewarim.cinnamon.model.FolderType;
-import com.dewarim.cinnamon.model.Meta;
-import com.dewarim.cinnamon.model.ObjectSystemData;
-import com.dewarim.cinnamon.model.UserAccount;
+import com.dewarim.cinnamon.dao.*;
+import com.dewarim.cinnamon.model.*;
 import com.dewarim.cinnamon.model.index.IndexJob;
 import com.dewarim.cinnamon.model.index.IndexJobAction;
 import com.dewarim.cinnamon.model.index.IndexJobType;
 import com.dewarim.cinnamon.model.links.Link;
-import com.dewarim.cinnamon.model.request.CreateMetaRequest;
-import com.dewarim.cinnamon.model.request.CreateRequest;
-import com.dewarim.cinnamon.model.request.DeleteAllMetasRequest;
-import com.dewarim.cinnamon.model.request.DeleteMetaRequest;
-import com.dewarim.cinnamon.model.request.IdListRequest;
-import com.dewarim.cinnamon.model.request.MetaRequest;
-import com.dewarim.cinnamon.model.request.SetSummaryRequest;
-import com.dewarim.cinnamon.model.request.UpdateMetaRequest;
-import com.dewarim.cinnamon.model.request.folder.CreateFolderRequest;
-import com.dewarim.cinnamon.model.request.folder.DeleteFolderRequest;
-import com.dewarim.cinnamon.model.request.folder.FolderPathRequest;
-import com.dewarim.cinnamon.model.request.folder.FolderRequest;
-import com.dewarim.cinnamon.model.request.folder.SingleFolderRequest;
-import com.dewarim.cinnamon.model.request.folder.UpdateFolderRequest;
+import com.dewarim.cinnamon.model.request.*;
+import com.dewarim.cinnamon.model.request.folder.*;
 import com.dewarim.cinnamon.model.request.osd.VersionPredicate;
-import com.dewarim.cinnamon.model.response.DeleteResponse;
-import com.dewarim.cinnamon.model.response.FolderWrapper;
-import com.dewarim.cinnamon.model.response.GenericResponse;
-import com.dewarim.cinnamon.model.response.Summary;
-import com.dewarim.cinnamon.model.response.SummaryWrapper;
+import com.dewarim.cinnamon.model.response.*;
 import com.dewarim.cinnamon.security.authorization.AccessFilter;
 import com.dewarim.cinnamon.security.authorization.AuthorizationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -337,6 +309,14 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
                     .orElseThrow(ErrorCode.USER_ACCOUNT_NOT_FOUND.getException());
             folder.setOwnerId(owner.getId());
             changed = true;
+        }
+
+        // metadataChanged:
+        if(updateRequest.getMetadataChanged() != null){
+            if(user.isChangeTracking()){
+                throw ErrorCode.CHANGED_FLAG_ONLY_USABLE_BY_UNTRACKED_USERS.exception();
+            }
+            folder.setMetadataChanged(updateRequest.getMetadataChanged());
         }
 
         // update folder:

@@ -2,6 +2,8 @@ package com.dewarim.cinnamon.model.request.folder;
 
 import com.dewarim.cinnamon.api.ApiRequest;
 import com.dewarim.cinnamon.model.Folder;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
@@ -12,6 +14,8 @@ import java.util.Optional;
 @JacksonXmlRootElement(localName = "deleteFolderRequest")
 public class DeleteFolderRequest implements ApiRequest<Folder> {
 
+    @JacksonXmlElementWrapper(localName = "ids")
+    @JacksonXmlProperty(localName = "id")
     private List<Long> ids               = new ArrayList<>();
     private boolean    deleteRecursively = false;
     private boolean    deleteContent     = false;

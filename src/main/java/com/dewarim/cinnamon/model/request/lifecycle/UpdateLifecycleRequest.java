@@ -5,6 +5,8 @@ import com.dewarim.cinnamon.model.Lifecycle;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.response.LifecycleWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
@@ -14,6 +16,8 @@ import java.util.Objects;
 @JacksonXmlRootElement(localName = "updateLifecycleRequest")
 public class UpdateLifecycleRequest implements UpdateRequest<Lifecycle>, ApiRequest {
 
+    @JacksonXmlElementWrapper(localName = "lifecycles")
+    @JacksonXmlProperty(localName = "lifecycle")
     private List<Lifecycle> lifecycles = new ArrayList<>();
 
     @Override

@@ -22,6 +22,9 @@ public class GroupUserDao implements CrudDao<GroupUser> {
     }
 
     public void addUserToGroups(Long userId, List<Long> ids) {
+        if(ids == null || ids.isEmpty()){
+            return;
+        }
         create(new GroupDao().getObjectsById(ids).stream().map(group ->
                         new GroupUser(userId, group.getId())
                 ).collect(Collectors.toList())

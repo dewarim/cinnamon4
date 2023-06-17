@@ -3,6 +3,7 @@ package com.dewarim.cinnamon.model.request.osd;
 import com.dewarim.cinnamon.api.ApiRequest;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
+import java.util.List;
 import java.util.Optional;
 
 @JacksonXmlRootElement(localName = "updateOsdRequest")
@@ -15,6 +16,8 @@ public class UpdateOsdRequest implements ApiRequest {
     private Long   aclId;
     private Long   objectTypeId;
     private Long   languageId;
+    private Boolean metadataChanged;
+    private Boolean contentChanged;
 
     public UpdateOsdRequest() {
     }
@@ -85,6 +88,22 @@ public class UpdateOsdRequest implements ApiRequest {
         this.languageId = languageId;
     }
 
+    public Boolean getMetadataChanged() {
+        return metadataChanged;
+    }
+
+    public void setMetadataChanged(Boolean metadataChanged) {
+        this.metadataChanged = metadataChanged;
+    }
+
+    public Boolean getContentChanged() {
+        return contentChanged;
+    }
+
+    public void setContentChanged(Boolean contentChanged) {
+        this.contentChanged = contentChanged;
+    }
+
     @Override
     public String toString() {
         return "UpdateOsdRequest{" +
@@ -95,6 +114,8 @@ public class UpdateOsdRequest implements ApiRequest {
                 ", aclId=" + aclId +
                 ", objectTypeId=" + objectTypeId +
                 ", languageId=" + languageId +
+                ", metadataChanged=" + metadataChanged +
+                ", contentChanged=" + contentChanged +
                 '}';
     }
 
@@ -134,5 +155,13 @@ public class UpdateOsdRequest implements ApiRequest {
         } else {
             return Optional.empty();
         }
+    }
+
+    @Override
+    public List<ApiRequest> examples() {
+        UpdateOsdRequest request = new UpdateOsdRequest(1L, 2L, "new name", 45L, 56L, 1L, 1L);
+        request.setContentChanged(true);
+        request.setMetadataChanged(false);
+        return List.of(request);
     }
 }

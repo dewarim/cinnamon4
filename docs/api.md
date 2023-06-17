@@ -959,27 +959,27 @@ Create a new folder.
 
 ```xml
 <createMetaRequest>
-  <metas>
-    <metas>
+  <metasets>
+    <metaset>
       <id/>
       <objectId>32</objectId>
       <typeId>3</typeId>
       <content>&lt;xml>some meta&lt;/xml></content>
-    </metas>
-  </metas>
+    </metaset>
+  </metasets>
 </createMetaRequest>
 
 ```
 ```xml
 <createMetaRequest>
-  <metas>
-    <metas>
+  <metasets>
+    <metaset>
       <id/>
       <objectId>40</objectId>
       <typeId>10</typeId>
       <content>&lt;meta>metadata&lt;/meta></content>
-    </metas>
-  </metas>
+    </metaset>
+  </metasets>
 </createMetaRequest>
 
 ```
@@ -1004,13 +1004,13 @@ Create a new folder.
 
 ```xml
 <deleteFolderRequest>
-  <ids>
-    <ids>1</ids>
-    <ids>2</ids>
-    <ids>3</ids>
-  </ids>
   <deleteRecursively>true</deleteRecursively>
   <deleteContent>false</deleteContent>
+  <ids>
+    <id>1</id>
+    <id>2</id>
+    <id>3</id>
+  </ids>
 </deleteFolderRequest>
 
 ```
@@ -1037,8 +1037,8 @@ Delete all metasets linked to the given Folder ids. Parameter ignoreNotFound is 
 <deleteAllMetasRequest>
   <ignoreNotFound>false</ignoreNotFound>
   <ids>
-    <ids>14</ids>
-    <ids>15</ids>
+    <id>14</id>
+    <id>15</id>
   </ids>
 </deleteAllMetasRequest>
 
@@ -1066,9 +1066,9 @@ Delete the folder metasets with the given meta ids.
 <deleteMetaRequest>
   <ignoreNotFound>false</ignoreNotFound>
   <ids>
-    <ids>3</ids>
-    <ids>5</ids>
-    <ids>6</ids>
+    <id>3</id>
+    <id>5</id>
+    <id>6</id>
   </ids>
 </deleteMetaRequest>
 
@@ -1077,7 +1077,7 @@ Delete the folder metasets with the given meta ids.
 <deleteMetaRequest>
   <ignoreNotFound>false</ignoreNotFound>
   <ids>
-    <ids>1</ids>
+    <id>1</id>
   </ids>
 </deleteMetaRequest>
 
@@ -1136,8 +1136,8 @@ Fetch a single folder
 
 ```xml
 <folderRequest>
-  <ids/>
   <includeSummary>false</includeSummary>
+  <ids/>
 </folderRequest>
 
 ```
@@ -1313,12 +1313,13 @@ Add a summary to an object, for example a short description of this folder's con
 
 ```xml
 <updateFolderRequest>
-  <id/>
-  <parentId/>
-  <name/>
-  <ownerId/>
-  <typeId/>
-  <aclId/>
+  <id>1</id>
+  <parentId>2</parentId>
+  <name>new name</name>
+  <ownerId>4</ownerId>
+  <typeId>5</typeId>
+  <aclId>6</aclId>
+  <metadataChanged>true</metadataChanged>
 </updateFolderRequest>
 
 ```
@@ -1344,14 +1345,14 @@ Update the content of a given folder metaset
 
 ```xml
 <updateMetaRequest>
-  <metas>
-    <meta>
+  <metasets>
+    <metaset>
       <id>123</id>
       <objectId>1</objectId>
       <typeId>2</typeId>
       <content>meta content update</content>
-    </meta>
-  </metas>
+    </metaset>
+  </metasets>
 </updateMetaRequest>
 
 ```
@@ -2243,14 +2244,14 @@ Only superusers may use forceChange parameter to attach any state without verifi
 ```xml
 <updateLifecycleStateRequest>
   <lifecycleStates>
-    <lifecycleStates>
+    <lifecycleState>
       <id>232</id>
       <name>review-state-update</name>
       <config>&lt;config/></config>
       <stateClass>com.dewarim.cinnamon.lifecycle.ChangeAclState</stateClass>
       <lifecycleId>1</lifecycleId>
       <lifecycleStateForCopyId/>
-    </lifecycleStates>
+    </lifecycleState>
   </lifecycleStates>
 </updateLifecycleStateRequest>
 
@@ -2756,10 +2757,10 @@ Update lifecycles. Note: does not update lifecycle states
 ```xml
 <updateObjectTypeRequest>
   <objectTypes>
-    <objectTypes>
+    <objectType>
       <id>123</id>
       <name>updated-object-type-name</name>
-    </objectTypes>
+    </objectType>
   </objectTypes>
 </updateObjectTypeRequest>
 
@@ -2823,27 +2824,27 @@ Update lifecycles. Note: does not update lifecycle states
 
 ```xml
 <createMetaRequest>
-  <metas>
-    <metas>
+  <metasets>
+    <metaset>
       <id/>
       <objectId>32</objectId>
       <typeId>3</typeId>
       <content>&lt;xml>some meta&lt;/xml></content>
-    </metas>
-  </metas>
+    </metaset>
+  </metasets>
 </createMetaRequest>
 
 ```
 ```xml
 <createMetaRequest>
-  <metas>
-    <metas>
+  <metasets>
+    <metaset>
       <id/>
       <objectId>40</objectId>
       <typeId>10</typeId>
       <content>&lt;meta>metadata&lt;/meta></content>
-    </metas>
-  </metas>
+    </metaset>
+  </metasets>
 </createMetaRequest>
 
 ```
@@ -2907,9 +2908,9 @@ should contain data.
 
 ```xml
 <deleteOsdRequest>
-  <ids/>
   <deleteDescendants>false</deleteDescendants>
   <deleteAllVersions>false</deleteAllVersions>
+  <ids/>
 </deleteOsdRequest>
 
 ```
@@ -2936,8 +2937,8 @@ Delete all metasets linked to the given OSD ids. Parameter ignoreNotFound is not
 <deleteAllMetasRequest>
   <ignoreNotFound>false</ignoreNotFound>
   <ids>
-    <ids>14</ids>
-    <ids>15</ids>
+    <id>14</id>
+    <id>15</id>
   </ids>
 </deleteAllMetasRequest>
 
@@ -2965,9 +2966,9 @@ Delete the OSD metasets with the given meta ids.
 <deleteMetaRequest>
   <ignoreNotFound>false</ignoreNotFound>
   <ids>
-    <ids>3</ids>
-    <ids>5</ids>
-    <ids>6</ids>
+    <id>3</id>
+    <id>5</id>
+    <id>6</id>
   </ids>
 </deleteMetaRequest>
 
@@ -2976,7 +2977,7 @@ Delete the OSD metasets with the given meta ids.
 <deleteMetaRequest>
   <ignoreNotFound>false</ignoreNotFound>
   <ids>
-    <ids>1</ids>
+    <id>1</id>
   </ids>
 </deleteMetaRequest>
 
@@ -3088,9 +3089,9 @@ Returns an OSD's content according to it's format's content type.
 
 ```xml
 <osdRequest>
-  <ids/>
   <includeSummary>false</includeSummary>
   <includeCustomMetadata>false</includeCustomMetadata>
+  <ids/>
 </osdRequest>
 
 ```
@@ -3289,13 +3290,15 @@ Add a summary to an object, for example a short description of the content.
 
 ```xml
 <updateOsdRequest>
-  <id/>
-  <parentFolderId/>
-  <name/>
-  <ownerId/>
-  <aclId/>
-  <objectTypeId/>
-  <languageId/>
+  <id>1</id>
+  <parentFolderId>2</parentFolderId>
+  <name>new name</name>
+  <ownerId>45</ownerId>
+  <aclId>56</aclId>
+  <objectTypeId>1</objectTypeId>
+  <languageId>1</languageId>
+  <metadataChanged>false</metadataChanged>
+  <contentChanged>true</contentChanged>
 </updateOsdRequest>
 
 ```
@@ -3321,14 +3324,14 @@ Update the content of a given OSD metaset
 
 ```xml
 <updateMetaRequest>
-  <metas>
-    <meta>
+  <metasets>
+    <metaset>
       <id>123</id>
       <objectId>1</objectId>
       <typeId>2</typeId>
       <content>meta content update</content>
-    </meta>
-  </metas>
+    </metaset>
+  </metasets>
 </updateMetaRequest>
 
 ```
@@ -3357,8 +3360,8 @@ part "file", if the new version should contain data.
 ```xml
 <createNewVersionRequest>
   <id/>
-  <metaRequests/>
   <formatId/>
+  <metaRequests/>
 </createNewVersionRequest>
 
 ```
@@ -3386,9 +3389,17 @@ part "file", if the new version should contain data.
 
 ```xml
 <changePermissionsRequest>
-  <aclGroupId/>
-  <add/>
-  <remove/>
+  <aclGroupId>3</aclGroupId>
+  <addPermissions>
+    <addId>4</addId>
+    <addId>5</addId>
+    <addId>6</addId>
+  </addPermissions>
+  <removePermissions>
+    <removeId>7</removeId>
+    <removeId>8</removeId>
+    <removeId>9</removeId>
+  </removePermissions>
 </changePermissionsRequest>
 
 ```
@@ -3961,8 +3972,10 @@ Returns status code 400
       <changeTracking>false</changeTracking>
       <activateTriggers>true</activateTriggers>
       <passwordExpired>false</passwordExpired>
-      <groupIds/>
       <config>&lt;config/></config>
+      <groupIds>
+        <groupId>12</groupId>
+      </groupIds>
     </userAccount>
   </userAccounts>
 </createUserAccountRequest>
@@ -3973,26 +3986,9 @@ Returns status code 400
 ## Response
 
 ```xml
-<UserAccountWrapper>
-  <users>
-    <user>
-      <id/>
-      <name>user-wrapper-example</name>
-      <loginType>CINNAMON</loginType>
-      <password>see-creta</password>
-      <activated>true</activated>
-      <locked>false</locked>
-      <uiLanguageId>1</uiLanguageId>
-      <fullname>U.W.Example</fullname>
-      <email>user@example.com</email>
-      <changeTracking>true</changeTracking>
-      <activateTriggers>true</activateTriggers>
-      <passwordExpired>false</passwordExpired>
-      <groupIds/>
-      <config>&lt;config/></config>
-    </user>
-  </users>
-</UserAccountWrapper>
+<cinnamon>
+  <users/>
+</cinnamon>
 
 ```
 
@@ -4023,26 +4019,9 @@ Returns status code 400
 ## Response
 
 ```xml
-<UserAccountWrapper>
-  <users>
-    <user>
-      <id/>
-      <name>user-wrapper-example</name>
-      <loginType>CINNAMON</loginType>
-      <password>see-creta</password>
-      <activated>true</activated>
-      <locked>false</locked>
-      <uiLanguageId>1</uiLanguageId>
-      <fullname>U.W.Example</fullname>
-      <email>user@example.com</email>
-      <changeTracking>true</changeTracking>
-      <activateTriggers>true</activateTriggers>
-      <passwordExpired>false</passwordExpired>
-      <groupIds/>
-      <config>&lt;config/></config>
-    </user>
-  </users>
-</UserAccountWrapper>
+<cinnamon>
+  <users/>
+</cinnamon>
 
 ```
 
@@ -4065,26 +4044,9 @@ Returns status code 400
 ## Response
 
 ```xml
-<UserAccountWrapper>
-  <users>
-    <user>
-      <id/>
-      <name>user-wrapper-example</name>
-      <loginType>CINNAMON</loginType>
-      <password>see-creta</password>
-      <activated>true</activated>
-      <locked>false</locked>
-      <uiLanguageId>1</uiLanguageId>
-      <fullname>U.W.Example</fullname>
-      <email>user@example.com</email>
-      <changeTracking>true</changeTracking>
-      <activateTriggers>true</activateTriggers>
-      <passwordExpired>false</passwordExpired>
-      <groupIds/>
-      <config>&lt;config/></config>
-    </user>
-  </users>
-</UserAccountWrapper>
+<cinnamon>
+  <users/>
+</cinnamon>
 
 ```
 
@@ -4161,26 +4123,9 @@ Update a user's individual configuration
 ## Response
 
 ```xml
-<UserAccountWrapper>
-  <users>
-    <user>
-      <id/>
-      <name>user-wrapper-example</name>
-      <loginType>CINNAMON</loginType>
-      <password>see-creta</password>
-      <activated>true</activated>
-      <locked>false</locked>
-      <uiLanguageId>1</uiLanguageId>
-      <fullname>U.W.Example</fullname>
-      <email>user@example.com</email>
-      <changeTracking>true</changeTracking>
-      <activateTriggers>true</activateTriggers>
-      <passwordExpired>false</passwordExpired>
-      <groupIds/>
-      <config>&lt;config/></config>
-    </user>
-  </users>
-</UserAccountWrapper>
+<cinnamon>
+  <users/>
+</cinnamon>
 
 ```
 

@@ -3,6 +3,7 @@ package com.dewarim.cinnamon.model.request.folder;
 import com.dewarim.cinnamon.api.ApiRequest;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
+import java.util.List;
 import java.util.Optional;
 
 @JacksonXmlRootElement(localName = "updateFolderRequest")
@@ -14,6 +15,7 @@ public class UpdateFolderRequest implements ApiRequest {
     private Long   ownerId;
     private Long   typeId;
     private Long   aclId;
+    private Boolean metadataChanged;
 
     public UpdateFolderRequest() {
     }
@@ -75,6 +77,14 @@ public class UpdateFolderRequest implements ApiRequest {
         this.aclId = aclId;
     }
 
+    public Boolean getMetadataChanged() {
+        return metadataChanged;
+    }
+
+    public void setMetadataChanged(Boolean metadataChanged) {
+        this.metadataChanged = metadataChanged;
+    }
+
     private boolean validated() {
         return id != null && id > 0
                 && (parentId == null || parentId > 0)
@@ -101,6 +111,14 @@ public class UpdateFolderRequest implements ApiRequest {
                 ", ownerId=" + ownerId +
                 ", typeId=" + typeId +
                 ", aclId=" + aclId +
+                ", metadataChanged=" + metadataChanged +
                 '}';
+    }
+
+    @Override
+    public List<ApiRequest> examples() {
+        UpdateFolderRequest request = new UpdateFolderRequest(1L, 2L, "new name", 4L, 5L, 6L);
+        request.setMetadataChanged(true);
+        return List.of(request);
     }
 }

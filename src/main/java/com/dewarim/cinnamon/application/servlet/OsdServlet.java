@@ -712,6 +712,22 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
             changed = true;
         }
 
+        // contentChanged
+        if(updateRequest.getContentChanged() != null){
+            if(user.isChangeTracking()){
+                throw ErrorCode.CHANGED_FLAG_ONLY_USABLE_BY_UNTRACKED_USERS.exception();
+            }
+            osd.setContentChanged(updateRequest.getContentChanged());
+        }
+
+        // metadataChanged
+        if(updateRequest.getMetadataChanged() != null){
+            if(user.isChangeTracking()){
+                throw ErrorCode.CHANGED_FLAG_ONLY_USABLE_BY_UNTRACKED_USERS.exception();
+            }
+            osd.setMetadataChanged(updateRequest.getMetadataChanged());
+        }
+
         // update osd:
         if (changed) {
             osdDao.updateOsd(osd, true);

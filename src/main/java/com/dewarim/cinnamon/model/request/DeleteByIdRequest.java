@@ -1,5 +1,8 @@
 package com.dewarim.cinnamon.model.request;
 
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -7,6 +10,8 @@ public abstract class DeleteByIdRequest<T> implements DeleteRequest<T> {
 
     private boolean ignoreNotFound = false;
 
+    @JacksonXmlElementWrapper(localName = "ids")
+    @JacksonXmlProperty(localName = "id")
     private List<Long> ids = new ArrayList<>();
 
     @Override

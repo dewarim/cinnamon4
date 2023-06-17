@@ -2,6 +2,8 @@ package com.dewarim.cinnamon.model.request;
 
 import com.dewarim.cinnamon.api.ApiRequest;
 import com.dewarim.cinnamon.model.Meta;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
@@ -11,6 +13,8 @@ import java.util.Optional;
 @JacksonXmlRootElement(localName = "createMetaRequest")
 public class CreateMetaRequest implements ApiRequest<Meta> {
 
+    @JacksonXmlElementWrapper(localName = "metasets")
+    @JacksonXmlProperty(localName = "metaset")
     private List<Meta> metas = new ArrayList<>();
 
     public CreateMetaRequest() {
