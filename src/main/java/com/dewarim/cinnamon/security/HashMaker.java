@@ -1,8 +1,8 @@
 package com.dewarim.cinnamon.security;
 
 import com.dewarim.cinnamon.application.CinnamonServer;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.mindrot.jbcrypt.BCrypt;
 
 /**
@@ -11,7 +11,7 @@ import org.mindrot.jbcrypt.BCrypt;
  */
 public class HashMaker {
 
-	static Log log = LogFactory.getLog(HashMaker.class);
+	static Logger log = LogManager.getLogger(HashMaker.class);
 	
 	/**
 	 * Use Bcrypt to create a hashed string from a given text.
