@@ -5,12 +5,9 @@ import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.FailedRequestException;
 import com.dewarim.cinnamon.application.CinnamonRequest;
 import com.dewarim.cinnamon.application.CinnamonResponse;
-import jakarta.servlet.Filter;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.FilterConfig;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.ServletResponse;
+import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
+import com.dewarim.cinnamon.application.TransactionStatus;
+import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.logging.log4j.LogManager;
@@ -29,12 +26,15 @@ public class RequestResponseFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        CinnamonRequest  cinnamonRequest  = new CinnamonRequest((HttpServletRequest) request);
         CinnamonResponse cinnamonResponse = new CinnamonResponse((HttpServletResponse) response);
         try {
+            CinnamonRequest cinnamonRequest  = new CinnamonRequest((HttpServletRequest) request);
             chain.doFilter(cinnamonRequest, cinnamonResponse);
+            //
+            ThreadLocalSqlSession.getSqlSession().commit();
             cinnamonResponse.renderResponseIfNecessary();
         } catch (FailedRequestException e) {
+            ThreadLocalSqlSession.setTransactionStatus(TransactionStatus.ROLLBACK);
             log.debug("Failed request: ", e);
             ErrorCode errorCode = e.getErrorCode();
             if (e.getErrors().isEmpty()) {
