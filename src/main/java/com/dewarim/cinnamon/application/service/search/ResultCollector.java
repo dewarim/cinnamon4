@@ -21,11 +21,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.LeafReaderContext;
-import org.apache.lucene.search.Collector;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.LeafCollector;
-import org.apache.lucene.search.Scorable;
-import org.apache.lucene.search.ScoreMode;
+import org.apache.lucene.search.*;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -38,7 +34,7 @@ public class ResultCollector implements Collector {
 
     private static final Logger log = LogManager.getLogger(ResultCollector.class);
 
-    private       Set<Document> documents = new HashSet<Document>();
+    private       Set<Document> documents = new HashSet<>();
     private final IndexSearcher searcher;
     private       Set<Integer>  hits      = new HashSet<>();
 

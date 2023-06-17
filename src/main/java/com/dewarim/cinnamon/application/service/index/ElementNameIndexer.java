@@ -65,7 +65,7 @@ public class ElementNameIndexer extends DefaultIndexer {
             comments.forEach(comment -> {
                 log.debug("fieldName: " + "xml.comment" + " value: " + comment + " stored:" + fieldType.stored());
                 luceneDoc.add(new Field("xml.comment", comment, fieldType));
-            });;
+            });
         } catch (Exception e) {
             throw new CinnamonException("Could not parse document.", e);
         }
