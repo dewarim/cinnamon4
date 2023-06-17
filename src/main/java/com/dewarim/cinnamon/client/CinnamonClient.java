@@ -215,8 +215,9 @@ public class CinnamonClient {
                     .addParameter("user", username)
                     .addParameter("password", password)
                     .build(), response -> {
-                verifyResponseIsOkay(new StandardResponse(response));
-                String tokenRequestResult = new String(response.getEntity().getContent().readAllBytes());
+                StandardResponse standardResponse = new StandardResponse(response);
+                verifyResponseIsOkay(standardResponse);
+                String tokenRequestResult = new String(standardResponse.getEntity().getContent().readAllBytes());
                 return mapper.readValue(tokenRequestResult, CinnamonConnection.class);
 
             });
@@ -304,7 +305,7 @@ public class CinnamonClient {
 //        request.setParentId(CREATE_FOLDER_ID);
 //        request.setTypeId(DEFAULT_OBJECT_TYPE_ID);
 //        MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
-//                .addTextBody("createOsdRequest", mapper.writeValueAsString(request),
+//                .addTextBody(CINNAMON_REQUEST_PART, mapper.writeValueAsString(request),
 //                        APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
 //        StandardResponse response = sendStandardMultipartRequest(UrlMapping.OSD__CREATE_OSD, entityBuilder.build());
 //        assertResponseOkay(response);
