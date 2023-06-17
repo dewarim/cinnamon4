@@ -25,6 +25,7 @@
         <Logger name="com.dewarim.cinnamon.model.Deletion" level="warn"><AppenderRef ref="Console"/></Logger>
         <Logger name="com.dewarim.cinnamon.model.SessionMapper" level="warn"><AppenderRef ref="Console"/></Logger>
         <Logger name="com.dewarim.cinnamon.filter.AuthenticationFilter" level="warn"><AppenderRef ref="Console"/></Logger>
+        <Logger name="org.apache.hc.client5.http" level="warn"><AppenderRef ref="Console"/></Logger>
 
     </Loggers>
 </Configuration>
