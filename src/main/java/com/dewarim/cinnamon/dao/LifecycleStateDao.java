@@ -23,12 +23,6 @@ public class LifecycleStateDao implements CrudDao<LifecycleState> {
         return sqlSession.selectList("com.dewarim.cinnamon.model.LifecycleState.getLifecycleStatesByLifecycleId", id);
     }
 
-    public Optional<LifecycleState> getLifecycleStateByName(String name) {
-        SqlSession     sqlSession = ThreadLocalSqlSession.getSqlSession();
-        LifecycleState state      = sqlSession.selectOne("com.dewarim.cinnamon.model.LifecycleState.getLifecycleStateByName", name);
-        return Optional.ofNullable(state);
-    }
-
     public List<LifecycleState> getLifecycleStatesByNameList(List<String> names) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
         return sqlSession.selectList("com.dewarim.cinnamon.model.LifecycleState.getLifecycleStatesByNameList", names);
