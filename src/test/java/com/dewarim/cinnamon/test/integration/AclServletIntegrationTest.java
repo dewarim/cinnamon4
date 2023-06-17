@@ -60,7 +60,7 @@ public class AclServletIntegrationTest extends CinnamonIntegrationTest {
     public void updateAclTest() throws IOException {
         String              aclName         = "rename.me.acl.new";
         UpdateAclRequest    updateRequest   = new UpdateAclRequest(4L, aclName);
-        ClassicHttpResponse aclListResponse = sendAdminRequest(UrlMapping.ACL__UPDATE, updateRequest);
+        var aclListResponse = sendAdminRequest(UrlMapping.ACL__UPDATE, updateRequest);
         List<Acl>           acls            = aclUnWrapper.unwrap(aclListResponse, 1);
         Optional<Acl>       renamedAcl      = acls.stream().filter(acl -> acl.getName().equals(aclName)).findFirst();
         assertTrue(renamedAcl.isPresent());
