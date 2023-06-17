@@ -6,8 +6,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
-import static jakarta.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
-import static jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED;
+import static jakarta.servlet.http.HttpServletResponse.*;
 
 
 public enum ErrorCode {
@@ -21,6 +20,7 @@ public enum ErrorCode {
     CANNOT_CHANGE_LINK_TYPE("Will not change link type: please delete old link and create a new one.", SC_BAD_REQUEST),
     CANNOT_DELETE_DUE_TO_ERRORS("delete operation encountered errors", HttpServletResponse.SC_CONFLICT),
     CANNOT_MOVE_FOLDER_INTO_ITSELF("source and parent folder are identical", SC_BAD_REQUEST),
+    CHANGED_FLAG_ONLY_USABLE_BY_UNTRACKED_USERS("only users without change-tracking may update metadataChanged and contentChanged fields", SC_FORBIDDEN),
     CONNECTION_FAIL_ACCOUNT_INACTIVE("account inactive", SC_UNAUTHORIZED),
     CONNECTION_FAIL_ACCOUNT_LOCKED("account locked", SC_UNAUTHORIZED),
     CONNECTION_FAIL_INVALID_USERNAME("invalid username", SC_UNAUTHORIZED),

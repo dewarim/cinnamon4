@@ -118,6 +118,7 @@ public class UserAccountServletIntegrationTest extends CinnamonIntegrationTest {
         String password = "xxx12345";
         UserAccount user = new UserAccount(username, password, "A new user", "user@invalid.com",
                 1L, LoginType.CINNAMON.name(), false, true, true);
+        user.setGroupIds(List.of(1L));
         UserAccount userAccount = adminClient.createUser(user);
         assertEquals(username, userAccount.getName());
         assertEquals(user.getFullname(), userAccount.getFullname());
@@ -132,6 +133,7 @@ public class UserAccountServletIntegrationTest extends CinnamonIntegrationTest {
                 username, password);
         testClient.connect();
         assertEquals(userAccount.getId(), testClient.getUser(userAccount.getId()).getId());
+        assertEquals(userAccount.getGroupIds().get(0),1L);
     }
 
     @Test

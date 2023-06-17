@@ -14,56 +14,14 @@ import com.dewarim.cinnamon.application.exception.CinnamonException;
 import com.dewarim.cinnamon.application.service.DeleteOsdService;
 import com.dewarim.cinnamon.application.service.MetaService;
 import com.dewarim.cinnamon.application.service.TikaService;
-import com.dewarim.cinnamon.dao.AclDao;
-import com.dewarim.cinnamon.dao.FolderDao;
-import com.dewarim.cinnamon.dao.FormatDao;
-import com.dewarim.cinnamon.dao.LanguageDao;
-import com.dewarim.cinnamon.dao.LifecycleStateDao;
-import com.dewarim.cinnamon.dao.LinkDao;
-import com.dewarim.cinnamon.dao.MetasetTypeDao;
-import com.dewarim.cinnamon.dao.ObjectTypeDao;
-import com.dewarim.cinnamon.dao.OsdDao;
-import com.dewarim.cinnamon.dao.OsdMetaDao;
-import com.dewarim.cinnamon.dao.RelationDao;
-import com.dewarim.cinnamon.dao.RelationTypeDao;
-import com.dewarim.cinnamon.dao.UserAccountDao;
-import com.dewarim.cinnamon.model.Acl;
-import com.dewarim.cinnamon.model.Folder;
-import com.dewarim.cinnamon.model.Format;
-import com.dewarim.cinnamon.model.IndexMode;
-import com.dewarim.cinnamon.model.Language;
-import com.dewarim.cinnamon.model.LifecycleState;
-import com.dewarim.cinnamon.model.Meta;
-import com.dewarim.cinnamon.model.MetasetType;
-import com.dewarim.cinnamon.model.ObjectSystemData;
-import com.dewarim.cinnamon.model.ObjectType;
-import com.dewarim.cinnamon.model.UserAccount;
+import com.dewarim.cinnamon.dao.*;
+import com.dewarim.cinnamon.model.*;
 import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.relations.Relation;
 import com.dewarim.cinnamon.model.relations.RelationType;
-import com.dewarim.cinnamon.model.request.CreateMetaRequest;
-import com.dewarim.cinnamon.model.request.CreateNewVersionRequest;
-import com.dewarim.cinnamon.model.request.DeleteAllMetasRequest;
-import com.dewarim.cinnamon.model.request.DeleteMetaRequest;
-import com.dewarim.cinnamon.model.request.IdListRequest;
-import com.dewarim.cinnamon.model.request.IdRequest;
-import com.dewarim.cinnamon.model.request.MetaRequest;
-import com.dewarim.cinnamon.model.request.SetSummaryRequest;
-import com.dewarim.cinnamon.model.request.UpdateMetaRequest;
-import com.dewarim.cinnamon.model.request.osd.CopyOsdRequest;
-import com.dewarim.cinnamon.model.request.osd.CreateOsdRequest;
-import com.dewarim.cinnamon.model.request.osd.DeleteOsdRequest;
-import com.dewarim.cinnamon.model.request.osd.GetRelationsRequest;
-import com.dewarim.cinnamon.model.request.osd.OsdByFolderRequest;
-import com.dewarim.cinnamon.model.request.osd.OsdRequest;
-import com.dewarim.cinnamon.model.request.osd.SetContentRequest;
-import com.dewarim.cinnamon.model.request.osd.UpdateOsdRequest;
-import com.dewarim.cinnamon.model.response.DeleteResponse;
-import com.dewarim.cinnamon.model.response.GenericResponse;
-import com.dewarim.cinnamon.model.response.OsdWrapper;
-import com.dewarim.cinnamon.model.response.RelationWrapper;
-import com.dewarim.cinnamon.model.response.Summary;
-import com.dewarim.cinnamon.model.response.SummaryWrapper;
+import com.dewarim.cinnamon.model.request.*;
+import com.dewarim.cinnamon.model.request.osd.*;
+import com.dewarim.cinnamon.model.response.*;
 import com.dewarim.cinnamon.provider.ContentProviderService;
 import com.dewarim.cinnamon.provider.StateProviderService;
 import com.dewarim.cinnamon.security.authorization.AccessFilter;
@@ -79,23 +37,11 @@ import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.dewarim.cinnamon.ErrorCode.*;
@@ -764,6 +710,22 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                     .orElseThrow(ErrorCode.LANGUAGE_NOT_FOUND.getException());
             osd.setLanguageId(language.getId());
             changed = true;
+        }
+
+        // contentChanged
+        if(updateRequest.getContentChanged() != null){
+            if(user.isChangeTracking()){
+                throw ErrorCode.CHANGED_FLAG_ONLY_USABLE_BY_UNTRACKED_USERS.exception();
+            }
+            osd.setContentChanged(updateRequest.getContentChanged());
+        }
+
+        // metadataChanged
+        if(updateRequest.getMetadataChanged() != null){
+            if(user.isChangeTracking()){
+                throw ErrorCode.CHANGED_FLAG_ONLY_USABLE_BY_UNTRACKED_USERS.exception();
+            }
+            osd.setMetadataChanged(updateRequest.getMetadataChanged());
         }
 
         // update osd:

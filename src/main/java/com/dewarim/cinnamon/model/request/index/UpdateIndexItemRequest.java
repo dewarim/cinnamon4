@@ -5,6 +5,8 @@ import com.dewarim.cinnamon.model.IndexItem;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.response.IndexItemWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
@@ -14,6 +16,8 @@ import java.util.Objects;
 @JacksonXmlRootElement(localName = "updateIndexItemRequest")
 public class UpdateIndexItemRequest implements UpdateRequest<IndexItem>, ApiRequest {
 
+    @JacksonXmlElementWrapper(localName = "indexItems")
+    @JacksonXmlProperty(localName = "indexItem")
     private List<IndexItem> indexItems = new ArrayList<>();
 
     @Override

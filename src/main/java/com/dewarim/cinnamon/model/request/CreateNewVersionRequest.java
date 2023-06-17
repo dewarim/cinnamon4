@@ -1,6 +1,8 @@
 package com.dewarim.cinnamon.model.request;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
@@ -11,6 +13,8 @@ import java.util.Optional;
 public class CreateNewVersionRequest implements ApiRequest {
 
     private Long           id;
+    @JacksonXmlElementWrapper(localName = "metaRequests")
+    @JacksonXmlProperty(localName = "metaRequest")
     private List<Metadata> metaRequests = new ArrayList<>();
     private Long           formatId;
 

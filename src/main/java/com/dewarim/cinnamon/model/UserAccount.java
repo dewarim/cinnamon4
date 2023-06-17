@@ -3,6 +3,8 @@ package com.dewarim.cinnamon.model;
 import com.dewarim.cinnamon.api.Identifiable;
 import com.dewarim.cinnamon.api.login.LoginUser;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
 import java.security.Principal;
 import java.util.ArrayList;
@@ -30,6 +32,9 @@ public class UserAccount implements Principal, LoginUser, Identifiable {
     @JsonIgnore
     private int        tokensToday;
     private boolean    passwordExpired;
+
+    @JacksonXmlElementWrapper(localName = "groupIds")
+    @JacksonXmlProperty(localName = "groupId")
     private List<Long> groupIds         = new ArrayList<>();
     private String     config           = "<config/>";
 

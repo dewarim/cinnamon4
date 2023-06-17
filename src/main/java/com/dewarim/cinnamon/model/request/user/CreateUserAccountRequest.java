@@ -66,7 +66,9 @@ public class CreateUserAccountRequest implements CreateRequest<UserAccount>, Api
 
     @Override
     public List<Object> examples() {
-        return List.of(new CreateUserAccountRequest("jane", "super-secret", "Jane Doe", "jane@example.com", 1L,
-                LoginType.CINNAMON.name(), false, true, true));
+        CreateUserAccountRequest request = new CreateUserAccountRequest("jane", "super-secret", "Jane Doe", "jane@example.com", 1L,
+                LoginType.CINNAMON.name(), false, true, true);
+        request.userAccounts.get(0).getGroupIds().add(12L);
+        return List.of(request);
     }
 }

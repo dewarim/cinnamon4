@@ -5,10 +5,12 @@ import com.dewarim.cinnamon.model.LoginType;
 import com.dewarim.cinnamon.model.UserAccount;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@JacksonXmlRootElement(localName = "cinnamon")
 public class UserAccountWrapper implements Wrapper<UserAccount>, ApiResponse {
 
 
@@ -44,7 +46,8 @@ public class UserAccountWrapper implements Wrapper<UserAccount>, ApiResponse {
 
     @Override
     public List<Object> examples() {
-        return List.of(new UserAccountWrapper(List.of(
-                new UserAccount("user-wrapper-example", "see-creta", "U.W.Example", "user@example.com", 1L, LoginType.CINNAMON.name(), true, true,true))));
+        UserAccount userAccount = new UserAccount("user-wrapper-example", "see-creta", "U.W.Example", "user@example.com", 1L, LoginType.CINNAMON.name(), true, true, true);
+        userAccount.setGroupIds(List.of(3L, 5L));
+        return List.of(new UserAccountWrapper(List.of(userAccount)));
     }
 }
