@@ -5,18 +5,10 @@ import com.dewarim.cinnamon.client.CinnamonClientException;
 import com.dewarim.cinnamon.model.Group;
 import com.dewarim.cinnamon.model.LoginType;
 import com.dewarim.cinnamon.model.UserAccount;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.*;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -81,9 +73,9 @@ public class GroupServletIntegrationTest extends CinnamonIntegrationTest {
     public void deleteGroups() throws IOException {
         var deleteResult = adminClient.deleteGroups(groups.stream().map(Group::getId).collect(Collectors.toList()));
         assertTrue(deleteResult);
-        var allGroupnames     = client.listGroups().stream().map(Group::getName).collect(Collectors.toList());
-        var deletedGroupNames = groups.stream().map(Group::getName).collect(Collectors.toList());
-        assertFalse(allGroupnames.containsAll(deletedGroupNames));
+        var allGroupNames     = client.listGroups().stream().map(Group::getName).toList();
+        var deletedGroupNames = groups.stream().map(Group::getName).toList();
+        assertFalse(allGroupNames.containsAll(deletedGroupNames));
     }
 
     @Test
