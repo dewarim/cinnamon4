@@ -38,12 +38,13 @@ public class DbSessionFilter implements Filter {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException {
         try {
+            ThreadLocalSqlSession.refreshSession();
             log.debug("DbSessionFilter: before");
             chain.doFilter(request, response);
             log.debug("DbSessionFilter: after");
         } catch (Exception e) {
             ThreadLocalSqlSession.setTransactionStatus(TransactionStatus.ROLLBACK);
-            log.warn("Caught unexpected exception:", e);
+            log.warn("Caught unexpected exception -> rollback:", e);
             CinnamonError error = new CinnamonError(ErrorCode.INTERNAL_SERVER_ERROR_TRY_AGAIN_LATER.getCode(), e.getMessage());
             ((HttpServletResponse) response).setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.setContentType(CONTENT_TYPE_XML);
@@ -64,13 +65,9 @@ public class DbSessionFilter implements Filter {
                 sqlSession.rollback();
             }
             sqlSession.close();
-            ThreadLocalSqlSession.refreshSession();
+//            ThreadLocalSqlSession.refreshSession();
         }
 
     }
 
-    @Override
-    public void destroy() {
-
-    }
 }

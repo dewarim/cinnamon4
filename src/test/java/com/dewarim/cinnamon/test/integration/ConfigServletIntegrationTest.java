@@ -1,11 +1,11 @@
 package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.api.UrlMapping;
+import com.dewarim.cinnamon.client.StandardResponse;
 import com.dewarim.cinnamon.model.ProviderType;
 import com.dewarim.cinnamon.model.UrlMappingInfo;
 import com.dewarim.cinnamon.model.request.config.ListConfigRequest;
 import com.dewarim.cinnamon.model.response.ConfigWrapper;
-import org.apache.http.HttpResponse;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -18,7 +18,7 @@ public class ConfigServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void listConfig() throws IOException {
-        HttpResponse response = sendStandardRequest(UrlMapping.CONFIG__LIST_ALL_CONFIGURATIONS, new ListConfigRequest());
+        var response = sendStandardRequest(UrlMapping.CONFIG__LIST_ALL_CONFIGURATIONS, new ListConfigRequest());
 
         ConfigWrapper config = parseResponse(response);
         assertFalse(config.getAcls().isEmpty());
@@ -47,11 +47,13 @@ public class ConfigServletIntegrationTest extends CinnamonIntegrationTest {
         // mapper.writeValue(System.out, config);
     }
 
-    private ConfigWrapper parseResponse(HttpResponse response) throws IOException {
-        assertResponseOkay(response);
-        ConfigWrapper wrapper = mapper.readValue(response.getEntity().getContent(), ConfigWrapper.class);
-        assertNotNull(wrapper);
-        return wrapper;
+    private ConfigWrapper parseResponse(StandardResponse response) throws IOException {
+        try(response) {
+            assertResponseOkay(response);
+            ConfigWrapper wrapper = mapper.readValue(response.getEntity().getContent(), ConfigWrapper.class);
+            assertNotNull(wrapper);
+            return wrapper;
+        }
     }
 
     @Test

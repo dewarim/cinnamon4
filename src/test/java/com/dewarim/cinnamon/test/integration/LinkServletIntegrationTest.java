@@ -10,7 +10,7 @@ import com.dewarim.cinnamon.model.links.LinkType;
 import com.dewarim.cinnamon.model.request.link.CreateLinkRequest;
 import com.dewarim.cinnamon.model.response.LinkResponse;
 import com.dewarim.cinnamon.test.TestObjectHolder;
-import org.apache.http.HttpResponse;
+import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -283,23 +283,20 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
 
         // invalid parent folder id
         CreateLinkRequest crlParentId      = new CreateLinkRequest(0L, LinkType.OBJECT, 1, 1, null, 13L);
-        HttpResponse      responseParentId = sendStandardRequest(UrlMapping.LINK__CREATE, crlParentId);
+         ClassicHttpResponse      responseParentId = sendStandardRequest(UrlMapping.LINK__CREATE, crlParentId);
         assertCinnamonError(responseParentId, INVALID_REQUEST);
 
         // invalid link type
-        CreateLinkRequest crlLinkType      = new CreateLinkRequest(6L, null, 1, 1, null, 13L);
-        HttpResponse      responseLinkType = sendStandardRequest(UrlMapping.LINK__CREATE, crlParentId);
-        assertCinnamonError(responseLinkType, INVALID_REQUEST);
+        CreateLinkRequest    crlLinkType      = new CreateLinkRequest(6L, null, 1, 1, null, 13L);
+        sendStandardRequestAndAssertError(UrlMapping.LINK__CREATE, crlParentId, INVALID_REQUEST);
 
         // invalid link type
         CreateLinkRequest crlAcl      = new CreateLinkRequest(6L, LinkType.OBJECT, 0, 1, null, 13L);
-        HttpResponse      responseAcl = sendStandardRequest(UrlMapping.LINK__CREATE, crlParentId);
-        assertCinnamonError(responseAcl, INVALID_REQUEST);
+         sendStandardRequestAndAssertError(UrlMapping.LINK__CREATE, crlParentId, INVALID_REQUEST);
 
         // invalid ownerId
         CreateLinkRequest crlOwnerId      = new CreateLinkRequest(6L, LinkType.OBJECT, 1, 0, null, 13L);
-        HttpResponse      responseOwnerId = sendStandardRequest(UrlMapping.LINK__CREATE, crlOwnerId);
-        assertCinnamonError(responseOwnerId, INVALID_REQUEST);
+        sendStandardRequestAndAssertError(UrlMapping.LINK__CREATE, crlOwnerId, INVALID_REQUEST);
     }
 
     @Test

@@ -7,13 +7,14 @@ import com.dewarim.cinnamon.lifecycle.NopState;
 import com.dewarim.cinnamon.model.Lifecycle;
 import com.dewarim.cinnamon.model.LifecycleState;
 import com.dewarim.cinnamon.model.request.lifecycle.LifecycleRequest;
-import org.apache.http.HttpResponse;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
+import static com.dewarim.cinnamon.ErrorCode.INVALID_REQUEST;
+import static com.dewarim.cinnamon.ErrorCode.OBJECT_NOT_FOUND;
 import static com.dewarim.cinnamon.test.integration.LifecycleStateServletIntegrationTest.CONFIG;
 import static com.dewarim.cinnamon.test.integration.LifecycleStateServletIntegrationTest.NOP_STATE;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -58,23 +59,15 @@ public class LifecycleServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getLifecycleFailOnNotFound() throws IOException {
-        HttpResponse response = sendStandardRequest(UrlMapping.LIFECYCLE__GET, new LifecycleRequest(Long.MAX_VALUE, null));
-        assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND);
-
-        HttpResponse nameNotFoundResponse = sendStandardRequest(UrlMapping.LIFECYCLE__GET, new LifecycleRequest(null, "does-not-exist"));
-        assertCinnamonError(nameNotFoundResponse, ErrorCode.OBJECT_NOT_FOUND);
+        sendStandardRequestAndAssertError(UrlMapping.LIFECYCLE__GET, new LifecycleRequest(Long.MAX_VALUE, null), OBJECT_NOT_FOUND);
+        sendStandardRequestAndAssertError(UrlMapping.LIFECYCLE__GET, new LifecycleRequest(null, "does-not-exist"), OBJECT_NOT_FOUND);
     }
 
     @Test
     public void getLifecycleFailOnInvalidRequest() throws IOException {
-        HttpResponse response = sendStandardRequest(UrlMapping.LIFECYCLE__GET, new LifecycleRequest(null, null));
-        assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
-
-        response = sendStandardRequest(UrlMapping.LIFECYCLE__GET, new LifecycleRequest(-1L, null));
-        assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
-
-        response = sendStandardRequest(UrlMapping.LIFECYCLE__GET, new LifecycleRequest(null, ""));
-        assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
+        sendStandardRequestAndAssertError(UrlMapping.LIFECYCLE__GET, new LifecycleRequest(null, null), INVALID_REQUEST);
+        sendStandardRequestAndAssertError(UrlMapping.LIFECYCLE__GET, new LifecycleRequest(-1L, null), INVALID_REQUEST);
+        sendStandardRequestAndAssertError(UrlMapping.LIFECYCLE__GET, new LifecycleRequest(null, ""), INVALID_REQUEST);
     }
 
     @Test
@@ -132,12 +125,12 @@ public class LifecycleServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void deleteShouldFailWhenInUse() throws IOException{
+    public void deleteShouldFailWhenInUse() throws IOException {
         var lifecycle = adminClient.createLifecycle("delete-me-fail-in-use");
         var lcs = adminClient.createLifecycleState(
-                new LifecycleState("delete-me-fail-lc-in-use",CONFIG,NOP_STATE,lifecycle.getId(),null));
+                new LifecycleState("delete-me-fail-lc-in-use", CONFIG, NOP_STATE, lifecycle.getId(), null));
         var ex = assertThrows(CinnamonClientException.class, () -> adminClient.deleteLifecycle(lifecycle.getId()));
-        assertEquals(ErrorCode.DB_DELETE_FAILED, ex.getErrorCode() );
+        assertEquals(ErrorCode.DB_DELETE_FAILED, ex.getErrorCode());
     }
 
     @Test

@@ -4,8 +4,6 @@ import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.client.CinnamonClientException;
 import com.dewarim.cinnamon.model.Format;
 import com.dewarim.cinnamon.model.IndexMode;
-import com.dewarim.cinnamon.model.response.FormatWrapper;
-import org.apache.http.HttpResponse;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -32,13 +30,6 @@ public class FormatServletIntegrationTest extends CinnamonIntegrationTest{
         assertThat(xml.getContentType(), equalTo("application/xml"));
         assertThat(xml.getExtension(), equalTo("xml"));
         assertThat(xml.getDefaultObjectTypeId(), equalTo(1L));
-    }
-    
-    private List<Format> parseResponse(HttpResponse response) throws IOException{
-        assertResponseOkay(response);
-        FormatWrapper formatWrapper = mapper.readValue(response.getEntity().getContent(), FormatWrapper.class);
-        assertNotNull(formatWrapper);
-        return formatWrapper.getFormats();
     }
 
     @Test

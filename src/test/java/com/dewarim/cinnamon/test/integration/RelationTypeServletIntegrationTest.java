@@ -1,11 +1,7 @@
 package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.ErrorCode;
-import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.model.relations.RelationType;
-import com.dewarim.cinnamon.model.request.relationType.ListRelationTypeRequest;
-import com.dewarim.cinnamon.model.response.RelationTypeWrapper;
-import org.apache.http.HttpResponse;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -20,8 +16,8 @@ public class RelationTypeServletIntegrationTest extends CinnamonIntegrationTest 
 
     @Test
     public void listRelationTypes() throws IOException {
-        HttpResponse       response      = sendStandardRequest(UrlMapping.RELATION_TYPE__LIST, new ListRelationTypeRequest());
-        List<RelationType> relationTypes = parseResponse(response);
+
+        List<RelationType> relationTypes = client.getRelationTypes();
 
         assertNotNull(relationTypes);
         assertFalse(relationTypes.isEmpty());
@@ -83,13 +79,5 @@ public class RelationTypeServletIntegrationTest extends CinnamonIntegrationTest 
     public void deleteInvalidRelationType() {
         assertClientError(() -> adminClient.deleteRelationTypes(List.of(0L)), ErrorCode.INVALID_REQUEST);
     }
-
-    private List<RelationType> parseResponse(HttpResponse response) throws IOException {
-        assertResponseOkay(response);
-        RelationTypeWrapper relationTypeWrapper = mapper.readValue(response.getEntity().getContent(), RelationTypeWrapper.class);
-        assertNotNull(relationTypeWrapper);
-        return relationTypeWrapper.getRelationTypes();
-    }
-
 
 }

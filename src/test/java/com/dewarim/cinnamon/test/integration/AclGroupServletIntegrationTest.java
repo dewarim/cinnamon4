@@ -3,13 +3,13 @@ package com.dewarim.cinnamon.test.integration;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.client.CinnamonClientException;
+import com.dewarim.cinnamon.client.StandardResponse;
 import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.AclGroup;
 import com.dewarim.cinnamon.model.Group;
 import com.dewarim.cinnamon.model.request.aclGroup.AclGroupListRequest;
 import com.dewarim.cinnamon.model.request.aclGroup.UpdateAclGroupRequest;
 import com.dewarim.cinnamon.model.response.AclGroupWrapper;
-import org.apache.http.HttpResponse;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -25,31 +25,30 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class AclGroupServletIntegrationTest extends CinnamonIntegrationTest {
 
-    static List<Acl>      acls       = new ArrayList<>();
-    static List<Group>    groups     = new ArrayList<>();
+    static List<Acl>      acls      = new ArrayList<>();
+    static List<Group>    groups    = new ArrayList<>();
     static List<AclGroup> aclGroups = new ArrayList<>();
 
     @Test
     public void testListAclGroupByAclId() throws IOException {
         AclGroupListRequest listRequest  = new AclGroupListRequest(1L, AclGroupListRequest.IdType.ACL);
-        HttpResponse        httpResponse = sendStandardRequest(UrlMapping.ACL_GROUP__LIST_BY_GROUP_OR_ACL, listRequest);
-        List<AclGroup>      aclGroups   = unwrapAclGroups(httpResponse, 1);
+        var httpResponse = sendStandardRequest(UrlMapping.ACL_GROUP__LIST_BY_GROUP_OR_ACL, listRequest);
+        List<AclGroup>      aclGroups    = unwrapAclGroups(httpResponse, 1);
         aclGroups.forEach(entry -> assertEquals(Long.valueOf(1), entry.getAclId()));
     }
 
     @Test
     public void testListAclGroupByGroupId() throws IOException {
         AclGroupListRequest listRequest  = new AclGroupListRequest(4L, AclGroupListRequest.IdType.GROUP);
-        HttpResponse        httpResponse = sendStandardRequest(UrlMapping.ACL_GROUP__LIST_BY_GROUP_OR_ACL, listRequest);
-        List<AclGroup>      aclGroups   = unwrapAclGroups(httpResponse, 1);
+        var httpResponse = sendStandardRequest(UrlMapping.ACL_GROUP__LIST_BY_GROUP_OR_ACL, listRequest);
+        List<AclGroup>      aclGroups    = unwrapAclGroups(httpResponse, 1);
         aclGroups.forEach(entry -> assertEquals(Long.valueOf(4), entry.getGroupId()));
     }
 
     @Test
     public void invalidAclGroupListRequest() throws IOException {
         AclGroupListRequest listRequest  = new AclGroupListRequest();
-        HttpResponse        httpResponse = sendStandardRequest(UrlMapping.ACL_GROUP__LIST_BY_GROUP_OR_ACL, listRequest);
-        assertCinnamonError(httpResponse, ErrorCode.INVALID_REQUEST);
+        sendStandardRequestAndAssertError(UrlMapping.ACL_GROUP__LIST_BY_GROUP_OR_ACL, listRequest, ErrorCode.INVALID_REQUEST);
     }
 
     @Test
@@ -140,9 +139,9 @@ public class AclGroupServletIntegrationTest extends CinnamonIntegrationTest {
         assertTrue(aclGroups.stream().noneMatch(remainingEntries::contains));
     }
 
-    private List<AclGroup> unwrapAclGroups(HttpResponse httpResponse, int expectedSize) throws IOException {
+    private List<AclGroup> unwrapAclGroups(StandardResponse httpResponse, int expectedSize) throws IOException {
         assertResponseOkay(httpResponse);
-        AclGroupWrapper wrapper    = mapper.readValue(httpResponse.getEntity().getContent(), AclGroupWrapper.class);
+        AclGroupWrapper wrapper   = mapper.readValue(httpResponse.getEntity().getContent(), AclGroupWrapper.class);
         List<AclGroup>  aclGroups = wrapper.getAclGroups();
         assertEquals(expectedSize, aclGroups.size());
         return aclGroups;

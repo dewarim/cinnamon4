@@ -5,13 +5,13 @@ import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.client.CinnamonClient;
 import com.dewarim.cinnamon.client.CinnamonClientException;
+import com.dewarim.cinnamon.client.StandardResponse;
 import com.dewarim.cinnamon.model.LoginType;
 import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.request.user.GetUserAccountRequest;
 import com.dewarim.cinnamon.model.request.user.SetPasswordRequest;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.fluent.Form;
-import org.apache.http.client.fluent.Request;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Test;
@@ -32,7 +32,7 @@ public class UserAccountServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void requestShouldHaveUserIdOrUsername() throws IOException {
         GetUserAccountRequest userInfoRequest  = new GetUserAccountRequest(null, null);
-        HttpResponse          userInfoResponse = sendAdminRequest(UrlMapping.USER__GET, userInfoRequest);
+        StandardResponse      userInfoResponse = sendAdminRequest(UrlMapping.USER__GET, userInfoRequest);
         assertCinnamonError(userInfoResponse, ErrorCode.USER_INFO_REQUEST_WITHOUT_NAME_OR_ID);
     }
 
@@ -69,46 +69,49 @@ public class UserAccountServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void requestForNonExistentUser() throws IOException {
         GetUserAccountRequest userInfoRequest  = new GetUserAccountRequest(123L, null);
-        HttpResponse          userInfoResponse = sendAdminRequest(UrlMapping.USER__GET, userInfoRequest);
+        StandardResponse      userInfoResponse = sendAdminRequest(UrlMapping.USER__GET, userInfoRequest);
         assertCinnamonError(userInfoResponse, ErrorCode.USER_ACCOUNT_NOT_FOUND);
     }
 
     @Test
     public void setUsersOwnPassword() throws IOException {
         SetPasswordRequest setPasswordRequest = new SetPasswordRequest(2L, "testTest");
-        HttpResponse       response           = sendStandardRequest(UrlMapping.USER__SET_PASSWORD, setPasswordRequest);
+        StandardResponse   response           = sendStandardRequest(UrlMapping.USER__SET_PASSWORD, setPasswordRequest);
         assertResponseOkay(response);
         String url = "http://localhost:" + cinnamonTestPort + UrlMapping.CINNAMON__CONNECT.getPath();
-        HttpResponse ticketResponse = Request.Post(url)
-                .bodyForm(Form.form().add("user", "doe").add(PASSWORD_PARAMETER_NAME, "testTest").build())
-                .execute().returnResponse();
-        assertResponseOkay(ticketResponse);
+
+        try (StandardResponse ticketResponse = httpClient.execute(ClassicRequestBuilder.post(url)
+                .addParameter("user", "doe")
+                .addParameter(PASSWORD_PARAMETER_NAME, "testTest").build(), StandardResponse::new)) {
+            assertResponseOkay(ticketResponse);
+        }
 
         // cleanup:
         CinnamonServer.config.getSecurityConfig().setMinimumPasswordLength(4);
         SetPasswordRequest setPasswordRequest2 = new SetPasswordRequest(2L, "admin");
-        HttpResponse       response2           = sendStandardRequest(UrlMapping.USER__SET_PASSWORD, setPasswordRequest);
-        CinnamonServer.config.getSecurityConfig().setMinimumPasswordLength(8);
+        try (StandardResponse r = sendStandardRequest(UrlMapping.USER__SET_PASSWORD, setPasswordRequest)) {
+            CinnamonServer.config.getSecurityConfig().setMinimumPasswordLength(8);
+        }
     }
 
     @Test
     public void setOtherUsersPassword() throws IOException {
         SetPasswordRequest setPasswordRequest = new SetPasswordRequest(1L, "testTest");
-        HttpResponse       response           = sendStandardRequest(UrlMapping.USER__SET_PASSWORD, setPasswordRequest);
+        StandardResponse   response           = sendStandardRequest(UrlMapping.USER__SET_PASSWORD, setPasswordRequest);
         assertCinnamonError(response, ErrorCode.FORBIDDEN);
     }
 
     @Test
     public void setOtherUsersPasswordAsAdmin() throws IOException {
         SetPasswordRequest setPasswordRequest = new SetPasswordRequest(3L, "testTest");
-        HttpResponse       response           = sendAdminRequest(UrlMapping.USER__SET_PASSWORD, setPasswordRequest);
+        StandardResponse   response           = sendAdminRequest(UrlMapping.USER__SET_PASSWORD, setPasswordRequest);
         assertResponseOkay(response);
     }
 
     @Test
     public void setTooShortPassword() throws IOException {
-        SetPasswordRequest setPasswordRequest = new SetPasswordRequest(2L, "x");
-        HttpResponse       response           = sendStandardRequest(UrlMapping.USER__SET_PASSWORD, setPasswordRequest);
+        SetPasswordRequest  setPasswordRequest = new SetPasswordRequest(2L, "x");
+        ClassicHttpResponse response           = sendStandardRequest(UrlMapping.USER__SET_PASSWORD, setPasswordRequest);
         assertCinnamonError(response, ErrorCode.PASSWORD_TOO_SHORT);
     }
 
@@ -241,18 +244,19 @@ public class UserAccountServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void setConfigInvalidRequest(){
+    public void setConfigInvalidRequest() {
         CinnamonClientException cex = assertThrows(CinnamonClientException.class, () -> client.setUserConfig(adminId, null));
         assertEquals(ErrorCode.INVALID_REQUEST, cex.getErrorCode());
     }
+
     @Test
-    public void setConfigOtherUserIsForbidden(){
+    public void setConfigOtherUserIsForbidden() {
         CinnamonClientException cex = assertThrows(CinnamonClientException.class, () -> client.setUserConfig(adminId, "xxx"));
         assertEquals(ErrorCode.FORBIDDEN, cex.getErrorCode());
     }
 
     @Test
-    public void setConfigUserNotFound(){
+    public void setConfigUserNotFound() {
         CinnamonClientException cex = assertThrows(CinnamonClientException.class, () -> client.setUserConfig(Long.MAX_VALUE, "xxx"));
         assertEquals(ErrorCode.USER_ACCOUNT_NOT_FOUND, cex.getErrorCode());
     }
@@ -268,7 +272,7 @@ public class UserAccountServletIntegrationTest extends CinnamonIntegrationTest {
     public void setConfigHappyPath() throws IOException {
         client.setUserConfig(userId, "<config>1</config>");
         UserAccount userWithNewConfig = client.getUser(userId);
-        assertEquals("<config>1</config>",userWithNewConfig.getConfig());
+        assertEquals("<config>1</config>", userWithNewConfig.getConfig());
     }
 
 }

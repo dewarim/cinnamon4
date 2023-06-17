@@ -15,7 +15,7 @@ import com.dewarim.cinnamon.model.request.lifecycleState.AttachLifecycleRequest;
 import com.dewarim.cinnamon.model.request.lifecycleState.ChangeLifecycleStateRequest;
 import com.dewarim.cinnamon.model.request.osd.UpdateOsdRequest;
 import com.dewarim.cinnamon.test.TestObjectHolder;
-import org.apache.http.HttpResponse;
+import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.dom4j.Document;
@@ -84,8 +84,9 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
     @Test
     public void attachLifecycleMissingOsd() throws IOException {
         AttachLifecycleRequest badOsd   = new AttachLifecycleRequest(Long.MAX_VALUE, 1L, 1L, false);
-        HttpResponse           response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__ATTACH_LIFECYCLE, badOsd);
-        assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND);
+        try (ClassicHttpResponse response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__ATTACH_LIFECYCLE, badOsd)) {
+            assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND);
+        }
     }
 
     @Test
@@ -172,15 +173,13 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
     @Test
     public void detachLifecycleInvalidRequest() throws IOException {
         IdRequest    idRequest      = new IdRequest(0L);
-        HttpResponse detachResponse = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__DETACH_LIFECYCLE, idRequest);
-        assertCinnamonError(detachResponse, INVALID_REQUEST);
+        sendStandardRequestAndAssertError(UrlMapping.LIFECYCLE_STATE__DETACH_LIFECYCLE, idRequest,INVALID_REQUEST);
     }
 
     @Test
     public void detachLifecycleNonExistentOsd() throws IOException {
         IdRequest    idRequest      = new IdRequest(Long.MAX_VALUE);
-        HttpResponse detachResponse = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__DETACH_LIFECYCLE, idRequest);
-        assertCinnamonError(detachResponse, ErrorCode.OBJECT_NOT_FOUND);
+        sendStandardRequestAndAssertError(UrlMapping.LIFECYCLE_STATE__DETACH_LIFECYCLE, idRequest,OBJECT_NOT_FOUND);
     }
 
     @Test
@@ -209,8 +208,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
     @Test
     public void changeStateMissingObject() throws IOException {
         ChangeLifecycleStateRequest attachRequest = new ChangeLifecycleStateRequest(Long.MAX_VALUE, Long.MAX_VALUE);
-        HttpResponse                response      = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__CHANGE_STATE, attachRequest);
-        assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND);
+        sendStandardRequestAndAssertError(UrlMapping.LIFECYCLE_STATE__CHANGE_STATE, attachRequest,OBJECT_NOT_FOUND);
     }
 
     @Test
@@ -257,15 +255,13 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
     @Test
     public void getNextStatesInvalidRequest() throws IOException {
         IdRequest    request  = new IdRequest();
-        HttpResponse response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__GET_NEXT_STATES, request);
-        assertCinnamonError(response, INVALID_REQUEST);
+        sendStandardRequestAndAssertError(UrlMapping.LIFECYCLE_STATE__GET_NEXT_STATES, request,INVALID_REQUEST);
     }
 
     @Test
     public void getNextStatesOsdNotFound() throws IOException {
         IdRequest    request  = new IdRequest(Long.MAX_VALUE);
-        HttpResponse response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__GET_NEXT_STATES, request);
-        assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND);
+        sendStandardRequestAndAssertError(UrlMapping.LIFECYCLE_STATE__GET_NEXT_STATES, request,OBJECT_NOT_FOUND);
     }
 
     @Test
@@ -384,8 +380,10 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
 
     @Test
     public void verifySerialization() throws IOException {
-        HttpResponse response    = sendStandardRequest(UrlMapping.LIFECYCLE__LIST, new ListLifecycleRequest());
-        String       xmlResponse = new String(response.getEntity().getContent().readAllBytes(), StandardCharsets.UTF_8);
+        String xmlResponse;
+        try (ClassicHttpResponse response = sendStandardRequest(UrlMapping.LIFECYCLE__LIST, new ListLifecycleRequest())) {
+            xmlResponse = new String(response.getEntity().getContent().readAllBytes(), StandardCharsets.UTF_8);
+        }
         Document     document    = ParamParser.parseXmlToDocument(xmlResponse);
         log.info("xmlResponse: " + xmlResponse);
         List<Node> nodes = document.selectNodes("//lifecycleStates/lifecycleState");

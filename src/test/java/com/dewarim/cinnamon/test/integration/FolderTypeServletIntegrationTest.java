@@ -2,15 +2,10 @@ package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.Constants;
-import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.client.CinnamonClientException;
-import com.dewarim.cinnamon.client.Unwrapper;
 import com.dewarim.cinnamon.model.FolderType;
 import com.dewarim.cinnamon.model.request.folder.UpdateFolderRequest;
-import com.dewarim.cinnamon.model.request.folderType.ListFolderTypeRequest;
-import com.dewarim.cinnamon.model.response.FolderTypeWrapper;
 import com.dewarim.cinnamon.test.TestObjectHolder;
-import org.apache.http.HttpResponse;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -19,12 +14,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.dewarim.cinnamon.api.Constants.EXPECTED_SIZE_ANY;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class FolderTypeServletIntegrationTest extends CinnamonIntegrationTest {
-
-    private final Unwrapper<FolderType, FolderTypeWrapper> folderTypeUnwrapper = new Unwrapper<>(FolderTypeWrapper.class);
 
     @Test
     public void create() throws IOException {
@@ -43,9 +35,7 @@ public class FolderTypeServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void list() throws IOException {
-        HttpResponse response = sendStandardRequest(UrlMapping.FOLDER_TYPE__LIST, new ListFolderTypeRequest());
-        assertResponseOkay(response);
-        List<FolderType> folderTypes = folderTypeUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
+        List<FolderType> folderTypes = client.listFolderTypes();
         assertTrue(folderTypes.contains(new FolderType(1L, Constants.FOLDER_TYPE_DEFAULT)));
     }
 

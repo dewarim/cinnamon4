@@ -4,6 +4,7 @@ import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
+import com.dewarim.cinnamon.client.StandardResponse;
 import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.request.user.GetUserAccountRequest;
@@ -45,10 +46,10 @@ public class AuthenticationFilterIntegrationTest extends CinnamonIntegrationTest
     public void callingApiWithoutTicketIsForbidden() throws IOException {
         String userInfoRequest = mapper.writeValueAsString(new GetUserAccountRequest(null, "admin"));
         String url             = "http://localhost:" + cinnamonTestPort + UrlMapping.USER__GET.getPath();
-        try (ClassicHttpResponse response = httpClient.execute(ClassicRequestBuilder.post(url)
+        try (StandardResponse response = httpClient.execute(ClassicRequestBuilder.post(url)
                 .setHeader("Content-type", APPLICATION_XML.toString())
                 .setEntity(userInfoRequest)
-                .build(), r -> r)) {
+                .build(), StandardResponse::new )) {
             assertThat(response.getCode(), equalTo(HttpServletResponse.SC_FORBIDDEN));
         }
     }
@@ -75,10 +76,10 @@ public class AuthenticationFilterIntegrationTest extends CinnamonIntegrationTest
     public void callApiWithNonExistingSessionTicket() throws IOException {
         String userInfoRequest = mapper.writeValueAsString(new GetUserAccountRequest(null, "admin"));
         String url             = "http://localhost:" + cinnamonTestPort + UrlMapping.USER__GET.getPath();
-        try (ClassicHttpResponse response = httpClient.execute(ClassicRequestBuilder.post(url)
+        try (StandardResponse response = httpClient.execute(ClassicRequestBuilder.post(url)
                 .addHeader("ticket", " ")
                 .setEntity(userInfoRequest, APPLICATION_XML)
-                .build(), r -> r)) {
+                .build(), StandardResponse::new)) {
             assertThat(response.getCode(), equalTo(HttpServletResponse.SC_FORBIDDEN));
             CinnamonError error = mapper.readValue(response.getEntity().getContent(), CinnamonErrorWrapper.class).getErrors().get(0);
             assertThat(error.getCode(), equalTo(ErrorCode.AUTHENTICATION_FAIL_NO_TICKET_GIVEN.getCode()));

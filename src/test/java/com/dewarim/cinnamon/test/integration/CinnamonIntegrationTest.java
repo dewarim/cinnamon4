@@ -8,22 +8,18 @@ import com.dewarim.cinnamon.application.DbSessionFactory;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.client.CinnamonClient;
 import com.dewarim.cinnamon.client.CinnamonClientException;
+import com.dewarim.cinnamon.client.StandardResponse;
 import com.dewarim.cinnamon.dao.GroupDao;
 import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.Folder;
 import com.dewarim.cinnamon.model.response.CinnamonConnection;
 import com.dewarim.cinnamon.model.response.CinnamonError;
 import com.dewarim.cinnamon.model.response.CinnamonErrorWrapper;
-import com.dewarim.cinnamon.model.response.GenericResponse;
 import com.dewarim.cinnamon.test.TestObjectHolder;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
-import org.apache.hc.core5.http.ClassicHttpResponse;
-import org.apache.hc.core5.http.HttpStatus;
-import org.apache.hc.core5.http.ParseException;
-import org.apache.hc.core5.http.io.entity.EntityUtils;
+import org.apache.hc.core5.http.*;
 import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.jdbc.ScriptRunner;
@@ -141,15 +137,17 @@ public class CinnamonIntegrationTest {
      */
     protected static String getAdminTicket() throws IOException, ParseException {
         String url = "http://localhost:" + cinnamonTestPort + UrlMapping.CINNAMON__CONNECT.getPath();
-        try (ClassicHttpResponse response = httpClient.execute(ClassicRequestBuilder.post(url)
-                        .addParameter("user", "admin")
-                        .addParameter("password","admin")
-                .build(), r -> r)) {
-            String tokenRequestResult = EntityUtils.toString(response.getEntity());
-            XmlMapper          mapper             = XML_MAPPER;
-            CinnamonConnection cinnamonConnection = mapper.readValue(tokenRequestResult, CinnamonConnection.class);
+        try (StandardResponse response = httpClient.execute(ClassicRequestBuilder.post(url)
+                .addParameter("user", "admin")
+                .addParameter("password", "admin")
+                .build(), StandardResponse::new)) {
+            CinnamonConnection cinnamonConnection = XML_MAPPER.readValue(response.getEntity().getContent(), CinnamonConnection.class);
             return cinnamonConnection.getTicket();
         }
+    }
+
+    public static String responseToString(ClassicHttpResponse response) throws IOException {
+        return new String(response.getEntity().getContent().readAllBytes());
     }
 
     /**
@@ -158,17 +156,19 @@ public class CinnamonIntegrationTest {
     protected static String getDoesTicket(boolean newTicket) throws IOException {
         if (ticketForDoe == null || newTicket) {
             String url = "http://localhost:" + cinnamonTestPort + UrlMapping.CINNAMON__CONNECT.getPath();
-            String tokenRequestResult = Request.Post(url)
-                    .bodyForm(Form.form().add("user", "doe").add("password", "admin").build())
-                    .execute().returnContent().asString();
-            XmlMapper          mapper             = XML_MAPPER;
-            CinnamonConnection cinnamonConnection = mapper.readValue(tokenRequestResult, CinnamonConnection.class);
-            ticketForDoe = cinnamonConnection.getTicket();
+            try (StandardResponse response = httpClient.execute(ClassicRequestBuilder.post(url)
+                    .addParameter("user", "doe")
+                    .addParameter("password", "admin")
+                    .build(), StandardResponse::new)) {
+                String             tokenRequestResult = responseToString(response);
+                CinnamonConnection cinnamonConnection = mapper.readValue(tokenRequestResult, CinnamonConnection.class);
+                ticketForDoe = cinnamonConnection.getTicket();
+            }
         }
         return ticketForDoe;
     }
 
-    protected void assertResponseOkay(ClassicHttpResponse response) throws IOException {
+    protected void assertResponseOkay(StandardResponse response) throws IOException {
         Integer statusCode = response.getCode();
         if (!statusCode.equals(HttpStatus.SC_OK)) {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -210,12 +210,13 @@ public class CinnamonIntegrationTest {
      * @return the server's response.
      * @throws IOException if connection to server fails for some reason
      */
-    protected ClassicHttpResponse sendAdminRequest(UrlMapping urlMapping, Object request) throws IOException {
+    protected StandardResponse sendAdminRequest(UrlMapping urlMapping, Object request) throws IOException {
         String requestStr = mapper.writeValueAsString(request);
-        return Request.Post("http://localhost:" + cinnamonTestPort + urlMapping.getPath())
+        String url        = "http://localhost:" + cinnamonTestPort + urlMapping.getPath();
+        return httpClient.execute(ClassicRequestBuilder.post(url)
                 .addHeader("ticket", ticket)
-                .bodyString(requestStr, ContentType.APPLICATION_XML)
-                .execute().returnResponse();
+                .setEntity(requestStr, ContentType.APPLICATION_XML.withCharset(StandardCharsets.UTF_8))
+                .build(), StandardResponse::new);
     }
 
     /**
@@ -227,28 +228,31 @@ public class CinnamonIntegrationTest {
      * @return the server's response.
      * @throws IOException if connection to server fails for some reason
      */
-    protected ClassicHttpResponse sendStandardRequest(UrlMapping urlMapping, Object request) throws IOException {
+    protected StandardResponse sendStandardRequest(UrlMapping urlMapping, Object request) throws IOException {
         String requestStr = mapper.writeValueAsString(request);
-        return Request.Post("http://localhost:" + cinnamonTestPort + urlMapping.getPath())
+        String url        = "http://localhost:" + cinnamonTestPort + urlMapping.getPath();
+        return httpClient.execute(ClassicRequestBuilder.post(url)
                 .addHeader("ticket", getDoesTicket(false))
-                .bodyString(requestStr, ContentType.APPLICATION_XML)
-                .execute().returnResponse();
+                .setEntity(requestStr, ContentType.APPLICATION_XML)
+                .build(), StandardResponse::new);
     }
 
-    protected Request createStandardRequestHeader(UrlMapping urlMapping) throws IOException {
-        return Request.Post("http://localhost:" + cinnamonTestPort + urlMapping.getPath())
-                .addHeader("ticket", getDoesTicket(false));
+    protected void sendStandardRequestAndAssertError(UrlMapping urlMapping, Object request, ErrorCode errorCode) throws IOException {
+        String requestStr = mapper.writeValueAsString(request);
+        String url        = "http://localhost:" + cinnamonTestPort + urlMapping.getPath();
+        try (StandardResponse response = httpClient.execute(ClassicRequestBuilder.post(url)
+                .addHeader("ticket", getDoesTicket(false))
+                .setEntity(requestStr, ContentType.APPLICATION_XML)
+                .build(), StandardResponse::new)) {
+            assertCinnamonError(response, errorCode);
+        }
     }
 
-    protected ClassicHttpResponse sendAdminRequest(UrlMapping urlMapping) throws IOException {
-        return Request.Post("http://localhost:" + cinnamonTestPort + urlMapping.getPath())
-                .addHeader("ticket", ticket)
-                .execute().returnResponse();
-    }
-
-    protected GenericResponse parseGenericResponse(ClassicHttpResponse response) throws IOException {
-        assertResponseOkay(response);
-        return mapper.readValue(response.getEntity().getContent(), GenericResponse.class);
+    protected ClassicHttpRequest createStandardRequestHeader(UrlMapping urlMapping) throws IOException {
+        String url = "http://localhost:" + cinnamonTestPort + urlMapping.getPath();
+        return ClassicRequestBuilder.post(url)
+                .addHeader("ticket", getDoesTicket(false))
+                .build();
     }
 
     // TODO: use this in FolderServletIntegrationTests, too

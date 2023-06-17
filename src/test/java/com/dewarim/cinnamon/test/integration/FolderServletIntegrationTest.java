@@ -4,28 +4,16 @@ import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.client.CinnamonClientException;
-import com.dewarim.cinnamon.model.Acl;
-import com.dewarim.cinnamon.model.Folder;
-import com.dewarim.cinnamon.model.FolderType;
-import com.dewarim.cinnamon.model.Meta;
-import com.dewarim.cinnamon.model.MetasetType;
-import com.dewarim.cinnamon.model.ObjectSystemData;
+import com.dewarim.cinnamon.model.*;
 import com.dewarim.cinnamon.model.relations.Relation;
 import com.dewarim.cinnamon.model.relations.RelationType;
 import com.dewarim.cinnamon.model.request.CreateMetaRequest;
 import com.dewarim.cinnamon.model.request.DeleteMetaRequest;
-import com.dewarim.cinnamon.model.request.IdListRequest;
 import com.dewarim.cinnamon.model.request.MetaRequest;
 import com.dewarim.cinnamon.model.request.SetSummaryRequest;
-import com.dewarim.cinnamon.model.request.folder.CreateFolderRequest;
-import com.dewarim.cinnamon.model.request.folder.FolderPathRequest;
-import com.dewarim.cinnamon.model.request.folder.FolderRequest;
-import com.dewarim.cinnamon.model.request.folder.SingleFolderRequest;
-import com.dewarim.cinnamon.model.request.folder.UpdateFolderRequest;
+import com.dewarim.cinnamon.model.request.folder.*;
 import com.dewarim.cinnamon.model.response.Summary;
-import com.dewarim.cinnamon.model.response.SummaryWrapper;
 import com.dewarim.cinnamon.test.TestObjectHolder;
-import org.apache.http.HttpResponse;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -45,16 +33,10 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void setSummaryHappyPath() throws IOException {
-        var               folderId       = new TestObjectHolder(client, userId).createFolder().folder.getId();
-        SetSummaryRequest summaryRequest = new SetSummaryRequest(folderId, "a summary");
-        HttpResponse      response       = sendStandardRequest(UrlMapping.FOLDER__SET_SUMMARY, summaryRequest);
-        assertResponseOkay(response);
-
-        IdListRequest idListRequest  = new IdListRequest(Collections.singletonList(folderId));
-        HttpResponse  verifyResponse = sendStandardRequest(UrlMapping.FOLDER__GET_SUMMARIES, idListRequest);
-        assertResponseOkay(verifyResponse);
-        SummaryWrapper wrapper = mapper.readValue(verifyResponse.getEntity().getContent(), SummaryWrapper.class);
-        assertThat(wrapper.getSummaries().get(0).getContent(), equalTo("a summary"));
+        var folderId = new TestObjectHolder(client, userId).createFolder().folder.getId();
+        client.setFolderSummary(folderId, "a summary");
+        List<Summary> folderSummaries = client.getFolderSummaries(List.of(folderId));
+        assertEquals("a summary", folderSummaries.get(0).getContent());
     }
 
     @Test
@@ -66,8 +48,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void setSummaryMissingObject() throws IOException {
         SetSummaryRequest summaryRequest = new SetSummaryRequest(Long.MAX_VALUE, "a summary");
-        HttpResponse      response       = sendStandardRequest(UrlMapping.FOLDER__SET_SUMMARY, summaryRequest);
-        assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND);
+        sendStandardRequestAndAssertError(UrlMapping.FOLDER__SET_SUMMARY, summaryRequest, OBJECT_NOT_FOUND);
     }
 
     @Test
@@ -112,15 +93,13 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void getFolderInvalidRequest() throws IOException {
         SingleFolderRequest singleRequest = new SingleFolderRequest(0L, false);
-        HttpResponse        response      = sendStandardRequest(UrlMapping.FOLDER__GET_FOLDER, singleRequest);
-        assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
+        sendStandardRequestAndAssertError(UrlMapping.FOLDER__GET_FOLDER, singleRequest, INVALID_REQUEST);
     }
 
     @Test
     public void getUnknownFolder() throws IOException {
         SingleFolderRequest singleRequest = new SingleFolderRequest(Long.MAX_VALUE, false);
-        HttpResponse        response      = sendStandardRequest(UrlMapping.FOLDER__GET_FOLDER, singleRequest);
-        assertCinnamonError(response, FOLDER_NOT_FOUND);
+        sendStandardRequestAndAssertError(UrlMapping.FOLDER__GET_FOLDER, singleRequest, FOLDER_NOT_FOUND);
     }
 
     @Test
@@ -134,43 +113,37 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void getFoldersInvalidRequest() throws IOException {
         FolderRequest folderRequest = new FolderRequest(Collections.singletonList(0L), false);
-        HttpResponse  response      = sendStandardRequest(UrlMapping.FOLDER__GET_FOLDERS, folderRequest);
-        assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
+        sendStandardRequestAndAssertError(UrlMapping.FOLDER__GET_FOLDERS, folderRequest, INVALID_REQUEST);
     }
 
 
     @Test
     public void getUnknownFolders() throws IOException {
         FolderRequest folderRequest = new FolderRequest(Collections.singletonList(Long.MAX_VALUE), false);
-        HttpResponse  response      = sendStandardRequest(UrlMapping.FOLDER__GET_FOLDERS, folderRequest);
-        assertCinnamonError(response, FOLDER_NOT_FOUND);
+        sendStandardRequestAndAssertError(UrlMapping.FOLDER__GET_FOLDERS, folderRequest, FOLDER_NOT_FOUND);
     }
 
     @Test
     public void getFolderByPathInvalidRequest() throws IOException {
-        FolderPathRequest request  = new FolderPathRequest("", true);
-        HttpResponse      response = sendStandardRequest(UrlMapping.FOLDER__GET_FOLDER_BY_PATH, request);
-        assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
+        FolderPathRequest request = new FolderPathRequest("", true);
+        sendStandardRequestAndAssertError(UrlMapping.FOLDER__GET_FOLDER_BY_PATH, request, INVALID_REQUEST);
     }
 
     @Test
     public void getFolderByPathBadParameter() throws IOException {
         // "//" is not allowed
-        FolderPathRequest request  = new FolderPathRequest("http://", true);
-        HttpResponse      response = sendStandardRequest(UrlMapping.FOLDER__GET_FOLDER_BY_PATH, request);
-        assertCinnamonError(response, ErrorCode.INVALID_FOLDER_PATH_STRUCTURE);
+        FolderPathRequest request = new FolderPathRequest("http://", true);
+        sendStandardRequestAndAssertError(UrlMapping.FOLDER__GET_FOLDER_BY_PATH, request, INVALID_FOLDER_PATH_STRUCTURE);
 
         // trailing "/" is not allowed
-        FolderPathRequest trailingRequest  = new FolderPathRequest("http://", true);
-        HttpResponse      trailingResponse = sendStandardRequest(UrlMapping.FOLDER__GET_FOLDER_BY_PATH, trailingRequest);
-        assertCinnamonError(trailingResponse, ErrorCode.INVALID_FOLDER_PATH_STRUCTURE);
+        FolderPathRequest trailingRequest = new FolderPathRequest("http://", true);
+        sendStandardRequestAndAssertError(UrlMapping.FOLDER__GET_FOLDER_BY_PATH, trailingRequest, INVALID_FOLDER_PATH_STRUCTURE);
     }
 
     @Test
     public void getFolderByPathFolderNotFound() throws IOException {
-        FolderPathRequest request  = new FolderPathRequest("/foo/bar", true);
-        HttpResponse      response = sendStandardRequest(UrlMapping.FOLDER__GET_FOLDER_BY_PATH, request);
-        assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND);
+        FolderPathRequest request = new FolderPathRequest("/foo/bar", true);
+        sendStandardRequestAndAssertError(UrlMapping.FOLDER__GET_FOLDER_BY_PATH, request, OBJECT_NOT_FOUND);
     }
 
     @Test
@@ -188,16 +161,14 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
      */
     @Test
     public void getMetaInvalidRequest() throws IOException {
-        MetaRequest  request      = new MetaRequest();
-        HttpResponse metaResponse = sendStandardRequest(UrlMapping.FOLDER__GET_META, request);
-        assertCinnamonError(metaResponse, ErrorCode.INVALID_REQUEST);
+        MetaRequest request = new MetaRequest();
+        sendStandardRequestAndAssertError(UrlMapping.FOLDER__GET_META, request, INVALID_REQUEST);
     }
 
     @Test
     public void getMetaObjectNotFound() throws IOException {
-        MetaRequest  request      = new MetaRequest(Long.MAX_VALUE, null);
-        HttpResponse metaResponse = sendStandardRequest(UrlMapping.FOLDER__GET_META, request);
-        assertCinnamonError(metaResponse, ErrorCode.OBJECT_NOT_FOUND);
+        MetaRequest request = new MetaRequest(Long.MAX_VALUE, null);
+        sendStandardRequestAndAssertError(UrlMapping.FOLDER__GET_META, request, OBJECT_NOT_FOUND);
     }
 
     @Test
@@ -293,8 +264,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void deleteMetaInvalidRequest() throws IOException {
         DeleteMetaRequest deleteRequest = new DeleteMetaRequest();
-        HttpResponse      metaResponse  = sendStandardRequest(UrlMapping.FOLDER__DELETE_META, deleteRequest);
-        assertCinnamonError(metaResponse, ErrorCode.INVALID_REQUEST);
+        sendStandardRequestAndAssertError(UrlMapping.FOLDER__DELETE_META, deleteRequest, INVALID_REQUEST);
     }
 
     @Test
@@ -307,8 +277,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void deleteMetaWithMetaNotFound() throws IOException {
         DeleteMetaRequest deleteRequest = new DeleteMetaRequest(Long.MAX_VALUE);
-        HttpResponse      metaResponse  = sendStandardRequest(UrlMapping.FOLDER__DELETE_META, deleteRequest);
-        assertCinnamonError(metaResponse, ErrorCode.METASET_NOT_FOUND);
+        sendStandardRequestAndAssertError(UrlMapping.FOLDER__DELETE_META, deleteRequest, METASET_NOT_FOUND);
     }
 
     @Test
@@ -468,16 +437,14 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getSubFoldersInvalidRequest() throws IOException {
-        SingleFolderRequest request  = new SingleFolderRequest();
-        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__GET_SUBFOLDERS, request);
-        assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
+        SingleFolderRequest request = new SingleFolderRequest();
+        sendStandardRequestAndAssertError(UrlMapping.FOLDER__GET_SUBFOLDERS, request, INVALID_REQUEST);
     }
 
     @Test
     public void getSubFoldersFolderNotFound() throws IOException {
-        SingleFolderRequest request  = new SingleFolderRequest(Long.MAX_VALUE, false);
-        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__GET_SUBFOLDERS, request);
-        assertCinnamonError(response, ErrorCode.FOLDER_NOT_FOUND);
+        SingleFolderRequest request = new SingleFolderRequest(Long.MAX_VALUE, false);
+        sendStandardRequestAndAssertError(UrlMapping.FOLDER__GET_SUBFOLDERS, request, FOLDER_NOT_FOUND);
     }
 
     @Test
@@ -494,24 +461,21 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createFolderInvalidRequest() throws IOException {
-        CreateFolderRequest request  = new CreateFolderRequest();
-        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__CREATE, request);
-        assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
+        CreateFolderRequest request = new CreateFolderRequest();
+        sendStandardRequestAndAssertError(UrlMapping.FOLDER__CREATE, request, INVALID_REQUEST);
     }
 
     @Test
     public void createFolderNoParentFolder() throws IOException {
-        CreateFolderRequest request  = new CreateFolderRequest("foo", Long.MAX_VALUE, "<sum/>", null, null, null);
-        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__CREATE, request);
-        assertCinnamonError(response, ErrorCode.PARENT_FOLDER_NOT_FOUND);
+        CreateFolderRequest request = new CreateFolderRequest("foo", Long.MAX_VALUE, "<sum/>", null, null, null);
+        sendStandardRequestAndAssertError(UrlMapping.FOLDER__CREATE, request, PARENT_FOLDER_NOT_FOUND);
     }
 
     @Test
     public void createFolderWithoutPermission() throws IOException {
         // trying to create a folder in root folder#1
-        CreateFolderRequest request  = new CreateFolderRequest("foo", 1L, "<sum/>", null, null, null);
-        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__CREATE, request);
-        assertCinnamonError(response, ErrorCode.NO_CREATE_PERMISSION);
+        CreateFolderRequest request = new CreateFolderRequest("foo", 1L, "<sum/>", null, null, null);
+        sendStandardRequestAndAssertError(UrlMapping.FOLDER__CREATE, request, NO_CREATE_PERMISSION);
     }
 
     @Test
@@ -524,23 +488,20 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createFolderWithTypeNotFound() throws IOException {
-        CreateFolderRequest request  = new CreateFolderRequest("untyped folder", createFolderId, "<sum/>", null, null, Long.MAX_VALUE);
-        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__CREATE, request);
-        assertCinnamonError(response, ErrorCode.FOLDER_TYPE_NOT_FOUND);
+        CreateFolderRequest request = new CreateFolderRequest("untyped folder", createFolderId, "<sum/>", null, null, Long.MAX_VALUE);
+        sendStandardRequestAndAssertError(UrlMapping.FOLDER__CREATE, request, FOLDER_TYPE_NOT_FOUND);
     }
 
     @Test
     public void createFolderWithoutValidUserAccount() throws IOException {
-        CreateFolderRequest request  = new CreateFolderRequest("folder without owner", createFolderId, "<sum/>", Long.MAX_VALUE, null, null);
-        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__CREATE, request);
-        assertCinnamonError(response, ErrorCode.USER_ACCOUNT_NOT_FOUND);
+        CreateFolderRequest request = new CreateFolderRequest("folder without owner", createFolderId, "<sum/>", Long.MAX_VALUE, null, null);
+        sendStandardRequestAndAssertError(UrlMapping.FOLDER__CREATE, request, USER_ACCOUNT_NOT_FOUND);
     }
 
     @Test
     public void createFolderWithoutValidAcl() throws IOException {
-        CreateFolderRequest request  = new CreateFolderRequest("folder without acl", createFolderId, "<sum/>", null, Long.MAX_VALUE, null);
-        HttpResponse        response = sendStandardRequest(UrlMapping.FOLDER__CREATE, request);
-        assertCinnamonError(response, ErrorCode.ACL_NOT_FOUND);
+        CreateFolderRequest request = new CreateFolderRequest("folder without acl", createFolderId, "<sum/>", null, Long.MAX_VALUE, null);
+        sendStandardRequestAndAssertError(UrlMapping.FOLDER__CREATE, request, ACL_NOT_FOUND);
     }
 
     @Test

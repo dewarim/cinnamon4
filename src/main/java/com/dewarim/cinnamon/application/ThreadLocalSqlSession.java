@@ -14,7 +14,7 @@ public class ThreadLocalSqlSession {
     private  static final Logger log = LogManager.getLogger(ThreadLocalSqlSession.class);
     
     static DbSessionFactory dbSessionFactory;
-    static TransactionIsolationLevel transactionIsolationLevel = TransactionIsolationLevel.REPEATABLE_READ;
+    static TransactionIsolationLevel transactionIsolationLevel = TransactionIsolationLevel.READ_COMMITTED;
     
     private static final ThreadLocal<SqlSession> localSqlSession = new ThreadLocal<>() {
         @Override

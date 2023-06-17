@@ -1,41 +1,12 @@
 package com.dewarim.cinnamon.client;
 
 import com.dewarim.cinnamon.api.UrlMapping;
-import com.dewarim.cinnamon.model.Acl;
-import com.dewarim.cinnamon.model.AclGroup;
-import com.dewarim.cinnamon.model.ChangeTrigger;
-import com.dewarim.cinnamon.model.ConfigEntry;
-import com.dewarim.cinnamon.model.Folder;
-import com.dewarim.cinnamon.model.FolderType;
-import com.dewarim.cinnamon.model.Format;
-import com.dewarim.cinnamon.model.Group;
-import com.dewarim.cinnamon.model.IndexItem;
-import com.dewarim.cinnamon.model.IndexMode;
-import com.dewarim.cinnamon.model.Language;
-import com.dewarim.cinnamon.model.Lifecycle;
-import com.dewarim.cinnamon.model.LifecycleState;
-import com.dewarim.cinnamon.model.Meta;
-import com.dewarim.cinnamon.model.MetasetType;
-import com.dewarim.cinnamon.model.ObjectSystemData;
-import com.dewarim.cinnamon.model.ObjectType;
-import com.dewarim.cinnamon.model.Permission;
-import com.dewarim.cinnamon.model.UiLanguage;
-import com.dewarim.cinnamon.model.UrlMappingInfo;
-import com.dewarim.cinnamon.model.UserAccount;
+import com.dewarim.cinnamon.model.*;
 import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.links.LinkType;
 import com.dewarim.cinnamon.model.relations.Relation;
 import com.dewarim.cinnamon.model.relations.RelationType;
-import com.dewarim.cinnamon.model.request.CreateMetaRequest;
-import com.dewarim.cinnamon.model.request.CreateNewVersionRequest;
-import com.dewarim.cinnamon.model.request.DeleteAllMetasRequest;
-import com.dewarim.cinnamon.model.request.DeleteMetaRequest;
-import com.dewarim.cinnamon.model.request.IdListRequest;
-import com.dewarim.cinnamon.model.request.IdRequest;
-import com.dewarim.cinnamon.model.request.ListUrlMappingInfoRequest;
-import com.dewarim.cinnamon.model.request.MetaRequest;
-import com.dewarim.cinnamon.model.request.SetSummaryRequest;
-import com.dewarim.cinnamon.model.request.UpdateMetaRequest;
+import com.dewarim.cinnamon.model.request.*;
 import com.dewarim.cinnamon.model.request.acl.AclInfoRequest;
 import com.dewarim.cinnamon.model.request.acl.CreateAclRequest;
 import com.dewarim.cinnamon.model.request.acl.DeleteAclRequest;
@@ -46,17 +17,8 @@ import com.dewarim.cinnamon.model.request.aclGroup.ListAclGroupRequest;
 import com.dewarim.cinnamon.model.request.aclGroup.UpdateAclGroupRequest;
 import com.dewarim.cinnamon.model.request.changeTrigger.CreateChangeTriggerRequest;
 import com.dewarim.cinnamon.model.request.changeTrigger.ListChangeTriggerRequest;
-import com.dewarim.cinnamon.model.request.configEntry.ConfigEntryRequest;
-import com.dewarim.cinnamon.model.request.configEntry.CreateConfigEntryRequest;
-import com.dewarim.cinnamon.model.request.configEntry.DeleteConfigEntryRequest;
-import com.dewarim.cinnamon.model.request.configEntry.ListConfigEntryRequest;
-import com.dewarim.cinnamon.model.request.configEntry.UpdateConfigEntryRequest;
-import com.dewarim.cinnamon.model.request.folder.CreateFolderRequest;
-import com.dewarim.cinnamon.model.request.folder.DeleteFolderRequest;
-import com.dewarim.cinnamon.model.request.folder.FolderPathRequest;
-import com.dewarim.cinnamon.model.request.folder.FolderRequest;
-import com.dewarim.cinnamon.model.request.folder.SingleFolderRequest;
-import com.dewarim.cinnamon.model.request.folder.UpdateFolderRequest;
+import com.dewarim.cinnamon.model.request.configEntry.*;
+import com.dewarim.cinnamon.model.request.folder.*;
 import com.dewarim.cinnamon.model.request.folderType.CreateFolderTypeRequest;
 import com.dewarim.cinnamon.model.request.folderType.DeleteFolderTypeRequest;
 import com.dewarim.cinnamon.model.request.folderType.ListFolderTypeRequest;
@@ -71,45 +33,24 @@ import com.dewarim.cinnamon.model.request.group.ListGroupRequest;
 import com.dewarim.cinnamon.model.request.group.UpdateGroupRequest;
 import com.dewarim.cinnamon.model.request.groupUser.AddUserToGroupsRequest;
 import com.dewarim.cinnamon.model.request.groupUser.RemoveUserFromGroupsRequest;
-import com.dewarim.cinnamon.model.request.index.CreateIndexItemRequest;
-import com.dewarim.cinnamon.model.request.index.DeleteIndexItemRequest;
-import com.dewarim.cinnamon.model.request.index.IndexInfoRequest;
-import com.dewarim.cinnamon.model.request.index.ListIndexItemRequest;
-import com.dewarim.cinnamon.model.request.index.ReindexRequest;
-import com.dewarim.cinnamon.model.request.index.UpdateIndexItemRequest;
+import com.dewarim.cinnamon.model.request.index.*;
 import com.dewarim.cinnamon.model.request.language.CreateLanguageRequest;
 import com.dewarim.cinnamon.model.request.language.DeleteLanguageRequest;
 import com.dewarim.cinnamon.model.request.language.ListLanguageRequest;
 import com.dewarim.cinnamon.model.request.language.UpdateLanguageRequest;
-import com.dewarim.cinnamon.model.request.lifecycle.CreateLifecycleRequest;
-import com.dewarim.cinnamon.model.request.lifecycle.DeleteLifecycleRequest;
-import com.dewarim.cinnamon.model.request.lifecycle.LifecycleRequest;
-import com.dewarim.cinnamon.model.request.lifecycle.ListLifecycleRequest;
-import com.dewarim.cinnamon.model.request.lifecycle.UpdateLifecycleRequest;
+import com.dewarim.cinnamon.model.request.lifecycle.*;
 import com.dewarim.cinnamon.model.request.lifecycleState.AttachLifecycleRequest;
 import com.dewarim.cinnamon.model.request.lifecycleState.ChangeLifecycleStateRequest;
 import com.dewarim.cinnamon.model.request.lifecycleState.CreateLifecycleStateRequest;
 import com.dewarim.cinnamon.model.request.lifecycleState.UpdateLifecycleStateRequest;
-import com.dewarim.cinnamon.model.request.link.CreateLinkRequest;
-import com.dewarim.cinnamon.model.request.link.DeleteLinkRequest;
-import com.dewarim.cinnamon.model.request.link.GetLinksRequest;
-import com.dewarim.cinnamon.model.request.link.LinkWrapper;
-import com.dewarim.cinnamon.model.request.link.UpdateLinkRequest;
+import com.dewarim.cinnamon.model.request.link.*;
 import com.dewarim.cinnamon.model.request.metasetType.CreateMetasetTypeRequest;
 import com.dewarim.cinnamon.model.request.metasetType.DeleteMetasetTypeRequest;
 import com.dewarim.cinnamon.model.request.metasetType.ListMetasetTypeRequest;
 import com.dewarim.cinnamon.model.request.metasetType.UpdateMetasetTypeRequest;
 import com.dewarim.cinnamon.model.request.objectType.CreateObjectTypeRequest;
 import com.dewarim.cinnamon.model.request.objectType.ListObjectTypeRequest;
-import com.dewarim.cinnamon.model.request.osd.CopyOsdRequest;
-import com.dewarim.cinnamon.model.request.osd.CreateOsdRequest;
-import com.dewarim.cinnamon.model.request.osd.DeleteOsdRequest;
-import com.dewarim.cinnamon.model.request.osd.GetRelationsRequest;
-import com.dewarim.cinnamon.model.request.osd.OsdByFolderRequest;
-import com.dewarim.cinnamon.model.request.osd.OsdRequest;
-import com.dewarim.cinnamon.model.request.osd.SetContentRequest;
-import com.dewarim.cinnamon.model.request.osd.UpdateOsdRequest;
-import com.dewarim.cinnamon.model.request.osd.VersionPredicate;
+import com.dewarim.cinnamon.model.request.osd.*;
 import com.dewarim.cinnamon.model.request.permission.ChangePermissionsRequest;
 import com.dewarim.cinnamon.model.request.permission.ListPermissionRequest;
 import com.dewarim.cinnamon.model.request.relation.CreateRelationRequest;
@@ -117,52 +58,15 @@ import com.dewarim.cinnamon.model.request.relation.DeleteRelationRequest;
 import com.dewarim.cinnamon.model.request.relation.SearchRelationRequest;
 import com.dewarim.cinnamon.model.request.relationType.CreateRelationTypeRequest;
 import com.dewarim.cinnamon.model.request.relationType.DeleteRelationTypeRequest;
+import com.dewarim.cinnamon.model.request.relationType.ListRelationTypeRequest;
 import com.dewarim.cinnamon.model.request.search.SearchIdsRequest;
 import com.dewarim.cinnamon.model.request.search.SearchType;
 import com.dewarim.cinnamon.model.request.uiLanguage.CreateUiLanguageRequest;
 import com.dewarim.cinnamon.model.request.uiLanguage.DeleteUiLanguageRequest;
 import com.dewarim.cinnamon.model.request.uiLanguage.ListUiLanguageRequest;
 import com.dewarim.cinnamon.model.request.uiLanguage.UpdateUiLanguageRequest;
-import com.dewarim.cinnamon.model.request.user.CreateUserAccountRequest;
-import com.dewarim.cinnamon.model.request.user.GetUserAccountRequest;
-import com.dewarim.cinnamon.model.request.user.ListUserAccountRequest;
-import com.dewarim.cinnamon.model.request.user.SetPasswordRequest;
-import com.dewarim.cinnamon.model.request.user.SetUserConfigRequest;
-import com.dewarim.cinnamon.model.request.user.UpdateUserAccountRequest;
-import com.dewarim.cinnamon.model.request.user.UserPermissionRequest;
-import com.dewarim.cinnamon.model.response.AclGroupWrapper;
-import com.dewarim.cinnamon.model.response.AclWrapper;
-import com.dewarim.cinnamon.model.response.ChangeTriggerWrapper;
-import com.dewarim.cinnamon.model.response.CinnamonConnection;
-import com.dewarim.cinnamon.model.response.CinnamonError;
-import com.dewarim.cinnamon.model.response.CinnamonErrorWrapper;
-import com.dewarim.cinnamon.model.response.ConfigEntryWrapper;
-import com.dewarim.cinnamon.model.response.DeleteResponse;
-import com.dewarim.cinnamon.model.response.DisconnectResponse;
-import com.dewarim.cinnamon.model.response.FolderTypeWrapper;
-import com.dewarim.cinnamon.model.response.FolderWrapper;
-import com.dewarim.cinnamon.model.response.FormatWrapper;
-import com.dewarim.cinnamon.model.response.GenericResponse;
-import com.dewarim.cinnamon.model.response.GroupWrapper;
-import com.dewarim.cinnamon.model.response.IndexItemWrapper;
-import com.dewarim.cinnamon.model.response.LanguageWrapper;
-import com.dewarim.cinnamon.model.response.LifecycleStateWrapper;
-import com.dewarim.cinnamon.model.response.LifecycleWrapper;
-import com.dewarim.cinnamon.model.response.LinkResponse;
-import com.dewarim.cinnamon.model.response.LinkResponseWrapper;
-import com.dewarim.cinnamon.model.response.MetaWrapper;
-import com.dewarim.cinnamon.model.response.MetasetTypeWrapper;
-import com.dewarim.cinnamon.model.response.ObjectTypeWrapper;
-import com.dewarim.cinnamon.model.response.OsdWrapper;
-import com.dewarim.cinnamon.model.response.PermissionWrapper;
-import com.dewarim.cinnamon.model.response.RelationTypeWrapper;
-import com.dewarim.cinnamon.model.response.RelationWrapper;
-import com.dewarim.cinnamon.model.response.SearchIdsResponse;
-import com.dewarim.cinnamon.model.response.Summary;
-import com.dewarim.cinnamon.model.response.SummaryWrapper;
-import com.dewarim.cinnamon.model.response.UiLanguageWrapper;
-import com.dewarim.cinnamon.model.response.UrlMappingInfoWrapper;
-import com.dewarim.cinnamon.model.response.UserAccountWrapper;
+import com.dewarim.cinnamon.model.request.user.*;
+import com.dewarim.cinnamon.model.response.*;
 import com.dewarim.cinnamon.model.response.index.IndexInfoResponse;
 import com.dewarim.cinnamon.model.response.index.ReindexResponse;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -254,7 +158,7 @@ public class CinnamonClient {
                 .setUri((String.format("%s://%s:%s", protocol, host, port) + urlMapping.getPath()))
                 .addHeader("ticket", getTicket(false))
                 .setEntity(multipartEntity);
-        return httpClient.execute(requestBuilder.build(), response -> response);
+        return httpClient.execute(requestBuilder.build(), StandardResponse::new);
     }
 
     /**
@@ -271,33 +175,51 @@ public class CinnamonClient {
         ClassicRequestBuilder requestBuilder = ClassicRequestBuilder.create("POST")
                 .setUri((String.format("%s://%s:%s", protocol, host, port) + urlMapping.getPath()))
                 .addHeader("ticket", getTicket(false))
-                .addHeader("Content-type",APPLICATION_XML.withCharset(StandardCharsets.UTF_8).toString() )
-                .setEntity(requestStr);
-        return httpClient.execute(requestBuilder.build(), response -> response);
+                .setEntity(requestStr, APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
+        return httpClient.execute(requestBuilder.build(), StandardResponse::new);
+    }
+
+    public static String responseToString(ClassicHttpResponse response) throws IOException {
+        return new String(response.getEntity().getContent().readAllBytes());
+    }
+
+    public class WrappedRequest<T, W extends Wrapper<T>> {
+        public List<T> send(UrlMapping urlMapping, Object request, Unwrapper<T, W> unwrapper, int expectedSize) throws IOException {
+            String requestStr = mapper.writeValueAsString(request);
+            ClassicRequestBuilder requestBuilder = ClassicRequestBuilder.create("POST")
+                    .setUri((String.format("%s://%s:%s", protocol, host, port) + urlMapping.getPath()))
+                    .addHeader("ticket", getTicket(false))
+                    .addHeader("Content-type", APPLICATION_XML.withCharset(StandardCharsets.UTF_8).toString())
+                    .setEntity(requestStr);
+            return httpClient.execute(requestBuilder.build(), response -> {
+                verifyResponseIsOkay(response);
+                return unwrapper.unwrap(response, expectedSize);
+            });
+        }
     }
 
     public UserAccount getUser(String name) throws IOException {
-        GetUserAccountRequest userInfoRequest = new GetUserAccountRequest(null, name);
-        ClassicHttpResponse   response        = sendStandardRequest(UrlMapping.USER__GET, userInfoRequest);
-        return userUnwrapper.unwrap(response, 1).get(0);
+        GetUserAccountRequest request = new GetUserAccountRequest(null, name);
+        return new WrappedRequest<UserAccount, UserAccountWrapper>().send(USER__GET, request, userUnwrapper, 1).get(0);
     }
 
     public UserAccount getUser(Long id) throws IOException {
-        GetUserAccountRequest request  = new GetUserAccountRequest(id, null);
-        ClassicHttpResponse   response = sendStandardRequest(UrlMapping.USER__GET, request);
-        return userUnwrapper.unwrap(response, 1).get(0);
+        GetUserAccountRequest request = new GetUserAccountRequest(id, null);
+        return new WrappedRequest<UserAccount, UserAccountWrapper>().send(USER__GET, request, userUnwrapper, 1).get(0);
     }
 
     protected String getTicket(boolean newTicket) throws IOException {
         if ((ticket == null && generateTicketIfNull) || newTicket) {
             String url = "http://localhost:" + port + UrlMapping.CINNAMON__CONNECT.getPath();
-            var response = httpClient.execute(ClassicRequestBuilder.post(url)
+            CinnamonConnection cinnamonConnection = httpClient.execute(ClassicRequestBuilder.post(url)
                     .addParameter("user", username)
-                    .addParameter("password",password)
-                    .build(), response1 -> response1);
-            verifyResponseIsOkay(response);
-            String             tokenRequestResult = new String(response.getEntity().getContent().readAllBytes());
-            CinnamonConnection cinnamonConnection = mapper.readValue(tokenRequestResult, CinnamonConnection.class);
+                    .addParameter("password", password)
+                    .build(), response -> {
+                verifyResponseIsOkay(response);
+                String tokenRequestResult = new String(response.getEntity().getContent().readAllBytes());
+                return mapper.readValue(tokenRequestResult, CinnamonConnection.class);
+
+            });
             ticket = cinnamonConnection.getTicket();
         }
         return ticket;
@@ -849,10 +771,10 @@ public class CinnamonClient {
         String responseFormat = Objects.requireNonNullElse(format, "xml");
         String url            = "http://localhost:" + port + UrlMapping.CINNAMON__CONNECT.getPath();
         var response = httpClient.execute(ClassicRequestBuilder.post(url)
-                        .addParameter("user",username)
-                        .addParameter("password",password)
-                        .addParameter("format",responseFormat)
-                        .build(), r -> r);
+                .addParameter("user", username)
+                .addParameter("password", password)
+                .addParameter("format", responseFormat)
+                .build(), StandardResponse::new);
         verifyResponseIsOkay(response);
         return new String(response.getEntity().getContent().readAllBytes());
     }
@@ -1300,7 +1222,7 @@ public class CinnamonClient {
         var response = httpClient.execute(ClassicRequestBuilder.post("http://localhost:" + port + TEST__ECHO.getPath())
                 .addHeader("ticket", getTicket(false))
                 .setEntity(message, APPLICATION_XML.withCharset(StandardCharsets.UTF_8))
-                        .build(),r -> r);
+                .build(), StandardResponse::new);
         verifyResponseIsOkay(response);
         return new String(response.getEntity().getContent().readAllBytes());
     }
@@ -1315,6 +1237,11 @@ public class CinnamonClient {
         CreateChangeTriggerRequest request  = new CreateChangeTriggerRequest(List.of(changeTrigger));
         ClassicHttpResponse        response = sendStandardRequest(CHANGE_TRIGGER__CREATE, request);
         return changeTriggerUnwrapper.unwrap(response, 1).get(0);
+    }
+
+    public List<RelationType> getRelationTypes() throws IOException {
+        ClassicHttpResponse response = sendStandardRequest(UrlMapping.RELATION_TYPE__LIST, new ListRelationTypeRequest());
+        return relationTypeUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
     static class SingletonUnwrapper<S> {
@@ -1340,7 +1267,7 @@ public class CinnamonClient {
             throw new CinnamonClientException(wrapper);
         }
         if (response.getCode() != SC_OK) {
-            String     message    = String.valueOf(response.getCode());
+            String message = String.valueOf(response.getCode());
             log.warn("Failed to unwrap non-okay response with status: " + message);
             log.info("Response: " + new String(response.getEntity().getContent().readAllBytes()));
             throw new CinnamonClientException(message);

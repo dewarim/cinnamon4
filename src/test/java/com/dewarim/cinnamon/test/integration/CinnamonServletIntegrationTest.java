@@ -4,15 +4,17 @@ import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.servlet.CinnamonServlet;
 import com.dewarim.cinnamon.client.CinnamonClient;
+import com.dewarim.cinnamon.client.StandardResponse;
 import com.dewarim.cinnamon.model.response.CinnamonConnection;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.fluent.Request;
+import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.Objects;
 
 import static com.dewarim.cinnamon.ErrorCode.*;
+import static org.apache.hc.core5.http.ContentType.APPLICATION_XML;
+import static org.apache.hc.core5.http.HttpHeaders.CONTENT_TYPE;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class CinnamonServletIntegrationTest extends CinnamonIntegrationTest {
@@ -92,9 +94,14 @@ public class CinnamonServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void infoPageReturnsBuildNumber() throws IOException {
-        HttpResponse response = Request.Get("http://localhost:" + cinnamonTestPort + UrlMapping.CINNAMON__INFO.getPath()).execute().returnResponse();
-        assertResponseOkay(response);
-        CinnamonServlet.CinnamonVersion version         = mapper.readValue(response.getEntity().getContent(), CinnamonServlet.CinnamonVersion.class);
+        CinnamonServlet.CinnamonVersion version;
+        try (StandardResponse response = httpClient.execute(
+                ClassicRequestBuilder.get("http://localhost:" + cinnamonTestPort + UrlMapping.CINNAMON__INFO.getPath())
+                        .setHeader(CONTENT_TYPE,APPLICATION_XML.toString()).build(),
+                StandardResponse::new)) {
+            assertResponseOkay(response);
+            version = mapper.readValue(response.getEntity().getContent(), CinnamonServlet.CinnamonVersion.class);
+        }
         CinnamonServlet                 servlet         = new CinnamonServlet();
         CinnamonServlet.CinnamonVersion cinnamonVersion = servlet.getCinnamonVersion();
         assertEquals(version.getBuild(), cinnamonVersion.getBuild());
