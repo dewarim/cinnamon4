@@ -74,7 +74,6 @@ import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.entity.mime.FileBody;
 import org.apache.hc.client5.http.entity.mime.MultipartEntityBuilder;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
-import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.hc.core5.http.HttpEntity;
 import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
 import org.apache.logging.log4j.LogManager;
@@ -100,44 +99,44 @@ public class CinnamonClient {
 
     private static final Logger log = LogManager.getLogger(CinnamonClient.class);
 
-    private       int        port       = 9090;
-    private       String     host       = "localhost";
-    private       String     protocol   = "http";
-    private       String     username   = "admin";
-    private       String     password   = "admin";
-    private       String     ticket;
-    private final XmlMapper  mapper     = XML_MAPPER;
+    private int port = 9090;
+    private String host = "localhost";
+    private String protocol = "http";
+    private String username = "admin";
+    private String password = "admin";
+    private String ticket;
+    private final XmlMapper mapper = XML_MAPPER;
     private final HttpClient httpClient = HttpClients.createDefault();
 
-    private final Unwrapper<ChangeTrigger, ChangeTriggerWrapper>    changeTriggerUnwrapper         = new Unwrapper<>(ChangeTriggerWrapper.class);
-    private final Unwrapper<ConfigEntry, ConfigEntryWrapper>        configEntryUnwrapper           = new Unwrapper<>(ConfigEntryWrapper.class);
-    private final Unwrapper<ObjectSystemData, OsdWrapper>           osdUnwrapper                   = new Unwrapper<>(OsdWrapper.class);
-    private final Unwrapper<FolderType, FolderTypeWrapper>          folderTypeUnwrapper            = new Unwrapper<>(FolderTypeWrapper.class);
-    private final Unwrapper<ObjectType, ObjectTypeWrapper>          objectTypeUnwrapper            = new Unwrapper<>(ObjectTypeWrapper.class);
-    private final Unwrapper<Folder, FolderWrapper>                  folderUnwrapper                = new Unwrapper<>(FolderWrapper.class);
-    private final Unwrapper<Format, FormatWrapper>                  formatUnwrapper                = new Unwrapper<>(FormatWrapper.class);
-    private final Unwrapper<Meta, MetaWrapper>                      metaUnwrapper                  = new Unwrapper<>(MetaWrapper.class);
-    private final Unwrapper<UserAccount, UserAccountWrapper>        userUnwrapper                  = new Unwrapper<>(UserAccountWrapper.class);
-    private final Unwrapper<DeleteResponse, DeleteResponse>         deleteResponseWrapper          = new Unwrapper<>(DeleteResponse.class);
-    private final Unwrapper<CinnamonError, CinnamonErrorWrapper>    errorUnwrapper                 = new Unwrapper<>(CinnamonErrorWrapper.class);
-    private final Unwrapper<Acl, AclWrapper>                        aclUnwrapper                   = new Unwrapper<>(AclWrapper.class);
-    private final Unwrapper<AclGroup, AclGroupWrapper>              aclGroupUnwrapper              = new Unwrapper<>(AclGroupWrapper.class);
-    private final Unwrapper<Group, GroupWrapper>                    groupUnwrapper                 = new Unwrapper<>(GroupWrapper.class);
-    private final Unwrapper<Language, LanguageWrapper>              languageUnwrapper              = new Unwrapper<>(LanguageWrapper.class);
-    private final Unwrapper<UiLanguage, UiLanguageWrapper>          uiLanguageUnwrapper            = new Unwrapper<>(UiLanguageWrapper.class);
-    private final Unwrapper<Link, LinkWrapper>                      linkUnwrapper                  = new Unwrapper<>(LinkWrapper.class);
-    private final Unwrapper<Lifecycle, LifecycleWrapper>            lifecycleUnwrapper             = new Unwrapper<>(LifecycleWrapper.class);
-    private final Unwrapper<LifecycleState, LifecycleStateWrapper>  lifecycleStateUnwrapper        = new Unwrapper<>(LifecycleStateWrapper.class);
+    private final Unwrapper<ChangeTrigger, ChangeTriggerWrapper> changeTriggerUnwrapper = new Unwrapper<>(ChangeTriggerWrapper.class);
+    private final Unwrapper<ConfigEntry, ConfigEntryWrapper> configEntryUnwrapper = new Unwrapper<>(ConfigEntryWrapper.class);
+    private final Unwrapper<ObjectSystemData, OsdWrapper> osdUnwrapper = new Unwrapper<>(OsdWrapper.class);
+    private final Unwrapper<FolderType, FolderTypeWrapper> folderTypeUnwrapper = new Unwrapper<>(FolderTypeWrapper.class);
+    private final Unwrapper<ObjectType, ObjectTypeWrapper> objectTypeUnwrapper = new Unwrapper<>(ObjectTypeWrapper.class);
+    private final Unwrapper<Folder, FolderWrapper> folderUnwrapper = new Unwrapper<>(FolderWrapper.class);
+    private final Unwrapper<Format, FormatWrapper> formatUnwrapper = new Unwrapper<>(FormatWrapper.class);
+    private final Unwrapper<Meta, MetaWrapper> metaUnwrapper = new Unwrapper<>(MetaWrapper.class);
+    private final Unwrapper<UserAccount, UserAccountWrapper> userUnwrapper = new Unwrapper<>(UserAccountWrapper.class);
+    private final Unwrapper<DeleteResponse, DeleteResponse> deleteResponseWrapper = new Unwrapper<>(DeleteResponse.class);
+    private final Unwrapper<CinnamonError, CinnamonErrorWrapper> errorUnwrapper = new Unwrapper<>(CinnamonErrorWrapper.class);
+    private final Unwrapper<Acl, AclWrapper> aclUnwrapper = new Unwrapper<>(AclWrapper.class);
+    private final Unwrapper<AclGroup, AclGroupWrapper> aclGroupUnwrapper = new Unwrapper<>(AclGroupWrapper.class);
+    private final Unwrapper<Group, GroupWrapper> groupUnwrapper = new Unwrapper<>(GroupWrapper.class);
+    private final Unwrapper<Language, LanguageWrapper> languageUnwrapper = new Unwrapper<>(LanguageWrapper.class);
+    private final Unwrapper<UiLanguage, UiLanguageWrapper> uiLanguageUnwrapper = new Unwrapper<>(UiLanguageWrapper.class);
+    private final Unwrapper<Link, LinkWrapper> linkUnwrapper = new Unwrapper<>(LinkWrapper.class);
+    private final Unwrapper<Lifecycle, LifecycleWrapper> lifecycleUnwrapper = new Unwrapper<>(LifecycleWrapper.class);
+    private final Unwrapper<LifecycleState, LifecycleStateWrapper> lifecycleStateUnwrapper = new Unwrapper<>(LifecycleStateWrapper.class);
     // LinkResponse contains full OSD/Folder objects, Link itself contains only ids.
-    private final Unwrapper<LinkResponse, LinkResponseWrapper>      linkResponseUnwrapper          = new Unwrapper<>(LinkResponseWrapper.class);
-    private final Unwrapper<Relation, RelationWrapper>              relationUnwrapper              = new Unwrapper<>(RelationWrapper.class);
-    private final Unwrapper<RelationType, RelationTypeWrapper>      relationTypeUnwrapper          = new Unwrapper<>(RelationTypeWrapper.class);
-    private final Unwrapper<Summary, SummaryWrapper>                summaryUnwrapper               = new Unwrapper<>(SummaryWrapper.class);
-    private final Unwrapper<Permission, PermissionWrapper>          permissionUnwrapper            = new Unwrapper<>(PermissionWrapper.class);
-    private final Unwrapper<DisconnectResponse, DisconnectResponse> disconnectUnwrapper            = new Unwrapper<>(DisconnectResponse.class);
-    private final Unwrapper<MetasetType, MetasetTypeWrapper>        metasetTypeUnwrapper           = new Unwrapper<>(MetasetTypeWrapper.class);
-    private final Unwrapper<IndexItem, IndexItemWrapper>            indexItemUnwrapper             = new Unwrapper<>(IndexItemWrapper.class);
-    private final Unwrapper<UrlMappingInfo, UrlMappingInfoWrapper>  urlMappingInfoWrapperUnwrapper = new Unwrapper<>(UrlMappingInfoWrapper.class);
+    private final Unwrapper<LinkResponse, LinkResponseWrapper> linkResponseUnwrapper = new Unwrapper<>(LinkResponseWrapper.class);
+    private final Unwrapper<Relation, RelationWrapper> relationUnwrapper = new Unwrapper<>(RelationWrapper.class);
+    private final Unwrapper<RelationType, RelationTypeWrapper> relationTypeUnwrapper = new Unwrapper<>(RelationTypeWrapper.class);
+    private final Unwrapper<Summary, SummaryWrapper> summaryUnwrapper = new Unwrapper<>(SummaryWrapper.class);
+    private final Unwrapper<Permission, PermissionWrapper> permissionUnwrapper = new Unwrapper<>(PermissionWrapper.class);
+    private final Unwrapper<DisconnectResponse, DisconnectResponse> disconnectUnwrapper = new Unwrapper<>(DisconnectResponse.class);
+    private final Unwrapper<MetasetType, MetasetTypeWrapper> metasetTypeUnwrapper = new Unwrapper<>(MetasetTypeWrapper.class);
+    private final Unwrapper<IndexItem, IndexItemWrapper> indexItemUnwrapper = new Unwrapper<>(IndexItemWrapper.class);
+    private final Unwrapper<UrlMappingInfo, UrlMappingInfoWrapper> urlMappingInfoWrapperUnwrapper = new Unwrapper<>(UrlMappingInfoWrapper.class);
 
     private boolean generateTicketIfNull = true;
 
@@ -153,7 +152,7 @@ public class CinnamonClient {
         this.password = password;
     }
 
-    private ClassicHttpResponse sendStandardMultipartRequest(UrlMapping urlMapping, HttpEntity multipartEntity) throws IOException {
+    private StandardResponse sendStandardMultipartRequest(UrlMapping urlMapping, HttpEntity multipartEntity) throws IOException {
         ClassicRequestBuilder requestBuilder = ClassicRequestBuilder.create("POST")
                 .setUri((String.format("%s://%s:%s", protocol, host, port) + urlMapping.getPath()))
                 .addHeader("ticket", getTicket(false))
@@ -170,7 +169,7 @@ public class CinnamonClient {
      * @return the server's response.
      * @throws IOException if connection to server fails for some reason
      */
-    protected ClassicHttpResponse sendStandardRequest(UrlMapping urlMapping, Object request) throws IOException {
+    protected StandardResponse sendStandardRequest(UrlMapping urlMapping, Object request) throws IOException {
         String requestStr = mapper.writeValueAsString(request);
         ClassicRequestBuilder requestBuilder = ClassicRequestBuilder.create("POST")
                 .setUri((String.format("%s://%s:%s", protocol, host, port) + urlMapping.getPath()))
@@ -179,7 +178,7 @@ public class CinnamonClient {
         return httpClient.execute(requestBuilder.build(), StandardResponse::new);
     }
 
-    public static String responseToString(ClassicHttpResponse response) throws IOException {
+    public static String responseToString(StandardResponse response) throws IOException {
         return new String(response.getEntity().getContent().readAllBytes());
     }
 
@@ -192,8 +191,9 @@ public class CinnamonClient {
                     .addHeader("Content-type", APPLICATION_XML.withCharset(StandardCharsets.UTF_8).toString())
                     .setEntity(requestStr);
             return httpClient.execute(requestBuilder.build(), response -> {
-                verifyResponseIsOkay(response);
-                return unwrapper.unwrap(response, expectedSize);
+                StandardResponse standardResponse = new StandardResponse(response);
+                verifyResponseIsOkay(standardResponse);
+                return unwrapper.unwrap(standardResponse, expectedSize);
             });
         }
     }
@@ -215,7 +215,7 @@ public class CinnamonClient {
                     .addParameter("user", username)
                     .addParameter("password", password)
                     .build(), response -> {
-                verifyResponseIsOkay(response);
+                verifyResponseIsOkay(new StandardResponse(response));
                 String tokenRequestResult = new String(response.getEntity().getContent().readAllBytes());
                 return mapper.readValue(tokenRequestResult, CinnamonConnection.class);
 
@@ -226,14 +226,14 @@ public class CinnamonClient {
     }
 
     public ObjectSystemData getOsdById(long id, boolean includeSummary, boolean includeCustomMetadata) throws IOException {
-        OsdRequest          osdRequest = new OsdRequest(Collections.singletonList(id), includeSummary, includeCustomMetadata);
-        ClassicHttpResponse response   = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
+        OsdRequest osdRequest = new OsdRequest(Collections.singletonList(id), includeSummary, includeCustomMetadata);
+        StandardResponse response = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
         return unwrapOsds(response, 1).get(0);
     }
 
     public List<ObjectSystemData> getOsdsById(List<Long> ids, boolean includeSummary, boolean includeCustomMetadata) throws IOException {
-        OsdRequest          osdRequest = new OsdRequest(ids, includeSummary, includeCustomMetadata);
-        ClassicHttpResponse response   = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
+        OsdRequest osdRequest = new OsdRequest(ids, includeSummary, includeCustomMetadata);
+        StandardResponse response = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
         return unwrapOsds(response, EXPECTED_SIZE_ANY);
     }
 
@@ -241,52 +241,52 @@ public class CinnamonClient {
      * Get a list of OSDs. Do not check if all requested OSDs are returned.
      */
     public List<ObjectSystemData> getOsds(List<Long> ids, boolean includeSummary, boolean includeCustomMetadata) throws IOException {
-        OsdRequest          osdRequest = new OsdRequest(ids, includeSummary, includeCustomMetadata);
-        ClassicHttpResponse response   = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
+        OsdRequest osdRequest = new OsdRequest(ids, includeSummary, includeCustomMetadata);
+        StandardResponse response = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
         return unwrapOsds(response, EXPECTED_SIZE_ANY);
     }
 
     public OsdWrapper getOsdsInFolderWrapped(Long folderId, boolean includeSummary, boolean linksAsOsd, boolean includeCustomMetadata) throws IOException {
-        OsdByFolderRequest  osdRequest = new OsdByFolderRequest(folderId, includeSummary, linksAsOsd, includeCustomMetadata, ALL);
-        ClassicHttpResponse response   = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_FOLDER_ID, osdRequest);
+        OsdByFolderRequest osdRequest = new OsdByFolderRequest(folderId, includeSummary, linksAsOsd, includeCustomMetadata, ALL);
+        StandardResponse response = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_FOLDER_ID, osdRequest);
         verifyResponseIsOkay(response);
         return mapper.readValue(response.getEntity().getContent(), OsdWrapper.class);
     }
 
     public List<ObjectSystemData> getOsdsInFolder(Long folderId, boolean includeSummary, boolean linksAsOsd, boolean includeCustomMetadata) throws IOException {
-        OsdByFolderRequest  osdRequest = new OsdByFolderRequest(folderId, includeSummary, linksAsOsd, includeCustomMetadata, ALL);
-        ClassicHttpResponse response   = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_FOLDER_ID, osdRequest);
+        OsdByFolderRequest osdRequest = new OsdByFolderRequest(folderId, includeSummary, linksAsOsd, includeCustomMetadata, ALL);
+        StandardResponse response = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_FOLDER_ID, osdRequest);
         verifyResponseIsOkay(response);
         return unwrapOsds(response, EXPECTED_SIZE_ANY);
     }
 
     public void setSummary(Long osdId, String summary) throws IOException {
-        SetSummaryRequest   summaryRequest = new SetSummaryRequest(osdId, summary);
-        ClassicHttpResponse response       = sendStandardRequest(UrlMapping.OSD__SET_SUMMARY, summaryRequest);
+        SetSummaryRequest summaryRequest = new SetSummaryRequest(osdId, summary);
+        StandardResponse response = sendStandardRequest(UrlMapping.OSD__SET_SUMMARY, summaryRequest);
         verifyResponseIsOkay(response);
     }
 
     public void setFolderSummary(Long folderId, String summary) throws IOException {
-        SetSummaryRequest   summaryRequest = new SetSummaryRequest(folderId, summary);
-        ClassicHttpResponse response       = sendStandardRequest(FOLDER__SET_SUMMARY, summaryRequest);
+        SetSummaryRequest summaryRequest = new SetSummaryRequest(folderId, summary);
+        StandardResponse response = sendStandardRequest(FOLDER__SET_SUMMARY, summaryRequest);
         verifyResponseIsOkay(response);
     }
 
     public OsdWrapper getOsdsInFolder(Long folderId, boolean includeSummary, boolean linksAsOsd, boolean includeCustomMetadata,
                                       VersionPredicate versionPredicate) throws IOException {
-        OsdByFolderRequest  osdRequest = new OsdByFolderRequest(folderId, includeSummary, linksAsOsd, includeCustomMetadata, versionPredicate);
-        ClassicHttpResponse response   = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_FOLDER_ID, osdRequest);
+        OsdByFolderRequest osdRequest = new OsdByFolderRequest(folderId, includeSummary, linksAsOsd, includeCustomMetadata, versionPredicate);
+        StandardResponse response = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_FOLDER_ID, osdRequest);
         verifyResponseIsOkay(response);
         return mapper.readValue(response.getEntity().getContent(), OsdWrapper.class);
     }
 
-    private List<ObjectSystemData> unwrapOsds(ClassicHttpResponse response, Integer expectedSize) throws IOException {
+    private List<ObjectSystemData> unwrapOsds(StandardResponse response, Integer expectedSize) throws IOException {
         verifyResponseIsOkay(response);
         return osdUnwrapper.unwrap(response, expectedSize);
     }
 
     public List<MetasetType> listMetasetTypes() throws IOException {
-        var request  = new ListMetasetTypeRequest();
+        var request = new ListMetasetTypeRequest();
         var response = sendStandardRequest(UrlMapping.METASET_TYPE__LIST, request);
         return metasetTypeUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
@@ -306,7 +306,7 @@ public class CinnamonClient {
 //        MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
 //                .addTextBody("createOsdRequest", mapper.writeValueAsString(request),
 //                        APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
-//        ClassicHttpResponse response = sendStandardMultipartRequest(UrlMapping.OSD__CREATE_OSD, entityBuilder.build());
+//        StandardResponse response = sendStandardMultipartRequest(UrlMapping.OSD__CREATE_OSD, entityBuilder.build());
 //        assertResponseOkay(response);
 //        List<ObjectSystemData> objectSystemData = unwrapOsds(response, 1);
 //        ObjectSystemData       osd              = objectSystemData.get(0);
@@ -318,7 +318,7 @@ public class CinnamonClient {
 //        assertEquals(CREATE_FOLDER_ID, osd.getParentId());
 //    }
 
-    private void verifyResponseIsOkay(ClassicHttpResponse response) throws IOException {
+    private void verifyResponseIsOkay(StandardResponse response) throws IOException {
         if (response.containsHeader(HEADER_FIELD_CINNAMON_ERROR)) {
             CinnamonErrorWrapper wrapper = mapper.readValue(response.getEntity().getContent(), CinnamonErrorWrapper.class);
             throw new CinnamonClientException(wrapper);
@@ -329,12 +329,12 @@ public class CinnamonClient {
         }
     }
 
-    private GenericResponse parseGenericResponse(ClassicHttpResponse response) throws IOException {
+    private GenericResponse parseGenericResponse(StandardResponse response) throws IOException {
         verifyResponseIsOkay(response);
         return mapper.readValue(response.getEntity().getContent(), GenericResponse.class);
     }
 
-    private boolean verifyDeleteResponse(ClassicHttpResponse response) throws IOException {
+    private boolean verifyDeleteResponse(StandardResponse response) throws IOException {
         return deleteResponseWrapper.unwrap(response, EXPECTED_SIZE_ANY).get(0).isSuccess();
     }
 
@@ -366,20 +366,20 @@ public class CinnamonClient {
     }
 
     public boolean deleteOsd(Long id, boolean deleteDescendants, boolean deleteAllVersions) throws IOException {
-        DeleteOsdRequest    deleteRequest = new DeleteOsdRequest(Collections.singletonList(id), deleteDescendants, deleteAllVersions);
-        ClassicHttpResponse response      = sendStandardRequest(UrlMapping.OSD__DELETE, deleteRequest);
+        DeleteOsdRequest deleteRequest = new DeleteOsdRequest(Collections.singletonList(id), deleteDescendants, deleteAllVersions);
+        StandardResponse response = sendStandardRequest(UrlMapping.OSD__DELETE, deleteRequest);
         return verifyDeleteResponse(response);
     }
 
     public boolean deleteOsds(List<Long> id, boolean deleteDescendants) throws IOException {
-        DeleteOsdRequest    deleteRequest = new DeleteOsdRequest(id, deleteDescendants, false);
-        ClassicHttpResponse response      = sendStandardRequest(UrlMapping.OSD__DELETE, deleteRequest);
+        DeleteOsdRequest deleteRequest = new DeleteOsdRequest(id, deleteDescendants, false);
+        var response = sendStandardRequest(UrlMapping.OSD__DELETE, deleteRequest);
         return verifyDeleteResponse(response);
     }
 
     public ObjectSystemData createOsd(CreateOsdRequest createOsdRequest) throws IOException {
-        HttpEntity          request  = createSimpleMultipartEntity(CINNAMON_REQUEST_PART, createOsdRequest);
-        ClassicHttpResponse response = sendStandardMultipartRequest(OSD__CREATE_OSD, request);
+        HttpEntity request = createSimpleMultipartEntity(CINNAMON_REQUEST_PART, createOsdRequest);
+        var response = sendStandardMultipartRequest(OSD__CREATE_OSD, request);
         return osdUnwrapper.unwrap(response, 1).get(0);
     }
 
@@ -405,31 +405,31 @@ public class CinnamonClient {
     }
 
     public InputStream getContent(Long osdId) throws IOException {
-        IdRequest           idRequest = new IdRequest(osdId);
-        ClassicHttpResponse response  = sendStandardRequest(UrlMapping.OSD__GET_CONTENT, idRequest);
+        IdRequest idRequest = new IdRequest(osdId);
+        StandardResponse response = sendStandardRequest(UrlMapping.OSD__GET_CONTENT, idRequest);
         verifyResponseIsOkay(response);
         return response.getEntity().getContent();
     }
 
     public boolean lockOsd(Long id) throws IOException {
         IdRequest idRequest = new IdRequest(id);
-        var       response  = sendStandardRequest(UrlMapping.OSD__LOCK, idRequest);
+        var response = sendStandardRequest(UrlMapping.OSD__LOCK, idRequest);
         return parseGenericResponse(response).isSuccessful();
     }
 
     public boolean unlockOsd(Long id) throws IOException {
         IdRequest idRequest = new IdRequest(id);
-        var       response  = sendStandardRequest(UrlMapping.OSD__UNLOCK, idRequest);
+        var response = sendStandardRequest(UrlMapping.OSD__UNLOCK, idRequest);
         return parseGenericResponse(response).isSuccessful();
     }
 
     public boolean updateOsd(UpdateOsdRequest updateOsdRequest) throws IOException {
-        ClassicHttpResponse response = sendStandardRequest(OSD__UPDATE, updateOsdRequest);
+        StandardResponse response = sendStandardRequest(OSD__UPDATE, updateOsdRequest);
         return parseGenericResponse(response).isSuccessful();
     }
 
     public boolean setPassword(Long userId, String password) throws IOException {
-        ClassicHttpResponse response = sendStandardRequest(USER__SET_PASSWORD, new SetPasswordRequest(userId, password));
+        StandardResponse response = sendStandardRequest(USER__SET_PASSWORD, new SetPasswordRequest(userId, password));
         return parseGenericResponse(response).isSuccessful();
     }
 
@@ -439,36 +439,36 @@ public class CinnamonClient {
     }
 
     public List<Folder> getFolderByIdWithAncestors(Long id, boolean includeSummary) throws IOException {
-        SingleFolderRequest request  = new SingleFolderRequest(id, includeSummary);
-        var                 response = sendStandardRequest(UrlMapping.FOLDER__GET_FOLDER, request);
+        SingleFolderRequest request = new SingleFolderRequest(id, includeSummary);
+        var response = sendStandardRequest(UrlMapping.FOLDER__GET_FOLDER, request);
         return folderUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
     public Folder createFolder(Long parentId, String name, Long ownerId, Long aclId, Long typeId) throws IOException {
-        var request  = new CreateFolderRequest(name, parentId, null, ownerId, aclId, typeId);
+        var request = new CreateFolderRequest(name, parentId, null, ownerId, aclId, typeId);
         var response = sendStandardRequest(UrlMapping.FOLDER__CREATE, request);
         return folderUnwrapper.unwrap(response, 1).get(0);
     }
 
     public List<Folder> getFolders(List<Long> ids, boolean includeSummary) throws IOException {
-        FolderRequest       folderRequest = new FolderRequest(ids, includeSummary);
-        ClassicHttpResponse response      = sendStandardRequest(UrlMapping.FOLDER__GET_FOLDERS, folderRequest);
+        FolderRequest folderRequest = new FolderRequest(ids, includeSummary);
+        StandardResponse response = sendStandardRequest(UrlMapping.FOLDER__GET_FOLDERS, folderRequest);
         return folderUnwrapper.unwrap(response, ids.size());
     }
 
     public List<Meta> createFolderMeta(CreateMetaRequest metaRequest) throws IOException {
-        ClassicHttpResponse response = sendStandardRequest(UrlMapping.FOLDER__CREATE_META, metaRequest);
+        var response = sendStandardRequest(UrlMapping.FOLDER__CREATE_META, metaRequest);
         return metaUnwrapper.unwrap(response, 1);
     }
 
     public List<Meta> createFolderMeta(Long folderId, String content, Long metaTypeId) throws IOException {
-        CreateMetaRequest   metaRequest = new CreateMetaRequest(folderId, content, metaTypeId);
-        ClassicHttpResponse response    = sendStandardRequest(UrlMapping.FOLDER__CREATE_META, metaRequest);
+        CreateMetaRequest metaRequest = new CreateMetaRequest(folderId, content, metaTypeId);
+        var response = sendStandardRequest(UrlMapping.FOLDER__CREATE_META, metaRequest);
         return metaUnwrapper.unwrap(response, 1);
     }
 
     public List<Meta> createOsdMeta(CreateMetaRequest metaRequest) throws IOException {
-        ClassicHttpResponse response = sendStandardRequest(UrlMapping.OSD__CREATE_META, metaRequest);
+        var response = sendStandardRequest(UrlMapping.OSD__CREATE_META, metaRequest);
         return metaUnwrapper.unwrap(response, 1);
     }
 
@@ -477,50 +477,50 @@ public class CinnamonClient {
     }
 
     public void updateFolder(UpdateFolderRequest updateFolderRequest) throws IOException {
-        ClassicHttpResponse response = sendStandardRequest(UrlMapping.FOLDER__UPDATE, updateFolderRequest);
+        StandardResponse response = sendStandardRequest(UrlMapping.FOLDER__UPDATE, updateFolderRequest);
         verifyResponseIsOkay(response);
     }
 
     public void updateFolder(Folder folder) throws IOException {
         UpdateFolderRequest request = new UpdateFolderRequest(folder.getId(), folder.getParentId(), folder.getName(),
                 folder.getOwnerId(), folder.getTypeId(), folder.getAclId());
-        ClassicHttpResponse response = sendStandardRequest(UrlMapping.FOLDER__UPDATE, request);
+        StandardResponse response = sendStandardRequest(UrlMapping.FOLDER__UPDATE, request);
         verifyResponseIsOkay(response);
     }
 
     // FolderTypes
     public List<FolderType> createFolderTypes(List<String> names) throws IOException {
-        var                 folderTypes = names.stream().map(FolderType::new).collect(Collectors.toList());
-        ClassicHttpResponse response    = sendStandardRequest(UrlMapping.FOLDER_TYPE__CREATE, new CreateFolderTypeRequest(folderTypes));
+        var folderTypes = names.stream().map(FolderType::new).collect(Collectors.toList());
+        StandardResponse response = sendStandardRequest(UrlMapping.FOLDER_TYPE__CREATE, new CreateFolderTypeRequest(folderTypes));
         return folderTypeUnwrapper.unwrap(response, names.size());
     }
 
     public boolean deleteFolderTypes(List<Long> ids) throws IOException {
-        ClassicHttpResponse response = sendStandardRequest(UrlMapping.FOLDER_TYPE__DELETE, new DeleteFolderTypeRequest(ids));
+        StandardResponse response = sendStandardRequest(UrlMapping.FOLDER_TYPE__DELETE, new DeleteFolderTypeRequest(ids));
         return verifyDeleteResponse(response);
     }
 
     public List<FolderType> updateFolderTypes(List<FolderType> types) throws IOException {
-        ClassicHttpResponse response = sendStandardRequest(UrlMapping.FOLDER_TYPE__UPDATE, new UpdateFolderTypeRequest(types));
+        StandardResponse response = sendStandardRequest(UrlMapping.FOLDER_TYPE__UPDATE, new UpdateFolderTypeRequest(types));
         return folderTypeUnwrapper.unwrap(response, types.size());
     }
 
     // Acls
     public List<Acl> createAcls(List<String> names) throws IOException {
-        CreateAclRequest    aclRequest = new CreateAclRequest(names.stream().map(Acl::new).collect(Collectors.toList()));
-        ClassicHttpResponse response   = sendStandardRequest(UrlMapping.ACL__CREATE, aclRequest);
+        CreateAclRequest aclRequest = new CreateAclRequest(names.stream().map(Acl::new).collect(Collectors.toList()));
+        StandardResponse response = sendStandardRequest(UrlMapping.ACL__CREATE, aclRequest);
         return aclUnwrapper.unwrap(response, aclRequest.list().size());
     }
 
     public Acl createAcl(String name) throws IOException {
-        CreateAclRequest    aclRequest = new CreateAclRequest(List.of(new Acl(name)));
-        ClassicHttpResponse response   = sendStandardRequest(UrlMapping.ACL__CREATE, aclRequest);
+        CreateAclRequest aclRequest = new CreateAclRequest(List.of(new Acl(name)));
+        StandardResponse response = sendStandardRequest(UrlMapping.ACL__CREATE, aclRequest);
         return aclUnwrapper.unwrap(response, 1).get(0);
     }
 
     public boolean deleteAcl(List<Long> ids) throws IOException {
         DeleteAclRequest deleteRequest = new DeleteAclRequest(ids);
-        var              response      = sendStandardRequest(UrlMapping.ACL__DELETE, deleteRequest);
+        var response = sendStandardRequest(UrlMapping.ACL__DELETE, deleteRequest);
         return verifyDeleteResponse(response);
     }
 
@@ -552,72 +552,72 @@ public class CinnamonClient {
 
     // AclGroups
     public List<AclGroup> listAclGroups() throws IOException {
-        ClassicHttpResponse response = sendStandardRequest(UrlMapping.ACL_GROUP__LIST, new ListAclGroupRequest());
+        StandardResponse response = sendStandardRequest(UrlMapping.ACL_GROUP__LIST, new ListAclGroupRequest());
         return aclGroupUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
     public List<AclGroup> createAclGroups(List<AclGroup> aclGroups) throws IOException {
-        CreateAclGroupRequest request  = new CreateAclGroupRequest(aclGroups);
-        ClassicHttpResponse   response = sendStandardRequest(UrlMapping.ACL_GROUP__CREATE, request);
+        CreateAclGroupRequest request = new CreateAclGroupRequest(aclGroups);
+        StandardResponse response = sendStandardRequest(UrlMapping.ACL_GROUP__CREATE, request);
         return aclGroupUnwrapper.unwrap(response, aclGroups.size());
     }
 
     public List<AclGroup> updateAclGroups(UpdateAclGroupRequest request) throws IOException {
-        ClassicHttpResponse response = sendStandardRequest(UrlMapping.ACL_GROUP__UPDATE, request);
+        StandardResponse response = sendStandardRequest(UrlMapping.ACL_GROUP__UPDATE, request);
         return aclGroupUnwrapper.unwrap(response, request.list().size());
     }
 
     public boolean deleteAclGroups(List<Long> ids) throws IOException {
-        ClassicHttpResponse response = sendStandardRequest(UrlMapping.ACL_GROUP__DELETE, new DeleteAclGroupRequest(ids));
+        StandardResponse response = sendStandardRequest(UrlMapping.ACL_GROUP__DELETE, new DeleteAclGroupRequest(ids));
         return verifyDeleteResponse(response);
     }
 
     // Groups
     public List<Group> createGroupsByName(List<String> groupNames) throws IOException {
-        var request  = new CreateGroupRequest(groupNames.stream().map(Group::new).collect(Collectors.toList()));
+        var request = new CreateGroupRequest(groupNames.stream().map(Group::new).collect(Collectors.toList()));
         var response = sendStandardRequest(UrlMapping.GROUP__CREATE, request);
         return groupUnwrapper.unwrap(response, groupNames.size());
     }
 
     public List<Group> createGroups(List<Group> groups) throws IOException {
-        var request  = new CreateGroupRequest(groups);
+        var request = new CreateGroupRequest(groups);
         var response = sendStandardRequest(UrlMapping.GROUP__CREATE, request);
         return groupUnwrapper.unwrap(response, groups.size());
     }
 
     public Group createGroup(Group group) throws IOException {
-        var request  = new CreateGroupRequest(List.of(group));
+        var request = new CreateGroupRequest(List.of(group));
         var response = sendStandardRequest(UrlMapping.GROUP__CREATE, request);
         return groupUnwrapper.unwrap(response, 1).get(0);
     }
 
     public List<Group> listGroups() throws IOException {
-        var request  = new ListGroupRequest();
+        var request = new ListGroupRequest();
         var response = sendStandardRequest(UrlMapping.GROUP__LIST, request);
         return groupUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
     public boolean deleteGroups(List<Long> ids) throws IOException {
-        var request  = new DeleteGroupRequest(ids);
+        var request = new DeleteGroupRequest(ids);
         var response = sendStandardRequest(UrlMapping.GROUP__DELETE, request);
         return verifyDeleteResponse(response);
     }
 
     public List<Group> updateGroups(List<Group> groups) throws IOException {
-        var request  = new UpdateGroupRequest(groups);
+        var request = new UpdateGroupRequest(groups);
         var response = sendStandardRequest(UrlMapping.GROUP__UPDATE, request);
         return groupUnwrapper.unwrap(response, groups.size());
     }
 
     // GroupUsers
     public void addUserToGroups(Long userId, List<Long> ids) throws IOException {
-        var request  = new AddUserToGroupsRequest(userId, ids);
+        var request = new AddUserToGroupsRequest(userId, ids);
         var response = sendStandardRequest(UrlMapping.GROUP__ADD_USER_TO_GROUPS, request);
         verifyResponseIsOkay(response);
     }
 
     public void removeUserFromGroups(Long userId, List<Long> ids) throws IOException {
-        var request  = new RemoveUserFromGroupsRequest(userId, ids);
+        var request = new RemoveUserFromGroupsRequest(userId, ids);
         var response = sendStandardRequest(UrlMapping.GROUP__REMOVE_USER_FROM_GROUPS, request);
         verifyResponseIsOkay(response);
     }
@@ -625,50 +625,50 @@ public class CinnamonClient {
     // Links
     public List<Link> updateLinks(List<Link> links) throws IOException {
         var updateRequest = new UpdateLinkRequest(links);
-        var response      = sendStandardRequest(UrlMapping.LINK__UPDATE, updateRequest);
+        var response = sendStandardRequest(UrlMapping.LINK__UPDATE, updateRequest);
         return linkUnwrapper.unwrap(response, links.size());
     }
 
     public List<Link> createLinks(List<Link> links) throws IOException {
         var createLinkRequest = new CreateLinkRequest(links);
-        var response          = sendStandardRequest(UrlMapping.LINK__CREATE, createLinkRequest);
+        var response = sendStandardRequest(UrlMapping.LINK__CREATE, createLinkRequest);
         return linkUnwrapper.unwrap(response, links.size());
     }
 
     public Link createLinkToFolder(Long parentId, Long aclId, Long ownerId, Long folderId) throws IOException {
-        var link              = new Link(LinkType.FOLDER, ownerId, aclId, parentId, folderId, null);
+        var link = new Link(LinkType.FOLDER, ownerId, aclId, parentId, folderId, null);
         var createLinkRequest = new CreateLinkRequest(List.of(link));
-        var response          = sendStandardRequest(UrlMapping.LINK__CREATE, createLinkRequest);
+        var response = sendStandardRequest(UrlMapping.LINK__CREATE, createLinkRequest);
         return linkUnwrapper.unwrap(response, 1).get(0);
     }
 
     public Link createLinkToOsd(Long parentId, Long aclId, Long ownerId, Long objectId) throws IOException {
-        var link              = new Link(LinkType.OBJECT, ownerId, aclId, parentId, null, objectId);
+        var link = new Link(LinkType.OBJECT, ownerId, aclId, parentId, null, objectId);
         var createLinkRequest = new CreateLinkRequest(List.of(link));
-        var response          = sendStandardRequest(UrlMapping.LINK__CREATE, createLinkRequest);
+        var response = sendStandardRequest(UrlMapping.LINK__CREATE, createLinkRequest);
         return linkUnwrapper.unwrap(response, 1).get(0);
     }
 
     public Link updateLink(Link link) throws IOException {
         var updateLinkRequest = new UpdateLinkRequest(List.of(link));
-        var response          = sendStandardRequest(UrlMapping.LINK__UPDATE, updateLinkRequest);
+        var response = sendStandardRequest(UrlMapping.LINK__UPDATE, updateLinkRequest);
         return linkUnwrapper.unwrap(response, 1).get(0);
     }
 
     public boolean deleteLinks(List<Long> ids) throws IOException {
-        var request  = new DeleteLinkRequest(ids);
+        var request = new DeleteLinkRequest(ids);
         var response = sendStandardRequest(UrlMapping.LINK__DELETE, request);
         return verifyDeleteResponse(response);
     }
 
     public List<LinkResponse> getLinksById(List<Long> ids, boolean includeSummary) throws IOException {
-        var request  = new GetLinksRequest(ids, includeSummary);
+        var request = new GetLinksRequest(ids, includeSummary);
         var response = sendStandardRequest(UrlMapping.LINK__GET_LINKS_BY_ID, request);
         return linkResponseUnwrapper.unwrap(response, ids.size());
     }
 
     public LinkResponse getLinkById(Long id, boolean includeSummary) throws IOException {
-        var request  = new GetLinksRequest(List.of(id), includeSummary);
+        var request = new GetLinksRequest(List.of(id), includeSummary);
         var response = sendStandardRequest(UrlMapping.LINK__GET_LINKS_BY_ID, request);
         return linkResponseUnwrapper.unwrap(response, 1).get(0);
     }
@@ -682,7 +682,7 @@ public class CinnamonClient {
 
     // Permissions
     public List<Permission> getUserPermissions(Long userId, Long aclId) throws IOException {
-        var request  = new UserPermissionRequest(userId, aclId);
+        var request = new UserPermissionRequest(userId, aclId);
         var response = sendStandardRequest(UrlMapping.PERMISSION__GET_USER_PERMISSIONS, request);
         return permissionUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
@@ -693,7 +693,7 @@ public class CinnamonClient {
     }
 
     public void addAndRemovePermissions(Long aclGroupId, List<Long> permissionsToAdd, List<Long> permissionsToRemove) throws IOException {
-        var request  = new ChangePermissionsRequest(aclGroupId, permissionsToAdd, permissionsToRemove);
+        var request = new ChangePermissionsRequest(aclGroupId, permissionsToAdd, permissionsToRemove);
         var response = sendStandardRequest(UrlMapping.PERMISSION__CHANGE_PERMISSIONS, request);
         verifyResponseIsOkay(response);
     }
@@ -702,20 +702,20 @@ public class CinnamonClient {
     public Relation createRelation(Long leftId, Long rightId, Long typeId, String metadata) throws IOException {
         // create
         var createRequest = new CreateRelationRequest(leftId, rightId, typeId, metadata);
-        var response      = sendStandardRequest(UrlMapping.RELATION__CREATE, createRequest);
+        var response = sendStandardRequest(UrlMapping.RELATION__CREATE, createRequest);
         return relationUnwrapper.unwrap(response, 1).get(0);
     }
 
     public boolean deleteRelationTypes(List<Long> ids) throws IOException {
         var deleteRequest = new DeleteRelationTypeRequest(ids);
-        var response      = sendStandardRequest(UrlMapping.RELATION_TYPE__DELETE, deleteRequest);
+        var response = sendStandardRequest(UrlMapping.RELATION_TYPE__DELETE, deleteRequest);
         return verifyDeleteResponse(response);
     }
 
     // RelationTypes
     public List<RelationType> createRelationTypes(List<RelationType> relationTypes) throws IOException {
         var createRequest = new CreateRelationTypeRequest(relationTypes);
-        var response      = sendStandardRequest(UrlMapping.RELATION_TYPE__CREATE, createRequest);
+        var response = sendStandardRequest(UrlMapping.RELATION_TYPE__CREATE, createRequest);
         return relationTypeUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
@@ -746,7 +746,7 @@ public class CinnamonClient {
     }
 
     public boolean disconnect() throws IOException {
-        ClassicHttpResponse response = sendStandardRequest(UrlMapping.CINNAMON__DISCONNECT, null);
+        StandardResponse response = sendStandardRequest(UrlMapping.CINNAMON__DISCONNECT, null);
         return disconnectUnwrapper.unwrap(response, 1).get(0).isDisconnectSuccessful();
     }
 
@@ -769,7 +769,7 @@ public class CinnamonClient {
      */
     public String connect(String username, String password, String format) throws IOException {
         String responseFormat = Objects.requireNonNullElse(format, "xml");
-        String url            = "http://localhost:" + port + UrlMapping.CINNAMON__CONNECT.getPath();
+        String url = "http://localhost:" + port + UrlMapping.CINNAMON__CONNECT.getPath();
         var response = httpClient.execute(ClassicRequestBuilder.post(url)
                 .addParameter("user", username)
                 .addParameter("password", password)
@@ -781,126 +781,126 @@ public class CinnamonClient {
 
     public List<ObjectType> createObjectTypes(List<String> names) throws IOException {
         var createRequest = new CreateObjectTypeRequest(names.stream().map(ObjectType::new).collect(Collectors.toList()));
-        var response      = sendStandardRequest(UrlMapping.OBJECT_TYPE__CREATE, createRequest);
+        var response = sendStandardRequest(UrlMapping.OBJECT_TYPE__CREATE, createRequest);
         return objectTypeUnwrapper.unwrap(response, names.size());
     }
 
     public List<Language> listLanguages() throws IOException {
-        var request  = new ListLanguageRequest();
+        var request = new ListLanguageRequest();
         var response = sendStandardRequest(UrlMapping.LANGUAGE__LIST, request);
         return languageUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
     public Format createFormat(String contentType, String extension, String name, long defaultObjectTypeId, IndexMode indexMode) throws IOException {
-        var request  = new CreateFormatRequest(List.of(new Format(contentType, extension, name, defaultObjectTypeId, indexMode)));
+        var request = new CreateFormatRequest(List.of(new Format(contentType, extension, name, defaultObjectTypeId, indexMode)));
         var response = sendStandardRequest(UrlMapping.FORMAT__CREATE, request);
         return formatUnwrapper.unwrap(response, 1).get(0);
     }
 
     public void updateFormat(Format format) throws IOException {
-        var request  = new UpdateFormatRequest(List.of(format));
+        var request = new UpdateFormatRequest(List.of(format));
         var response = sendStandardRequest(UrlMapping.FORMAT__UPDATE, request);
         verifyResponseIsOkay(response);
     }
 
     public void deleteFormat(Long id) throws IOException {
-        var request  = new DeleteFormatRequest(List.of(id));
+        var request = new DeleteFormatRequest(List.of(id));
         var response = sendStandardRequest(UrlMapping.FORMAT__DELETE, request);
         verifyResponseIsOkay(response);
     }
 
     public Language createLanguage(String isoCode) throws IOException {
-        var request  = new CreateLanguageRequest(List.of(new Language(isoCode)));
+        var request = new CreateLanguageRequest(List.of(new Language(isoCode)));
         var response = sendStandardRequest(UrlMapping.LANGUAGE__CREATE, request);
         return languageUnwrapper.unwrap(response, 1).get(0);
     }
 
     public List<Language> createLanguages(List<String> isoCodes) throws IOException {
-        var request  = new CreateLanguageRequest(isoCodes.stream().map(Language::new).collect(Collectors.toList()));
+        var request = new CreateLanguageRequest(isoCodes.stream().map(Language::new).collect(Collectors.toList()));
         var response = sendStandardRequest(UrlMapping.LANGUAGE__CREATE, request);
         return languageUnwrapper.unwrap(response, isoCodes.size());
     }
 
     public void updateLanguage(Language language) throws IOException {
-        var request  = new UpdateLanguageRequest(List.of(language));
+        var request = new UpdateLanguageRequest(List.of(language));
         var response = sendStandardRequest(UrlMapping.LANGUAGE__UPDATE, request);
         verifyResponseIsOkay(response);
     }
 
     public boolean deleteLanguage(Long id) throws IOException {
-        var request  = new DeleteLanguageRequest(id);
+        var request = new DeleteLanguageRequest(id);
         var response = sendStandardRequest(UrlMapping.LANGUAGE__DELETE, request);
         return verifyDeleteResponse(response);
     }
 
     public UiLanguage createUiLanguage(String isoCode) throws IOException {
-        var request  = new CreateUiLanguageRequest(List.of(new UiLanguage(isoCode)));
+        var request = new CreateUiLanguageRequest(List.of(new UiLanguage(isoCode)));
         var response = sendStandardRequest(UrlMapping.UI_LANGUAGE__CREATE, request);
         return uiLanguageUnwrapper.unwrap(response, 1).get(0);
     }
 
     public void updateUiLanguage(UiLanguage language) throws IOException {
-        var request  = new UpdateUiLanguageRequest(List.of(language));
+        var request = new UpdateUiLanguageRequest(List.of(language));
         var response = sendStandardRequest(UrlMapping.UI_LANGUAGE__UPDATE, request);
         verifyResponseIsOkay(response);
     }
 
     public boolean deleteUiLanguage(Long id) throws IOException {
-        var request  = new DeleteUiLanguageRequest(id);
+        var request = new DeleteUiLanguageRequest(id);
         var response = sendStandardRequest(UrlMapping.UI_LANGUAGE__DELETE, request);
         return verifyDeleteResponse(response);
     }
 
     public List<UiLanguage> listUiLanguages() throws IOException {
-        var request  = new ListUiLanguageRequest();
+        var request = new ListUiLanguageRequest();
         var response = sendStandardRequest(UrlMapping.UI_LANGUAGE__LIST, request);
         return uiLanguageUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
     public MetasetType createMetasetType(String name, boolean unique) throws IOException {
-        var request  = new CreateMetasetTypeRequest(name, unique);
+        var request = new CreateMetasetTypeRequest(name, unique);
         var response = sendStandardRequest(UrlMapping.METASET_TYPE__CREATE, request);
         return metasetTypeUnwrapper.unwrap(response, 1).get(0);
     }
 
     public void updateMetasetType(MetasetType metasetType) throws IOException {
-        var request  = new UpdateMetasetTypeRequest(List.of(metasetType));
+        var request = new UpdateMetasetTypeRequest(List.of(metasetType));
         var response = sendStandardRequest(UrlMapping.METASET_TYPE__UPDATE, request);
         verifyResponseIsOkay(response);
     }
 
     public boolean deleteMetasetType(Long id) throws IOException {
-        var request  = new DeleteMetasetTypeRequest(id);
+        var request = new DeleteMetasetTypeRequest(id);
         var response = sendStandardRequest(UrlMapping.METASET_TYPE__DELETE, request);
         return verifyDeleteResponse(response);
     }
 
     public ConfigEntry createConfigEntry(ConfigEntry configEntry) throws IOException {
-        var request  = new CreateConfigEntryRequest(configEntry.getName(), configEntry.getConfig(), configEntry.isPublicVisibility());
+        var request = new CreateConfigEntryRequest(configEntry.getName(), configEntry.getConfig(), configEntry.isPublicVisibility());
         var response = sendStandardRequest(UrlMapping.CONFIG_ENTRY__CREATE, request);
         return configEntryUnwrapper.unwrap(response, 1).get(0);
     }
 
     public List<ConfigEntry> listConfigEntries() throws IOException {
-        var request  = new ListConfigEntryRequest();
+        var request = new ListConfigEntryRequest();
         var response = sendStandardRequest(UrlMapping.CONFIG_ENTRY__LIST, request);
         return configEntryUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
     public ConfigEntry updateConfigEntry(ConfigEntry entry) throws IOException {
-        var request  = new UpdateConfigEntryRequest(List.of(entry));
+        var request = new UpdateConfigEntryRequest(List.of(entry));
         var response = sendStandardRequest(UrlMapping.CONFIG_ENTRY__UPDATE, request);
         return configEntryUnwrapper.unwrap(response, 1).get(0);
     }
 
     public void deleteConfigEntry(Long id) throws IOException {
-        var request  = new DeleteConfigEntryRequest(id);
+        var request = new DeleteConfigEntryRequest(id);
         var response = sendStandardRequest(UrlMapping.CONFIG_ENTRY__DELETE, request);
         verifyDeleteResponse(response);
     }
 
     public ConfigEntry getConfigEntry(String name) throws IOException {
-        var request  = new ConfigEntryRequest(name);
+        var request = new ConfigEntryRequest(name);
         var response = sendStandardRequest(UrlMapping.CONFIG_ENTRY__GET, request);
         return configEntryUnwrapper.unwrap(response, 1).get(0);
     }
@@ -913,13 +913,13 @@ public class CinnamonClient {
     }
 
     public ConfigEntry getConfigEntry(Long id) throws IOException {
-        var request  = new ConfigEntryRequest(id);
+        var request = new ConfigEntryRequest(id);
         var response = sendStandardRequest(UrlMapping.CONFIG_ENTRY__GET, request);
         return configEntryUnwrapper.unwrap(response, 1).get(0);
     }
 
     public List<UserAccount> listUsers() throws IOException {
-        var request  = new ListUserAccountRequest();
+        var request = new ListUserAccountRequest();
         var response = sendStandardRequest(UrlMapping.USER__LIST, request);
         return userUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
@@ -932,19 +932,19 @@ public class CinnamonClient {
     }
 
     public List<Meta> getOsdMetas(Long id) throws IOException {
-        var request  = new MetaRequest(id, null);
+        var request = new MetaRequest(id, null);
         var response = sendStandardRequest(UrlMapping.OSD__GET_META, request);
         return metaUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
     public List<Meta> getOsdMetas(Long id, List<Long> typeIds) throws IOException {
-        var request  = new MetaRequest(id, typeIds);
+        var request = new MetaRequest(id, typeIds);
         var response = sendStandardRequest(UrlMapping.OSD__GET_META, request);
         return metaUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
     public List<Meta> getFolderMetas(Long id) throws IOException {
-        var request  = new MetaRequest(id, null);
+        var request = new MetaRequest(id, null);
         var response = sendStandardRequest(UrlMapping.FOLDER__GET_META, request);
         return metaUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
@@ -974,158 +974,158 @@ public class CinnamonClient {
     }
 
     public UserAccount updateUser(UserAccount user) throws IOException {
-        var request  = new UpdateUserAccountRequest(List.of(user));
+        var request = new UpdateUserAccountRequest(List.of(user));
         var response = sendStandardRequest(UrlMapping.USER__UPDATE, request);
         return userUnwrapper.unwrap(response, 1).get(0);
     }
 
     public List<ObjectSystemData> copyOsds(long targetFolderId, List<Long> ids) throws IOException {
         var copyOsdRequest = new CopyOsdRequest(ids, targetFolderId, null);
-        var response       = sendStandardRequest(UrlMapping.OSD__COPY, copyOsdRequest);
+        var response = sendStandardRequest(UrlMapping.OSD__COPY, copyOsdRequest);
         return osdUnwrapper.unwrap(response, ids.size());
     }
 
     public List<ObjectSystemData> copyOsds(long targetFolderId, List<Long> ids, List<Long> metasetTypeIds) throws IOException {
         var copyOsdRequest = new CopyOsdRequest(ids, targetFolderId, metasetTypeIds);
-        var response       = sendStandardRequest(UrlMapping.OSD__COPY, copyOsdRequest);
+        var response = sendStandardRequest(UrlMapping.OSD__COPY, copyOsdRequest);
         return osdUnwrapper.unwrap(response, ids.size());
     }
 
     public List<Relation> getRelations(List<Long> ids) throws IOException {
-        var request  = new GetRelationsRequest(ids, true);
+        var request = new GetRelationsRequest(ids, true);
         var response = sendStandardRequest(UrlMapping.OSD__GET_RELATIONS, request);
         return relationUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
     public List<Relation> searchRelations(List<Long> leftIds, List<Long> rightIds, Collection<Long> relationTypeIds, boolean includeMetadata, boolean orMode) throws IOException {
-        var request  = new SearchRelationRequest(leftIds, rightIds, relationTypeIds, includeMetadata, orMode);
+        var request = new SearchRelationRequest(leftIds, rightIds, relationTypeIds, includeMetadata, orMode);
         var response = sendStandardRequest(RELATION__SEARCH, request);
         return relationUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
     public Lifecycle createLifecycle(String name) throws IOException {
-        var request  = new CreateLifecycleRequest(List.of(new Lifecycle(name, null)));
+        var request = new CreateLifecycleRequest(List.of(new Lifecycle(name, null)));
         var response = sendStandardRequest(UrlMapping.LIFECYCLE__CREATE, request);
         return lifecycleUnwrapper.unwrap(response, 1).get(0);
     }
 
     public LifecycleState createLifecycleState(LifecycleState lifecycleState) throws IOException {
-        var request  = new CreateLifecycleStateRequest(List.of(lifecycleState));
+        var request = new CreateLifecycleStateRequest(List.of(lifecycleState));
         var response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__CREATE, request);
         return lifecycleStateUnwrapper.unwrap(response, 1).get(0);
     }
 
     public void changeLifecycleState(Long osdId, Long stateId) throws IOException {
-        var request  = new ChangeLifecycleStateRequest(osdId, stateId);
+        var request = new ChangeLifecycleStateRequest(osdId, stateId);
         var response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__CHANGE_STATE, request);
         verifyResponseIsOkay(response);
     }
 
     public void attachLifecycle(Long osdId, Long lifecycleId, Long lifecycleStateId, boolean forceChange) throws IOException {
-        var request  = new AttachLifecycleRequest(osdId, lifecycleId, lifecycleStateId, forceChange);
+        var request = new AttachLifecycleRequest(osdId, lifecycleId, lifecycleStateId, forceChange);
         var response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__ATTACH_LIFECYCLE, request);
         verifyResponseIsOkay(response);
     }
 
     public void detachLifecycle(Long osdId) throws IOException {
-        var request  = new IdRequest(osdId);
+        var request = new IdRequest(osdId);
         var response = sendStandardRequest(LIFECYCLE_STATE__DETACH_LIFECYCLE, request);
         verifyResponseIsOkay(response);
     }
 
     public List<Lifecycle> listLifecycles() throws IOException {
-        var request  = new ListLifecycleRequest();
+        var request = new ListLifecycleRequest();
         var response = sendStandardRequest(UrlMapping.LIFECYCLE__LIST, request);
         return lifecycleUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
     public Lifecycle getLifecycle(Long lifecycleId) throws IOException {
-        var request  = new LifecycleRequest(lifecycleId, null);
+        var request = new LifecycleRequest(lifecycleId, null);
         var response = sendStandardRequest(UrlMapping.LIFECYCLE__GET, request);
         return lifecycleUnwrapper.unwrap(response, 1).get(0);
     }
 
     public Lifecycle getLifecycle(String name) throws IOException {
-        var request  = new LifecycleRequest(null, name);
+        var request = new LifecycleRequest(null, name);
         var response = sendStandardRequest(UrlMapping.LIFECYCLE__GET, request);
         return lifecycleUnwrapper.unwrap(response, 1).get(0);
 
     }
 
     public Lifecycle updateLifecycle(Lifecycle lifecycle) throws IOException {
-        var request  = new UpdateLifecycleRequest(List.of(lifecycle));
+        var request = new UpdateLifecycleRequest(List.of(lifecycle));
         var response = sendStandardRequest(UrlMapping.LIFECYCLE__UPDATE, request);
         return lifecycleUnwrapper.unwrap(response, 1).get(0);
     }
 
     public void deleteLifecycle(Long lifecycleId) throws IOException {
-        var request  = new DeleteLifecycleRequest(List.of(lifecycleId));
+        var request = new DeleteLifecycleRequest(List.of(lifecycleId));
         var response = sendStandardRequest(UrlMapping.LIFECYCLE__DELETE, request);
         verifyDeleteResponse(response);
     }
 
     public List<LifecycleState> getNextLifecycleStates(long osdId) throws IOException {
-        var request  = new IdRequest(osdId);
+        var request = new IdRequest(osdId);
         var response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__GET_NEXT_STATES, request);
         return lifecycleStateUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
     public LifecycleState getLifecycleState(long lifecycleStateId) throws IOException {
-        var request  = new IdRequest(lifecycleStateId);
+        var request = new IdRequest(lifecycleStateId);
         var response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__GET, request);
         return lifecycleStateUnwrapper.unwrap(response, 1).get(0);
     }
 
     public LifecycleState updateLifecycleState(LifecycleState lcs) throws IOException {
-        var request  = new UpdateLifecycleStateRequest(List.of(lcs));
+        var request = new UpdateLifecycleStateRequest(List.of(lcs));
         var response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__UPDATE, request);
         return lifecycleStateUnwrapper.unwrap(response, 1).get(0);
     }
 
     public void deleteLifecycleState(Long lifecycleStateId) throws IOException {
-        var request  = new DeleteLifecycleRequest(lifecycleStateId);
+        var request = new DeleteLifecycleRequest(lifecycleStateId);
         var response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__DELETE, request);
         verifyDeleteResponse(response);
     }
 
     public List<Summary> getFolderSummaries(List<Long> folderIds) throws IOException {
-        var request  = new IdListRequest(folderIds);
+        var request = new IdListRequest(folderIds);
         var response = sendStandardRequest(UrlMapping.FOLDER__GET_SUMMARIES, request);
         return summaryUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
     public List<Summary> getOsdSummaries(List<Long> osdIds) throws IOException {
-        var request  = new IdListRequest(osdIds);
+        var request = new IdListRequest(osdIds);
         var response = sendStandardRequest(UrlMapping.OSD__GET_SUMMARIES, request);
         return summaryUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
     public void deleteFolderMeta(Long metaId) throws IOException {
-        var request  = new DeleteMetaRequest(metaId);
+        var request = new DeleteMetaRequest(metaId);
         var response = sendStandardRequest(UrlMapping.FOLDER__DELETE_META, request);
         verifyDeleteResponse(response);
     }
 
     public void deleteAllFolderMeta(Long folderId) throws IOException {
-        var request  = new DeleteAllMetasRequest(folderId);
+        var request = new DeleteAllMetasRequest(folderId);
         var response = sendStandardRequest(FOLDER__DELETE_ALL_METAS, request);
         verifyDeleteResponse(response);
     }
 
     public void deleteAllOsdMeta(Long osdId) throws IOException {
-        var request  = new DeleteAllMetasRequest(osdId);
+        var request = new DeleteAllMetasRequest(osdId);
         var response = sendStandardRequest(OSD__DELETE_ALL_METAS, request);
         verifyDeleteResponse(response);
     }
 
     public void deleteOsdMeta(Long metaId) throws IOException {
-        var request  = new DeleteMetaRequest(metaId);
+        var request = new DeleteMetaRequest(metaId);
         var response = sendStandardRequest(UrlMapping.OSD__DELETE_META, request);
         verifyDeleteResponse(response);
     }
 
     public void deleteFolder(List<Long> folderId, boolean deleteRecursively, boolean deleteContent) throws IOException {
-        var request  = new DeleteFolderRequest(folderId, deleteRecursively, deleteContent);
+        var request = new DeleteFolderRequest(folderId, deleteRecursively, deleteContent);
         var response = sendStandardRequest(UrlMapping.FOLDER__DELETE, request);
         verifyDeleteResponse(response);
     }
@@ -1135,61 +1135,61 @@ public class CinnamonClient {
     }
 
     public List<IndexItem> listIndexItems() throws IOException {
-        var request  = new ListIndexItemRequest();
+        var request = new ListIndexItemRequest();
         var response = sendStandardRequest(UrlMapping.INDEX_ITEM__LIST, request);
         return indexItemUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
     public IndexItem createIndexItem(IndexItem indexItem) throws IOException {
-        var request  = new CreateIndexItemRequest(List.of(indexItem));
+        var request = new CreateIndexItemRequest(List.of(indexItem));
         var response = sendStandardRequest(UrlMapping.INDEX_ITEM__CREATE, request);
         return indexItemUnwrapper.unwrap(response, 1).get(0);
     }
 
     public void deleteIndexItem(Long id) throws IOException {
-        var request  = new DeleteIndexItemRequest(id);
+        var request = new DeleteIndexItemRequest(id);
         var response = sendStandardRequest(UrlMapping.INDEX_ITEM__DELETE, request);
         verifyDeleteResponse(response);
     }
 
     public IndexItem updateIndexItem(IndexItem indexItem) throws IOException {
-        var request  = new UpdateIndexItemRequest(List.of(indexItem));
+        var request = new UpdateIndexItemRequest(List.of(indexItem));
         var response = sendStandardRequest(UrlMapping.INDEX_ITEM__UPDATE, request);
         return indexItemUnwrapper.unwrap(response, 1).get(0);
     }
 
     public void deleteRelation(Long id) throws IOException {
-        var request  = new DeleteRelationRequest(id);
+        var request = new DeleteRelationRequest(id);
         var response = sendStandardRequest(UrlMapping.RELATION__DELETE, request);
         verifyDeleteResponse(response);
     }
 
     public void setUserConfig(Long userId, String config) throws IOException {
-        var request  = new SetUserConfigRequest(userId, config);
+        var request = new SetUserConfigRequest(userId, config);
         var response = sendStandardRequest(USER__SET_CONFIG, request);
         verifyResponseIsOkay(response);
     }
 
     public IndexInfoResponse getIndexInfo(boolean countDocuments) throws IOException {
-        var                 request  = new IndexInfoRequest(countDocuments);
-        ClassicHttpResponse response = sendStandardRequest(INDEX__INFO, request);
+        var request = new IndexInfoRequest(countDocuments);
+        StandardResponse response = sendStandardRequest(INDEX__INFO, request);
         return new SingletonUnwrapper<>(IndexInfoResponse.class).unwrap(response);
     }
 
     public ReindexResponse reindex(ReindexRequest request) throws IOException {
-        ClassicHttpResponse response = sendStandardRequest(INDEX__REINDEX, request);
+        StandardResponse response = sendStandardRequest(INDEX__REINDEX, request);
         return new SingletonUnwrapper<>(ReindexResponse.class).unwrap(response);
     }
 
     public SearchIdsResponse search(String query, SearchType searchType) throws IOException {
-        SearchIdsRequest    request  = new SearchIdsRequest(searchType, query);
-        ClassicHttpResponse response = sendStandardRequest(SEARCH__IDS, request);
+        SearchIdsRequest request = new SearchIdsRequest(searchType, query);
+        StandardResponse response = sendStandardRequest(SEARCH__IDS, request);
         return new SingletonUnwrapper<>(SearchIdsResponse.class).unwrap(response);
     }
 
     public List<Folder> getFoldersByPath(String path, boolean includeSummary) throws IOException {
-        var                 request  = new FolderPathRequest(path, includeSummary);
-        ClassicHttpResponse response = sendStandardRequest(FOLDER__GET_FOLDER_BY_PATH, request);
+        var request = new FolderPathRequest(path, includeSummary);
+        StandardResponse response = sendStandardRequest(FOLDER__GET_FOLDER_BY_PATH, request);
         return folderUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
@@ -1201,20 +1201,20 @@ public class CinnamonClient {
     }
 
     public List<Folder> getSubFolders(Long parentFolderId, boolean includeSummary) throws IOException {
-        SingleFolderRequest request  = new SingleFolderRequest(parentFolderId, includeSummary);
-        ClassicHttpResponse response = sendStandardRequest(UrlMapping.FOLDER__GET_SUBFOLDERS, request);
+        SingleFolderRequest request = new SingleFolderRequest(parentFolderId, includeSummary);
+        StandardResponse response = sendStandardRequest(UrlMapping.FOLDER__GET_SUBFOLDERS, request);
         return folderUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
     public void updateFolderMeta(Meta meta) throws IOException {
-        UpdateMetaRequest   request  = new UpdateMetaRequest(List.of(meta));
-        ClassicHttpResponse response = sendStandardRequest(FOLDER__UPDATE_META_CONTENT, request);
+        UpdateMetaRequest request = new UpdateMetaRequest(List.of(meta));
+        StandardResponse response = sendStandardRequest(FOLDER__UPDATE_META_CONTENT, request);
         verifyResponseIsOkay(response);
     }
 
     public void updateOsdMeta(Meta meta) throws IOException {
-        UpdateMetaRequest   request  = new UpdateMetaRequest(List.of(meta));
-        ClassicHttpResponse response = sendStandardRequest(OSD__UPDATE_META_CONTENT, request);
+        UpdateMetaRequest request = new UpdateMetaRequest(List.of(meta));
+        StandardResponse response = sendStandardRequest(OSD__UPDATE_META_CONTENT, request);
         verifyResponseIsOkay(response);
     }
 
@@ -1228,19 +1228,19 @@ public class CinnamonClient {
     }
 
     public List<UrlMappingInfo> listUrlMappings() throws IOException {
-        ListUrlMappingInfoRequest request  = new ListUrlMappingInfoRequest();
-        ClassicHttpResponse       response = sendStandardRequest(CONFIG__URL_MAPPINGS, request);
+        ListUrlMappingInfoRequest request = new ListUrlMappingInfoRequest();
+        StandardResponse response = sendStandardRequest(CONFIG__URL_MAPPINGS, request);
         return urlMappingInfoWrapperUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
     public ChangeTrigger createChangeTrigger(ChangeTrigger changeTrigger) throws IOException {
-        CreateChangeTriggerRequest request  = new CreateChangeTriggerRequest(List.of(changeTrigger));
-        ClassicHttpResponse        response = sendStandardRequest(CHANGE_TRIGGER__CREATE, request);
+        CreateChangeTriggerRequest request = new CreateChangeTriggerRequest(List.of(changeTrigger));
+        StandardResponse response = sendStandardRequest(CHANGE_TRIGGER__CREATE, request);
         return changeTriggerUnwrapper.unwrap(response, 1).get(0);
     }
 
     public List<RelationType> getRelationTypes() throws IOException {
-        ClassicHttpResponse response = sendStandardRequest(UrlMapping.RELATION_TYPE__LIST, new ListRelationTypeRequest());
+        StandardResponse response = sendStandardRequest(UrlMapping.RELATION_TYPE__LIST, new ListRelationTypeRequest());
         return relationTypeUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
@@ -1254,13 +1254,13 @@ public class CinnamonClient {
             this.clazz = clazz;
         }
 
-        public S unwrap(ClassicHttpResponse response) throws IOException {
+        public S unwrap(StandardResponse response) throws IOException {
             checkResponseForErrors(response, mapper);
             return mapper.readValue(response.getEntity().getContent(), clazz);
         }
     }
 
-    static void checkResponseForErrors(ClassicHttpResponse response, XmlMapper mapper) throws IOException {
+    static void checkResponseForErrors(StandardResponse response, XmlMapper mapper) throws IOException {
         if (response.containsHeader(HEADER_FIELD_CINNAMON_ERROR)) {
             CinnamonErrorWrapper wrapper = mapper.readValue(response.getEntity().getContent(), CinnamonErrorWrapper.class);
             log.warn("Found errors: " + wrapper.getErrors().stream().map(CinnamonError::toString).collect(Collectors.joining(",")));
