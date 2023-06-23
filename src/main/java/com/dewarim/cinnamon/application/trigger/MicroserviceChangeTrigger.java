@@ -18,11 +18,7 @@ import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
 import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactoryBuilder;
-import org.apache.hc.core5.http.ClassicHttpResponse;
-import org.apache.hc.core5.http.ContentType;
-import org.apache.hc.core5.http.HttpEntity;
-import org.apache.hc.core5.http.HttpHeaders;
-import org.apache.hc.core5.http.HttpStatus;
+import org.apache.hc.core5.http.*;
 import org.apache.hc.core5.http.io.SocketConfig;
 import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
 import org.apache.hc.core5.http.ssl.TLS;
@@ -172,6 +168,8 @@ public class MicroserviceChangeTrigger implements Trigger {
     private void cleanupHeaders(ClassicRequestBuilder requestBuilder) {
         requestBuilder.removeHeaders(HttpHeaders.CONTENT_LENGTH);
         requestBuilder.removeHeaders(HttpHeaders.HOST);
+        // MUST NOT leak the client's session to a remote service!
+        requestBuilder.removeHeaders("ticket");
 
     }
 

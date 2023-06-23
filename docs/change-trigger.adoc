@@ -1,0 +1,67 @@
+== Change-Trigger
+
+Change-Triggers are pieces of code that will be executed whenever you call a specific endpoint. They are best used at endpoints that aim to change (add, remove or update) a resource.
+
+At the moment, the Cinnamon server comes with the Microservice-Change-Trigger, which allows you to call other services before or after any request you send to Cinnamon.
+
+A usage example would be to call a PDF rendering service or a thumbnail generator each time a new object is created, thus triggering the other service to execute some action on the new object,like
+
+- downloading the content,
+- creating a thumbnail,
+- storing it in Cinnamon
+- adding a relation to the object pointing towards the thumbnail.
+
+== Creating a change trigger
+
+This is an example of a request to create a new change trigger:
+
+    <createChangeTriggerRequest>
+    <changeTriggers>
+     <changeTrigger>
+      <name>triggerThumbnailGenerator</name>
+      <controller>osd</controller>
+      <action>setContent</action>
+      <active>true</active>
+      <preTrigger>false</preTrigger>
+      <postTrigger>true</postTrigger>
+      <copyFileContent>false</copyFileContent>
+      <ranking>100</ranking>
+      <config>&lt;config>&lt;url>http://localhost:64888/createThumbnail&lt;/url>&lt;/config></config>
+      <triggerType>MICROSERVICE</triggerType>
+     </changeTrigger>
+    </changeTriggers>
+    </createChangeTriggerRequest>
+
+The fields are as follows:
+
+* name: the name of the trigger, must be unique.
+* controller: the first part of the endpoint this trigger will be attached to.
++
+Endpoints in Cinnamon have URLs like /api/folder/create, where "folder" is the controller and "create" is the action or method called.
+* action: the action part of the endpoint
+* preTrigger: if true, this change-trigger will be executed _before_ the request is given to the endpoint's code. Depending on the change-trigger's implementation, it may block the request from going any further.
++
+For example, the microservice change-trigger may check if  the name of a new folder conforms to the company's naming scheme.
+
+* postTrigger: if true, this change-trigger will be executed after the request is finished and before the response is sent to the client
+* copyFileContent: if true, the content of files sent to the server is temporarily copied and sent given to the change-trigger implementation. This may affect performance and resource consumption negatively, so use with care.
+* ranking: if multiple change-triggers are configured for a single endpoint, the lowest ranked change-trigger will be executed first. It's recommended to use ranking numbers in the hundreds, so you have always some room to insert another trigger before or after an existing one.
+* config: an XML snippet that is given to the change-trigger's code. In case of the microservice change-trigger, this defines the URL to call.
+* triggerType: the type of trigger - we only have MICROSERVICE at the moment (TODO: add a NOP_TRIGGER which does nothing but allows for easy testing of the basic code paths).
+
+== Microservice Change-Trigger
+
+* when used, it will send the XML request to the server configured in the /config/url section.
+* in preTrigger mode, a non-200 response code will stop the request from going further and return an error message to the client.
+* in postTrigger mode, a non-200 response will roll back any database changes.
+* if copyFileContent is true, send any file content as multipart request to the remote service.
+* header fields are (mostly) copied where it makes sense, so the client can put special parameters for the remote service into it's request's header fields.
+* if the remote service responds with content, this is added as-is to a header field "microservice-response". Note: current assumption is: the remote service will respond with a text message that does not need further encoding.
++
+if the remote service only sends an empty response (like: 200-OK without anything else), the header field will contain "<no-content/>".
+
+== Performance Considerations
+
+You should not use too many change-triggers on any one endpoint. The requests to remote servers will be executed sequentially, so we can stop if we receive a non-200-OK response. Also, copying file content is expensive.
+
+Normally, a file upload is received by the server and streamed to disk. The server can consume this stream of data only once, so to make it available for both a remote service _and_ the Cinnamon server itself for storage, it must create a temporary copy, which can get expensive quick if someone uploads a 1 GByte sized video file.
