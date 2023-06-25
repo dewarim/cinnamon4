@@ -3,6 +3,7 @@ package com.dewarim.cinnamon.model.request.user;
 import com.dewarim.cinnamon.api.ApiRequest;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
+import java.util.List;
 import java.util.Optional;
 
 @JacksonXmlRootElement(localName = "deleteUserAccountRequest")
@@ -51,5 +52,10 @@ public class DeleteUserAccountRequest implements ApiRequest {
         } else {
             return Optional.empty();
         }
+    }
+
+    @Override
+    public List<ApiRequest> examples() {
+        return List.of(new DeleteUserAccountRequest(4L,5L));
     }
 }

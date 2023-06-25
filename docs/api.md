@@ -1563,7 +1563,12 @@ Update the content of a given folder metaset
 ```xml
 <deleteGroupRequest>
   <ignoreNotFound>false</ignoreNotFound>
-  <ids/>
+  <recursive>true</recursive>
+  <ids>
+    <id>4</id>
+    <id>6</id>
+    <id>7</id>
+  </ids>
 </deleteGroupRequest>
 
 ```
@@ -2863,7 +2868,7 @@ Update lifecycles. Note: does not update lifecycle states
 ---
 
 # /api/osd/createOsd
-Create a new OSD. Requires: this must be a multipart-mime request, with part "createOsdRequest" and optional part "file" if this object
+Create a new OSD. Requires: this must be a multipart-mime request, with part "cinnamonRequest" and optional part "file" if this object
 should contain data.
 
 
@@ -3196,7 +3201,7 @@ Returns an OSD's content according to it's format's content type.
 ---
 
 # /api/osd/setContent
-Set an OSD's content. Requires a multipart-mime request, with part "setContentRequest" and part "file".
+Set an OSD's content. Requires a multipart-mime request, with part "cinnamonRequest" and part "file".
 
 
 ## Request
@@ -3351,7 +3356,7 @@ Update the content of a given OSD metaset
 ---
 
 # /api/osd/version
-Create a new version of an OSD. Requires a multipart-mime request, with part "createNewVersionRequest" and optional
+Create a new version of an OSD. Requires a multipart-mime request, with part "cinnamonRequest" and optional
 part "file", if the new version should contain data.
 
 
@@ -3987,8 +3992,57 @@ Returns status code 400
 
 ```xml
 <cinnamon>
-  <users/>
+  <users>
+    <user>
+      <id/>
+      <name>user-wrapper-example</name>
+      <loginType>CINNAMON</loginType>
+      <password>see-creta</password>
+      <activated>true</activated>
+      <locked>false</locked>
+      <uiLanguageId>1</uiLanguageId>
+      <fullname>U.W.Example</fullname>
+      <email>user@example.com</email>
+      <changeTracking>true</changeTracking>
+      <activateTriggers>true</activateTriggers>
+      <passwordExpired>false</passwordExpired>
+      <config>&lt;config/></config>
+      <groupIds>
+        <groupId>3</groupId>
+        <groupId>5</groupId>
+      </groupIds>
+    </user>
+  </users>
 </cinnamon>
+
+```
+
+
+---
+
+# /api/user/delete
+Delete a user and transfer all his remaining assets to another user.
+Note: this is not optimized for users who own vast collections of objects or folders.
+
+
+## Request
+
+```xml
+<deleteUserAccountRequest>
+  <userId/>
+  <assetReceiverId/>
+</deleteUserAccountRequest>
+
+```
+
+
+## Response
+
+```xml
+<genericResponse>
+  <message/>
+  <successful>false</successful>
+</genericResponse>
 
 ```
 
@@ -4020,7 +4074,27 @@ Returns status code 400
 
 ```xml
 <cinnamon>
-  <users/>
+  <users>
+    <user>
+      <id/>
+      <name>user-wrapper-example</name>
+      <loginType>CINNAMON</loginType>
+      <password>see-creta</password>
+      <activated>true</activated>
+      <locked>false</locked>
+      <uiLanguageId>1</uiLanguageId>
+      <fullname>U.W.Example</fullname>
+      <email>user@example.com</email>
+      <changeTracking>true</changeTracking>
+      <activateTriggers>true</activateTriggers>
+      <passwordExpired>false</passwordExpired>
+      <config>&lt;config/></config>
+      <groupIds>
+        <groupId>3</groupId>
+        <groupId>5</groupId>
+      </groupIds>
+    </user>
+  </users>
 </cinnamon>
 
 ```
@@ -4045,7 +4119,27 @@ Returns status code 400
 
 ```xml
 <cinnamon>
-  <users/>
+  <users>
+    <user>
+      <id/>
+      <name>user-wrapper-example</name>
+      <loginType>CINNAMON</loginType>
+      <password>see-creta</password>
+      <activated>true</activated>
+      <locked>false</locked>
+      <uiLanguageId>1</uiLanguageId>
+      <fullname>U.W.Example</fullname>
+      <email>user@example.com</email>
+      <changeTracking>true</changeTracking>
+      <activateTriggers>true</activateTriggers>
+      <passwordExpired>false</passwordExpired>
+      <config>&lt;config/></config>
+      <groupIds>
+        <groupId>3</groupId>
+        <groupId>5</groupId>
+      </groupIds>
+    </user>
+  </users>
 </cinnamon>
 
 ```
@@ -4124,7 +4218,27 @@ Update a user's individual configuration
 
 ```xml
 <cinnamon>
-  <users/>
+  <users>
+    <user>
+      <id/>
+      <name>user-wrapper-example</name>
+      <loginType>CINNAMON</loginType>
+      <password>see-creta</password>
+      <activated>true</activated>
+      <locked>false</locked>
+      <uiLanguageId>1</uiLanguageId>
+      <fullname>U.W.Example</fullname>
+      <email>user@example.com</email>
+      <changeTracking>true</changeTracking>
+      <activateTriggers>true</activateTriggers>
+      <passwordExpired>false</passwordExpired>
+      <config>&lt;config/></config>
+      <groupIds>
+        <groupId>3</groupId>
+        <groupId>5</groupId>
+      </groupIds>
+    </user>
+  </users>
 </cinnamon>
 
 ```
