@@ -154,9 +154,9 @@ public class AclServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getUserAcls() throws IOException {
-        // admin should be connected to reviewer.acl and default acl.
-        StandardResponse response = sendAdminRequest(UrlMapping.ACL__GET_USER_ACLS, new IdRequest(1L));
-        unwrapAcls(response, 2);
+        List<Acl> acls = client.getAclsOfUser(adminId);
+        assertTrue(acls.stream().anyMatch(acl -> acl.getName().equals("reviewers.acl")));
+        assertTrue(acls.stream().anyMatch(acl -> acl.getName().equals(ACL_DEFAULT)));
     }
 
     @Test
