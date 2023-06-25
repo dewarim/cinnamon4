@@ -16,13 +16,13 @@ public class GroupUserDao implements CrudDao<GroupUser> {
     }
 
     public void removeUserFromGroups(Long userId, List<Long> ids) {
-        SqlSession          sqlSession = ThreadLocalSqlSession.getSqlSession();
-        Map<String, Object> params     = Map.of("userId", userId, "ids", ids);
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        Map<String, Object> params = Map.of("userId", userId, "ids", ids);
         sqlSession.delete("com.dewarim.cinnamon.model.GroupUser.remove", params);
     }
 
     public void addUserToGroups(Long userId, List<Long> ids) {
-        if(ids == null || ids.isEmpty()){
+        if (ids == null || ids.isEmpty()) {
             return;
         }
         create(new GroupDao().getObjectsById(ids).stream().map(group ->
@@ -31,9 +31,13 @@ public class GroupUserDao implements CrudDao<GroupUser> {
         );
     }
 
-    public List<GroupUser> listGroupsOfUser(Long userId){
-        SqlSession          sqlSession = ThreadLocalSqlSession.getSqlSession();
-        return sqlSession.selectList("com.dewarim.cinnamon.model.GroupUser.listGroupsOfUser",userId);
+    public List<GroupUser> listGroupsOfUser(Long userId) {
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        return sqlSession.selectList("com.dewarim.cinnamon.model.GroupUser.listGroupsOfUser", userId);
     }
 
+    public void deleteByGroupIds(List<Long> ids) {
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        sqlSession.delete("com.dewarim.cinnamon.model.GroupUser.deleteByGroupIds", ids);
+    }
 }

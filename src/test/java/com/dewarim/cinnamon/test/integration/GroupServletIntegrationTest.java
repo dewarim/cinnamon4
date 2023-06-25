@@ -5,6 +5,7 @@ import com.dewarim.cinnamon.client.CinnamonClientException;
 import com.dewarim.cinnamon.model.Group;
 import com.dewarim.cinnamon.model.LoginType;
 import com.dewarim.cinnamon.model.UserAccount;
+import com.dewarim.cinnamon.test.TestObjectHolder;
 import org.junit.jupiter.api.*;
 
 import java.io.IOException;
@@ -27,7 +28,7 @@ public class GroupServletIntegrationTest extends CinnamonIntegrationTest {
         assertTrue(groups.size() >= 7);
 
         List<String> actualGroupNames = groups.stream().map(Group::getName).collect(Collectors.toList());
-        String[]     groupNames       = {"_superusers", "_everyone", "_owner"};
+        String[] groupNames = {"_superusers", "_everyone", "_owner"};
         Arrays.stream(groupNames).forEach(name ->
                 assertTrue(actualGroupNames.contains(name))
         );
@@ -73,7 +74,7 @@ public class GroupServletIntegrationTest extends CinnamonIntegrationTest {
     public void deleteGroups() throws IOException {
         var deleteResult = adminClient.deleteGroups(groups.stream().map(Group::getId).collect(Collectors.toList()));
         assertTrue(deleteResult);
-        var allGroupNames     = client.listGroups().stream().map(Group::getName).toList();
+        var allGroupNames = client.listGroups().stream().map(Group::getName).toList();
         var deletedGroupNames = groups.stream().map(Group::getName).toList();
         assertFalse(allGroupNames.containsAll(deletedGroupNames));
     }
@@ -103,7 +104,7 @@ public class GroupServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateGroupWithDuplicateName() throws IOException {
-        var existing    = adminClient.createGroup(new Group("existing-group"));
+        var existing = adminClient.createGroup(new Group("existing-group"));
         var updateGroup = adminClient.createGroup(new Group("update-my-name"));
         updateGroup.setName(existing.getName());
         CinnamonClientException ex = assertThrows(CinnamonClientException.class, () ->
@@ -113,17 +114,17 @@ public class GroupServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createGroupWithParent() throws IOException {
-        var  parent      = adminClient.createGroup(new Group("parent-group", null));
-        var  child       = adminClient.createGroup(new Group("a-child", parent.getId()));
+        var parent = adminClient.createGroup(new Group("parent-group", null));
+        var child = adminClient.createGroup(new Group("a-child", parent.getId()));
         long parentCount = client.listGroups().stream().filter(group -> group.equals(new Group(child.getId(), child.getName(), child.getParentId()))).count();
         assertEquals(1L, parentCount);
     }
 
     @Test
     public void updateGroupWithParent() throws IOException {
-        var parent     = adminClient.createGroup(new Group("another-parent-group", null));
+        var parent = adminClient.createGroup(new Group("another-parent-group", null));
         var stepParent = adminClient.createGroup(new Group("step-parent-group", null));
-        var child      = adminClient.createGroup(new Group("another-child", parent.getId()));
+        var child = adminClient.createGroup(new Group("another-child", parent.getId()));
         child.setParentId(stepParent.getId());
         Group adoptedChild = adminClient.updateGroups(List.of(child)).get(0);
         assertEquals(stepParent.getId(), adoptedChild.getParentId());
@@ -132,35 +133,45 @@ public class GroupServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void updateGroupByAddingParent() throws IOException {
         var parent = adminClient.createGroup(new Group("parent-group2", null));
-        var child  = adminClient.createGroup(new Group("a-child2", null));
+        var child = adminClient.createGroup(new Group("a-child2", null));
         child.setParentId(parent.getId());
         Group adoptedChild = adminClient.updateGroups(List.of(child)).get(0);
-        long  count        = client.listGroups().stream().filter(group -> group.equals(new Group(child.getId(), child.getName(), adoptedChild.getParentId()))).count();
+        long count = client.listGroups().stream().filter(group -> group.equals(new Group(child.getId(), child.getName(), adoptedChild.getParentId()))).count();
         assertEquals(1L, count);
     }
 
     @Test
     public void deleteChildWithParentGroup() throws IOException {
         var parent = adminClient.createGroup(new Group("parent-group3", null));
-        var child  = adminClient.createGroup(new Group("a-child3", parent.getId()));
+        var child = adminClient.createGroup(new Group("a-child3", parent.getId()));
         adminClient.deleteGroups(List.of(child.getId()));
         assertTrue(client.listGroups().stream().noneMatch(group -> group.equals(new Group(child.getId(), child.getName(), null))));
     }
 
-    // currently, deleteGroupRequest has no "recurse" option.
     @Test
     public void deleteGroupWithChildrenShouldFail() throws IOException {
-        var parent = adminClient.createGroup(new Group("moribund-parent-group", null));
-        var child  = adminClient.createGroup(new Group("to-be-orphaned", parent.getId()));
+        TestObjectHolder toh = new TestObjectHolder(adminClient, adminId)
+                .createGroup();
+        Long parentId = toh.group.getId();
+        toh.createGroup(parentId).createAcl().createAclGroup().addUserToGroup(adminId);
         CinnamonClientException ex = assertThrows(CinnamonClientException.class, () ->
-                adminClient.deleteGroups(List.of(parent.getId())));
-        assertEquals(ErrorCode.DB_DELETE_FAILED, ex.getErrorCode());
+                adminClient.deleteGroups(List.of(parentId)));
+        assertEquals(ErrorCode.GROUP_HAS_CHILDREN, ex.getErrorCode());
+    }
+
+    @Test
+    public void deleteGroupWithChildrenAndFlag() throws IOException {
+        TestObjectHolder toh = new TestObjectHolder(adminClient, adminId)
+                .createGroup();
+        Long parentId = toh.group.getId();
+        toh.createGroup(parentId).createAcl().createAclGroup().addUserToGroup(adminId);
+        adminClient.deleteGroups(List.of((parentId)),true);
     }
 
     @Test
     public void addUserToGroupAndRemove() throws IOException {
         var userGroup = adminClient.createGroup(new Group("user-group", null));
-        var user      = adminClient.createUser(new UserAccount("user-for-a-group", "passwehde", "-", "-", 1L, LoginType.CINNAMON.name(), true, true, true));
+        var user = adminClient.createUser(new UserAccount("user-for-a-group", "passwehde", "-", "-", 1L, LoginType.CINNAMON.name(), true, true, true));
         adminClient.addUserToGroups(user.getId(), List.of(userGroup.getId()));
         UserAccount userWithGroup = client.getUser(user.getId());
         assertEquals(userGroup.getId(), userWithGroup.getGroupIds().get(0));

@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.dewarim.cinnamon.model.Group">
-    
+
     <resultMap id="groupMap" type="com.dewarim.cinnamon.model.Group">
         <id property="id" column="id"/>
         <result property="name" column="name"/>
@@ -16,17 +16,34 @@
         FROM groups
         WHERE id = #{id}
     </select>
+    <select id="getChildGroupIds" parameterType="list" resultType="long">
+        SELECT id
+        FROM groups
+        WHERE parent_id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
     <select id="getGroupByName" parameterType="string" resultMap="groupMap">
         SELECT *
         FROM groups
         WHERE name = #{name}
     </select>
-    
-    <select id="getGroupsOfUserById" parameterType="long" resultMap="groupMap">
-        SELECT * 
-        FROM groups JOIN group_users gu on groups.id = gu.group_id WHERE gu.user_id= #{id}
+
+    <select id="hasChildren" parameterType="long" resultType="boolean">
+        SELECT count(1) > 0 as hasChildren
+        FROM groups
+        where parent_id = #{id}
     </select>
-    
+
+    <select id="getGroupsOfUserById" parameterType="long" resultMap="groupMap">
+        SELECT *
+        FROM groups
+                 JOIN group_users gu on groups.id = gu.group_id
+        WHERE gu.user_id = #{id}
+    </select>
+
     <select id="list" resultMap="groupMap">
         SELECT *
         FROM groups
@@ -75,7 +92,8 @@
                                select child.id,
                                       child.name,
                                       child.parent_id
-                               from groups child join groups_of_user gou on gou.parent_id=child.id)
+                               from groups child
+                                        join groups_of_user gou on gou.parent_id = child.id)
         select *
         from groups_of_user;
     </select>

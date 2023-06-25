@@ -52,17 +52,26 @@ public interface CruddyServlet<T extends Identifiable> {
 
     ObjectMapper getMapper();
 
+    default void deleteByIds(List<Long> ids, CrudDao<T> dao, boolean ignoreNotFound) {
+        deleteInner(ids, dao, ignoreNotFound);
+    }
+
     default List<Long> delete(DeleteRequest<T> deleteRequest, CrudDao<T> dao, CinnamonResponse cinnamonResponse) {
         try {
-            int deletedRows = dao.delete(deleteRequest.list());
-            if (deletedRows != deleteRequest.list().size() && !deleteRequest.isIgnoreNotFound()) {
-                throw new FailedRequestException(ErrorCode.OBJECT_NOT_FOUND);
-            }
+            deleteInner(deleteRequest.list(),dao, deleteRequest.isIgnoreNotFound());
+
         } catch (PersistenceException e) {
             throw new FailedRequestException(ErrorCode.DB_DELETE_FAILED, e);
         }
         cinnamonResponse.setWrapper(deleteRequest.fetchResponseWrapper());
         return deleteRequest.list();
+    }
+
+    default void deleteInner(List<Long> ids, CrudDao<T> dao, boolean ignoreNotFound){
+        int deletedRows = dao.delete(ids);
+        if (deletedRows != ids.size() && !ignoreNotFound) {
+            throw new FailedRequestException(ErrorCode.OBJECT_NOT_FOUND);
+        }
     }
 
     default void superuserCheck() {

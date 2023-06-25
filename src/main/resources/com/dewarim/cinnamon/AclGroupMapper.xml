@@ -70,6 +70,16 @@
         </foreach>
     </delete>
 
+    <delete id="deleteByGroupIds" parameterType="list">
+        DELETE
+        FROM acl_groups
+        WHERE group_id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
     <select id="getAllById" parameterType="list" resultMap="aclGroupMap">
         SELECT *
         FROM acl_groups

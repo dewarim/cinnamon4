@@ -603,6 +603,11 @@ public class CinnamonClient {
         var response = sendStandardRequest(UrlMapping.GROUP__DELETE, request);
         return verifyDeleteResponse(response);
     }
+    public boolean deleteGroups(List<Long> ids, boolean recursive) throws IOException {
+        var request = new DeleteGroupRequest(ids, recursive);
+        var response = sendStandardRequest(UrlMapping.GROUP__DELETE, request);
+        return verifyDeleteResponse(response);
+    }
 
     public List<Group> updateGroups(List<Group> groups) throws IOException {
         var request = new UpdateGroupRequest(groups);

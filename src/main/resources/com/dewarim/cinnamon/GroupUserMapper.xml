@@ -26,6 +26,14 @@
         </foreach>
     </delete>
 
+    <delete id="deleteByGroupIds" parameterType="list">
+        DELETE FROM group_users WHERE group_id IN
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
     <select id="listGroupsOfUser" resultMap="groupUserMap">
         SELECT *
         FROM group_users

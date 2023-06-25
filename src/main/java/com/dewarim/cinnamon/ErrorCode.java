@@ -124,12 +124,13 @@ public enum ErrorCode {
             You can only set a password on a user with original Cinnamon login,
              Cinnamon cannot change your password on an external login provider like LDAP.""", SC_BAD_REQUEST),
 
-    USER_INFO_REQUEST_WITHOUT_NAME_OR_ID("userInfoRequest missing id or name", SC_BAD_REQUEST);
+    USER_INFO_REQUEST_WITHOUT_NAME_OR_ID("userInfoRequest missing id or name", SC_BAD_REQUEST),
+    GROUP_HAS_CHILDREN("Group cannot be deleted, it still has child groups and deleteChildren flag is not set.", SC_CONFLICT);
 
-    private static final Map<String, ErrorCode>           codeMapping = new ConcurrentHashMap<>();
-    final                String                           description;
-    final                int                              httpResponseCode;
-    final                Supplier<FailedRequestException> exceptionSupplier;
+    private static final Map<String, ErrorCode> codeMapping = new ConcurrentHashMap<>();
+    final String description;
+    final int httpResponseCode;
+    final Supplier<FailedRequestException> exceptionSupplier;
 
     ErrorCode(String description, int httpResponseCode) {
         this.description = description;

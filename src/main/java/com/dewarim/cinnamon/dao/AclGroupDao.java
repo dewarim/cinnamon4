@@ -65,4 +65,9 @@ public class AclGroupDao implements CrudDao<AclGroup> {
     public String getTypeClassName() {
         return AclGroup.class.getName();
     }
+
+    public void deleteByGroupIds(List<Long> ids) {
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        sqlSession.delete("com.dewarim.cinnamon.model.AclGroup.deleteByGroupIds", ids);
+    }
 }
