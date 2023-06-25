@@ -125,7 +125,12 @@ public enum ErrorCode {
              Cinnamon cannot change your password on an external login provider like LDAP.""", SC_BAD_REQUEST),
 
     USER_INFO_REQUEST_WITHOUT_NAME_OR_ID("userInfoRequest missing id or name", SC_BAD_REQUEST),
-    GROUP_HAS_CHILDREN("Group cannot be deleted, it still has child groups and deleteChildren flag is not set.", SC_CONFLICT);
+    GROUP_HAS_CHILDREN("Group cannot be deleted, it still has child groups and deleteChildren flag is not set.", SC_CONFLICT),
+    DELETE_USER_NEEDS_ASSET_RECEIVER("""
+            You must submit the user id of another user who stands to receive ownership of all
+            assets belonging to the deleted user, if any.
+            """, SC_BAD_REQUEST),
+    CANNOT_DELETE_SUPERUSER("Cannot delete superuser - please remove superuser status first.", SC_FORBIDDEN);
 
     private static final Map<String, ErrorCode> codeMapping = new ConcurrentHashMap<>();
     final String description;

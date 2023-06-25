@@ -23,7 +23,10 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.hc.client5.http.entity.mime.FileBody;
 import org.apache.hc.client5.http.entity.mime.MultipartEntityBuilder;
 import org.apache.hc.client5.http.entity.mime.StringBody;
-import org.apache.hc.core5.http.*;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.Header;
+import org.apache.hc.core5.http.HttpEntity;
 import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
 import org.apache.ibatis.parsing.ParsingException;
 import org.apache.logging.log4j.LogManager;
@@ -338,14 +341,14 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void getContentWithoutInvalidRequest() throws IOException {
         IdRequest idRequest = new IdRequest(0L);
-        ClassicHttpResponse response = sendStandardRequest(UrlMapping.OSD__GET_CONTENT, idRequest);
+        StandardResponse response = sendStandardRequest(UrlMapping.OSD__GET_CONTENT, idRequest);
         assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
     }
 
     @Test
     public void getContentWithoutValidObject() throws IOException {
         IdRequest idRequest = new IdRequest(Long.MAX_VALUE);
-        ClassicHttpResponse response = sendStandardRequest(UrlMapping.OSD__GET_CONTENT, idRequest);
+        StandardResponse response = sendStandardRequest(UrlMapping.OSD__GET_CONTENT, idRequest);
         assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND);
     }
 
@@ -377,7 +380,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void setContentWithWrongContentType() throws IOException {
-        ClassicHttpResponse response = sendStandardRequest(UrlMapping.OSD__SET_CONTENT, null);
+        StandardResponse response = sendStandardRequest(UrlMapping.OSD__SET_CONTENT, null);
         assertCinnamonError(response, NOT_MULTIPART_UPLOAD);
     }
 
@@ -387,7 +390,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         FileBody fileBody = new FileBody(pomXml, APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
         HttpEntity multipartEntity = MultipartEntityBuilder.create()
                 .addPart("file", fileBody).build();
-        try (ClassicHttpResponse response = sendStandardMultipartRequest(UrlMapping.OSD__SET_CONTENT, multipartEntity)) {
+        try (StandardResponse response = sendStandardMultipartRequest(UrlMapping.OSD__SET_CONTENT, multipartEntity)) {
             assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
         }
     }
@@ -405,7 +408,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         StringBody setContentBody = new StringBody(mapper.writeValueAsString(contentRequest), APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
         HttpEntity multipartEntity = MultipartEntityBuilder.create().
                 addPart(CINNAMON_REQUEST_PART, setContentBody).build();
-        try (ClassicHttpResponse response = sendStandardMultipartRequest(UrlMapping.OSD__SET_CONTENT, multipartEntity)) {
+        try (StandardResponse response = sendStandardMultipartRequest(UrlMapping.OSD__SET_CONTENT, multipartEntity)) {
             assertCinnamonError(response, ErrorCode.MISSING_FILE_PARAMETER);
         }
     }
@@ -413,7 +416,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void setContentWithInvalidParameters() throws IOException {
         SetContentRequest contentRequest = new SetContentRequest(-1L, 0L);
-        try (ClassicHttpResponse response = sendStandardMultipartRequest(UrlMapping.OSD__SET_CONTENT, createMultipartEntityWithFileBody(CINNAMON_REQUEST_PART, contentRequest))) {
+        try (StandardResponse response = sendStandardMultipartRequest(UrlMapping.OSD__SET_CONTENT, createMultipartEntityWithFileBody(CINNAMON_REQUEST_PART, contentRequest))) {
             assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
         }
     }
@@ -421,7 +424,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void setContentWithUnknownOsdId() throws IOException {
         SetContentRequest contentRequest = new SetContentRequest(Long.MAX_VALUE, 1L);
-        try (ClassicHttpResponse response = sendStandardMultipartRequest(UrlMapping.OSD__SET_CONTENT, createMultipartEntityWithFileBody(CINNAMON_REQUEST_PART, contentRequest))) {
+        try (StandardResponse response = sendStandardMultipartRequest(UrlMapping.OSD__SET_CONTENT, createMultipartEntityWithFileBody(CINNAMON_REQUEST_PART, contentRequest))) {
             assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND);
         }
     }
@@ -540,10 +543,10 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void lockAndUnlockShouldFailWithNonExistentObject() throws IOException {
         IdRequest idRequest = new IdRequest(Long.MAX_VALUE);
-        ClassicHttpResponse lockResponse = sendStandardRequest(UrlMapping.OSD__LOCK, idRequest);
+        StandardResponse lockResponse = sendStandardRequest(UrlMapping.OSD__LOCK, idRequest);
         assertCinnamonError(lockResponse, ErrorCode.OBJECT_NOT_FOUND);
 
-        ClassicHttpResponse unlockResponse = sendStandardRequest(UrlMapping.OSD__UNLOCK, idRequest);
+        StandardResponse unlockResponse = sendStandardRequest(UrlMapping.OSD__UNLOCK, idRequest);
         assertCinnamonError(unlockResponse, ErrorCode.OBJECT_NOT_FOUND);
     }
 
@@ -558,14 +561,14 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void getMetaInvalidRequest() throws IOException {
         MetaRequest request = new MetaRequest();
-        ClassicHttpResponse metaResponse = sendStandardRequest(UrlMapping.OSD__GET_META, request);
+        StandardResponse metaResponse = sendStandardRequest(UrlMapping.OSD__GET_META, request);
         assertCinnamonError(metaResponse, ErrorCode.INVALID_REQUEST);
     }
 
     @Test
     public void getMetaObjectNotFound() throws IOException {
         MetaRequest request = new MetaRequest(Long.MAX_VALUE, null);
-        ClassicHttpResponse metaResponse = sendStandardRequest(UrlMapping.OSD__GET_META, request);
+        StandardResponse metaResponse = sendStandardRequest(UrlMapping.OSD__GET_META, request);
         assertCinnamonError(metaResponse, ErrorCode.OBJECT_NOT_FOUND);
     }
 
@@ -612,14 +615,14 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void createMetaInvalidRequest() throws IOException {
         CreateMetaRequest request = new CreateMetaRequest();
-        ClassicHttpResponse metaResponse = sendStandardRequest(UrlMapping.OSD__CREATE_META, request);
+        StandardResponse metaResponse = sendStandardRequest(UrlMapping.OSD__CREATE_META, request);
         assertCinnamonError(metaResponse, ErrorCode.INVALID_REQUEST);
     }
 
     @Test
     public void createMetaObjectNotFound() throws IOException {
         CreateMetaRequest request = new CreateMetaRequest(Long.MAX_VALUE, "foo", 1L);
-        ClassicHttpResponse metaResponse = sendStandardRequest(UrlMapping.OSD__CREATE_META, request);
+        StandardResponse metaResponse = sendStandardRequest(UrlMapping.OSD__CREATE_META, request);
         assertCinnamonError(metaResponse, ErrorCode.OBJECT_NOT_FOUND);
     }
 
@@ -683,7 +686,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void deleteMetaInvalidRequest() throws IOException {
         DeleteMetaRequest deleteRequest = new DeleteMetaRequest();
-        ClassicHttpResponse metaResponse = sendStandardRequest(UrlMapping.OSD__DELETE_META, deleteRequest);
+        StandardResponse metaResponse = sendStandardRequest(UrlMapping.OSD__DELETE_META, deleteRequest);
         assertCinnamonError(metaResponse, ErrorCode.INVALID_REQUEST);
     }
 
@@ -699,7 +702,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void deleteMetaWithMetaNotFound() throws IOException {
         DeleteMetaRequest deleteRequest = new DeleteMetaRequest(Long.MAX_VALUE);
-        ClassicHttpResponse metaResponse = sendStandardRequest(UrlMapping.OSD__DELETE_META, deleteRequest);
+        StandardResponse metaResponse = sendStandardRequest(UrlMapping.OSD__DELETE_META, deleteRequest);
         assertCinnamonError(metaResponse, ErrorCode.METASET_NOT_FOUND);
     }
 
@@ -761,7 +764,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
                 .addTextBody(CINNAMON_REQUEST_PART, mapper.writeValueAsString(request),
                         APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
-        try (ClassicHttpResponse response = sendStandardMultipartRequest(UrlMapping.OSD__CREATE_OSD, entityBuilder.build())) {
+        try (StandardResponse response = sendStandardMultipartRequest(UrlMapping.OSD__CREATE_OSD, entityBuilder.build())) {
             assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
         }
     }
@@ -778,7 +781,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
                 .addTextBody(CINNAMON_REQUEST_PART, mapper.writeValueAsString(request),
                         APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
-        try (ClassicHttpResponse response = sendStandardMultipartRequest(UrlMapping.OSD__CREATE_OSD, entityBuilder.build())) {
+        try (StandardResponse response = sendStandardMultipartRequest(UrlMapping.OSD__CREATE_OSD, entityBuilder.build())) {
             assertCinnamonError(response, ErrorCode.PARENT_FOLDER_NOT_FOUND);
         }
     }
@@ -804,7 +807,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
                 .addTextBody(CINNAMON_REQUEST_PART, mapper.writeValueAsString(request),
                         APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
-        try (ClassicHttpResponse response = sendStandardMultipartRequest(UrlMapping.OSD__CREATE_OSD, entityBuilder.build())) {
+        try (StandardResponse response = sendStandardMultipartRequest(UrlMapping.OSD__CREATE_OSD, entityBuilder.build())) {
             assertCinnamonError(response, ErrorCode.ACL_NOT_FOUND);
         }
     }
@@ -821,7 +824,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
                 .addTextBody(CINNAMON_REQUEST_PART, mapper.writeValueAsString(request),
                         APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
-        try (ClassicHttpResponse response = sendStandardMultipartRequest(UrlMapping.OSD__CREATE_OSD, entityBuilder.build())) {
+        try (StandardResponse response = sendStandardMultipartRequest(UrlMapping.OSD__CREATE_OSD, entityBuilder.build())) {
             assertCinnamonError(response, ErrorCode.USER_ACCOUNT_NOT_FOUND);
         }
     }
@@ -838,7 +841,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
                 .addTextBody(CINNAMON_REQUEST_PART, mapper.writeValueAsString(request),
                         APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
-        try (ClassicHttpResponse response = sendStandardMultipartRequest(UrlMapping.OSD__CREATE_OSD, entityBuilder.build())) {
+        try (StandardResponse response = sendStandardMultipartRequest(UrlMapping.OSD__CREATE_OSD, entityBuilder.build())) {
             assertCinnamonError(response, ErrorCode.OBJECT_TYPE_NOT_FOUND);
         }
     }
@@ -856,7 +859,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
                 .addTextBody(CINNAMON_REQUEST_PART, mapper.writeValueAsString(request),
                         APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
-        try (ClassicHttpResponse response = sendStandardMultipartRequest(UrlMapping.OSD__CREATE_OSD, entityBuilder.build())) {
+        try (StandardResponse response = sendStandardMultipartRequest(UrlMapping.OSD__CREATE_OSD, entityBuilder.build())) {
             assertCinnamonError(response, ErrorCode.LIFECYCLE_STATE_NOT_FOUND);
         }
     }
@@ -875,7 +878,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
                 .addTextBody(CINNAMON_REQUEST_PART, mapper.writeValueAsString(request),
                         APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
-        try (ClassicHttpResponse response = sendStandardMultipartRequest(UrlMapping.OSD__CREATE_OSD, entityBuilder.build())) {
+        try (StandardResponse response = sendStandardMultipartRequest(UrlMapping.OSD__CREATE_OSD, entityBuilder.build())) {
             assertCinnamonError(response, ErrorCode.LANGUAGE_NOT_FOUND);
         }
     }
@@ -921,7 +924,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
                 .addPart("file", fileBody)
                 .addTextBody(CINNAMON_REQUEST_PART, mapper.writeValueAsString(request),
                         APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
-        try (ClassicHttpResponse response = sendStandardMultipartRequest(UrlMapping.OSD__CREATE_OSD, entityBuilder.build())) {
+        try (StandardResponse response = sendStandardMultipartRequest(UrlMapping.OSD__CREATE_OSD, entityBuilder.build())) {
             assertCinnamonError(response, ErrorCode.FORMAT_NOT_FOUND);
         }
     }
@@ -955,7 +958,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void versionWithStandardRequest() throws IOException {
-        try (ClassicHttpResponse response = sendStandardRequest(UrlMapping.OSD__VERSION, null)) {
+        try (StandardResponse response = sendStandardRequest(UrlMapping.OSD__VERSION, null)) {
             assertCinnamonError(response, NOT_MULTIPART_UPLOAD);
         }
     }
@@ -972,7 +975,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     public void versionWithInvalidRequest() throws IOException {
         CreateNewVersionRequest versionRequest = new CreateNewVersionRequest(-1L);
         HttpEntity request = createMultipartEntityWithFileBody(CINNAMON_REQUEST_PART, versionRequest);
-        try (ClassicHttpResponse versionResponse = sendStandardMultipartRequest(UrlMapping.OSD__VERSION, request)) {
+        try (StandardResponse versionResponse = sendStandardMultipartRequest(UrlMapping.OSD__VERSION, request)) {
             assertCinnamonError(versionResponse, ErrorCode.INVALID_REQUEST);
         }
     }
@@ -981,7 +984,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     public void versionWithoutValidTarget() throws IOException {
         CreateNewVersionRequest versionRequest = new CreateNewVersionRequest(Long.MAX_VALUE);
         HttpEntity request = createMultipartEntityWithFileBody(CINNAMON_REQUEST_PART, versionRequest);
-        try (ClassicHttpResponse versionResponse = sendStandardMultipartRequest(UrlMapping.OSD__VERSION, request)) {
+        try (StandardResponse versionResponse = sendStandardMultipartRequest(UrlMapping.OSD__VERSION, request)) {
             assertCinnamonError(versionResponse, ErrorCode.OBJECT_NOT_FOUND);
         }
     }
@@ -1042,7 +1045,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         CreateNewVersionRequest versionRequest = new CreateNewVersionRequest(toh.osd.getId());
         CreateNewVersionRequest.Metadata metadata = new CreateNewVersionRequest.Metadata();
         versionRequest.getMetaRequests().add(metadata);
-        ClassicHttpResponse versionResponse = sendStandardRequest(UrlMapping.OSD__VERSION, versionRequest);
+        StandardResponse versionResponse = sendStandardRequest(UrlMapping.OSD__VERSION, versionRequest);
         assertCinnamonError(versionResponse, NOT_MULTIPART_UPLOAD);
     }
 
@@ -1126,7 +1129,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         CreateNewVersionRequest versionRequest = new CreateNewVersionRequest(osd.getId());
         versionRequest.setFormatId(PLAINTEXT_FORMAT_ID);
         HttpEntity entity = createMultipartEntityWithFileBody(CINNAMON_REQUEST_PART, versionRequest);
-        try (ClassicHttpResponse versionResponse = sendStandardMultipartRequest(UrlMapping.OSD__VERSION, entity)) {
+        try (StandardResponse versionResponse = sendStandardMultipartRequest(UrlMapping.OSD__VERSION, entity)) {
             assertCinnamonError(versionResponse, ErrorCode.LIFECYCLE_STATE_CHANGE_FAILED);
         }
         var ex = assertThrows(CinnamonClientException.class, () -> client.version(versionRequest));

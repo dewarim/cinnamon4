@@ -6,7 +6,9 @@ import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.configuration.CinnamonConfig;
 import com.dewarim.cinnamon.configuration.SecurityConfig;
+import com.dewarim.cinnamon.dao.FolderDao;
 import com.dewarim.cinnamon.dao.GroupUserDao;
+import com.dewarim.cinnamon.dao.OsdDao;
 import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.model.GroupUser;
 import com.dewarim.cinnamon.model.LoginType;
@@ -118,6 +120,26 @@ public class UserAccountServlet extends HttpServlet implements CruddyServlet<Use
                 UserAccount user = userOpt.get();
                 user.setConfig(configRequest.getConfig());
                 userAccountDao.updateUser(user);
+                cinnamonResponse.responseIsGenericOkay();
+            }
+            case USER__DELETE -> {
+                superuserCheck();
+                DeleteUserAccountRequest deleteUserAccountRequest = xmlMapper.readValue(request.getInputStream(), DeleteUserAccountRequest.class)
+                        .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
+                Long assetReceiverId = deleteUserAccountRequest.getAssetReceiverId();
+                userAccountDao.getUserAccountById(assetReceiverId).orElseThrow(ErrorCode.DELETE_USER_NEEDS_ASSET_RECEIVER::exception);
+                Long userId = deleteUserAccountRequest.getUserId();
+                UserAccount userAccount = userAccountDao.getUserAccountById(userId).orElseThrow(ErrorCode.USER_ACCOUNT_NOT_FOUND::exception);
+                if (userAccountDao.isSuperuser(userAccount)) {
+                    throw ErrorCode.CANNOT_DELETE_SUPERUSER.exception();
+                }
+                UserAccount currentUser = ThreadLocalSqlSession.getCurrentUser();
+
+                new FolderDao().updateOwnership(userId, assetReceiverId);
+                new OsdDao().updateOwnershipAndModifierAndCreatorAndLocker(userId, assetReceiverId, currentUser.getId());
+                new GroupUserDao().deleteByUserId(userId);
+
+                userAccountDao.delete(List.of(userId));
                 cinnamonResponse.responseIsGenericOkay();
             }
             default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();

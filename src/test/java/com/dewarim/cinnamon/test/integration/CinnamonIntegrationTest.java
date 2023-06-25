@@ -178,7 +178,7 @@ public class CinnamonIntegrationTest {
         }
     }
 
-    protected void assertCinnamonError(ClassicHttpResponse response, ErrorCode errorCode) throws IOException {
+    protected void assertCinnamonError(StandardResponse response, ErrorCode errorCode) throws IOException {
         String responseText = new String(response.getEntity().getContent().readAllBytes());
         assertTrue(responseText.contains(errorCode.getCode()), "response should contain errorCode " + errorCode + " but was " + responseText);
         assertThat(errorCode.getHttpResponseCode(), equalTo(response.getCode()));

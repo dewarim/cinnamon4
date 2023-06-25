@@ -9,14 +9,7 @@ import com.dewarim.cinnamon.model.index.IndexJobAction;
 import com.dewarim.cinnamon.model.index.IndexJobType;
 import org.apache.ibatis.session.SqlSession;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 import static com.dewarim.cinnamon.api.Constants.ROOT_FOLDER_NAME;
 
@@ -205,5 +198,17 @@ public class FolderDao implements CrudDao<Folder> {
 
     public List<Long> getRecursiveSubFolderIds(Long folderId) {
         return getSqlSession().selectList("com.dewarim.cinnamon.model.Folder.getRecursiveSubFolderIds", folderId);
+    }
+
+    public void updateOwnership(Long userId, Long assetReceiverId) {
+        List<Folder> folders = getFoldersByOwner(userId);
+        folders.forEach(folder -> {
+            folder.setOwnerId(assetReceiverId);
+            updateFolder(folder);
+        });
+    }
+
+    private List<Folder> getFoldersByOwner(Long userId) {
+        return getSqlSession().selectList("com.dewarim.cinnamon.model.Folder.getFoldersByOwnerId", userId);
     }
 }

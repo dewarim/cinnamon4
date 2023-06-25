@@ -4,20 +4,7 @@ import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.Constants;
 import com.dewarim.cinnamon.client.CinnamonClient;
-import com.dewarim.cinnamon.model.Acl;
-import com.dewarim.cinnamon.model.AclGroup;
-import com.dewarim.cinnamon.model.Folder;
-import com.dewarim.cinnamon.model.FolderType;
-import com.dewarim.cinnamon.model.Format;
-import com.dewarim.cinnamon.model.Group;
-import com.dewarim.cinnamon.model.Language;
-import com.dewarim.cinnamon.model.LifecycleState;
-import com.dewarim.cinnamon.model.Meta;
-import com.dewarim.cinnamon.model.MetasetType;
-import com.dewarim.cinnamon.model.ObjectSystemData;
-import com.dewarim.cinnamon.model.ObjectType;
-import com.dewarim.cinnamon.model.Permission;
-import com.dewarim.cinnamon.model.UserAccount;
+import com.dewarim.cinnamon.model.*;
 import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.relations.Relation;
 import com.dewarim.cinnamon.model.relations.RelationType;
@@ -76,6 +63,7 @@ public class TestObjectHolder {
     public MetasetType metasetType;
     public Relation     relation;
     public RelationType relationType;
+    public String newUserPassword;
 
     /**
      * Initialize a new TestObjectHolder with default values, using the given client
@@ -378,4 +366,14 @@ public class TestObjectHolder {
     }
 
 
+    public TestObjectHolder createUser() throws IOException {
+        newUserPassword = createRandomName();
+        user = client.createUser(new UserAccount(createRandomName(),newUserPassword , "-", "-", 1L, LoginType.CINNAMON.name(), true, true, true));
+        return this;
+    }
+
+    public TestObjectHolder deleteUser(Long userId, Long assetReceiverId) throws IOException {
+        client.deleteUser(userId,assetReceiverId );
+        return this;
+    }
 }

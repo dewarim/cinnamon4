@@ -10,15 +10,7 @@ import com.dewarim.cinnamon.model.index.IndexJobType;
 import com.dewarim.cinnamon.model.request.osd.VersionPredicate;
 import org.apache.ibatis.session.SqlSession;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 public class OsdDao implements CrudDao<ObjectSystemData> {
 
@@ -30,11 +22,11 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
     private SqlSession sqlSession;
 
     public List<ObjectSystemData> getObjectsById(List<Long> ids, boolean includeSummary) {
-        SqlSession             sqlSession  = getSqlSession();
-        List<ObjectSystemData> results     = new ArrayList<>(ids.size());
-        int                    requestSize = ids.size();
-        int                    rowCount    = 0;
-        Map<String, Object>    params      = new HashMap<>();
+        SqlSession sqlSession = getSqlSession();
+        List<ObjectSystemData> results = new ArrayList<>(ids.size());
+        int requestSize = ids.size();
+        int rowCount = 0;
+        Map<String, Object> params = new HashMap<>();
         params.put("includeSummary", includeSummary);
         while (rowCount < requestSize) {
             int lastIndex = rowCount + BATCH_SIZE;
@@ -55,8 +47,8 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
     }
 
     public List<ObjectSystemData> getObjectsByFolderId(long folderId, boolean includeSummary, VersionPredicate versionPredicate) {
-        SqlSession          sqlSession = getSqlSession();
-        Map<String, Object> params     = new HashMap<>();
+        SqlSession sqlSession = getSqlSession();
+        Map<String, Object> params = new HashMap<>();
         params.put("includeSummary", includeSummary);
         params.put("folderId", folderId);
 
@@ -92,11 +84,11 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
 
     public ObjectSystemData saveOsd(ObjectSystemData osd) {
         SqlSession sqlSession = getSqlSession();
-        int        resultRows = sqlSession.insert("com.dewarim.cinnamon.model.ObjectSystemData.insertOsd", osd);
+        int resultRows = sqlSession.insert("com.dewarim.cinnamon.model.ObjectSystemData.insertOsd", osd);
         if (resultRows != 1) {
             ErrorCode.DB_INSERT_FAILED.throwUp();
         }
-        if(osd.getRootId() == null){
+        if (osd.getRootId() == null) {
             osd.setRootId(osd.getId());
             updateOsd(osd, false);
         }
@@ -119,12 +111,12 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
     }
 
     public void deleteOsds(List<Long> osdIdsToToDelete) {
-        SqlSession          sqlSession = getSqlSession();
+        SqlSession sqlSession = getSqlSession();
         sqlSession.delete("com.dewarim.cinnamon.model.ObjectSystemData.deleteOsds", osdIdsToToDelete);
     }
 
     public Set<Long> getOsdIdByIdWithDescendants(Long id) {
-        SqlSession          sqlSession =getSqlSession();
+        SqlSession sqlSession = getSqlSession();
         return new HashSet<>(sqlSession.selectList("com.dewarim.cinnamon.model.ObjectSystemData.getOsdIdByIdWithDescendants", id));
     }
 
@@ -143,5 +135,30 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
             return sqlSession;
         }
         return ThreadLocalSqlSession.getSqlSession();
+    }
+
+    public void updateOwnershipAndModifierAndCreatorAndLocker(Long userId, Long assetReceiverId, Long adminUserId) {
+        List<ObjectSystemData> osds = getOsdByModifierOrCreatorOrOwnerOrLocker(userId);
+        Date currentDate = new Date();
+        osds.forEach(osd -> {
+            if (osd.getOwnerId().equals(userId)) {
+                osd.setOwnerId(assetReceiverId);
+            }
+            osd.setModifierId(adminUserId);
+            osd.setModified(currentDate);
+            if (osd.getCreatorId().equals(userId)) {
+                osd.setCreatorId(assetReceiverId);
+            }
+            if (osd.getLockerId() != null && osd.getLockerId().equals(userId)) {
+                osd.setLockerId(assetReceiverId);
+            }
+            updateOsd(osd, false);
+        });
+    }
+
+    private List<ObjectSystemData> getOsdByModifierOrCreatorOrOwnerOrLocker(Long userId) {
+        SqlSession sqlSession = getSqlSession();
+        return sqlSession.selectList("com.dewarim.cinnamon.model.ObjectSystemData.getOsdByModifierOrCreatorOrOwnerOrLocker", userId);
+
     }
 }

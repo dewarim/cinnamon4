@@ -182,6 +182,16 @@ public class CinnamonClient {
         return new String(response.getEntity().getContent().readAllBytes());
     }
 
+    public List<Acl> getAclsOfUser(long userId) throws IOException {
+        StandardResponse response = sendStandardRequest(UrlMapping.ACL__GET_USER_ACLS, new IdRequest(userId));
+        return aclUnwrapper.unwrap(response,EXPECTED_SIZE_ANY);
+    }
+
+    public void deleteUser(Long userId, Long assetReceiverId) throws IOException {
+        var response = sendStandardRequest(USER__DELETE, new DeleteUserAccountRequest(userId, assetReceiverId));
+        verifyResponseIsOkay(response);
+    }
+
     public class WrappedRequest<T, W extends Wrapper<T>> {
         public List<T> send(UrlMapping urlMapping, Object request, Unwrapper<T, W> unwrapper, int expectedSize) throws IOException {
             String requestStr = mapper.writeValueAsString(request);

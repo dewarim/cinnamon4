@@ -1,16 +1,19 @@
 package com.dewarim.cinnamon.test.integration;
 
+import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.client.CinnamonClient;
 import com.dewarim.cinnamon.client.CinnamonClientException;
 import com.dewarim.cinnamon.client.StandardResponse;
+import com.dewarim.cinnamon.model.Folder;
 import com.dewarim.cinnamon.model.LoginType;
+import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.request.user.GetUserAccountRequest;
 import com.dewarim.cinnamon.model.request.user.SetPasswordRequest;
-import org.apache.hc.core5.http.ClassicHttpResponse;
+import com.dewarim.cinnamon.test.TestObjectHolder;
 import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -31,8 +34,8 @@ public class UserAccountServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void requestShouldHaveUserIdOrUsername() throws IOException {
-        GetUserAccountRequest userInfoRequest  = new GetUserAccountRequest(null, null);
-        StandardResponse      userInfoResponse = sendAdminRequest(UrlMapping.USER__GET, userInfoRequest);
+        GetUserAccountRequest userInfoRequest = new GetUserAccountRequest(null, null);
+        StandardResponse userInfoResponse = sendAdminRequest(UrlMapping.USER__GET, userInfoRequest);
         assertCinnamonError(userInfoResponse, ErrorCode.USER_INFO_REQUEST_WITHOUT_NAME_OR_ID);
     }
 
@@ -51,9 +54,9 @@ public class UserAccountServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void listUsers() throws IOException {
-        List<UserAccount> users     = client.listUsers();
-        List<String>      names     = Arrays.asList("admin", "doe", "deactivated user", "locked user");
-        List<String>      userNames = users.stream().map(UserAccount::getName).toList();
+        List<UserAccount> users = client.listUsers();
+        List<String> names = Arrays.asList("admin", "doe", "deactivated user", "locked user");
+        List<String> userNames = users.stream().map(UserAccount::getName).toList();
         assertTrue(userNames.containsAll(names));
         assertFalse(client.getUser("deactivated user").isActivated());
         assertTrue(client.getUser("locked user").isLocked());
@@ -68,15 +71,15 @@ public class UserAccountServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void requestForNonExistentUser() throws IOException {
-        GetUserAccountRequest userInfoRequest  = new GetUserAccountRequest(123L, null);
-        StandardResponse      userInfoResponse = sendAdminRequest(UrlMapping.USER__GET, userInfoRequest);
+        GetUserAccountRequest userInfoRequest = new GetUserAccountRequest(123L, null);
+        StandardResponse userInfoResponse = sendAdminRequest(UrlMapping.USER__GET, userInfoRequest);
         assertCinnamonError(userInfoResponse, ErrorCode.USER_ACCOUNT_NOT_FOUND);
     }
 
     @Test
     public void setUsersOwnPassword() throws IOException {
         SetPasswordRequest setPasswordRequest = new SetPasswordRequest(2L, "testTest");
-        StandardResponse   response           = sendStandardRequest(UrlMapping.USER__SET_PASSWORD, setPasswordRequest);
+        StandardResponse response = sendStandardRequest(UrlMapping.USER__SET_PASSWORD, setPasswordRequest);
         assertResponseOkay(response);
         String url = "http://localhost:" + cinnamonTestPort + UrlMapping.CINNAMON__CONNECT.getPath();
 
@@ -97,21 +100,21 @@ public class UserAccountServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void setOtherUsersPassword() throws IOException {
         SetPasswordRequest setPasswordRequest = new SetPasswordRequest(1L, "testTest");
-        StandardResponse   response           = sendStandardRequest(UrlMapping.USER__SET_PASSWORD, setPasswordRequest);
+        StandardResponse response = sendStandardRequest(UrlMapping.USER__SET_PASSWORD, setPasswordRequest);
         assertCinnamonError(response, ErrorCode.FORBIDDEN);
     }
 
     @Test
     public void setOtherUsersPasswordAsAdmin() throws IOException {
         SetPasswordRequest setPasswordRequest = new SetPasswordRequest(3L, "testTest");
-        StandardResponse   response           = sendAdminRequest(UrlMapping.USER__SET_PASSWORD, setPasswordRequest);
+        StandardResponse response = sendAdminRequest(UrlMapping.USER__SET_PASSWORD, setPasswordRequest);
         assertResponseOkay(response);
     }
 
     @Test
     public void setTooShortPassword() throws IOException {
-        SetPasswordRequest  setPasswordRequest = new SetPasswordRequest(2L, "x");
-        ClassicHttpResponse response           = sendStandardRequest(UrlMapping.USER__SET_PASSWORD, setPasswordRequest);
+        SetPasswordRequest setPasswordRequest = new SetPasswordRequest(2L, "x");
+        StandardResponse response = sendStandardRequest(UrlMapping.USER__SET_PASSWORD, setPasswordRequest);
         assertCinnamonError(response, ErrorCode.PASSWORD_TOO_SHORT);
     }
 
@@ -136,7 +139,7 @@ public class UserAccountServletIntegrationTest extends CinnamonIntegrationTest {
                 username, password);
         testClient.connect();
         assertEquals(userAccount.getId(), testClient.getUser(userAccount.getId()).getId());
-        assertEquals(userAccount.getGroupIds().get(0),1L);
+        assertEquals(userAccount.getGroupIds().get(0), 1L);
     }
 
     @Test
@@ -176,8 +179,8 @@ public class UserAccountServletIntegrationTest extends CinnamonIntegrationTest {
     public void setPasswordOnNonCinnamonLoginType() throws IOException {
         UserAccount user = new UserAccount("user-with-other-login-type", "just-a-pass", "A new user", "user@invalid.com",
                 1L, "LDAP", false, true, true);
-        UserAccount             userAccount = adminClient.createUser(user);
-        CinnamonClientException ex          = assertThrows(CinnamonClientException.class, () -> adminClient.setPassword(userAccount.getId(), "some other password"));
+        UserAccount userAccount = adminClient.createUser(user);
+        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> adminClient.setPassword(userAccount.getId(), "some other password"));
         assertEquals(ErrorCode.USER_ACCOUNT_SET_PASSWORD_NOT_ALLOWED, ex.getErrorCode());
     }
 
@@ -223,8 +226,8 @@ public class UserAccountServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateWithoutChangingPassword() throws IOException {
-        String password    = "xxx123456";
-        String username    = "update-without-changing-password";
+        String password = "xxx123456";
+        String username = "update-without-changing-password";
         String newUserName = "a new updated name";
         UserAccount user = new UserAccount(username, password, "A new user", "user@invalid.com",
                 1L, LoginType.CINNAMON.name(), false, true, true);
@@ -275,6 +278,59 @@ public class UserAccountServletIntegrationTest extends CinnamonIntegrationTest {
         client.setUserConfig(userId, "<config>1</config>");
         UserAccount userWithNewConfig = client.getUser(userId);
         assertEquals("<config>1</config>", userWithNewConfig.getConfig());
+    }
+
+    @Test
+    public void deleteUserHappyPath() throws IOException {
+        TestObjectHolder toh = new TestObjectHolder(adminClient, adminId)
+                .createGroup()
+                .createAclGroup()
+                .createUser();
+        Long userId = toh.user.getId();
+        toh.addUserToGroup(userId)
+        .addPermissions(List.of(DefaultPermission.CREATE_OBJECT,DefaultPermission.CREATE_FOLDER,DefaultPermission.BROWSE,DefaultPermission.LOCK));
+
+        CinnamonClient userClient = new CinnamonClient(client.getPort(), client.getHost(), client.getProtocol(), toh.user.getUsername(), toh.newUserPassword);
+        userClient.connect();
+        TestObjectHolder normalToh = new TestObjectHolder(userClient);
+        normalToh.folder = creationFolder;
+        normalToh.setUser(userId)
+                .setAcl(toh.acl)
+                .createFolder().createOsd().lockOsd();
+
+        Long assetReceiverId = toh.createUser().user.getId();
+
+        toh.deleteUser(userId, assetReceiverId);
+
+        ObjectSystemData osd = client.getOsdById(normalToh.osd.getId(), false, false);
+        assertEquals(adminId, osd.getModifierId());
+        assertEquals(assetReceiverId, osd.getOwnerId());
+        assertEquals(assetReceiverId, osd.getCreatorId());
+        assertEquals(assetReceiverId, osd.getLockerId());
+        Folder folder = client.getFolderById(normalToh.folder.getId(), false);
+        assertEquals(assetReceiverId, folder.getOwnerId());
+    }
+
+    @Test
+    public void deleteUserAsNormalUser() throws IOException {
+        TestObjectHolder toh = new TestObjectHolder(adminClient, adminId)
+                .createGroup()
+                .createUser();
+        Long userId = toh.user.getId();
+        toh.addUserToGroup(userId);
+        toh.createFolder().createOsd().lockOsd();
+        Long assetReceiverId = toh.createUser().user.getId();
+        assertClientError(() -> client.deleteUser(userId, assetReceiverId), ErrorCode.REQUIRES_SUPERUSER_STATUS);
+    }
+
+    @Test
+    public void deleteSuperuser() {
+        assertClientError(() -> adminClient.deleteUser(adminId, userId), ErrorCode.CANNOT_DELETE_SUPERUSER);
+    }
+
+    @Test
+    public void deleteWithoutReceiver() {
+        assertClientError(() -> adminClient.deleteUser(userId, 3289899L), ErrorCode.DELETE_USER_NEEDS_ASSET_RECEIVER);
     }
 
 }

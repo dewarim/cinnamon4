@@ -246,6 +246,11 @@
             </foreach>
     </select>
 
+    <select id="getFoldersByOwnerId" parameterType="long" resultMap="folderMap">
+        select * from folders
+        where owner_id = #{id}
+    </select>
+
     <delete id="delete" parameterType="list">
         DELETE
         FROM folders

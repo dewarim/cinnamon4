@@ -205,6 +205,12 @@
         </foreach>
     </select>
 
+    <select id="getOsdByModifierOrCreatorOrOwnerOrLocker" parameterType="long" resultMap="osdMap">
+        SELECT *
+        FROM objects
+        WHERE owner_id = #{id} or modifier_id = #{id} or creator_id = #{id} or locker_id = #{id}
+    </select>
+
     <!-- should only be used for debugging -->
     <select id="list" resultMap="osdMap">
         SELECT *

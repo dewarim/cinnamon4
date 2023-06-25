@@ -108,4 +108,13 @@
         </foreach>
     </select>
 
+    <delete id="delete" parameterType="list">
+        DELETE FROM users
+        WHERE id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
 </mapper>

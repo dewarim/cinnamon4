@@ -1,41 +1,15 @@
 package com.dewarim.cinnamon.api;
 
-import com.dewarim.cinnamon.model.request.CreateMetaRequest;
-import com.dewarim.cinnamon.model.request.CreateNewVersionRequest;
-import com.dewarim.cinnamon.model.request.DeleteAllMetasRequest;
-import com.dewarim.cinnamon.model.request.DeleteMetaRequest;
-import com.dewarim.cinnamon.model.request.IdListRequest;
-import com.dewarim.cinnamon.model.request.IdRequest;
-import com.dewarim.cinnamon.model.request.ListUrlMappingInfoRequest;
-import com.dewarim.cinnamon.model.request.MetaRequest;
-import com.dewarim.cinnamon.model.request.SetSummaryRequest;
-import com.dewarim.cinnamon.model.request.UpdateMetaRequest;
-import com.dewarim.cinnamon.model.request.acl.AclInfoRequest;
-import com.dewarim.cinnamon.model.request.acl.CreateAclRequest;
-import com.dewarim.cinnamon.model.request.acl.DeleteAclRequest;
-import com.dewarim.cinnamon.model.request.acl.ListAclRequest;
-import com.dewarim.cinnamon.model.request.acl.UpdateAclRequest;
-import com.dewarim.cinnamon.model.request.aclGroup.AclGroupListRequest;
-import com.dewarim.cinnamon.model.request.aclGroup.CreateAclGroupRequest;
-import com.dewarim.cinnamon.model.request.aclGroup.DeleteAclGroupRequest;
-import com.dewarim.cinnamon.model.request.aclGroup.ListAclGroupRequest;
-import com.dewarim.cinnamon.model.request.aclGroup.UpdateAclGroupRequest;
+import com.dewarim.cinnamon.model.request.*;
+import com.dewarim.cinnamon.model.request.acl.*;
+import com.dewarim.cinnamon.model.request.aclGroup.*;
 import com.dewarim.cinnamon.model.request.changeTrigger.CreateChangeTriggerRequest;
 import com.dewarim.cinnamon.model.request.changeTrigger.DeleteChangeTriggerRequest;
 import com.dewarim.cinnamon.model.request.changeTrigger.ListChangeTriggerRequest;
 import com.dewarim.cinnamon.model.request.changeTrigger.UpdateChangeTriggerRequest;
 import com.dewarim.cinnamon.model.request.config.ListConfigRequest;
-import com.dewarim.cinnamon.model.request.configEntry.ConfigEntryRequest;
-import com.dewarim.cinnamon.model.request.configEntry.CreateConfigEntryRequest;
-import com.dewarim.cinnamon.model.request.configEntry.DeleteConfigEntryRequest;
-import com.dewarim.cinnamon.model.request.configEntry.ListConfigEntryRequest;
-import com.dewarim.cinnamon.model.request.configEntry.UpdateConfigEntryRequest;
-import com.dewarim.cinnamon.model.request.folder.CreateFolderRequest;
-import com.dewarim.cinnamon.model.request.folder.DeleteFolderRequest;
-import com.dewarim.cinnamon.model.request.folder.FolderPathRequest;
-import com.dewarim.cinnamon.model.request.folder.FolderRequest;
-import com.dewarim.cinnamon.model.request.folder.SingleFolderRequest;
-import com.dewarim.cinnamon.model.request.folder.UpdateFolderRequest;
+import com.dewarim.cinnamon.model.request.configEntry.*;
+import com.dewarim.cinnamon.model.request.folder.*;
 import com.dewarim.cinnamon.model.request.folderType.CreateFolderTypeRequest;
 import com.dewarim.cinnamon.model.request.folderType.DeleteFolderTypeRequest;
 import com.dewarim.cinnamon.model.request.folderType.ListFolderTypeRequest;
@@ -50,32 +24,14 @@ import com.dewarim.cinnamon.model.request.group.ListGroupRequest;
 import com.dewarim.cinnamon.model.request.group.UpdateGroupRequest;
 import com.dewarim.cinnamon.model.request.groupUser.AddUserToGroupsRequest;
 import com.dewarim.cinnamon.model.request.groupUser.RemoveUserFromGroupsRequest;
-import com.dewarim.cinnamon.model.request.index.CreateIndexItemRequest;
-import com.dewarim.cinnamon.model.request.index.DeleteIndexItemRequest;
-import com.dewarim.cinnamon.model.request.index.IndexInfoRequest;
-import com.dewarim.cinnamon.model.request.index.ListIndexItemRequest;
-import com.dewarim.cinnamon.model.request.index.ReindexRequest;
-import com.dewarim.cinnamon.model.request.index.UpdateIndexItemRequest;
+import com.dewarim.cinnamon.model.request.index.*;
 import com.dewarim.cinnamon.model.request.language.CreateLanguageRequest;
 import com.dewarim.cinnamon.model.request.language.DeleteLanguageRequest;
 import com.dewarim.cinnamon.model.request.language.ListLanguageRequest;
 import com.dewarim.cinnamon.model.request.language.UpdateLanguageRequest;
-import com.dewarim.cinnamon.model.request.lifecycle.CreateLifecycleRequest;
-import com.dewarim.cinnamon.model.request.lifecycle.DeleteLifecycleRequest;
-import com.dewarim.cinnamon.model.request.lifecycle.LifecycleRequest;
-import com.dewarim.cinnamon.model.request.lifecycle.ListLifecycleRequest;
-import com.dewarim.cinnamon.model.request.lifecycle.UpdateLifecycleRequest;
-import com.dewarim.cinnamon.model.request.lifecycleState.AttachLifecycleRequest;
-import com.dewarim.cinnamon.model.request.lifecycleState.ChangeLifecycleStateRequest;
-import com.dewarim.cinnamon.model.request.lifecycleState.CreateLifecycleStateRequest;
-import com.dewarim.cinnamon.model.request.lifecycleState.DeleteLifecycleStateRequest;
-import com.dewarim.cinnamon.model.request.lifecycleState.ListLifecycleStateRequest;
-import com.dewarim.cinnamon.model.request.lifecycleState.UpdateLifecycleStateRequest;
-import com.dewarim.cinnamon.model.request.link.CreateLinkRequest;
-import com.dewarim.cinnamon.model.request.link.DeleteLinkRequest;
-import com.dewarim.cinnamon.model.request.link.GetLinksRequest;
-import com.dewarim.cinnamon.model.request.link.LinkWrapper;
-import com.dewarim.cinnamon.model.request.link.UpdateLinkRequest;
+import com.dewarim.cinnamon.model.request.lifecycle.*;
+import com.dewarim.cinnamon.model.request.lifecycleState.*;
+import com.dewarim.cinnamon.model.request.link.*;
 import com.dewarim.cinnamon.model.request.metasetType.CreateMetasetTypeRequest;
 import com.dewarim.cinnamon.model.request.metasetType.DeleteMetasetTypeRequest;
 import com.dewarim.cinnamon.model.request.metasetType.ListMetasetTypeRequest;
@@ -84,14 +40,7 @@ import com.dewarim.cinnamon.model.request.objectType.CreateObjectTypeRequest;
 import com.dewarim.cinnamon.model.request.objectType.DeleteObjectTypeRequest;
 import com.dewarim.cinnamon.model.request.objectType.ListObjectTypeRequest;
 import com.dewarim.cinnamon.model.request.objectType.UpdateObjectTypeRequest;
-import com.dewarim.cinnamon.model.request.osd.CopyOsdRequest;
-import com.dewarim.cinnamon.model.request.osd.CreateOsdRequest;
-import com.dewarim.cinnamon.model.request.osd.DeleteOsdRequest;
-import com.dewarim.cinnamon.model.request.osd.GetRelationsRequest;
-import com.dewarim.cinnamon.model.request.osd.OsdByFolderRequest;
-import com.dewarim.cinnamon.model.request.osd.OsdRequest;
-import com.dewarim.cinnamon.model.request.osd.SetContentRequest;
-import com.dewarim.cinnamon.model.request.osd.UpdateOsdRequest;
+import com.dewarim.cinnamon.model.request.osd.*;
 import com.dewarim.cinnamon.model.request.permission.ChangePermissionsRequest;
 import com.dewarim.cinnamon.model.request.permission.ListPermissionRequest;
 import com.dewarim.cinnamon.model.request.relation.CreateRelationRequest;
@@ -106,41 +55,8 @@ import com.dewarim.cinnamon.model.request.uiLanguage.CreateUiLanguageRequest;
 import com.dewarim.cinnamon.model.request.uiLanguage.DeleteUiLanguageRequest;
 import com.dewarim.cinnamon.model.request.uiLanguage.ListUiLanguageRequest;
 import com.dewarim.cinnamon.model.request.uiLanguage.UpdateUiLanguageRequest;
-import com.dewarim.cinnamon.model.request.user.CreateUserAccountRequest;
-import com.dewarim.cinnamon.model.request.user.GetUserAccountRequest;
-import com.dewarim.cinnamon.model.request.user.ListUserAccountRequest;
-import com.dewarim.cinnamon.model.request.user.SetPasswordRequest;
-import com.dewarim.cinnamon.model.request.user.SetUserConfigRequest;
-import com.dewarim.cinnamon.model.request.user.UpdateUserAccountRequest;
-import com.dewarim.cinnamon.model.request.user.UserPermissionRequest;
-import com.dewarim.cinnamon.model.response.AclGroupWrapper;
-import com.dewarim.cinnamon.model.response.AclWrapper;
-import com.dewarim.cinnamon.model.response.ChangeTriggerWrapper;
-import com.dewarim.cinnamon.model.response.ConfigEntryWrapper;
-import com.dewarim.cinnamon.model.response.ConfigWrapper;
-import com.dewarim.cinnamon.model.response.DeleteResponse;
-import com.dewarim.cinnamon.model.response.FolderTypeWrapper;
-import com.dewarim.cinnamon.model.response.FolderWrapper;
-import com.dewarim.cinnamon.model.response.FormatWrapper;
-import com.dewarim.cinnamon.model.response.GenericResponse;
-import com.dewarim.cinnamon.model.response.GroupWrapper;
-import com.dewarim.cinnamon.model.response.IndexItemWrapper;
-import com.dewarim.cinnamon.model.response.LanguageWrapper;
-import com.dewarim.cinnamon.model.response.LifecycleStateWrapper;
-import com.dewarim.cinnamon.model.response.LifecycleWrapper;
-import com.dewarim.cinnamon.model.response.LinkResponseWrapper;
-import com.dewarim.cinnamon.model.response.MetaWrapper;
-import com.dewarim.cinnamon.model.response.MetasetTypeWrapper;
-import com.dewarim.cinnamon.model.response.ObjectTypeWrapper;
-import com.dewarim.cinnamon.model.response.OsdWrapper;
-import com.dewarim.cinnamon.model.response.PermissionWrapper;
-import com.dewarim.cinnamon.model.response.RelationTypeWrapper;
-import com.dewarim.cinnamon.model.response.RelationWrapper;
-import com.dewarim.cinnamon.model.response.SearchIdsResponse;
-import com.dewarim.cinnamon.model.response.SummaryWrapper;
-import com.dewarim.cinnamon.model.response.UiLanguageWrapper;
-import com.dewarim.cinnamon.model.response.UrlMappingInfoWrapper;
-import com.dewarim.cinnamon.model.response.UserAccountWrapper;
+import com.dewarim.cinnamon.model.request.user.*;
+import com.dewarim.cinnamon.model.response.*;
 import com.dewarim.cinnamon.model.response.index.IndexInfoResponse;
 import com.dewarim.cinnamon.model.response.index.ReindexResponse;
 
@@ -364,6 +280,11 @@ public enum UrlMapping {
     UI_LANGUAGE__LIST("uiLanguage", "list", "/api", "", ListUiLanguageRequest.class, UiLanguageWrapper.class),
     UI_LANGUAGE__UPDATE("uiLanguage", "update", "/api", "", UpdateUiLanguageRequest.class, UiLanguageWrapper.class),
     USER__CREATE("user", "create", "/api", "", CreateUserAccountRequest.class, UserAccountWrapper.class),
+    USER__DELETE("user", "delete", "/api", """
+    Delete a user and transfer all his remaining assets to another user.
+    Note: this is not optimized for users who own vast collections of objects or folders.
+    """
+    , DeleteUserAccountRequest.class, GenericResponse.class),
     USER__GET("user", "get", "/api", "", GetUserAccountRequest.class, UserAccountWrapper.class),
     USER__LIST("user", "list", "/api", "", ListUserAccountRequest.class, UserAccountWrapper.class),
     USER__SET_CONFIG("user", "setConfig", "/api", "Update a user's individual configuration", SetUserConfigRequest.class, GenericResponse.class),

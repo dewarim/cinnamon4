@@ -34,6 +34,10 @@
         </foreach>
     </delete>
 
+    <delete id="deleteByUserId" parameterType="long">
+        DELETE FROM group_users WHERE user_id = #{id}
+    </delete>
+
     <select id="listGroupsOfUser" resultMap="groupUserMap">
         SELECT *
         FROM group_users

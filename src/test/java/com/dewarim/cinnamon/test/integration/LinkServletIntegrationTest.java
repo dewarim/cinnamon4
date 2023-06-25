@@ -3,6 +3,7 @@ package com.dewarim.cinnamon.test.integration;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.client.CinnamonClientException;
+import com.dewarim.cinnamon.client.StandardResponse;
 import com.dewarim.cinnamon.model.Folder;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.links.Link;
@@ -10,7 +11,6 @@ import com.dewarim.cinnamon.model.links.LinkType;
 import com.dewarim.cinnamon.model.request.link.CreateLinkRequest;
 import com.dewarim.cinnamon.model.response.LinkResponse;
 import com.dewarim.cinnamon.test.TestObjectHolder;
-import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -29,8 +29,8 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getLinkByIdForObject() throws IOException {
-        String           summary    = "<summary>sum of a sum</summary>";
-        var              toh        = prepareAclGroupWithPermissions(List.of(BROWSE, SET_SUMMARY));
+        String summary = "<summary>sum of a sum</summary>";
+        var toh = prepareAclGroupWithPermissions(List.of(BROWSE, SET_SUMMARY));
         ObjectSystemData linkTarget = toh.createOsd().osd;
         Long linkId = toh.createFolder()
                 .createLinkToOsd(linkTarget)
@@ -47,13 +47,13 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getLinkByIdForObjectWithoutSummary() throws IOException {
-        var              toh        = prepareAclGroupWithPermissions(List.of(BROWSE));
+        var toh = prepareAclGroupWithPermissions(List.of(BROWSE));
         ObjectSystemData linkTarget = toh.createOsd().osd;
         Long linkId = toh.createFolder()
                 .createLinkToOsd(linkTarget)
                 .link.getId();
-        Link             link = new Link(client.getLinkById(linkId, false));
-        ObjectSystemData osd  = client.getOsdById(link.getObjectId(), false, false);
+        Link link = new Link(client.getLinkById(linkId, false));
+        ObjectSystemData osd = client.getOsdById(link.getObjectId(), false, false);
         assertEquals(DEFAULT_SUMMARY, osd.getSummary());
     }
 
@@ -88,7 +88,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
                 .createLinkToFolder(linkTarget);
         client.setFolderSummary(linkTarget.getId(), "<summary>stuff</summary>");
         LinkResponse linkResponse = client.getLinkById(toh.link.getId(), true);
-        Link         link         = new Link(linkResponse);
+        Link link = new Link(linkResponse);
         assertEquals(LinkType.FOLDER, link.getType());
         Folder folder = client.getFolderById(link.getFolderId(), false);
         assertEquals(DEFAULT_SUMMARY, folder.getSummary());
@@ -113,7 +113,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
         toh.createLinkToOsd(toh.osd);
 
         var linkResponse = client.getLinkById(toh.link.getId(), false);
-        var link         = new Link(linkResponse);
+        var link = new Link(linkResponse);
         assertEquals(LinkType.OBJECT, link.getType());
     }
 
@@ -142,7 +142,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void aclOnFolderForbidsAccess() throws IOException {
         // we need 2 acls: the link itself is browsable, but the folder behind it is not
-        var toh          = prepareAclGroupWithPermissions(List.of());
+        var toh = prepareAclGroupWithPermissions(List.of());
         var targetFolder = toh.createFolder().folder;
         toh.createFolder();
         var toh2 = prepareAclGroupWithPermissions(List.of(BROWSE));
@@ -207,7 +207,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void deleteLinkToFolderWithoutPermission() throws IOException {
-        var toh          = prepareAclGroupWithPermissions(List.of(BROWSE));
+        var toh = prepareAclGroupWithPermissions(List.of(BROWSE));
         var targetFolder = toh.createFolder().folder;
         toh.createFolder(defaultCreationFolderId)
                 .createLinkToFolder(client.getFolderById(targetFolder.getId(), false));
@@ -216,7 +216,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void deleteObjectLinkHappyPath() throws IOException {
-        var              toh        = prepareAclGroupWithPermissions(List.of(BROWSE, DELETE));
+        var toh = prepareAclGroupWithPermissions(List.of(BROWSE, DELETE));
         ObjectSystemData linkTarget = toh.createOsd().osd;
         Long linkId = toh.createFolder()
                 .createLinkToOsd(linkTarget)
@@ -229,7 +229,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void deleteFolderLinkHappyPath() throws IOException {
-        var    toh        = prepareAclGroupWithPermissions(List.of(BROWSE, DELETE));
+        var toh = prepareAclGroupWithPermissions(List.of(BROWSE, DELETE));
         Folder linkTarget = toh.createFolder(createFolderId).folder;
         Long linkId = toh.createFolder()
                 .createLinkToFolder(linkTarget)
@@ -246,8 +246,8 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
                 List.of(BROWSE, CREATE_OBJECT))
                 .createOsd()
                 .createFolder();
-        ObjectSystemData osd  = toh.osd;
-        Link             link = client.createLinkToOsd(toh.folder.getId(), defaultCreationAcl.getId(), userId, osd.getId());
+        ObjectSystemData osd = toh.osd;
+        Link link = client.createLinkToOsd(toh.folder.getId(), defaultCreationAcl.getId(), userId, osd.getId());
 
         assertEquals(osd.getId(), link.getObjectId());
         assertEquals(toh.folder.getId(), link.getParentId());
@@ -263,9 +263,9 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
                 List.of(BROWSE, CREATE_OBJECT))
                 .createOsd()
                 .createFolder();
-        var  targetFolder    = toh.folder;
-        var  containerFolder = toh.createFolder(defaultCreationFolderId).folder;
-        Link link            = client.createLinkToFolder(containerFolder.getId(), defaultCreationAcl.getId(), userId, targetFolder.getId());
+        var targetFolder = toh.folder;
+        var containerFolder = toh.createFolder(defaultCreationFolderId).folder;
+        Link link = client.createLinkToFolder(containerFolder.getId(), defaultCreationAcl.getId(), userId, targetFolder.getId());
 
         assertEquals(targetFolder.getId(), link.getFolderId());
         assertEquals(containerFolder.getId(), link.getParentId());
@@ -282,20 +282,20 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
         assertClientError(() -> client.createLinkToOsd(6L, 1L, 1L, 0L), INVALID_REQUEST);
 
         // invalid parent folder id
-        CreateLinkRequest crlParentId      = new CreateLinkRequest(0L, LinkType.OBJECT, 1, 1, null, 13L);
-         ClassicHttpResponse      responseParentId = sendStandardRequest(UrlMapping.LINK__CREATE, crlParentId);
+        CreateLinkRequest crlParentId = new CreateLinkRequest(0L, LinkType.OBJECT, 1, 1, null, 13L);
+        StandardResponse responseParentId = sendStandardRequest(UrlMapping.LINK__CREATE, crlParentId);
         assertCinnamonError(responseParentId, INVALID_REQUEST);
 
         // invalid link type
-        CreateLinkRequest    crlLinkType      = new CreateLinkRequest(6L, null, 1, 1, null, 13L);
-        sendStandardRequestAndAssertError(UrlMapping.LINK__CREATE, crlParentId, INVALID_REQUEST);
+        CreateLinkRequest crlLinkType = new CreateLinkRequest(6L, null, 1, 1, null, 13L);
+        sendStandardRequestAndAssertError(UrlMapping.LINK__CREATE, crlLinkType, INVALID_REQUEST);
 
         // invalid link type
-        CreateLinkRequest crlAcl      = new CreateLinkRequest(6L, LinkType.OBJECT, 0, 1, null, 13L);
-         sendStandardRequestAndAssertError(UrlMapping.LINK__CREATE, crlParentId, INVALID_REQUEST);
+        CreateLinkRequest crlAcl = new CreateLinkRequest(6L, LinkType.OBJECT, 0, 1, null, 13L);
+        sendStandardRequestAndAssertError(UrlMapping.LINK__CREATE, crlAcl, INVALID_REQUEST);
 
         // invalid ownerId
-        CreateLinkRequest crlOwnerId      = new CreateLinkRequest(6L, LinkType.OBJECT, 1, 0, null, 13L);
+        CreateLinkRequest crlOwnerId = new CreateLinkRequest(6L, LinkType.OBJECT, 1, 0, null, 13L);
         sendStandardRequestAndAssertError(UrlMapping.LINK__CREATE, crlOwnerId, INVALID_REQUEST);
     }
 
@@ -350,9 +350,9 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
         var toh = prepareAclGroupWithOwnerPermissions(List.of(BROWSE, CREATE_OBJECT))
                 .createOsd()
                 .createFolder();
-        var  targetFolder    = toh.folder;
-        var  containerFolder = toh.createFolder().folder;
-        Link link            = client.createLinkToFolder(containerFolder.getId(), toh.acl.getId(), userId, targetFolder.getId());
+        var targetFolder = toh.folder;
+        var containerFolder = toh.createFolder().folder;
+        Link link = client.createLinkToFolder(containerFolder.getId(), toh.acl.getId(), userId, targetFolder.getId());
         assertEquals(LinkType.FOLDER, link.getType());
         assertEquals(toh.folder.getId(), link.getParentId());
         assertEquals(targetFolder.getId(), link.getFolderId());
@@ -462,7 +462,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateLinkFolderWithNonExistentFolder() throws IOException {
-        var toh          = prepareAclGroupWithPermissions(List.of(BROWSE));
+        var toh = prepareAclGroupWithPermissions(List.of(BROWSE));
         var targetFolder = toh.createFolder().folder;
         var link = toh.createFolder()
                 .createLinkToFolder(targetFolder).link;
@@ -507,7 +507,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
                 .createLinkToFolder(linkTarget);
         var linkResponse = client.getLinkById(toh.link.getId(), true);
         linkResponse.setOwnerId(adminId);
-        var  link        = new Link(linkResponse);
+        var link = new Link(linkResponse);
         Link updatedLink = client.updateLink(link);
         assertEquals(link, updatedLink);
     }
@@ -553,10 +553,10 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void updateLinkParentFolder() throws IOException {
         var toh = prepareAclGroupWithPermissions(
-                List.of(BROWSE, CREATE_OBJECT, CREATE_FOLDER,SET_PARENT ));
+                List.of(BROWSE, CREATE_OBJECT, CREATE_FOLDER, SET_PARENT));
         // Create target folder, then a folder and inside a link to the target folder.
-        Folder linkTarget  = toh.createFolder().folder;
-        Long   newParentId = toh.createFolder("parent folder for update", linkTarget.getId()).folder.getId();
+        Folder linkTarget = toh.createFolder().folder;
+        Long newParentId = toh.createFolder("parent folder for update", linkTarget.getId()).folder.getId();
         toh.createFolder().createLinkToFolder(linkTarget);
         var linkResponse = client.getLinkById(toh.link.getId(), true);
         linkResponse.setParentId(newParentId);
@@ -570,11 +570,11 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
                 BROWSE, CREATE_OBJECT, SET_LINK_TARGET
         ));
 
-        long osdId        = toh.createOsd("updateLinkToObject").osd.getId();
+        long osdId = toh.createOsd("updateLinkToObject").osd.getId();
         long linkFolderId = toh.createFolder("folder with a link", createFolderId).folder.getId();
-        Link link         = client.createLinkToOsd(linkFolderId, toh.acl.getId(), userId, osdId);
-        long secondOsdId  = toh.createOsd("second-link-osd").osd.getId();
-        var  linkResponse = client.getLinkById(link.getId(), false);
+        Link link = client.createLinkToOsd(linkFolderId, toh.acl.getId(), userId, osdId);
+        long secondOsdId = toh.createOsd("second-link-osd").osd.getId();
+        var linkResponse = client.getLinkById(link.getId(), false);
         linkResponse.setObjectId(secondOsdId);
         assertEquals(new Link(linkResponse), client.updateLink(new Link(linkResponse)));
     }
@@ -585,7 +585,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
                 .createOsd()
                 .createFolder();
         var targetFolder = toh.folder;
-        var link         = toh.createFolder().createLinkToFolder(toh.folder).link;
+        var link = toh.createFolder().createLinkToFolder(toh.folder).link;
         link.setType(LinkType.OBJECT);
         link.setFolderId(null);
         link.setObjectId(toh.osd.getId());
@@ -599,7 +599,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
                 .createOsd()
                 .createFolder();
         var targetFolder = toh.createFolder(createFolderId).folder;
-        var link         = toh.createLinkToOsd(toh.osd).link;
+        var link = toh.createLinkToOsd(toh.osd).link;
 
         link.setType(LinkType.FOLDER);
         link.setFolderId(targetFolder.getId());

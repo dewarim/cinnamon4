@@ -40,4 +40,9 @@ public class GroupUserDao implements CrudDao<GroupUser> {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
         sqlSession.delete("com.dewarim.cinnamon.model.GroupUser.deleteByGroupIds", ids);
     }
+
+    public void deleteByUserId(Long userId) {
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        sqlSession.delete("com.dewarim.cinnamon.model.GroupUser.deleteByUserId", userId);
+    }
 }
