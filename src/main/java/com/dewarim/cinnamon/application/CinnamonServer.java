@@ -51,7 +51,7 @@ public class CinnamonServer {
 
     private static final Logger log = LogManager.getLogger(CinnamonServer.class);
 
-    public static final String           VERSION       = "0.5.6";
+    public static final String           VERSION       = "0.5.6.1";
     private final       int              port;
     private             Server           server;
     private             DbSessionFactory dbSessionFactory;

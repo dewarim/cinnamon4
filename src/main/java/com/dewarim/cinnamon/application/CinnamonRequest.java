@@ -1,7 +1,6 @@
 package com.dewarim.cinnamon.application;
 
 
-import com.dewarim.cinnamon.ErrorCode;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.HttpServletRequest;
@@ -30,9 +29,9 @@ public class CinnamonRequest extends HttpServletRequestWrapper {
     public CinnamonRequest(HttpServletRequest request) {
         super(request);
         this.request = request;
-        String contentType = Optional.ofNullable(request.getContentType())
-                .orElseThrow(ErrorCode.NO_CONTENT_TYPE_IN_HEADER.getException());
-        multiPart = contentType.toLowerCase().startsWith(MULTIPART);
+        Optional<String> contentType = Optional.ofNullable(request.getContentType());
+        //                .orElseThrow(ErrorCode.NO_CONTENT_TYPE_IN_HEADER.getException());
+        multiPart = contentType.map(s -> s.toLowerCase().startsWith(MULTIPART)).orElse(false);
     }
 
     public void copyInputStream(boolean copyFileContent) throws IOException, ServletException {
