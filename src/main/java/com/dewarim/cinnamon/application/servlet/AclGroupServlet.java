@@ -5,13 +5,12 @@ import com.dewarim.cinnamon.FailedRequestException;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.dao.AclGroupDao;
+import com.dewarim.cinnamon.dao.AclGroupPermissionDao;
 import com.dewarim.cinnamon.model.AclGroup;
-import com.dewarim.cinnamon.model.request.aclGroup.AclGroupListRequest;
-import com.dewarim.cinnamon.model.request.aclGroup.CreateAclGroupRequest;
-import com.dewarim.cinnamon.model.request.aclGroup.DeleteAclGroupRequest;
-import com.dewarim.cinnamon.model.request.aclGroup.ListAclGroupRequest;
-import com.dewarim.cinnamon.model.request.aclGroup.UpdateAclGroupRequest;
+import com.dewarim.cinnamon.model.request.UpdateRequest;
+import com.dewarim.cinnamon.model.request.aclGroup.*;
 import com.dewarim.cinnamon.model.response.AclGroupWrapper;
+import com.dewarim.cinnamon.security.authorization.AccessFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -19,7 +18,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
 
@@ -38,7 +39,7 @@ public class AclGroupServlet extends HttpServlet implements CruddyServlet<AclGro
             case ACL_GROUP__LIST_BY_GROUP_OR_ACL -> listAclGroups(request, cinnamonResponse, aclGroupDao);
             case ACL_GROUP__LIST -> {
                 list(convertListRequest(request, ListAclGroupRequest.class), aclGroupDao, cinnamonResponse);
-                aclGroupDao.addPermissionsToAclGroups(((AclGroupWrapper) cinnamonResponse.getWrapper()).list());
+                aclGroupDao.loadPermissionsIntoAclGroups(((AclGroupWrapper) cinnamonResponse.getWrapper()).list());
             }
             case ACL_GROUP__CREATE -> {
                 superuserCheck();
@@ -50,8 +51,21 @@ public class AclGroupServlet extends HttpServlet implements CruddyServlet<AclGro
             }
             case ACL_GROUP__UPDATE -> {
                 superuserCheck();
-                update(convertUpdateRequest(request, UpdateAclGroupRequest.class), aclGroupDao, cinnamonResponse);
-                aclGroupDao.addPermissionsToAclGroups(((AclGroupWrapper) cinnamonResponse.getWrapper()).list());
+                UpdateRequest<AclGroup> updateRequest = convertUpdateRequest(request, UpdateAclGroupRequest.class);
+                List<Long> aclGroupIds = updateRequest.list().stream().map(AclGroup::getId).toList();
+                AclGroupPermissionDao permissionDao = new AclGroupPermissionDao();
+                List<AclGroup> currentGroupsFromDb = aclGroupDao.getObjectsById(aclGroupIds);
+                aclGroupDao.loadPermissionsIntoAclGroups(currentGroupsFromDb);
+                Map<Long,AclGroup> requestGroups = new HashMap<>();
+                updateRequest.list().forEach(ag -> requestGroups.put(ag.getId(),ag));
+                for (AclGroup currentGroup : currentGroupsFromDb) {
+                    permissionDao.removePermissions(currentGroup,currentGroup.getPermissionIds());
+                    AclGroup requestGroup = requestGroups.get(currentGroup.getId());
+                    permissionDao.addPermissions(currentGroup,requestGroup.getPermissionIds());
+                }
+                AclGroupWrapper aclGroupWrapper = new AclGroupWrapper(updateRequest.list());
+                cinnamonResponse.setWrapper(aclGroupWrapper);
+                AccessFilter.reload();
             }
             default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }

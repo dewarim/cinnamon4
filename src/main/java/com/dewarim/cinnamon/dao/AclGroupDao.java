@@ -23,17 +23,17 @@ public class AclGroupDao implements CrudDao<AclGroup> {
     public List<AclGroup> getAclGroupsByAclId(long aclId) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
         List<AclGroup> aclGroups= sqlSession.selectList("com.dewarim.cinnamon.model.AclGroup.getAclGroupsByAclId", aclId);
-        addPermissionsToAclGroups(aclGroups);
+        loadPermissionsIntoAclGroups(aclGroups);
         return aclGroups;
     }
     public List<AclGroup> getAclGroupsByGroupId(long groupId) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
         List<AclGroup> aclGroups  = sqlSession.selectList("com.dewarim.cinnamon.model.AclGroup.getAclGroupsByGroupId", groupId);
-        addPermissionsToAclGroups(aclGroups);
+        loadPermissionsIntoAclGroups(aclGroups);
         return aclGroups;
     }
 
-    public void addPermissionsToAclGroups(List<AclGroup> aclGroups) {
+    public void loadPermissionsIntoAclGroups(List<AclGroup> aclGroups) {
         AclGroupPermissionDao agpDao = new AclGroupPermissionDao();
         Map<Long, List<Long>> aclGroupToPermissionIds = agpDao.listPermissionsOfAclGroups(aclGroups.stream().map(AclGroup::getId).collect(Collectors.toList()));
         aclGroups.forEach(aclGroup -> aclGroup.setPermissionIds(aclGroupToPermissionIds.getOrDefault(aclGroup.getId(),new ArrayList<>())));
@@ -56,7 +56,7 @@ public class AclGroupDao implements CrudDao<AclGroup> {
         Map<String, Object> params = Map.of("groupName", name, "aclId", aclId);
         AclGroup aclGroup = sqlSession.selectOne("com.dewarim.cinnamon.model.AclGroup.getAclGroupByAclAndGroupName", params);
         if(aclGroup != null){
-            addPermissionsToAclGroups(List.of(aclGroup));
+            loadPermissionsIntoAclGroups(List.of(aclGroup));
         }
         return Optional.ofNullable(aclGroup);
     }

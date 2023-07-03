@@ -74,7 +74,10 @@ public enum UrlMapping {
     ACL_GROUP__DELETE("aclGroup", "delete", "/api", "", DeleteAclGroupRequest.class, DeleteResponse.class),
     ACL_GROUP__LIST("aclGroup", "list", "/api", "", ListAclGroupRequest.class, AclGroupWrapper.class),
     ACL_GROUP__LIST_BY_GROUP_OR_ACL("aclGroup", "listByGroupOrAcl", "/api", "", AclGroupListRequest.class, AclGroupWrapper.class),
-    ACL_GROUP__UPDATE("aclGroup", "update", "/api", "", UpdateAclGroupRequest.class, AclGroupWrapper.class),
+    ACL_GROUP__UPDATE("aclGroup", "update", "/api", """
+     This replaces the existing permissions of the given AclGroup with the ones you send with the request.
+     It does not otherwise change the AclGroup (as it only contains of a group and acl reference - to change those, create a new AclGroup.
+     """, UpdateAclGroupRequest.class, AclGroupWrapper.class),
     ACL__ACL_INFO("acl", "aclInfo", "/api", "", AclInfoRequest.class, AclWrapper.class),
     ACL__CREATE("acl", "create", "/api", "", CreateAclRequest.class, AclWrapper.class),
     ACL__DELETE("acl", "delete", "/api", "", DeleteAclRequest.class, DeleteResponse.class),
