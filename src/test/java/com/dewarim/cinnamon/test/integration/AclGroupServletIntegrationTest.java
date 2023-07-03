@@ -162,4 +162,10 @@ public class AclGroupServletIntegrationTest extends CinnamonIntegrationTest {
         assertEquals(1,userPermissions.size());
         assertEquals(deletePerm, userPermissions.get(0));
     }
+    @Test
+    public void deleteAclGroupWithUser() throws IOException {
+        TestObjectHolder toh = prepareAclGroupWithPermissions(List.of(BROWSE, LOCK));
+        AclGroup deleteMe = new AclGroup(toh.aclGroup.getId(), toh.acl.getId(), toh.group.getId());
+        adminClient.deleteAclGroups(List.of(deleteMe.getId()));
+    }
 }

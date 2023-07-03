@@ -20,4 +20,9 @@ public class DeleteAclGroupRequest extends DeleteByIdRequest<AclGroup> implement
     public DeleteAclGroupRequest(Long id) {
         super(id);
     }
+
+    @Override
+    public List<ApiRequest> examples() {
+        return List.of(new DeleteAclGroupRequest(List.of(5L,78L)));
+    }
 }

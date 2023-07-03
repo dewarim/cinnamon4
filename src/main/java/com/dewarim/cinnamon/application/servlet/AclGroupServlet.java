@@ -7,6 +7,7 @@ import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.dao.AclGroupDao;
 import com.dewarim.cinnamon.dao.AclGroupPermissionDao;
 import com.dewarim.cinnamon.model.AclGroup;
+import com.dewarim.cinnamon.model.request.DeleteRequest;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.request.aclGroup.*;
 import com.dewarim.cinnamon.model.response.AclGroupWrapper;
@@ -47,7 +48,12 @@ public class AclGroupServlet extends HttpServlet implements CruddyServlet<AclGro
             }
             case ACL_GROUP__DELETE -> {
                 superuserCheck();
-                delete(convertDeleteRequest(request, DeleteAclGroupRequest.class), aclGroupDao, cinnamonResponse);
+                DeleteRequest<AclGroup> aclGroupDeleteRequest = convertDeleteRequest(request, DeleteAclGroupRequest.class);
+                List<AclGroup> groupsToDelete = aclGroupDao.getObjectsById(aclGroupDeleteRequest.list());
+                aclGroupDao.loadPermissionsIntoAclGroups(groupsToDelete);
+                AclGroupPermissionDao permissionDao = new AclGroupPermissionDao();
+                groupsToDelete.forEach(group -> permissionDao.removePermissions(group,group.getPermissionIds()));
+                delete(aclGroupDeleteRequest, aclGroupDao,cinnamonResponse);
             }
             case ACL_GROUP__UPDATE -> {
                 superuserCheck();

@@ -56,7 +56,10 @@ Create a new ACL group. Note: permissions parameter is not yet implemented.
 ```xml
 <deleteAclGroupRequest>
   <ignoreNotFound>false</ignoreNotFound>
-  <ids/>
+  <ids>
+    <id>5</id>
+    <id>78</id>
+  </ids>
 </deleteAclGroupRequest>
 
 ```
@@ -150,20 +153,15 @@ Create a new ACL group. Note: permissions parameter is not yet implemented.
 ---
 
 # /api/aclGroup/update
+This replaces the existing permissions of the given AclGroup with the ones you send with the request.
+It does not otherwise change the AclGroup (as it only contains of a group and acl reference - to change those, create a new AclGroup.
 
 
 ## Request
 
 ```xml
 <updateAclGroupRequest>
-  <aclGroups>
-    <aclGroup>
-      <id>1345</id>
-      <aclId>54</aclId>
-      <groupId>4</groupId>
-      <permissions/>
-    </aclGroup>
-  </aclGroups>
+  <aclGroups/>
 </updateAclGroupRequest>
 
 ```
@@ -381,6 +379,7 @@ Retrieve the server version and build number.
 
 ---
 
+WARNING: sun.reflect.Reflection.getCallerClass is not supported. This will impact performance.
 # /api/changeTrigger/create
 
 
@@ -4029,8 +4028,8 @@ Note: this is not optimized for users who own vast collections of objects or fol
 
 ```xml
 <deleteUserAccountRequest>
-  <userId/>
-  <assetReceiverId/>
+  <userId>4</userId>
+  <assetReceiverId>5</assetReceiverId>
 </deleteUserAccountRequest>
 
 ```

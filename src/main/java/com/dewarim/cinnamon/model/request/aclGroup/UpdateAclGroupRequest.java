@@ -63,6 +63,9 @@ public class UpdateAclGroupRequest implements UpdateRequest<AclGroup>, ApiReques
 
     @Override
     public List<Object> examples() {
-        return List.of(new UpdateAclGroupRequest(1345L, 54L,4L));
+        AclGroup aclGroup = new AclGroup(1345L, 54L, 4L);
+        aclGroup.getPermissionIds().add(5L);
+        aclGroup.getPermissionIds().add(2L);
+        return List.of(new UpdateAclGroupRequest(aclGroups));
     }
 }
