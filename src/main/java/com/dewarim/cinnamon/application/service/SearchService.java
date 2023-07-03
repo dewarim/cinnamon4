@@ -20,13 +20,9 @@ import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.xml.CoreParser;
-import org.apache.lucene.queryparser.xml.builders.ExacPointQueryBuilder;
+import org.apache.lucene.queryparser.xml.builders.ExactPointQueryBuilder;
 import org.apache.lucene.queryparser.xml.builders.RangeQueryBuilder;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.SearcherFactory;
-import org.apache.lucene.search.SearcherManager;
-import org.apache.lucene.search.TermQuery;
+import org.apache.lucene.search.*;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 
@@ -97,9 +93,9 @@ public class SearchService {
             CoreParser  coreParser     = new CoreParser("content", limitTokenCountAnalyzer);
             coreParser.addQueryBuilder("WildcardQuery", new WildcardQueryBuilder());
             coreParser.addQueryBuilder("RegexQuery", new RegexQueryBuilder());
-            coreParser.addQueryBuilder("PointRangeQuery", new ExacPointQueryBuilder());
+            coreParser.addQueryBuilder("PointRangeQuery", new ExactPointQueryBuilder());
             coreParser.addQueryBuilder("RangeQuery", new RangeQueryBuilder());
-            coreParser.addQueryBuilder("ExactPointQuery", new ExacPointQueryBuilder());
+            coreParser.addQueryBuilder("ExactPointQuery", new ExactPointQueryBuilder());
             Query           query     = coreParser.parse(xmlInputStream);
             log.debug("parsed query: "+query);
             ResultCollector collector = new ResultCollector(searcher);

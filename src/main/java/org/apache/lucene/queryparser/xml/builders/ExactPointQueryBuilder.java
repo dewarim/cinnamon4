@@ -71,7 +71,7 @@ import org.w3c.dom.Element;
  * <p>A {@link ParserException} will be thrown if an error occurs parsing the supplied <code>
  * lowerTerm</code> or <code>upperTerm</code> into the numeric type specified by <code>type</code>.
  */
-public class ExacPointQueryBuilder implements QueryBuilder {
+public class ExactPointQueryBuilder implements QueryBuilder {
 
     @Override
     public Query getQuery(Element e) throws ParserException {

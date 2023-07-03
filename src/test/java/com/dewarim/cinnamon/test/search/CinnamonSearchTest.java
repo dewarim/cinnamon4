@@ -14,7 +14,7 @@ import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.apache.lucene.queryparser.flexible.standard.config.PointsConfig;
 import org.apache.lucene.queryparser.xml.CoreParser;
 import org.apache.lucene.queryparser.xml.ParserException;
-import org.apache.lucene.queryparser.xml.builders.ExacPointQueryBuilder;
+import org.apache.lucene.queryparser.xml.builders.ExactPointQueryBuilder;
 import org.apache.lucene.queryparser.xml.builders.PointRangeQueryBuilder;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
@@ -79,7 +79,7 @@ public class CinnamonSearchTest {
     private void searchWithXmlExactPointQuery(IndexSearcher searcher) throws ParserException, IOException {
         InputStream xmlInputStream = new ByteArrayInputStream(exactPoint.getBytes(StandardCharsets.UTF_8));
         CoreParser  coreParser     = new CoreParser("p", new StandardAnalyzer());
-        coreParser.addQueryBuilder("ExactPointQuery", new ExacPointQueryBuilder());
+        coreParser.addQueryBuilder("ExactPointQuery", new ExactPointQueryBuilder());
         Query query = coreParser.parse(xmlInputStream);
         log.info("query: "+query);
         TopDocs topDocs = searcher.search(query, 100);
