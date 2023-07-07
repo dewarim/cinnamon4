@@ -54,7 +54,7 @@ public class ContentContainer {
     private void convertEncodedFieldsIntoXmlNodes(Document combinedDoc) {
         FieldDecoder fieldDecoder = new FieldDecoder();
         fieldDecoder.decodeField(combinedDoc, "//relation/metadata");
-        fieldDecoder.decodeField(combinedDoc, "//meta//content");
+        fieldDecoder.decodeField(combinedDoc, "//metaset/content");
         fieldDecoder.decodeField(combinedDoc, "//summary");
     }
 
