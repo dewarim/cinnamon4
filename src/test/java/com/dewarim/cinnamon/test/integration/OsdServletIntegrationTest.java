@@ -148,6 +148,30 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
+    public void getObjectsByFolderIdWithReadMetaPermission() throws IOException {
+        var toh = prepareAclGroupWithPermissions(List.of(BROWSE, CREATE_OBJECT, CREATE_FOLDER, READ_OBJECT_CUSTOM_METADATA, WRITE_OBJECT_CUSTOM_METADATA));
+        var folder = toh.createFolder(createFolderId).folder;
+        var osd1 = toh.createOsd().osd;
+        String metaXml = "<xml>meta</xml>";
+        client.createOsdMeta(osd1.getId(), metaXml, 1L);
+        OsdWrapper osdWrapper = client.getOsdsInFolder(folder.getId(), true, false, true, ALL);
+        List<ObjectSystemData> osdsInFolder = osdWrapper.getOsds();
+
+        assertEquals(1, osdsInFolder.size());
+        assertEquals(metaXml, osdsInFolder.get(0).getMetas().get(0).getContent());
+    }
+
+    @Test
+    public void getObjectsByFolderIdWithoutReadMetaPermission() throws IOException {
+        var toh = prepareAclGroupWithPermissions(List.of(BROWSE, CREATE_OBJECT, CREATE_FOLDER, WRITE_OBJECT_CUSTOM_METADATA));
+        var folder = toh.createFolder(createFolderId).folder;
+        var osd1 = toh.createOsd().osd;
+        String metaXml = "<xml>meta</xml>";
+        client.createOsdMeta(osd1.getId(), metaXml, 1L);
+        assertClientError(() -> client.getOsdsInFolder(folder.getId(), true, false, true, ALL), NO_READ_CUSTOM_METADATA_PERMISSION);
+    }
+
+    @Test
     public void getObjectsByFolderIdOnlyHead() throws IOException {
         var toh = new TestObjectHolder(client, userId)
                 .createFolder("only-head", createFolderId)

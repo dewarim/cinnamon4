@@ -54,12 +54,12 @@ import static org.apache.hc.core5.http.HttpHeaders.CONTENT_DISPOSITION;
 @WebServlet(name = "Osd", urlPatterns = "/")
 public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSystemData> {
 
-    private final        ObjectMapper         xmlMapper            = XML_MAPPER;
-    private final        AuthorizationService authorizationService = new AuthorizationService();
-    private final        DeleteOsdService     deleteOsdService     = new DeleteOsdService();
-    private static final Logger               log                  = LogManager.getLogger(OsdServlet.class);
-    private final        Long                 tikaMetasetTypeId;
-    private              TikaService          tikaService;
+    private final ObjectMapper xmlMapper = XML_MAPPER;
+    private final AuthorizationService authorizationService = new AuthorizationService();
+    private final DeleteOsdService deleteOsdService = new DeleteOsdService();
+    private static final Logger log = LogManager.getLogger(OsdServlet.class);
+    private final Long tikaMetasetTypeId;
+    private TikaService tikaService;
 
     public OsdServlet() {
         super();
@@ -70,11 +70,11 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
-        UserAccount user   = ThreadLocalSqlSession.getCurrentUser();
-        OsdDao      osdDao = new OsdDao();
+        UserAccount user = ThreadLocalSqlSession.getCurrentUser();
+        OsdDao osdDao = new OsdDao();
 
         CinnamonResponse cinnamonResponse = (CinnamonResponse) response;
-        UrlMapping       mapping          = UrlMapping.getByPath(request.getRequestURI());
+        UrlMapping mapping = UrlMapping.getByPath(request.getRequestURI());
         switch (mapping) {
             case OSD__COPY -> copyOsd(request, cinnamonResponse, user, osdDao);
             case OSD__CREATE_OSD -> createOsd(request, cinnamonResponse, user, osdDao);
@@ -112,7 +112,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
         OsdMetaDao metaDao = new OsdMetaDao();
-        List<Meta> metas   = metaDao.listMetaByObjectIds(metaRequest.getIds());
+        List<Meta> metas = metaDao.listMetaByObjectIds(metaRequest.getIds());
         new MetaService<>().deleteMetas(metaDao, metas, osdDao, user);
         cinnamonResponse.setWrapper(new DeleteResponse(true));
     }
@@ -121,16 +121,16 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         GetRelationsRequest relationRequest = xmlMapper.readValue(request.getInputStream(), GetRelationsRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
-        var                    accessFilter = AccessFilter.getInstance(user);
-        List<ObjectSystemData> osds         = osdDao.getObjectsById(relationRequest.getIds(), false);
+        var accessFilter = AccessFilter.getInstance(user);
+        List<ObjectSystemData> osds = osdDao.getObjectsById(relationRequest.getIds(), false);
         boolean hasReadSysMetaPermission = osds.stream().allMatch(osd ->
                 accessFilter.hasPermissionOnOwnable(osd, DefaultPermission.READ_OBJECT_SYS_METADATA, osd));
         if (!hasReadSysMetaPermission) {
             ErrorCode.NO_READ_OBJECT_SYS_METADATA_PERMISSION.throwUp();
             return;
         }
-        List<Long>      ids             = osds.stream().map(ObjectSystemData::getId).collect(Collectors.toList());
-        List<Relation>  relations       = new RelationDao().getRelationsOrMode(ids, ids, null, relationRequest.isIncludeMetadata());
+        List<Long> ids = osds.stream().map(ObjectSystemData::getId).collect(Collectors.toList());
+        List<Relation> relations = new RelationDao().getRelationsOrMode(ids, ids, null, relationRequest.isIncludeMetadata());
         RelationWrapper relationWrapper = new RelationWrapper(relations);
         cinnamonResponse.setWrapper(relationWrapper);
     }
@@ -171,13 +171,13 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         }
 
         // create copy
-        var                    relationDao       = new RelationDao();
-        var                    lifecycleStateDao = new LifecycleStateDao();
-        List<ObjectSystemData> copies            = new ArrayList<>();
+        var relationDao = new RelationDao();
+        var lifecycleStateDao = new LifecycleStateDao();
+        List<ObjectSystemData> copies = new ArrayList<>();
         for (ObjectSystemData osd : sourceOsds) {
-            long id     = osd.getId();
+            long id = osd.getId();
             long userId = user.getId();
-            var  copy   = new ObjectSystemData();
+            var copy = new ObjectSystemData();
             copy.setAclId(targetFolder.getAclId());
             copy.setParentId(targetFolder.getId());
             copy.setName("Copy_" + osd.getName());
@@ -226,8 +226,8 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
 
             // copy metasets
             if (copyOsdRequest.getMetasetTypeIds().size() > 0) {
-                var        metasetDao = new OsdMetaDao();
-                List<Meta> metas      = metasetDao.listByOsd(osd.getId());
+                var metasetDao = new OsdMetaDao();
+                List<Meta> metas = metasetDao.listByOsd(osd.getId());
                 var metaCopies = metas.stream()
                         .filter(meta -> copyOsdRequest.getMetasetTypeIds().contains(meta.getTypeId()))
                         .map(meta -> new Meta(copy.getId(), meta.getTypeId(), meta.getContent()))
@@ -359,7 +359,8 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
     private List<Meta> createMetas(List<Meta> metas, Long id) {
         var dao = new OsdMetaDao();
         checkMetaUniqueness(metas);
-        dao.create(metas.stream().peek(meta -> meta.setObjectId(id)).collect(Collectors.toList()));
+        metas.forEach(meta -> meta.setObjectId(id));
+        dao.create(metas);
         return dao.listByOsd(id);
     }
 
@@ -379,7 +380,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
         OsdMetaDao osdMetaDao = new OsdMetaDao();
-        List<Meta> metas      = osdMetaDao.getObjectsById(metaRequest.getIds());
+        List<Meta> metas = osdMetaDao.getObjectsById(metaRequest.getIds());
         if (metas.size() != metaRequest.getIds().size() && !metaRequest.isIgnoreNotFound()) {
             throw ErrorCode.METASET_NOT_FOUND.exception();
         }
@@ -399,8 +400,8 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         MetaRequest metaRequest = xmlMapper.readValue(request.getInputStream(), MetaRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
-        Long             osdId = metaRequest.getId();
-        ObjectSystemData osd   = osdDao.getObjectById(osdId).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
+        Long osdId = metaRequest.getId();
+        ObjectSystemData osd = osdDao.getObjectById(osdId).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
         throwUnlessCustomMetaIsReadable(osd);
 
         List<Meta> metaList;
@@ -437,8 +438,8 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         IdRequest idRequest = xmlMapper.readValue(request.getInputStream(), IdRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
-        ObjectSystemData osd         = osdDao.getObjectById(idRequest.getId()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
-        boolean          lockAllowed = new AuthorizationService().hasUserOrOwnerPermission(osd, DefaultPermission.LOCK, user);
+        ObjectSystemData osd = osdDao.getObjectById(idRequest.getId()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
+        boolean lockAllowed = new AuthorizationService().hasUserOrOwnerPermission(osd, DefaultPermission.LOCK, user);
         if (!lockAllowed) {
             throw ErrorCode.NO_LOCK_PERMISSION.exception();
         }
@@ -500,7 +501,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                 () -> new ServletException(String.format("Encountered object #%d with content but non-existing formatId #%d.",
                         osd.getId(), osd.getFormatId())));
         ContentProvider contentProvider = ContentProviderService.getInstance().getContentProvider(osd.getContentProvider());
-        InputStream     contentStream   = contentProvider.getContentStream(osd);
+        InputStream contentStream = contentProvider.getContentStream(osd);
         response.setHeader(CONTENT_DISPOSITION, "attachment; filename=\"" + osd.getName().replace("\"", "%22") + "\"");
         response.setContentType(format.getContentType());
         response.setStatus(SC_OK);
@@ -520,8 +521,8 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         }
         SetContentRequest setContentRequest = xmlMapper.readValue(contentRequest.getInputStream(), SetContentRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
-        ObjectSystemData osd          = osdDao.getObjectById(setContentRequest.getId()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
-        boolean          writeAllowed = new AuthorizationService().hasUserOrOwnerPermission(osd, DefaultPermission.WRITE_OBJECT_CONTENT, user);
+        ObjectSystemData osd = osdDao.getObjectById(setContentRequest.getId()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
+        boolean writeAllowed = new AuthorizationService().hasUserOrOwnerPermission(osd, DefaultPermission.WRITE_OBJECT_CONTENT, user);
         if (!writeAllowed) {
             throw ErrorCode.NO_WRITE_PERMISSION.exception();
         }
@@ -544,16 +545,16 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
 
     private void storeFileUpload(InputStream inputStream, ObjectSystemData osd, Long formatId) throws IOException {
         FormatDao formatDao = new FormatDao();
-        Format    format    = formatDao.getObjectById(formatId).orElseThrow(ErrorCode.FORMAT_NOT_FOUND.getException());
+        Format format = formatDao.getObjectById(formatId).orElseThrow(ErrorCode.FORMAT_NOT_FOUND.getException());
 
         // store file in tmp dir:
-        Path tempFile       = Files.createTempFile("cinnamon-upload-", ".data");
+        Path tempFile = Files.createTempFile("cinnamon-upload-", ".data");
         File tempOutputFile = tempFile.toFile();
-        long bytesWritten   = Files.copy(inputStream, tempFile, REPLACE_EXISTING);
+        long bytesWritten = Files.copy(inputStream, tempFile, REPLACE_EXISTING);
 
         // get content provider and store data:
         ContentProvider contentProvider = ContentProviderService.getInstance().getContentProvider(osd.getContentProvider());
-        ContentMetadata metadata        = contentProvider.writeContentStream(osd, new FileInputStream(tempOutputFile));
+        ContentMetadata metadata = contentProvider.writeContentStream(osd, new FileInputStream(tempOutputFile));
         osd.setContentHash(metadata.getContentHash());
         osd.setContentPath(metadata.getContentPath());
         osd.setContentSize(metadata.getContentSize());
@@ -565,9 +566,9 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
     private void convertContentToTikaMetaset(ObjectSystemData osd, InputStream contentStream, Format format) throws IOException {
         OsdMetaDao osdMetaDao = new OsdMetaDao();
         if (tikaService.isEnabled() && tikaMetasetTypeId != null && format.getIndexMode() == IndexMode.TIKA) {
-            String         tikaMetadata = parseWithTika(contentStream, format);
-            log.debug("Tika returned: "+tikaMetadata);
-            Optional<Meta> tikaMetaset  = osdMetaDao.listByOsd(osd.getId()).stream().filter(meta -> meta.getTypeId().equals(tikaMetasetTypeId)).findFirst();
+            String tikaMetadata = parseWithTika(contentStream, format);
+            log.debug("Tika returned: " + tikaMetadata);
+            Optional<Meta> tikaMetaset = osdMetaDao.listByOsd(osd.getId()).stream().filter(meta -> meta.getTypeId().equals(tikaMetasetTypeId)).findFirst();
             if (tikaMetaset.isPresent()) {
                 Meta tikaMeta = tikaMetaset.get();
                 tikaMeta.setContent(tikaMetadata);
@@ -579,7 +580,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
             } else {
                 Meta tikaMeta = new Meta(osd.getId(), tikaMetasetTypeId, tikaMetadata);
                 List<Meta> metas = osdMetaDao.create(List.of(tikaMeta));
-                log.debug("tikaMeta: "+metas.get(0));
+                log.debug("tikaMeta: " + metas.get(0));
             }
         }
     }
@@ -598,7 +599,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
     private void setSummary(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws
             IOException {
         SetSummaryRequest summaryRequest = xmlMapper.readValue(request.getInputStream(), SetSummaryRequest.class);
-        ObjectSystemData  osd            = osdDao.getObjectById(summaryRequest.getId()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
+        ObjectSystemData osd = osdDao.getObjectById(summaryRequest.getId()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
         authorizationService.throwUpUnlessUserOrOwnerHasPermission(osd, DefaultPermission.SET_SUMMARY, user,
                 ErrorCode.NO_SET_SUMMARY_PERMISSION);
         osd.setSummary(summaryRequest.getSummary());
@@ -608,9 +609,9 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
 
     private void getSummaries(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao
             osdDao) throws IOException {
-        IdListRequest          idListRequest = xmlMapper.readValue(request.getInputStream(), IdListRequest.class);
-        SummaryWrapper         wrapper       = new SummaryWrapper();
-        List<ObjectSystemData> osds          = osdDao.getObjectsById(idListRequest.getIdList(), true);
+        IdListRequest idListRequest = xmlMapper.readValue(request.getInputStream(), IdListRequest.class);
+        SummaryWrapper wrapper = new SummaryWrapper();
+        List<ObjectSystemData> osds = osdDao.getObjectsById(idListRequest.getIdList(), true);
         osds.forEach(osd -> {
             if (authorizationService.hasUserOrOwnerPermission(osd, DefaultPermission.READ_OBJECT_SYS_METADATA, user)) {
                 wrapper.getSummaries().add(new Summary(osd.getId(), osd.getSummary()));
@@ -636,7 +637,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         }
 
         AccessFilter accessFilter = AccessFilter.getInstance(user);
-        FolderDao    folderDao    = new FolderDao();
+        FolderDao folderDao = new FolderDao();
 
         boolean changed = false;
         // change parent folder
@@ -713,16 +714,16 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         }
 
         // contentChanged
-        if(updateRequest.getContentChanged() != null){
-            if(user.isChangeTracking()){
+        if (updateRequest.getContentChanged() != null) {
+            if (user.isChangeTracking()) {
                 throw ErrorCode.CHANGED_FLAG_ONLY_USABLE_BY_UNTRACKED_USERS.exception();
             }
             osd.setContentChanged(updateRequest.getContentChanged());
         }
 
         // metadataChanged
-        if(updateRequest.getMetadataChanged() != null){
-            if(user.isChangeTracking()){
+        if (updateRequest.getMetadataChanged() != null) {
+            if (user.isChangeTracking()) {
                 throw ErrorCode.CHANGED_FLAG_ONLY_USABLE_BY_UNTRACKED_USERS.exception();
             }
             osd.setMetadataChanged(updateRequest.getMetadataChanged());
@@ -736,22 +737,27 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         response.responseIsGenericOkay();
     }
 
+    private void checkPermissionAndAddCustomMetadata(List<ObjectSystemData> osds, UserAccount user) {
+        OsdMetaDao metaDao = new OsdMetaDao();
+        boolean hasReadMetaPermission = osds.stream().allMatch(osd ->
+                authorizationService.hasUserOrOwnerPermission(osd, DefaultPermission.READ_OBJECT_CUSTOM_METADATA, user)
+        );
+        if (!hasReadMetaPermission) {
+            ErrorCode.NO_READ_CUSTOM_METADATA_PERMISSION.throwUp();
+            return;
+        }
+        osds.forEach(osd -> osd.setMetas(metaDao.listByOsd(osd.getId())));
+
+    }
+
     private void getObjectsById(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao
             osdDao) throws IOException {
-        OsdRequest             osdRequest   = xmlMapper.readValue(request.getInputStream(), OsdRequest.class);
-        List<ObjectSystemData> osds         = osdDao.getObjectsById(osdRequest.getIds(), osdRequest.isIncludeSummary());
+        OsdRequest osdRequest = xmlMapper.readValue(request.getInputStream(), OsdRequest.class);
+        List<ObjectSystemData> osds = osdDao.getObjectsById(osdRequest.getIds(), osdRequest.isIncludeSummary());
         List<ObjectSystemData> filteredOsds = authorizationService.filterObjectsByBrowsePermission(osds, user);
 
         if (osdRequest.isIncludeCustomMetadata()) {
-            OsdMetaDao metaDao = new OsdMetaDao();
-            boolean hasReadMetaPermission = filteredOsds.stream().allMatch(osd ->
-                    authorizationService.hasUserOrOwnerPermission(osd, DefaultPermission.READ_OBJECT_CUSTOM_METADATA, user)
-            );
-            if (!hasReadMetaPermission) {
-                ErrorCode.NO_READ_CUSTOM_METADATA_PERMISSION.throwUp();
-                return;
-            }
-            filteredOsds.forEach(osd -> osd.setMetas(metaDao.listByOsd(osd.getId())));
+            checkPermissionAndAddCustomMetadata(filteredOsds, user);
         }
 
         OsdWrapper wrapper = new OsdWrapper();
@@ -761,18 +767,19 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
 
     private void getObjectsByFolderId(HttpServletRequest request, CinnamonResponse response, UserAccount
             user, OsdDao osdDao) throws IOException {
-        OsdByFolderRequest     osdRequest     = xmlMapper.readValue(request.getInputStream(), OsdByFolderRequest.class);
-        long                   folderId       = osdRequest.getFolderId();
-        boolean                includeSummary = osdRequest.isIncludeSummary();
-        boolean                includeMeta    = osdRequest.isIncludeCustomMetadata();
-        List<ObjectSystemData> osds           = osdDao.getObjectsByFolderId(folderId, includeSummary, osdRequest.getVersionPredicate());
-        List<ObjectSystemData> filteredOsds   = authorizationService.filterObjectsByBrowsePermission(osds, user);
-        OsdMetaDao             metaDao        = new OsdMetaDao();
+        OsdByFolderRequest osdRequest = xmlMapper.readValue(request.getInputStream(), OsdByFolderRequest.class);
+        long folderId = osdRequest.getFolderId();
+        boolean includeSummary = osdRequest.isIncludeSummary();
+        boolean includeMeta = osdRequest.isIncludeCustomMetadata();
+        List<ObjectSystemData> osds = osdDao.getObjectsByFolderId(folderId, includeSummary, osdRequest.getVersionPredicate());
+        List<ObjectSystemData> filteredOsds = authorizationService.filterObjectsByBrowsePermission(osds, user);
+        OsdMetaDao metaDao = new OsdMetaDao();
         if (includeMeta) {
+            checkPermissionAndAddCustomMetadata(filteredOsds, user);
             filteredOsds.forEach(osd -> osd.setMetas(metaDao.listByOsd(osd.getId())));
         }
-        LinkDao    linkDao       = new LinkDao();
-        List<Link> links         = linkDao.getLinksByFolderId(folderId);
+        LinkDao linkDao = new LinkDao();
+        List<Link> links = linkDao.getLinksByFolderId(folderId);
         List<Link> filteredLinks = authorizationService.filterLinksByBrowsePermission(links, user);
 
         OsdWrapper wrapper = new OsdWrapper();
@@ -795,16 +802,16 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         Part contentRequest = request.getPart(CINNAMON_REQUEST_PART);
         CreateNewVersionRequest versionRequest = xmlMapper.readValue(contentRequest.getInputStream(), CreateNewVersionRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
-        ObjectSystemData preOsd    = osdDao.getObjectById(versionRequest.getId()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
-        FolderDao        folderDao = new FolderDao();
-        Folder           folder    = folderDao.getFolderById(preOsd.getParentId()).orElseThrow(FOLDER_NOT_FOUND::exception);
+        ObjectSystemData preOsd = osdDao.getObjectById(versionRequest.getId()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
+        FolderDao folderDao = new FolderDao();
+        Folder folder = folderDao.getFolderById(preOsd.getParentId()).orElseThrow(FOLDER_NOT_FOUND::exception);
         authorizationService.throwUpUnlessUserOrOwnerHasPermission(folder, DefaultPermission.CREATE_OBJECT, user,
                 NO_CREATE_PERMISSION);
         authorizationService.throwUpUnlessUserOrOwnerHasPermission(preOsd, DefaultPermission.VERSION_OBJECT, user,
                 NO_VERSION_PERMISSION);
 
         Optional<String> lastDescendantVersion = osdDao.findLastDescendantVersion(preOsd.getId());
-        ObjectSystemData osd                   = preOsd.createNewVersion(user, lastDescendantVersion.orElse(null));
+        ObjectSystemData osd = preOsd.createNewVersion(user, lastDescendantVersion.orElse(null));
 
         /*
          * fixLatestHeadAndBranch:
@@ -821,8 +828,8 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         ObjectSystemData savedOsd = osdDao.saveOsd(osd);
 
         // copy relations
-        RelationDao    relationDao = new RelationDao();
-        List<Relation> relations   = relationDao.getRelationsToCopyOnVersion(preOsd.getId());
+        RelationDao relationDao = new RelationDao();
+        List<Relation> relations = relationDao.getRelationsToCopyOnVersion(preOsd.getId());
         Map<Long, RelationType> relationTypes = new RelationTypeDao()
                 .getRelationTypeMap(relations.stream().map(Relation::getTypeId).collect(Collectors.toSet()));
         List<Relation> relationCopies = new ArrayList<>();
@@ -841,12 +848,12 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
 
         // storeMetadata
         if (versionRequest.hasMetaRequests()) {
-            OsdMetaDao            osdMetaDao = new OsdMetaDao();
+            OsdMetaDao osdMetaDao = new OsdMetaDao();
             final List<ErrorCode> errorCodes = new ArrayList<>();
             versionRequest.getMetaRequests().forEach(metadata -> {
                         try {
                             MetasetType metasetType = determineMetasetType(metadata.getTypeId(), metadata.getTypeName());
-                            Meta        meta        = new Meta(osd.getId(), metasetType.getId(), metadata.getContent());
+                            Meta meta = new Meta(osd.getId(), metasetType.getId(), metadata.getContent());
                             osdMetaDao.create(List.of(meta));
                         } catch (FailedRequestException e) {
                             errorCodes.add(e.getErrorCode());
@@ -873,7 +880,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
             LifecycleState lifecycleState = new LifecycleStateDao()
                     .getLifecycleStateById(preOsd.getLifecycleStateId())
                     .orElseThrow(ErrorCode.LIFECYCLE_STATE_NOT_FOUND.getException());
-            State             stateImpl         = StateProviderService.getInstance().getStateProvider(lifecycleState.getStateClass()).getState();
+            State stateImpl = StateProviderService.getInstance().getStateProvider(lifecycleState.getStateClass()).getState();
             StateChangeResult attachStateResult = stateImpl.enter(osd, lifecycleState.getLifecycleStateConfig());
             if (!attachStateResult.isSuccessful()) {
                 throw ErrorCode.LIFECYCLE_STATE_CHANGE_FAILED.exception();
