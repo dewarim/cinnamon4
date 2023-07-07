@@ -19,9 +19,8 @@
     </insert>
 
     <delete id="remove" parameterType="map">
-        DELETE FROM group_users WHERE user_id=#{userId} AND group_id IN
-        <foreach item="item" index="index" collection="ids"
-                 open="(" separator="," close=")">
+        DELETE FROM group_users WHERE user_id = #{userId} AND group_id IN
+        <foreach item="item" index="index" collection="ids" open="(" separator="," close=")">
             #{item}
         </foreach>
     </delete>
@@ -35,7 +34,9 @@
     </delete>
 
     <delete id="deleteByUserId" parameterType="long">
-        DELETE FROM group_users WHERE user_id = #{id}
+        DELETE
+        FROM group_users
+        WHERE user_id = #{id}
     </delete>
 
     <select id="listGroupsOfUser" resultMap="groupUserMap">

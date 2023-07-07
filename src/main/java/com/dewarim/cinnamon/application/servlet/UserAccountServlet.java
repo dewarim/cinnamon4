@@ -87,15 +87,19 @@ public class UserAccountServlet extends HttpServlet implements CruddyServlet<Use
                 superuserCheck();
                 UpdateRequest<UserAccount> updateRequest = convertUpdateRequest(request, UpdateUserAccountRequest.class);
                 updateRequest.list().forEach(userAccount -> {
+                    Long userId = userAccount.getId();
                             if (userAccount.getPassword() != null && userAccount.getPassword().trim().length() > 0) {
                                 // user has supplied a new password:
                                 userAccount.setPassword(HashMaker.createDigest(userAccount.getPassword()));
                             } else {
                                 // keep the old password: load encrypted password for this user.
-                                UserAccount accountFromDb = userAccountDao.getUserAccountById(userAccount.getId())
+                                UserAccount accountFromDb = userAccountDao.getUserAccountById(userId)
                                         .orElseThrow(ErrorCode.USER_ACCOUNT_NOT_FOUND.getException());
                                 userAccount.setPassword(accountFromDb.getPassword());
                             }
+                            // update the user's groups:
+                            groupUserDao.removeUserFromGroups(userId, groupUserDao.listGroupsOfUser(userId).stream().map(GroupUser::getGroupId).toList());
+                            groupUserDao.addUserToGroups(userId, userAccount.getGroupIds());
                         }
                 );
                 update(updateRequest, userAccountDao, cinnamonResponse);

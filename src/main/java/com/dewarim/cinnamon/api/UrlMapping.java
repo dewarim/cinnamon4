@@ -292,7 +292,10 @@ public enum UrlMapping {
     USER__LIST("user", "list", "/api", "", ListUserAccountRequest.class, UserAccountWrapper.class),
     USER__SET_CONFIG("user", "setConfig", "/api", "Update a user's individual configuration", SetUserConfigRequest.class, GenericResponse.class),
     USER__SET_PASSWORD("user", "setPassword", "/api", "", SetPasswordRequest.class, GenericResponse.class),
-    USER__UPDATE("user", "update", "/api", "", UpdateUserAccountRequest.class, UserAccountWrapper.class);
+    USER__UPDATE("user", "update", "/api", """
+            Update a user's account. This also updates the user's groups,
+             so you must make sure that the userAccount objects contain the desired list of groupIds.
+            """, UpdateUserAccountRequest.class, UserAccountWrapper.class);
 
     private static final Map<String, UrlMapping>      pathMapping = new ConcurrentHashMap<>();
     private final        String                       servlet;

@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.dewarim.cinnamon.DefaultPermission.BROWSE;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -92,7 +93,7 @@ public class UserAccountServletIntegrationTest extends CinnamonIntegrationTest {
         // cleanup:
         CinnamonServer.config.getSecurityConfig().setMinimumPasswordLength(4);
         SetPasswordRequest setPasswordRequest2 = new SetPasswordRequest(2L, "admin");
-        try (StandardResponse r = sendStandardRequest(UrlMapping.USER__SET_PASSWORD, setPasswordRequest)) {
+        try (StandardResponse r = sendStandardRequest(UrlMapping.USER__SET_PASSWORD, setPasswordRequest2)) {
             CinnamonServer.config.getSecurityConfig().setMinimumPasswordLength(8);
         }
     }
@@ -214,6 +215,23 @@ public class UserAccountServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
+    public void updateUserGroups() throws IOException {
+        // create a new user with a group which also has a permission.
+        TestObjectHolder toh = new TestObjectHolder(adminClient, userId).createUser().createAcl().createGroup().createAclGroup();
+        toh.addUserToGroup(toh.user.getId())
+                .addPermissions(List.of(BROWSE));
+
+        // update the user, so he is now only in another group
+        UserAccount user = toh.user;
+        user.setGroupIds(List.of(toh.createGroup().group.getId()));
+        adminClient.updateUser(user);
+
+        UserAccount updatedUser = client.getUser(user.getId());
+        assertEquals(1, updatedUser.getGroupIds().size());
+        assertEquals(toh.group.getId(), updatedUser.getGroupIds().get(0));
+    }
+
+    @Test
     public void updateWithDuplicateName() throws IOException {
         UserAccount user = new UserAccount("duplicate-name-test", "xxx123456", "A new user", "user@invalid.com",
                 1L, LoginType.CINNAMON.name(), false, true, true);
@@ -288,7 +306,7 @@ public class UserAccountServletIntegrationTest extends CinnamonIntegrationTest {
                 .createUser();
         Long userId = toh.user.getId();
         toh.addUserToGroup(userId)
-        .addPermissions(List.of(DefaultPermission.CREATE_OBJECT,DefaultPermission.CREATE_FOLDER,DefaultPermission.BROWSE,DefaultPermission.LOCK));
+                .addPermissions(List.of(DefaultPermission.CREATE_OBJECT, DefaultPermission.CREATE_FOLDER, DefaultPermission.BROWSE, DefaultPermission.LOCK));
 
         CinnamonClient userClient = new CinnamonClient(client.getPort(), client.getHost(), client.getProtocol(), toh.user.getUsername(), toh.newUserPassword);
         userClient.connect();

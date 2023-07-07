@@ -16,6 +16,9 @@ public class GroupUserDao implements CrudDao<GroupUser> {
     }
 
     public void removeUserFromGroups(Long userId, List<Long> ids) {
+        if(ids == null || ids.isEmpty()){
+            return;
+        }
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
         Map<String, Object> params = Map.of("userId", userId, "ids", ids);
         sqlSession.delete("com.dewarim.cinnamon.model.GroupUser.remove", params);

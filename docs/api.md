@@ -4201,13 +4201,36 @@ Update a user's individual configuration
 ---
 
 # /api/user/update
+Update a user's account. This also updates the user's groups,
+ so you must make sure that the userAccount objects contain the desired list of groupIds.
 
 
 ## Request
 
 ```xml
 <updateUserAccountRequest>
-  <userAccounts/>
+  <userAccounts>
+    <userAccount>
+      <id/>
+      <name>foo</name>
+      <loginType>CINNAMON</loginType>
+      <password>secretPassword</password>
+      <activated>true</activated>
+      <locked>false</locked>
+      <uiLanguageId>1</uiLanguageId>
+      <fullname>Mr Foo Bar</fullname>
+      <email>foo@example.com</email>
+      <changeTracking>true</changeTracking>
+      <activateTriggers>true</activateTriggers>
+      <passwordExpired>false</passwordExpired>
+      <config>&lt;config/></config>
+      <groupIds>
+        <groupId>10</groupId>
+        <groupId>12</groupId>
+        <groupId>45</groupId>
+      </groupIds>
+    </userAccount>
+  </userAccounts>
 </updateUserAccountRequest>
 
 ```

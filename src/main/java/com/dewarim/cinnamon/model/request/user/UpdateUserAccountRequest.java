@@ -12,6 +12,8 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.dewarim.cinnamon.model.LoginType.CINNAMON;
+
 @JacksonXmlRootElement(localName = "updateUserAccountRequest")
 public class UpdateUserAccountRequest implements UpdateRequest<UserAccount>, ApiRequest {
 
@@ -55,5 +57,12 @@ public class UpdateUserAccountRequest implements UpdateRequest<UserAccount>, Api
     @Override
     public Wrapper<UserAccount> fetchResponseWrapper() {
         return new UserAccountWrapper();
+    }
+
+    @Override
+    public List<ApiRequest> examples() {
+        UserAccount userAccount = new UserAccount("foo", "secretPassword", "Mr Foo Bar", "foo@example.com", 1L,CINNAMON.name(), true,true,true);
+        userAccount.setGroupIds(List.of(10L,12L,45L));
+        return List.of(new UpdateUserAccountRequest(List.of(userAccount)));
     }
 }
