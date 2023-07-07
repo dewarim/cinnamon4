@@ -121,8 +121,15 @@ Create a new ACL group. Note: permissions parameter is not yet implemented.
 
 ```xml
 <aclGroupListRequest>
-  <id/>
-  <idType/>
+  <id>1</id>
+  <idType>GROUP</idType>
+</aclGroupListRequest>
+
+```
+```xml
+<aclGroupListRequest>
+  <id>2</id>
+  <idType>ACL</idType>
 </aclGroupListRequest>
 
 ```
@@ -2933,7 +2940,8 @@ should contain data.
 ---
 
 # /api/osd/deleteAllMetas
-Delete all metasets linked to the given OSD ids. Parameter ignoreNotFound is not used.
+    Delete all metasets linked to the given OSD ids. Parameter ignoreNotFound is not used.
+
 
 ## Request
 
@@ -3363,9 +3371,14 @@ part "file", if the new version should contain data.
 
 ```xml
 <createNewVersionRequest>
-  <id/>
+  <id>5</id>
   <formatId/>
-  <metaRequests/>
+  <metaRequests>
+    <metaRequest>
+      <content>&lt;xml>new metadata&lt;/xml></content>
+      <typeId>1</typeId>
+    </metaRequest>
+  </metaRequests>
 </createNewVersionRequest>
 
 ```

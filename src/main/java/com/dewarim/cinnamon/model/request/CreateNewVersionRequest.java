@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 @JacksonXmlRootElement(localName = "createNewVersionRequest")
-public class CreateNewVersionRequest implements ApiRequest {
+public class CreateNewVersionRequest implements ApiRequest<CreateNewVersionRequest> {
 
     private Long           id;
     @JacksonXmlElementWrapper(localName = "metaRequests")
@@ -74,11 +74,17 @@ public class CreateNewVersionRequest implements ApiRequest {
     public static class Metadata {
         private String content;
         private Long   typeId;
-        private String typeName;
+
+        public Metadata() {
+        }
+
+        public Metadata(String content, Long typeId) {
+            this.content = content;
+            this.typeId = typeId;
+        }
 
         private boolean validated() {
-            return ((typeId != null && typeId > 0) || (typeName != null && !typeName.trim().isEmpty()))
-                    && (content != null);
+            return ((typeId != null && typeId > 0)) && (content != null);
         }
 
         public String getContent() {
@@ -97,12 +103,12 @@ public class CreateNewVersionRequest implements ApiRequest {
             this.typeId = typeId;
         }
 
-        public String getTypeName() {
-            return typeName;
-        }
+    }
 
-        public void setTypeName(String typeName) {
-            this.typeName = typeName;
-        }
+    @Override
+    public List<ApiRequest<CreateNewVersionRequest>> examples() {
+        CreateNewVersionRequest createNewVersionRequest = new CreateNewVersionRequest(5L);
+        createNewVersionRequest.setMetaRequests(List.of(new Metadata("<xml>new metadata</xml>", 1L)));
+        return List.of(createNewVersionRequest);
     }
 }

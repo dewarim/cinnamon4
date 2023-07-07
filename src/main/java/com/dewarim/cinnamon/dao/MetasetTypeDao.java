@@ -14,13 +14,6 @@ public class MetasetTypeDao implements CrudDao<MetasetType>{
         return Optional.ofNullable(metasetType);
     }
 
-    @Deprecated // use byId
-    public Optional<MetasetType> getMetasetTypeByName(String name) {
-        SqlSession   sqlSession   = ThreadLocalSqlSession.getSqlSession();
-        MetasetType metasetType = sqlSession.selectOne("com.dewarim.cinnamon.model.MetasetType.getMetasetTypeByName", name);
-        return Optional.ofNullable(metasetType);
-    }
-
     @Override
     public String getTypeClassName() {
         return MetasetType.class.getName();

@@ -22,12 +22,6 @@
         WHERE id = #{id}
     </select>
 
-    <select id="getMetasetTypeByName" parameterType="String" resultMap="metasetTypeMap">
-        SELECT *
-        FROM metaset_types
-        WHERE name = #{name}
-    </select>
-
     <select id="getAllById" parameterType="list" resultMap="metasetTypeMap">
         SELECT *
         FROM metaset_types

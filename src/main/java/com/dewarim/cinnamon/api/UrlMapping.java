@@ -187,7 +187,9 @@ public enum UrlMapping {
             """,
             CreateOsdRequest.class, OsdWrapper.class),
     OSD__DELETE("osd", "delete", "/api", "", DeleteOsdRequest.class, DeleteResponse.class),
-    OSD__DELETE_ALL_METAS("osd", "deleteAllMetas", "/api", "Delete all metasets linked to the given OSD ids. Parameter ignoreNotFound is not used.", DeleteAllMetasRequest.class, DeleteResponse.class),
+    OSD__DELETE_ALL_METAS("osd", "deleteAllMetas", "/api", """
+        Delete all metasets linked to the given OSD ids. Parameter ignoreNotFound is not used.
+    """, DeleteAllMetasRequest.class, DeleteResponse.class),
     OSD__DELETE_META("osd", "deleteMeta", "/api", "Delete the OSD metasets with the given meta ids.", DeleteMetaRequest.class, DeleteResponse.class),
     OSD__GET_CONTENT("osd", "getContent", "/api", "Returns an OSD's content according to it's format's content type.", IdRequest.class, null),
     OSD__GET_META("osd", "getMeta", "/api", "", MetaRequest.class, MetaWrapper.class),

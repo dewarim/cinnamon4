@@ -423,16 +423,6 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         createMetaResponse(response, metas);
     }
 
-    private MetasetType determineMetasetType(Long typeId, String typeName) {
-        if (typeId != null) {
-            return new MetasetTypeDao().getMetasetTypeById(typeId)
-                    .orElseThrow(ErrorCode.METASET_TYPE_NOT_FOUND.getException());
-        } else {
-            return new MetasetTypeDao().getMetasetTypeByName(typeName)
-                    .orElseThrow(ErrorCode.METASET_TYPE_NOT_FOUND.getException());
-        }
-    }
-
     private void lock(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws
             IOException {
         IdRequest idRequest = xmlMapper.readValue(request.getInputStream(), IdRequest.class)
@@ -852,7 +842,8 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
             final List<ErrorCode> errorCodes = new ArrayList<>();
             versionRequest.getMetaRequests().forEach(metadata -> {
                         try {
-                            MetasetType metasetType = determineMetasetType(metadata.getTypeId(), metadata.getTypeName());
+                            MetasetType metasetType =  new MetasetTypeDao().getMetasetTypeById(metadata.getTypeId())
+                                    .orElseThrow(ErrorCode.METASET_TYPE_NOT_FOUND.getException());;
                             Meta meta = new Meta(osd.getId(), metasetType.getId(), metadata.getContent());
                             osdMetaDao.create(List.of(meta));
                         } catch (FailedRequestException e) {

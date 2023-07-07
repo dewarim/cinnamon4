@@ -3,10 +3,11 @@ package com.dewarim.cinnamon.model.request.aclGroup;
 import com.dewarim.cinnamon.api.ApiRequest;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
+import java.util.List;
 import java.util.Optional;
 
 @JacksonXmlRootElement(localName = "aclGroupListRequest")
-public class AclGroupListRequest implements ApiRequest {
+public class AclGroupListRequest implements ApiRequest<AclGroupListRequest> {
 
     public enum IdType{
         ACL,GROUP
@@ -58,5 +59,10 @@ public class AclGroupListRequest implements ApiRequest {
                 "id=" + id +
                 ", idType=" + idType +
                 '}';
+    }
+
+    @Override
+    public List<ApiRequest<AclGroupListRequest>> examples() {
+        return List.of(new AclGroupListRequest(1L, IdType.GROUP), new AclGroupListRequest(2L,IdType.ACL));
     }
 }
