@@ -11,20 +11,20 @@
     <name>Cinnamon CMS</name>
 
     <properties>
-        <jetty.version>11.0.14</jetty.version>
-        <jackson.version>2.14.2</jackson.version>
-        <junit.version>5.8.2</junit.version>
+        <jetty.version>11.0.15</jetty.version>
+        <jackson.version>2.14.3</jackson.version>
+        <junit.version>5.9.3</junit.version>
         <lucene.version>9.6.0</lucene.version>
-        <mybatis.version>3.5.11</mybatis.version>
-        <postgresql.version>42.5.1</postgresql.version>
+        <mybatis.version>3.5.13</mybatis.version>
+        <postgresql.version>42.6.0</postgresql.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.plugin.version>3.8.1</maven.compiler.plugin.version>
-        <log4j.version>2.19.0</log4j.version>
+        <maven.compiler.plugin.version>3.11.0</maven.compiler.plugin.version>
+        <log4j.version>2.20.0</log4j.version>
         <httpcomponents.version>4.5.14</httpcomponents.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
-        <dom4j.version>2.1.3</dom4j.version>
+        <dom4j.version>2.1.4</dom4j.version>
         <tika.version>2.7.0</tika.version>
     </properties>
 
@@ -38,7 +38,7 @@
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
-                <version>2.0.5</version>
+                <version>2.0.7</version>
             </dependency>
 
             <!-- fix vulnerabilities in dependencies of dom4j: -->
@@ -186,18 +186,6 @@
             <version>${log4j.version}</version>
         </dependency>
 
-        <!-- http communication -->
-<!--        <dependency>-->
-<!--            <groupId>org.apache.httpcomponents</groupId>-->
-<!--            <artifactId>httpmime</artifactId>-->
-<!--            <version>${httpcomponents.version}</version>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>org.apache.httpcomponents</groupId>-->
-<!--            <artifactId>fluent-hc</artifactId>-->
-<!--            <version>${httpcomponents.version}</version>-->
-<!--        </dependency>-->
-
         <dependency>
             <groupId>org.apache.httpcomponents.client5</groupId>
             <artifactId>httpclient5</artifactId>
@@ -247,12 +235,12 @@
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>2.11.0</version>
+            <version>2.13.0</version>
         </dependency>
         <dependency>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
-            <version>1.15</version>
+            <version>1.16.0</version>
         </dependency>
 
     </dependencies>
@@ -265,7 +253,7 @@
                 <!-- run tests -->
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.0.0-M5</version>
+                <version>3.1.2</version>
                 <configuration>
                     <argLine>
                         --illegal-access=permit
@@ -289,32 +277,17 @@
                 <version>${maven.compiler.plugin.version}</version>
                 <inherited>true</inherited>
                 <configuration>
-                    <release>16</release>
-                    <source>16</source>
-                    <target>16</target>
+                    <release>17</release>
+                    <source>17</source>
+                    <target>17</target>
                 </configuration>
             </plugin>
-            <!--            <plugin>-->
-            <!-- assembly plugin: used to collect all dependencies into one executable jar; alternative: shade plugin below. -->
-            <!--                <groupId>org.apache.maven.plugins</groupId>-->
-            <!--                <artifactId>maven-assembly-plugin</artifactId>-->
-            <!--                <configuration>-->
-            <!--                    <archive>-->
-            <!--                        <manifest>-->
-            <!--                            <mainClass>com.dewarim.cinnamon.application.CinnamonServer</mainClass>-->
-            <!--                        </manifest>-->
-            <!--                    </archive>-->
-            <!--                    <descriptorRefs>-->
-            <!--                        <descriptorRef>jar-with-dependencies</descriptorRef>-->
-            <!--                    </descriptorRefs>-->
-            <!--                </configuration>-->
-            <!--            </plugin>-->
             <plugin>
                 <!-- shade plugin: used to collect all dependencies into one executable jar; alternative: assembly plugin above. -->
                 <!-- https://maven.apache.org/plugins/maven-shade-plugin/examples/executable-jar.html -->
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.2.4</version>
+                <version>3.5.0</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
