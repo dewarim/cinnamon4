@@ -534,9 +534,9 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void lockAndUnlockShouldFailWithInvalidRequest() {
-        var exLock = assertThrows(CinnamonClientException.class, () -> client.lockOsd(null));
+        var exLock = assertThrows(CinnamonClientException.class, () -> client.lockOsd(List.of()));
         assertEquals(INVALID_REQUEST, exLock.getErrorCode());
-        var exUnlock = assertThrows(CinnamonClientException.class, () -> client.unlockOsd(null));
+        var exUnlock = assertThrows(CinnamonClientException.class, () -> client.unlockOsd(List.of()));
         assertEquals(INVALID_REQUEST, exUnlock.getErrorCode());
     }
 
@@ -565,13 +565,9 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void lockAndUnlockShouldFailWithNonExistentObject() throws IOException {
-        IdRequest idRequest = new IdRequest(Long.MAX_VALUE);
-        StandardResponse lockResponse = sendStandardRequest(UrlMapping.OSD__LOCK, idRequest);
-        assertCinnamonError(lockResponse, ErrorCode.OBJECT_NOT_FOUND);
-
-        StandardResponse unlockResponse = sendStandardRequest(UrlMapping.OSD__UNLOCK, idRequest);
-        assertCinnamonError(unlockResponse, ErrorCode.OBJECT_NOT_FOUND);
+    public void lockAndUnlockShouldFailWithNonExistentObject()  {
+        assertClientError(() -> client.unlockOsd(Long.MAX_VALUE), OBJECT_NOT_FOUND);
+        assertClientError(() -> client.lockOsd(Long.MAX_VALUE), OBJECT_NOT_FOUND);
     }
 
     @Test

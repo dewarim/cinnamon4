@@ -435,16 +435,26 @@ public class CinnamonClient {
         return response.getEntity().getContent();
     }
 
-    public boolean lockOsd(Long id) throws IOException {
-        IdRequest idRequest = new IdRequest(id);
-        var response = sendStandardRequest(UrlMapping.OSD__LOCK, idRequest);
-        return parseGenericResponse(response).isSuccessful();
+    public void lockOsd(Long id) throws IOException {
+        IdListRequest idListRequest = new IdListRequest(List.of(id));
+        var response = sendStandardRequest(UrlMapping.OSD__LOCK, idListRequest);
+        verifyResponseIsOkay(response);
+    }
+    public void lockOsd(List<Long> ids) throws IOException {
+        IdListRequest idListRequest = new IdListRequest(ids);
+        var response = sendStandardRequest(UrlMapping.OSD__LOCK, idListRequest);
+        verifyResponseIsOkay(response);
     }
 
-    public boolean unlockOsd(Long id) throws IOException {
-        IdRequest idRequest = new IdRequest(id);
-        var response = sendStandardRequest(UrlMapping.OSD__UNLOCK, idRequest);
-        return parseGenericResponse(response).isSuccessful();
+    public void unlockOsd(Long id) throws IOException {
+        IdListRequest idListRequest = new IdListRequest(List.of(id));
+        var response = sendStandardRequest(UrlMapping.OSD__UNLOCK, idListRequest);
+        verifyResponseIsOkay(response);
+    }
+    public void unlockOsd(List<Long> ids) throws IOException {
+        IdListRequest idListRequest = new IdListRequest(ids);
+        var response = sendStandardRequest(UrlMapping.OSD__UNLOCK, idListRequest);
+        verifyResponseIsOkay(response);
     }
 
     public boolean updateOsd(UpdateOsdRequest updateOsdRequest) throws IOException {

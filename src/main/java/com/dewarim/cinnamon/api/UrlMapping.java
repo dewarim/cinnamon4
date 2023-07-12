@@ -197,7 +197,7 @@ public enum UrlMapping {
     OSD__GET_OBJECTS_BY_ID("osd", "getObjectsById", "/api", "", OsdRequest.class, OsdWrapper.class),
     OSD__GET_RELATIONS("osd", "getRelations", "/api", "", GetRelationsRequest.class, RelationWrapper.class),
     OSD__GET_SUMMARIES("osd", "getSummaries", "/api", "", IdListRequest.class, SummaryWrapper.class),
-    OSD__LOCK("osd", "lock", "/api", "", IdRequest.class, GenericResponse.class),
+    OSD__LOCK("osd", "lock", "/api", "", IdListRequest.class, GenericResponse.class),
     OSD__SET_CONTENT("osd", "setContent", "/api", """
             Set an OSD's content. Requires a multipart-mime request, with part "cinnamonRequest" and part "file".
             """,
