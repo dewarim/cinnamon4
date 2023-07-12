@@ -99,6 +99,18 @@ public class UserAccountServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
+    public void loginWithExpiredPassword() throws IOException {
+        TestObjectHolder toh = new TestObjectHolder(adminClient, userId)
+                .createUser();
+        UserAccount user = toh.user;
+        new CinnamonClient(client, user.getName(), toh.newUserPassword).connect();
+        user.setPasswordExpired(true);
+        adminClient.updateUser(user);
+        assertClientError(() -> new CinnamonClient(client, user.getName(), toh.newUserPassword).connect(),
+                ErrorCode.PASSWORD_IS_EXPIRED);
+    }
+
+    @Test
     public void setOtherUsersPassword() throws IOException {
         SetPasswordRequest setPasswordRequest = new SetPasswordRequest(1L, "testTest");
         StandardResponse response = sendStandardRequest(UrlMapping.USER__SET_PASSWORD, setPasswordRequest);

@@ -152,6 +152,19 @@ public class CinnamonClient {
         this.password = password;
     }
 
+    /**
+     * Create a new Cinnamon client using the old client's connection data.
+     *
+     * @param client
+     */
+    public CinnamonClient(CinnamonClient client, String username, String password) {
+        this.port = client.getPort();
+        this.host = client.getHost();
+        this.protocol = client.getProtocol();
+        this.username = username;
+        this.password = password;
+    }
+
     private StandardResponse sendStandardMultipartRequest(UrlMapping urlMapping, HttpEntity multipartEntity) throws IOException {
         ClassicRequestBuilder requestBuilder = ClassicRequestBuilder.create("POST")
                 .setUri((String.format("%s://%s:%s", protocol, host, port) + urlMapping.getPath()))
@@ -184,7 +197,7 @@ public class CinnamonClient {
 
     public List<Acl> getAclsOfUser(long userId) throws IOException {
         StandardResponse response = sendStandardRequest(UrlMapping.ACL__GET_USER_ACLS, new IdRequest(userId));
-        return aclUnwrapper.unwrap(response,EXPECTED_SIZE_ANY);
+        return aclUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
     public void deleteUser(Long userId, Long assetReceiverId) throws IOException {
@@ -613,6 +626,7 @@ public class CinnamonClient {
         var response = sendStandardRequest(UrlMapping.GROUP__DELETE, request);
         return verifyDeleteResponse(response);
     }
+
     public boolean deleteGroups(List<Long> ids, boolean recursive) throws IOException {
         var request = new DeleteGroupRequest(ids, recursive);
         var response = sendStandardRequest(UrlMapping.GROUP__DELETE, request);

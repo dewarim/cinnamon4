@@ -130,7 +130,10 @@ public enum ErrorCode {
             You must submit the user id of another user who stands to receive ownership of all
             assets belonging to the deleted user, if any.
             """, SC_BAD_REQUEST),
-    CANNOT_DELETE_SUPERUSER("Cannot delete superuser - please remove superuser status first.", SC_FORBIDDEN);
+    CANNOT_DELETE_SUPERUSER("Cannot delete superuser - please remove superuser status first.", SC_FORBIDDEN),
+    PASSWORD_IS_EXPIRED("""
+            Your password has expired. Please ask your administrator for a new password
+            """, SC_UNAUTHORIZED);
 
     private static final Map<String, ErrorCode> codeMapping = new ConcurrentHashMap<>();
     final String description;

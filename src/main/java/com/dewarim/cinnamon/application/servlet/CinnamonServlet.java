@@ -84,21 +84,25 @@ public class CinnamonServlet extends HttpServlet {
         SecurityConfig securityConfig = CinnamonServer.config.getSecurityConfig();
 
         if (username == null || username.isEmpty()) {
-            ErrorCode.CONNECTION_FAIL_INVALID_USERNAME.throwUp();
+            throw ErrorCode.CONNECTION_FAIL_INVALID_USERNAME.exception();
         }
 
         Optional<UserAccount> userOpt = userAccountDao.getUserAccountByName(username);
         if (userOpt.isEmpty()) {
-            ErrorCode.CONNECTION_FAIL_INVALID_USERNAME.throwUp();
+            throw ErrorCode.CONNECTION_FAIL_INVALID_USERNAME.exception();
         }
 
         UserAccount user = userOpt.get();
         if (!user.isActivated()) {
-            ErrorCode.CONNECTION_FAIL_ACCOUNT_INACTIVE.throwUp();
+            throw ErrorCode.CONNECTION_FAIL_ACCOUNT_INACTIVE.exception();
         }
 
         if (user.isLocked()) {
-            ErrorCode.CONNECTION_FAIL_ACCOUNT_LOCKED.throwUp();
+            throw ErrorCode.CONNECTION_FAIL_ACCOUNT_LOCKED.exception();
+        }
+
+        if(user.isPasswordExpired()){
+            throw ErrorCode.PASSWORD_IS_EXPIRED.exception();
         }
 
         if (authenticate(user, password)) {
