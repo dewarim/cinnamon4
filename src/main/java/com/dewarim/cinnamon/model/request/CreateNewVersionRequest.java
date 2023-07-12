@@ -109,6 +109,7 @@ public class CreateNewVersionRequest implements ApiRequest<CreateNewVersionReque
     public List<ApiRequest<CreateNewVersionRequest>> examples() {
         CreateNewVersionRequest createNewVersionRequest = new CreateNewVersionRequest(5L);
         createNewVersionRequest.setMetaRequests(List.of(new Metadata("<xml>new metadata</xml>", 1L)));
-        return List.of(createNewVersionRequest);
+        createNewVersionRequest.setFormatId(4L);
+        return List.of(createNewVersionRequest, new CreateNewVersionRequest(6L));
     }
 }
