@@ -1,97 +1,61 @@
 package com.dewarim.cinnamon.model.request.folder;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.dewarim.cinnamon.model.Folder;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 @JacksonXmlRootElement(localName = "updateFolderRequest")
-public class UpdateFolderRequest implements ApiRequest {
+public class UpdateFolderRequest implements ApiRequest<UpdateFolderRequest> {
 
-    private Long   id;
-    private Long   parentId;
-    private String name;
-    private Long   ownerId;
-    private Long   typeId;
-    private Long   aclId;
-    private Boolean metadataChanged;
+    List<Folder> folders = new ArrayList<>();
 
     public UpdateFolderRequest() {
     }
 
+    public UpdateFolderRequest(Long id, Long parentId, String name, Long ownerId, Long typeId, Long aclId, Boolean metadataChanged) {
+        Folder folder = new Folder();
+        folder.setId(id);
+        folder.setParentId(parentId);
+        folder.setName(name);
+        folder.setOwnerId(ownerId);
+        folder.setTypeId(typeId);
+        folder.setAclId(aclId);
+        folder.setMetadataChanged(metadataChanged);
+        folders.add(folder);
+    }
+
     public UpdateFolderRequest(Long id, Long parentId, String name, Long ownerId, Long typeId, Long aclId) {
-        this.id = id;
-        this.parentId = parentId;
-        this.name = name;
-        this.ownerId = ownerId;
-        this.typeId = typeId;
-        this.aclId = aclId;
+        this(id, parentId, name, ownerId, typeId, aclId, null);
     }
 
-    public Long getId() {
-        return id;
+    public UpdateFolderRequest(List<Folder> folder) {
+        this.folders.addAll(folder);
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public List<Folder> getFolders() {
+        return folders;
     }
 
-    public Long getParentId() {
-        return parentId;
-    }
-
-    public void setParentId(Long parentId) {
-        this.parentId = parentId;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public Long getOwnerId() {
-        return ownerId;
-    }
-
-    public void setOwnerId(Long ownerId) {
-        this.ownerId = ownerId;
-    }
-
-    public Long getTypeId() {
-        return typeId;
-    }
-
-    public void setTypeId(Long typeId) {
-        this.typeId = typeId;
-    }
-
-    public Long getAclId() {
-        return aclId;
-    }
-
-    public void setAclId(Long aclId) {
-        this.aclId = aclId;
-    }
-
-    public Boolean getMetadataChanged() {
-        return metadataChanged;
-    }
-
-    public void setMetadataChanged(Boolean metadataChanged) {
-        this.metadataChanged = metadataChanged;
+    public void setFolders(List<Folder> folders) {
+        this.folders = folders;
     }
 
     private boolean validated() {
-        return id != null && id > 0
-                && (parentId == null || parentId > 0)
-                && (name == null || !name.trim().isEmpty())
-                && (typeId == null || typeId > 0)
-                && (ownerId == null || ownerId > 0)
-                && (aclId == null || aclId > 0);
+        if (folders == null || folders.isEmpty()) {
+            return false;
+        }
+        return folders.stream().allMatch(folder ->
+                folder.getId() != null && folder.getId() > 0
+                        && (folder.getParentId() == null || folder.getParentId() > 0)
+                        && (folder.getName() == null || !folder.getName().trim().isEmpty())
+                        && (folder.getTypeId() == null || folder.getTypeId() > 0)
+                        && (folder.getOwnerId() == null || folder.getOwnerId() > 0)
+                        && (folder.getAclId() == null || folder.getAclId() > 0)
+        );
     }
 
     public Optional<UpdateFolderRequest> validateRequest() {
@@ -105,20 +69,15 @@ public class UpdateFolderRequest implements ApiRequest {
     @Override
     public String toString() {
         return "UpdateFolderRequest{" +
-                "id=" + id +
-                ", parentId=" + parentId +
-                ", name='" + name + '\'' +
-                ", ownerId=" + ownerId +
-                ", typeId=" + typeId +
-                ", aclId=" + aclId +
-                ", metadataChanged=" + metadataChanged +
+                "folders=" + folders +
                 '}';
     }
 
     @Override
-    public List<ApiRequest> examples() {
-        UpdateFolderRequest request = new UpdateFolderRequest(1L, 2L, "new name", 4L, 5L, 6L);
-        request.setMetadataChanged(true);
+    public List<ApiRequest<UpdateFolderRequest>> examples() {
+        Folder folder = new Folder("new name", 1L, 2L, 3L, 4L, "<summary>update this</summary>");
+        folder.setMetadataChanged(true);
+        UpdateFolderRequest request = new UpdateFolderRequest(List.of(folder));
         return List.of(request);
     }
 }

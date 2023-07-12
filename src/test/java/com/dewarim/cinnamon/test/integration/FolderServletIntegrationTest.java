@@ -9,14 +9,9 @@ import com.dewarim.cinnamon.model.relations.Relation;
 import com.dewarim.cinnamon.model.relations.RelationType;
 import com.dewarim.cinnamon.model.request.CreateMetaRequest;
 import com.dewarim.cinnamon.model.request.DeleteMetaRequest;
-import com.dewarim.cinnamon.model.request.IdListRequest;
 import com.dewarim.cinnamon.model.request.MetaRequest;
 import com.dewarim.cinnamon.model.request.SetSummaryRequest;
-import com.dewarim.cinnamon.model.request.folder.CreateFolderRequest;
-import com.dewarim.cinnamon.model.request.folder.FolderPathRequest;
-import com.dewarim.cinnamon.model.request.folder.FolderRequest;
-import com.dewarim.cinnamon.model.request.folder.SingleFolderRequest;
-import com.dewarim.cinnamon.model.request.folder.UpdateFolderRequest;
+import com.dewarim.cinnamon.model.request.folder.*;
 import com.dewarim.cinnamon.model.response.Summary;
 import com.dewarim.cinnamon.test.TestObjectHolder;
 import org.junit.jupiter.api.Test;
@@ -436,7 +431,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
                 adminToh.folderType.getId(), adminToh.acl.getId()
         );
         client.updateFolder(request);
-        Folder updatedFolder = client.getFolderById(request.getId(), false);
+        Folder updatedFolder = client.getFolderById(request.getFolders().get(0).getId(), false);
         assertEquals(targetFolderId, updatedFolder.getParentId());
     }
 
@@ -449,11 +444,10 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
                 .createFolder();
         UpdateFolderRequest request = new UpdateFolderRequest(
                 adminToh.folder.getId(), targetFolderId, "new-name-for-metadata-changed-folder", 1L,
-                adminToh.folderType.getId(), adminToh.acl.getId()
+                adminToh.folderType.getId(), adminToh.acl.getId(), true
         );
-        request.setMetadataChanged(true);
         adminClient.updateFolder(request);
-        Folder updatedFolder = client.getFolderById(request.getId(), false);
+        Folder updatedFolder = client.getFolderById(request.getFolders().get(0).getId(), false);
         assertEquals(targetFolderId, updatedFolder.getParentId());
         assertTrue(updatedFolder.getMetadataChanged());
     }
@@ -467,9 +461,8 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
                 .createFolder();
         UpdateFolderRequest request = new UpdateFolderRequest(
                 adminToh.folder.getId(), targetFolderId, null, 1L,
-                adminToh.folderType.getId(), adminToh.acl.getId()
+                adminToh.folderType.getId(), adminToh.acl.getId(),true
         );
-        request.setMetadataChanged(true);
         CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> client.updateFolder(request));
         assertEquals(CHANGED_FLAG_ONLY_USABLE_BY_UNTRACKED_USERS, ex.getErrorCode());
     }

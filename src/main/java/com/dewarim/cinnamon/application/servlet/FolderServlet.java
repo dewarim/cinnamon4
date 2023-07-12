@@ -228,110 +228,112 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
         UpdateFolderRequest updateRequest = xmlMapper.readValue(request.getInputStream(), UpdateFolderRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
-        Long         folderId     = updateRequest.getId();
-        Folder       folder       = folderDao.getFolderById(folderId, true).orElseThrow(ErrorCode.FOLDER_NOT_FOUND.getException());
-        AccessFilter accessFilter = AccessFilter.getInstance(user);
+        for(Folder updateFolder : updateRequest.getFolders()) {
+            Long folderId = updateFolder.getId();
+            Folder folder = folderDao.getFolderById(folderId, true).orElseThrow(ErrorCode.FOLDER_NOT_FOUND.getException());
+            AccessFilter accessFilter = AccessFilter.getInstance(user);
 
-        boolean reIndexSubfolders = false;
-        boolean changed = false;
-        // change parent folder
-        Long parentId = updateRequest.getParentId();
-        if (parentId != null) {
-            if (parentId.equals(folderId)) {
-                ErrorCode.CANNOT_MOVE_FOLDER_INTO_ITSELF.throwUp();
-            }
-            Folder parentFolder = folderDao.getFolderById(parentId)
-                    .orElseThrow(ErrorCode.PARENT_FOLDER_NOT_FOUND.getException());
-            if (!accessFilter.hasPermissionOnOwnable(parentFolder, DefaultPermission.CREATE_FOLDER, parentFolder)) {
-                ErrorCode.NO_CREATE_PERMISSION.throwUp();
-            }
-            if (!accessFilter.hasPermissionOnOwnable(folder, DefaultPermission.SET_PARENT, folder)) {
-                ErrorCode.NO_SET_PARENT_PERMISSION.throwUp();
-            }
-
-            folder.setParentId(parentFolder.getId());
-            reIndexSubfolders = true;
-            changed = true;
-        }
-
-        // change name
-        String name = updateRequest.getName();
-        if (name != null) {
-            if (!accessFilter.hasPermissionOnOwnable(folder, DefaultPermission.SET_NAME, folder)) {
-                throw ErrorCode.NO_NAME_WRITE_PERMISSION.exception();
-            }
-            Folder parentFolder;
-            if (folder.getParentId() == null) {
-                parentFolder = folderDao.getRootFolder(false);
-            } else {
-                parentFolder = folderDao.getFolderById(folder.getParentId())
+            boolean reIndexSubfolders = false;
+            boolean changed = false;
+            // change parent folder
+            Long parentId = updateFolder.getParentId();
+            if (parentId != null) {
+                if (parentId.equals(folderId)) {
+                    ErrorCode.CANNOT_MOVE_FOLDER_INTO_ITSELF.throwUp();
+                }
+                Folder parentFolder = folderDao.getFolderById(parentId)
                         .orElseThrow(ErrorCode.PARENT_FOLDER_NOT_FOUND.getException());
-            }
-            // check if name is valid, otherwise user gets a confusing duplicate field db exception:
-            folderDao.getFolderByParentAndName(parentFolder.getId(), name, false)
-                    .ifPresent(f -> ErrorCode.DUPLICATE_FOLDER_NAME_FORBIDDEN.throwUp());
-            folder.setName(name);
-            changed = true;
-            reIndexSubfolders = true;
-        }
+                if (!accessFilter.hasPermissionOnOwnable(parentFolder, DefaultPermission.CREATE_FOLDER, parentFolder)) {
+                    ErrorCode.NO_CREATE_PERMISSION.throwUp();
+                }
+                if (!accessFilter.hasPermissionOnOwnable(folder, DefaultPermission.SET_PARENT, folder)) {
+                    ErrorCode.NO_SET_PARENT_PERMISSION.throwUp();
+                }
 
-        // change type
-        Long typeId = updateRequest.getTypeId();
-        if (typeId != null) {
-            if (!accessFilter.hasPermissionOnOwnable(folder, SET_TYPE, folder)) {
-                throw NO_TYPE_WRITE_PERMISSION.exception();
+                folder.setParentId(parentFolder.getId());
+                reIndexSubfolders = true;
+                changed = true;
             }
-            FolderType type = new FolderTypeDao().getFolderTypeById(typeId)
-                    .orElseThrow(ErrorCode.FOLDER_TYPE_NOT_FOUND.getException());
-            folder.setTypeId(type.getId());
-            changed = true;
-        }
 
-        // change acl
-        Long aclId = updateRequest.getAclId();
-        if (aclId != null) {
-            if (!accessFilter.hasPermissionOnOwnable(folder, DefaultPermission.SET_ACL, folder)) {
-                ErrorCode.MISSING_SET_ACL_PERMISSION.throwUp();
+            // change name
+            String name = updateFolder.getName();
+            if (name != null) {
+                if (!accessFilter.hasPermissionOnOwnable(folder, DefaultPermission.SET_NAME, folder)) {
+                    throw ErrorCode.NO_NAME_WRITE_PERMISSION.exception();
+                }
+                Folder parentFolder;
+                if (folder.getParentId() == null) {
+                    parentFolder = folderDao.getRootFolder(false);
+                } else {
+                    parentFolder = folderDao.getFolderById(folder.getParentId())
+                            .orElseThrow(ErrorCode.PARENT_FOLDER_NOT_FOUND.getException());
+                }
+                // check if name is valid, otherwise user gets a confusing duplicate field db exception:
+                folderDao.getFolderByParentAndName(parentFolder.getId(), name, false)
+                        .ifPresent(f -> ErrorCode.DUPLICATE_FOLDER_NAME_FORBIDDEN.throwUp());
+                folder.setName(name);
+                changed = true;
+                reIndexSubfolders = true;
             }
-            Acl acl = new AclDao().getAclById(aclId)
-                    .orElseThrow(ErrorCode.ACL_NOT_FOUND.getException());
-            folder.setAclId(acl.getId());
-            changed = true;
-        }
 
-        // change owner
-        Long ownerId = updateRequest.getOwnerId();
-        if (ownerId != null) {
-            if (!accessFilter.hasPermissionOnOwnable(folder, DefaultPermission.SET_OWNER, folder)) {
-                ErrorCode.NO_SET_OWNER_PERMISSION.throwUp();
+            // change type
+            Long typeId = updateFolder.getTypeId();
+            if (typeId != null) {
+                if (!accessFilter.hasPermissionOnOwnable(folder, SET_TYPE, folder)) {
+                    throw NO_TYPE_WRITE_PERMISSION.exception();
+                }
+                FolderType type = new FolderTypeDao().getFolderTypeById(typeId)
+                        .orElseThrow(ErrorCode.FOLDER_TYPE_NOT_FOUND.getException());
+                folder.setTypeId(type.getId());
+                changed = true;
             }
-            UserAccount owner = new UserAccountDao().getUserAccountById(ownerId)
-                    .orElseThrow(ErrorCode.USER_ACCOUNT_NOT_FOUND.getException());
-            folder.setOwnerId(owner.getId());
-            changed = true;
-        }
 
-        // metadataChanged:
-        if(updateRequest.getMetadataChanged() != null){
-            if(user.isChangeTracking()){
-                throw ErrorCode.CHANGED_FLAG_ONLY_USABLE_BY_UNTRACKED_USERS.exception();
+            // change acl
+            Long aclId = updateFolder.getAclId();
+            if (aclId != null) {
+                if (!accessFilter.hasPermissionOnOwnable(folder, DefaultPermission.SET_ACL, folder)) {
+                    ErrorCode.MISSING_SET_ACL_PERMISSION.throwUp();
+                }
+                Acl acl = new AclDao().getAclById(aclId)
+                        .orElseThrow(ErrorCode.ACL_NOT_FOUND.getException());
+                folder.setAclId(acl.getId());
+                changed = true;
             }
-            folder.setMetadataChanged(updateRequest.getMetadataChanged());
-        }
 
-        // update folder:
-        if (changed) {
-            folderDao.updateFolder(folder);
-            if(reIndexSubfolders){
-                // the folder path changes for this folder and everything inside it, so we have to be re-index.
-                IndexJobDao indexJobDao = new IndexJobDao();
-                indexJobDao.reIndexFolderContent(folderId);
-                List<Long> subFolderIds = folderDao.getRecursiveSubFolderIds(folderId);
-                if(!subFolderIds.isEmpty()) {
-                    indexJobDao.reindexFolders(subFolderIds);
-                    for (Long subFolderId : subFolderIds) {
-                        indexJobDao.insertIndexJob(new IndexJob(IndexJobType.FOLDER, subFolderId, IndexJobAction.UPDATE));
-                        indexJobDao.reIndexFolderContent(subFolderId);
+            // change owner
+            Long ownerId = updateFolder.getOwnerId();
+            if (ownerId != null) {
+                if (!accessFilter.hasPermissionOnOwnable(folder, DefaultPermission.SET_OWNER, folder)) {
+                    ErrorCode.NO_SET_OWNER_PERMISSION.throwUp();
+                }
+                UserAccount owner = new UserAccountDao().getUserAccountById(ownerId)
+                        .orElseThrow(ErrorCode.USER_ACCOUNT_NOT_FOUND.getException());
+                folder.setOwnerId(owner.getId());
+                changed = true;
+            }
+
+            // metadataChanged:
+            if (updateFolder.getMetadataChanged() != null) {
+                if (user.isChangeTracking()) {
+                    throw ErrorCode.CHANGED_FLAG_ONLY_USABLE_BY_UNTRACKED_USERS.exception();
+                }
+                folder.setMetadataChanged(updateFolder.getMetadataChanged());
+            }
+
+            // update folder:
+            if (changed) {
+                folderDao.updateFolder(folder);
+                if (reIndexSubfolders) {
+                    // the folder path changes for this folder and everything inside it, so we have to be re-index.
+                    IndexJobDao indexJobDao = new IndexJobDao();
+                    indexJobDao.reIndexFolderContent(folderId);
+                    List<Long> subFolderIds = folderDao.getRecursiveSubFolderIds(folderId);
+                    if (!subFolderIds.isEmpty()) {
+                        indexJobDao.reindexFolders(subFolderIds);
+                        for (Long subFolderId : subFolderIds) {
+                            indexJobDao.insertIndexJob(new IndexJob(IndexJobType.FOLDER, subFolderId, IndexJobAction.UPDATE));
+                            indexJobDao.reIndexFolderContent(subFolderId);
+                        }
                     }
                 }
             }
