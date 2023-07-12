@@ -86,6 +86,18 @@ public enum UrlMapping {
     ACL__UPDATE("acl", "update", "/api", "", UpdateAclRequest.class, AclWrapper.class),
     CINNAMON__CONNECT("cinnamon", "connect", "", """
             Connect to the cinnamon server by sending a form-encoded username and password.
+                        
+            Example call:
+                        
+                TICKET=$(curl --silent --show-error -X POST "http://localhost:9090/cinnamon/connect?user=admin&password=admin&format=text")
+                       
+            If you add the "format=text" parameter, you will receive a plain/text response with just the session ticket.
+            Otherwise, you will get:
+                        
+                <connection><ticket>72ca5288-c802-4da7-9315-6881f5e593b5</ticket></connection>
+                        
+            The ticket is a session id that must be sent with all other requests to the server,
+            in the request header field "ticket".
             """, null, null),
     CINNAMON__DISCONNECT("cinnamon", "disconnect", "", """
             Disconnect from the cinnamon server by invalidating the session ticket.
