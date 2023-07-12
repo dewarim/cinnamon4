@@ -371,6 +371,18 @@ It does not otherwise change the AclGroup (as it only contains of a group and ac
 # /cinnamon/connect
 Connect to the cinnamon server by sending a form-encoded username and password.
 
+Example call:
+
+    TICKET=$(curl --silent --show-error -X POST "http://localhost:9090/cinnamon/connect?user=admin&password=admin&format=text")
+
+If you add the "format=text" parameter, you will receive a plain/text response with just the session ticket.
+Otherwise, you will get:
+
+    <connection><ticket>72ca5288-c802-4da7-9315-6881f5e593b5</ticket></connection>
+
+The ticket is a session id that must be sent with all other requests to the server,
+in the request header field "ticket".
+
 
 ---
 
@@ -1261,7 +1273,13 @@ Fetch a single folder
 ## Request
 
 ```xml
-<idListRequest/>
+<idListRequest>
+  <idList>
+    <idList>1</idList>
+    <idList>44</idList>
+    <idList>5</idList>
+  </idList>
+</idListRequest>
 
 ```
 
@@ -1319,13 +1337,20 @@ Add a summary to an object, for example a short description of this folder's con
 
 ```xml
 <updateFolderRequest>
-  <id>1</id>
-  <parentId>2</parentId>
-  <name>new name</name>
-  <ownerId>4</ownerId>
-  <typeId>5</typeId>
-  <aclId>6</aclId>
-  <metadataChanged>true</metadataChanged>
+  <folders>
+    <folders>
+      <id/>
+      <name>new name</name>
+      <aclId>1</aclId>
+      <ownerId>2</ownerId>
+      <parentId>3</parentId>
+      <typeId>4</typeId>
+      <metadataChanged>true</metadataChanged>
+      <summary>&lt;summary>update this&lt;/summary></summary>
+      <hasSubfolders>false</hasSubfolders>
+      <created>2023-07-12T13:48:14+0000</created>
+    </folders>
+  </folders>
 </updateFolderRequest>
 
 ```
@@ -3164,7 +3189,13 @@ Returns an OSD's content according to it's format's content type.
 ## Request
 
 ```xml
-<idListRequest/>
+<idListRequest>
+  <idList>
+    <idList>1</idList>
+    <idList>44</idList>
+    <idList>5</idList>
+  </idList>
+</idListRequest>
 
 ```
 
@@ -3187,9 +3218,13 @@ Returns an OSD's content according to it's format's content type.
 ## Request
 
 ```xml
-<idRequest>
-  <id/>
-</idRequest>
+<idListRequest>
+  <idList>
+    <idList>1</idList>
+    <idList>44</idList>
+    <idList>5</idList>
+  </idList>
+</idListRequest>
 
 ```
 
@@ -3372,13 +3407,21 @@ part "file", if the new version should contain data.
 ```xml
 <createNewVersionRequest>
   <id>5</id>
-  <formatId/>
+  <formatId>4</formatId>
   <metaRequests>
     <metaRequest>
       <content>&lt;xml>new metadata&lt;/xml></content>
       <typeId>1</typeId>
     </metaRequest>
   </metaRequests>
+</createNewVersionRequest>
+
+```
+```xml
+<createNewVersionRequest>
+  <id>6</id>
+  <formatId/>
+  <metaRequests/>
 </createNewVersionRequest>
 
 ```

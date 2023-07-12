@@ -2,7 +2,6 @@ package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
-import com.dewarim.cinnamon.client.CinnamonClientException;
 import com.dewarim.cinnamon.client.StandardResponse;
 import com.dewarim.cinnamon.model.Folder;
 import com.dewarim.cinnamon.model.ObjectSystemData;
@@ -123,8 +122,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
                 .createOsd()
                 .createFolder();
         toh.createLinkToOsd(toh.osd);
-        var ex = assertThrows(CinnamonClientException.class, () -> client.getLinkById(toh.link.getId(), false));
-        assertEquals(NO_BROWSE_PERMISSION, ex.getErrorCode());
+        assertClientError(() -> client.getLinkById(toh.link.getId(), false), NO_BROWSE_PERMISSION);
     }
 
     @Disabled("fetching a link to an object that is no longer accessible is not wrong per se,")
@@ -147,8 +145,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
         toh.createFolder();
         var toh2 = prepareAclGroupWithPermissions(List.of(BROWSE));
         toh2.createLinkToFolder(targetFolder);
-        var ex = assertThrows(CinnamonClientException.class, () -> client.getLinkById(toh2.link.getId(), false));
-        assertEquals(UNAUTHORIZED, ex.getErrorCode());
+        assertClientError(() -> client.getLinkById(toh2.link.getId(), false), UNAUTHORIZED);
     }
 
     @Test
@@ -167,9 +164,8 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
                 .createOsd()
                 .createFolder();
         var linkId = toh.createLinkToOsd(toh.osd).link.getId();
-        var ex = assertThrows(CinnamonClientException.class,
-                () -> client.deleteLinks(List.of(linkId)));
-        assertEquals(UNAUTHORIZED, ex.getErrorCode());
+        assertClientError(
+                () -> client.deleteLinks(List.of(linkId)), UNAUTHORIZED);
     }
 
     @Test
@@ -178,8 +174,7 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
                 .createOsd()
                 .createFolder();
         toh.createLinkToOsd(toh.osd);
-        var ex = assertThrows(CinnamonClientException.class, () -> client.deleteLinks(List.of(toh.link.getId())));
-        assertEquals(NO_DELETE_LINK_PERMISSION, ex.getErrorCode());
+        assertClientError(() -> client.deleteLinks(List.of(toh.link.getId())), NO_DELETE_LINK_PERMISSION);
 
     }
 
@@ -341,8 +336,8 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
     public void createLinkToFolderWithoutBrowseFolderPermission() throws IOException {
         var toh = prepareAclGroupWithPermissions(List.of())
                 .createFolder(createFolderId);
-        var ex = assertThrows(CinnamonClientException.class, () -> client.createLinkToFolder(createFolderId, toh.acl.getId(), adminId, toh.folder.getId()));
-        assertEquals(UNAUTHORIZED, ex.getErrorCode());
+        assertClientError(() -> client.createLinkToFolder(createFolderId, toh.acl.getId(), adminId, toh.folder.getId()),
+                UNAUTHORIZED);
     }
 
     @Test
@@ -364,9 +359,8 @@ public class LinkServletIntegrationTest extends CinnamonIntegrationTest {
         var toh = prepareAclGroupWithPermissions(List.of())
                 .createOsd()
                 .createFolder();
-        var ex = assertThrows(CinnamonClientException.class,
-                () -> client.createLinkToOsd(toh.folder.getId(), toh.acl.getId(), userId, toh.osd.getId()));
-        assertEquals(UNAUTHORIZED, ex.getErrorCode());
+        assertClientError(() -> client.createLinkToOsd(toh.folder.getId(), toh.acl.getId(), userId, toh.osd.getId()),
+                UNAUTHORIZED);
     }
 
     @Test

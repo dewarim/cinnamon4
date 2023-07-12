@@ -1,7 +1,5 @@
 package com.dewarim.cinnamon.test.integration;
 
-import com.dewarim.cinnamon.ErrorCode;
-import com.dewarim.cinnamon.client.CinnamonClientException;
 import com.dewarim.cinnamon.model.MetasetType;
 import com.dewarim.cinnamon.model.request.CreateMetaRequest;
 import com.dewarim.cinnamon.test.TestObjectHolder;
@@ -11,6 +9,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
+import static com.dewarim.cinnamon.ErrorCode.*;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -40,17 +39,14 @@ public class MetasetTypeServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createDuplicateMetasetType() throws IOException {
-        var metasetType = adminClient.createMetasetType("duplicate", true);
-        var ex = assertThrows(CinnamonClientException.class,
-                () -> adminClient.createMetasetType("duplicate", true));
-        assertEquals(ErrorCode.DB_INSERT_FAILED, ex.getErrorCode());
+        adminClient.createMetasetType("duplicate", true);
+        assertClientError(() -> adminClient.createMetasetType("duplicate", true), DB_INSERT_FAILED);
     }
 
     @Test
     public void createMetasetTypeNonSuperuser() {
-        var ex = assertThrows(CinnamonClientException.class,
-                () -> client.createMetasetType("non-super", false));
-        assertEquals(ErrorCode.REQUIRES_SUPERUSER_STATUS, ex.getErrorCode());
+        assertClientError(
+                () -> client.createMetasetType("non-super", false), REQUIRES_SUPERUSER_STATUS);
     }
 
     @Test
@@ -66,9 +62,8 @@ public class MetasetTypeServletIntegrationTest extends CinnamonIntegrationTest {
     public void updateMetasetTypeNonSuperuser() throws IOException {
         var metasetType = adminClient.createMetasetType("for-update2", false);
         metasetType.setName("expect-fail");
-        var ex = assertThrows(CinnamonClientException.class, () ->
-                client.updateMetasetType(metasetType));
-        assertEquals(ErrorCode.REQUIRES_SUPERUSER_STATUS, ex.getErrorCode());
+        assertClientError(() ->
+                client.updateMetasetType(metasetType), REQUIRES_SUPERUSER_STATUS);
     }
 
     @Test
@@ -81,20 +76,18 @@ public class MetasetTypeServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void deleteMetasetTypeWhichIsInUse() throws IOException {
-        var toh         = new TestObjectHolder(client, userId);
-        var osd         = toh.createOsd("delete-metasetType-in-use-test").osd;
+        var toh = new TestObjectHolder(client, userId);
+        var osd = toh.createOsd("delete-metasetType-in-use-test").osd;
         var metasetType = adminClient.createMetasetType("test-in-use", false);
         client.lockOsd(osd.getId());
         client.createOsdMeta(new CreateMetaRequest(osd.getId(), "<xml>test</xml>", metasetType.getId()));
-        var ex = assertThrows(CinnamonClientException.class, () -> adminClient.deleteMetasetType(metasetType.getId()));
-        assertEquals(ErrorCode.DB_DELETE_FAILED, ex.getErrorCode());
+        assertClientError(() -> adminClient.deleteMetasetType(metasetType.getId()), DB_DELETE_FAILED);
     }
 
     @Test
     public void deleteMetasetTypeNonSuperuser() throws IOException {
         var metasetType = adminClient.createMetasetType("non-super-delete", true);
-        var ex = assertThrows(CinnamonClientException.class, () ->
-                client.deleteMetasetType(metasetType.getId()));
-        assertEquals(ErrorCode.REQUIRES_SUPERUSER_STATUS, ex.getErrorCode());
+        assertClientError(() ->
+                client.deleteMetasetType(metasetType.getId()), REQUIRES_SUPERUSER_STATUS);
     }
 }

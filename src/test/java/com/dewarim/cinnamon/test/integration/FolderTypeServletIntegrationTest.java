@@ -1,6 +1,5 @@
 package com.dewarim.cinnamon.test.integration;
 
-import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.Constants;
 import com.dewarim.cinnamon.client.CinnamonClientException;
 import com.dewarim.cinnamon.model.FolderType;
@@ -14,7 +13,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static com.dewarim.cinnamon.ErrorCode.DB_DELETE_FAILED;
+import static com.dewarim.cinnamon.ErrorCode.REQUIRES_SUPERUSER_STATUS;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class FolderTypeServletIntegrationTest extends CinnamonIntegrationTest {
 
@@ -29,7 +31,7 @@ public class FolderTypeServletIntegrationTest extends CinnamonIntegrationTest {
         try {
             client.createFolderTypes(Collections.singletonList("new-folder-type"));
         } catch (CinnamonClientException e) {
-            assertEquals(e.getErrorCode(), ErrorCode.REQUIRES_SUPERUSER_STATUS);
+            assertEquals(e.getErrorCode(), REQUIRES_SUPERUSER_STATUS);
         }
     }
 
@@ -49,10 +51,10 @@ public class FolderTypeServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void deleteWithoutPermission() throws IOException {
         List<FolderType> types = adminClient.createFolderTypes(Collections.singletonList("delete-me-forbidden"));
-        CinnamonClientException e = assertThrows(CinnamonClientException.class, () ->
-                client.deleteFolderTypes(types.stream().map(FolderType::getId).collect(Collectors.toList()))
+        assertClientError( () ->
+                client.deleteFolderTypes(types.stream().map(FolderType::getId).collect(Collectors.toList())),
+                REQUIRES_SUPERUSER_STATUS
         );
-        assertEquals(e.getErrorCode(), ErrorCode.REQUIRES_SUPERUSER_STATUS);
     }
 
     @Test
@@ -74,7 +76,7 @@ public class FolderTypeServletIntegrationTest extends CinnamonIntegrationTest {
             types.get(0).setName("forbidden-update");
             client.updateFolderTypes(types);
         } catch (CinnamonClientException e) {
-            assertEquals(e.getErrorCode(), ErrorCode.REQUIRES_SUPERUSER_STATUS);
+            assertEquals(e.getErrorCode(), REQUIRES_SUPERUSER_STATUS);
         }
     }
 
@@ -85,9 +87,8 @@ public class FolderTypeServletIntegrationTest extends CinnamonIntegrationTest {
                 .createFolder();
         var folder = toh.folder;
         client.updateFolder(new UpdateFolderRequest(folder.getId(), null, null, null, folderType.getId(), null));
-        var ex = assertThrows(CinnamonClientException.class,
-                () -> adminClient.deleteFolderTypes(List.of(folderType.getId())));
-        assertEquals(ErrorCode.DB_DELETE_FAILED, ex.getErrorCode());
+        assertClientError(
+                () -> adminClient.deleteFolderTypes(List.of(folderType.getId())),DB_DELETE_FAILED);
     }
 
 

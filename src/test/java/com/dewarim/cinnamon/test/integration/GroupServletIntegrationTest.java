@@ -1,7 +1,5 @@
 package com.dewarim.cinnamon.test.integration;
 
-import com.dewarim.cinnamon.ErrorCode;
-import com.dewarim.cinnamon.client.CinnamonClientException;
 import com.dewarim.cinnamon.model.Group;
 import com.dewarim.cinnamon.model.LoginType;
 import com.dewarim.cinnamon.model.UserAccount;
@@ -12,6 +10,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.dewarim.cinnamon.ErrorCode.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -36,16 +35,14 @@ public class GroupServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createGroupWithInvalidRequest() {
-        CinnamonClientException e = assertThrows(CinnamonClientException.class, () -> adminClient.createGroupsByName(List.of("")));
-        assertEquals(ErrorCode.INVALID_REQUEST, e.getErrorCode());
+        assertClientError( () -> adminClient.createGroupsByName(List.of("")),INVALID_REQUEST);
     }
 
     @Test
     public void createGroupWithSameName() throws IOException {
         String name = "a-group-with-a-name";
         adminClient.createGroupsByName(List.of(name));
-        CinnamonClientException e = assertThrows(CinnamonClientException.class, () -> adminClient.createGroupsByName(List.of(name)));
-        assertEquals(ErrorCode.DB_INSERT_FAILED, e.getErrorCode());
+        assertClientError( () -> adminClient.createGroupsByName(List.of(name)),DB_INSERT_FAILED);
     }
 
     @Test
@@ -59,14 +56,12 @@ public class GroupServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createGroupsWithoutPermission() {
-        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> client.createGroupsByName(List.of("no-perm-group")));
-        assertEquals(ErrorCode.REQUIRES_SUPERUSER_STATUS, ex.getErrorCode());
+        assertClientError( () -> client.createGroupsByName(List.of("no-perm-group")),REQUIRES_SUPERUSER_STATUS);
     }
 
     @Test
     public void deleteGroupsWithoutPermission() {
-        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> client.deleteGroups(List.of(1L)));
-        assertEquals(ErrorCode.REQUIRES_SUPERUSER_STATUS, ex.getErrorCode());
+        assertClientError( () -> client.deleteGroups(List.of(1L)),REQUIRES_SUPERUSER_STATUS);
     }
 
     @Test
@@ -89,17 +84,15 @@ public class GroupServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateGroupWithoutPermission() {
-        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> client.updateGroups(Collections.emptyList()));
-        assertEquals(ErrorCode.REQUIRES_SUPERUSER_STATUS, ex.getErrorCode());
+        assertClientError( () -> client.updateGroups(Collections.emptyList()),REQUIRES_SUPERUSER_STATUS);
     }
 
     @Test
     public void updateNonExistentGroup() {
         var group = new Group("foo");
         group.setId(Long.MAX_VALUE);
-        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () ->
-                adminClient.updateGroups(Collections.singletonList(group)));
-        assertEquals(ErrorCode.OBJECT_NOT_FOUND, ex.getErrorCode());
+        assertClientError( () ->
+                adminClient.updateGroups(Collections.singletonList(group)),OBJECT_NOT_FOUND);
     }
 
     @Test
@@ -107,9 +100,8 @@ public class GroupServletIntegrationTest extends CinnamonIntegrationTest {
         var existing = adminClient.createGroup(new Group("existing-group"));
         var updateGroup = adminClient.createGroup(new Group("update-my-name"));
         updateGroup.setName(existing.getName());
-        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () ->
-                adminClient.updateGroups(Collections.singletonList(updateGroup)));
-        assertEquals(ErrorCode.DB_UPDATE_FAILED, ex.getErrorCode());
+        assertClientError( () ->
+                adminClient.updateGroups(Collections.singletonList(updateGroup)),DB_UPDATE_FAILED);
     }
 
     @Test
@@ -154,9 +146,8 @@ public class GroupServletIntegrationTest extends CinnamonIntegrationTest {
                 .createGroup();
         Long parentId = toh.group.getId();
         toh.createGroup(parentId).createAcl().createAclGroup().addUserToGroup(adminId);
-        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () ->
-                adminClient.deleteGroups(List.of(parentId)));
-        assertEquals(ErrorCode.GROUP_HAS_CHILDREN, ex.getErrorCode());
+        assertClientError( () ->
+                adminClient.deleteGroups(List.of(parentId)),GROUP_HAS_CHILDREN);
     }
 
     @Test
@@ -186,9 +177,8 @@ public class GroupServletIntegrationTest extends CinnamonIntegrationTest {
     public void addUserToNonExistentGroup() throws IOException {
         var user = adminClient.createUser(new UserAccount("user-for-a-missing-group",
                 "passwehde", "-", "-", 1L, LoginType.CINNAMON.name(), true, true, true));
-        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () ->
-                adminClient.addUserToGroups(user.getId(), List.of(Long.MAX_VALUE)));
-        assertEquals(ErrorCode.DB_INSERT_FAILED, ex.getErrorCode());
+        assertClientError( () ->
+                adminClient.addUserToGroups(user.getId(), List.of(Long.MAX_VALUE)),DB_INSERT_FAILED);
     }
 
 }

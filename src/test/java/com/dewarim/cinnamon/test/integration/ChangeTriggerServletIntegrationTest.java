@@ -1,13 +1,12 @@
 package com.dewarim.cinnamon.test.integration;
 
-import com.dewarim.cinnamon.ErrorCode;
-import com.dewarim.cinnamon.client.CinnamonClientException;
 import com.dewarim.cinnamon.model.ChangeTrigger;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.List;
 
+import static com.dewarim.cinnamon.ErrorCode.REQUIRES_SUPERUSER_STATUS;
 import static com.dewarim.cinnamon.model.ChangeTriggerType.MICROSERVICE;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -43,8 +42,7 @@ public class ChangeTriggerServletIntegrationTest extends CinnamonIntegrationTest
 
     @Test
     public void createChangeTriggerWithoutSuperuserStatus() {
-        var ex = assertThrows(CinnamonClientException.class, () -> client.createChangeTrigger(changeTrigger));
-        assertEquals(ErrorCode.REQUIRES_SUPERUSER_STATUS, ex.getErrorCode());
+        assertClientError( () -> client.createChangeTrigger(changeTrigger),REQUIRES_SUPERUSER_STATUS);
     }
 
     // TODO: test changeTrigger-update + delete with/without superuser

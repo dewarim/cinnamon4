@@ -4,7 +4,6 @@ import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonServer;
-import com.dewarim.cinnamon.client.CinnamonClientException;
 import com.dewarim.cinnamon.client.StandardResponse;
 import com.dewarim.cinnamon.lifecycle.NopState;
 import com.dewarim.cinnamon.model.*;
@@ -380,8 +379,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     public void getContentWithoutContent() throws IOException {
         long osdId = new TestObjectHolder(client, userId)
                 .createOsd("getContentWithoutContent").osd.getId();
-        var ex = assertThrows(CinnamonClientException.class, () -> client.getContent(osdId));
-        assertEquals(OBJECT_HAS_NO_CONTENT, ex.getErrorCode());
+        assertClientError(() -> client.getContent(osdId), OBJECT_HAS_NO_CONTENT);
     }
 
     @Test
@@ -458,8 +456,8 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         long osdId = new TestObjectHolder(client, userId)
                 .createOsd("setContentWithDefaultContentProviderHappyPath").osd.getId();
         client.lockOsd(osdId);
-        var ex = assertThrows(CinnamonClientException.class, () -> client.setContentOnLockedOsd(osdId, Long.MAX_VALUE, new File("pom.xml")));
-        assertEquals(FORMAT_NOT_FOUND, ex.getErrorCode());
+        assertClientError(() -> client.setContentOnLockedOsd(osdId, Long.MAX_VALUE, new File("pom.xml")),
+                FORMAT_NOT_FOUND);
     }
 
     @Test
@@ -467,10 +465,9 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         long osdId = prepareAclGroupWithPermissions(List.of(LOCK))
                 .createOsd("setContentWithoutWritePermission").osd.getId();
         client.lockOsd(osdId);
-        var ex = assertThrows(CinnamonClientException.class,
-                () -> client.setContentOnLockedOsd(osdId, 1L, new File("pom.xml")));
-        assertEquals(NO_WRITE_PERMISSION, ex.getErrorCode());
-
+        assertClientError(
+                () -> client.setContentOnLockedOsd(osdId, 1L, new File("pom.xml")),
+                NO_WRITE_PERMISSION);
     }
 
     @Test
@@ -517,8 +514,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         adminClient.lockOsd(osdId);
 
         // try to overwrite admin's lock:
-        var ex = assertThrows(CinnamonClientException.class, () -> client.lockOsd(osdId));
-        assertEquals(OBJECT_LOCKED_BY_OTHER_USER, ex.getErrorCode());
+        assertClientError(() -> client.lockOsd(osdId), OBJECT_LOCKED_BY_OTHER_USER);
     }
 
     @Test
@@ -528,16 +524,13 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         adminClient.lockOsd(osdId);
 
         // try to unlock admin's lock:
-        var ex = assertThrows(CinnamonClientException.class, () -> client.unlockOsd(osdId));
-        assertEquals(OBJECT_LOCKED_BY_OTHER_USER, ex.getErrorCode());
+        assertClientError(() -> client.unlockOsd(osdId), OBJECT_LOCKED_BY_OTHER_USER);
     }
 
     @Test
     public void lockAndUnlockShouldFailWithInvalidRequest() {
-        var exLock = assertThrows(CinnamonClientException.class, () -> client.lockOsd(List.of()));
-        assertEquals(INVALID_REQUEST, exLock.getErrorCode());
-        var exUnlock = assertThrows(CinnamonClientException.class, () -> client.unlockOsd(List.of()));
-        assertEquals(INVALID_REQUEST, exUnlock.getErrorCode());
+        assertClientError(() -> client.lockOsd(List.of()), INVALID_REQUEST);
+        assertClientError(() -> client.unlockOsd(List.of()), INVALID_REQUEST);
     }
 
     @Test
@@ -551,21 +544,17 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
                 .createOsd("lockAndUnlockShouldFailWithoutPermission");
         long osdId = toh.osd.getId();
 
-        var ex = assertThrows(CinnamonClientException.class,
-                () -> client.lockOsd(osdId));
-        assertEquals(NO_LOCK_PERMISSION, ex.getErrorCode());
+        assertClientError(() -> client.lockOsd(osdId), NO_LOCK_PERMISSION);
 
         toh.addPermissions(List.of(LOCK));
         client.lockOsd(osdId);
         toh.removePermissions(List.of(LOCK));
 
-        ex = assertThrows(CinnamonClientException.class,
-                () -> client.unlockOsd(osdId));
-        assertEquals(NO_LOCK_PERMISSION, ex.getErrorCode());
+        assertClientError(() -> client.unlockOsd(osdId), NO_LOCK_PERMISSION);
     }
 
     @Test
-    public void lockAndUnlockShouldFailWithNonExistentObject()  {
+    public void lockAndUnlockShouldFailWithNonExistentObject() {
         assertClientError(() -> client.unlockOsd(Long.MAX_VALUE), OBJECT_NOT_FOUND);
         assertClientError(() -> client.lockOsd(Long.MAX_VALUE), OBJECT_NOT_FOUND);
     }
@@ -599,8 +588,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
                 .createOsd("getMetaWithoutReadPermission")
                 .setMetasetType(metasetType)
                 .createOsdMeta("foo");
-        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> client.getOsdMetas(toh.osd.getId()));
-        assertEquals(NO_READ_CUSTOM_METADATA_PERMISSION, ex.getErrorCode());
+        assertClientError(() -> client.getOsdMetas(toh.osd.getId()), NO_READ_CUSTOM_METADATA_PERMISSION);
     }
 
     @Test
@@ -654,17 +642,17 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
                 .createGroup("createMetaObjectNotWritable")
                 .createAclGroup().addUserToGroup(userId)
                 .createOsd("createMetaObjectNotWritable");
-        var ex = assertThrows(CinnamonClientException.class, () -> client.createOsdMeta(toh.osd.getId(), "unwritten", metasetType.getId()));
-        assertEquals(NO_WRITE_CUSTOM_METADATA_PERMISSION, ex.getErrorCode());
+        assertClientError(() -> client.createOsdMeta(toh.osd.getId(), "unwritten", metasetType.getId()),
+                NO_WRITE_CUSTOM_METADATA_PERMISSION);
     }
 
     @Test
     public void createMetaMetasetTypeByIdNotFound() throws IOException {
         var toh = new TestObjectHolder(client, userId)
                 .createOsd("createMetaMetasetTypeByNameNotFound");
-        var ex = assertThrows(CinnamonClientException.class,
-                () -> client.createOsdMeta(toh.osd.getId(), "type does not exist", Long.MAX_VALUE));
-        assertEquals(METASET_TYPE_NOT_FOUND, ex.getErrorCode());
+        assertClientError(
+                () -> client.createOsdMeta(toh.osd.getId(), "type does not exist", Long.MAX_VALUE),
+                METASET_TYPE_NOT_FOUND);
     }
 
     @Test
@@ -674,9 +662,9 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
                 .createOsd("createMetaMetasetHappyWithExistingMeta")
                 .setMetasetType(metasetType)
                 .createOsdMeta("1st");
-        var ex = assertThrows(CinnamonClientException.class, () -> client.createOsdMeta(toh.osd.getId(),
-                "forbidden duplicate", metasetType.getId()));
-        assertEquals(METASET_IS_UNIQUE_AND_ALREADY_EXISTS, ex.getErrorCode());
+        assertClientError(() -> client.createOsdMeta(toh.osd.getId(),
+                        "forbidden duplicate", metasetType.getId()),
+                METASET_IS_UNIQUE_AND_ALREADY_EXISTS);
     }
 
     // non-unique metasetType should allow appending new metasets.
@@ -715,8 +703,8 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var toh = prepareAclGroupWithPermissions(List.of(CREATE_OBJECT))
                 .createOsd("deleteMetaWithoutPermission")
                 .createOsdMeta("test");
-        var ex = assertThrows(CinnamonClientException.class, () -> client.deleteOsdMeta(toh.meta.getId()));
-        assertEquals(NO_WRITE_CUSTOM_METADATA_PERMISSION, ex.getErrorCode());
+        assertClientError(() -> client.deleteOsdMeta(toh.meta.getId()),
+                NO_WRITE_CUSTOM_METADATA_PERMISSION);
     }
 
     @Test
@@ -1014,8 +1002,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var toh = prepareAclGroupWithPermissions(List.of(CREATE_OBJECT))
                 .createOsd("version without version permission");
         CreateNewVersionRequest versionRequest = new CreateNewVersionRequest(toh.osd.getId());
-        var ex = assertThrows(CinnamonClientException.class, () -> client.version(versionRequest));
-        assertEquals(NO_VERSION_PERMISSION, ex.getErrorCode());
+        assertClientError(() -> client.version(versionRequest), NO_VERSION_PERMISSION);
     }
 
     @Test
@@ -1024,8 +1011,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
                 .createFolder()
                 .createOsd("version without create permission");
         CreateNewVersionRequest versionRequest = new CreateNewVersionRequest(toh.osd.getId());
-        var ex = assertThrows(CinnamonClientException.class, () -> client.version(versionRequest));
-        assertEquals(NO_CREATE_PERMISSION, ex.getErrorCode());
+        assertClientError(() -> client.version(versionRequest), NO_CREATE_PERMISSION);
     }
 
     @Test
@@ -1037,8 +1023,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         metadata.setContent("");
         metadata.setTypeId(Long.MAX_VALUE);
         versionRequest.getMetaRequests().add(metadata);
-        var ex = assertThrows(CinnamonClientException.class, () -> client.version(versionRequest));
-        assertEquals(METASET_TYPE_NOT_FOUND, ex.getErrorCode());
+        assertClientError(() -> client.version(versionRequest), METASET_TYPE_NOT_FOUND);
     }
 
     @Test
@@ -1087,8 +1072,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         toh.createOsd("multipart version without format");
         adminClient.attachLifecycle(toh.osd.getId(), 1L, 1L, true);
         CreateNewVersionRequest versionRequest = new CreateNewVersionRequest(toh.osd.getId());
-        var ex = assertThrows(CinnamonClientException.class, () -> client.versionWithContent(versionRequest, new File("pom.xml")));
-        assertEquals(FORMAT_NOT_FOUND, ex.getErrorCode());
+        assertClientError(() -> client.versionWithContent(versionRequest, new File("pom.xml")), FORMAT_NOT_FOUND);
     }
 
     @Disabled("Currently no easy way to setup DB to ignore FK-constraint on lifecycle so we would get a missing LC exception")
@@ -1152,8 +1136,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         try (StandardResponse versionResponse = sendStandardMultipartRequest(UrlMapping.OSD__VERSION, entity)) {
             assertCinnamonError(versionResponse, ErrorCode.LIFECYCLE_STATE_CHANGE_FAILED);
         }
-        var ex = assertThrows(CinnamonClientException.class, () -> client.version(versionRequest));
-        assertEquals(ErrorCode.LIFECYCLE_STATE_CHANGE_FAILED, ex.getErrorCode());
+        assertClientError(() -> client.version(versionRequest), LIFECYCLE_STATE_CHANGE_FAILED);
     }
 
     @Test
@@ -1326,14 +1309,12 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
         // try and set metadataChanged
         request.setMetadataChanged(true);
-        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> client.updateOsd(request));
-        assertEquals(CHANGED_FLAG_ONLY_USABLE_BY_UNTRACKED_USERS, ex.getErrorCode());
+        assertClientError(() -> client.updateOsd(request), CHANGED_FLAG_ONLY_USABLE_BY_UNTRACKED_USERS);
 
         // try and set contentChanged
         request.setMetadataChanged(null);
         request.setContentChanged(true);
-        ex = assertThrows(CinnamonClientException.class, () -> client.updateOsd(request));
-        assertEquals(CHANGED_FLAG_ONLY_USABLE_BY_UNTRACKED_USERS, ex.getErrorCode());
+        assertClientError(() -> client.updateOsd(request), CHANGED_FLAG_ONLY_USABLE_BY_UNTRACKED_USERS);
     }
 
     @Test
@@ -1786,8 +1767,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void copyWithInvalidRequest() {
-        var ex = assertThrows(CinnamonClientException.class, () -> client.createOsd(new CreateOsdRequest()));
-        assertEquals(INVALID_REQUEST, ex.getErrorCode());
+        assertClientError(() -> client.createOsd(new CreateOsdRequest()), INVALID_REQUEST);
     }
 
     private TestObjectHolder createCopySourceObject(String testName) throws IOException {
@@ -1805,16 +1785,14 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void copyWithoutReadContentPermission() throws IOException {
         var toh = createCopySourceObject("copyWithoutReadContentPermission");
-        var ex = assertThrows(CinnamonClientException.class, () -> client.copyOsds(createFolderId, List.of(toh.osd.getId())));
-        assertEquals(NO_READ_PERMISSION, ex.getErrorCode());
+        assertClientError(() -> client.copyOsds(createFolderId, List.of(toh.osd.getId())), NO_READ_PERMISSION);
     }
 
     @Test
     public void copyWithoutReadCustomMetadataPermission() throws IOException {
         var toh = createCopySourceObject("copyWithoutReadCustomMetadataPermission")
                 .addPermissionsByName(List.of(READ_OBJECT_CONTENT.getName()));
-        var ex = assertThrows(CinnamonClientException.class, () -> client.copyOsds(createFolderId, List.of(toh.osd.getId())));
-        assertEquals(NO_READ_CUSTOM_METADATA_PERMISSION, ex.getErrorCode());
+        assertClientError(() -> client.copyOsds(createFolderId, List.of(toh.osd.getId())), NO_READ_CUSTOM_METADATA_PERMISSION);
     }
 
     @Test
@@ -1831,8 +1809,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
                 .addPermissionsByName(List.of(READ_OBJECT_CONTENT.getName(),
                         READ_OBJECT_CUSTOM_METADATA.getName(),
                         READ_OBJECT_SYS_METADATA.getName()));
-        var ex = assertThrows(CinnamonClientException.class, () -> client.copyOsds(Long.MAX_VALUE, List.of(toh.osd.getId())));
-        assertEquals(FOLDER_NOT_FOUND, ex.getErrorCode());
+        assertClientError(() -> client.copyOsds(Long.MAX_VALUE, List.of(toh.osd.getId())), FOLDER_NOT_FOUND);
     }
 
     @Test
@@ -1842,8 +1819,8 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
                         READ_OBJECT_CUSTOM_METADATA.getName(),
                         READ_OBJECT_SYS_METADATA.getName()))
                 .createFolder("copyWithoutCreateObjectPermission-target", createFolderId);
-        var ex = assertThrows(CinnamonClientException.class, () -> client.copyOsds(toh.folder.getId(), List.of(toh.osd.getId())));
-        assertEquals(NO_CREATE_PERMISSION, ex.getErrorCode());
+        assertClientError(() -> client.copyOsds(toh.folder.getId(), List.of(toh.osd.getId())),
+                NO_CREATE_PERMISSION);
     }
 
     @Test

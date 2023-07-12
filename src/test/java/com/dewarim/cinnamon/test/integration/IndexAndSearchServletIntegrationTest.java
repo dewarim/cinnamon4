@@ -1,9 +1,7 @@
 package com.dewarim.cinnamon.test.integration;
 
-import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
-import com.dewarim.cinnamon.client.CinnamonClientException;
 import com.dewarim.cinnamon.model.Format;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.request.index.ReindexRequest;
@@ -22,6 +20,8 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
 
+import static com.dewarim.cinnamon.ErrorCode.INVALID_REQUEST;
+import static com.dewarim.cinnamon.ErrorCode.REQUIRES_SUPERUSER_STATUS;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTest {
@@ -140,14 +140,12 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
 
     @Test
     public void reindexIsForbiddenForNonAdmins() {
-        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> client.reindex(new ReindexRequest()));
-        assertEquals(ErrorCode.REQUIRES_SUPERUSER_STATUS, ex.getErrorCode());
+        assertClientError( () -> client.reindex(new ReindexRequest()),REQUIRES_SUPERUSER_STATUS);
     }
 
     @Test
     public void reindexInvalidRequest() {
-        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> adminClient.reindex(new ReindexRequest(List.of(-1L), List.of())));
-        assertEquals(ErrorCode.INVALID_REQUEST, ex.getErrorCode());
+        assertClientError( () -> adminClient.reindex(new ReindexRequest(List.of(-1L), List.of())),INVALID_REQUEST);
     }
 
     @Test

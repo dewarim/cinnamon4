@@ -1,13 +1,13 @@
 package com.dewarim.cinnamon.test.integration;
 
-import com.dewarim.cinnamon.ErrorCode;
-import com.dewarim.cinnamon.client.CinnamonClientException;
 import com.dewarim.cinnamon.model.ConfigEntry;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.List;
 
+import static com.dewarim.cinnamon.ErrorCode.OBJECT_NOT_FOUND;
+import static com.dewarim.cinnamon.ErrorCode.REQUIRES_SUPERUSER_STATUS;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ConfigEntryServletIntegrationTest extends CinnamonIntegrationTest {
@@ -37,8 +37,7 @@ public class ConfigEntryServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void deleteNonAdmin() throws IOException{
         var entry = adminClient.createConfigEntry(new ConfigEntry("delete-me", "<xml/>", true));
-        var ex = assertThrows(CinnamonClientException.class, () -> client.deleteConfigEntry(entry.getId()));
-        assertEquals(ErrorCode.REQUIRES_SUPERUSER_STATUS, ex.getErrorCode());
+        assertClientError( () -> client.deleteConfigEntry(entry.getId()),REQUIRES_SUPERUSER_STATUS);
     }
 
     @Test
@@ -60,8 +59,7 @@ public class ConfigEntryServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void doesNotExistPath() {
         // more a test of the client than the server - which will return simply an empty list.
-        var ex = assertThrows(CinnamonClientException.class, () -> client.getConfigEntry("unknown-entry"));
-        assertEquals(ErrorCode.OBJECT_NOT_FOUND, ex.getErrorCode());
+        assertClientError( () -> client.getConfigEntry("unknown-entry"),OBJECT_NOT_FOUND);
     }
 
     @Test

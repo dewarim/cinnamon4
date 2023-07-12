@@ -3,7 +3,6 @@ package com.dewarim.cinnamon.test.integration;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.Constants;
 import com.dewarim.cinnamon.api.UrlMapping;
-import com.dewarim.cinnamon.client.CinnamonClientException;
 import com.dewarim.cinnamon.client.StandardResponse;
 import com.dewarim.cinnamon.client.Unwrapper;
 import com.dewarim.cinnamon.model.Acl;
@@ -21,6 +20,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import static com.dewarim.cinnamon.ErrorCode.INVALID_REQUEST;
 import static com.dewarim.cinnamon.api.Constants.ACL_DEFAULT;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -51,8 +51,7 @@ public class AclServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createAclShouldFailOnInvalidName() {
-        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> adminClient.createAcls(List.of("")));
-        assertEquals(ErrorCode.INVALID_REQUEST, ex.getErrorCode());
+        assertClientError( () -> adminClient.createAcls(List.of("")),INVALID_REQUEST);
     }
 
     @Test
@@ -69,7 +68,7 @@ public class AclServletIntegrationTest extends CinnamonIntegrationTest {
     public void renameToNullShouldFail() throws IOException {
         UpdateAclRequest updateRequest = new UpdateAclRequest(4L, null);
         StandardResponse aclListResponse = sendAdminRequest(UrlMapping.ACL__UPDATE, updateRequest);
-        assertCinnamonError(aclListResponse, ErrorCode.INVALID_REQUEST);
+        assertCinnamonError(aclListResponse, INVALID_REQUEST);
     }
 
     @Test
@@ -107,7 +106,7 @@ public class AclServletIntegrationTest extends CinnamonIntegrationTest {
     public void invalidRequestForAcl() throws IOException {
         AclInfoRequest aclInfoRequest = new AclInfoRequest(null, null);
         var aclListResponse = sendAdminRequest(UrlMapping.ACL__ACL_INFO, aclInfoRequest);
-        assertCinnamonError(aclListResponse, ErrorCode.INVALID_REQUEST);
+        assertCinnamonError(aclListResponse, INVALID_REQUEST);
     }
 
     @Test
@@ -161,7 +160,7 @@ public class AclServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void getUserAclsShouldFailWithoutValidId() throws IOException {
         var response = sendAdminRequest(UrlMapping.ACL__GET_USER_ACLS, new IdRequest(-1L));
-        assertCinnamonError(response, ErrorCode.INVALID_REQUEST);
+        assertCinnamonError(response, INVALID_REQUEST);
     }
 
     private List<Acl> unwrapAcls(StandardResponse response, Integer expectedSize) throws IOException {

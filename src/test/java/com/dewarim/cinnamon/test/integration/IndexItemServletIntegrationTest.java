@@ -1,7 +1,5 @@
 package com.dewarim.cinnamon.test.integration;
 
-import com.dewarim.cinnamon.ErrorCode;
-import com.dewarim.cinnamon.client.CinnamonClientException;
 import com.dewarim.cinnamon.model.IndexItem;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.apache.logging.log4j.LogManager;
@@ -12,6 +10,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
+import static com.dewarim.cinnamon.ErrorCode.INVALID_REQUEST;
+import static com.dewarim.cinnamon.ErrorCode.REQUIRES_SUPERUSER_STATUS;
 import static com.dewarim.cinnamon.model.index.IndexType.DEFAULT_INDEXER;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -44,8 +44,7 @@ public class IndexItemServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createIndexItemInvalidRequest() {
-        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> adminClient.createIndexItem(new IndexItem()));
-        assertEquals(ErrorCode.INVALID_REQUEST, ex.getErrorCode());
+        assertClientError( () -> adminClient.createIndexItem(new IndexItem()),INVALID_REQUEST);
     }
 
     @Test
@@ -77,20 +76,17 @@ public class IndexItemServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createIndexItemNonSuperuser() {
-        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> client.createIndexItem(new IndexItem()));
-        assertEquals(ErrorCode.REQUIRES_SUPERUSER_STATUS, ex.getErrorCode());
+        assertClientError( () -> client.createIndexItem(new IndexItem()),REQUIRES_SUPERUSER_STATUS);
     }
 
     @Test
     public void deleteIndexItemNonSuperuser() {
-        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> client.deleteIndexItem(1L));
-        assertEquals(ErrorCode.REQUIRES_SUPERUSER_STATUS, ex.getErrorCode());
+        assertClientError( () -> client.deleteIndexItem(1L),REQUIRES_SUPERUSER_STATUS);
     }
 
     @Test
     public void updateIndexItemNonSuperuser() {
-        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> client.updateIndexItem(new IndexItem()));
-        assertEquals(ErrorCode.REQUIRES_SUPERUSER_STATUS, ex.getErrorCode());
+        assertClientError( () -> client.updateIndexItem(new IndexItem()),REQUIRES_SUPERUSER_STATUS);
     }
 
 }

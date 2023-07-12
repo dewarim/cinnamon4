@@ -1,7 +1,5 @@
 package com.dewarim.cinnamon.test.integration;
 
-import com.dewarim.cinnamon.ErrorCode;
-import com.dewarim.cinnamon.client.CinnamonClientException;
 import com.dewarim.cinnamon.model.Language;
 import com.dewarim.cinnamon.model.request.osd.UpdateOsdRequest;
 import com.dewarim.cinnamon.test.TestObjectHolder;
@@ -11,6 +9,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.dewarim.cinnamon.ErrorCode.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class LanguageServletIntegrationTest extends CinnamonIntegrationTest {
@@ -39,21 +38,19 @@ public class LanguageServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createDuplicateLanguage() throws IOException {
-        var language = adminClient.createLanguage("elf");
-        var ex       = assertThrows(CinnamonClientException.class, () -> adminClient.createLanguage("elf"));
-        assertEquals(ErrorCode.DB_INSERT_FAILED, ex.getErrorCode());
+        adminClient.createLanguage("elf");
+        assertClientError(() -> adminClient.createLanguage("elf"), DB_INSERT_FAILED);
     }
 
     @Test
-    public void createTwoLanguages() throws IOException{
+    public void createTwoLanguages() throws IOException {
         var languages = adminClient.createLanguages(List.of("bicorn", "unicorn"));
         assertEquals(2, languages.size());
     }
 
     @Test
     public void createLanguageNonSuperuser() {
-        var ex = assertThrows(CinnamonClientException.class, () -> client.createLanguage("elf"));
-        assertEquals(ErrorCode.REQUIRES_SUPERUSER_STATUS, ex.getErrorCode());
+        assertClientError(() -> client.createLanguage("elf"), REQUIRES_SUPERUSER_STATUS);
     }
 
     @Test
@@ -67,9 +64,8 @@ public class LanguageServletIntegrationTest extends CinnamonIntegrationTest {
     public void updateLanguageNonSuperuser() throws IOException {
         var language = adminClient.createLanguage("troll");
         language.setIsoCode("gnome");
-        var ex = assertThrows(CinnamonClientException.class, () ->
-                client.updateLanguage(language));
-        assertEquals(ErrorCode.REQUIRES_SUPERUSER_STATUS, ex.getErrorCode());
+        assertClientError(() ->
+                client.updateLanguage(language), REQUIRES_SUPERUSER_STATUS);
     }
 
     @Test
@@ -82,22 +78,20 @@ public class LanguageServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void deleteLanguageWhichIsInUse() throws IOException {
-        var toh = new TestObjectHolder(adminClient,userId);
+        var toh = new TestObjectHolder(adminClient, userId);
         var osd = toh.createOsd("delete-language-in-use-test").osd;
         var language = adminClient.createLanguage("test");
-        var updateRequest = new UpdateOsdRequest(osd.getId(), null,null,null,null,null,language.getId());
+        var updateRequest = new UpdateOsdRequest(osd.getId(), null, null, null, null, null, language.getId());
         client.lockOsd(osd.getId());
         assertTrue(client.updateOsd(updateRequest));
-        var ex = assertThrows(CinnamonClientException.class, () -> adminClient.deleteLanguage(language.getId()));
-        assertEquals(ErrorCode.DB_DELETE_FAILED, ex.getErrorCode());
+        assertClientError(() -> adminClient.deleteLanguage(language.getId()), DB_DELETE_FAILED);
     }
 
     @Test
     public void deleteLanguageNonSuperuser() throws IOException {
         var language = adminClient.createLanguage("client");
-        var ex = assertThrows(CinnamonClientException.class, () ->
-                client.deleteLanguage(language.getId()));
-        assertEquals(ErrorCode.REQUIRES_SUPERUSER_STATUS, ex.getErrorCode());
+        assertClientError(() ->
+                client.deleteLanguage(language.getId()), REQUIRES_SUPERUSER_STATUS);
     }
 
 }

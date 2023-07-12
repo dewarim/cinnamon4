@@ -1,7 +1,5 @@
 package com.dewarim.cinnamon.test.integration;
 
-import com.dewarim.cinnamon.ErrorCode;
-import com.dewarim.cinnamon.client.CinnamonClientException;
 import com.dewarim.cinnamon.model.UiLanguage;
 import org.junit.jupiter.api.Test;
 
@@ -9,6 +7,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
+import static com.dewarim.cinnamon.ErrorCode.*;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -38,15 +37,13 @@ public class UiLanguageServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createDuplicateUiLanguage() throws IOException {
-        var language = adminClient.createUiLanguage("elf");
-        var ex       = assertThrows(CinnamonClientException.class, () -> adminClient.createUiLanguage("elf"));
-        assertEquals(ErrorCode.DB_INSERT_FAILED, ex.getErrorCode());
+        adminClient.createUiLanguage("elf");
+        assertClientError( () -> adminClient.createUiLanguage("elf"),DB_INSERT_FAILED);
     }
 
     @Test
     public void createUiLanguageNonSuperuser() {
-        var ex = assertThrows(CinnamonClientException.class, () -> client.createUiLanguage("elf"));
-        assertEquals(ErrorCode.REQUIRES_SUPERUSER_STATUS, ex.getErrorCode());
+        assertClientError(() -> client.createUiLanguage("elf"), REQUIRES_SUPERUSER_STATUS);
     }
 
     @Test
@@ -60,9 +57,8 @@ public class UiLanguageServletIntegrationTest extends CinnamonIntegrationTest {
     public void updateUiLanguageNonSuperuser() throws IOException {
         var language = adminClient.createUiLanguage("troll");
         language.setIsoCode("gnome");
-        var ex = assertThrows(CinnamonClientException.class, () ->
-                client.updateUiLanguage(language));
-        assertEquals(ErrorCode.REQUIRES_SUPERUSER_STATUS, ex.getErrorCode());
+        assertClientError(() ->
+                client.updateUiLanguage(language), REQUIRES_SUPERUSER_STATUS);
     }
 
     @Test
@@ -70,9 +66,8 @@ public class UiLanguageServletIntegrationTest extends CinnamonIntegrationTest {
         var language1 = adminClient.createUiLanguage("AA");
         var language2 = adminClient.createUiLanguage("ZZ");
         language2.setIsoCode("AA");
-        var ex = assertThrows(CinnamonClientException.class, () ->
-                adminClient.updateUiLanguage(language2));
-        assertEquals(ErrorCode.DB_UPDATE_FAILED, ex.getErrorCode());
+        assertClientError(() ->
+                adminClient.updateUiLanguage(language2), DB_UPDATE_FAILED);
     }
 
     @Test
@@ -86,9 +81,8 @@ public class UiLanguageServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void deleteUiLanguageNonSuperuser() throws IOException {
         var language = adminClient.createUiLanguage("client");
-        var ex = assertThrows(CinnamonClientException.class, () ->
-                client.deleteUiLanguage(language.getId()));
-        assertEquals(ErrorCode.REQUIRES_SUPERUSER_STATUS, ex.getErrorCode());
+        assertClientError(() ->
+                client.deleteUiLanguage(language.getId()), REQUIRES_SUPERUSER_STATUS);
     }
 
 

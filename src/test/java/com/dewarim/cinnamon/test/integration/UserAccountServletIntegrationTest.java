@@ -5,7 +5,6 @@ import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.client.CinnamonClient;
-import com.dewarim.cinnamon.client.CinnamonClientException;
 import com.dewarim.cinnamon.client.StandardResponse;
 import com.dewarim.cinnamon.model.Folder;
 import com.dewarim.cinnamon.model.LoginType;
@@ -24,6 +23,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static com.dewarim.cinnamon.DefaultPermission.BROWSE;
+import static com.dewarim.cinnamon.ErrorCode.*;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -160,32 +160,28 @@ public class UserAccountServletIntegrationTest extends CinnamonIntegrationTest {
         String username = "new user without password";
         UserAccount user = new UserAccount(username, "", "A new user", "user@invalid.com",
                 1L, LoginType.CINNAMON.name(), false, true, false);
-        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> adminClient.createUser(user));
-        assertEquals(ErrorCode.INVALID_REQUEST, ex.getErrorCode());
+        assertClientError(() -> adminClient.createUser(user), INVALID_REQUEST);
     }
 
     @Test
     public void createUserWithExistingName() {
         UserAccount user = new UserAccount("admin", "a second admin!", "A new user", "user@invalid.com",
                 1L, LoginType.CINNAMON.name(), false, true, false);
-        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> adminClient.createUser(user));
-        assertEquals(ErrorCode.DB_INSERT_FAILED, ex.getErrorCode());
+        assertClientError(() -> adminClient.createUser(user), DB_INSERT_FAILED);
     }
 
     @Test
     public void createUserWithUnknownLoginType() {
         UserAccount user = new UserAccount("admin", "a second admin!", "A new user", "user@invalid.com",
                 1L, "login via biometrically authenticated hug", false, true, false);
-        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> adminClient.createUser(user));
-        assertEquals(ErrorCode.LOGIN_TYPE_IS_UNKNOWN, ex.getErrorCode());
+        assertClientError(() -> adminClient.createUser(user), LOGIN_TYPE_IS_UNKNOWN);
     }
 
     @Test
     public void createUserWithoutAdminAccess() {
         UserAccount user = new UserAccount("not-an-admin", "just-a-pass", "A new user", "user@invalid.com",
                 1L, LoginType.CINNAMON.name(), false, true, true);
-        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> client.createUser(user));
-        assertEquals(ErrorCode.REQUIRES_SUPERUSER_STATUS, ex.getErrorCode());
+        assertClientError(() -> client.createUser(user), REQUIRES_SUPERUSER_STATUS);
     }
 
     @Test
@@ -193,8 +189,7 @@ public class UserAccountServletIntegrationTest extends CinnamonIntegrationTest {
         UserAccount user = new UserAccount("user-with-other-login-type", "just-a-pass", "A new user", "user@invalid.com",
                 1L, "LDAP", false, true, true);
         UserAccount userAccount = adminClient.createUser(user);
-        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> adminClient.setPassword(userAccount.getId(), "some other password"));
-        assertEquals(ErrorCode.USER_ACCOUNT_SET_PASSWORD_NOT_ALLOWED, ex.getErrorCode());
+        assertClientError(() -> adminClient.setPassword(userAccount.getId(), "some other password"), USER_ACCOUNT_SET_PASSWORD_NOT_ALLOWED);
     }
 
     @Test
@@ -210,8 +205,7 @@ public class UserAccountServletIntegrationTest extends CinnamonIntegrationTest {
         String username = "new user with tiny password";
         UserAccount user = new UserAccount(username, "tiny", "A new user", "user@invalid.com",
                 1L, LoginType.CINNAMON.name(), false, true, false);
-        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> adminClient.createUser(user));
-        assertEquals(ErrorCode.PASSWORD_TOO_SHORT, ex.getErrorCode());
+        assertClientError(() -> adminClient.createUser(user), PASSWORD_TOO_SHORT);
     }
 
     @Test
@@ -250,8 +244,7 @@ public class UserAccountServletIntegrationTest extends CinnamonIntegrationTest {
         UserAccount account = adminClient.createUser(user);
         account.setName("admin");
 
-        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> adminClient.updateUser(account));
-        assertEquals(ErrorCode.DB_UPDATE_FAILED, ex.getErrorCode());
+        assertClientError(() -> adminClient.updateUser(account), DB_UPDATE_FAILED);
     }
 
     @Test
@@ -280,20 +273,17 @@ public class UserAccountServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void setConfigInvalidRequest() {
-        CinnamonClientException cex = assertThrows(CinnamonClientException.class, () -> client.setUserConfig(adminId, null));
-        assertEquals(ErrorCode.INVALID_REQUEST, cex.getErrorCode());
+        assertClientError(() -> client.setUserConfig(adminId, null), INVALID_REQUEST);
     }
 
     @Test
     public void setConfigOtherUserIsForbidden() {
-        CinnamonClientException cex = assertThrows(CinnamonClientException.class, () -> client.setUserConfig(adminId, "xxx"));
-        assertEquals(ErrorCode.FORBIDDEN, cex.getErrorCode());
+        assertClientError(() -> client.setUserConfig(adminId, "xxx"), FORBIDDEN);
     }
 
     @Test
     public void setConfigUserNotFound() {
-        CinnamonClientException cex = assertThrows(CinnamonClientException.class, () -> client.setUserConfig(Long.MAX_VALUE, "xxx"));
-        assertEquals(ErrorCode.USER_ACCOUNT_NOT_FOUND, cex.getErrorCode());
+        assertClientError(() -> client.setUserConfig(Long.MAX_VALUE, "xxx"), USER_ACCOUNT_NOT_FOUND);
     }
 
     @Test

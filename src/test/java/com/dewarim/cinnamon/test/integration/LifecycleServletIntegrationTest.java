@@ -1,8 +1,6 @@
 package com.dewarim.cinnamon.test.integration;
 
-import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
-import com.dewarim.cinnamon.client.CinnamonClientException;
 import com.dewarim.cinnamon.lifecycle.NopState;
 import com.dewarim.cinnamon.model.Lifecycle;
 import com.dewarim.cinnamon.model.LifecycleState;
@@ -13,8 +11,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
-import static com.dewarim.cinnamon.ErrorCode.INVALID_REQUEST;
-import static com.dewarim.cinnamon.ErrorCode.OBJECT_NOT_FOUND;
+import static com.dewarim.cinnamon.ErrorCode.*;
 import static com.dewarim.cinnamon.test.integration.LifecycleStateServletIntegrationTest.CONFIG;
 import static com.dewarim.cinnamon.test.integration.LifecycleStateServletIntegrationTest.NOP_STATE;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -81,14 +78,12 @@ public class LifecycleServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createLifecycleAsNormalUser() {
-        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> client.createLifecycle("failed-create"));
-        assertEquals(ErrorCode.REQUIRES_SUPERUSER_STATUS, ex.getErrorCode());
+        assertClientError(() -> client.createLifecycle("failed-create"), REQUIRES_SUPERUSER_STATUS);
     }
 
     @Test
     public void createLifecycleInvalidRequest() {
-        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> adminClient.createLifecycle(null));
-        assertEquals(ErrorCode.INVALID_REQUEST, ex.getErrorCode());
+        assertClientError(() -> adminClient.createLifecycle(null), INVALID_REQUEST);
     }
 
     @Test
@@ -106,15 +101,13 @@ public class LifecycleServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateLifecycleTestAsNormalUser() throws IOException {
-        var                     lifecycle = adminClient.createLifecycle("update-me-cycle-fail");
-        CinnamonClientException ex        = assertThrows(CinnamonClientException.class, () -> client.updateLifecycle(lifecycle));
-        assertEquals(ErrorCode.REQUIRES_SUPERUSER_STATUS, ex.getErrorCode());
+        var lifecycle = adminClient.createLifecycle("update-me-cycle-fail");
+        assertClientError(() -> client.updateLifecycle(lifecycle), REQUIRES_SUPERUSER_STATUS);
     }
 
     @Test
     public void updateLifecycleTestInvalidRequest() {
-        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> adminClient.updateLifecycle(new Lifecycle()));
-        assertEquals(ErrorCode.INVALID_REQUEST, ex.getErrorCode());
+        assertClientError(() -> adminClient.updateLifecycle(new Lifecycle()), INVALID_REQUEST);
     }
 
     @Test
@@ -129,21 +122,18 @@ public class LifecycleServletIntegrationTest extends CinnamonIntegrationTest {
         var lifecycle = adminClient.createLifecycle("delete-me-fail-in-use");
         var lcs = adminClient.createLifecycleState(
                 new LifecycleState("delete-me-fail-lc-in-use", CONFIG, NOP_STATE, lifecycle.getId(), null));
-        var ex = assertThrows(CinnamonClientException.class, () -> adminClient.deleteLifecycle(lifecycle.getId()));
-        assertEquals(ErrorCode.DB_DELETE_FAILED, ex.getErrorCode());
+        assertClientError(() -> adminClient.deleteLifecycle(lifecycle.getId()), DB_DELETE_FAILED);
     }
 
     @Test
     public void deleteLifecycleAsNormalUserTest() throws IOException {
-        var                     lifecycle = adminClient.createLifecycle("delete-me-cycle-fail");
-        CinnamonClientException ex        = assertThrows(CinnamonClientException.class, () -> client.deleteLifecycle(lifecycle.getId()));
-        assertEquals(ErrorCode.REQUIRES_SUPERUSER_STATUS, ex.getErrorCode());
+        var lifecycle = adminClient.createLifecycle("delete-me-cycle-fail");
+        assertClientError(() -> client.deleteLifecycle(lifecycle.getId()), REQUIRES_SUPERUSER_STATUS);
     }
 
     @Test
     public void deleteLifecycleInvalidRequest() {
-        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> adminClient.deleteLifecycle(-1L));
-        assertEquals(ErrorCode.INVALID_REQUEST, ex.getErrorCode());
+        assertClientError(() -> adminClient.deleteLifecycle(-1L), INVALID_REQUEST);
     }
 
 }

@@ -1,8 +1,6 @@
 package com.dewarim.cinnamon.test.integration;
 
-import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
-import com.dewarim.cinnamon.client.CinnamonClientException;
 import com.dewarim.cinnamon.client.StandardResponse;
 import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.AclGroup;
@@ -23,7 +21,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.dewarim.cinnamon.DefaultPermission.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static com.dewarim.cinnamon.ErrorCode.INVALID_REQUEST;
+import static com.dewarim.cinnamon.ErrorCode.REQUIRES_SUPERUSER_STATUS;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class AclGroupServletIntegrationTest extends CinnamonIntegrationTest {
@@ -51,7 +52,7 @@ public class AclGroupServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void invalidAclGroupListRequest() throws IOException {
         AclGroupListRequest listRequest = new AclGroupListRequest();
-        sendStandardRequestAndAssertError(UrlMapping.ACL_GROUP__LIST_BY_GROUP_OR_ACL, listRequest, ErrorCode.INVALID_REQUEST);
+        sendStandardRequestAndAssertError(UrlMapping.ACL_GROUP__LIST_BY_GROUP_OR_ACL, listRequest, INVALID_REQUEST);
     }
 
     @Test
@@ -90,16 +91,14 @@ public class AclGroupServletIntegrationTest extends CinnamonIntegrationTest {
     public void createAclGroupWithoutPermission() {
         List<AclGroup> entries = new ArrayList<>();
         entries.add(new AclGroup(acls.get(0).getId(), groups.get(0).getId()));
-        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> client.createAclGroups(entries));
-        assertEquals(ErrorCode.REQUIRES_SUPERUSER_STATUS, ex.getErrorCode());
+        assertClientError( () -> client.createAclGroups(entries), REQUIRES_SUPERUSER_STATUS);
     }
 
     @Test
     public void createAclGroupWithInvalidRequest() {
         List<AclGroup> entries = new ArrayList<>();
         entries.add(new AclGroup(0L, 0L));
-        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> adminClient.createAclGroups(entries));
-        assertEquals(ErrorCode.INVALID_REQUEST, ex.getErrorCode());
+        assertClientError( () -> adminClient.createAclGroups(entries),INVALID_REQUEST);
     }
 
     @Test
@@ -122,15 +121,14 @@ public class AclGroupServletIntegrationTest extends CinnamonIntegrationTest {
     public void updateAclGroupWithoutPermisson() {
         UpdateAclGroupRequest updateRequest = new UpdateAclGroupRequest(1L, 1L, 1L);
 
-        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> client.updateAclGroups(updateRequest));
-        assertEquals(ErrorCode.REQUIRES_SUPERUSER_STATUS, ex.getErrorCode());
+        assertClientError( () -> client.updateAclGroups(updateRequest),REQUIRES_SUPERUSER_STATUS);
     }
 
     @Test
     @Order(250)
     public void deleteAclGroupWithoutPermission() {
-        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> client.deleteAclGroups(aclGroups.stream().map(AclGroup::getId).collect(Collectors.toList())));
-        assertEquals(ErrorCode.REQUIRES_SUPERUSER_STATUS, ex.getErrorCode());
+        assertClientError( () -> client.deleteAclGroups(
+                aclGroups.stream().map(AclGroup::getId).collect(Collectors.toList())),REQUIRES_SUPERUSER_STATUS);
     }
 
     @Test

@@ -2,7 +2,6 @@ package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
-import com.dewarim.cinnamon.client.CinnamonClientException;
 import com.dewarim.cinnamon.model.relations.Relation;
 import com.dewarim.cinnamon.model.relations.RelationType;
 import com.dewarim.cinnamon.model.request.relation.CreateRelationRequest;
@@ -15,6 +14,7 @@ import java.io.IOException;
 import java.util.List;
 
 import static com.dewarim.cinnamon.DefaultPermission.*;
+import static com.dewarim.cinnamon.ErrorCode.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
@@ -37,8 +37,8 @@ public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getRelationsByLeftIds() throws IOException {
-        var toh      = prepareAclWithDefaultRelationPermissions("getRelationsByLeftIds");
-        var leftOsd  = toh.createOsd("left").osd;
+        var toh = prepareAclWithDefaultRelationPermissions("getRelationsByLeftIds");
+        var leftOsd = toh.createOsd("left").osd;
         var rightOsd = toh.createOsd("right").osd;
 
         client.createRelation(leftOsd.getId(), rightOsd.getId(), 1L, "<none/>");
@@ -47,7 +47,7 @@ public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
         assertEquals(1, relations.size());
 
         Relation relation = relations.get(0);
-        Long     typeId   = relation.getTypeId();
+        Long typeId = relation.getTypeId();
         assertNotNull(typeId);
         assertEquals(1L, (long) typeId);
         Long leftId = relation.getLeftId();
@@ -60,8 +60,8 @@ public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getRelationsByRightIds() throws IOException {
-        var toh      = prepareAclWithDefaultRelationPermissions("getRelationsByRightIds");
-        var leftOsd  = toh.createOsd("left").osd;
+        var toh = prepareAclWithDefaultRelationPermissions("getRelationsByRightIds");
+        var leftOsd = toh.createOsd("left").osd;
         var rightOsd = toh.createOsd("right").osd;
 
         client.createRelation(leftOsd.getId(), rightOsd.getId(), 1L, "<none/>");
@@ -70,7 +70,7 @@ public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
         assertEquals(1, relations.size());
 
         Relation relation = relations.get(0);
-        Long     typeId   = relation.getTypeId();
+        Long typeId = relation.getTypeId();
         assertNotNull(typeId);
         assertEquals(1L, (long) typeId);
         Long leftId = relation.getLeftId();
@@ -87,8 +87,8 @@ public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getRelationsWithAllParameters() throws IOException {
-        var toh      = prepareAclWithDefaultRelationPermissions("getRelationsWithAllParameters");
-        var leftOsd  = toh.createOsd("left").osd;
+        var toh = prepareAclWithDefaultRelationPermissions("getRelationsWithAllParameters");
+        var leftOsd = toh.createOsd("left").osd;
         var rightOsd = toh.createOsd("right").osd;
 
         client.createRelation(leftOsd.getId(), rightOsd.getId(), 1L, "<none/>");
@@ -97,7 +97,7 @@ public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
         assertEquals(1, relations.size());
 
         Relation relation = relations.get(0);
-        Long     typeId   = relation.getTypeId();
+        Long typeId = relation.getTypeId();
         assertNotNull(typeId);
         assertEquals(1L, (long) typeId);
         Long leftId = relation.getLeftId();
@@ -130,8 +130,7 @@ public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void deleteRelationWhichDoesNotExist() {
-        var ex = assertThrows(CinnamonClientException.class, () -> client.deleteRelation(Long.MAX_VALUE));
-        assertEquals(ErrorCode.OBJECT_NOT_FOUND, ex.getErrorCode());
+        assertClientError(() -> client.deleteRelation(Long.MAX_VALUE), OBJECT_NOT_FOUND);
     }
 
     @Test
@@ -139,7 +138,7 @@ public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
         var toh = prepareAclGroupWithPermissions("happyPathCreateAndDeleteRelation",
                 List.of(READ_OBJECT_SYS_METADATA, RELATION_CHILD_ADD, RELATION_PARENT_ADD,
                         RELATION_CHILD_REMOVE, RELATION_PARENT_REMOVE));
-        var leftOsd  = toh.createOsd("left-osd").osd;
+        var leftOsd = toh.createOsd("left-osd").osd;
         var rightOsd = toh.createOsd("right-osd").osd;
         // create
         var createdRelation = client.createRelation(leftOsd.getId(), rightOsd.getId(), 1L, "<meta>m</meta>");
@@ -147,8 +146,8 @@ public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
         // verify relation exists:
 
         List<Relation> relations = client.searchRelations(List.of(leftOsd.getId()), List.of(rightOsd.getId()), List.of(1L), true, false);
-        Relation       relation  = relations.get(0);
-        Long           typeId    = relation.getTypeId();
+        Relation relation = relations.get(0);
+        Long typeId = relation.getTypeId();
         assertNotNull(typeId);
         assertEquals(1L, (long) typeId);
         Long leftId = relation.getLeftId();
@@ -166,28 +165,28 @@ public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createRelationFailsWithoutChildAddPermission() throws IOException {
-        var toh      = prepareAclGroupWithPermissions("createRelationFailsWithoutChildAddPermission", List.of(READ_OBJECT_SYS_METADATA));
-        var leftOsd  = toh.createOsd("left-osd").osd;
+        var toh = prepareAclGroupWithPermissions("createRelationFailsWithoutChildAddPermission", List.of(READ_OBJECT_SYS_METADATA));
+        var leftOsd = toh.createOsd("left-osd").osd;
         var rightOsd = toh.createOsd("right-osd").osd;
 
         // create
-        var ex = assertThrows(CinnamonClientException.class, () -> client.createRelation(leftOsd.getId(), rightOsd.getId(), 1L, "<meta>m</meta>"));
-        assertEquals(ex.getErrorCode(), ErrorCode.NO_RELATION_CHILD_ADD_PERMISSION);
+        assertClientError(() -> client.createRelation(leftOsd.getId(), rightOsd.getId(), 1L, "<meta>m</meta>"),
+                NO_RELATION_CHILD_ADD_PERMISSION);
     }
 
     @Test
     public void deleteRelationFailsWithoutChildRemovePermission() throws IOException {
         var toh = prepareAclGroupWithPermissions("deleteRelationFailsWithoutChildRemovePermission",
                 List.of(READ_OBJECT_SYS_METADATA, RELATION_CHILD_ADD, RELATION_PARENT_ADD));
-        var leftOsd  = toh.createOsd("left-osd").osd;
+        var leftOsd = toh.createOsd("left-osd").osd;
         var rightOsd = toh.createOsd("right-osd").osd;
 
         // create
         Relation relation = client.createRelation(leftOsd.getId(), rightOsd.getId(), 1L, "<meta>m</meta>");
 
         // delete:
-        var ex = assertThrows(CinnamonClientException.class, () -> client.deleteRelation(relation.getId()));
-        assertEquals(ErrorCode.NO_RELATION_CHILD_REMOVE_PERMISSION, ex.getErrorCode());
+        assertClientError(() -> client.deleteRelation(relation.getId()),
+                NO_RELATION_CHILD_REMOVE_PERMISSION);
     }
 
     @Test
@@ -195,40 +194,39 @@ public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
         var toh = prepareAclGroupWithPermissions("deleteRelationFailsWithoutParentRemovePermission",
                 List.of(READ_OBJECT_SYS_METADATA, RELATION_CHILD_ADD, RELATION_PARENT_ADD,
                         RELATION_CHILD_REMOVE));
-        var leftOsd  = toh.createOsd("left-osd").osd;
+        var leftOsd = toh.createOsd("left-osd").osd;
         var rightOsd = toh.createOsd("right-osd").osd;
 
         // create
         Relation relation = client.createRelation(leftOsd.getId(), rightOsd.getId(), 1L, "<meta>m</meta>");
 
         // delete:
-        var ex = assertThrows(CinnamonClientException.class, () -> client.deleteRelation(relation.getId()));
-        assertEquals(ErrorCode.NO_RELATION_PARENT_REMOVE_PERMISSION, ex.getErrorCode());
+        assertClientError(() -> client.deleteRelation(relation.getId()), NO_RELATION_PARENT_REMOVE_PERMISSION);
     }
 
     @Test
     public void createRelationFailsWithoutParentAddPermission() throws IOException {
-        var toh      = prepareAclGroupWithPermissions("createRelationFailsWithoutParentAddPermission", List.of(READ_OBJECT_SYS_METADATA, RELATION_CHILD_ADD));
-        var leftOsd  = toh.createOsd("left-osd").osd;
+        var toh = prepareAclGroupWithPermissions("createRelationFailsWithoutParentAddPermission", List.of(READ_OBJECT_SYS_METADATA, RELATION_CHILD_ADD));
+        var leftOsd = toh.createOsd("left-osd").osd;
         var rightOsd = toh.createOsd("right-osd").osd;
 
         // create
-        var ex = assertThrows(CinnamonClientException.class, () -> client.createRelation(leftOsd.getId(), rightOsd.getId(), 1L, "<meta>m</meta>"));
-        assertEquals(ex.getErrorCode(), ErrorCode.NO_RELATION_PARENT_ADD_PERMISSION);
+        assertClientError(() -> client.createRelation(leftOsd.getId(), rightOsd.getId(), 1L, "<meta>m</meta>"),
+                NO_RELATION_PARENT_ADD_PERMISSION);
     }
 
     @Test
     public void getRelationsInOrMode() throws IOException {
-        var toh    = prepareAclWithDefaultRelationPermissions("getRelationsInOrMode");
-        var left1  = toh.createOsd("left or 1").osd;
-        var left2  = toh.createOsd("left or 2").osd;
+        var toh = prepareAclWithDefaultRelationPermissions("getRelationsInOrMode");
+        var left1 = toh.createOsd("left or 1").osd;
+        var left2 = toh.createOsd("left or 2").osd;
         var right1 = toh.createOsd("right or 1").osd;
         var right2 = toh.createOsd("right or 2").osd;
 
         var relationType1 = adminClient.createRelationType(new RelationType("or-mode-test-1", false, false, false, false, false, false));
         var relationType2 = adminClient.createRelationType(new RelationType("or-mode-test-2", false, false, false, false, false, false));
-        var relation1     = client.createRelation(left1.getId(), right1.getId(), relationType1.getId(), "<meta/>");
-        var relation2     = client.createRelation(left2.getId(), right2.getId(), relationType2.getId(), "<meta/>");
+        var relation1 = client.createRelation(left1.getId(), right1.getId(), relationType1.getId(), "<meta/>");
+        var relation2 = client.createRelation(left2.getId(), right2.getId(), relationType2.getId(), "<meta/>");
 
         // should find relation1 based on leftId + relation2 based on rightId
         List<Relation> searchResult = client.searchRelations(List.of(left1.getId()), List.of(right2.getId()), null, true, true);
@@ -248,17 +246,17 @@ public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
         var toh = prepareAclGroupWithPermissions("getRelations",
                 List.of(RELATION_CHILD_ADD, RELATION_PARENT_ADD, READ_OBJECT_SYS_METADATA));
 
-        var left1  = toh.createOsd("left and 1").osd;
-        var left2  = toh.createOsd("left and 2").osd;
+        var left1 = toh.createOsd("left and 1").osd;
+        var left2 = toh.createOsd("left and 2").osd;
         var right1 = toh.createOsd("right and 1").osd;
         var right2 = toh.createOsd("right and 2").osd;
-        var left3  = toh.createOsd("left and 3").osd;
+        var left3 = toh.createOsd("left and 3").osd;
         var right3 = toh.createOsd("right and 3").osd;
 
         var relationType = adminClient.createRelationType(new RelationType("getRelations-test", false, false, false, false, false, false));
-        var relation1    = client.createRelation(left1.getId(), right1.getId(), relationType.getId(), "<meta/>");
-        var relation2    = client.createRelation(left2.getId(), right2.getId(), relationType.getId(), "<meta/>");
-        var relation3    = client.createRelation(left3.getId(), right3.getId(), relationType.getId(), "<meta/>");
+        var relation1 = client.createRelation(left1.getId(), right1.getId(), relationType.getId(), "<meta/>");
+        var relation2 = client.createRelation(left2.getId(), right2.getId(), relationType.getId(), "<meta/>");
+        var relation3 = client.createRelation(left3.getId(), right3.getId(), relationType.getId(), "<meta/>");
 
         var andRelations = client.getRelations(List.of(left1.getId(), right2.getId()));
         assertEquals(2, andRelations.size());

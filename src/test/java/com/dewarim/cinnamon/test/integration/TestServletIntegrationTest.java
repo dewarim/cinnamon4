@@ -1,13 +1,11 @@
 package com.dewarim.cinnamon.test.integration;
 
-import com.dewarim.cinnamon.ErrorCode;
-import com.dewarim.cinnamon.client.CinnamonClientException;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
+import static com.dewarim.cinnamon.ErrorCode.INVALID_REQUEST;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class TestServletIntegrationTest extends CinnamonIntegrationTest{
     
@@ -20,8 +18,7 @@ public class TestServletIntegrationTest extends CinnamonIntegrationTest{
     @Test
     public void testBrokenEcho()  {
         String message = "<xml-is-broken";
-        CinnamonClientException exception = assertThrows(CinnamonClientException.class, () -> client.testEcho(message));
-        assertEquals(ErrorCode.INVALID_REQUEST, exception.getErrorCode());
+        assertClientError( () -> client.testEcho(message),INVALID_REQUEST);
     }
 
 
