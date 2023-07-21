@@ -7,6 +7,7 @@ import com.dewarim.cinnamon.api.lifecycle.LifecycleStateConfig;
 import com.dewarim.cinnamon.application.service.index.ParamParser;
 import com.dewarim.cinnamon.client.StandardResponse;
 import com.dewarim.cinnamon.lifecycle.NopState;
+import com.dewarim.cinnamon.model.Lifecycle;
 import com.dewarim.cinnamon.model.LifecycleState;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.request.IdRequest;
@@ -106,7 +107,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
     public void changeStateFailInStateClass() throws IOException {
         // should fail on oldState.exit
         var toh = new TestObjectHolder(client, userId)
-                .createOsd("changeStateFailInStateClass");
+                .createOsd();
         adminClient.attachLifecycle(toh.osd.getId(), 4L, 4L, true);
         assertClientError(
                 () -> client.changeLifecycleState(toh.osd.getId(), 4L), LIFECYCLE_STATE_EXIT_FAILED);
@@ -116,7 +117,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
     public void attachLifecycleStateChangeFailed() throws IOException {
         // should fail on newState.enter
         var toh = new TestObjectHolder(client, userId)
-                .createOsd("attachLifecycleStateChangeFailed");
+                .createOsd();
         assertClientError(
                 () -> client.attachLifecycle(toh.osd.getId(), 4L, 4L, false),
                 LIFECYCLE_STATE_CHANGE_FAILED);
@@ -125,7 +126,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
     @Test
     public void attachLifecycleMissingLifecycleState() throws IOException {
         var toh = new TestObjectHolder(client, userId)
-                .createOsd("attachLifecycleMissingLifecycleState");
+                .createOsd();
         long osdId = toh.osd.getId();
         assertClientError(
                 () -> client.attachLifecycle(osdId, 2L, null, false), LIFECYCLE_STATE_NOT_FOUND);
@@ -134,7 +135,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
     @Test
     public void attachLifecycleHappyPathDefaultState() throws IOException {
         var toh = new TestObjectHolder(client, userId)
-                .createOsd("attachLifecycleMissingLifecycleState");
+                .createOsd();
         long osdId = toh.osd.getId();
         client.attachLifecycle(osdId, 1L, null, false);
         // check if lifecycle state is really attached to OSD:
@@ -142,17 +143,34 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
         assertEquals((Long) 1L, osd.getLifecycleStateId());
     }
 
-    @Test
-    public void attachLifecycleHappyPathWithNonDefaultState() throws IOException {
-        var toh = new TestObjectHolder(client, userId)
-                .createOsd("attachLifecycleHappyPathWithNonDefaultState");
+    @Test()
+    public void attachLifecycleHappyPathWithNonDefaultState() throws IOException, InterruptedException {
+        var toh = new TestObjectHolder(client, userId).createOsd();
         long osdId = toh.osd.getId();
-        client.attachLifecycle(osdId, 3L, 2L, false);
+        Lifecycle lifecycle = adminClient.createLifecycle("attachLifecycleHappyPathWithNonDefaultState");
+        LifecycleState state = adminClient.createLifecycleState(new LifecycleState("authoring2", """
+                <config>
+                <properties><property><name>aclName</name><value>reviewers.acl</value></property></properties>
+                <nextStates><name>published2</name></nextStates>
+                </config>
+                """,
+                "com.dewarim.cinnamon.lifecycle.ChangeAclState", lifecycle.getId(), null));
+        LifecycleState state2 = adminClient.createLifecycleState(new LifecycleState("published2", """
+                <config>
+                <properties><property><name>aclName</name><value>_default_acl</value></property></properties>
+                 <nextStates><name>authoring2</name></nextStates>
+                 </config>
+                """, "com.dewarim.cinnamon.lifecycle.ChangeAclState", lifecycle.getId(), null));
+        log.info("trying to attach lifecycle");
+        client.attachLifecycle(osdId, lifecycle.getId(), state.getId(), false);
+
         ObjectSystemData osd = adminClient.getOsdById(osdId, false, false);
 
         // check if lifecycle state is really attached to OSD:
-        assertEquals(2L, osd.getLifecycleStateId());
-        assertEquals(4L, osd.getAclId());
+        assertEquals(state.getId(), osd.getLifecycleStateId());
+        assertEquals(toh.getAcls().stream()
+                .filter(a -> a.getName().equals("reviewers.acl"))
+                .findFirst().orElseThrow().getId(), osd.getAclId());
     }
 
     @Test
@@ -169,8 +187,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
 
     @Test
     public void detachLifecycleHappyPath() throws IOException {
-        var toh = new TestObjectHolder(client, userId)
-                .createOsd("detachLifecycleHappyPath");
+        var toh = new TestObjectHolder(client, userId).createOsd();
         long osdId = toh.osd.getId();
 
         // attach lifecycle:
@@ -197,8 +214,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
 
     @Test
     public void changeStateWithStateNotFound() throws IOException {
-        var toh = new TestObjectHolder(client, userId)
-                .createOsd("changeStateWithStateNotFound");
+        var toh = new TestObjectHolder(client, userId).createOsd();
         assertClientError(() -> client.changeLifecycleState(toh.osd.getId(), Long.MAX_VALUE), LIFECYCLE_STATE_NOT_FOUND);
     }
 
@@ -223,8 +239,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
 
     @Test
     public void changeStateNoLifecycleStateWritePermission() throws IOException {
-        var toh = prepareAclGroupWithPermissions(List.of(CREATE_OBJECT))
-                .createOsd("changeStateNoLifecycleStateWritePermission");
+        var toh = prepareAclGroupWithPermissions(List.of(CREATE_OBJECT)).createOsd();
         long osdId = toh.osd.getId();
         adminClient.attachLifecycle(osdId, 2L, 2L, true);
         // when the test-lifecycle is attached, it changes the ACL to one with all permissions, so
@@ -248,8 +263,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
 
     @Test
     public void getNextStatesLifecycleStateNotFound() throws IOException {
-        var toh = new TestObjectHolder(client, userId)
-                .createOsd("getNextStatesLifecycleStateNotFound");
+        var toh = new TestObjectHolder(client, userId).createOsd();
         assertClientError(() -> client.getNextLifecycleStates(toh.osd.getId()), LIFECYCLE_STATE_NOT_FOUND);
     }
 
