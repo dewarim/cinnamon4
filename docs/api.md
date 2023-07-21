@@ -1274,11 +1274,11 @@ Fetch a single folder
 
 ```xml
 <idListRequest>
-  <idList>
-    <idList>1</idList>
-    <idList>44</idList>
-    <idList>5</idList>
-  </idList>
+  <ids>
+    <id>1</id>
+    <id>44</id>
+    <id>5</id>
+  </ids>
 </idListRequest>
 
 ```
@@ -1348,7 +1348,7 @@ Add a summary to an object, for example a short description of this folder's con
       <metadataChanged>true</metadataChanged>
       <summary>&lt;summary>update this&lt;/summary></summary>
       <hasSubfolders>false</hasSubfolders>
-      <created>2023-07-12T13:48:14+0000</created>
+      <created>2023-07-21T12:21:11+0000</created>
     </folders>
   </folders>
 </updateFolderRequest>
@@ -3190,11 +3190,11 @@ Returns an OSD's content according to it's format's content type.
 
 ```xml
 <idListRequest>
-  <idList>
-    <idList>1</idList>
-    <idList>44</idList>
-    <idList>5</idList>
-  </idList>
+  <ids>
+    <id>1</id>
+    <id>44</id>
+    <id>5</id>
+  </ids>
 </idListRequest>
 
 ```
@@ -3219,11 +3219,11 @@ Returns an OSD's content according to it's format's content type.
 
 ```xml
 <idListRequest>
-  <idList>
-    <idList>1</idList>
-    <idList>44</idList>
-    <idList>5</idList>
-  </idList>
+  <ids>
+    <id>1</id>
+    <id>44</id>
+    <id>5</id>
+  </ids>
 </idListRequest>
 
 ```
