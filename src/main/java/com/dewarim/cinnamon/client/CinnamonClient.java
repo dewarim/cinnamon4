@@ -831,7 +831,7 @@ public class CinnamonClient {
         return languageUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
-    public Format createFormat(String contentType, String extension, String name, long defaultObjectTypeId, IndexMode indexMode) throws IOException {
+    public Format createFormat(String contentType, String extension, String name, Long defaultObjectTypeId, IndexMode indexMode) throws IOException {
         var request = new CreateFormatRequest(List.of(new Format(contentType, extension, name, defaultObjectTypeId, indexMode)));
         var response = sendStandardRequest(UrlMapping.FORMAT__CREATE, request);
         return formatUnwrapper.unwrap(response, 1).get(0);

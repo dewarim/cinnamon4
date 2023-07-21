@@ -2,6 +2,7 @@ package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.model.Format;
 import com.dewarim.cinnamon.model.IndexMode;
+import com.dewarim.cinnamon.test.TestObjectHolder;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -82,4 +83,10 @@ public class FormatServletIntegrationTest extends CinnamonIntegrationTest {
         assertClientError(() -> adminClient.deleteFormat(Long.MAX_VALUE), OBJECT_NOT_FOUND);
     }
 
+    @Test
+    public void allowFormatCreationWithoutDefaultObjectType() throws IOException{
+        TestObjectHolder toh = new TestObjectHolder(adminClient,adminId);
+        var format = adminClient.createFormat("text/allowed", "xxx", toh.createRandomName(), null, PLAIN_TEXT);
+        assertNull(format.getDefaultObjectTypeId());
+    }
 }
