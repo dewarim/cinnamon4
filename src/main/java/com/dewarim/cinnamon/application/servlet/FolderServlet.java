@@ -459,7 +459,7 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
     private void getSummaries(HttpServletRequest request, CinnamonResponse response, UserAccount user, FolderDao folderDao) throws IOException {
         IdListRequest  idListRequest = xmlMapper.readValue(request.getInputStream(), IdListRequest.class);
         SummaryWrapper wrapper       = new SummaryWrapper();
-        List<Folder>   folders       = folderDao.getFoldersById(idListRequest.getIdList(), true);
+        List<Folder>   folders       = folderDao.getFoldersById(idListRequest.getIds(), true);
         folders.forEach(folder -> {
             if (authorizationService.hasUserOrOwnerPermission(folder, DefaultPermission.READ_OBJECT_SYS_METADATA, user)) {
                 wrapper.getSummaries().add(new Summary(folder.getId(), folder.getSummary()));

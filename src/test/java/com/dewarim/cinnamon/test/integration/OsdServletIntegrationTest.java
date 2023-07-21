@@ -989,6 +989,23 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
+    public void adminMaySetContentWithoutLock() throws IOException {
+        TestObjectHolder toh = new TestObjectHolder(adminClient, userId).createOsd();
+        long id = toh.osd.getId();
+        assertClientError(() -> client.setContentOnLockedOsd(id, 1L, new File("pom.xml")), OBJECT_MUST_BE_LOCKED_BY_USER);
+        assertTrue(adminClient.setContentOnLockedOsd(id, 1L, new File("pom.xml")));
+    }
+
+    @Test
+    public void adminMayUpdateOsdWithoutLock() throws IOException {
+        TestObjectHolder toh = new TestObjectHolder(adminClient, userId).createOsd();
+        long id = toh.osd.getId();
+        UpdateOsdRequest updateOsdRequest = new UpdateOsdRequest(id, null, toh.createRandomName(), null, null, null, null);
+        assertClientError(() -> client.updateOsd(updateOsdRequest), OBJECT_MUST_BE_LOCKED_BY_USER);
+        assertTrue(adminClient.updateOsd(updateOsdRequest));
+    }
+
+    @Test
     public void versionWithoutValidTarget() throws IOException {
         CreateNewVersionRequest versionRequest = new CreateNewVersionRequest(Long.MAX_VALUE);
         HttpEntity request = createMultipartEntityWithFileBody(CINNAMON_REQUEST_PART, versionRequest);

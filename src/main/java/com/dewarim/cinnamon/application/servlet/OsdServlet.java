@@ -427,10 +427,11 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
             IOException {
         IdListRequest idRequest = xmlMapper.readValue(request.getInputStream(), IdListRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
-        List<ObjectSystemData> osds = osdDao.getObjectsById(idRequest.getIdList());
-        if(osds.size() != idRequest.getIdList().size()){
+        List<ObjectSystemData> osds = osdDao.getObjectsById(idRequest.getIds());
+        if(osds.size() != idRequest.getIds().size()){
             throw ErrorCode.OBJECT_NOT_FOUND.exception();
         }
+
         for(ObjectSystemData osd : osds){
             boolean lockAllowed = authorizationService.hasUserOrOwnerPermission(osd, DefaultPermission.LOCK, user);
             if (!lockAllowed) {
@@ -456,8 +457,8 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
             IOException {
         IdListRequest idRequest = xmlMapper.readValue(request.getInputStream(), IdListRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
-        List<ObjectSystemData> osds = osdDao.getObjectsById(idRequest.getIdList());
-        if(osds.size() != idRequest.getIdList().size()){
+        List<ObjectSystemData> osds = osdDao.getObjectsById(idRequest.getIds());
+        if(osds.size() != idRequest.getIds().size()){
             throw ErrorCode.OBJECT_NOT_FOUND.exception();
         }
         UserAccountDao userDao = new UserAccountDao();
@@ -523,7 +524,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
             throw ErrorCode.NO_WRITE_PERMISSION.exception();
         }
         boolean isLocker = user.getId().equals(osd.getLockerId());
-        if (!isLocker) {
+        if (!isLocker && !authorizationService.currentUserIsSuperuser()) {
             throw ErrorCode.OBJECT_MUST_BE_LOCKED_BY_USER.exception();
         }
 
@@ -607,7 +608,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
             osdDao) throws IOException {
         IdListRequest idListRequest = xmlMapper.readValue(request.getInputStream(), IdListRequest.class);
         SummaryWrapper wrapper = new SummaryWrapper();
-        List<ObjectSystemData> osds = osdDao.getObjectsById(idListRequest.getIdList(), true);
+        List<ObjectSystemData> osds = osdDao.getObjectsById(idListRequest.getIds(), true);
         osds.forEach(osd -> {
             if (authorizationService.hasUserOrOwnerPermission(osd, DefaultPermission.READ_OBJECT_SYS_METADATA, user)) {
                 wrapper.getSummaries().add(new Summary(osd.getId(), osd.getSummary()));
@@ -623,13 +624,12 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
 
         ObjectSystemData osd = osdDao.getObjectById(updateRequest.getId())
                 .orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
-        if (osd.lockedByOtherUser(user)) {
-            ErrorCode.OBJECT_LOCKED_BY_OTHER_USER.throwUp();
-            return;
+        boolean isAdmin = authorizationService.currentUserIsSuperuser();
+        if (osd.lockedByOtherUser(user) && !isAdmin) {
+            throw ErrorCode.OBJECT_LOCKED_BY_OTHER_USER.getException().get();
         }
-        if (!osd.lockedByUser(user)) {
-            ErrorCode.OBJECT_MUST_BE_LOCKED_BY_USER.throwUp();
-            return;
+        if (!osd.lockedByUser(user) && !isAdmin) {
+           throw ErrorCode.OBJECT_MUST_BE_LOCKED_BY_USER.getException().get();
         }
 
         AccessFilter accessFilter = AccessFilter.getInstance(user);

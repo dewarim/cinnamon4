@@ -1,6 +1,8 @@
 package com.dewarim.cinnamon.model.request;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.List;
@@ -8,17 +10,19 @@ import java.util.Optional;
 
 @JacksonXmlRootElement(localName = "idListRequest")
 public class IdListRequest implements ApiRequest<IdListRequest> {
-    
-    private List<Long> idList;
+
+    @JacksonXmlElementWrapper(localName = "ids")
+    @JacksonXmlProperty(localName = "id")
+    private List<Long> ids;
 
     public IdListRequest() {
     }
 
     public boolean validated(){
-        if(idList == null){
+        if(ids == null){
             return false;
         }
-        return idList.stream().allMatch(id -> id != null && id > 0);
+        return ids.stream().allMatch(id -> id != null && id > 0);
     }
 
     public Optional<IdListRequest> validateRequest() {
@@ -29,16 +33,16 @@ public class IdListRequest implements ApiRequest<IdListRequest> {
         }
     }
 
-    public IdListRequest(List<Long> idList) {
-        this.idList = idList;
+    public IdListRequest(List<Long> ids) {
+        this.ids = ids;
     }
 
-    public List<Long> getIdList() {
-        return idList;
+    public List<Long> getIds() {
+        return ids;
     }
 
-    public void setIdList(List<Long> idList) {
-        this.idList = idList;
+    public void setIds(List<Long> ids) {
+        this.ids = ids;
     }
 
     @Override
