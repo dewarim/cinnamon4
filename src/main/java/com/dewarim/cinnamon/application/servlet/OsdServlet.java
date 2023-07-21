@@ -428,55 +428,72 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         IdListRequest idRequest = xmlMapper.readValue(request.getInputStream(), IdListRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         List<ObjectSystemData> osds = osdDao.getObjectsById(idRequest.getIds());
-        if(osds.size() != idRequest.getIds().size()){
+        if (osds.size() != idRequest.getIds().size()) {
             throw ErrorCode.OBJECT_NOT_FOUND.exception();
         }
 
-        for(ObjectSystemData osd : osds){
+        List<CinnamonError> errors = new ArrayList<>();
+        boolean isSuperuser = authorizationService.currentUserIsSuperuser();
+        for (ObjectSystemData osd : osds) {
             boolean lockAllowed = authorizationService.hasUserOrOwnerPermission(osd, DefaultPermission.LOCK, user);
             if (!lockAllowed) {
-                throw ErrorCode.NO_LOCK_PERMISSION.exception();
+                errors.add(new CinnamonError(ErrorCode.NO_LOCK_PERMISSION.getCode(), osd.getId()));
+                continue;
             }
             Long lockHolder = osd.getLockerId();
             if (lockHolder != null) {
-                if (lockHolder.equals(user.getId())) {
+                if (lockHolder.equals(user.getId()) || isSuperuser) {
                     // trying to lock your own object: NOP
                     continue;
                 } else {
-                    throw ErrorCode.OBJECT_LOCKED_BY_OTHER_USER.exception();
+                    errors.add(new CinnamonError(ErrorCode.OBJECT_LOCKED_BY_OTHER_USER.getCode(), osd.getId()));
                 }
             }
-            osd.setLockerId(user.getId());
-            osdDao.updateOsd(osd, false);
         }
-        response.responseIsGenericOkay();
+        if (errors.isEmpty() || isSuperuser) {
+            osds.forEach(osd -> {
+                osd.setLockerId(user.getId());
+                osdDao.updateOsd(osd, false);
+            });
+            response.responseIsGenericOkay();
+        } else {
+            throw new FailedRequestException(ErrorCode.LOCK_FAILED, errors);
+        }
     }
-
 
     private void unlock(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws
             IOException {
         IdListRequest idRequest = xmlMapper.readValue(request.getInputStream(), IdListRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         List<ObjectSystemData> osds = osdDao.getObjectsById(idRequest.getIds());
-        if(osds.size() != idRequest.getIds().size()){
+        if (osds.size() != idRequest.getIds().size()) {
             throw ErrorCode.OBJECT_NOT_FOUND.exception();
         }
-        UserAccountDao userDao = new UserAccountDao();
-        for(ObjectSystemData osd : osds){
-            authorizationService.throwUpUnlessUserOrOwnerHasPermission(osd, DefaultPermission.LOCK, user,
-                    ErrorCode.NO_LOCK_PERMISSION);
-
+        List<CinnamonError> errors = new ArrayList<>();
+        boolean isSuperuser = authorizationService.currentUserIsSuperuser();
+        for (ObjectSystemData osd : osds) {
+            boolean unlockAllowed = authorizationService.hasUserOrOwnerPermission(osd, DefaultPermission.LOCK, user);
+            if (!unlockAllowed) {
+                errors.add(new CinnamonError(ErrorCode.NO_LOCK_PERMISSION.getCode(), osd.getId()));
+                continue;
+            }
             Long lockHolder = osd.getLockerId();
             if (lockHolder != null) {
                 // superuser may remove locks from other users.
-                if (lockHolder.equals(user.getId()) || userDao.isSuperuser(user)) {
-                    osd.setLockerId(null);
-                    osdDao.updateOsd(osd, false);
-                } else {
+                if (!lockHolder.equals(user.getId()) || isSuperuser) {
                     // trying to unlock another user's lock: nope.
-                    throw ErrorCode.OBJECT_LOCKED_BY_OTHER_USER.exception();
+                    errors.add(new CinnamonError(ErrorCode.OBJECT_LOCKED_BY_OTHER_USER.getCode(), osd.getId()));
                 }
             }
+        }
+        if (errors.isEmpty() || isSuperuser) {
+            osds.forEach(osd -> {
+                osd.setLockerId(null);
+                osdDao.updateOsd(osd, false);
+            });
+            response.responseIsGenericOkay();
+        } else {
+            throw new FailedRequestException(UNLOCK_FAILED, errors);
         }
         response.responseIsGenericOkay();
 
@@ -629,7 +646,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
             throw ErrorCode.OBJECT_LOCKED_BY_OTHER_USER.getException().get();
         }
         if (!osd.lockedByUser(user) && !isAdmin) {
-           throw ErrorCode.OBJECT_MUST_BE_LOCKED_BY_USER.getException().get();
+            throw ErrorCode.OBJECT_MUST_BE_LOCKED_BY_USER.getException().get();
         }
 
         AccessFilter accessFilter = AccessFilter.getInstance(user);
@@ -848,8 +865,9 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
             final List<ErrorCode> errorCodes = new ArrayList<>();
             versionRequest.getMetaRequests().forEach(metadata -> {
                         try {
-                            MetasetType metasetType =  new MetasetTypeDao().getMetasetTypeById(metadata.getTypeId())
-                                    .orElseThrow(ErrorCode.METASET_TYPE_NOT_FOUND.getException());;
+                            MetasetType metasetType = new MetasetTypeDao().getMetasetTypeById(metadata.getTypeId())
+                                    .orElseThrow(ErrorCode.METASET_TYPE_NOT_FOUND.getException());
+                            ;
                             Meta meta = new Meta(osd.getId(), metasetType.getId(), metadata.getContent());
                             osdMetaDao.create(List.of(meta));
                         } catch (FailedRequestException e) {

@@ -133,7 +133,9 @@ public enum ErrorCode {
     CANNOT_DELETE_SUPERUSER("Cannot delete superuser - please remove superuser status first.", SC_FORBIDDEN),
     PASSWORD_IS_EXPIRED("""
             Your password has expired. Please ask your administrator for a new password
-            """, SC_UNAUTHORIZED);
+            """, SC_UNAUTHORIZED),
+    LOCK_FAILED("Failed to lock the given list of objects, see detailed error list for more information", SC_FORBIDDEN),
+    UNLOCK_FAILED("Failed to unlock the given list of objects, see detailed error list for more information", SC_FORBIDDEN);
 
     private static final Map<String, ErrorCode> codeMapping = new ConcurrentHashMap<>();
     final String description;

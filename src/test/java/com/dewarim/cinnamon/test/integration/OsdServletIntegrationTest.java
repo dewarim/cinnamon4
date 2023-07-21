@@ -1006,6 +1006,19 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
+    public void adminMayLockAndUnlockWithoutPermissionCheck() throws IOException {
+        TestObjectHolder toh = new TestObjectHolder(client, userId).createOsd().lockOsd();
+        adminClient.lockOsd(toh.osd.getId());
+        toh.createOsd().lockOsd();
+        adminClient.unlockOsd(toh.osd.getId());
+
+        // but normal user may not unlock another user's lock:
+        TestObjectHolder adminToh = new TestObjectHolder(adminClient, adminId).createOsd().lockOsd();
+        assertClientError(() -> client.unlockOsd(adminToh.osd.getId()), UNLOCK_FAILED);
+        assertClientError(() -> client.lockOsd(adminToh.osd.getId()), LOCK_FAILED);
+    }
+
+    @Test
     public void versionWithoutValidTarget() throws IOException {
         CreateNewVersionRequest versionRequest = new CreateNewVersionRequest(Long.MAX_VALUE);
         HttpEntity request = createMultipartEntityWithFileBody(CINNAMON_REQUEST_PART, versionRequest);
