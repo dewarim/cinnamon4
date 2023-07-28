@@ -1,5 +1,11 @@
 package com.dewarim.cinnamon.test.search;
 
+import com.dewarim.cinnamon.application.service.index.ContentContainer;
+import com.dewarim.cinnamon.application.service.index.DescendingStringIndexer;
+import com.dewarim.cinnamon.application.service.search.WildcardQueryBuilder;
+import com.dewarim.cinnamon.model.Meta;
+import com.dewarim.cinnamon.model.ObjectSystemData;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -21,6 +27,7 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.ByteBuffersDirectory;
 import org.apache.lucene.store.Directory;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
@@ -29,6 +36,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -51,6 +59,22 @@ public class CinnamonSearchTest {
     private final String pointRangeQuery = """
             <BooleanQuery><Clause occurs='must'><PointRangeQuery fieldName='p' lowerTerm='300' upperTerm='300' type='long'/></Clause></BooleanQuery>
             """;
+    private final String wildcardQuery = """
+            <?xml version="1.0" encoding="utf-8"?>
+            <BooleanQuery>
+              <Clause occurs="must">
+                <WildcardQuery fieldName="content">__queryString__</WildcardQuery>
+              </Clause>
+            </BooleanQuery>
+            """;
+    private static ObjectSystemData osd;
+
+    @BeforeAll
+    public static void setup(){
+        osd = new ObjectSystemData();
+        Meta meta = new Meta(1L,1L,"<html><body><div><p>Schnitzel und Verbrechen</p></div></body></html>");
+        osd.setMetas(List.of(meta));
+    }
 
     @Test
     public void longPointIndexing() throws IOException, QueryNodeException, ParserException {
@@ -58,13 +82,39 @@ public class CinnamonSearchTest {
         try (IndexWriter indexWriter = createIndex()) {
             Document doc = createDocumentWithLongPoint();
             indexWriter.addDocument(doc);
-
-
         }
         IndexSearcher indexSearcher = createIndexSearcher();
         searchWithNormalQuery(indexSearcher);
         searchWithXmlExactPointQuery(indexSearcher);
         searchWithXmlPointRangeQuery(indexSearcher);
+    }
+
+    @Test
+    public void parseOsdWithMeta() throws IOException, QueryNodeException, ParserException {
+        DescendingStringIndexer indexer = new DescendingStringIndexer();
+        try (IndexWriter indexWriter = createIndex()) {
+
+            Document doc = new Document();
+            String objectAsString = new XmlMapper().writeValueAsString(osd);
+            ContentContainer contentContainer = new ContentContainer(objectAsString, new byte[0], "/root/home/sys");
+            org.dom4j.Document xmlDoc = contentContainer.getCombinedDocument();
+            log.info("xmlDoc:\n"+xmlDoc.asXML());
+            indexer.indexObject(xmlDoc, contentContainer.asNode(), doc, "content", "/objectSystemData/metasets/metaset[typeId='1']/content/html/body", true);
+            indexWriter.addDocument(doc);
+        }
+        IndexSearcher indexSearcher = createIndexSearcher();
+        searchWithStandardQuery(indexSearcher, "schnitzel");
+        searchWithWildcardQuery(indexSearcher,"*schnitzel*");
+    }
+
+    private void searchWithWildcardQuery(IndexSearcher indexSearcher, String queryStringWithWildcard) throws ParserException, IOException {
+        InputStream xmlInputStream = new ByteArrayInputStream(wildcardQuery.replace("__queryString__", queryStringWithWildcard).getBytes(StandardCharsets.UTF_8));
+        CoreParser  coreParser     = new CoreParser("p", new StandardAnalyzer());
+        coreParser.addQueryBuilder("WildcardQuery", new WildcardQueryBuilder());
+        Query query = coreParser.parse(xmlInputStream);
+        log.info("query: "+query);
+        TopDocs topDocs = indexSearcher.search(query, 100);
+        assertEquals(1, topDocs.totalHits.value);
     }
 
     private void searchWithXmlPointRangeQuery(IndexSearcher searcher) throws ParserException, IOException {
@@ -98,6 +148,13 @@ public class CinnamonSearchTest {
         StandardQueryParser queryParser = new StandardQueryParser(new StandardAnalyzer());
         queryParser.setPointsConfigMap(pointsConfigMap);
         Query   query   = queryParser.parse("300", "p");
+        TopDocs topDocs = searcher.search(query, 100);
+        assertEquals(1, topDocs.totalHits.value);
+    }
+
+    private void searchWithStandardQuery(IndexSearcher searcher, String queryString) throws QueryNodeException, IOException {
+        StandardQueryParser queryParser = new StandardQueryParser(new StandardAnalyzer());
+        Query   query   = queryParser.parse(queryString, "content");
         TopDocs topDocs = searcher.search(query, 100);
         assertEquals(1, topDocs.totalHits.value);
     }

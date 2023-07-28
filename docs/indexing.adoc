@@ -105,12 +105,12 @@ An OSD document as seen by the index service:
     <contentHash>88f743bb6ca59eaf4b88efba76a4f1d28dea5749a0d94e8a654b7d6d197e9ee3</contentHash>
     <contentProvider>FILE_SYSTEM</contentProvider>
     <metasets>
-        <meta>
+        <metaset>
             <id>1</id>
             <objectId>4</objectId>
             <typeId>3</typeId>
             <content><xml><copyright>ACME Inc., 2023</copyright></xml></content>
-        </meta>
+        </metaset>
     </metasets>
     <relations>
         <relation>
