@@ -2,6 +2,8 @@ package com.dewarim.cinnamon.model.request.folder;
 
 import com.dewarim.cinnamon.api.ApiRequest;
 import com.dewarim.cinnamon.model.Folder;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
@@ -11,6 +13,8 @@ import java.util.Optional;
 @JacksonXmlRootElement(localName = "updateFolderRequest")
 public class UpdateFolderRequest implements ApiRequest<UpdateFolderRequest> {
 
+    @JacksonXmlElementWrapper(localName = "folders")
+    @JacksonXmlProperty(localName = "folder")
     List<Folder> folders = new ArrayList<>();
 
     public UpdateFolderRequest() {

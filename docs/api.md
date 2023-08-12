@@ -1338,7 +1338,7 @@ Add a summary to an object, for example a short description of this folder's con
 ```xml
 <updateFolderRequest>
   <folders>
-    <folders>
+    <folder>
       <id/>
       <name>new name</name>
       <aclId>1</aclId>
@@ -1348,8 +1348,8 @@ Add a summary to an object, for example a short description of this folder's con
       <metadataChanged>true</metadataChanged>
       <summary>&lt;summary>update this&lt;/summary></summary>
       <hasSubfolders>false</hasSubfolders>
-      <created>2023-07-21T12:21:11+0000</created>
-    </folders>
+      <created>2023-08-12T16:22:14+0000</created>
+    </folder>
   </folders>
 </updateFolderRequest>
 
