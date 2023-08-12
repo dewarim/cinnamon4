@@ -1,11 +1,14 @@
 package com.dewarim.cinnamon.configuration;
 
 public class ServerConfig {
-    
-    private int port = 9090;
+
     private String systemRoot = "data/config";
     private String dataRoot = "data";
-    private String luceneIndexPath = "data/index";
+    private boolean enableHttps = false;
+    private int maxThreads = 200;
+    private HttpConnectorConfig httpConnectorConfig = new HttpConnectorConfig();
+
+    private HttpsConnectorConfig httpsConnectorConfig = new HttpsConnectorConfig();
 
     /**
      * If true, check if an object exists in the database before trying to update it.
@@ -17,14 +20,6 @@ public class ServerConfig {
      * (So you can decide if sending no-effect update requests to the server is allowed or not.)
      */
     private boolean ignoreNopUpdates = false;
-
-    public int getPort() {
-        return port;
-    }
-
-    public void setPort(int port) {
-        this.port = port;
-    }
 
     public String getSystemRoot() {
         return systemRoot;
@@ -42,14 +37,6 @@ public class ServerConfig {
         this.dataRoot = dataRoot;
     }
 
-    public String getLuceneIndexPath() {
-        return luceneIndexPath;
-    }
-
-    public void setLuceneIndexPath(String luceneIndexPath) {
-        this.luceneIndexPath = luceneIndexPath;
-    }
-
     public boolean isVerifyExistence() {
         return verifyExistence;
     }
@@ -64,5 +51,51 @@ public class ServerConfig {
 
     public void setIgnoreNopUpdates(boolean ignoreNopUpdates) {
         this.ignoreNopUpdates = ignoreNopUpdates;
+    }
+
+    public boolean isEnableHttps() {
+        return enableHttps;
+    }
+
+    public void setEnableHttps(boolean enableHttps) {
+        this.enableHttps = enableHttps;
+    }
+
+    public int getMaxThreads() {
+        return maxThreads;
+    }
+
+    public void setMaxThreads(int maxThreads) {
+        this.maxThreads = maxThreads;
+    }
+
+    public HttpConnectorConfig getHttpConnectorConfig() {
+        return httpConnectorConfig;
+    }
+
+    public void setHttpConnectorConfig(HttpConnectorConfig httpConnectorConfig) {
+        this.httpConnectorConfig = httpConnectorConfig;
+    }
+
+    public HttpsConnectorConfig getHttpsConnectorConfig() {
+        return httpsConnectorConfig;
+    }
+
+    public void setHttpsConnectorConfig(HttpsConnectorConfig httpsConnectorConfig) {
+        this.httpsConnectorConfig = httpsConnectorConfig;
+    }
+
+    @Override
+    public String toString() {
+        return "ServerConfig{" +
+                "systemRoot='" + systemRoot + '\'' +
+                ", dataRoot='" + dataRoot + '\'' +
+                ", enableHttps=" + enableHttps +
+                ", maxThreads=" + maxThreads +
+                ", httpConnectorConfig=" + httpConnectorConfig +
+                ", httpsConnectorConfig=" + httpsConnectorConfig +
+                ", verifyExistence=" + verifyExistence +
+                ", ignoreNopUpdates=" + ignoreNopUpdates +
+                '}';
     }
 }

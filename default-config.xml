@@ -1,13 +1,26 @@
 <CinnamonConfig>
   <serverConfig>
-    <port>9090</port>
-    <systemRoot>/opt/cinnamon/cinnamon-system</systemRoot>
-    <dataRoot>/opt/cinnamon/cinnamon-data</dataRoot>
-    <luceneIndexPath>/opt/cinnamon/cinnamon-data/index</luceneIndexPath>
+    <systemRoot>data/config</systemRoot>
+    <dataRoot>data</dataRoot>
+    <enableHttps>false</enableHttps>
+    <maxThreads>200</maxThreads>
+    <httpConnectorConfig>
+      <port>8080</port>
+      <acceptors>1</acceptors>
+      <selectors>1</selectors>
+      <acceptQueueSize>128</acceptQueueSize>
+    </httpConnectorConfig>
+    <httpsConnectorConfig>
+      <port>8443</port>
+      <acceptors>1</acceptors>
+      <selectors>1</selectors>
+      <acceptQueueSize>128</acceptQueueSize>
+      <keyStorePath>my.keystore</keyStorePath>
+      <keyStorePassword>secret</keyStorePassword>
+    </httpsConnectorConfig>
     <verifyExistence>true</verifyExistence>
     <ignoreNopUpdates>false</ignoreNopUpdates>
   </serverConfig>
-  <logbackLoggingConfigPath>/opt/cinnamon/logback.xml</logbackLoggingConfigPath>
   <systemAdministratorEmail/>
   <mailConfig>
     <smtpHost/>
@@ -25,14 +38,25 @@
     <driver>org.postgresql.Driver</driver>
     <host>127.0.0.1</host>
     <port>5432</port>
-    <database>cinnamon4</database>
+    <database>cinnamon_test</database>
     <user>cinnamon</user>
     <password>cinnamon</password>
-    <databaseUrl>jdbc:postgresql://127.0.0.1:5432/cinnamon4</databaseUrl>
   </databaseConfig>
-  <loginProviders/>
+  <luceneConfig>
+    <indexPath>/opt/cinnamon4/cinnamon-data/index</indexPath>
+    <millisToWaitBetweenRuns>1000</millisToWaitBetweenRuns>
+  </luceneConfig>
   <cinnamonTikaConfig>
     <baseUrl>http://localhost:9998</baseUrl>
     <useTika>false</useTika>
   </cinnamonTikaConfig>
+  <loginProviders/>
+  <changeTriggerConfig>
+    <socketTimeoutSeconds>60</socketTimeoutSeconds>
+    <connectionTimeoutSeconds>60</connectionTimeoutSeconds>
+    <timeToLiveSeconds>600</timeToLiveSeconds>
+    <tlsVersions>
+      <tlsVersion>V_1_3</tlsVersion>
+    </tlsVersions>
+  </changeTriggerConfig>
 </CinnamonConfig>

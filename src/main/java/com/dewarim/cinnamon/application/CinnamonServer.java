@@ -10,6 +10,9 @@ import com.dewarim.cinnamon.application.service.SearchService;
 import com.dewarim.cinnamon.application.service.TikaService;
 import com.dewarim.cinnamon.application.servlet.*;
 import com.dewarim.cinnamon.configuration.CinnamonConfig;
+import com.dewarim.cinnamon.configuration.HttpConnectorConfig;
+import com.dewarim.cinnamon.configuration.HttpsConnectorConfig;
+import com.dewarim.cinnamon.configuration.ServerConfig;
 import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.filter.AuthenticationFilter;
 import com.dewarim.cinnamon.filter.ChangeTriggerFilter;
@@ -26,7 +29,9 @@ import jakarta.servlet.DispatcherType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.annotations.AnnotationDecorator;
-import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.*;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
+import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.eclipse.jetty.webapp.WebAppContext;
 
 import java.io.File;
@@ -51,8 +56,7 @@ public class CinnamonServer {
 
     private static final Logger log = LogManager.getLogger(CinnamonServer.class);
 
-    public static final String           VERSION       = "0.5.10";
-    private final       int              port;
+    public static final String           VERSION       = "0.5.11";
     private             Server           server;
     private             DbSessionFactory dbSessionFactory;
     private final       WebAppContext    webAppContext = new WebAppContext();
@@ -65,7 +69,9 @@ public class CinnamonServer {
     private static      Thread           indexServiceThread;
 
     public CinnamonServer(int port) {
-        this.port = port;
+        // the CinnamonIntegrationTests overrides the configured port,
+        // for normal startup this is a NOP.
+        config.getServerConfig().getHttpConnectorConfig().setPort(port);
     }
 
     public void start() throws Exception {
@@ -78,7 +84,21 @@ public class CinnamonServer {
 
         addFilters(webAppContext);
         addServlets(webAppContext);
-        server = new Server(port);
+
+        ServerConfig serverConfig = config.getServerConfig();
+        QueuedThreadPool threadPool = new QueuedThreadPool(serverConfig.getMaxThreads());
+        threadPool.setName("cinnamon-server");
+
+        server = new Server(threadPool);
+
+        Connector httpConnector = createHttpConnector(serverConfig.getHttpConnectorConfig());
+        server.addConnector(httpConnector);
+
+        if(serverConfig.isEnableHttps()) {
+            Connector httpsConnector = createHttpsConnector(serverConfig.getHttpsConnectorConfig());
+            server.addConnector(httpsConnector);
+        }
+
         server.setHandler(webAppContext);
         log.info("Starting CinnamonServer.");
         server.start();
@@ -89,8 +109,52 @@ public class CinnamonServer {
         // TODO: make number of threads and timeout configurable
         executorService = new ThreadPoolExecutor(4, 16, 5, TimeUnit.MINUTES, new ArrayBlockingQueue<>(100));
 
-        log.info("Server is running at port " + config.getServerConfig().getPort());
+        log.info("Server is running at http port {}", config.getServerConfig().getHttpConnectorConfig().getPort());
+        if(config.getServerConfig().isEnableHttps()) {
+            log.info("Server is also allowing connections via https @ port {}", config.getServerConfig().getHttpsConnectorConfig().getPort());
+        }
     }
+
+    private Connector createHttpConnector(HttpConnectorConfig httpConfig){
+        // The number of acceptor threads.
+        int acceptors = httpConfig.getAcceptors();
+        int selectors = httpConfig.getSelectors();
+        ServerConnector connector = new ServerConnector(server, acceptors, selectors, new HttpConnectionFactory());
+        connector.setAcceptQueueSize(httpConfig.getAcceptQueueSize());
+        connector.setPort(httpConfig.getPort());
+        return connector;
+    }
+
+    private Connector createHttpsConnector(HttpsConnectorConfig httpsConfig){
+        HttpConfiguration httpConfig = new HttpConfiguration();
+        // Add the SecureRequestCustomizer because we are using TLS.
+        SecureRequestCustomizer secureRequestCustomizer = new SecureRequestCustomizer();
+        // disable SNI check when testing with localhost:
+        // secureRequestCustomizer.setSniHostCheck(false);
+        httpConfig.addCustomizer(secureRequestCustomizer);
+
+        // The ConnectionFactory for HTTP/1.1.
+        HttpConnectionFactory http11 = new HttpConnectionFactory(httpConfig);
+
+        // Configure the SslContextFactory with the keyStore information.
+        ServerConnector connector = getServerConnector(httpsConfig, http11);
+        connector.setAcceptQueueSize(httpsConfig.getAcceptQueueSize());
+        connector.setPort(httpsConfig.getPort());
+        return connector;
+    }
+
+    private ServerConnector getServerConnector(HttpsConnectorConfig httpsConfig, HttpConnectionFactory http11) {
+        SslContextFactory.Server sslContextFactory = new SslContextFactory.Server();
+        sslContextFactory.setKeyStorePath(httpsConfig.getKeyStorePath());
+        sslContextFactory.setKeyStorePassword(httpsConfig.getKeyStorePassword());
+
+        SslConnectionFactory tls = new SslConnectionFactory(sslContextFactory, http11.getProtocol());
+        int acceptors = httpsConfig.getAcceptors();
+        int selectors = httpsConfig.getSelectors();
+
+        return new ServerConnector(server, acceptors, selectors, tls, http11);
+    }
+
 
     public void startIndexService() {
         indexService = new IndexService(config.getLuceneConfig());
@@ -202,10 +266,10 @@ public class CinnamonServer {
         }
 
         if (cliArguments.port != null) {
-            config.getServerConfig().setPort(cliArguments.port);
+            config.getServerConfig().getHttpConnectorConfig().setPort(cliArguments.port);
         }
 
-        CinnamonServer server = new CinnamonServer(config.getServerConfig().getPort());
+        CinnamonServer server = new CinnamonServer(config.getServerConfig().getHttpConnectorConfig().getPort());
         server.start();
         server.getServer().join();
     }
