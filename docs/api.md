@@ -1348,7 +1348,7 @@ Add a summary to an object, for example a short description of this folder's con
       <metadataChanged>true</metadataChanged>
       <summary>&lt;summary>update this&lt;/summary></summary>
       <hasSubfolders>false</hasSubfolders>
-      <created>2023-08-12T16:22:14+0000</created>
+      <created>2023-08-13T12:32:49+0000</created>
     </folder>
   </folders>
 </updateFolderRequest>
@@ -3126,9 +3126,13 @@ Returns an OSD's content according to it's format's content type.
 
 ```xml
 <osdRequest>
-  <includeSummary>false</includeSummary>
-  <includeCustomMetadata>false</includeCustomMetadata>
-  <ids/>
+  <includeSummary>true</includeSummary>
+  <includeCustomMetadata>true</includeCustomMetadata>
+  <ids>
+    <id>45</id>
+    <id>23</id>
+    <id>2</id>
+  </ids>
 </osdRequest>
 
 ```
@@ -3337,15 +3341,37 @@ Add a summary to an object, for example a short description of the content.
 
 ```xml
 <updateOsdRequest>
-  <id>1</id>
-  <parentFolderId>2</parentFolderId>
-  <name>new name</name>
-  <ownerId>45</ownerId>
-  <aclId>56</aclId>
-  <objectTypeId>1</objectTypeId>
-  <languageId>1</languageId>
-  <metadataChanged>false</metadataChanged>
-  <contentChanged>true</contentChanged>
+  <osds>
+    <osd>
+      <id>1</id>
+      <name>new name</name>
+      <contentPath/>
+      <contentSize/>
+      <predecessorId/>
+      <rootId/>
+      <creatorId/>
+      <modifierId/>
+      <ownerId>45</ownerId>
+      <lockerId/>
+      <created>2023-08-13T12:32:49+0000</created>
+      <modified>2023-08-13T12:32:49+0000</modified>
+      <languageId>1</languageId>
+      <aclId>56</aclId>
+      <parentId>2</parentId>
+      <formatId/>
+      <typeId>1</typeId>
+      <latestHead>false</latestHead>
+      <latestBranch>true</latestBranch>
+      <contentChanged/>
+      <metadataChanged>true</metadataChanged>
+      <cmnVersion>1</cmnVersion>
+      <lifecycleStateId/>
+      <summary>&lt;summary/></summary>
+      <contentHash/>
+      <contentProvider>FILE_SYSTEM</contentProvider>
+      <metasets/>
+    </osd>
+  </osds>
 </updateOsdRequest>
 
 ```

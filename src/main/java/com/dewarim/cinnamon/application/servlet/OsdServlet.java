@@ -638,115 +638,119 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
             osdDao) throws IOException {
         UpdateOsdRequest updateRequest = xmlMapper.readValue(request.getInputStream(), UpdateOsdRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
-
-        ObjectSystemData osd = osdDao.getObjectById(updateRequest.getId())
-                .orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
+        List<ObjectSystemData> osds = osdDao.getObjectsById(updateRequest.getOsds().stream().map(ObjectSystemData::getId).toList());
+        if (osds.size() != updateRequest.getOsds().size()) {
+            throw ErrorCode.OBJECT_NOT_FOUND.exception();
+        }
         boolean isAdmin = authorizationService.currentUserIsSuperuser();
-        if (osd.lockedByOtherUser(user) && !isAdmin) {
-            throw ErrorCode.OBJECT_LOCKED_BY_OTHER_USER.getException().get();
-        }
-        if (!osd.lockedByUser(user) && !isAdmin) {
-            throw ErrorCode.OBJECT_MUST_BE_LOCKED_BY_USER.getException().get();
-        }
-
-        AccessFilter accessFilter = AccessFilter.getInstance(user);
-        FolderDao folderDao = new FolderDao();
-
-        boolean changed = false;
-        // change parent folder
-        Long parentId = updateRequest.getParentFolderId();
-        if (parentId != null) {
-            Folder parentFolder = folderDao.getFolderById(parentId)
-                    .orElseThrow(ErrorCode.PARENT_FOLDER_NOT_FOUND.getException());
-            if (!accessFilter.hasPermissionOnOwnable(parentFolder, DefaultPermission.CREATE_OBJECT, parentFolder)) {
-                ErrorCode.NO_CREATE_PERMISSION.throwUp();
+        Map<Long,ObjectSystemData> updateOsds = updateRequest.getOsds().stream().collect(Collectors.toMap(ObjectSystemData::getId, k -> k));
+        for (ObjectSystemData osd : osds) {
+            ObjectSystemData update = updateOsds.get(osd.getId());
+            if (osd.lockedByOtherUser(user) && !isAdmin) {
+                throw ErrorCode.OBJECT_LOCKED_BY_OTHER_USER.getException().get();
             }
-            if (!accessFilter.hasPermissionOnOwnable(osd, DefaultPermission.SET_PARENT, osd)) {
-                ErrorCode.NO_SET_PARENT_PERMISSION.throwUp();
+            if (!osd.lockedByUser(user) && !isAdmin) {
+                throw ErrorCode.OBJECT_MUST_BE_LOCKED_BY_USER.getException().get();
             }
-            osd.setParentId(parentFolder.getId());
-            changed = true;
-        }
 
-        // change name
-        String name = updateRequest.getName();
-        if (name != null) {
-            if (!accessFilter.hasPermissionOnOwnable(osd, DefaultPermission.SET_NAME, osd)) {
-                throw ErrorCode.NO_NAME_WRITE_PERMISSION.exception();
+            AccessFilter accessFilter = AccessFilter.getInstance(user);
+            FolderDao folderDao = new FolderDao();
+
+            boolean changed = false;
+            // change parent folder
+            Long parentId = update.getParentId();
+            if (parentId != null) {
+                Folder parentFolder = folderDao.getFolderById(parentId)
+                        .orElseThrow(ErrorCode.PARENT_FOLDER_NOT_FOUND.getException());
+                if (!accessFilter.hasPermissionOnOwnable(parentFolder, DefaultPermission.CREATE_OBJECT, parentFolder)) {
+                    ErrorCode.NO_CREATE_PERMISSION.throwUp();
+                }
+                if (!accessFilter.hasPermissionOnOwnable(osd, DefaultPermission.SET_PARENT, osd)) {
+                    ErrorCode.NO_SET_PARENT_PERMISSION.throwUp();
+                }
+                osd.setParentId(parentFolder.getId());
+                changed = true;
             }
-            osd.setName(name);
-            changed = true;
-        }
 
-        // change type
-        Long typeId = updateRequest.getObjectTypeId();
-        if (typeId != null) {
-            if (!accessFilter.hasPermissionOnOwnable(osd, DefaultPermission.SET_TYPE, osd)) {
-                throw NO_TYPE_WRITE_PERMISSION.exception();
+            // change name
+            String name = update.getName();
+            if (name != null) {
+                if (!accessFilter.hasPermissionOnOwnable(osd, DefaultPermission.SET_NAME, osd)) {
+                    throw ErrorCode.NO_NAME_WRITE_PERMISSION.exception();
+                }
+                osd.setName(name);
+                changed = true;
             }
-            ObjectType type = new ObjectTypeDao().getObjectTypeById(typeId)
-                    .orElseThrow(ErrorCode.OBJECT_TYPE_NOT_FOUND.getException());
-            osd.setTypeId(type.getId());
-            changed = true;
-        }
 
-        // change acl
-        Long aclId = updateRequest.getAclId();
-        if (aclId != null) {
-            if (!accessFilter.hasPermissionOnOwnable(osd, DefaultPermission.SET_ACL, osd)) {
-                ErrorCode.MISSING_SET_ACL_PERMISSION.throwUp();
+            // change type
+            Long typeId = update.getTypeId();
+            if (typeId != null) {
+                if (!accessFilter.hasPermissionOnOwnable(osd, DefaultPermission.SET_TYPE, osd)) {
+                    throw NO_TYPE_WRITE_PERMISSION.exception();
+                }
+                ObjectType type = new ObjectTypeDao().getObjectTypeById(typeId)
+                        .orElseThrow(ErrorCode.OBJECT_TYPE_NOT_FOUND.getException());
+                osd.setTypeId(type.getId());
+                changed = true;
             }
-            Acl acl = new AclDao().getAclById(aclId)
-                    .orElseThrow(ErrorCode.ACL_NOT_FOUND.getException());
-            osd.setAclId(acl.getId());
-            changed = true;
-        }
 
-        // change owner
-        Long ownerId = updateRequest.getOwnerId();
-        if (ownerId != null) {
-            if (!accessFilter.hasPermissionOnOwnable(osd, DefaultPermission.SET_OWNER, osd)) {
-                NO_SET_OWNER_PERMISSION.throwUp();
+            // change acl
+            Long aclId = update.getAclId();
+            if (aclId != null) {
+                if (!accessFilter.hasPermissionOnOwnable(osd, DefaultPermission.SET_ACL, osd)) {
+                    ErrorCode.MISSING_SET_ACL_PERMISSION.throwUp();
+                }
+                Acl acl = new AclDao().getAclById(aclId)
+                        .orElseThrow(ErrorCode.ACL_NOT_FOUND.getException());
+                osd.setAclId(acl.getId());
+                changed = true;
             }
-            UserAccount owner = new UserAccountDao().getUserAccountById(ownerId)
-                    .orElseThrow(ErrorCode.USER_ACCOUNT_NOT_FOUND.getException());
-            osd.setOwnerId(owner.getId());
-            changed = true;
-        }
 
-        // change language
-        Long languageId = updateRequest.getLanguageId();
-        if (languageId != null) {
-            if (!accessFilter.hasPermissionOnOwnable(osd, DefaultPermission.SET_LANGUAGE, osd)) {
-                NO_UPDATE_LANGUAGE_PERMISSION.throwUp();
+            // change owner
+            Long ownerId = update.getOwnerId();
+            if (ownerId != null) {
+                if (!accessFilter.hasPermissionOnOwnable(osd, DefaultPermission.SET_OWNER, osd)) {
+                    NO_SET_OWNER_PERMISSION.throwUp();
+                }
+                UserAccount owner = new UserAccountDao().getUserAccountById(ownerId)
+                        .orElseThrow(ErrorCode.USER_ACCOUNT_NOT_FOUND.getException());
+                osd.setOwnerId(owner.getId());
+                changed = true;
             }
-            Language language = new LanguageDao().getLanguageById(languageId)
-                    .orElseThrow(ErrorCode.LANGUAGE_NOT_FOUND.getException());
-            osd.setLanguageId(language.getId());
-            changed = true;
-        }
 
-        // contentChanged
-        if (updateRequest.getContentChanged() != null) {
-            if (user.isChangeTracking()) {
-                throw ErrorCode.CHANGED_FLAG_ONLY_USABLE_BY_UNTRACKED_USERS.exception();
+            // change language
+            Long languageId = update.getLanguageId();
+            if (languageId != null) {
+                if (!accessFilter.hasPermissionOnOwnable(osd, DefaultPermission.SET_LANGUAGE, osd)) {
+                    NO_UPDATE_LANGUAGE_PERMISSION.throwUp();
+                }
+                Language language = new LanguageDao().getLanguageById(languageId)
+                        .orElseThrow(ErrorCode.LANGUAGE_NOT_FOUND.getException());
+                osd.setLanguageId(language.getId());
+                changed = true;
             }
-            osd.setContentChanged(updateRequest.getContentChanged());
-        }
 
-        // metadataChanged
-        if (updateRequest.getMetadataChanged() != null) {
-            if (user.isChangeTracking()) {
-                throw ErrorCode.CHANGED_FLAG_ONLY_USABLE_BY_UNTRACKED_USERS.exception();
+            // contentChanged
+            if (update.isContentChanged() != null) {
+                if (user.isChangeTracking()) {
+                    throw ErrorCode.CHANGED_FLAG_ONLY_USABLE_BY_UNTRACKED_USERS.exception();
+                }
+                osd.setContentChanged(update.isContentChanged());
             }
-            osd.setMetadataChanged(updateRequest.getMetadataChanged());
-        }
 
-        // update osd:
-        if (changed) {
-            osdDao.updateOsd(osd, true);
-        }
+            // metadataChanged
+            if (update.isMetadataChanged() != null) {
+                if (user.isChangeTracking()) {
+                    throw ErrorCode.CHANGED_FLAG_ONLY_USABLE_BY_UNTRACKED_USERS.exception();
+                }
+                osd.setMetadataChanged(update.isMetadataChanged());
+            }
 
+            // update osd:
+            if (changed) {
+                osdDao.updateOsd(osd, true);
+            }
+        }
         response.responseIsGenericOkay();
     }
 
@@ -766,7 +770,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
     private void getObjectsById(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao
             osdDao) throws IOException {
         OsdRequest osdRequest = xmlMapper.readValue(request.getInputStream(), OsdRequest.class);
-        if(!osdRequest.validated()){
+        if (!osdRequest.validated()) {
             log.debug("invalid osdRequest - check list of ids (must be non-empty list of positive integers):\n{}",
                     getMapper().writeValueAsString(osdRequest));
             throw ErrorCode.INVALID_REQUEST.exception();

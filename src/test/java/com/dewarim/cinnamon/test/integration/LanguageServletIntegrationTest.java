@@ -81,7 +81,7 @@ public class LanguageServletIntegrationTest extends CinnamonIntegrationTest {
         var toh = new TestObjectHolder(adminClient, userId);
         var osd = toh.createOsd("delete-language-in-use-test").osd;
         var language = adminClient.createLanguage("test");
-        var updateRequest = new UpdateOsdRequest(osd.getId(), null, null, null, null, null, language.getId());
+        var updateRequest = new UpdateOsdRequest(osd.getId(), null, null, null, null, null, language.getId(),null,null);
         client.lockOsd(osd.getId());
         assertTrue(client.updateOsd(updateRequest));
         assertClientError(() -> adminClient.deleteLanguage(language.getId()), DB_DELETE_FAILED);

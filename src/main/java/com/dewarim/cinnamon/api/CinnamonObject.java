@@ -29,9 +29,9 @@ public interface CinnamonObject extends ContentMetadata, Ownable {
 
     boolean isLatestBranch();
 
-    boolean isContentChanged();
+    Boolean isContentChanged();
 
-    boolean isMetadataChanged();
+    Boolean isMetadataChanged();
 
     Long getLifecycleStateId();
 
@@ -41,6 +41,6 @@ public interface CinnamonObject extends ContentMetadata, Ownable {
 
     String getCmnVersion();
 
-    void setAclId(long id);
+    void setAclId(Long id);
 
 }

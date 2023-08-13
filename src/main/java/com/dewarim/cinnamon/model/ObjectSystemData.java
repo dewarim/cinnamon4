@@ -10,12 +10,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 import static com.dewarim.cinnamon.api.Constants.DEFAULT_SUMMARY;
 
@@ -67,8 +62,8 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject, Identi
      * You can only delete an object without descendants.
      */
     private boolean latestBranch    = true;
-    private boolean contentChanged  = false;
-    private boolean metadataChanged = false;
+    private Boolean contentChanged  = false;
+    private Boolean metadataChanged = false;
     private String  cmnVersion      = "1";
     private Long    lifecycleStateId;
     private String  summary         = DEFAULT_SUMMARY;
@@ -79,6 +74,16 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject, Identi
     private String contentProvider = DefaultContentProvider.FILE_SYSTEM.name();
 
     public ObjectSystemData() {
+    }
+
+    public ObjectSystemData(Long id, String name, Long ownerId, Long languageId, Long aclId, Long parentId, Long typeId) {
+        this.id = id;
+        this.name = name;
+        this.ownerId = ownerId;
+        this.languageId = languageId;
+        this.aclId = aclId;
+        this.parentId = parentId;
+        this.typeId = typeId;
     }
 
     /**
@@ -375,10 +380,6 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject, Identi
         return aclId;
     }
 
-    public void setAclId(long aclId) {
-        this.aclId = aclId;
-    }
-
     public Long getParentId() {
         return parentId;
     }
@@ -419,19 +420,19 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject, Identi
         this.latestBranch = latestBranch;
     }
 
-    public boolean isContentChanged() {
+    public Boolean isContentChanged() {
         return contentChanged;
     }
 
-    public void setContentChanged(boolean contentChanged) {
+    public void setContentChanged(Boolean contentChanged) {
         this.contentChanged = contentChanged;
     }
 
-    public boolean isMetadataChanged() {
+    public Boolean isMetadataChanged() {
         return metadataChanged;
     }
 
-    public void setMetadataChanged(boolean metadataChanged) {
+    public void setMetadataChanged(Boolean metadataChanged) {
         this.metadataChanged = metadataChanged;
     }
 

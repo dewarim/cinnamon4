@@ -9,27 +9,27 @@ public class UpdateOsdRequestTest {
 
     @Test
     public void emptyName() {
-        var request = new UpdateOsdRequest(1L, 1L, "", 1L, 1L, 1L, 1L);
+        var request = new UpdateOsdRequest(1L, 1L, "", 1L, 1L, 1L, 1L,null,null);
         assertTrue(request.validateRequest().isEmpty());
     }
 
     @Test
     public void whitespaceName() {
-        var request = new UpdateOsdRequest(1L, 1L, " ", 1L, 1L, 1L, 1L);
+        var request = new UpdateOsdRequest(1L, 1L, " ", 1L, 1L, 1L, 1L,null,null);
         assertTrue(request.validateRequest().isEmpty());
     }
 
     @Test
     public void trimmedName(){
         var request = new UpdateOsdRequest(1L, 1L, " leading-or-trailing-whitespace ",
-                1L, 1L, 1L, 1L);
+                1L, 1L, 1L, 1L,null,null);
         assertTrue(request.validateRequest().isEmpty());
     }
 
     @Test
     public void happyName(){
         var request = new UpdateOsdRequest(1L, 1L, "okay",
-                1L, 1L, 1L, 1L);
+                1L, 1L, 1L, 1L,null,null);
         assertTrue(request.validateRequest().isPresent());
     }
 
