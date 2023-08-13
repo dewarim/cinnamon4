@@ -22,6 +22,9 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
     private SqlSession sqlSession;
 
     public List<ObjectSystemData> getObjectsById(List<Long> ids, boolean includeSummary) {
+        if(ids == null || ids.isEmpty()){
+            return List.of();
+        }
         SqlSession sqlSession = getSqlSession();
         List<ObjectSystemData> results = new ArrayList<>(ids.size());
         int requestSize = ids.size();

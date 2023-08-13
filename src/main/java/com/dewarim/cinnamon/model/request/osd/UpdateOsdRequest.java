@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Optional;
 
 @JacksonXmlRootElement(localName = "updateOsdRequest")
-public class UpdateOsdRequest implements ApiRequest {
+public class UpdateOsdRequest implements ApiRequest<UpdateOsdRequest> {
 
     private Long   id;
     private Long   parentFolderId;
@@ -124,7 +124,7 @@ public class UpdateOsdRequest implements ApiRequest {
      * one potentially valid field that should be updated.
      */
     private boolean validated() {
-        if (name != null && (name.length() == 0 || name.trim().length() < name.length() || name.matches("^\\s+$"))) {
+        if (name != null && (name.isEmpty() || name.trim().length() < name.length() || name.matches("^\\s+$"))) {
             return false;
         }
         if (parentFolderId != null && parentFolderId <= 0) {
@@ -158,7 +158,7 @@ public class UpdateOsdRequest implements ApiRequest {
     }
 
     @Override
-    public List<ApiRequest> examples() {
+    public List<ApiRequest<UpdateOsdRequest>> examples() {
         UpdateOsdRequest request = new UpdateOsdRequest(1L, 2L, "new name", 45L, 56L, 1L, 1L);
         request.setContentChanged(true);
         request.setMetadataChanged(false);

@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "osdRequest")
-public class OsdRequest implements ApiRequest {
+public class OsdRequest implements ApiRequest<OsdRequest> {
 
     @JacksonXmlElementWrapper(localName = "ids")
     @JacksonXmlProperty(localName = "id")
@@ -25,6 +25,10 @@ public class OsdRequest implements ApiRequest {
         this.includeSummary = includeSummary;
         this.includeCustomMetadata = includeCustomMetadata;
         this.ids = ids;
+    }
+
+    public boolean validated(){
+        return ids != null && !ids.isEmpty() && ids.stream().allMatch(id -> id != null && id > 0);
     }
 
     public List<Long> getIds() {
@@ -58,5 +62,12 @@ public class OsdRequest implements ApiRequest {
                 ", includeSummary=" + includeSummary +
                 ", includeCustomMetadata=" + includeCustomMetadata +
                 '}';
+    }
+
+
+
+    @Override
+    public List<ApiRequest<OsdRequest>> examples() {
+        return List.of(new OsdRequest(List.of(45L,23L,2L),true,true));
     }
 }

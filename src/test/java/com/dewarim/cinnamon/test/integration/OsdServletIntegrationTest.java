@@ -184,6 +184,11 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
+    public void getObjectsByIdEmptyInvalidRequest() {
+        assertClientError(() -> client.getOsds(List.of(),false,false), INVALID_REQUEST);
+    }
+
+    @Test
     public void getObjectsByFolderIdOnlyBranches() throws IOException {
         var toh = new TestObjectHolder(client, userId)
                 .createFolder("getObjectsByFolderIdOnlyBranches", createFolderId)
@@ -2061,7 +2066,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void fetchLargeCountOfOsds() throws IOException {
         List<Long> ids = new ArrayList<>(2000);
-        for (long i = 0; i < 2000; i++) {
+        for (long i = 1; i <= 2000; i++) {
             ids.add(i);
         }
         // exercise the batchMode of CrudDao.partitionLongList()

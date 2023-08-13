@@ -766,6 +766,11 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
     private void getObjectsById(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao
             osdDao) throws IOException {
         OsdRequest osdRequest = xmlMapper.readValue(request.getInputStream(), OsdRequest.class);
+        if(!osdRequest.validated()){
+            log.debug("invalid osdRequest - check list of ids (must be non-empty list of positive integers):\n{}",
+                    getMapper().writeValueAsString(osdRequest));
+            throw ErrorCode.INVALID_REQUEST.exception();
+        }
         List<ObjectSystemData> osds = osdDao.getObjectsById(osdRequest.getIds(), osdRequest.isIncludeSummary());
         List<ObjectSystemData> filteredOsds = authorizationService.filterObjectsByBrowsePermission(osds, user);
 
