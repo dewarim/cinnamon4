@@ -101,9 +101,8 @@ public class CinnamonServer {
 
         server.setHandler(webAppContext);
         log.info("Starting CinnamonServer.");
-        server.start();
-
         addSingletons();
+        server.start();
 
         // start executorService for background threads
         // TODO: make number of threads and timeout configurable
