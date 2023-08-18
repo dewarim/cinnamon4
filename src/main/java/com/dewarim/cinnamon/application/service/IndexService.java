@@ -6,19 +6,8 @@ import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.application.exception.CinnamonException;
 import com.dewarim.cinnamon.application.service.index.ContentContainer;
 import com.dewarim.cinnamon.configuration.LuceneConfig;
-import com.dewarim.cinnamon.dao.FolderDao;
-import com.dewarim.cinnamon.dao.FolderMetaDao;
-import com.dewarim.cinnamon.dao.FormatDao;
-import com.dewarim.cinnamon.dao.IndexItemDao;
-import com.dewarim.cinnamon.dao.IndexJobDao;
-import com.dewarim.cinnamon.dao.OsdDao;
-import com.dewarim.cinnamon.dao.OsdMetaDao;
-import com.dewarim.cinnamon.dao.RelationDao;
-import com.dewarim.cinnamon.model.Folder;
-import com.dewarim.cinnamon.model.Format;
-import com.dewarim.cinnamon.model.IndexItem;
-import com.dewarim.cinnamon.model.Meta;
-import com.dewarim.cinnamon.model.ObjectSystemData;
+import com.dewarim.cinnamon.dao.*;
+import com.dewarim.cinnamon.model.*;
 import com.dewarim.cinnamon.model.index.IndexJob;
 import com.dewarim.cinnamon.model.index.IndexJobType;
 import com.dewarim.cinnamon.model.relations.Relation;
@@ -31,13 +20,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.document.DateTools;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
-import org.apache.lucene.document.LongPoint;
-import org.apache.lucene.document.StoredField;
-import org.apache.lucene.document.StringField;
-import org.apache.lucene.document.TextField;
+import org.apache.lucene.document.*;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.Term;
@@ -50,14 +33,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -71,13 +47,13 @@ public class IndexService implements Runnable {
 
     public static boolean isInitialized = false;
 
-    private       boolean         stopped   = false;
-    private       IndexWriter     indexWriter;
-    private final OsdDao          osdDao    = new OsdDao();
-    private final FolderDao       folderDao = new FolderDao();
-    private final LuceneConfig    config;
-    private final Path            indexPath;
-    private final XmlMapper       xmlMapper;
+    private boolean stopped = false;
+    private IndexWriter indexWriter;
+    private final OsdDao osdDao = new OsdDao();
+    private final FolderDao folderDao = new FolderDao();
+    private final LuceneConfig config;
+    private final Path indexPath;
+    private final XmlMapper xmlMapper;
     private final List<IndexItem> indexItems;
 
     public IndexService(LuceneConfig config) {
@@ -107,18 +83,19 @@ public class IndexService implements Runnable {
                     writerConfig.setCommitOnClose(true);
                     indexWriter = new IndexWriter(indexDir, writerConfig);
 
-                    Set<IndexKey> seen   = new HashSet<>(128);
-                    IndexJobDao   jobDao = new IndexJobDao().setSqlSession(sqlSession);
+                    Set<IndexKey> seen = new HashSet<>(128);
+                    IndexJobDao jobDao = new IndexJobDao().setSqlSession(sqlSession);
                     osdDao.setSqlSession(sqlSession);
                     folderDao.setSqlSession(sqlSession);
 
                     while (jobDao.countJobs() > 0) {
                         List<IndexJob> jobs = jobDao.getIndexJobsByFailedCountWithLimit(0, limit);
-                        log.debug("Found " + jobs.size() + " IndexJobs.");
-                        if (jobs.size() == 0) {
+                        if (jobs.isEmpty()) {
+                            log.trace("Found 0 IndexJobs.");
                             break;
                         }
-                        boolean        indexChanged = false;
+                        log.debug("Found {} IndexJobs.", jobs.size());
+                        boolean indexChanged = false;
                         List<IndexJob> jobsToDelete = new ArrayList<>();
                         for (IndexJob job : jobs) {
                             IndexKey indexKey = new IndexKey(job.getJobType(), job.getItemId());
@@ -206,8 +183,8 @@ public class IndexService implements Runnable {
 
         // folderpath
         String folderPath = folderDao.getFolderPath(folder.getParentId());
-        log.debug("folderpath: "+folderPath);
-        doc.add(new StringField("folderpath", folderPath, Field.Store.NO));
+        log.debug("folderpath: " + folderPath);
+        doc.add(new StringField("folderpath", folderPath.toLowerCase(), Field.Store.NO));
 
         doc.add(new StoredField("acl", folder.getAclId()));
         doc.add(new LongPoint("acl", folder.getAclId()));
@@ -216,7 +193,7 @@ public class IndexService implements Runnable {
         doc.add(new StoredField("id", folder.getId()));
         doc.add(new StringField("created", DateTools.dateToString(folder.getCreated(), DateTools.Resolution.MILLISECOND), Field.Store.NO));
         doc.add(new LongPoint("created", folder.getCreated().getTime()));
-        doc.add(new StringField("name", folder.getName(), Field.Store.NO));
+        doc.add(new StringField("name", folder.getName().toLowerCase(), Field.Store.NO));
         doc.add(new LongPoint("owner", folder.getOwnerId()));
         doc.add(new StoredField("owner", folder.getOwnerId()));
         if (folder.getParentId() != null) {
@@ -244,7 +221,7 @@ public class IndexService implements Runnable {
 
         // index sysMeta
         String folderPath = folderDao.getFolderPath(osd.getParentId());
-        doc.add(new StringField("folderpath", folderPath, Field.Store.NO));
+        doc.add(new StringField("folderpath", folderPath.toLowerCase(), Field.Store.NO));
 
         doc.add(new StoredField("acl", osd.getAclId()));
         doc.add(new LongPoint("acl", osd.getAclId()));
@@ -275,7 +252,7 @@ public class IndexService implements Runnable {
             doc.add(new LongPoint("locker", osd.getId()));
         }
         doc.add(new StringField("metadata_changed", String.valueOf(osd.isMetadataChanged()), Field.Store.NO));
-        doc.add(new StringField("name", osd.getName(), Field.Store.NO));
+        doc.add(new StringField("name", osd.getName().toLowerCase(), Field.Store.NO));
         doc.add(new LongPoint("owner", osd.getOwnerId()));
         doc.add(new StoredField("owner", osd.getOwnerId()));
         doc.add(new LongPoint("parent", osd.getParentId()));
@@ -291,13 +268,13 @@ public class IndexService implements Runnable {
         doc.add(new TextField("summary", osd.getSummary(), Field.Store.NO));
         doc.add(new LongPoint("object_type", osd.getTypeId()));
 
-        List<Long>     relationCriteria = List.of(osd.getId());
-        List<Relation> relations        = new RelationDao().getRelationsOrMode(relationCriteria, relationCriteria, Collections.emptyList(), true);
+        List<Long> relationCriteria = List.of(osd.getId());
+        List<Relation> relations = new RelationDao().getRelationsOrMode(relationCriteria, relationCriteria, Collections.emptyList(), true);
         osd.setRelations(relations);
 
         byte[] content = NO_CONTENT;
         if (osd.getContentPath() != null && osd.getFormatId() != null) {
-            Format          format          = new FormatDao().getObjectById(osd.getFormatId()).orElseThrow(() -> new CinnamonException(ErrorCode.FORMAT_NOT_FOUND.getCode()));
+            Format format = new FormatDao().getObjectById(osd.getFormatId()).orElseThrow(() -> new CinnamonException(ErrorCode.FORMAT_NOT_FOUND.getCode()));
             ContentProvider contentProvider = ContentProviderService.getInstance().getContentProvider(osd.getContentProvider());
             try (InputStream contentStream = contentProvider.getContentStream(osd)) {
                 switch (format.getIndexMode()) {
@@ -322,11 +299,11 @@ public class IndexService implements Runnable {
 
     private void applyIndexItems(Document luceneDoc, List<IndexItem> indexItems,
                                  String objectAsString, byte[] content, String folderPath) {
-        ContentContainer   contentContainer = new ContentContainer(objectAsString, content, folderPath);
-        org.dom4j.Document xmlDoc           = contentContainer.getCombinedDocument();
+        ContentContainer contentContainer = new ContentContainer(objectAsString, content, folderPath);
+        org.dom4j.Document xmlDoc = contentContainer.getCombinedDocument();
 
         for (IndexItem indexItem : indexItems) {
-            String fieldName    = indexItem.getFieldName();
+            String fieldName = indexItem.getFieldName();
             String searchString = indexItem.getSearchString();
             log.debug("indexing for field: " + fieldName + " with " + searchString);
             // TODO: check search condition, probably with xmlDoc
@@ -349,7 +326,7 @@ public class IndexService implements Runnable {
 
     static class IndexKey {
         private final IndexJobType type;
-        private final Long         itemId;
+        private final Long itemId;
 
         public IndexKey(IndexJobType type, Long itemId) {
             this.type = type;

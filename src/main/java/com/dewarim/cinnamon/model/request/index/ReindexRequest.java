@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Optional;
 
 @JacksonXmlRootElement(localName = "reindexRequest")
-public class ReindexRequest implements ApiRequest {
+public class ReindexRequest implements ApiRequest<ReindexRequest> {
 
     private List<Long> osdIds;
     private List<Long> folderIds;
@@ -62,7 +62,7 @@ public class ReindexRequest implements ApiRequest {
     }
 
     @Override
-    public List<ApiRequest> examples() {
+    public List<ApiRequest<ReindexRequest>> examples() {
         return List.of(new ReindexRequest(), new ReindexRequest(List.of(13L, 23L), List.of(43L, 2L)));
     }
 

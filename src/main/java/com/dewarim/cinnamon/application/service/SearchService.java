@@ -15,6 +15,7 @@ import com.dewarim.cinnamon.model.request.search.SearchType;
 import com.dewarim.cinnamon.security.authorization.AuthorizationService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.miscellaneous.LimitTokenCountAnalyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.index.DirectoryReader;
@@ -39,12 +40,11 @@ public class SearchService {
 
     private static final Logger log = LogManager.getLogger(SearchService.class);
 
-    private final LuceneConfig    config;
-    private final Directory       directory;
-    private       DirectoryReader indexReader;
-
-    private final SearcherManager         searcherManager;
-    private final LimitTokenCountAnalyzer limitTokenCountAnalyzer = new LimitTokenCountAnalyzer(new StandardAnalyzer(), Integer.MAX_VALUE);
+    private final LuceneConfig config;
+    private final Directory directory;
+    private DirectoryReader indexReader;
+    private final SearcherManager searcherManager;
+    private final LimitTokenCountAnalyzer limitTokenCountAnalyzer;
 
     public SearchService(LuceneConfig luceneConfig) throws IOException, InterruptedException {
         this.config = luceneConfig;
@@ -58,6 +58,9 @@ public class SearchService {
         indexReader = DirectoryReader.open(directory);
         searcherManager = new SearcherManager(indexReader, new SearcherFactory());
         searcherManager.maybeRefresh();
+        Analyzer analyzer = new StandardAnalyzer();
+        limitTokenCountAnalyzer = new LimitTokenCountAnalyzer(analyzer, Integer.MAX_VALUE);
+
         // TODO: refresh periodically - or if last refresh was > config.lucene.refreshTime
     }
 
@@ -69,7 +72,7 @@ public class SearchService {
             }
             searcher = searcherManager.acquire();
             int documents = searcher.count(new TermQuery(new Term(LUCENE_FIELD_CINNAMON_CLASS, "OSD")));
-            int folders   = searcher.count(new TermQuery(new Term(LUCENE_FIELD_CINNAMON_CLASS, "FOLDER")));
+            int folders = searcher.count(new TermQuery(new Term(LUCENE_FIELD_CINNAMON_CLASS, "FOLDER")));
             return new IndexJobDao.IndexRows(documents, folders);
         } catch (Exception e) {
             log.warn("countDocs failed: ", e);
@@ -88,23 +91,23 @@ public class SearchService {
                 searcherManager.maybeRefreshBlocking();
             }
             searcher = searcherManager.acquire();
-            log.debug("xmlQuery: "+xmlQuery);
+            log.debug("xmlQuery: " + xmlQuery);
             InputStream xmlInputStream = new ByteArrayInputStream(xmlQuery.getBytes(StandardCharsets.UTF_8));
-            CoreParser  coreParser     = new CoreParser("content", limitTokenCountAnalyzer);
+            CoreParser coreParser = new CoreParser("content", limitTokenCountAnalyzer);
             coreParser.addQueryBuilder("WildcardQuery", new WildcardQueryBuilder());
             coreParser.addQueryBuilder("RegexQuery", new RegexQueryBuilder());
             coreParser.addQueryBuilder("PointRangeQuery", new ExactPointQueryBuilder());
             coreParser.addQueryBuilder("RangeQuery", new RangeQueryBuilder());
             coreParser.addQueryBuilder("ExactPointQuery", new ExactPointQueryBuilder());
-            Query           query     = coreParser.parse(xmlInputStream);
-            log.debug("parsed query: "+query);
+            Query query = coreParser.parse(xmlInputStream);
+            log.debug("parsed query: " + query);
             ResultCollector collector = new ResultCollector(searcher);
             searcher.search(query, collector);
             log.debug("Found " + collector.getDocuments().size() + " documents.");
 
             BrowsableAcls browsableAcls = new AuthorizationService().getBrowsableAcls(user);
-            List<Long>    osdIds        = List.of();
-            List<Long>    folderIds     = List.of();
+            List<Long> osdIds = List.of();
+            List<Long> folderIds = List.of();
             switch (searchType) {
                 case OSD -> osdIds = filterForType(collector, IndexJobType.OSD, browsableAcls);
                 case FOLDER -> folderIds = filterForType(collector, IndexJobType.FOLDER, browsableAcls);
