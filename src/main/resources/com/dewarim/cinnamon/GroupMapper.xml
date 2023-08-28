@@ -25,10 +25,21 @@
             #{item}
         </foreach>
     </select>
+
     <select id="getGroupByName" parameterType="string" resultMap="groupMap">
         SELECT *
         FROM groups
         WHERE name = #{name}
+    </select>
+
+    <select id="getGroupsByName" parameterType="list" resultMap="groupMap">
+        SELECT *
+        FROM groups
+        WHERE name in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
     </select>
 
     <select id="hasChildren" parameterType="long" resultType="boolean">

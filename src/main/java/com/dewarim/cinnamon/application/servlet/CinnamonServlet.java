@@ -9,6 +9,7 @@ import com.dewarim.cinnamon.application.exception.CinnamonException;
 import com.dewarim.cinnamon.configuration.SecurityConfig;
 import com.dewarim.cinnamon.dao.SessionDao;
 import com.dewarim.cinnamon.dao.UserAccountDao;
+import com.dewarim.cinnamon.model.LoginType;
 import com.dewarim.cinnamon.model.Session;
 import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.response.CinnamonConnection;
@@ -20,8 +21,6 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -37,11 +36,10 @@ import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
 @WebServlet(name = "Cinnamon", urlPatterns = {"/*"})
 public class CinnamonServlet extends HttpServlet {
 
-    private static final Logger               log                  = LogManager.getLogger(CinnamonServlet.class);
-    private final        ObjectMapper         xmlMapper            = XML_MAPPER;
-    private final        UserAccountDao       userAccountDao       = new UserAccountDao();
-    private final        LoginProviderService loginProviderService = LoginProviderService.getInstance();
-    private final        CinnamonVersion      cinnamonVersion      = new CinnamonVersion();
+    private final ObjectMapper xmlMapper = XML_MAPPER;
+    private final UserAccountDao userAccountDao = new UserAccountDao();
+    private final LoginProviderService loginProviderService = LoginProviderService.getInstance();
+    private final CinnamonVersion cinnamonVersion = new CinnamonVersion();
     // TODO: move to constants or use http core?
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -56,7 +54,7 @@ public class CinnamonServlet extends HttpServlet {
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         CinnamonResponse cinnamonResponse = (CinnamonResponse) response;
-        UrlMapping       mapping          = UrlMapping.getByPath(request.getRequestURI());
+        UrlMapping mapping = UrlMapping.getByPath(request.getRequestURI());
         switch (mapping) {
             case CINNAMON__CONNECT -> connect(request, cinnamonResponse);
             case CINNAMON__DISCONNECT -> disconnect(request, cinnamonResponse);
@@ -79,7 +77,7 @@ public class CinnamonServlet extends HttpServlet {
     private void connect(HttpServletRequest request, CinnamonResponse response) throws IOException {
         String username = request.getParameter("user");
         String password = request.getParameter("password");
-        String format   = request.getParameter("format");
+        String format = request.getParameter("format");
         // TODO: maybe add a ConnectionRequest object (with fields user & password) for consistency
         SecurityConfig securityConfig = CinnamonServer.config.getSecurityConfig();
 
@@ -88,11 +86,30 @@ public class CinnamonServlet extends HttpServlet {
         }
 
         Optional<UserAccount> userOpt = userAccountDao.getUserAccountByName(username);
+
+        boolean alreadyAuthenticatedViaLdap = false;
+        UserAccount user;
         if (userOpt.isEmpty()) {
-            throw ErrorCode.CONNECTION_FAIL_INVALID_USERNAME.exception();
+            if (securityConfig.getLdapConfig().isLdapConnectorEnabled()) {
+                // LDAP users may be created on the fly:
+                UserAccount loginUser = new UserAccount();
+                loginUser.setName(username);
+                loginUser.setLoginType(LoginType.LDAP.name());
+                LoginResult loginResult = loginProviderService.connect(loginUser, password);
+                if (!loginResult.isValidUser()) {
+                    throw CONNECTION_FAIL_WRONG_PASSWORD.exception();
+                }
+                // LdapLoginProvider may have just created the user for us:
+                user = userAccountDao.getUserAccountByName(username).orElseThrow(CONNECTION_FAIL_WRONG_PASSWORD.getException());
+                alreadyAuthenticatedViaLdap = true;
+            }
+            else {
+                throw ErrorCode.CONNECTION_FAIL_INVALID_USERNAME.exception();
+            }
+        } else {
+            user = userOpt.get();
         }
 
-        UserAccount user = userOpt.get();
         if (!user.isActivated()) {
             throw ErrorCode.CONNECTION_FAIL_ACCOUNT_INACTIVE.exception();
         }
@@ -101,14 +118,14 @@ public class CinnamonServlet extends HttpServlet {
             throw ErrorCode.CONNECTION_FAIL_ACCOUNT_LOCKED.exception();
         }
 
-        if(user.isPasswordExpired()){
+        if (user.isPasswordExpired()) {
             throw ErrorCode.PASSWORD_IS_EXPIRED.exception();
         }
 
-        if (authenticate(user, password)) {
+        if (alreadyAuthenticatedViaLdap || authenticate(user, password)) {
             // TODO: get optional uiLanguageParam.
-            long    sessionLengthInMillis = securityConfig.getSessionLengthInMillis();
-            Session session               = new SessionDao().save(new Session(user.getId(), sessionLengthInMillis));
+            long sessionLengthInMillis = securityConfig.getSessionLengthInMillis();
+            Session session = new SessionDao().save(new Session(user.getId(), sessionLengthInMillis));
 
             if (format != null && format.equals("text")) {
                 response.setContentType(CONTENT_TYPE_PLAIN_TEXT);
@@ -125,13 +142,13 @@ public class CinnamonServlet extends HttpServlet {
 
     }
 
-    private void disconnect(HttpServletRequest request, CinnamonResponse response) throws IOException {
+    private void disconnect(HttpServletRequest request, CinnamonResponse response) {
         String ticket = request.getHeader("ticket");
         if (ticket == null || ticket.isBlank()) {
             ErrorCode.AUTHENTICATION_FAIL_NO_TICKET_GIVEN.throwUp();
         }
         SessionDao sessionDao = new SessionDao();
-        Session    session    = sessionDao.getSessionByTicket(ticket);
+        Session session = sessionDao.getSessionByTicket(ticket);
         if (session != null) {
             sessionDao.delete(session.getId());
         } else {

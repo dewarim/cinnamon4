@@ -8,6 +8,8 @@ public class SecurityConfig {
     private Boolean deleteUserAllowed     = true;
     private long    sessionLengthInMillis = 3600_000;
 
+    private LdapConfig ldapConfig = new LdapConfig();
+
     public Boolean getTransferAssetsAllowed() {
         return transferAssetsAllowed;
     }
@@ -46,5 +48,13 @@ public class SecurityConfig {
 
     public void setSessionLengthInMillis(long sessionLengthInMillis) {
         this.sessionLengthInMillis = sessionLengthInMillis;
+    }
+
+    public LdapConfig getLdapConfig() {
+        return ldapConfig;
+    }
+
+    public void setLdapConfig(LdapConfig ldapConfig) {
+        this.ldapConfig = ldapConfig;
     }
 }

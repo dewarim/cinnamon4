@@ -7,7 +7,7 @@
     <groupId>com.dewarim.cinnamon</groupId>
     <artifactId>cinnamon-cms</artifactId>
     <packaging>jar</packaging>
-    <version>0.5.13</version>
+    <version>0.6.0</version>
     <name>Cinnamon CMS</name>
 
     <properties>
@@ -26,6 +26,7 @@
         <maven.compiler.target>17</maven.compiler.target>
         <dom4j.version>2.1.4</dom4j.version>
         <tika.version>2.7.0</tika.version>
+        <unbound.ldap.version>6.0.9</unbound.ldap.version>
     </properties>
 
     <scm>
@@ -241,6 +242,13 @@
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
             <version>1.16.0</version>
+        </dependency>
+
+        <!-- ldap connectivity -->
+        <dependency>
+            <groupId>com.unboundid</groupId>
+            <artifactId>unboundid-ldapsdk</artifactId>
+            <version>${unbound.ldap.version}</version>
         </dependency>
 
     </dependencies>

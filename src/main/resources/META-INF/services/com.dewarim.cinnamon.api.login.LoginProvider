@@ -1,1 +1,2 @@
 com.dewarim.cinnamon.security.CinnamonLoginProvider
+com.dewarim.cinnamon.security.LdapLoginProvider

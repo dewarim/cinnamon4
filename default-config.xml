@@ -33,6 +33,21 @@
     <transferAssetsAllowed>true</transferAssetsAllowed>
     <deleteUserAllowed>true</deleteUserAllowed>
     <sessionLengthInMillis>3600000</sessionLengthInMillis>
+    <ldapConfig>
+      <ldapConnectorEnabled>false</ldapConnectorEnabled>
+      <host>localhost</host>
+      <port>10389</port>
+      <bindDnFormatString>cn=%s,cn=Users,dc=localhost</bindDnFormatString>
+      <searchBaseDnFormatString>cn=retrieval-users,cn=Users,dc=localhost</searchBaseDnFormatString>
+      <searchFilter>(&amp;(objectclass=*))</searchFilter>
+      <searchAttribute>member</searchAttribute>
+      <groupMappings>
+        <groupMapping>
+          <externalGroup>authors</externalGroup>
+          <cinnamonGroup>group.authors</cinnamonGroup>
+        </groupMapping>
+      </groupMappings>
+    </ldapConfig>
   </securityConfig>
   <databaseConfig>
     <driver>org.postgresql.Driver</driver>

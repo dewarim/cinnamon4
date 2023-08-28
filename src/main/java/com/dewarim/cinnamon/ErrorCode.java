@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon;
 
+import com.dewarim.cinnamon.api.Constants;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.util.Map;
@@ -24,7 +25,7 @@ public enum ErrorCode {
     CONNECTION_FAIL_ACCOUNT_INACTIVE("account inactive", SC_UNAUTHORIZED),
     CONNECTION_FAIL_ACCOUNT_LOCKED("account locked", SC_UNAUTHORIZED),
     CONNECTION_FAIL_INVALID_USERNAME("invalid username", SC_UNAUTHORIZED),
-    CONNECTION_FAIL_WRONG_PASSWORD("wrong password", SC_UNAUTHORIZED),
+    CONNECTION_FAIL_WRONG_PASSWORD("authentication failed (wrong password or account does not exist?)", SC_UNAUTHORIZED),
     DB_DELETE_FAILED("db delete failed", HttpServletResponse.SC_INTERNAL_SERVER_ERROR),
     DB_INSERT_FAILED("db insert failed", HttpServletResponse.SC_INTERNAL_SERVER_ERROR),
     DB_IS_MISSING_LANGUAGE_CODE("db does not contain ISO code for undetermined language.", HttpServletResponse.SC_INTERNAL_SERVER_ERROR),
@@ -51,6 +52,8 @@ public enum ErrorCode {
     INVALID_UPDATE("You are trying to update an object in a way that is not implemented yet, for example changing the type of a folder's metaset",
             SC_BAD_REQUEST),
     LANGUAGE_NOT_FOUND("language was not found in the database", HttpServletResponse.SC_NOT_FOUND),
+    LDAP_CONNECTOR_NOT_CONFIGURED("ldap connector is not configured correctly", SC_CONFLICT),
+    LDAP_LOGIN_FAILED("ldap user not found or login failed", SC_UNAUTHORIZED),
     LIFECYCLE_NOT_FOUND("Lifecycle was not found in the database", HttpServletResponse.SC_NOT_FOUND),
     LIFECYCLE_STATE_CHANGE_FAILED("Lifecycle state change failed.", SC_BAD_REQUEST),
     LIFECYCLE_STATE_EXIT_FAILED("Failed to exit existing lifecycle state.", SC_BAD_REQUEST),
@@ -135,7 +138,12 @@ public enum ErrorCode {
             Your password has expired. Please ask your administrator for a new password
             """, SC_UNAUTHORIZED),
     LOCK_FAILED("Failed to lock the given list of objects, see detailed error list for more information", SC_FORBIDDEN),
-    UNLOCK_FAILED("Failed to unlock the given list of objects, see detailed error list for more information", SC_FORBIDDEN);
+    UNLOCK_FAILED("Failed to unlock the given list of objects, see detailed error list for more information", SC_FORBIDDEN),
+    UI_LANGUAGE_NOT_FOUND("UI language was not found in the database", HttpServletResponse.SC_NOT_FOUND),
+    SYSTEM_FOLDER_NOT_FOUND("Folder /system/users was not found in the database", HttpServletResponse.SC_NOT_FOUND),
+    DEFAULT_ACL_NOT_FOUND("Could not find the default ACL (with name: "+ Constants.ACL_DEFAULT+")", SC_NOT_FOUND),
+    DEFAULT_FOLDER_TYPE_NOT_FOUND("Could not find the default folder type (with name: "+ Constants.FOLDER_TYPE_DEFAULT+")", SC_NOT_FOUND),
+    ;
 
     private static final Map<String, ErrorCode> codeMapping = new ConcurrentHashMap<>();
     final String description;

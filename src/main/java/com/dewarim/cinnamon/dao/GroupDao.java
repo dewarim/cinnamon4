@@ -35,6 +35,13 @@ public class GroupDao implements CrudDao<Group> {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
         return Optional.ofNullable(sqlSession.selectOne("com.dewarim.cinnamon.model.Group.getGroupByName",name));
     }
+    public List<Group> getGroupsByName(List<String> names){
+        if(names == null || names.isEmpty()){
+            return List.of();
+        }
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        return sqlSession.selectList("com.dewarim.cinnamon.model.Group.getGroupsByName",names);
+    }
 
     public boolean hasChildren(Long id) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
