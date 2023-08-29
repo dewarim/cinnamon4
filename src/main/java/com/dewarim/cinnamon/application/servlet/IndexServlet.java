@@ -49,8 +49,9 @@ public class IndexServlet extends BaseServlet {
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         IndexJobDao     indexJobDao     = new IndexJobDao();
         ReindexResponse reindexResponse = new ReindexResponse();
+        boolean updateTikaMetaset = reindexRequest.getUpdateTikaMetaset();
         if (reindexRequest.doFullReindex()) {
-            IndexJobDao.IndexRows rowCounts = indexJobDao.fullReindex();
+            IndexJobDao.IndexRows rowCounts = indexJobDao.fullReindex(updateTikaMetaset);
             reindexResponse.setDocumentsToIndex(rowCounts.getOsdRowCount());
             reindexResponse.setFoldersToIndex(rowCounts.getFolderRowCount());
         } else {
@@ -58,7 +59,7 @@ public class IndexServlet extends BaseServlet {
                 reindexResponse.setFoldersToIndex(indexJobDao.reindexFolders(reindexRequest.getFolderIds()));
             }
             if (!reindexRequest.getOsdIds().isEmpty()) {
-                reindexResponse.setDocumentsToIndex(indexJobDao.reindexOsds(reindexRequest.getOsdIds()));
+                reindexResponse.setDocumentsToIndex(indexJobDao.reindexOsds(reindexRequest.getOsdIds(), updateTikaMetaset));
             }
         }
         cinnamonResponse.setResponse(reindexResponse);

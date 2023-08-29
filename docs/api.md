@@ -1348,7 +1348,7 @@ Add a summary to an object, for example a short description of this folder's con
       <metadataChanged>true</metadataChanged>
       <summary>&lt;summary>update this&lt;/summary></summary>
       <hasSubfolders>false</hasSubfolders>
-      <created>2023-08-13T12:32:49+0000</created>
+      <created>2023-08-29T10:21:54+0000</created>
     </folder>
   </folders>
 </updateFolderRequest>
@@ -1897,6 +1897,7 @@ Rebuild the Lucene search index in parts or completely. When reindexing large nu
 <reindexRequest>
   <osdIds/>
   <folderIds/>
+  <updateTikaMetaset>false</updateTikaMetaset>
 </reindexRequest>
 
 ```
@@ -1910,6 +1911,7 @@ Rebuild the Lucene search index in parts or completely. When reindexing large nu
     <folderIds>43</folderIds>
     <folderIds>2</folderIds>
   </folderIds>
+  <updateTikaMetaset>false</updateTikaMetaset>
 </reindexRequest>
 
 ```
@@ -3353,8 +3355,8 @@ Add a summary to an object, for example a short description of the content.
       <modifierId/>
       <ownerId>45</ownerId>
       <lockerId/>
-      <created>2023-08-13T12:32:49+0000</created>
-      <modified>2023-08-13T12:32:49+0000</modified>
+      <created>2023-08-29T10:21:55+0000</created>
+      <modified>2023-08-29T10:21:55+0000</modified>
       <languageId>1</languageId>
       <aclId>56</aclId>
       <parentId>2</parentId>

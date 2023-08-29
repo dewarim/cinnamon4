@@ -106,7 +106,7 @@ public class FolderDao implements CrudDao<Folder> {
         if (resultRows != 1) {
             ErrorCode.DB_INSERT_FAILED.throwUp();
         }
-        new IndexJobDao().insertIndexJob(new IndexJob(IndexJobType.FOLDER, folder.getId(), IndexJobAction.CREATE));
+        new IndexJobDao().insertIndexJob(new IndexJob(IndexJobType.FOLDER, folder.getId(), IndexJobAction.CREATE,false ));
         return folder;
     }
 
@@ -182,7 +182,7 @@ public class FolderDao implements CrudDao<Folder> {
     public void updateFolder(Folder folder) {
         SqlSession sqlSession = getSqlSession();
         sqlSession.update("com.dewarim.cinnamon.model.Folder.updateFolder", folder);
-        new IndexJobDao().insertIndexJob(new IndexJob(IndexJobType.FOLDER, folder.getId(), IndexJobAction.UPDATE));
+        new IndexJobDao().insertIndexJob(new IndexJob(IndexJobType.FOLDER, folder.getId(), IndexJobAction.UPDATE,false ));
     }
 
     public boolean hasContent(List<Long> ids) {

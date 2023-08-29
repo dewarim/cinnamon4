@@ -528,7 +528,8 @@ create table index_jobs(
     job_type varchar(127) not null,
     item_id bigint not null,
     failed int not null default 0,
-    action varchar(127) not null
+    action varchar(127) not null,
+    update_tika_metaset boolean default false
 );
 
 

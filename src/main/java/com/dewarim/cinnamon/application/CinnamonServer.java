@@ -56,7 +56,7 @@ public class CinnamonServer {
 
     private static final Logger log = LogManager.getLogger(CinnamonServer.class);
 
-    public static final String           VERSION       = "0.6.0";
+    public static final String           VERSION       = "0.6.1";
     private             Server           server;
     private             DbSessionFactory dbSessionFactory;
     private final       WebAppContext    webAppContext = new WebAppContext();
@@ -65,7 +65,7 @@ public class CinnamonServer {
     public static       CinnamonStats    cinnamonStats = new CinnamonStats();
     private             IndexService     indexService;
     private             SearchService    searchService;
-    private TikaService tikaService;
+    private             TikaService      tikaService;
     private static      Thread           indexServiceThread;
 
     public CinnamonServer(int port) {
@@ -85,8 +85,8 @@ public class CinnamonServer {
         addFilters(webAppContext);
         addServlets(webAppContext);
 
-        ServerConfig serverConfig = config.getServerConfig();
-        QueuedThreadPool threadPool = new QueuedThreadPool(serverConfig.getMaxThreads());
+        ServerConfig     serverConfig = config.getServerConfig();
+        QueuedThreadPool threadPool   = new QueuedThreadPool(serverConfig.getMaxThreads());
         threadPool.setName("cinnamon-server");
 
         server = new Server(threadPool);
@@ -94,7 +94,7 @@ public class CinnamonServer {
         Connector httpConnector = createHttpConnector(serverConfig.getHttpConnectorConfig());
         server.addConnector(httpConnector);
 
-        if(serverConfig.isEnableHttps()) {
+        if (serverConfig.isEnableHttps()) {
             Connector httpsConnector = createHttpsConnector(serverConfig.getHttpsConnectorConfig());
             server.addConnector(httpsConnector);
         }
@@ -109,22 +109,22 @@ public class CinnamonServer {
         executorService = new ThreadPoolExecutor(4, 16, 5, TimeUnit.MINUTES, new ArrayBlockingQueue<>(100));
 
         log.info("Server is running at http port {}", config.getServerConfig().getHttpConnectorConfig().getPort());
-        if(config.getServerConfig().isEnableHttps()) {
+        if (config.getServerConfig().isEnableHttps()) {
             log.info("Server is also allowing connections via https @ port {}", config.getServerConfig().getHttpsConnectorConfig().getPort());
         }
     }
 
-    private Connector createHttpConnector(HttpConnectorConfig httpConfig){
+    private Connector createHttpConnector(HttpConnectorConfig httpConfig) {
         // The number of acceptor threads.
-        int acceptors = httpConfig.getAcceptors();
-        int selectors = httpConfig.getSelectors();
+        int             acceptors = httpConfig.getAcceptors();
+        int             selectors = httpConfig.getSelectors();
         ServerConnector connector = new ServerConnector(server, acceptors, selectors, new HttpConnectionFactory());
         connector.setAcceptQueueSize(httpConfig.getAcceptQueueSize());
         connector.setPort(httpConfig.getPort());
         return connector;
     }
 
-    private Connector createHttpsConnector(HttpsConnectorConfig httpsConfig){
+    private Connector createHttpsConnector(HttpsConnectorConfig httpsConfig) {
         HttpConfiguration httpConfig = new HttpConfiguration();
         // Add the SecureRequestCustomizer because we are using TLS.
         SecureRequestCustomizer secureRequestCustomizer = new SecureRequestCustomizer();
@@ -147,16 +147,16 @@ public class CinnamonServer {
         sslContextFactory.setKeyStorePath(httpsConfig.getKeyStorePath());
         sslContextFactory.setKeyStorePassword(httpsConfig.getKeyStorePassword());
 
-        SslConnectionFactory tls = new SslConnectionFactory(sslContextFactory, http11.getProtocol());
-        int acceptors = httpsConfig.getAcceptors();
-        int selectors = httpsConfig.getSelectors();
+        SslConnectionFactory tls       = new SslConnectionFactory(sslContextFactory, http11.getProtocol());
+        int                  acceptors = httpsConfig.getAcceptors();
+        int                  selectors = httpsConfig.getSelectors();
 
         return new ServerConnector(server, acceptors, selectors, tls, http11);
     }
 
 
     public void startIndexService() {
-        indexService = new IndexService(config.getLuceneConfig());
+        indexService = new IndexService(config.getLuceneConfig(), tikaService);
         indexServiceThread = new Thread(indexService);
         indexServiceThread.setName("Index-Service");
         indexServiceThread.start();
@@ -179,10 +179,10 @@ public class CinnamonServer {
         // TODO: unused?
         server.setAttribute(DEFAULT_DATABASE_SESSION_FACTORY, dbSessionFactory);
 
-        startIndexService();
-
-        searchService = new SearchService(config.getLuceneConfig());
         tikaService = new TikaService(config.getCinnamonTikaConfig());
+        // order is important here: searchService waits for indexService to finish initialization
+        startIndexService();
+        searchService = new SearchService(config.getLuceneConfig());
 
         webAppContext.setAttribute(TIKA_SERVICE, tikaService);
         webAppContext.setAttribute(SEARCH_SERVICE, searchService);
@@ -305,7 +305,8 @@ public class CinnamonServer {
                         } catch (Exception e) {
                             throw new IllegalStateException("Failed to format API template.", e);
                         }
-                    } else {
+                    }
+                    else {
                         String template = """
                                 # __endpoint__
                                 __description__

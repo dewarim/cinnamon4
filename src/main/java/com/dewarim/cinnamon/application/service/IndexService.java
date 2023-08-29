@@ -47,26 +47,28 @@ public class IndexService implements Runnable {
 
     public static boolean isInitialized = false;
 
-    private boolean stopped = false;
-    private IndexWriter indexWriter;
-    private final OsdDao osdDao = new OsdDao();
-    private final FolderDao folderDao = new FolderDao();
-    private final LuceneConfig config;
-    private final Path indexPath;
-    private final XmlMapper xmlMapper;
+    private       boolean         stopped   = false;
+    private       IndexWriter     indexWriter;
+    private final OsdDao          osdDao    = new OsdDao();
+    private final FolderDao       folderDao = new FolderDao();
+    private final LuceneConfig    config;
+    private final Path            indexPath;
+    private final XmlMapper       xmlMapper;
+    private final TikaService     tikaService;
     private final List<IndexItem> indexItems;
 
-    public IndexService(LuceneConfig config) {
+    public IndexService(LuceneConfig config, TikaService tikaService) {
         this.config = config;
-        indexPath = Paths.get(config.getIndexPath());
+        indexPath   = Paths.get(config.getIndexPath());
         if (!indexPath.toFile().exists()) {
             boolean madeDirs = indexPath.toFile().mkdirs();
             if (madeDirs) {
                 throw new IllegalStateException("Could not create path to index: " + indexPath.toAbsolutePath());
             }
         }
-        indexItems = new IndexItemDao().list();
-        xmlMapper = new XmlMapper();
+        indexItems       = new IndexItemDao().list();
+        xmlMapper        = new XmlMapper();
+        this.tikaService = tikaService;
     }
 
 
@@ -83,8 +85,8 @@ public class IndexService implements Runnable {
                     writerConfig.setCommitOnClose(true);
                     indexWriter = new IndexWriter(indexDir, writerConfig);
 
-                    Set<IndexKey> seen = new HashSet<>(128);
-                    IndexJobDao jobDao = new IndexJobDao().setSqlSession(sqlSession);
+                    Set<IndexKey> seen   = new HashSet<>(128);
+                    IndexJobDao   jobDao = new IndexJobDao().setSqlSession(sqlSession);
                     osdDao.setSqlSession(sqlSession);
                     folderDao.setSqlSession(sqlSession);
 
@@ -95,7 +97,7 @@ public class IndexService implements Runnable {
                             break;
                         }
                         log.debug("Found {} IndexJobs.", jobs.size());
-                        boolean indexChanged = false;
+                        boolean        indexChanged = false;
                         List<IndexJob> jobsToDelete = new ArrayList<>();
                         for (IndexJob job : jobs) {
                             IndexKey indexKey = new IndexKey(job.getJobType(), job.getItemId());
@@ -122,7 +124,8 @@ public class IndexService implements Runnable {
                         if (indexChanged) {
                             long sequenceNr = indexWriter.commit();
                             log.debug("sequenceNr: " + sequenceNr);
-                        } else {
+                        }
+                        else {
                             log.debug("no change to index");
                         }
                         jobsToDelete.forEach(jobDao::delete);
@@ -159,7 +162,7 @@ public class IndexService implements Runnable {
 
         boolean isOkay = false;
         switch (job.getJobType()) {
-            case OSD -> isOkay = indexOsd(job.getItemId(), doc, indexItems);
+            case OSD -> isOkay = indexOsd(job.getItemId(), doc, indexItems, job.isUpdateTikaMetaset());
             case FOLDER -> isOkay = indexFolder(job.getItemId(), doc, indexItems);
         }
         if (!isOkay) {
@@ -203,7 +206,7 @@ public class IndexService implements Runnable {
         doc.add(new LongPoint("folder_type", folder.getTypeId()));
 
         FolderMetaDao metaDao = new FolderMetaDao(TransactionIsolationLevel.READ_COMMITTED);
-        List<Meta> metas = metaDao.listByFolderId(folder.getId());
+        List<Meta>    metas   = metaDao.listByFolderId(folder.getId());
         metaDao.closePrivateSession();
         folder.setMetas(metas);
 
@@ -211,7 +214,7 @@ public class IndexService implements Runnable {
         return true;
     }
 
-    private boolean indexOsd(Long id, Document doc, List<IndexItem> indexItems) throws JsonProcessingException {
+    private boolean indexOsd(Long id, Document doc, List<IndexItem> indexItems, boolean updateTikaMetaset) throws JsonProcessingException {
         Optional<ObjectSystemData> osdOpt = osdDao.getObjectById(id);
         if (osdOpt.isEmpty()) {
             log.debug("osd " + id + " not found for indexing");
@@ -268,27 +271,35 @@ public class IndexService implements Runnable {
         doc.add(new TextField("summary", osd.getSummary(), Field.Store.NO));
         doc.add(new LongPoint("object_type", osd.getTypeId()));
 
-        List<Long> relationCriteria = List.of(osd.getId());
-        List<Relation> relations = new RelationDao().getRelationsOrMode(relationCriteria, relationCriteria, Collections.emptyList(), true);
+        List<Long>     relationCriteria = List.of(osd.getId());
+        List<Relation> relations        = new RelationDao().getRelationsOrMode(relationCriteria, relationCriteria, Collections.emptyList(), true);
         osd.setRelations(relations);
 
         byte[] content = NO_CONTENT;
         if (osd.getContentPath() != null && osd.getFormatId() != null) {
-            Format format = new FormatDao().getObjectById(osd.getFormatId()).orElseThrow(() -> new CinnamonException(ErrorCode.FORMAT_NOT_FOUND.getCode()));
+            Format          format          = new FormatDao().getObjectById(osd.getFormatId()).orElseThrow(() -> new CinnamonException(ErrorCode.FORMAT_NOT_FOUND.getCode()));
             ContentProvider contentProvider = ContentProviderService.getInstance().getContentProvider(osd.getContentProvider());
             try (InputStream contentStream = contentProvider.getContentStream(osd)) {
                 switch (format.getIndexMode()) {
                     case XML -> content = contentStream.readAllBytes();
-                    case TIKA -> log.debug("ignore format with tika flag");
-                    case PLAIN_TEXT ->
-                            content = ("<plainText>" + new String(contentStream.readAllBytes(), StandardCharsets.UTF_8) + "</plainText>").getBytes();
+                    case TIKA -> {
+                        // TODO: add test for this
+                        if (updateTikaMetaset && tikaService.isEnabled()) {
+                            log.debug("update tika metaset");
+                            tikaService.convertContentToTikaMetaset(osd, contentStream, format);
+                        }
+                        else {
+                            log.debug("ignore format with tika flag");
+                        }
+                    }
+                    case PLAIN_TEXT -> content = ("<plainText>" + new String(contentStream.readAllBytes(), StandardCharsets.UTF_8) + "</plainText>").getBytes();
                 }
             } catch (IOException e) {
                 throw new CinnamonException("Failed to load content for OSD " + osd.getId() + " at " + osd.getContentPath(), e);
             }
         }
         OsdMetaDao metaDao = new OsdMetaDao(TransactionIsolationLevel.READ_COMMITTED);
-        List<Meta> metas = metaDao.listByOsd(osd.getId());
+        List<Meta> metas   = metaDao.listByOsd(osd.getId());
         metaDao.closePrivateSession();
         osd.setMetas(metas);
 
@@ -299,18 +310,19 @@ public class IndexService implements Runnable {
 
     private void applyIndexItems(Document luceneDoc, List<IndexItem> indexItems,
                                  String objectAsString, byte[] content, String folderPath) {
-        ContentContainer contentContainer = new ContentContainer(objectAsString, content, folderPath);
-        org.dom4j.Document xmlDoc = contentContainer.getCombinedDocument();
+        ContentContainer   contentContainer = new ContentContainer(objectAsString, content, folderPath);
+        org.dom4j.Document xmlDoc           = contentContainer.getCombinedDocument();
 
         for (IndexItem indexItem : indexItems) {
-            String fieldName = indexItem.getFieldName();
+            String fieldName    = indexItem.getFieldName();
             String searchString = indexItem.getSearchString();
             log.debug("indexing for field: " + fieldName + " with " + searchString);
             // TODO: check search condition, probably with xmlDoc
             if (xmlDoc.valueOf(indexItem.getSearchCondition()).equals("true")) {
                 indexItem.getIndexType().getIndexer()
                         .indexObject(xmlDoc, contentContainer.asNode(), luceneDoc, fieldName, searchString, indexItem.isMultipleResults());
-            } else {
+            }
+            else {
                 log.debug("searchCondition failed: " + indexItem.getSearchCondition());
             }
         }
@@ -326,10 +338,10 @@ public class IndexService implements Runnable {
 
     static class IndexKey {
         private final IndexJobType type;
-        private final Long itemId;
+        private final Long         itemId;
 
         public IndexKey(IndexJobType type, Long itemId) {
-            this.type = type;
+            this.type   = type;
             this.itemId = itemId;
         }
 

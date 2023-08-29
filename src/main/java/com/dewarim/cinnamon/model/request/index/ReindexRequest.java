@@ -12,6 +12,7 @@ public class ReindexRequest implements ApiRequest<ReindexRequest> {
     private List<Long> osdIds;
     private List<Long> folderIds;
 
+    private Boolean updateTikaMetaset = false;
     public ReindexRequest() {
     }
 
@@ -46,11 +47,19 @@ public class ReindexRequest implements ApiRequest<ReindexRequest> {
         this.folderIds = folderIds;
     }
 
+    public Boolean getUpdateTikaMetaset() {
+        return updateTikaMetaset;
+    }
+
+    public void setUpdateTikaMetaset(Boolean updateTikaMetaset) {
+        this.updateTikaMetaset = updateTikaMetaset;
+    }
 
     private boolean validated() {
         boolean validFolderIds = getFolderIds().stream().noneMatch(id -> id < 1);
         boolean validOsdIds    = getOsdIds().stream().noneMatch(id -> id < 1);
-        return validFolderIds && validOsdIds;
+        boolean updateSetting = updateTikaMetaset != null;
+        return validFolderIds && validOsdIds && updateSetting;
     }
 
     public Optional<ReindexRequest> validateRequest() {

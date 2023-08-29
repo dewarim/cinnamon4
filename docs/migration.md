@@ -330,3 +330,6 @@ It's recommended to use a copy of production for testing.
     controller        varchar(255)                    not null,
     trigger_type      varchar(255)                    not null
     );
+
+
+    alter table index_jobs add column update_tika_metaset boolean default false

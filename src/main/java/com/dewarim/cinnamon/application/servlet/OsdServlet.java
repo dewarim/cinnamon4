@@ -10,7 +10,6 @@ import com.dewarim.cinnamon.api.lifecycle.State;
 import com.dewarim.cinnamon.api.lifecycle.StateChangeResult;
 import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
-import com.dewarim.cinnamon.application.exception.CinnamonException;
 import com.dewarim.cinnamon.application.service.DeleteOsdService;
 import com.dewarim.cinnamon.application.service.MetaService;
 import com.dewarim.cinnamon.application.service.TikaService;
@@ -33,14 +32,15 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Part;
-import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -58,14 +58,12 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
     private final AuthorizationService authorizationService = new AuthorizationService();
     private final DeleteOsdService deleteOsdService = new DeleteOsdService();
     private static final Logger log = LogManager.getLogger(OsdServlet.class);
-    private final Long tikaMetasetTypeId;
     private TikaService tikaService;
 
     public OsdServlet() {
         super();
         ThreadLocalSqlSession.refreshSession();
         Optional<MetasetType> tikaMetasetType = new MetasetTypeDao().list().stream().filter(meta -> meta.getName().equals(TIKA_METASET_NAME)).findFirst();
-        tikaMetasetTypeId = tikaMetasetType.map(MetasetType::getId).orElse(null);
     }
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -247,7 +245,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                     copy.setContentProvider(contentProvider.getName());
                     copy.setFormatId(osd.getFormatId());
                     Format format = new FormatDao().getObjectById(osd.getFormatId()).orElseThrow();
-                    convertContentToTikaMetaset(osd, contentProvider.getContentStream(metadata), format);
+                    tikaService.convertContentToTikaMetaset(osd, contentProvider.getContentStream(metadata), format);
                     osdDao.updateOsd(copy, false);
                 }
             }
@@ -573,41 +571,8 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         osd.setContentPath(metadata.getContentPath());
         osd.setContentSize(metadata.getContentSize());
         osd.setFormatId(format.getId());
-        convertContentToTikaMetaset(osd, new FileInputStream(tempOutputFile), format);
+        tikaService.convertContentToTikaMetaset(osd, new FileInputStream(tempOutputFile), format);
         deleteTempFile(tempOutputFile);
-    }
-
-    private void convertContentToTikaMetaset(ObjectSystemData osd, InputStream contentStream, Format format) throws IOException {
-        OsdMetaDao osdMetaDao = new OsdMetaDao();
-        if (tikaService.isEnabled() && tikaMetasetTypeId != null && format.getIndexMode() == IndexMode.TIKA) {
-            String tikaMetadata = parseWithTika(contentStream, format);
-            log.debug("Tika returned: " + tikaMetadata);
-            Optional<Meta> tikaMetaset = osdMetaDao.listByOsd(osd.getId()).stream().filter(meta -> meta.getTypeId().equals(tikaMetasetTypeId)).findFirst();
-            if (tikaMetaset.isPresent()) {
-                Meta tikaMeta = tikaMetaset.get();
-                tikaMeta.setContent(tikaMetadata);
-                try {
-                    osdMetaDao.update(List.of(tikaMeta));
-                } catch (SQLException e) {
-                    throw new CinnamonException("Failed to update tika metaset:", e);
-                }
-            } else {
-                Meta tikaMeta = new Meta(osd.getId(), tikaMetasetTypeId, tikaMetadata);
-                List<Meta> metas = osdMetaDao.create(List.of(tikaMeta));
-                log.debug("tikaMeta: " + metas.get(0));
-            }
-        }
-    }
-
-    private String parseWithTika(InputStream contentStream, Format format) throws IOException {
-        File tempData = File.createTempFile("tika-indexing-", ".data");
-        try (FileOutputStream tempFos = new FileOutputStream(tempData)) {
-            tempFos.write(contentStream.readAllBytes());
-            tempFos.flush();
-            return tikaService.parseData(tempData, format);
-        } finally {
-            FileUtils.delete(tempData);
-        }
     }
 
     private void setSummary(HttpServletRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws
