@@ -74,6 +74,13 @@ Con: it's a slight performance hit due to running another database query for eac
 +
 Setting this to false is useful during development and debugging of complex operations: you want to make sure the client is not issuing useless update commands or is updating in the wrong order (rename A to B to A, but a bad client may rename A to A to B)
 
+===== HTTPS/SSL configuration
+
+TODO: extend this section.
+
+see: https://www.baeldung.com/java-import-cer-certificate-into-keystore[import certificate into keystore]
+
+
 ==== Email settings
 
   <systemAdministratorEmail/>

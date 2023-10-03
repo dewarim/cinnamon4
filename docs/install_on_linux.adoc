@@ -30,6 +30,16 @@ You can either use your system's package manager to install a version of the Ope
 
 You may have to restart / re-login to have this take effect.
 
+=== Automatically start server on boot
+
+see: https://www.baeldung.com/linux/run-java-application-as-service[run application as service]
+
+you will need to start after Cinnamon after Postgresql, so (untested):
+
+  [Unit]
+  Description=Cinnamon Server Service
+  After=syslog.target network.target postgresql.service
+
 === Development
 
 * Install https://git-scm.com/downloads[Git]

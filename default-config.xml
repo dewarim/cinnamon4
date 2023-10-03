@@ -40,7 +40,10 @@
       <bindDnFormatString>cn=%s,cn=Users,dc=localhost</bindDnFormatString>
       <searchBaseDnFormatString>cn=retrieval-users,cn=Users,dc=localhost</searchBaseDnFormatString>
       <searchFilter>(&amp;(objectclass=*))</searchFilter>
-      <searchAttribute>member</searchAttribute>
+      <searchAttributeForGroup>member</searchAttributeForGroup>
+      <searchAttributeForDn>distinguishedName</searchAttributeForDn>
+      <defaultLanguageCode>und</defaultLanguageCode>
+      <staticBindPassword/>
       <groupMappings>
         <groupMapping>
           <externalGroup>authors</externalGroup>

@@ -12,7 +12,7 @@ public class LdapConfig {
     /**
      * The LDAP server host's address.
      */
-    private String host;
+    private String host =  "localhost";
 
     /**
      * Port on which to reach the LDAP server. The default (for testing) is 10389,
