@@ -24,8 +24,13 @@ public class ConfigEntryServletIntegrationTest extends CinnamonIntegrationTest {
     public void update() throws IOException{
         var publicEntry = adminClient.createConfigEntry(new ConfigEntry("update", "<xml/>", true));
         publicEntry.setConfig("<xml>updated</xml>");
+        publicEntry.setName("updated");
+        publicEntry.setPublicVisibility(false);
         var updatedEntry = adminClient.updateConfigEntry(publicEntry);
         assertEquals("<xml>updated</xml>", updatedEntry.getConfig());
+        assertEquals("updated", updatedEntry.getName());
+        // updated entry should invisible for normal users:
+        assertClientError(() -> client.getConfigEntry(updatedEntry.getId()), OBJECT_NOT_FOUND);
     }
 
     @Test
@@ -41,25 +46,9 @@ public class ConfigEntryServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void getByName() throws IOException{
-        var publicEntry = adminClient.createConfigEntry(new ConfigEntry("get-me", "<xml/>", true));
-        var entry = client.getConfigEntry("get-me");
-        assertEquals(publicEntry,entry);
-        var entryById = client.getConfigEntry(publicEntry.getId());
-        assertEquals(publicEntry, entryById);
-    }
-
-    @Test
-    public void getByNameNonPublic() throws IOException{
-        var nonPublicEntry = adminClient.createConfigEntry(new ConfigEntry("non-public-entry", "<xml/>", false));
-        var entry = client.getConfigEntries(List.of(nonPublicEntry.getId()));
-        assertTrue(entry.isEmpty());
-    }
-
-    @Test
     public void doesNotExistPath() {
         // more a test of the client than the server - which will return simply an empty list.
-        assertClientError( () -> client.getConfigEntry("unknown-entry"),OBJECT_NOT_FOUND);
+        assertClientError( () -> client.getConfigEntry(Long.MAX_VALUE),OBJECT_NOT_FOUND);
     }
 
     @Test

@@ -8,11 +8,7 @@ import com.dewarim.cinnamon.dao.CrudDao;
 import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.model.ConfigEntry;
 import com.dewarim.cinnamon.model.request.ListRequest;
-import com.dewarim.cinnamon.model.request.configEntry.ConfigEntryRequest;
-import com.dewarim.cinnamon.model.request.configEntry.CreateConfigEntryRequest;
-import com.dewarim.cinnamon.model.request.configEntry.DeleteConfigEntryRequest;
-import com.dewarim.cinnamon.model.request.configEntry.ListConfigEntryRequest;
-import com.dewarim.cinnamon.model.request.configEntry.UpdateConfigEntryRequest;
+import com.dewarim.cinnamon.model.request.configEntry.*;
 import com.dewarim.cinnamon.model.response.ConfigEntryWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -73,13 +69,11 @@ public class ConfigEntryServlet extends HttpServlet implements CruddyServlet<Con
         ConfigEntryRequest configRequest = xmlMapper.readValue(request.getInputStream(), ConfigEntryRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         ConfigEntryDao configEntryDao = new ConfigEntryDao();
-        List<ConfigEntry> entries;
+        List<ConfigEntry> entries = List.of();
         if (configRequest.getIds() != null && configRequest.getIds().size() > 0) {
             entries = configEntryDao.getObjectsById(configRequest.getIds());
         }
-        else{
-            entries = configEntryDao.getConfigEntriesByName(configRequest.getNames());
-        }
+
         boolean isSuperuser = UserAccountDao.currentUserIsSuperuser();
         List<ConfigEntry> filtered = entries.stream().filter(entry -> {
             if (entry.isPublicVisibility()) {

@@ -939,12 +939,6 @@ public class CinnamonClient {
         verifyDeleteResponse(response);
     }
 
-    public ConfigEntry getConfigEntry(String name) throws IOException {
-        var request = new ConfigEntryRequest(name);
-        var response = sendStandardRequest(UrlMapping.CONFIG_ENTRY__GET, request);
-        return configEntryUnwrapper.unwrap(response, 1).get(0);
-    }
-
     public List<ConfigEntry> getConfigEntries(List<Long> ids) throws IOException {
         var request = new ConfigEntryRequest();
         request.getIds().addAll(ids);

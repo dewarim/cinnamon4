@@ -14,11 +14,6 @@ import java.util.Optional;
  */
 @JacksonXmlRootElement(localName = "configEntryRequest")
 public class ConfigEntryRequest implements ApiRequest {
-
-    @JacksonXmlElementWrapper(localName = "names")
-    @JacksonXmlProperty(localName = "name")
-    private List<String> names = new ArrayList<>();
-
     @JacksonXmlElementWrapper(localName = "ids")
     @JacksonXmlProperty(localName = "id")
     private List<Long> ids = new ArrayList<>();
@@ -27,20 +22,8 @@ public class ConfigEntryRequest implements ApiRequest {
     }
 
 
-    public ConfigEntryRequest(String name) {
-        this.names.add(name);
-    }
-
     public ConfigEntryRequest(Long id) {
         this.ids.add(id);
-    }
-
-    public List<String> getNames() {
-        return names;
-    }
-
-    public void setNames(List<String> names) {
-        this.names = names;
     }
 
     public List<Long> getIds() {
@@ -52,8 +35,7 @@ public class ConfigEntryRequest implements ApiRequest {
     }
 
     public boolean validated(){
-        return (ids != null && ids.stream().allMatch(id -> id != null && id > 0)) ||
-                (names != null && names.stream().allMatch(name -> name != null && name.trim().length() > 0));
+        return (ids != null && !ids.isEmpty() && ids.stream().allMatch(id -> id != null && id > 0));
     }
 
     public Optional<ConfigEntryRequest> validateRequest(){
@@ -66,6 +48,6 @@ public class ConfigEntryRequest implements ApiRequest {
 
     @Override
     public List<Object> examples() {
-        return List.of(new ConfigEntryRequest(123L), new ConfigEntryRequest("default-ui-settings"));
+        return List.of(new ConfigEntryRequest(123L), new ConfigEntryRequest(456L));
     }
 }

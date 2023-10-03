@@ -12,15 +12,6 @@
         <result property="publicVisibility" column="public_visibility"/>
     </resultMap>
 
-    <select id="getConfigEntriesByName" parameterType="java.util.List" resultMap="configEntryMap">
-        SELECT *
-        FROM config_entries
-        WHERE name IN
-        <foreach item="item" index="index" collection="list" open="(" separator="," close=")">
-        #{item}
-        </foreach>
-    </select>
-
     <insert id="insert" parameterType="com.dewarim.cinnamon.model.ConfigEntry">
         <selectKey keyProperty="id" resultType="long" order="BEFORE">
             select nextval('seq_config_entry_id')
@@ -32,8 +23,9 @@
     <update id="update" parameterType="com.dewarim.cinnamon.model.ConfigEntry">
         UPDATE config_entries
         SET config            = #{config},
-            public_visibility = #{publicVisibility}
-        WHERE name = #{name}
+            public_visibility = #{publicVisibility},
+            name = #{name}
+        WHERE id = #{id}
     </update>
 
     <select id="getAllById" parameterType="list" resultMap="configEntryMap">
