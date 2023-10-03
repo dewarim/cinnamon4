@@ -19,7 +19,6 @@ import com.dewarim.cinnamon.filter.ChangeTriggerFilter;
 import com.dewarim.cinnamon.filter.DbSessionFilter;
 import com.dewarim.cinnamon.filter.RequestResponseFilter;
 import com.dewarim.cinnamon.model.UserAccount;
-import com.dewarim.cinnamon.security.HashMaker;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -39,9 +38,13 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Files;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -78,8 +81,11 @@ public class CinnamonServer {
 
         webAppContext.setContextPath("/");
         webAppContext.setInitParameter("org.eclipse.jetty.servlet.Default.dirAllowed", "false");
-        // set the resource to a non-existent root directory
-        webAppContext.setResourceBase(HashMaker.createDigest("cinnamon"));
+        // set the resource to a non-existent root directory - Jetty needs a resource base, but we do not want to serve
+        // any files or risk remote users accessing the file system.
+        Set<PosixFilePermission> readPermissions = Set.of(PosixFilePermission.OWNER_READ, PosixFilePermission.GROUP_READ);
+        String tempDir = Files.createTempDirectory("cinnamon-temp-dir", PosixFilePermissions.asFileAttribute(readPermissions)).toString();
+        webAppContext.setResourceBase(tempDir);
         webAppContext.getObjectFactory().addDecorator(new AnnotationDecorator(webAppContext));
 
         addFilters(webAppContext);
