@@ -4,12 +4,7 @@ import com.beust.jcommander.Strings;
 import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.FailedRequestException;
-import com.dewarim.cinnamon.dao.DeletionDao;
-import com.dewarim.cinnamon.dao.LinkDao;
-import com.dewarim.cinnamon.dao.OsdDao;
-import com.dewarim.cinnamon.dao.OsdMetaDao;
-import com.dewarim.cinnamon.dao.RelationDao;
-import com.dewarim.cinnamon.dao.RelationTypeDao;
+import com.dewarim.cinnamon.dao.*;
 import com.dewarim.cinnamon.model.Deletion;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.UserAccount;
@@ -20,21 +15,19 @@ import com.dewarim.cinnamon.security.authorization.AuthorizationService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class DeleteOsdService {
 
-    private static final Logger               log                  = LogManager.getLogger(DeleteOsdService.class);
-    private final        AuthorizationService authorizationService = new AuthorizationService();
+    private static final Logger log = LogManager.getLogger(DeleteOsdService.class);
+
+    private final  AuthorizationService authorizationService = new AuthorizationService();
+    private static Pattern              MAIN_BRANCH          = Pattern.compile("\\d+");
 
     public void verifyAndDelete(List<ObjectSystemData> osds, boolean deleteDescendants, boolean deleteAllVersions, UserAccount user) {
-        if(osds.isEmpty()){
+        if (osds.isEmpty()) {
             return;
         }
         OsdDao osdDao = new OsdDao();
@@ -42,7 +35,8 @@ public class DeleteOsdService {
                     if (deleteAllVersions) {
                         // TODO: should the DB just return osd.id if osd.rootId is null?
                         return Objects.requireNonNullElse(osd.getRootId(), osd.getId());
-                    } else {
+                    }
+                    else {
                         return osd.getId();
                     }
                 }
@@ -62,7 +56,8 @@ public class DeleteOsdService {
                     if (deleteDescendants) {
                         osdAndDescendants.remove(id);
                         descendants.addAll(osdAndDescendants);
-                    } else if (!osdIds.containsAll(osdAndDescendants)) {
+                    }
+                    else if (!osdIds.containsAll(osdAndDescendants)) {
                         CinnamonError error = new CinnamonError(ErrorCode.OBJECT_HAS_DESCENDANTS.getCode(), id);
                         errors.add(error);
                     }
@@ -117,6 +112,17 @@ public class DeleteOsdService {
         new LinkDao().deleteAllLinksToObjects(osdIdsToToDelete);
         new OsdMetaDao().deleteByOsdIds(osdIdsToToDelete);
         osdDao.deleteOsds(osdIdsToToDelete);
+
+        Set<Long>              predecessorIds = osds.stream().map(ObjectSystemData::getPredecessorId).filter(Objects::nonNull).collect(Collectors.toSet());
+        List<ObjectSystemData> predecessors   = osdDao.getObjectsById(predecessorIds.stream().toList(), false).stream().toList();
+        for (ObjectSystemData predecessor : predecessors) {
+            predecessor.setLatestBranch(true);
+            if (MAIN_BRANCH.matcher(predecessor.getCmnVersion()).matches()){
+                predecessor.setLatestHead(true);
+            }
+            osdDao.updateOsd(predecessor, false);
+        }
+
         List<Deletion> deletions = osds.stream().filter(osd -> Objects.nonNull(osd.getContentPath()))
                 .map(osd -> new Deletion(osd.getId(), osd.getContentPath(), false))
                 .collect(Collectors.toList());

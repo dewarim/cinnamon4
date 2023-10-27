@@ -1639,6 +1639,16 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         ObjectSystemData version2 = client.version(new CreateNewVersionRequest(version1.getId()));
         client.deleteOsd(toh.osd.getId(), true);
     }
+    @Test
+    public void deleteVersionedOsdAndUpdateLatestHeadAndBranch() throws IOException {
+        var              toh      = prepareAclGroupWithPermissions(List.of(DELETE, VERSION_OBJECT, BROWSE)).createOsd();
+        ObjectSystemData version1 = client.version(new CreateNewVersionRequest(toh.osd.getId()));
+        ObjectSystemData version2 = client.version(new CreateNewVersionRequest(version1.getId()));
+        client.deleteOsd(version2.getId(), false);
+        ObjectSystemData newHead = client.getOsdById(version1.getId(), false, false);
+        assertTrue(newHead.isLatestHead());
+        assertTrue(newHead.isLatestBranch());
+    }
 
     @Test
     public void deleteOsdWithUnprotectedRelations() throws IOException {
