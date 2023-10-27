@@ -696,7 +696,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
             }
 
             // contentChanged
-            if (update.isContentChanged() != null) {
+            if (updateRequest.isUpdateContentChanged() && update.isContentChanged() != null) {
                 if (user.isChangeTracking()) {
                     throw ErrorCode.CHANGED_FLAG_ONLY_USABLE_BY_UNTRACKED_USERS.exception();
                 }
@@ -704,7 +704,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
             }
 
             // metadataChanged
-            if (update.isMetadataChanged() != null) {
+            if (updateRequest.isUpdateMetadataChanged() && update.isMetadataChanged() != null) {
                 if (user.isChangeTracking()) {
                     throw ErrorCode.CHANGED_FLAG_ONLY_USABLE_BY_UNTRACKED_USERS.exception();
                 }

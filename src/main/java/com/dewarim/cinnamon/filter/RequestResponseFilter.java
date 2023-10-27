@@ -38,9 +38,9 @@ public class RequestResponseFilter implements Filter {
             log.debug("Failed request: ", e);
             ErrorCode errorCode = e.getErrorCode();
             if (e.getErrors().isEmpty()) {
-                cinnamonResponse.generateErrorMessage(errorCode.getHttpResponseCode(), errorCode, e.getMessage());
+                cinnamonResponse.generateErrorMessage(errorCode.getHttpResponseCode(), errorCode, errorCode.getDescription());
             } else {
-                cinnamonResponse.generateErrorMessage(errorCode.getHttpResponseCode(), errorCode, e.getMessage(), e.getErrors());
+                cinnamonResponse.generateErrorMessage(errorCode.getHttpResponseCode(), errorCode, errorCode.getDescription(), e.getErrors());
             }
         }
 

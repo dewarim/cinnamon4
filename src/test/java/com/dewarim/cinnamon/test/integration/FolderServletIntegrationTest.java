@@ -446,6 +446,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
                 adminToh.folder.getId(), targetFolderId, "new-name-for-metadata-changed-folder", 1L,
                 adminToh.folderType.getId(), adminToh.acl.getId(), true
         );
+        request.setUpdateMetadataChanged(true);
         adminClient.updateFolder(request);
         Folder updatedFolder = client.getFolderById(request.getFolders().get(0).getId(), false);
         assertEquals(targetFolderId, updatedFolder.getParentId());
@@ -463,6 +464,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
                 adminToh.folder.getId(), targetFolderId, null, 1L,
                 adminToh.folderType.getId(), adminToh.acl.getId(),true
         );
+        request.setUpdateMetadataChanged(true);
         assertClientError( () -> client.updateFolder(request),CHANGED_FLAG_ONLY_USABLE_BY_UNTRACKED_USERS);
     }
 

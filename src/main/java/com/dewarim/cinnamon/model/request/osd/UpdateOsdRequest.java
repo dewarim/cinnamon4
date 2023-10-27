@@ -15,7 +15,10 @@ public class UpdateOsdRequest implements ApiRequest<UpdateOsdRequest> {
 
     @JacksonXmlElementWrapper(localName = "osds")
     @JacksonXmlProperty(localName = "osd")
-    List<ObjectSystemData> osds = new ArrayList<>();
+    private List<ObjectSystemData> osds = new ArrayList<>();
+    private boolean                updateContentChanged;
+    private boolean                updateMetadataChanged;
+
 
     public UpdateOsdRequest() {
     }
@@ -26,6 +29,14 @@ public class UpdateOsdRequest implements ApiRequest<UpdateOsdRequest> {
         osd.setContentChanged(contentChanged);
         osd.setMetadataChanged(metadataChanged);
         osds.add(osd);
+    }
+
+    public void setUpdateContentChanged(boolean updateContentChanged) {
+        this.updateContentChanged = updateContentChanged;
+    }
+
+    public void setUpdateMetadataChanged(boolean updateMetadataChanged) {
+        this.updateMetadataChanged = updateMetadataChanged;
     }
 
     public UpdateOsdRequest(List<ObjectSystemData> osds) {
@@ -61,6 +72,14 @@ public class UpdateOsdRequest implements ApiRequest<UpdateOsdRequest> {
         });
     }
 
+    public boolean isUpdateContentChanged() {
+        return updateContentChanged;
+    }
+
+    public boolean isUpdateMetadataChanged() {
+        return updateMetadataChanged;
+    }
+
     public List<ObjectSystemData> getOsds() {
         return osds;
     }
@@ -76,7 +95,8 @@ public class UpdateOsdRequest implements ApiRequest<UpdateOsdRequest> {
     public Optional<UpdateOsdRequest> validateRequest() {
         if (validated()) {
             return Optional.of(this);
-        } else {
+        }
+        else {
             return Optional.empty();
         }
     }
@@ -84,6 +104,9 @@ public class UpdateOsdRequest implements ApiRequest<UpdateOsdRequest> {
     @Override
     public List<ApiRequest<UpdateOsdRequest>> examples() {
         UpdateOsdRequest request = new UpdateOsdRequest(1L, 2L, "new name", 45L, 56L, 1L, 1L, null, true);
+        UpdateOsdRequest request2 = new UpdateOsdRequest(1L, 2L, "new name", 45L, 56L, 1L, 1L, null, true);
+        request2.setUpdateMetadataChanged(true);
+        request2.setUpdateContentChanged(true);
         return List.of(request);
     }
 }

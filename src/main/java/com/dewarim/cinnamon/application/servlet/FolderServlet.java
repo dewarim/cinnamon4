@@ -313,7 +313,7 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
             }
 
             // metadataChanged:
-            if (updateFolder.getMetadataChanged() != null) {
+            if (updateRequest.isUpdateMetadataChanged() && updateFolder.getMetadataChanged() != null) {
                 if (user.isChangeTracking()) {
                     throw ErrorCode.CHANGED_FLAG_ONLY_USABLE_BY_UNTRACKED_USERS.exception();
                 }

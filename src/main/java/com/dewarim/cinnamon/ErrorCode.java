@@ -166,6 +166,10 @@ public enum ErrorCode {
         }
     }
 
+    public String getDescription() {
+        return description;
+    }
+
     public static ErrorCode getErrorCode(String code) {
         return codeMapping.getOrDefault(code, UNKNOWN_ERROR_TYPE);
     }

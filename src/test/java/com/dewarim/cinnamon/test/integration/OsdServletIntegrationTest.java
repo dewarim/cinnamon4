@@ -1392,6 +1392,8 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var id = toh.osd.getId();
 
         var request = new UpdateOsdRequest(id, null, "new name", null, null, null, null, true, true);
+        request.setUpdateContentChanged(true);
+        request.setUpdateMetadataChanged(true);
         adminClient.lockOsd(id);
         adminClient.updateOsd(request);
         var updatedOsd = client.getOsdById(id, false, false);
@@ -1412,12 +1414,20 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         // try and set metadataChanged
         var osd = request.getOsds().get(0);
         osd.setMetadataChanged(true);
+        request.setUpdateMetadataChanged(true);
         assertClientError(() -> client.updateOsd(request), CHANGED_FLAG_ONLY_USABLE_BY_UNTRACKED_USERS);
 
         // try and set contentChanged
         osd.setMetadataChanged(false);
         osd.setContentChanged(true);
+        request.setUpdateMetadataChanged(false);
+        request.setUpdateContentChanged(true);
         assertClientError(() -> client.updateOsd(request), CHANGED_FLAG_ONLY_USABLE_BY_UNTRACKED_USERS);
+
+        // try without updateMetadataChanged flag:
+        request.setUpdateContentChanged(false);
+        request.setUpdateMetadataChanged(false);
+        client.updateOsd(request);
     }
 
     @Test
