@@ -806,6 +806,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
          */
         preOsd.setLatestBranch(false);
         preOsd.setLatestHead(false);
+        // TODO: probably set latestBranch on latestDescendant to false, too.
         osdDao.updateOsd(preOsd, false);
 
         if (osd.getCmnVersion().matches("^\\d+$")) {

@@ -255,16 +255,10 @@ public class CinnamonClient {
         return unwrapOsds(response, 1).get(0);
     }
 
-    public List<ObjectSystemData> getOsdsById(List<Long> ids, boolean includeSummary, boolean includeCustomMetadata) throws IOException {
-        OsdRequest osdRequest = new OsdRequest(ids, includeSummary, includeCustomMetadata);
-        StandardResponse response = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
-        return unwrapOsds(response, EXPECTED_SIZE_ANY);
-    }
-
     /**
      * Get a list of OSDs. Do not check if all requested OSDs are returned.
      */
-    public List<ObjectSystemData> getOsds(List<Long> ids, boolean includeSummary, boolean includeCustomMetadata) throws IOException {
+    public List<ObjectSystemData> getOsdsById(List<Long> ids, boolean includeSummary, boolean includeCustomMetadata) throws IOException {
         OsdRequest osdRequest = new OsdRequest(ids, includeSummary, includeCustomMetadata);
         StandardResponse response = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
         return unwrapOsds(response, EXPECTED_SIZE_ANY);
