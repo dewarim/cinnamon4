@@ -252,7 +252,8 @@ public class IndexService implements Runnable {
         doc.add(new StringField("latest_branch", String.valueOf(osd.isLatestBranch()), Field.Store.NO));
         doc.add(new StringField("latest_head", String.valueOf(osd.isLatestHead()), Field.Store.NO));
         if (osd.getLockerId() != null) {
-            doc.add(new LongPoint("locker", osd.getId()));
+            log.debug("locker: {}", osd.getLockerId());
+            doc.add(new LongPoint("locker", osd.getLockerId()));
         }
         doc.add(new StringField("metadata_changed", String.valueOf(osd.isMetadataChanged()), Field.Store.NO));
         doc.add(new StringField("name", osd.getName().toLowerCase(), Field.Store.NO));

@@ -22,6 +22,7 @@ import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.xml.CoreParser;
 import org.apache.lucene.queryparser.xml.builders.ExactPointQueryBuilder;
+import org.apache.lucene.queryparser.xml.builders.PointRangeQueryBuilder;
 import org.apache.lucene.queryparser.xml.builders.RangeQueryBuilder;
 import org.apache.lucene.search.*;
 import org.apache.lucene.store.Directory;
@@ -96,7 +97,7 @@ public class SearchService {
             CoreParser coreParser = new CoreParser("content", limitTokenCountAnalyzer);
             coreParser.addQueryBuilder("WildcardQuery", new WildcardQueryBuilder());
             coreParser.addQueryBuilder("RegexQuery", new RegexQueryBuilder());
-            coreParser.addQueryBuilder("PointRangeQuery", new ExactPointQueryBuilder());
+            coreParser.addQueryBuilder("PointRangeQuery", new PointRangeQueryBuilder());
             coreParser.addQueryBuilder("RangeQuery", new RangeQueryBuilder());
             coreParser.addQueryBuilder("ExactPointQuery", new ExactPointQueryBuilder());
             Query query = coreParser.parse(xmlInputStream);

@@ -88,4 +88,9 @@ public class OsdWrapper implements Wrapper<ObjectSystemData>, ApiResponse {
         this.osds = osds;
         return this;
     }
+
+    @Override
+    public List<Object> examples() {
+        return List.of(new ObjectSystemData(1L, "my osd", 3L, 4L, 5L, 5L, 1L));
+    }
 }

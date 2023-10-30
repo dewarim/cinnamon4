@@ -23,7 +23,7 @@ import static com.dewarim.cinnamon.api.Constants.DEFAULT_SUMMARY;
  */
 @JacksonXmlRootElement(localName = "objectSystemData")
 public class ObjectSystemData implements ContentMetadata, CinnamonObject, Identifiable {
-    private static final Logger log = LogManager.getLogger();
+    private static final Logger log = LogManager.getLogger(ObjectSystemData.class);
 
     private Long   id;
     private String name;
@@ -220,11 +220,6 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject, Identi
         private String extractBranch(String version) {
             int lastVersionSeparator = version.lastIndexOf("-");
             return version.substring(0, lastVersionSeparator);
-        }
-
-        public static void main(String[] args) {
-            CmnVersion version = new CmnVersion("1", "1.1-1");
-            System.out.println(version.getMyVersionString());
         }
 
         private long increaseVersionNumber(String myPredecessorVersion) {

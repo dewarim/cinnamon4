@@ -107,6 +107,6 @@ public class UpdateOsdRequest implements ApiRequest<UpdateOsdRequest> {
         UpdateOsdRequest request2 = new UpdateOsdRequest(1L, 2L, "new name", 45L, 56L, 1L, 1L, null, true);
         request2.setUpdateMetadataChanged(true);
         request2.setUpdateContentChanged(true);
-        return List.of(request);
+        return List.of(request, request2);
     }
 }

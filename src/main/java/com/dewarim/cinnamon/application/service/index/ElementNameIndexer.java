@@ -6,7 +6,6 @@ import org.apache.logging.log4j.Logger;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.dom4j.Element;
-import org.dom4j.Node;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.ext.LexicalHandler;
@@ -138,10 +137,5 @@ public class ElementNameIndexer extends DefaultIndexer {
         }
     }
 
-    public static void main(String[] args) {
-        org.dom4j.Document doc  = ParamParser.parseXmlToDocument("<foo><f>bar</f></foo>");
-        Node               node = doc.selectSingleNode("//f");
-        System.out.println(node.asXML());
-    }
 
 }

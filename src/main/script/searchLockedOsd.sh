@@ -9,24 +9,28 @@ osd=$(curl --silent --show-error --header "ticket: ${TICKET}" -F "cinnamonReques
 echo;
 echo "created osd:"
 echo "${osd}"
+echo "${osd}" > /tmp/created.xml
+osdId=$(xmllint --xpath "//osd/id/text()" /tmp/created.xml)
+
+echo "osdId: ${osdId}; sleep for 5"
+echo;
+sleep 5;
+
+request="<idListRequest><ids><id>${osdId}</id></ids></idListRequest>"
+osd=$(curl --silent --show-error --header "ticket: ${TICKET}" --data "${request}" "http://localhost:${PORT}/api/osd/lock")
+
+echo;
+echo "locked osd:"
+echo "${osd}"
 echo "sleep for 5"
 echo;
 sleep 5;
 
-echo "<idListRequest>
-        <ids>
-          <id>1</id>
-        </ids>
-      </idListRequest>" > /tmp/lockOsd.xml
-osd=$(curl --silent --show-error --header "ticket: ${TICKET}" -F "cinnamonRequest=</tmp/osd.xml" "http://localhost:${PORT}/api/osd/updateOsd")
 
-sleep 5;
-
-
-#echo " <BooleanQuery><Clause occurs='must'><PointRangeQuery fieldName='acl' lowerTerm='1' upperTerm='1' type='long'/></Clause></BooleanQuery>" > /tmp/booleanQuery.xml
+echo " <BooleanQuery><Clause occurs='must'><PointRangeQuery fieldName='locker' lowerTerm='1' upperTerm='1' type='long'/></Clause></BooleanQuery>" > /tmp/booleanQuery.xml
 #echo " <BooleanQuery><Clause occurs='must'><ExactPointQuery fieldName='id' value='26' type='long'/></Clause></BooleanQuery>" > /tmp/booleanQuery.xml
 #echo " <BooleanQuery><Clause occurs='must'><TermQuery fieldName='name'>test</TermQuery></Clause></BooleanQuery>" > /tmp/booleanQuery.xml
-echo " <BooleanQuery><Clause occurs='must'><TermQuery fieldName='name'>bar</TermQuery></Clause></BooleanQuery>" > /tmp/booleanQuery.xml
+#echo " <BooleanQuery><Clause occurs='must'><TermQuery fieldName='name'>bar</TermQuery></Clause></BooleanQuery>" > /tmp/booleanQuery.xml
 
 # see: https://lucene.apache.org/core/9_4_2/core/org/apache/lucene/util/automaton/RegExp.html for explanation
 #echo " <BooleanQuery><Clause occurs='must'><RegexQuery fieldName='name'>t..t</RegexQuery></Clause></BooleanQuery>" > /tmp/booleanQuery.xml

@@ -11,7 +11,7 @@ import java.util.Optional;
 import static com.dewarim.cinnamon.api.Constants.DEFAULT_SUMMARY;
 
 @JacksonXmlRootElement(localName = "createOsdRequest")
-public class CreateOsdRequest implements ApiRequest {
+public class CreateOsdRequest implements ApiRequest<CreateOsdRequest> {
 
     private String     name;
     private Long       parentId;
@@ -167,10 +167,9 @@ public class CreateOsdRequest implements ApiRequest {
     }
 
     @Override
-    public List<ApiRequest> examples() {
+    public List<ApiRequest<CreateOsdRequest>> examples() {
         return List.of(new CreateOsdRequest("create OSD request must be sent via multipart-request",
                 1L, 23L, 44L, 2L, 3L, 1L, null,
                 "<summary>Optional fields: typeId, aclId, ownerId, formatId, languageId, summary</summary>"));
-
     }
 }
