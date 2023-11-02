@@ -2,8 +2,10 @@ package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
+import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.application.servlet.CinnamonServlet;
 import com.dewarim.cinnamon.client.CinnamonClient;
+import com.dewarim.cinnamon.client.CinnamonClientException;
 import com.dewarim.cinnamon.client.StandardResponse;
 import com.dewarim.cinnamon.model.response.CinnamonConnection;
 import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
@@ -106,5 +108,16 @@ public class CinnamonServletIntegrationTest extends CinnamonIntegrationTest {
         CinnamonServlet.CinnamonVersion cinnamonVersion = servlet.getCinnamonVersion();
         assertEquals(version.getBuild(), cinnamonVersion.getBuild());
         assertEquals(version.getVersion(), cinnamonVersion.getVersion());
+    }
+
+    @Test
+    public void reloadLogging() throws IOException{
+        assertThrows(CinnamonClientException.class, () -> client.reloadLogging());
+        CinnamonServer.config.getServerConfig().setLog4jConfigPath("log4j2-example.xml");
+        client.reloadLogging();
+        CinnamonServer.config.getServerConfig().setLog4jConfigPath("src/test/resources/log4j2-test.xml");
+        client.reloadLogging();
+
+
     }
 }

@@ -1255,6 +1255,13 @@ public class CinnamonClient {
         return new String(response.getEntity().getContent().readAllBytes());
     }
 
+    public void reloadLogging() throws IOException{
+        var response = httpClient.execute(ClassicRequestBuilder.post("http://localhost:" + port + CINNAMON__RELOAD_LOGGING.getPath())
+                .addHeader("ticket", getTicket(false))
+                .build(), StandardResponse::new);
+        verifyResponseIsOkay(response);
+    }
+
     public List<UrlMappingInfo> listUrlMappings() throws IOException {
         ListUrlMappingInfoRequest request = new ListUrlMappingInfoRequest();
         StandardResponse response = sendStandardRequest(CONFIG__URL_MAPPINGS, request);

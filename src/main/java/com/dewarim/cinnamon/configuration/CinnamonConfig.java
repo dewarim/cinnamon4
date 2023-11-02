@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CinnamonConfig {
-    
+
     private ServerConfig serverConfig = new ServerConfig();
 
-    private String systemAdministratorEmail;
+    private String     systemAdministratorEmail;
     private MailConfig mailConfig = new MailConfig();
 
     private SecurityConfig securityConfig = new SecurityConfig();
@@ -17,11 +17,11 @@ public class CinnamonConfig {
     private LuceneConfig luceneConfig = new LuceneConfig();
 
     private CinnamonTikaConfig cinnamonTikaConfig = new CinnamonTikaConfig();
-    
+
     private List<LoginProviderConfig> loginProviders = new ArrayList<>();
 
     private ChangeTriggerConfig changeTriggerConfig = new ChangeTriggerConfig();
-    
+
     public String getSystemAdministratorEmail() {
         return systemAdministratorEmail;
     }

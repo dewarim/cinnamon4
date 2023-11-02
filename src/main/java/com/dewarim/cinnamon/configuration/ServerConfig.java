@@ -6,6 +6,8 @@ public class ServerConfig {
     private String dataRoot = "data";
     private boolean enableHttps = false;
     private int maxThreads = 200;
+    private String log4jConfigPath = "";
+
     private HttpConnectorConfig httpConnectorConfig = new HttpConnectorConfig();
 
     private HttpsConnectorConfig httpsConnectorConfig = new HttpsConnectorConfig();
@@ -83,6 +85,15 @@ public class ServerConfig {
 
     public void setHttpsConnectorConfig(HttpsConnectorConfig httpsConnectorConfig) {
         this.httpsConnectorConfig = httpsConnectorConfig;
+    }
+
+
+    public void setLog4jConfigPath(String log4jConfigPath) {
+        this.log4jConfigPath = log4jConfigPath;
+    }
+
+    public String getLog4jConfigPath() {
+        return log4jConfigPath;
     }
 
     @Override

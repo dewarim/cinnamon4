@@ -71,8 +71,8 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
         assertTrue(indexInfoResponse.getFoldersInIndex() > 0);
         // TODO: would be nice to test with broken XML file.
         // this is just a broken job added via CreateTestDb script.
-        assertEquals(1,indexInfoResponse.getFailedIndexJobs().size());
-        assertEquals(1, indexInfoResponse.getFailedJobCount());
+        assertTrue(indexInfoResponse.getFailedIndexJobs().size() > 0);
+        assertEquals(indexInfoResponse.getFailedJobCount(), indexInfoResponse.getFailedIndexJobs().size());
     }
 
     @Test

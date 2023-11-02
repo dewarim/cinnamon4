@@ -143,7 +143,7 @@ public enum ErrorCode {
     SYSTEM_FOLDER_NOT_FOUND("Folder /system/users was not found in the database", HttpServletResponse.SC_NOT_FOUND),
     DEFAULT_ACL_NOT_FOUND("Could not find the default ACL (with name: "+ Constants.ACL_DEFAULT+")", SC_NOT_FOUND),
     DEFAULT_FOLDER_TYPE_NOT_FOUND("Could not find the default folder type (with name: "+ Constants.FOLDER_TYPE_DEFAULT+")", SC_NOT_FOUND),
-    ;
+    NEED_EXTERNAL_LOGGING_CONFIG("Please configure Cinnamon Server which external log4j2.xml file to use when reconfiguring logging.",SC_BAD_REQUEST );
 
     private static final Map<String, ErrorCode> codeMapping = new ConcurrentHashMap<>();
     final String description;

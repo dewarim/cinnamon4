@@ -20,6 +20,7 @@
     </httpsConnectorConfig>
     <verifyExistence>true</verifyExistence>
     <ignoreNopUpdates>false</ignoreNopUpdates>
+    <log4jConfigPath/>
   </serverConfig>
   <systemAdministratorEmail/>
   <mailConfig>

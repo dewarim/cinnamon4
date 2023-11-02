@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- usage: add the complete path to your customized log4j2.xml file to your Cinnamon config.xml-->
+<Configuration status="WARN">
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+        </Console>
+    </Appenders>
+    <Loggers>
+        <!-- warn level will make the server almost completely silent -->
+        <Root level="warn">
+            <AppenderRef ref="Console"/>
+        </Root>
+        <Logger name="org.eclipse" level="warn">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="org.apache.ibatis.transaction" level="info">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="org.apache.ibatis.datasource" level="info">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="com.dewarim.cinnamon.model.index.IndexJob.countJobs" level="info">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="com.dewarim.cinnamon.model.index.IndexJob.getIndexJobsByFailedCount" level="info">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="com.dewarim.cinnamon.model.UserAccount" level="info">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="com.dewarim.cinnamon.SessionMapper" level="info">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="com.dewarim.cinnamon.model.Deletion" level="info">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="com.dewarim.cinnamon.filter" level="info">
+            <AppenderRef ref="Console"/>
+        </Logger>
+    </Loggers>
+</Configuration>

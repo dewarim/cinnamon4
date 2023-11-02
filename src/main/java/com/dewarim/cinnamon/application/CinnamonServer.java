@@ -27,6 +27,7 @@ import com.fasterxml.jackson.dataformat.xml.deser.FromXmlParser;
 import jakarta.servlet.DispatcherType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.eclipse.jetty.annotations.AnnotationDecorator;
 import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
@@ -38,6 +39,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
@@ -78,6 +80,11 @@ public class CinnamonServer {
     }
 
     public void start() throws Exception {
+        String log4jConfigPath = config.getServerConfig().getLog4jConfigPath();
+        if(!log4jConfigPath.isEmpty()) {
+            log.info("reconfigure logging to use: "+log4jConfigPath);
+            Configurator.reconfigure(URI.create(log4jConfigPath));
+        }
 
         webAppContext.setContextPath("/");
         webAppContext.setInitParameter("org.eclipse.jetty.servlet.Default.dirAllowed", "false");

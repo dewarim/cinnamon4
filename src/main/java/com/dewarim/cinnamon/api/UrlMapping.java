@@ -104,7 +104,8 @@ public enum UrlMapping {
             """, null, null),
     CINNAMON__INFO("cinnamon", "info", "", """
             Retrieve the server version and build number.
-            """, null, null),
+            """, null, GenericResponse.class),
+    CINNAMON__RELOAD_LOGGING("cinnamon", "reloadLogging", "", "reload the logging configuration", null, null),
     CHANGE_TRIGGER__CREATE("changeTrigger", "create", "/api", "", CreateChangeTriggerRequest.class, ChangeTriggerWrapper.class),
     CHANGE_TRIGGER__DELETE("changeTrigger", "delete", "/api", "", DeleteChangeTriggerRequest.class, DeleteResponse.class),
     CHANGE_TRIGGER__LIST("changeTrigger", "list", "/api", "", ListChangeTriggerRequest.class, ChangeTriggerWrapper.class),
