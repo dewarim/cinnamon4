@@ -5,9 +5,9 @@ import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.application.servlet.CinnamonServlet;
 import com.dewarim.cinnamon.client.CinnamonClient;
-import com.dewarim.cinnamon.client.CinnamonClientException;
 import com.dewarim.cinnamon.client.StandardResponse;
 import com.dewarim.cinnamon.model.response.CinnamonConnection;
+import com.dewarim.cinnamon.test.TestObjectHolder;
 import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
 import org.junit.jupiter.api.Test;
 
@@ -112,12 +112,13 @@ public class CinnamonServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void reloadLogging() throws IOException{
-        assertThrows(CinnamonClientException.class, () -> client.reloadLogging());
+        var toh = new TestObjectHolder(client, userId);
+        assertClientError(toh::reloadLogging, REQUIRES_SUPERUSER_STATUS);
+        var adminToh = new TestObjectHolder(adminClient, adminId);
+        assertClientError(adminToh::reloadLogging, NEED_EXTERNAL_LOGGING_CONFIG);
         CinnamonServer.config.getServerConfig().setLog4jConfigPath("log4j2-example.xml");
-        client.reloadLogging();
+        adminToh.reloadLogging();
         CinnamonServer.config.getServerConfig().setLog4jConfigPath("src/test/resources/log4j2-test.xml");
-        client.reloadLogging();
-
-
+        adminToh.reloadLogging();
     }
 }

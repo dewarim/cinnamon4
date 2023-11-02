@@ -376,4 +376,8 @@ public class TestObjectHolder {
         client.deleteUser(userId,assetReceiverId );
         return this;
     }
+
+    public void reloadLogging() throws IOException {
+        client.reloadLogging();
+    }
 }
