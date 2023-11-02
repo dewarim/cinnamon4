@@ -398,7 +398,11 @@ Retrieve the server version and build number.
 
 ---
 
-WARNING: sun.reflect.Reflection.getCallerClass is not supported. This will impact performance.
+# /cinnamon/reloadLogging
+reload the logging configuration
+
+---
+
 # /api/changeTrigger/create
 
 
@@ -1347,7 +1351,7 @@ Add a summary to an object, for example a short description of this folder's con
       <metadataChanged>false</metadataChanged>
       <summary>&lt;summary>update this&lt;/summary></summary>
       <hasSubfolders>false</hasSubfolders>
-      <created>2023-10-30T17:58:03+0000</created>
+      <created>2023-11-02T10:45:13+0000</created>
     </folder>
   </folders>
 </updateFolderRequest>
@@ -1867,6 +1871,7 @@ Provides information on the status of the Lucene search index
 ```xml
 <indexInfoRequest>
   <countDocuments>true</countDocuments>
+  <listFailedIndexJobs>false</listFailedIndexJobs>
 </indexInfoRequest>
 
 ```
@@ -1879,6 +1884,16 @@ Provides information on the status of the Lucene search index
   <documentsInIndex>100</documentsInIndex>
   <foldersInIndex>20</foldersInIndex>
   <failedJobCount>2</failedJobCount>
+  <failedIndexJobs>
+    <failedIndexJobs>
+      <id/>
+      <jobType>OSD</jobType>
+      <itemId>143</itemId>
+      <failed>0</failed>
+      <updateTikaMetaset>true</updateTikaMetaset>
+      <action>CREATE</action>
+    </failedIndexJobs>
+  </failedIndexJobs>
   <jobCount>41</jobCount>
 </indexInfoResponse>
 
@@ -2853,8 +2868,8 @@ Update lifecycles. Note: does not update lifecycle states
   <modifierId/>
   <ownerId>3</ownerId>
   <lockerId/>
-  <created>2023-10-30T17:58:03+0000</created>
-  <modified>2023-10-30T17:58:03+0000</modified>
+  <created>2023-11-02T10:45:13+0000</created>
+  <modified>2023-11-02T10:45:13+0000</modified>
   <languageId>4</languageId>
   <aclId>5</aclId>
   <parentId>5</parentId>
@@ -2960,8 +2975,8 @@ should contain data.
   <modifierId/>
   <ownerId>3</ownerId>
   <lockerId/>
-  <created>2023-10-30T17:58:03+0000</created>
-  <modified>2023-10-30T17:58:03+0000</modified>
+  <created>2023-11-02T10:45:13+0000</created>
+  <modified>2023-11-02T10:45:13+0000</modified>
   <languageId>4</languageId>
   <aclId>5</aclId>
   <parentId>5</parentId>
@@ -3165,8 +3180,8 @@ Returns an OSD's content according to it's format's content type.
   <modifierId/>
   <ownerId>3</ownerId>
   <lockerId/>
-  <created>2023-10-30T17:58:03+0000</created>
-  <modified>2023-10-30T17:58:03+0000</modified>
+  <created>2023-11-02T10:45:13+0000</created>
+  <modified>2023-11-02T10:45:13+0000</modified>
   <languageId>4</languageId>
   <aclId>5</aclId>
   <parentId>5</parentId>
@@ -3222,8 +3237,8 @@ Returns an OSD's content according to it's format's content type.
   <modifierId/>
   <ownerId>3</ownerId>
   <lockerId/>
-  <created>2023-10-30T17:58:03+0000</created>
-  <modified>2023-10-30T17:58:03+0000</modified>
+  <created>2023-11-02T10:45:13+0000</created>
+  <modified>2023-11-02T10:45:13+0000</modified>
   <languageId>4</languageId>
   <aclId>5</aclId>
   <parentId>5</parentId>
@@ -3448,8 +3463,8 @@ Add a summary to an object, for example a short description of the content.
       <modifierId/>
       <ownerId>45</ownerId>
       <lockerId/>
-      <created>2023-10-30T17:58:03+0000</created>
-      <modified>2023-10-30T17:58:03+0000</modified>
+      <created>2023-11-02T10:45:13+0000</created>
+      <modified>2023-11-02T10:45:13+0000</modified>
       <languageId>1</languageId>
       <aclId>56</aclId>
       <parentId>2</parentId>
@@ -3486,8 +3501,8 @@ Add a summary to an object, for example a short description of the content.
       <modifierId/>
       <ownerId>45</ownerId>
       <lockerId/>
-      <created>2023-10-30T17:58:03+0000</created>
-      <modified>2023-10-30T17:58:03+0000</modified>
+      <created>2023-11-02T10:45:13+0000</created>
+      <modified>2023-11-02T10:45:13+0000</modified>
       <languageId>1</languageId>
       <aclId>56</aclId>
       <parentId>2</parentId>
@@ -3600,8 +3615,8 @@ part "file", if the new version should contain data.
   <modifierId/>
   <ownerId>3</ownerId>
   <lockerId/>
-  <created>2023-10-30T17:58:03+0000</created>
-  <modified>2023-10-30T17:58:03+0000</modified>
+  <created>2023-11-02T10:45:13+0000</created>
+  <modified>2023-11-02T10:45:13+0000</modified>
   <languageId>4</languageId>
   <aclId>5</aclId>
   <parentId>5</parentId>
