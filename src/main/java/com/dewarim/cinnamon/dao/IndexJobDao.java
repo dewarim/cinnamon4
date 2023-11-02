@@ -82,7 +82,7 @@ public class IndexJobDao {
 
     public int countFailedJobs() {
         SqlSession session = getSqlSession();
-        return session.insert("com.dewarim.cinnamon.model.index.IndexJob.countFailedJobs");
+        return session.selectOne("com.dewarim.cinnamon.model.index.IndexJob.countFailedJobs");
     }
 
 
@@ -94,6 +94,10 @@ public class IndexJobDao {
         reindexOsds(ids,false);
     }
 
+    public List<IndexJob> listFailedIndexJobs() {
+        SqlSession session = getSqlSession();
+        return session.selectList("com.dewarim.cinnamon.model.index.IndexJob.listFailedIndexJobs");
+    }
 
     public static class IndexRows {
         private final int folders;

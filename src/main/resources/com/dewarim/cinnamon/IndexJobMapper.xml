@@ -58,6 +58,12 @@
         FROM index_jobs
     </select>
 
+    <select id="listFailedIndexJobs" resultMap="indexJobMap">
+        SELECT *
+        FROM index_jobs
+        WHERE failed > 0
+    </select>
+
     <insert id="reindexAllOsds" parameterType="boolean">
         INSERT INTO index_jobs(id, item_id, job_type, action, failed, update_tika_metaset)
         SELECT nextval('seq_index_job_id'), id, 'OSD', 'UPDATE', 0, #{updateTikaMetaset}

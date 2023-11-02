@@ -1198,8 +1198,8 @@ public class CinnamonClient {
         verifyResponseIsOkay(response);
     }
 
-    public IndexInfoResponse getIndexInfo(boolean countDocuments) throws IOException {
-        var request = new IndexInfoRequest(countDocuments);
+    public IndexInfoResponse getIndexInfo(boolean countDocuments, boolean listFailedIndexJobs) throws IOException {
+        var request = new IndexInfoRequest(countDocuments, listFailedIndexJobs);
         StandardResponse response = sendStandardRequest(INDEX__INFO, request);
         return new SingletonUnwrapper<>(IndexInfoResponse.class).unwrap(response);
     }

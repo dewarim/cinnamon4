@@ -75,8 +75,9 @@ public class IndexServlet extends BaseServlet {
             IndexJobDao.IndexRows docCounts = searchService.countDocs();
             infoResponse.setDocumentsInIndex(docCounts.getOsdRowCount());
             infoResponse.setFoldersInIndex(docCounts.getFolderRowCount());
-        } else {
-            cinnamonResponse.setResponse(new IndexInfoResponse().setJobCount(jobs));
+        }
+        if(createRequest.isListFailedIndexJobs()){
+            infoResponse.setFailedIndexJobs(new IndexJobDao().listFailedIndexJobs());
         }
         infoResponse.setJobCount(jobs);
         infoResponse.setFailedJobCount(failedJobs);

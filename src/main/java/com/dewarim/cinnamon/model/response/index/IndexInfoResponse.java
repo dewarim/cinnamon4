@@ -1,6 +1,9 @@
 package com.dewarim.cinnamon.model.response.index;
 
 import com.dewarim.cinnamon.api.ApiResponse;
+import com.dewarim.cinnamon.model.index.IndexJob;
+import com.dewarim.cinnamon.model.index.IndexJobAction;
+import com.dewarim.cinnamon.model.index.IndexJobType;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.List;
@@ -10,9 +13,9 @@ public class IndexInfoResponse implements ApiResponse {
 
     private Integer documentsInIndex;
     private Integer foldersInIndex;
-    private Integer failedJobCount;
-
-    private Integer jobCount;
+    private Integer        failedJobCount;
+    private List<IndexJob> failedIndexJobs;
+    private Integer        jobCount;
 
     public IndexInfoResponse() {
     }
@@ -22,6 +25,14 @@ public class IndexInfoResponse implements ApiResponse {
         this.foldersInIndex = foldersInIndex;
         this.failedJobCount = failedJobCount;
         this.jobCount = jobCount;
+    }
+
+    public List<IndexJob> getFailedIndexJobs() {
+        return failedIndexJobs;
+    }
+
+    public void setFailedIndexJobs(List<IndexJob> failedIndexJobs) {
+        this.failedIndexJobs = failedIndexJobs;
     }
 
     public Integer getJobCount() {
@@ -69,6 +80,8 @@ public class IndexInfoResponse implements ApiResponse {
 
     @Override
     public List<Object> examples() {
-        return List.of(new IndexInfoResponse(100,20,2,41));
+        IndexInfoResponse response = new IndexInfoResponse(100, 20, 2, 41);
+        response.setFailedIndexJobs(List.of(new IndexJob(IndexJobType.OSD, 143L, IndexJobAction.CREATE, true)));
+        return List.of(response);
     }
 }
