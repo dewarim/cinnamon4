@@ -1,13 +1,9 @@
 package com.dewarim.cinnamon.filter;
 
 import com.dewarim.cinnamon.ErrorCode;
-import com.dewarim.cinnamon.application.CinnamonServer;
-import com.dewarim.cinnamon.application.DeletionTask;
-import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
-import com.dewarim.cinnamon.application.TransactionStatus;
+import com.dewarim.cinnamon.application.*;
 import com.dewarim.cinnamon.dao.DeletionDao;
 import com.dewarim.cinnamon.model.Deletion;
-import com.dewarim.cinnamon.model.response.CinnamonError;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.dataformat.xml.deser.FromXmlParser;
@@ -23,7 +19,7 @@ import org.apache.logging.log4j.Logger;
 import java.io.IOException;
 import java.util.List;
 
-import static com.dewarim.cinnamon.api.Constants.CONTENT_TYPE_XML;
+import static com.dewarim.cinnamon.ErrorCode.INTERNAL_SERVER_ERROR_TRY_AGAIN_LATER;
 
 /**
  *
@@ -37,21 +33,11 @@ public class DbSessionFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException {
-        try {
-            ThreadLocalSqlSession.refreshSession();
+        try(SqlSession sqlSession = ThreadLocalSqlSession.refreshSession()) {
             log.debug("DbSessionFilter: before");
             chain.doFilter(request, response);
             log.debug("DbSessionFilter: after");
-        } catch (Exception e) {
-            ThreadLocalSqlSession.setTransactionStatus(TransactionStatus.ROLLBACK);
-            log.warn("Caught unexpected exception -> rollback:", e);
-            CinnamonError error = new CinnamonError(ErrorCode.INTERNAL_SERVER_ERROR_TRY_AGAIN_LATER.getCode(), e.getMessage());
-            ((HttpServletResponse) response).setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            response.setContentType(CONTENT_TYPE_XML);
-            response.setCharacterEncoding("UTF-8");
-            xmlMapper.writeValue(response.getWriter(), error);
-        } finally {
-            SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+
             if (ThreadLocalSqlSession.getTransactionStatus() == TransactionStatus.OK) {
                 log.debug("commit changes (if any)");
                 try {
@@ -59,20 +45,24 @@ public class DbSessionFilter implements Filter {
                 }
                 catch (Exception e){
                     log.warn("Failed to commit DB session: ",e);
+                    throw ErrorCode.COMMIT_TO_DATABASE_FAILED.exception();
                 }
                 // TODO: maybe check if an idling background thread uses less resources
                 List<Deletion> deletions = deletionDao.listPendingDeletions();
                 if (deletions.size() > 0) {
                     CinnamonServer.executorService.submit(new DeletionTask(deletions));
                 }
-            } else {
-                log.debug("rollback changes");
+            }
+            else{
+                log.debug("TransactionStatus is not OK -> do not commit changes, roll back the sqlSession.");
                 sqlSession.rollback();
             }
-            sqlSession.close();
-//            ThreadLocalSqlSession.refreshSession();
-        }
 
+        } catch (Exception e) {
+            log.warn("Caught unexpected exception -> rollback:", e);
+            ThreadLocalSqlSession.getSqlSession().rollback();
+            ErrorResponseGenerator.generateErrorMessage( (HttpServletResponse) response, INTERNAL_SERVER_ERROR_TRY_AGAIN_LATER, e.getMessage());
+        }
     }
 
 }

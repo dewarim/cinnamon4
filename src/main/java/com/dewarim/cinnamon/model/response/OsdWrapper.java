@@ -8,7 +8,10 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "cinnamon")
@@ -91,6 +94,12 @@ public class OsdWrapper implements Wrapper<ObjectSystemData>, ApiResponse {
 
     @Override
     public List<Object> examples() {
-        return List.of(new ObjectSystemData(1L, "my osd", 3L, 4L, 5L, 5L, 1L));
+        ObjectSystemData osd = new ObjectSystemData(1L, "my osd", 3L, 4L, 5L, 5L, 1L);
+        osd.setCreated(new Date(LocalDateTime.of(2023,11,10,0,0,0).toEpochSecond(ZoneOffset.UTC) * 1000));
+        osd.setModified(new Date(LocalDateTime.of(2023,11,10,0,0,0).toEpochSecond(ZoneOffset.UTC) * 1000));
+        osd.setModifierId(1L);
+        osd.setCreatorId(1L);
+        osd.setFormatId(23L);
+        return List.of(osd);
     }
 }

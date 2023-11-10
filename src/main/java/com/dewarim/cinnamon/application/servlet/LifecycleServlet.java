@@ -1,17 +1,14 @@
 package com.dewarim.cinnamon.application.servlet;
 
 import com.dewarim.cinnamon.ErrorCode;
+import com.dewarim.cinnamon.FailedRequestException;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.dao.LifecycleDao;
 import com.dewarim.cinnamon.dao.LifecycleStateDao;
 import com.dewarim.cinnamon.model.Lifecycle;
 import com.dewarim.cinnamon.model.LifecycleState;
-import com.dewarim.cinnamon.model.request.lifecycle.CreateLifecycleRequest;
-import com.dewarim.cinnamon.model.request.lifecycle.DeleteLifecycleRequest;
-import com.dewarim.cinnamon.model.request.lifecycle.LifecycleRequest;
-import com.dewarim.cinnamon.model.request.lifecycle.ListLifecycleRequest;
-import com.dewarim.cinnamon.model.request.lifecycle.UpdateLifecycleRequest;
+import com.dewarim.cinnamon.model.request.lifecycle.*;
 import com.dewarim.cinnamon.model.response.LifecycleWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.annotation.WebServlet;
@@ -28,7 +25,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
-import static com.dewarim.cinnamon.application.ErrorResponseGenerator.generateErrorMessage;
 
 @WebServlet(name = "Lifecycle", urlPatterns = "/")
 public class LifecycleServlet extends HttpServlet implements CruddyServlet<Lifecycle> {
@@ -75,15 +71,7 @@ public class LifecycleServlet extends HttpServlet implements CruddyServlet<Lifec
     private void getLifecycle(HttpServletRequest request, CinnamonResponse response) throws IOException {
         LifecycleRequest lifecycleRequest = xmlMapper.readValue(request.getInputStream(), LifecycleRequest.class);
         if (lifecycleRequest.validated()) {
-            Lifecycle           lifecycle;
-            Long                id           = lifecycleRequest.getId();
-            LifecycleDao        lifecycleDao = new LifecycleDao();
-            Optional<Lifecycle> lifecycleOpt = lifecycleDao.getLifecycleById(id);
-            lifecycle = lifecycleOpt.orElseGet(() -> lifecycleDao.getLifecycleByName(lifecycleRequest.getName()).orElse(null));
-            if (lifecycle == null) {
-                generateErrorMessage(response, ErrorCode.OBJECT_NOT_FOUND);
-                return;
-            }
+            Lifecycle            lifecycle       = getLifecycle(lifecycleRequest);
             List<LifecycleState> lifecycleStates = new LifecycleStateDao().getLifecycleStatesByLifecycleId(lifecycle.getId());
             lifecycle.setLifecycleStates(lifecycleStates);
             LifecycleWrapper wrapper = new LifecycleWrapper(Collections.singletonList(lifecycle));
@@ -91,6 +79,17 @@ public class LifecycleServlet extends HttpServlet implements CruddyServlet<Lifec
         } else {
             throw ErrorCode.INVALID_REQUEST.exception();
         }
+    }
+
+    private static Lifecycle getLifecycle(LifecycleRequest lifecycleRequest) {
+        Long                id           = lifecycleRequest.getId();
+        LifecycleDao        lifecycleDao = new LifecycleDao();
+        Optional<Lifecycle> lifecycleOpt = lifecycleDao.getLifecycleById(id);
+        Lifecycle lifecycle = lifecycleOpt.orElseGet(() -> lifecycleDao.getLifecycleByName(lifecycleRequest.getName()).orElse(null));
+        if (lifecycle == null) {
+            throw new FailedRequestException(ErrorCode.OBJECT_NOT_FOUND);
+        }
+        return lifecycle;
     }
 
     @Override

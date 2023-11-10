@@ -75,15 +75,19 @@ public enum UrlMapping {
     ACL_GROUP__LIST("aclGroup", "list", "/api", "", ListAclGroupRequest.class, AclGroupWrapper.class),
     ACL_GROUP__LIST_BY_GROUP_OR_ACL("aclGroup", "listByGroupOrAcl", "/api", "", AclGroupListRequest.class, AclGroupWrapper.class),
     ACL_GROUP__UPDATE("aclGroup", "update", "/api", """
-     This replaces the existing permissions of the given AclGroup with the ones you send with the request.
-     It does not otherwise change the AclGroup (as it only contains of a group and acl reference - to change those, create a new AclGroup.
-     """, UpdateAclGroupRequest.class, AclGroupWrapper.class),
+            This replaces the existing permissions of the given AclGroup with the ones you send with the request.
+            It does not otherwise change the AclGroup (as it only contains of a group and acl reference - to change those, create a new AclGroup.
+            """, UpdateAclGroupRequest.class, AclGroupWrapper.class),
     ACL__ACL_INFO("acl", "aclInfo", "/api", "", AclInfoRequest.class, AclWrapper.class),
     ACL__CREATE("acl", "create", "/api", "", CreateAclRequest.class, AclWrapper.class),
     ACL__DELETE("acl", "delete", "/api", "", DeleteAclRequest.class, DeleteResponse.class),
     ACL__GET_USER_ACLS("acl", "getUserAcls", "/api", "", IdRequest.class, AclWrapper.class),
     ACL__LIST("acl", "list", "/api", "", ListAclRequest.class, AclWrapper.class),
     ACL__UPDATE("acl", "update", "/api", "", UpdateAclRequest.class, AclWrapper.class),
+    CHANGE_TRIGGER__CREATE("changeTrigger", "create", "/api", "", CreateChangeTriggerRequest.class, ChangeTriggerWrapper.class),
+    CHANGE_TRIGGER__DELETE("changeTrigger", "delete", "/api", "", DeleteChangeTriggerRequest.class, DeleteResponse.class),
+    CHANGE_TRIGGER__LIST("changeTrigger", "list", "/api", "", ListChangeTriggerRequest.class, ChangeTriggerWrapper.class),
+    CHANGE_TRIGGER__UPDATE("changeTrigger", "update", "/api", "", UpdateChangeTriggerRequest.class, ChangeTriggerWrapper.class),
     CINNAMON__CONNECT("cinnamon", "connect", "", """
             Connect to the cinnamon server by sending a form-encoded username and password.
                         
@@ -105,12 +109,6 @@ public enum UrlMapping {
     CINNAMON__INFO("cinnamon", "info", "", """
             Retrieve the server version and build number.
             """, null, GenericResponse.class),
-    CINNAMON__RELOAD_LOGGING("cinnamon", "reloadLogging", "", "reload the logging configuration", null, null),
-    CHANGE_TRIGGER__CREATE("changeTrigger", "create", "/api", "", CreateChangeTriggerRequest.class, ChangeTriggerWrapper.class),
-    CHANGE_TRIGGER__DELETE("changeTrigger", "delete", "/api", "", DeleteChangeTriggerRequest.class, DeleteResponse.class),
-    CHANGE_TRIGGER__LIST("changeTrigger", "list", "/api", "", ListChangeTriggerRequest.class, ChangeTriggerWrapper.class),
-    CHANGE_TRIGGER__UPDATE("changeTrigger", "update", "/api", "", UpdateChangeTriggerRequest.class, ChangeTriggerWrapper.class),
-
     CONFIG_ENTRY__CREATE("configEntry", "create", "/api", "Create a new config entry", CreateConfigEntryRequest.class, ConfigEntryWrapper.class),
     CONFIG_ENTRY__DELETE("configEntry", "delete", "/api", "Delete a list of config entries", DeleteConfigEntryRequest.class, DeleteResponse.class),
     CONFIG_ENTRY__GET("configEntry", "get", "/api", "Retrieve a config entries by names or ids", ConfigEntryRequest.class, ConfigEntryWrapper.class),
@@ -121,7 +119,8 @@ public enum UrlMapping {
     CONFIG__LIST_ALL_CONFIGURATIONS("config", "listAllConfigurations", "/api", """
             List of all objects the client may want to cache, for example users, object types, groups, permissions, languages etc.
             """, ListConfigRequest.class, ConfigWrapper.class),
-    CONFIG__URL_MAPPINGS("config", "urlMappings","/api", "List URL Mappings", ListUrlMappingInfoRequest.class, UrlMappingInfoWrapper.class),
+    CONFIG__RELOAD_LOGGING("config", "reloadLogging", "/api", "reload the logging configuration", null, null),
+    CONFIG__URL_MAPPINGS("config", "urlMappings", "/api", "List URL Mappings", ListUrlMappingInfoRequest.class, UrlMappingInfoWrapper.class),
     FOLDER_TYPE__CREATE("folderType", "create", "/api", "Create a new folder type", CreateFolderTypeRequest.class, FolderTypeWrapper.class),
     FOLDER_TYPE__DELETE("folderType", "delete", "/api", "Delete a folder type", DeleteFolderTypeRequest.class, DeleteResponse.class),
     FOLDER_TYPE__LIST("folderType", "list", "/api", "List all folder types", ListFolderTypeRequest.class, FolderTypeWrapper.class),
@@ -201,8 +200,8 @@ public enum UrlMapping {
             CreateOsdRequest.class, OsdWrapper.class),
     OSD__DELETE("osd", "delete", "/api", "", DeleteOsdRequest.class, DeleteResponse.class),
     OSD__DELETE_ALL_METAS("osd", "deleteAllMetas", "/api", """
-        Delete all metasets linked to the given OSD ids. Parameter ignoreNotFound is not used.
-    """, DeleteAllMetasRequest.class, DeleteResponse.class),
+                Delete all metasets linked to the given OSD ids. Parameter ignoreNotFound is not used.
+            """, DeleteAllMetasRequest.class, DeleteResponse.class),
     OSD__DELETE_META("osd", "deleteMeta", "/api", "Delete the OSD metasets with the given meta ids.", DeleteMetaRequest.class, DeleteResponse.class),
     OSD__GET_CONTENT("osd", "getContent", "/api", "Returns an OSD's content according to it's format's content type.", IdRequest.class, null),
     OSD__GET_META("osd", "getMeta", "/api", "", MetaRequest.class, MetaWrapper.class),
@@ -290,7 +289,8 @@ public enum UrlMapping {
             """,
             SearchIdsRequest.class, SearchIdsResponse.class),
     STATIC__ROOT("static", "", "", "Returns a static file from the server (for example, a favicon.ico if one exists).", null, null),
-    TEST__ECHO("test", "echo", "/api", "return the posted input xml", null,null),
+    TEST__BOOM("test", "boom", "/api", "generate an error to test error handling", null, null),
+    TEST__ECHO("test", "echo", "/api", "return the posted input xml", null, null),
     TEST__STATUS_200("test", "status200", "", "Returns status code 200", null, null),
     TEST__STATUS_400("test", "status400", "", "Returns status code 400", null, null),
     UI_LANGUAGE__CREATE("uiLanguage", "create", "/api", "", CreateUiLanguageRequest.class, UiLanguageWrapper.class),
@@ -299,10 +299,10 @@ public enum UrlMapping {
     UI_LANGUAGE__UPDATE("uiLanguage", "update", "/api", "", UpdateUiLanguageRequest.class, UiLanguageWrapper.class),
     USER__CREATE("user", "create", "/api", "", CreateUserAccountRequest.class, UserAccountWrapper.class),
     USER__DELETE("user", "delete", "/api", """
-    Delete a user and transfer all his remaining assets to another user.
-    Note: this is not optimized for users who own vast collections of objects or folders.
-    """
-    , DeleteUserAccountRequest.class, GenericResponse.class),
+            Delete a user and transfer all his remaining assets to another user.
+            Note: this is not optimized for users who own vast collections of objects or folders.
+            """
+            , DeleteUserAccountRequest.class, GenericResponse.class),
     USER__GET("user", "get", "/api", "", GetUserAccountRequest.class, UserAccountWrapper.class),
     USER__LIST("user", "list", "/api", "", ListUserAccountRequest.class, UserAccountWrapper.class),
     USER__SET_CONFIG("user", "setConfig", "/api", "Update a user's individual configuration", SetUserConfigRequest.class, GenericResponse.class),
@@ -327,11 +327,11 @@ public enum UrlMapping {
      * @param prefix  a prefix for the servlet - for example, all api servlets are prefixed with /api for
      */
     UrlMapping(String servlet, String action, String prefix, String description, Class<? extends ApiRequest> requestClass, Class<? extends ApiResponse> responseClass) {
-        this.servlet = servlet;
-        this.action = action;
-        this.prefix = prefix;
-        this.description = description;
-        this.requestClass = requestClass;
+        this.servlet       = servlet;
+        this.action        = action;
+        this.prefix        = prefix;
+        this.description   = description;
+        this.requestClass  = requestClass;
         this.responseClass = responseClass;
     }
 

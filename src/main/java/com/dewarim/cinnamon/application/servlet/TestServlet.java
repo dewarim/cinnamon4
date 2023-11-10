@@ -42,6 +42,7 @@ public class TestServlet extends HttpServlet {
             case TEST__ECHO -> echo(request, cinnamonResponse);
             case TEST__STATUS_200 -> returnStatus(cinnamonResponse, 200, "OK");
             case TEST__STATUS_400 -> returnStatus(cinnamonResponse, 400, "NOT OK");
+            case TEST__BOOM -> throw new RuntimeException("testing error handling!");
             default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
     }

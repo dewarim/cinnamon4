@@ -205,6 +205,11 @@ public class CinnamonClient {
         verifyResponseIsOkay(response);
     }
 
+    public void testBoom() throws IOException {
+        var response = sendStandardRequest(TEST__BOOM, null);
+        verifyResponseIsOkay(response);
+    }
+
     public class WrappedRequest<T, W extends Wrapper<T>> {
         public List<T> send(UrlMapping urlMapping, Object request, Unwrapper<T, W> unwrapper, int expectedSize) throws IOException {
             String requestStr = mapper.writeValueAsString(request);
@@ -1256,7 +1261,7 @@ public class CinnamonClient {
     }
 
     public void reloadLogging() throws IOException{
-        var response = httpClient.execute(ClassicRequestBuilder.post("http://localhost:" + port + CINNAMON__RELOAD_LOGGING.getPath())
+        var response = httpClient.execute(ClassicRequestBuilder.post("http://localhost:" + port + CONFIG__RELOAD_LOGGING.getPath())
                 .addHeader("ticket", getTicket(false))
                 .build(), StandardResponse::new);
         verifyResponseIsOkay(response);

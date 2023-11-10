@@ -34,7 +34,7 @@ public class ThreadLocalSqlSession {
     /**
      * After the current request is finished, create a new session for this thread.
      */
-    public static void refreshSession(){
+    public static SqlSession refreshSession(){
         log.debug("Refresh session for thread "+ Thread.currentThread().getName());
 
         if(localSqlSession.get() != null){
@@ -45,9 +45,10 @@ public class ThreadLocalSqlSession {
                 log.debug("Closing sql session resulted in: ",e);
             }
         }
-
-        localSqlSession.set(dbSessionFactory.getSqlSessionFactory().openSession(transactionIsolationLevel));
+        SqlSession sqlSession = dbSessionFactory.getSqlSessionFactory().openSession(transactionIsolationLevel);
+        localSqlSession.set(sqlSession);
         setTransactionStatus(TransactionStatus.OK);
+        return sqlSession;
     }
 
     public static SqlSession getNewSession(TransactionIsolationLevel isolationLevel){

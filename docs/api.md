@@ -368,41 +368,6 @@ It does not otherwise change the AclGroup (as it only contains of a group and ac
 
 ---
 
-# /cinnamon/connect
-Connect to the cinnamon server by sending a form-encoded username and password.
-
-Example call:
-
-    TICKET=$(curl --silent --show-error -X POST "http://localhost:9090/cinnamon/connect?user=admin&password=admin&format=text")
-
-If you add the "format=text" parameter, you will receive a plain/text response with just the session ticket.
-Otherwise, you will get:
-
-    <connection><ticket>72ca5288-c802-4da7-9315-6881f5e593b5</ticket></connection>
-
-The ticket is a session id that must be sent with all other requests to the server,
-in the request header field "ticket".
-
-
----
-
-# /cinnamon/disconnect
-Disconnect from the cinnamon server by invalidating the session ticket.
-
-
----
-
-# /cinnamon/info
-Retrieve the server version and build number.
-
-
----
-
-# /cinnamon/reloadLogging
-reload the logging configuration
-
----
-
 # /api/changeTrigger/create
 
 
@@ -528,6 +493,36 @@ reload the logging configuration
 </cinnamon>
 
 ```
+
+
+---
+
+# /cinnamon/connect
+Connect to the cinnamon server by sending a form-encoded username and password.
+
+Example call:
+
+    TICKET=$(curl --silent --show-error -X POST "http://localhost:9090/cinnamon/connect?user=admin&password=admin&format=text")
+
+If you add the "format=text" parameter, you will receive a plain/text response with just the session ticket.
+Otherwise, you will get:
+
+    <connection><ticket>72ca5288-c802-4da7-9315-6881f5e593b5</ticket></connection>
+
+The ticket is a session id that must be sent with all other requests to the server,
+in the request header field "ticket".
+
+
+---
+
+# /cinnamon/disconnect
+Disconnect from the cinnamon server by invalidating the session ticket.
+
+
+---
+
+# /cinnamon/info
+Retrieve the server version and build number.
 
 
 ---
@@ -772,6 +767,11 @@ List of all objects the client may want to cache, for example users, object type
 
 ```
 
+
+---
+
+# /api/config/reloadLogging
+reload the logging configuration
 
 ---
 
@@ -1351,7 +1351,7 @@ Add a summary to an object, for example a short description of this folder's con
       <metadataChanged>false</metadataChanged>
       <summary>&lt;summary>update this&lt;/summary></summary>
       <hasSubfolders>false</hasSubfolders>
-      <created>2023-11-02T10:45:13+0000</created>
+      <created>2023-11-10T00:00:00+0000</created>
     </folder>
   </folders>
 </updateFolderRequest>
@@ -2864,12 +2864,12 @@ Update lifecycles. Note: does not update lifecycle states
   <contentSize/>
   <predecessorId/>
   <rootId/>
-  <creatorId/>
-  <modifierId/>
+  <creatorId>1</creatorId>
+  <modifierId>1</modifierId>
   <ownerId>3</ownerId>
   <lockerId/>
-  <created>2023-11-02T10:45:13+0000</created>
-  <modified>2023-11-02T10:45:13+0000</modified>
+  <created>2023-11-10T00:00:00+0000</created>
+  <modified>2023-11-10T00:00:00+0000</modified>
   <languageId>4</languageId>
   <aclId>5</aclId>
   <parentId>5</parentId>
@@ -2971,12 +2971,12 @@ should contain data.
   <contentSize/>
   <predecessorId/>
   <rootId/>
-  <creatorId/>
-  <modifierId/>
+  <creatorId>1</creatorId>
+  <modifierId>1</modifierId>
   <ownerId>3</ownerId>
   <lockerId/>
-  <created>2023-11-02T10:45:13+0000</created>
-  <modified>2023-11-02T10:45:13+0000</modified>
+  <created>2023-11-10T00:00:00+0000</created>
+  <modified>2023-11-10T00:00:00+0000</modified>
   <languageId>4</languageId>
   <aclId>5</aclId>
   <parentId>5</parentId>
@@ -3176,12 +3176,12 @@ Returns an OSD's content according to it's format's content type.
   <contentSize/>
   <predecessorId/>
   <rootId/>
-  <creatorId/>
-  <modifierId/>
+  <creatorId>1</creatorId>
+  <modifierId>1</modifierId>
   <ownerId>3</ownerId>
   <lockerId/>
-  <created>2023-11-02T10:45:13+0000</created>
-  <modified>2023-11-02T10:45:13+0000</modified>
+  <created>2023-11-10T00:00:00+0000</created>
+  <modified>2023-11-10T00:00:00+0000</modified>
   <languageId>4</languageId>
   <aclId>5</aclId>
   <parentId>5</parentId>
@@ -3233,12 +3233,12 @@ Returns an OSD's content according to it's format's content type.
   <contentSize/>
   <predecessorId/>
   <rootId/>
-  <creatorId/>
-  <modifierId/>
+  <creatorId>1</creatorId>
+  <modifierId>1</modifierId>
   <ownerId>3</ownerId>
   <lockerId/>
-  <created>2023-11-02T10:45:13+0000</created>
-  <modified>2023-11-02T10:45:13+0000</modified>
+  <created>2023-11-10T00:00:00+0000</created>
+  <modified>2023-11-10T00:00:00+0000</modified>
   <languageId>4</languageId>
   <aclId>5</aclId>
   <parentId>5</parentId>
@@ -3463,8 +3463,8 @@ Add a summary to an object, for example a short description of the content.
       <modifierId/>
       <ownerId>45</ownerId>
       <lockerId/>
-      <created>2023-11-02T10:45:13+0000</created>
-      <modified>2023-11-02T10:45:13+0000</modified>
+      <created>2023-11-10T09:58:35+0000</created>
+      <modified>2023-11-10T09:58:35+0000</modified>
       <languageId>1</languageId>
       <aclId>56</aclId>
       <parentId>2</parentId>
@@ -3501,8 +3501,8 @@ Add a summary to an object, for example a short description of the content.
       <modifierId/>
       <ownerId>45</ownerId>
       <lockerId/>
-      <created>2023-11-02T10:45:13+0000</created>
-      <modified>2023-11-02T10:45:13+0000</modified>
+      <created>2023-11-10T09:58:35+0000</created>
+      <modified>2023-11-10T09:58:35+0000</modified>
       <languageId>1</languageId>
       <aclId>56</aclId>
       <parentId>2</parentId>
@@ -3611,12 +3611,12 @@ part "file", if the new version should contain data.
   <contentSize/>
   <predecessorId/>
   <rootId/>
-  <creatorId/>
-  <modifierId/>
+  <creatorId>1</creatorId>
+  <modifierId>1</modifierId>
   <ownerId>3</ownerId>
   <lockerId/>
-  <created>2023-11-02T10:45:13+0000</created>
-  <modified>2023-11-02T10:45:13+0000</modified>
+  <created>2023-11-10T00:00:00+0000</created>
+  <modified>2023-11-10T00:00:00+0000</modified>
   <languageId>4</languageId>
   <aclId>5</aclId>
   <parentId>5</parentId>
@@ -4067,6 +4067,11 @@ Field of objects contain the id, so acl field will index the acl.id.
 
 # /static/
 Returns a static file from the server (for example, a favicon.ico if one exists).
+
+---
+
+# /api/test/boom
+generate an error to test error handling
 
 ---
 

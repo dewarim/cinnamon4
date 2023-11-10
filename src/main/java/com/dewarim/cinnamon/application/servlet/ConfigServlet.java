@@ -3,19 +3,8 @@ package com.dewarim.cinnamon.application.servlet;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonResponse;
-import com.dewarim.cinnamon.dao.AclDao;
-import com.dewarim.cinnamon.dao.FolderTypeDao;
-import com.dewarim.cinnamon.dao.FormatDao;
-import com.dewarim.cinnamon.dao.GroupDao;
-import com.dewarim.cinnamon.dao.IndexItemDao;
-import com.dewarim.cinnamon.dao.LanguageDao;
-import com.dewarim.cinnamon.dao.LifecycleDao;
-import com.dewarim.cinnamon.dao.MetasetTypeDao;
-import com.dewarim.cinnamon.dao.ObjectTypeDao;
-import com.dewarim.cinnamon.dao.PermissionDao;
-import com.dewarim.cinnamon.dao.RelationTypeDao;
-import com.dewarim.cinnamon.dao.UiLanguageDao;
-import com.dewarim.cinnamon.dao.UserAccountDao;
+import com.dewarim.cinnamon.application.CinnamonServer;
+import com.dewarim.cinnamon.dao.*;
 import com.dewarim.cinnamon.model.ProviderClass;
 import com.dewarim.cinnamon.model.ProviderType;
 import com.dewarim.cinnamon.model.UrlMappingInfo;
@@ -30,17 +19,23 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.dewarim.cinnamon.ErrorCode.NEED_EXTERNAL_LOGGING_CONFIG;
 import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
 
 @WebServlet(name = "Config", urlPatterns = "/")
 public class ConfigServlet extends HttpServlet {
+    private static final Logger log = LogManager.getLogger(CinnamonServlet.class);
 
     private final ObjectMapper xmlMapper = XML_MAPPER;
 
@@ -52,7 +47,24 @@ public class ConfigServlet extends HttpServlet {
         switch (mapping) {
             case CONFIG__LIST_ALL_CONFIGURATIONS -> listAllConfigurations(request, cinnamonResponse);
             case CONFIG__URL_MAPPINGS -> listUrlMappings(request,cinnamonResponse);
+            case CONFIG__RELOAD_LOGGING -> reloadLogging(request, cinnamonResponse);
             default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
+        }
+    }
+
+    private void reloadLogging(HttpServletRequest request, CinnamonResponse cinnamonResponse) {
+        if (!UserAccountDao.currentUserIsSuperuser()) {
+            throw ErrorCode.REQUIRES_SUPERUSER_STATUS.getException().get();
+        }
+        String log4jConfigPath = CinnamonServer.config.getServerConfig().getLog4jConfigPath();
+        if(log4jConfigPath.isEmpty()) {
+            log.info("will not reload logging without valid config");
+            cinnamonResponse.generateErrorMessage(HttpServletResponse.SC_BAD_REQUEST, ErrorCode.NEED_EXTERNAL_LOGGING_CONFIG, NEED_EXTERNAL_LOGGING_CONFIG.getDescription());
+        }
+        else {
+            log.info("reconfigure logging to use: "+log4jConfigPath);
+            Configurator.reconfigure(URI.create(log4jConfigPath));
+            cinnamonResponse.responseIsGenericOkay();
         }
     }
 

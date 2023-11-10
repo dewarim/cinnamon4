@@ -1,13 +1,14 @@
 package com.dewarim.cinnamon.test.integration;
 
+import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.model.ConfigEntry;
+import com.dewarim.cinnamon.test.TestObjectHolder;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.List;
 
-import static com.dewarim.cinnamon.ErrorCode.OBJECT_NOT_FOUND;
-import static com.dewarim.cinnamon.ErrorCode.REQUIRES_SUPERUSER_STATUS;
+import static com.dewarim.cinnamon.ErrorCode.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ConfigEntryServletIntegrationTest extends CinnamonIntegrationTest {
@@ -67,4 +68,15 @@ public class ConfigEntryServletIntegrationTest extends CinnamonIntegrationTest {
         assertFalse(publicEntries.contains(adminEntry));
     }
 
+    @Test
+    public void reloadLogging() throws IOException{
+        var toh = new TestObjectHolder(client, userId);
+        assertClientError(toh::reloadLogging, REQUIRES_SUPERUSER_STATUS);
+        var adminToh = new TestObjectHolder(adminClient, adminId);
+        assertClientError(adminToh::reloadLogging, NEED_EXTERNAL_LOGGING_CONFIG);
+        CinnamonServer.config.getServerConfig().setLog4jConfigPath("log4j2-example.xml");
+        adminToh.reloadLogging();
+        CinnamonServer.config.getServerConfig().setLog4jConfigPath("src/test/resources/log4j2-test.xml");
+        adminToh.reloadLogging();
+    }
 }

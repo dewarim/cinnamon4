@@ -6,7 +6,10 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -88,6 +91,7 @@ private boolean updateMetadataChanged;
     @Override
     public List<ApiRequest<UpdateFolderRequest>> examples() {
         Folder folder = new Folder("new name", 1L, 2L, 3L, 4L, "<summary>update this</summary>");
+        folder.setCreated(new Date(LocalDateTime.of(2023,11,10,0,0,0).toEpochSecond(ZoneOffset.UTC) * 1000));
         UpdateFolderRequest request = new UpdateFolderRequest(List.of(folder));
         return List.of(request);
     }
