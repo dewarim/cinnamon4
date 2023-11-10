@@ -19,9 +19,18 @@ public class RequestResponseFilter implements Filter {
 
     private static final Logger log = LogManager.getLogger(RequestResponseFilter.class);
 
+    private boolean logResponses = false;
+
     @Override
     public void init(FilterConfig filterConfig) {
 
+    }
+
+    public RequestResponseFilter() {
+    }
+
+    public RequestResponseFilter(boolean logResponses) {
+        this.logResponses = logResponses;
     }
 
     @Override
@@ -32,15 +41,15 @@ public class RequestResponseFilter implements Filter {
             chain.doFilter(cinnamonRequest, cinnamonResponse);
             //
             ThreadLocalSqlSession.getSqlSession().commit();
-            cinnamonResponse.renderResponseIfNecessary();
+            cinnamonResponse.renderResponseIfNecessary(logResponses);
         } catch (FailedRequestException e) {
             ThreadLocalSqlSession.setTransactionStatus(TransactionStatus.ROLLBACK);
             log.debug("Failed request: ", e);
             ErrorCode errorCode = e.getErrorCode();
             if (e.getErrors().isEmpty()) {
-                cinnamonResponse.generateErrorMessage(errorCode.getHttpResponseCode(), errorCode, errorCode.getDescription());
+                cinnamonResponse.generateErrorMessage(errorCode.getHttpResponseCode(), errorCode, errorCode.getDescription(), logResponses);
             } else {
-                cinnamonResponse.generateErrorMessage(errorCode.getHttpResponseCode(), errorCode, errorCode.getDescription(), e.getErrors());
+                cinnamonResponse.generateErrorMessage(errorCode.getHttpResponseCode(), errorCode, errorCode.getDescription(), e.getErrors(), logResponses);
             }
         }
 

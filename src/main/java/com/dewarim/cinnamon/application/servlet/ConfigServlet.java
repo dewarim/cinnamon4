@@ -4,6 +4,7 @@ import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.application.CinnamonServer;
+import com.dewarim.cinnamon.configuration.ServerConfig;
 import com.dewarim.cinnamon.dao.*;
 import com.dewarim.cinnamon.model.ProviderClass;
 import com.dewarim.cinnamon.model.ProviderType;
@@ -46,7 +47,7 @@ public class ConfigServlet extends HttpServlet {
         UrlMapping mapping = UrlMapping.getByPath(request.getRequestURI());
         switch (mapping) {
             case CONFIG__LIST_ALL_CONFIGURATIONS -> listAllConfigurations(request, cinnamonResponse);
-            case CONFIG__URL_MAPPINGS -> listUrlMappings(request,cinnamonResponse);
+            case CONFIG__URL_MAPPINGS -> listUrlMappings(request, cinnamonResponse);
             case CONFIG__RELOAD_LOGGING -> reloadLogging(request, cinnamonResponse);
             default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
@@ -56,13 +57,17 @@ public class ConfigServlet extends HttpServlet {
         if (!UserAccountDao.currentUserIsSuperuser()) {
             throw ErrorCode.REQUIRES_SUPERUSER_STATUS.getException().get();
         }
-        String log4jConfigPath = CinnamonServer.config.getServerConfig().getLog4jConfigPath();
-        if(log4jConfigPath.isEmpty()) {
+        ServerConfig serverConfig    = CinnamonServer.config.getServerConfig();
+        String       log4jConfigPath = serverConfig.getLog4jConfigPath();
+        boolean      logResponses    = serverConfig.isLogResponses();
+        if (log4jConfigPath.isEmpty()) {
             log.info("will not reload logging without valid config");
-            cinnamonResponse.generateErrorMessage(HttpServletResponse.SC_BAD_REQUEST, ErrorCode.NEED_EXTERNAL_LOGGING_CONFIG, NEED_EXTERNAL_LOGGING_CONFIG.getDescription());
+            cinnamonResponse.generateErrorMessage(HttpServletResponse.SC_BAD_REQUEST,
+                    ErrorCode.NEED_EXTERNAL_LOGGING_CONFIG,
+                    NEED_EXTERNAL_LOGGING_CONFIG.getDescription(), logResponses);
         }
         else {
-            log.info("reconfigure logging to use: "+log4jConfigPath);
+            log.info("reconfigure logging to use: " + log4jConfigPath);
             Configurator.reconfigure(URI.create(log4jConfigPath));
             cinnamonResponse.responseIsGenericOkay();
         }
@@ -71,7 +76,7 @@ public class ConfigServlet extends HttpServlet {
     private void listUrlMappings(HttpServletRequest request, CinnamonResponse cinnamonResponse) {
         List<UrlMappingInfo> urlMappingInfos = Arrays.stream(UrlMapping.values()).toList().stream()
                 .map(urlMapping -> new UrlMappingInfo(urlMapping.getServlet(), urlMapping.getAction(), urlMapping.getPath(), urlMapping.getDescription()))
-                        .collect(Collectors.toList());
+                .collect(Collectors.toList());
         cinnamonResponse.setWrapper(new UrlMappingInfoWrapper(urlMappingInfos));
     }
 

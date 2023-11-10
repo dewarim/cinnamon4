@@ -91,12 +91,12 @@ public class IndexService implements Runnable {
                     folderDao.setSqlSession(sqlSession);
 
                     while (jobDao.countJobs() > 0) {
-                        List<IndexJob> jobs = jobDao.getIndexJobsByFailedCountWithLimit(0, limit);
+                        List<IndexJob> jobs = jobDao.getIndexJobsByFailedCountWithLimit(config.getMaxIndexAttempts(), limit);
                         if (jobs.isEmpty()) {
                             log.trace("Found 0 IndexJobs.");
                             break;
                         }
-                        log.debug("Found {} IndexJobs.", jobs.size());
+                        log.debug("Found {} IndexJobs with not more than {} failed attempts.", jobs.size(), config.getMaxIndexAttempts());
                         boolean        indexChanged = false;
                         List<IndexJob> jobsToDelete = new ArrayList<>();
                         for (IndexJob job : jobs) {

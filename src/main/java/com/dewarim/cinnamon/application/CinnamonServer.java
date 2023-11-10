@@ -30,6 +30,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.eclipse.jetty.annotations.AnnotationDecorator;
 import org.eclipse.jetty.server.*;
+import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.eclipse.jetty.webapp.WebAppContext;
@@ -225,12 +226,19 @@ public class CinnamonServer {
     private void addFilters(WebAppContext handler) {
         handler.addFilter(DbSessionFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
         handler.addFilter(AuthenticationFilter.class, "/api/*", EnumSet.of(DispatcherType.REQUEST));
-        handler.addFilter(RequestResponseFilter.class, "/api/*", EnumSet.of(DispatcherType.REQUEST));
+
+        RequestResponseFilter requestResponseFilter = new RequestResponseFilter(config.getServerConfig().isLogResponses());
+        var requestResponseFilterHolder = new FilterHolder(requestResponseFilter);
+        handler.addFilter(requestResponseFilterHolder,"/api/*", EnumSet.of(DispatcherType.REQUEST) );
+
         // TODO: it would be cleaner to add filter params to ChangeTriggerFilter here instead of fetching
         //  the server config statically.
         handler.addFilter(ChangeTriggerFilter.class, "/api/*", EnumSet.of(DispatcherType.REQUEST));
+
+        // use standard RequestResponseFilter for /cinnamon endpoints: we do not want to enable logging there,
+        // since those are used for login
         handler.addFilter(RequestResponseFilter.class, "/cinnamon/*", EnumSet.of(DispatcherType.REQUEST));
-        handler.addFilter(RequestResponseFilter.class, "/test/*", EnumSet.of(DispatcherType.REQUEST));
+        handler.addFilter(requestResponseFilterHolder, "/test/*", EnumSet.of(DispatcherType.REQUEST));
     }
 
     private void addServlets(WebAppContext handler) {

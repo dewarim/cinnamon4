@@ -34,20 +34,20 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void setSummaryHappyPath() throws IOException {
         var folderId = new TestObjectHolder(client, userId).createFolder().folder.getId();
-        client.setFolderSummary(folderId, "a summary");
+        client.setFolderSummary(folderId, XML_SUMMARY);
         List<Summary> folderSummaries = client.getFolderSummaries(List.of(folderId));
-        assertEquals("a summary", folderSummaries.get(0).getContent());
+        assertEquals(XML_SUMMARY, folderSummaries.get(0).getContent());
     }
 
     @Test
     public void setSummaryMissingPermission() throws IOException {
         var folderId = prepareAclGroupWithPermissions(List.of()).createFolder().folder.getId();
-        assertClientError(() -> client.setFolderSummary(folderId, "a summary"), NO_SET_SUMMARY_PERMISSION);
+        assertClientError(() -> client.setFolderSummary(folderId, XML_SUMMARY), NO_SET_SUMMARY_PERMISSION);
     }
 
     @Test
     public void setSummaryMissingObject() throws IOException {
-        SetSummaryRequest summaryRequest = new SetSummaryRequest(Long.MAX_VALUE, "a summary");
+        SetSummaryRequest summaryRequest = new SetSummaryRequest(Long.MAX_VALUE, XML_SUMMARY);
         sendStandardRequestAndAssertError(UrlMapping.FOLDER__SET_SUMMARY, summaryRequest, OBJECT_NOT_FOUND);
     }
 
@@ -63,7 +63,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void getSummariesMissingPermission() throws IOException {
         var folderId = prepareAclGroupWithPermissions(List.of())
-                .createFolder().setSummaryOnFolder("foo").folder.getId();
+                .createFolder().setSummaryOnFolder(XML_SUMMARY).folder.getId();
         assertClientError(() -> client.getFolderSummaries(List.of(folderId)), NO_READ_OBJECT_SYS_METADATA_PERMISSION);
     }
 
@@ -180,9 +180,9 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void getMetaHappyPath() throws IOException {
         var folder = prepareAclGroupWithPermissions(List.of(READ_OBJECT_CUSTOM_METADATA))
-                .createFolder().createFolderMeta("my meta").folder;
+                .createFolder().createFolderMeta("<xml>my meta</xml>").folder;
         Meta folderMeta = client.getFolderMetas(folder.getId()).get(0);
-        assertEquals("my meta", folderMeta.getContent());
+        assertEquals("<xml>my meta</xml>", folderMeta.getContent());
     }
 
     @Test
@@ -227,7 +227,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
                 userId, acl.getId(), 1L);
         MetasetType type = adminClient.createMetasetType("unique metaset type", true);
 
-        CreateMetaRequest request = new CreateMetaRequest(folder.getId(), "duplicate license", type.getId());
+        CreateMetaRequest request = new CreateMetaRequest(folder.getId(), "<xml>duplicate license</xml>", type.getId());
         client.createFolderMeta(request);
         assertClientError(() -> client.createFolderMeta(request), METASET_IS_UNIQUE_AND_ALREADY_EXISTS);
     }
@@ -236,18 +236,18 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     public void createFolderMetasetHappyWithExistingMeta() throws IOException {
         var folderId = new TestObjectHolder(client, userId)
                 .createFolder().folder.getId();
-        client.createFolderMeta(folderId, "comment 1", 1L);
-        client.createFolderMeta(folderId, "comment 2", 1L);
+        client.createFolderMeta(folderId, "<xml>comment 1</xml>", 1L);
+        client.createFolderMeta(folderId, "<xml>comment 2</xml>", 1L);
         List<Meta> folderMetas = client.getFolderMetas(folderId);
-        assertTrue(folderMetas.stream().map(Meta::getContent).toList().containsAll(List.of("comment 1", "comment 2")));
+        assertTrue(folderMetas.stream().map(Meta::getContent).toList().containsAll(List.of("<xml>comment 1</xml>", "<xml>comment 2</xml>")));
     }
 
     @Test
     public void createOsdMetasetHappyPath() throws IOException {
         long osdId = new TestObjectHolder(client, userId)
                 .createOsd("createOsdMetasetHappyPath").osd.getId();
-        Meta licenseMeta = client.createOsdMeta(osdId, "new license meta", 2L);
-        assertEquals("new license meta", licenseMeta.getContent());
+        Meta licenseMeta = client.createOsdMeta(osdId, "<xml>new license meta</xml>", 2L);
+        assertEquals("<xml>new license meta</xml>", licenseMeta.getContent());
         assertEquals(2, licenseMeta.getTypeId());
     }
 
@@ -255,8 +255,8 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     public void deleteAllMetas() throws IOException {
         Acl acl = prepareAclGroupWithPermissions(List.of(READ_OBJECT_CUSTOM_METADATA, WRITE_OBJECT_CUSTOM_METADATA)).acl;
         Folder folder = client.createFolder(createFolderId, "folder-deleteAllMetas", userId, acl.getId(), 1L);
-        client.createFolderMeta(new CreateMetaRequest(folder.getId(), "...", 1L));
-        client.createFolderMeta(new CreateMetaRequest(folder.getId(), "...", 1L));
+        client.createFolderMeta(new CreateMetaRequest(folder.getId(), "<xml>...</xml>", 1L));
+        client.createFolderMeta(new CreateMetaRequest(folder.getId(), "<xml>...</xml>", 1L));
         client.deleteAllFolderMeta(folder.getId());
         assertEquals(0, client.getFolderMetas(folder.getId()).size());
     }
@@ -270,7 +270,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void deleteMetaWithoutPermission() throws IOException {
         var meta = prepareAclGroupWithPermissions(List.of())
-                .createFolder().createFolderMeta("some meta").meta;
+                .createFolder().createFolderMeta("<xml>some meta</xml>").meta;
         assertClientError(() -> client.deleteFolderMeta(meta.getId()), NO_WRITE_CUSTOM_METADATA_PERMISSION);
     }
 
@@ -284,7 +284,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     public void deleteMetaHappyPathById() throws IOException {
         var meta = new TestObjectHolder(client, userId)
                 .createFolder()
-                .createFolderMeta("my meta").meta;
+                .createFolderMeta("<xml>my meta</xml>").meta;
         client.deleteFolderMeta(meta.getId());
     }
 
@@ -748,9 +748,9 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     public void updateFolderMetaHappyPath() throws IOException {
         var toh = new TestObjectHolder(client, userId)
                 .createFolder()
-                .createFolderMeta("some meta content");
+                .createFolderMeta("<xml>some meta content</xml>");
         Meta meta = toh.meta;
-        meta.setContent("updated meta");
+        meta.setContent("<xml>updated meta</xml>");
         client.updateFolderMeta(meta);
         Meta updatedMeta = client.getFolderMetas(toh.folder.getId()).get(0);
         assertEquals(meta, updatedMeta);
@@ -760,9 +760,9 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     public void updateFolderMetaNoWritePermission() throws IOException {
         var toh = prepareAclGroupWithPermissions(List.of(BROWSE))
                 .createFolder()
-                .createFolderMeta("some meta content");
+                .createFolderMeta("<xml>some meta content</xml>");
         Meta meta = toh.meta;
-        meta.setContent("updated meta");
+        meta.setContent("<xml>updated meta</xml>");
         assertClientError(() -> client.updateFolderMeta(meta), NO_WRITE_CUSTOM_METADATA_PERMISSION);
     }
 
@@ -770,7 +770,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     public void updateFolderMetaUpdateFolderIdFail() throws IOException {
         var toh = new TestObjectHolder(client, userId)
                 .createFolder()
-                .createFolderMeta("some meta content");
+                .createFolderMeta("<xml>some meta content</xml>");
         Meta meta = toh.meta;
         meta.setObjectId(1L);
         assertClientError(() -> client.updateFolderMeta(meta), INVALID_UPDATE);
@@ -780,7 +780,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     public void updateFolderMetaUpdateTypeFail() throws IOException {
         var toh = new TestObjectHolder(client, userId)
                 .createFolder()
-                .createFolderMeta("some meta content");
+                .createFolderMeta("<xml>some meta content</xml>");
         Meta meta = toh.meta;
         meta.setTypeId(Long.MAX_VALUE);
         assertClientError(() -> client.updateFolderMeta(meta), INVALID_UPDATE);
@@ -790,7 +790,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     public void updateFolderMetaUpdateMetaNotFound() throws IOException {
         var toh = new TestObjectHolder(client, userId)
                 .createFolder()
-                .createFolderMeta("some meta content");
+                .createFolderMeta("<xml>some meta content</xml>");
         Meta meta = toh.meta;
         meta.setId(Long.MAX_VALUE);
         assertClientError(() -> client.updateFolderMeta(meta), METASET_NOT_FOUND);

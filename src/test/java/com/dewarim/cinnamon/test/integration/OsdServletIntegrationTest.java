@@ -120,8 +120,8 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void getObjectsByIdIncludingSummary() throws IOException {
         var osdId = new TestObjectHolder(client, userId)
-                .createOsd().setSummaryOnOsd("xxx").osd.getId();
-        assertTrue(client.getOsdSummaries(List.of(osdId)).stream().anyMatch(s -> s.getContent().equals("xxx")));
+                .createOsd().setSummaryOnOsd(XML_SUMMARY).osd.getId();
+        assertTrue(client.getOsdSummaries(List.of(osdId)).stream().anyMatch(s -> s.getContent().equals(XML_SUMMARY)));
     }
 
     @Test
@@ -362,12 +362,12 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     public void setSummaryMissingPermission() throws IOException {
         var toh = prepareAclGroupWithPermissions("setSummaryMissingPermission", List.of(BROWSE))
                 .createOsd("setSummaryMissingPermission");
-        assertClientError(() -> client.setSummary(toh.osd.getId(), "a summary"), NO_SET_SUMMARY_PERMISSION);
+        assertClientError(() -> client.setSummary(toh.osd.getId(), XML_SUMMARY), NO_SET_SUMMARY_PERMISSION);
     }
 
     @Test
     public void setSummaryMissingObject() throws IOException {
-        SetSummaryRequest summaryRequest = new SetSummaryRequest(Long.MAX_VALUE, "a summary");
+        SetSummaryRequest summaryRequest = new SetSummaryRequest(Long.MAX_VALUE, XML_SUMMARY);
         var               response       = sendStandardRequest(UrlMapping.OSD__SET_SUMMARY, summaryRequest);
         assertCinnamonError(response, ErrorCode.OBJECT_NOT_FOUND);
     }
@@ -736,7 +736,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var toh = new TestObjectHolder(client, userId)
                 .createOsd("createMetaMetasetHappyWithExistingMeta")
                 .setMetasetType(metasetType)
-                .createOsdMeta("1st");
+                .createOsdMeta("<xml>1st</xml>");
         assertClientError(() -> client.createOsdMeta(toh.osd.getId(),
                         "forbidden duplicate", metasetType.getId()),
                 METASET_IS_UNIQUE_AND_ALREADY_EXISTS);
@@ -749,8 +749,8 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var toh = new TestObjectHolder(client, userId)
                 .createOsd("createMetaMetasetHappyWithExistingMeta")
                 .setMetasetType(metasetType)
-                .createOsdMeta("1st")
-                .createOsdMeta("2nd");
+                .createOsdMeta("<xml>1st</xml>")
+                .createOsdMeta("<xml>2nd</xml>");
         List<Meta> osdMetas = client.getOsdMetas(toh.osd.getId());
         assertEquals(2, osdMetas.size());
     }
@@ -761,8 +761,8 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var toh = new TestObjectHolder(client, userId)
                 .createOsd("createMetaMetasetHappyPath")
                 .setMetasetType(metasetType)
-                .createOsdMeta("smile");
-        assertEquals("smile", toh.meta.getContent());
+                .createOsdMeta("<xml>smile</xml>");
+        assertEquals("<xml>smile</xml>", toh.meta.getContent());
         assertEquals(metasetType.getId(), toh.meta.getTypeId());
     }
 
@@ -777,7 +777,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     public void deleteMetaWithoutPermission() throws IOException {
         var toh = prepareAclGroupWithPermissions(List.of(CREATE_OBJECT))
                 .createOsd("deleteMetaWithoutPermission")
-                .createOsdMeta("test");
+                .createOsdMeta("<xml>test</xml>");
         assertClientError(() -> client.deleteOsdMeta(toh.meta.getId()),
                 NO_WRITE_CUSTOM_METADATA_PERMISSION);
     }
@@ -1293,8 +1293,8 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         Thread.sleep(1000);
 
         // admin without changeTracking
-        SetSummaryRequest summaryRequest = new SetSummaryRequest(osd.getId(), "a summary");
-        adminClient.setSummary(osd.getId(), "a summary");
+        SetSummaryRequest summaryRequest = new SetSummaryRequest(osd.getId(), XML_SUMMARY);
+        adminClient.setSummary(osd.getId(), XML_SUMMARY);
         var updatedOsd = client.getOsdById(osd.getId(), false, false);
         assertThat(updatedOsd.getModifierId(), equalTo(osd.getModifierId()));
         assertThat(updatedOsd.getModified(), equalTo(osd.getModified()));
@@ -1302,7 +1302,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         Thread.sleep(1000);
 
         // standard user should have changeTracking
-        client.setSummary(osd.getId(), "new summary");
+        client.setSummary(osd.getId(), "<xml>new summary</xml>");
         osd = client.getOsdById(osd.getId(), false, false);
         assertThat(updatedOsd.getModifierId(), equalTo(osd.getModifierId()));
         assertThat(updatedOsd.getModified(), not(equalTo(osd.getModified())));
@@ -2016,7 +2016,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var                    toh      = createCopySourceObject("copyWithMetasets");
         MetasetType            foo      = adminClient.createMetasetType("foo", false);
         long                   osdId    = toh.osd.getId();
-        Meta                   osdMeta  = adminClient.createOsdMeta(osdId, "some meta", foo.getId());
+        Meta                   osdMeta  = adminClient.createOsdMeta(osdId, "<xml>some meta</xml>", foo.getId());
         List<ObjectSystemData> copies   = adminClient.copyOsds(createFolderId, List.of(osdId), List.of(foo.getId()));
         ObjectSystemData       copy     = copies.get(0);
         Meta                   copyMeta = adminClient.getOsdMetas(copy.getId()).get(0);
@@ -2170,9 +2170,9 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     public void updateOsdMetaHappyPath() throws IOException {
         var toh = new TestObjectHolder(client, userId)
                 .createOsd()
-                .createOsdMeta("some meta content");
+                .createOsdMeta("<xml>some meta content</xml>");
         Meta meta = toh.meta;
-        meta.setContent("updated meta");
+        meta.setContent("<xml>updated meta<xml>");
         client.updateOsdMeta(meta);
         Meta updatedMeta = client.getOsdMetas(toh.osd.getId()).get(0);
         assertEquals(meta, updatedMeta);
@@ -2182,9 +2182,9 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     public void updateOsdMetaNoWritePermission() throws IOException {
         var toh = prepareAclGroupWithPermissions(List.of(BROWSE))
                 .createOsd()
-                .createOsdMeta("some meta content");
+                .createOsdMeta("<xml>some meta content</xml>");
         Meta meta = toh.meta;
-        meta.setContent("updated meta");
+        meta.setContent("<xml>updated meta<xml>");
         assertClientError(() -> client.updateOsdMeta(meta), NO_WRITE_CUSTOM_METADATA_PERMISSION);
     }
 
@@ -2192,7 +2192,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     public void updateOsdMetaUpdateOsdIdFail() throws IOException {
         var toh = new TestObjectHolder(client, userId)
                 .createOsd()
-                .createOsdMeta("some meta content");
+                .createOsdMeta("<xml>some meta content</xml>");
         Meta meta = toh.meta;
         meta.setObjectId(1L);
         assertClientError(() -> client.updateOsdMeta(meta), INVALID_UPDATE);
@@ -2202,7 +2202,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     public void updateOsdMetaUpdateTypeFail() throws IOException {
         var toh = new TestObjectHolder(client, userId)
                 .createOsd()
-                .createOsdMeta("some meta content");
+                .createOsdMeta("<xml>some meta content</xml>");
         Meta meta = toh.meta;
         meta.setTypeId(Long.MAX_VALUE);
         assertClientError(() -> client.updateOsdMeta(meta), INVALID_UPDATE);
@@ -2212,7 +2212,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     public void updateOsdMetaUpdateMetaNotFound() throws IOException {
         var toh = new TestObjectHolder(client, userId)
                 .createOsd()
-                .createOsdMeta("some meta content");
+                .createOsdMeta("<xml>some meta content</xml>");
         Meta meta = toh.meta;
         meta.setId(Long.MAX_VALUE);
         assertClientError(() -> client.updateOsdMeta(meta), METASET_NOT_FOUND);

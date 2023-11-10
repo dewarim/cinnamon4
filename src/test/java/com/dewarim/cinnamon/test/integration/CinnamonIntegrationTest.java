@@ -56,6 +56,7 @@ public class CinnamonIntegrationTest {
     private final static Logger log = LogManager.getLogger(CinnamonIntegrationTest.class);
 
     static final String PASSWORD_PARAMETER_NAME = "password";
+    static final String XML_SUMMARY="<xml>a summary</xml>";
 
     static int            cinnamonTestPort = 19999;
     static CinnamonServer cinnamonServer;
@@ -85,6 +86,7 @@ public class CinnamonIntegrationTest {
         if (cinnamonServer == null) {
             log.info("Create new CinnamonServer.");
             cinnamonServer = new CinnamonServer(cinnamonTestPort);
+            CinnamonServer.config.getServerConfig().setLogResponses(true);
 
             DbSessionFactory dbSessionFactory = new DbSessionFactory("sql/mybatis.test.properties.xml");
 

@@ -8,6 +8,7 @@ public class ServerConfig {
     private boolean enableHttp  = true;
     private int     maxThreads  = 200;
     private String log4jConfigPath = "";
+    private boolean logResponses = false;
 
     private HttpConnectorConfig httpConnectorConfig = new HttpConnectorConfig();
 
@@ -103,9 +104,10 @@ public class ServerConfig {
                 "systemRoot='" + systemRoot + '\'' +
                 ", dataRoot='" + dataRoot + '\'' +
                 ", enableHttps=" + enableHttps +
-                ", disableHttp=" + enableHttp +
+                ", enableHttp=" + enableHttp +
                 ", maxThreads=" + maxThreads +
                 ", log4jConfigPath='" + log4jConfigPath + '\'' +
+                ", logResponses=" + logResponses +
                 ", httpConnectorConfig=" + httpConnectorConfig +
                 ", httpsConnectorConfig=" + httpsConnectorConfig +
                 ", verifyExistence=" + verifyExistence +
@@ -119,5 +121,13 @@ public class ServerConfig {
 
     public void setEnableHttp(boolean enableHttp) {
         this.enableHttp = enableHttp;
+    }
+
+    public boolean isLogResponses() {
+        return logResponses;
+    }
+
+    public void setLogResponses(boolean logResponses) {
+        this.logResponses = logResponses;
     }
 }

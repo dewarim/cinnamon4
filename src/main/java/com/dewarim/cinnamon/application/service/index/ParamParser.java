@@ -18,6 +18,8 @@ import java.util.regex.Pattern;
 
 // copied from Cinnamon 3
 public class ParamParser {
+    private static Logger log = LogManager.getLogger(ParamParser.class);
+
 
     private static final Pattern DOCTYPE_OR_ENTITY_PATTERN = Pattern.compile(ElementNameIndexer.DOCTYPE_ENTITY);
 
@@ -32,7 +34,8 @@ public class ParamParser {
     public static final Pattern bomReplacer           = Pattern.compile("^(?:\\xEF\\xBB\\xBF|\uFEFF)");
     public static final Pattern tikaBadEntityReplacer = Pattern.compile("&#0;");
 
-    public static Document parseXmlToDocument(String xml, String message) {
+    public static Document parseXmlToDocument(String xmlDocument, String message) {
+        String xml = xmlDocument;
         if (message == null) {
             message = "error.parse.xml";
         }
@@ -49,8 +52,7 @@ public class ParamParser {
             reader.setValidation(false);
             return reader.read(new StringReader(xml));
         } catch (DocumentException e) {
-            Logger log = LogManager.getLogger(ParamParser.class);
-            log.debug("ParamParser::DocumentException::", e);
+            log.debug("ParamParser::DocumentException::for content {}", e, xml);
             throw new RuntimeException(message);
         }
     }
