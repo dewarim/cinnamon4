@@ -5,7 +5,8 @@ public class ServerConfig {
     private String systemRoot = "data/config";
     private String dataRoot = "data";
     private boolean enableHttps = false;
-    private int maxThreads = 200;
+    private boolean enableHttp  = true;
+    private int     maxThreads  = 200;
     private String log4jConfigPath = "";
 
     private HttpConnectorConfig httpConnectorConfig = new HttpConnectorConfig();
@@ -102,11 +103,21 @@ public class ServerConfig {
                 "systemRoot='" + systemRoot + '\'' +
                 ", dataRoot='" + dataRoot + '\'' +
                 ", enableHttps=" + enableHttps +
+                ", disableHttp=" + enableHttp +
                 ", maxThreads=" + maxThreads +
+                ", log4jConfigPath='" + log4jConfigPath + '\'' +
                 ", httpConnectorConfig=" + httpConnectorConfig +
                 ", httpsConnectorConfig=" + httpsConnectorConfig +
                 ", verifyExistence=" + verifyExistence +
                 ", ignoreNopUpdates=" + ignoreNopUpdates +
                 '}';
+    }
+
+    public boolean isEnableHttp() {
+        return enableHttp;
+    }
+
+    public void setEnableHttp(boolean enableHttp) {
+        this.enableHttp = enableHttp;
     }
 }

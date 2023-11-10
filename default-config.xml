@@ -3,6 +3,7 @@
     <systemRoot>data/config</systemRoot>
     <dataRoot>data</dataRoot>
     <enableHttps>false</enableHttps>
+    <enableHttp>true</enableHttp>
     <maxThreads>200</maxThreads>
     <httpConnectorConfig>
       <port>8080</port>

@@ -104,8 +104,13 @@ public class CinnamonServer {
 
         server = new Server(threadPool);
 
-        Connector httpConnector = createHttpConnector(serverConfig.getHttpConnectorConfig());
-        server.addConnector(httpConnector);
+        boolean enableHttps = serverConfig.isEnableHttps();
+        boolean enableHttp = serverConfig.isEnableHttp();
+
+        if(enableHttp) {
+            Connector httpConnector = createHttpConnector(serverConfig.getHttpConnectorConfig());
+            server.addConnector(httpConnector);
+        }
 
         if (serverConfig.isEnableHttps()) {
             Connector httpsConnector = createHttpsConnector(serverConfig.getHttpsConnectorConfig());
@@ -121,9 +126,15 @@ public class CinnamonServer {
         // TODO: make number of threads and timeout configurable
         executorService = new ThreadPoolExecutor(4, 16, 5, TimeUnit.MINUTES, new ArrayBlockingQueue<>(100));
 
-        log.info("Server is running at http port {}", config.getServerConfig().getHttpConnectorConfig().getPort());
-        if (config.getServerConfig().isEnableHttps()) {
+        if(enableHttp) {
+            log.info("Server is running at http @ port {}", config.getServerConfig().getHttpConnectorConfig().getPort());
+        }
+        if (enableHttps) {
             log.info("Server is also allowing connections via https @ port {}", config.getServerConfig().getHttpsConnectorConfig().getPort());
+        }
+        if(!enableHttp && !enableHttps){
+            log.warn("You have disabled both http and https endpoints, so there is no way for you to talk to me." +
+                    " Still starting the server, perhaps you want to just enable indexing etc.");
         }
     }
 
