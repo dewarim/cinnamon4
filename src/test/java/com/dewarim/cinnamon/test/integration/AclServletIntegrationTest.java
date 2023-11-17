@@ -7,7 +7,6 @@ import com.dewarim.cinnamon.client.StandardResponse;
 import com.dewarim.cinnamon.client.Unwrapper;
 import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.request.IdRequest;
-import com.dewarim.cinnamon.model.request.acl.AclInfoRequest;
 import com.dewarim.cinnamon.model.request.acl.DeleteAclRequest;
 import com.dewarim.cinnamon.model.request.acl.ListAclRequest;
 import com.dewarim.cinnamon.model.request.acl.UpdateAclRequest;
@@ -83,36 +82,6 @@ public class AclServletIntegrationTest extends CinnamonIntegrationTest {
         UpdateAclRequest updateRequest = new UpdateAclRequest(4L, Constants.ACL_DEFAULT);
         StandardResponse aclListResponse = sendAdminRequest(UrlMapping.ACL__UPDATE, updateRequest);
         assertCinnamonError(aclListResponse, ErrorCode.DB_UPDATE_FAILED);
-    }
-
-    @Test
-    public void validRequestByAclName() throws IOException {
-        AclInfoRequest aclInfoRequest = new AclInfoRequest(null, Constants.ACL_DEFAULT);
-        var aclListResponse = sendAdminRequest(UrlMapping.ACL__ACL_INFO, aclInfoRequest);
-        List<Acl> acls = unwrapAcls(aclListResponse, 1);
-        Optional<Acl> defaultAcl = acls.stream().filter(acl -> acl.getName().equals(Constants.ACL_DEFAULT)).findFirst();
-        assertTrue(defaultAcl.isPresent());
-    }
-
-    @Test
-    public void validRequestByAclId() throws IOException {
-        var aclListResponse = sendAdminRequest(UrlMapping.ACL__ACL_INFO, new AclInfoRequest(1L, null));
-        List<Acl> acls = unwrapAcls(aclListResponse, 1);
-        Optional<Acl> defaultAcl = acls.stream().filter(acl -> acl.getName().equals(Constants.ACL_DEFAULT)).findFirst();
-        assertTrue(defaultAcl.isPresent());
-    }
-
-    @Test
-    public void invalidRequestForAcl() throws IOException {
-        AclInfoRequest aclInfoRequest = new AclInfoRequest(null, null);
-        var aclListResponse = sendAdminRequest(UrlMapping.ACL__ACL_INFO, aclInfoRequest);
-        assertCinnamonError(aclListResponse, INVALID_REQUEST);
-    }
-
-    @Test
-    public void requestForNonExistentAclShouldFail() throws IOException {
-        var aclListResponse = sendAdminRequest(UrlMapping.ACL__ACL_INFO, new AclInfoRequest(null, "unknown acl"));
-        assertCinnamonError(aclListResponse, ErrorCode.ACL_NOT_FOUND);
     }
 
     @Test

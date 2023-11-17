@@ -665,7 +665,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                 if (!accessFilter.hasPermissionOnOwnable(osd, DefaultPermission.SET_ACL, osd)) {
                     ErrorCode.MISSING_SET_ACL_PERMISSION.throwUp();
                 }
-                Acl acl = new AclDao().getAclById(aclId)
+                Acl acl = new AclDao().getObjectById(aclId)
                         .orElseThrow(ErrorCode.ACL_NOT_FOUND.getException());
                 osd.setAclId(acl.getId());
                 changed = true;

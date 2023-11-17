@@ -7,11 +7,7 @@ import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.application.ErrorResponseGenerator;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.application.service.DeleteLinkService;
-import com.dewarim.cinnamon.dao.AclDao;
-import com.dewarim.cinnamon.dao.FolderDao;
-import com.dewarim.cinnamon.dao.LinkDao;
-import com.dewarim.cinnamon.dao.OsdDao;
-import com.dewarim.cinnamon.dao.UserAccountDao;
+import com.dewarim.cinnamon.dao.*;
 import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.Folder;
 import com.dewarim.cinnamon.model.ObjectSystemData;
@@ -19,11 +15,7 @@ import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.links.LinkType;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
-import com.dewarim.cinnamon.model.request.link.CreateLinkRequest;
-import com.dewarim.cinnamon.model.request.link.DeleteLinkRequest;
-import com.dewarim.cinnamon.model.request.link.GetLinksRequest;
-import com.dewarim.cinnamon.model.request.link.LinkWrapper;
-import com.dewarim.cinnamon.model.request.link.UpdateLinkRequest;
+import com.dewarim.cinnamon.model.request.link.*;
 import com.dewarim.cinnamon.model.response.LinkResponse;
 import com.dewarim.cinnamon.model.response.LinkResponseWrapper;
 import com.dewarim.cinnamon.security.authorization.AccessFilter;
@@ -37,11 +29,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
@@ -99,7 +87,7 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
         }
 
         AclDao        aclDao = new AclDao();
-        Optional<Acl> acl    = aclDao.getAclById(link.getAclId());
+        Optional<Acl> acl    = aclDao.getObjectById(link.getAclId());
         if (acl.isEmpty()) {
             ErrorCode.ACL_NOT_FOUND.throwUp();
         }
@@ -213,7 +201,7 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
     }
 
     private void updateAcl(Link updateRequest, Link link, LinkDao linkDao, AccessFilter accessFilter) {
-        Acl acl = new AclDao().getAclById(updateRequest.getAclId()).orElseThrow(ErrorCode.ACL_NOT_FOUND.getException());
+        Acl acl = new AclDao().getObjectById(updateRequest.getAclId()).orElseThrow(ErrorCode.ACL_NOT_FOUND.getException());
         accessFilter.verifyHasPermissionOnOwnable(link, DefaultPermission.SET_ACL, link, ErrorCode.MISSING_SET_ACL_PERMISSION);
         link.setAclId(acl.getId());
         if (linkDao.updateLink(link) != 1) {

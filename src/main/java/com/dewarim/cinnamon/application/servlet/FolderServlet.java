@@ -202,7 +202,7 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
             if (aclId == null) {
                 aclId = parentFolder.getAclId();
             } else {
-                aclId = new AclDao().getAclById(aclId)
+                aclId = new AclDao().getObjectById(aclId)
                         .orElseThrow(ErrorCode.ACL_NOT_FOUND.getException()).getId();
             }
 
@@ -294,7 +294,7 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
                 if (!accessFilter.hasPermissionOnOwnable(folder, DefaultPermission.SET_ACL, folder)) {
                     ErrorCode.MISSING_SET_ACL_PERMISSION.throwUp();
                 }
-                Acl acl = new AclDao().getAclById(aclId)
+                Acl acl = new AclDao().getObjectById(aclId)
                         .orElseThrow(ErrorCode.ACL_NOT_FOUND.getException());
                 folder.setAclId(acl.getId());
                 changed = true;

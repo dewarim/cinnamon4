@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.client;
 
+import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.model.*;
 import com.dewarim.cinnamon.model.links.Link;
@@ -7,7 +8,6 @@ import com.dewarim.cinnamon.model.links.LinkType;
 import com.dewarim.cinnamon.model.relations.Relation;
 import com.dewarim.cinnamon.model.relations.RelationType;
 import com.dewarim.cinnamon.model.request.*;
-import com.dewarim.cinnamon.model.request.acl.AclInfoRequest;
 import com.dewarim.cinnamon.model.request.acl.CreateAclRequest;
 import com.dewarim.cinnamon.model.request.acl.DeleteAclRequest;
 import com.dewarim.cinnamon.model.request.acl.ListAclRequest;
@@ -570,13 +570,19 @@ public class CinnamonClient {
     }
 
     public Acl getAclByName(String name) throws IOException {
-        var response = sendStandardRequest(UrlMapping.ACL__ACL_INFO, new AclInfoRequest(null, name));
-        return aclUnwrapper.unwrap(response, 1).get(0);
+        var response = sendStandardRequest(ACL__LIST, new ListAclRequest());
+        return aclUnwrapper.unwrap(response, EXPECTED_SIZE_ANY).stream()
+                .filter(acl -> acl.getName().equals(name))
+                .findFirst()
+                .orElseThrow(() -> new CinnamonClientException(ErrorCode.ACL_NOT_FOUND));
     }
 
     public Acl getAclById(Long id) throws IOException {
-        var response = sendStandardRequest(UrlMapping.ACL__ACL_INFO, new AclInfoRequest(id, null));
-        return aclUnwrapper.unwrap(response, 1).get(0);
+        var response = sendStandardRequest(ACL__LIST, new ListAclRequest());
+        return aclUnwrapper.unwrap(response, EXPECTED_SIZE_ANY).stream()
+                .filter(acl -> acl.getId().equals(id))
+                .findFirst()
+                .orElseThrow(() -> new CinnamonClientException(ErrorCode.ACL_NOT_FOUND));
     }
 
     public List<Acl> listAcls() throws IOException {

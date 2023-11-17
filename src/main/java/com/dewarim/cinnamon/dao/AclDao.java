@@ -12,12 +12,6 @@ import java.util.stream.Collectors;
 
 public class AclDao implements CrudDao<Acl> {
 
-    public Optional<Acl> getAclById(long id) {
-        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        Acl        acl        = sqlSession.selectOne("com.dewarim.cinnamon.model.Acl.getAclById", id);
-        return Optional.ofNullable(acl);
-    }
-
     public Optional<Acl> getAclByName(String name) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
         return Optional.ofNullable(sqlSession.selectOne("com.dewarim.cinnamon.model.Acl.getAclByName", name));

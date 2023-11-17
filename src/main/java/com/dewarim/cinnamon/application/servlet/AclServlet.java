@@ -6,7 +6,6 @@ import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.dao.AclDao;
 import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.request.IdRequest;
-import com.dewarim.cinnamon.model.request.acl.AclInfoRequest;
 import com.dewarim.cinnamon.model.request.acl.CreateAclRequest;
 import com.dewarim.cinnamon.model.request.acl.DeleteAclRequest;
 import com.dewarim.cinnamon.model.request.acl.ListAclRequest;
@@ -46,7 +45,6 @@ public class AclServlet extends HttpServlet implements CruddyServlet<Acl> {
                 create(convertCreateRequest(request, CreateAclRequest.class), aclDao, cinnamonResponse);
                 AccessFilter.reload();
             }
-            case ACL__ACL_INFO -> getAclByNameOrId(request, cinnamonResponse);
             case ACL__DELETE -> {
                 superuserCheck();
                 delete(convertDeleteRequest(request, DeleteAclRequest.class), aclDao, cinnamonResponse);
@@ -60,19 +58,6 @@ public class AclServlet extends HttpServlet implements CruddyServlet<Acl> {
             }
             default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
-    }
-
-    private void getAclByNameOrId(HttpServletRequest request, CinnamonResponse response) throws IOException {
-        AclInfoRequest aclInfoRequest = xmlMapper.readValue(request.getInputStream(), AclInfoRequest.class)
-                .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
-        AclDao aclDao = new AclDao();
-        Acl    acl;
-        if (aclInfoRequest.byId()) {
-            acl = aclDao.getAclById(aclInfoRequest.getAclId()).orElseThrow(ErrorCode.ACL_NOT_FOUND.getException());
-        } else {
-            acl = aclDao.getAclByName(aclInfoRequest.getName()).orElseThrow(ErrorCode.ACL_NOT_FOUND.getException());
-        }
-        sendWrappedAcls(response, Collections.singletonList(acl));
     }
 
     private void getUserAcls(HttpServletRequest request, AclDao aclDao, CinnamonResponse response) throws IOException {

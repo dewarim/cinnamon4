@@ -1,7 +1,10 @@
 package com.dewarim.cinnamon.api;
 
 import com.dewarim.cinnamon.model.request.*;
-import com.dewarim.cinnamon.model.request.acl.*;
+import com.dewarim.cinnamon.model.request.acl.CreateAclRequest;
+import com.dewarim.cinnamon.model.request.acl.DeleteAclRequest;
+import com.dewarim.cinnamon.model.request.acl.ListAclRequest;
+import com.dewarim.cinnamon.model.request.acl.UpdateAclRequest;
 import com.dewarim.cinnamon.model.request.aclGroup.*;
 import com.dewarim.cinnamon.model.request.changeTrigger.CreateChangeTriggerRequest;
 import com.dewarim.cinnamon.model.request.changeTrigger.DeleteChangeTriggerRequest;
@@ -78,7 +81,6 @@ public enum UrlMapping {
             This replaces the existing permissions of the given AclGroup with the ones you send with the request.
             It does not otherwise change the AclGroup (as it only contains of a group and acl reference - to change those, create a new AclGroup.
             """, UpdateAclGroupRequest.class, AclGroupWrapper.class),
-    ACL__ACL_INFO("acl", "aclInfo", "/api", "", AclInfoRequest.class, AclWrapper.class),
     ACL__CREATE("acl", "create", "/api", "", CreateAclRequest.class, AclWrapper.class),
     ACL__DELETE("acl", "delete", "/api", "", DeleteAclRequest.class, DeleteResponse.class),
     ACL__GET_USER_ACLS("acl", "getUserAcls", "/api", "", IdRequest.class, AclWrapper.class),
