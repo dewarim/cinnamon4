@@ -11,7 +11,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 @JacksonXmlRootElement(localName = "changePermissionsRequest")
-public class ChangePermissionsRequest implements ApiRequest {
+public class ChangePermissionsRequest implements ApiRequest<ChangePermissionsRequest> {
 
     private Long aclGroupId;
 
@@ -69,7 +69,7 @@ public class ChangePermissionsRequest implements ApiRequest {
     }
 
     @Override
-    public List<ApiRequest> examples() {
+    public List<ApiRequest<ChangePermissionsRequest>> examples() {
         return List.of(new ChangePermissionsRequest(3L, List.of(4L,5L,6L),List.of(7L,8L,9L)));
     }
 

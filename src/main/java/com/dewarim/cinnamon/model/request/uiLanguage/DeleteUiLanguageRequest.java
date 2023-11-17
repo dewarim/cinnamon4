@@ -8,7 +8,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "deleteUiLanguageRequest")
-public class DeleteUiLanguageRequest extends DeleteByIdRequest<UiLanguage> implements ApiRequest {
+public class DeleteUiLanguageRequest extends DeleteByIdRequest<UiLanguage> implements ApiRequest<DeleteUiLanguageRequest> {
 
     public DeleteUiLanguageRequest() {
     }
@@ -19,5 +19,10 @@ public class DeleteUiLanguageRequest extends DeleteByIdRequest<UiLanguage> imple
 
     public DeleteUiLanguageRequest(Long id) {
         super(id);
+    }
+
+    @Override
+    public List<ApiRequest<DeleteUiLanguageRequest>> examples() {
+        return List.of(new DeleteUiLanguageRequest(90L));
     }
 }

@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "updateObjectTypeRequest")
-public class UpdateObjectTypeRequest implements UpdateRequest<ObjectType>, ApiRequest {
+public class UpdateObjectTypeRequest implements UpdateRequest<ObjectType>, ApiRequest<UpdateObjectTypeRequest> {
 
     @JacksonXmlElementWrapper(localName = "objectTypes")
     @JacksonXmlProperty(localName = "objectType")
@@ -52,7 +52,7 @@ public class UpdateObjectTypeRequest implements UpdateRequest<ObjectType>, ApiRe
     }
 
     @Override
-    public List<Object> examples() {
+    public List<ApiRequest<UpdateObjectTypeRequest>> examples() {
         return List.of(new UpdateObjectTypeRequest(123L,"updated-object-type-name"));
     }
 

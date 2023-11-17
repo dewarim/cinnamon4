@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Optional;
 
 @JacksonXmlRootElement(localName = "deleteUserAccountRequest")
-public class DeleteUserAccountRequest implements ApiRequest {
+public class DeleteUserAccountRequest implements ApiRequest<DeleteUserAccountRequest> {
 
     private Long userId;
     /**
@@ -55,7 +55,7 @@ public class DeleteUserAccountRequest implements ApiRequest {
     }
 
     @Override
-    public List<ApiRequest> examples() {
+    public List<ApiRequest<DeleteUserAccountRequest>> examples() {
         return List.of(new DeleteUserAccountRequest(4L,5L));
     }
 }

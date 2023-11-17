@@ -1,4 +1,4 @@
-package com.dewarim.cinnamon.model.request;
+package com.dewarim.cinnamon.model.request.osd;
 
 import com.dewarim.cinnamon.api.ApiRequest;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;

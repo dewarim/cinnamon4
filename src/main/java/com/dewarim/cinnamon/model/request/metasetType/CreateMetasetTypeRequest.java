@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "createMetasetTypeRequest")
-public class CreateMetasetTypeRequest implements CreateRequest<MetasetType>, ApiRequest {
+public class CreateMetasetTypeRequest implements CreateRequest<MetasetType>, ApiRequest<CreateMetasetTypeRequest> {
 
     @JacksonXmlElementWrapper(localName = "metasetTypes")
     @JacksonXmlProperty(localName = "metasetType")
@@ -55,5 +55,10 @@ public class CreateMetasetTypeRequest implements CreateRequest<MetasetType>, Api
     @Override
     public Wrapper<MetasetType> fetchResponseWrapper() {
         return new MetasetTypeWrapper();
+    }
+
+    @Override
+    public List<ApiRequest<CreateMetasetTypeRequest>> examples() {
+        return List.of(new CreateMetasetTypeRequest("tika", true));
     }
 }

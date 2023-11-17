@@ -8,7 +8,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "deleteObjectTypeRequest")
-public class DeleteObjectTypeRequest extends DeleteByIdRequest<ObjectType> implements ApiRequest {
+public class DeleteObjectTypeRequest extends DeleteByIdRequest<ObjectType> implements ApiRequest<DeleteObjectTypeRequest> {
 
     public DeleteObjectTypeRequest() {
     }
@@ -19,5 +19,10 @@ public class DeleteObjectTypeRequest extends DeleteByIdRequest<ObjectType> imple
 
     public DeleteObjectTypeRequest(Long id) {
         super(id);
+    }
+
+    @Override
+    public List<ApiRequest<DeleteObjectTypeRequest>> examples() {
+        return List.of(new DeleteObjectTypeRequest(List.of(2L, 3L)));
     }
 }

@@ -22,12 +22,6 @@
         WHERE id = #{id}
     </select>
 
-    <select id="getLifecycleByName" parameterType="String" resultMap="lifecycleMap">
-        SELECT *
-        FROM lifecycles
-        WHERE name = #{name}
-    </select>
-
     <update id="update" parameterType="com.dewarim.cinnamon.model.Lifecycle">
         UPDATE lifecycles
         SET name = #{name},

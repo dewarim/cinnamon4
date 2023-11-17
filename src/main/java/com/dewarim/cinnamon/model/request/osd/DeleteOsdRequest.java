@@ -11,7 +11,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 @JacksonXmlRootElement(localName = "deleteOsdRequest")
-public class DeleteOsdRequest implements ApiRequest {
+public class DeleteOsdRequest implements ApiRequest<DeleteOsdRequest> {
 
     @JacksonXmlElementWrapper(localName = "ids")
     @JacksonXmlProperty(localName = "id")
@@ -61,5 +61,10 @@ public class DeleteOsdRequest implements ApiRequest {
             return Optional.of(this);
         }
         return Optional.empty();
+    }
+
+    @Override
+    public List<ApiRequest<DeleteOsdRequest>> examples() {
+        return List.of(new DeleteOsdRequest(List.of(4L,6L), true, true));
     }
 }

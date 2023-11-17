@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Objects;
 
 @JacksonXmlRootElement(localName = "createIndexItemRequest")
-public class CreateIndexItemRequest implements CreateRequest<IndexItem>, ApiRequest {
+public class CreateIndexItemRequest implements CreateRequest<IndexItem>, ApiRequest<CreateIndexItemRequest> {
 
     @JacksonXmlElementWrapper(localName = "indexItems")
     @JacksonXmlProperty(localName = "indexItem")
@@ -65,7 +65,7 @@ public class CreateIndexItemRequest implements CreateRequest<IndexItem>, ApiRequ
     }
 
     @Override
-    public List<ApiRequest> examples() {
+    public List<ApiRequest<CreateIndexItemRequest>> examples() {
         IndexItem item = new IndexItem("title", true, "Titles",
                 "//title/text()","true()", false, IndexType.DEFAULT_INDEXER );
         return List.of(new CreateIndexItemRequest(List.of(item)));

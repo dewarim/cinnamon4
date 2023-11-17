@@ -1,7 +1,6 @@
 package com.dewarim.cinnamon.model.request.relation;
 
 import com.dewarim.cinnamon.api.ApiRequest;
-import com.dewarim.cinnamon.model.relations.Relation;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.Collection;
@@ -10,7 +9,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 @JacksonXmlRootElement(localName = "searchRelationRequest")
-public class SearchRelationRequest implements ApiRequest<Relation> {
+public class SearchRelationRequest implements ApiRequest<SearchRelationRequest> {
 
     private Collection<Long> leftIds;
     private Collection<Long> rightIds;
@@ -89,7 +88,7 @@ public class SearchRelationRequest implements ApiRequest<Relation> {
     }
 
     @Override
-    public List<ApiRequest<Relation>> examples() {
+    public List<ApiRequest<SearchRelationRequest>> examples() {
         return List.of(new SearchRelationRequest(List.of(1L, 2L, 3L), List.of(4L, 5L, 6L),
                 List.of(2L), true, true));
     }

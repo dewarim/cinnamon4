@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Optional;
 
 @JacksonXmlRootElement(localName = "setUserConfigRequest")
-public class SetUserConfigRequest implements ApiRequest {
+public class SetUserConfigRequest implements ApiRequest<SetUserConfigRequest> {
 
     private Long   userId;
     private String config;
@@ -45,7 +45,7 @@ public class SetUserConfigRequest implements ApiRequest {
     }
 
     @Override
-    public List<ApiRequest> examples() {
+    public List<ApiRequest<SetUserConfigRequest>> examples() {
         return List.of(new SetUserConfigRequest(123L,
                 "<config><lastSearches><search>foo</search></lastSearches></config>"));
     }

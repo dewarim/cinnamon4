@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Objects;
 
 @JacksonXmlRootElement(localName = "createRelationRequest")
-public class CreateRelationRequest implements CreateRequest<Relation>, ApiRequest {
+public class CreateRelationRequest implements CreateRequest<Relation>, ApiRequest<CreateRelationRequest> {
 
     @JacksonXmlElementWrapper(localName = "relations")
     @JacksonXmlProperty(localName = "relation")
@@ -25,7 +25,7 @@ public class CreateRelationRequest implements CreateRequest<Relation>, ApiReques
     }
 
     public CreateRelationRequest(Long leftId, Long rightId, Long typeId, String metadata) {
-        relations.add(new Relation(leftId,rightId,typeId, metadata));
+        relations.add(new Relation(leftId, rightId, typeId, metadata));
     }
 
     public CreateRelationRequest() {
@@ -50,7 +50,7 @@ public class CreateRelationRequest implements CreateRequest<Relation>, ApiReques
     }
 
     @Override
-    public List<Object> examples() {
-        return List.of(new CreateRelationRequest(1L,2L,3L,"<meta/>"), new CreateRelationRequest(2L,1L,10L,"<xml>test</xml>"));
+    public List<ApiRequest<CreateRelationRequest>> examples() {
+        return List.of(new CreateRelationRequest(1L, 2L, 3L, "<meta/>"), new CreateRelationRequest(2L, 1L, 10L, "<xml>test</xml>"));
     }
 }

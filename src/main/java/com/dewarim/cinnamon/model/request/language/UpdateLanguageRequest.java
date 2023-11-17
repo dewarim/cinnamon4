@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "updateLanguageRequest")
-public class UpdateLanguageRequest implements UpdateRequest<Language>, ApiRequest {
+public class UpdateLanguageRequest implements UpdateRequest<Language>, ApiRequest<UpdateLanguageRequest> {
 
     @JacksonXmlElementWrapper(localName = "languages")
     @JacksonXmlProperty(localName = "language")
@@ -52,7 +52,7 @@ public class UpdateLanguageRequest implements UpdateRequest<Language>, ApiReques
     }
 
     @Override
-    public List<Object> examples() {
+    public List<ApiRequest<UpdateLanguageRequest>> examples() {
         return List.of(new UpdateLanguageRequest(53L,"new-isoCode-for-language"));
     }
 }

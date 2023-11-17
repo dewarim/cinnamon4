@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "updateMetasetTypeRequest")
-public class UpdateMetasetTypeRequest implements UpdateRequest<MetasetType>, ApiRequest {
+public class UpdateMetasetTypeRequest implements UpdateRequest<MetasetType>, ApiRequest<UpdateMetasetTypeRequest> {
 
     @JacksonXmlElementWrapper(localName = "metasetTypes")
     @JacksonXmlProperty(localName = "metasetType")
@@ -49,5 +49,10 @@ public class UpdateMetasetTypeRequest implements UpdateRequest<MetasetType>, Api
     @Override
     public Wrapper<MetasetType> fetchResponseWrapper() {
         return new MetasetTypeWrapper();
+    }
+
+    @Override
+    public List<ApiRequest<UpdateMetasetTypeRequest>> examples() {
+        return List.of(new UpdateMetasetTypeRequest(1L, "thumbnail"));
     }
 }

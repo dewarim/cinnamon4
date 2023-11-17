@@ -2,6 +2,7 @@ package com.dewarim.cinnamon.model.request.format;
 
 import com.dewarim.cinnamon.api.ApiRequest;
 import com.dewarim.cinnamon.model.Format;
+import com.dewarim.cinnamon.model.IndexMode;
 import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.response.FormatWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
@@ -14,7 +15,7 @@ import java.util.List;
 import java.util.Objects;
 
 @JacksonXmlRootElement(localName = "createFormatRequest")
-public class CreateFormatRequest implements CreateRequest<Format>, ApiRequest {
+public class CreateFormatRequest implements CreateRequest<Format>, ApiRequest<CreateFormatRequest> {
 
     @JacksonXmlElementWrapper(localName = "formats")
     @JacksonXmlProperty(localName = "format")
@@ -60,5 +61,10 @@ public class CreateFormatRequest implements CreateRequest<Format>, ApiRequest {
     @Override
     public Wrapper<Format> fetchResponseWrapper() {
         return new FormatWrapper();
+    }
+
+    @Override
+    public List<ApiRequest<CreateFormatRequest>> examples() {
+        return List.of(new CreateFormatRequest(List.of(new Format("application/cinnamon", "cnm", "CinnamonType", 1L, IndexMode.NONE))));
     }
 }

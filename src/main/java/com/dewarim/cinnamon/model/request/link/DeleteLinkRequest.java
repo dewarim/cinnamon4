@@ -8,7 +8,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "deleteLinkRequest")
-public class DeleteLinkRequest extends DeleteByIdRequest<Link> implements ApiRequest {
+public class DeleteLinkRequest extends DeleteByIdRequest<Link> implements ApiRequest<DeleteLinkRequest> {
 
     public DeleteLinkRequest() {
     }
@@ -19,5 +19,10 @@ public class DeleteLinkRequest extends DeleteByIdRequest<Link> implements ApiReq
 
     public DeleteLinkRequest(Long id) {
         super(id);
+    }
+
+    @Override
+    public List<ApiRequest<DeleteLinkRequest>> examples() {
+        return List.of(new DeleteLinkRequest(51L));
     }
 }

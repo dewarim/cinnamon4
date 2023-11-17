@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "createFolderTypeRequest")
-public class CreateFolderTypeRequest implements CreateRequest<FolderType>, ApiRequest {
+public class CreateFolderTypeRequest implements CreateRequest<FolderType>, ApiRequest<CreateFolderTypeRequest> {
 
     @JacksonXmlElementWrapper(localName = "folderTypes")
     @JacksonXmlProperty(localName = "folderType")
@@ -51,7 +51,7 @@ public class CreateFolderTypeRequest implements CreateRequest<FolderType>, ApiRe
     }
 
     @Override
-    public List<Object> examples() {
+    public List<ApiRequest<CreateFolderTypeRequest>> examples() {
         return List.of(new CreateFolderTypeRequest("source"), new CreateFolderTypeRequest(List.of(
                 new FolderType("temp"), new FolderType("bin")
         )));

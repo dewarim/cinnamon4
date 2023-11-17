@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Optional;
 
 @JacksonXmlRootElement(localName = "setPasswordRequest")
-public class SetPasswordRequest implements ApiRequest {
+public class SetPasswordRequest implements ApiRequest<SetPasswordRequest> {
 
     private Long   userId;
     private String password;
@@ -45,7 +45,7 @@ public class SetPasswordRequest implements ApiRequest {
     }
 
     @Override
-    public List<ApiRequest> examples() {
+    public List<ApiRequest<SetPasswordRequest>> examples() {
         return List.of(new SetPasswordRequest(123L, "my-new-secret-password"));
     }
 }

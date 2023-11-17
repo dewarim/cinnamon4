@@ -198,32 +198,6 @@ It does not otherwise change the AclGroup (as it only contains of a group and ac
 
 ---
 
-# /api/acl/aclInfo
-
-
-## Request
-
-```xml
-<aclInfoRequest>
-  <aclId/>
-  <name/>
-</aclInfoRequest>
-
-```
-
-
-## Response
-
-```xml
-<cinnamon>
-  <acls/>
-</cinnamon>
-
-```
-
-
----
-
 # /api/acl/create
 
 
@@ -270,7 +244,10 @@ It does not otherwise change the AclGroup (as it only contains of a group and ac
 ```xml
 <deleteAclRequest>
   <ignoreNotFound>false</ignoreNotFound>
-  <ids/>
+  <ids>
+    <id>43</id>
+    <id>99</id>
+  </ids>
 </deleteAclRequest>
 
 ```
@@ -2873,7 +2850,7 @@ Update lifecycles. Note: does not update lifecycle states
   <languageId>4</languageId>
   <aclId>5</aclId>
   <parentId>5</parentId>
-  <formatId/>
+  <formatId>23</formatId>
   <typeId>1</typeId>
   <latestHead>false</latestHead>
   <latestBranch>true</latestBranch>
@@ -2980,7 +2957,7 @@ should contain data.
   <languageId>4</languageId>
   <aclId>5</aclId>
   <parentId>5</parentId>
-  <formatId/>
+  <formatId>23</formatId>
   <typeId>1</typeId>
   <latestHead>false</latestHead>
   <latestBranch>true</latestBranch>
@@ -3185,7 +3162,7 @@ Returns an OSD's content according to it's format's content type.
   <languageId>4</languageId>
   <aclId>5</aclId>
   <parentId>5</parentId>
-  <formatId/>
+  <formatId>23</formatId>
   <typeId>1</typeId>
   <latestHead>false</latestHead>
   <latestBranch>true</latestBranch>
@@ -3242,7 +3219,7 @@ Returns an OSD's content according to it's format's content type.
   <languageId>4</languageId>
   <aclId>5</aclId>
   <parentId>5</parentId>
-  <formatId/>
+  <formatId>23</formatId>
   <typeId>1</typeId>
   <latestHead>false</latestHead>
   <latestBranch>true</latestBranch>
@@ -3463,8 +3440,8 @@ Add a summary to an object, for example a short description of the content.
       <modifierId/>
       <ownerId>45</ownerId>
       <lockerId/>
-      <created>2023-11-10T09:58:35+0000</created>
-      <modified>2023-11-10T09:58:35+0000</modified>
+      <created>2023-11-17T10:42:46+0000</created>
+      <modified>2023-11-17T10:42:46+0000</modified>
       <languageId>1</languageId>
       <aclId>56</aclId>
       <parentId>2</parentId>
@@ -3501,8 +3478,8 @@ Add a summary to an object, for example a short description of the content.
       <modifierId/>
       <ownerId>45</ownerId>
       <lockerId/>
-      <created>2023-11-10T09:58:35+0000</created>
-      <modified>2023-11-10T09:58:35+0000</modified>
+      <created>2023-11-17T10:42:46+0000</created>
+      <modified>2023-11-17T10:42:46+0000</modified>
       <languageId>1</languageId>
       <aclId>56</aclId>
       <parentId>2</parentId>
@@ -3620,7 +3597,7 @@ part "file", if the new version should contain data.
   <languageId>4</languageId>
   <aclId>5</aclId>
   <parentId>5</parentId>
-  <formatId/>
+  <formatId>23</formatId>
   <typeId>1</typeId>
   <latestHead>false</latestHead>
   <latestBranch>true</latestBranch>

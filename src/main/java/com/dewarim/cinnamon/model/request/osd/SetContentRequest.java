@@ -6,7 +6,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import java.util.Optional;
 
 @JacksonXmlRootElement(localName = "setContentRequest")
-public class SetContentRequest implements ApiRequest {
+public class SetContentRequest implements ApiRequest<SetContentRequest> {
 
     private Long id;
     private Long formatId;

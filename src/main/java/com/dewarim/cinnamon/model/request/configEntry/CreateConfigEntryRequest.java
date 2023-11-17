@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "createConfigEntryRequest")
-public class CreateConfigEntryRequest implements CreateRequest<ConfigEntry>, ApiRequest {
+public class CreateConfigEntryRequest implements CreateRequest<ConfigEntry>, ApiRequest<CreateConfigEntryRequest> {
 
     @JacksonXmlElementWrapper(localName = "configEntries")
     @JacksonXmlProperty(localName = "configEntry")
@@ -35,7 +35,7 @@ public class CreateConfigEntryRequest implements CreateRequest<ConfigEntry>, Api
     }
 
     @Override
-    public List<Object> examples() {
+    public List<ApiRequest<CreateConfigEntryRequest>> examples() {
         return List.of(
                 new CreateConfigEntryRequest("default-ui-settings", "<xml><show-logo>true</show-logo></xml>", true),
                 new CreateConfigEntryRequest("render-server-password", "xxx", false)

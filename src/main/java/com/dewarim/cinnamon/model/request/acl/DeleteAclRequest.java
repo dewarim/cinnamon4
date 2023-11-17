@@ -8,7 +8,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "deleteAclRequest")
-public class DeleteAclRequest extends DeleteByIdRequest<Acl> implements ApiRequest {
+public class DeleteAclRequest extends DeleteByIdRequest<Acl> implements ApiRequest<DeleteAclRequest> {
 
     public DeleteAclRequest() {
     }
@@ -19,5 +19,10 @@ public class DeleteAclRequest extends DeleteByIdRequest<Acl> implements ApiReque
 
     public DeleteAclRequest(Long id) {
         super(id);
+    }
+
+    @Override
+    public List<ApiRequest<DeleteAclRequest>> examples() {
+        return List.of(new DeleteAclRequest(List.of(43L, 99L)));
     }
 }

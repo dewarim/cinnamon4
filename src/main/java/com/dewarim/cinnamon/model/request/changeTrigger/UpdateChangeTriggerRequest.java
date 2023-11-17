@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "updateChangeTriggerRequest")
-public class UpdateChangeTriggerRequest implements UpdateRequest<ChangeTrigger>, ApiRequest {
+public class UpdateChangeTriggerRequest implements UpdateRequest<ChangeTrigger>, ApiRequest<UpdateRequest<ChangeTrigger>> {
 
     @JacksonXmlElementWrapper(localName = "changeTriggers")
     @JacksonXmlProperty(localName = "changeTrigger")
@@ -49,7 +49,7 @@ public class UpdateChangeTriggerRequest implements UpdateRequest<ChangeTrigger>,
     }
 
     @Override
-    public List<Object> examples() {
+    public List<ApiRequest<UpdateRequest<ChangeTrigger>>> examples() {
         return List.of(new UpdateChangeTriggerRequest(List.of(new ChangeTrigger(1L, "triggerThumbnailGenerator", "osd", "setContent", true,
                 false, true, false, "<config><url>http://localhost:64888/createThumbnail</url></config>",
                 ChangeTriggerType.MICROSERVICE,100 ))));

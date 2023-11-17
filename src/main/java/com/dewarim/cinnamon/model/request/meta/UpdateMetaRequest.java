@@ -1,7 +1,8 @@
-package com.dewarim.cinnamon.model.request;
+package com.dewarim.cinnamon.model.request.meta;
 
 import com.dewarim.cinnamon.api.ApiRequest;
 import com.dewarim.cinnamon.model.Meta;
+import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.response.MetaWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
@@ -13,7 +14,7 @@ import java.util.List;
 import java.util.Objects;
 
 @JacksonXmlRootElement(localName = "updateMetaRequest")
-public class UpdateMetaRequest implements ApiRequest, UpdateRequest<Meta> {
+public class UpdateMetaRequest implements ApiRequest<UpdateMetaRequest>, UpdateRequest<Meta> {
 
     @JacksonXmlElementWrapper(localName = "metasets")
     @JacksonXmlProperty(localName = "metaset")
@@ -58,7 +59,7 @@ public class UpdateMetaRequest implements ApiRequest, UpdateRequest<Meta> {
     }
 
     @Override
-    public List<ApiRequest> examples() {
+    public List<ApiRequest<UpdateMetaRequest>> examples() {
         Meta meta = new Meta(1L, 2L, "meta content update");
         meta.setId(123L);
         return List.of(new UpdateMetaRequest(List.of(meta)));

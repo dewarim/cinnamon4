@@ -8,7 +8,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "deleteFolderTypeRequest")
-public class DeleteFolderTypeRequest extends DeleteByIdRequest<FolderType> implements ApiRequest {
+public class DeleteFolderTypeRequest extends DeleteByIdRequest<FolderType> implements ApiRequest<DeleteFolderTypeRequest> {
 
     public DeleteFolderTypeRequest() {
     }
@@ -19,5 +19,10 @@ public class DeleteFolderTypeRequest extends DeleteByIdRequest<FolderType> imple
 
     public DeleteFolderTypeRequest(Long id) {
         super(id);
+    }
+
+    @Override
+    public List<ApiRequest<DeleteFolderTypeRequest>> examples() {
+        return List.of(new DeleteFolderTypeRequest(List.of(543L,44L)));
     }
 }

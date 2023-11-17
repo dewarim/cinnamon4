@@ -1,10 +1,7 @@
 package com.dewarim.cinnamon.model.request;
 
 
-import com.dewarim.cinnamon.api.ApiRequest;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
-
-public class DefaultListRequest implements ApiRequest {
+public class DefaultListRequest{
 
     private ListType type = ListType.FULL;
 

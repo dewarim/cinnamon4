@@ -1,6 +1,8 @@
 package com.dewarim.cinnamon.api;
 
-import com.dewarim.cinnamon.model.request.*;
+import com.dewarim.cinnamon.model.request.IdListRequest;
+import com.dewarim.cinnamon.model.request.IdRequest;
+import com.dewarim.cinnamon.model.request.ListUrlMappingInfoRequest;
 import com.dewarim.cinnamon.model.request.acl.CreateAclRequest;
 import com.dewarim.cinnamon.model.request.acl.DeleteAclRequest;
 import com.dewarim.cinnamon.model.request.acl.ListAclRequest;
@@ -32,9 +34,16 @@ import com.dewarim.cinnamon.model.request.language.CreateLanguageRequest;
 import com.dewarim.cinnamon.model.request.language.DeleteLanguageRequest;
 import com.dewarim.cinnamon.model.request.language.ListLanguageRequest;
 import com.dewarim.cinnamon.model.request.language.UpdateLanguageRequest;
-import com.dewarim.cinnamon.model.request.lifecycle.*;
+import com.dewarim.cinnamon.model.request.lifecycle.CreateLifecycleRequest;
+import com.dewarim.cinnamon.model.request.lifecycle.DeleteLifecycleRequest;
+import com.dewarim.cinnamon.model.request.lifecycle.ListLifecycleRequest;
+import com.dewarim.cinnamon.model.request.lifecycle.UpdateLifecycleRequest;
 import com.dewarim.cinnamon.model.request.lifecycleState.*;
-import com.dewarim.cinnamon.model.request.link.*;
+import com.dewarim.cinnamon.model.request.link.CreateLinkRequest;
+import com.dewarim.cinnamon.model.request.link.DeleteLinkRequest;
+import com.dewarim.cinnamon.model.request.link.GetLinksRequest;
+import com.dewarim.cinnamon.model.request.link.UpdateLinkRequest;
+import com.dewarim.cinnamon.model.request.meta.*;
 import com.dewarim.cinnamon.model.request.metasetType.CreateMetasetTypeRequest;
 import com.dewarim.cinnamon.model.request.metasetType.DeleteMetasetTypeRequest;
 import com.dewarim.cinnamon.model.request.metasetType.ListMetasetTypeRequest;
@@ -177,7 +186,6 @@ public enum UrlMapping {
     LIFECYCLE_STATE__UPDATE("lifecycleState", "update", "/api", "", UpdateLifecycleStateRequest.class, LifecycleStateWrapper.class),
     LIFECYCLE__CREATE("lifecycle", "create", "/api", "Create lifecycles. Note: does not create lifecycle states, defaultStateId should be empty.", CreateLifecycleRequest.class, LifecycleWrapper.class),
     LIFECYCLE__DELETE("lifecycle", "delete", "/api", "Delete lifecycles ", DeleteLifecycleRequest.class, DeleteResponse.class),
-    LIFECYCLE__GET("lifecycle", "get", "/api", "", LifecycleRequest.class, LifecycleWrapper.class),
     LIFECYCLE__LIST("lifecycle", "list", "/api", "List lifecycles ", ListLifecycleRequest.class, LifecycleWrapper.class),
     LIFECYCLE__UPDATE("lifecycle", "update", "/api", "Update lifecycles. Note: does not update lifecycle states ", UpdateLifecycleRequest.class, LifecycleWrapper.class),
     LINK__CREATE("link", "create", "/api", "", CreateLinkRequest.class, LinkWrapper.class),

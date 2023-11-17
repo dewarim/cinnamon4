@@ -9,7 +9,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "deleteRelationTypeRequest")
-public class DeleteRelationTypeRequest extends DeleteByIdRequest<RelationType> implements ApiRequest {
+public class DeleteRelationTypeRequest extends DeleteByIdRequest<RelationType> implements ApiRequest<DeleteRelationTypeRequest> {
 
     public DeleteRelationTypeRequest() {
     }
@@ -20,5 +20,10 @@ public class DeleteRelationTypeRequest extends DeleteByIdRequest<RelationType> i
 
     public DeleteRelationTypeRequest(Long id) {
         super(id);
+    }
+
+    @Override
+    public List<ApiRequest<DeleteRelationTypeRequest>> examples() {
+        return List.of(new DeleteRelationTypeRequest(List.of(333L,543L)));
     }
 }

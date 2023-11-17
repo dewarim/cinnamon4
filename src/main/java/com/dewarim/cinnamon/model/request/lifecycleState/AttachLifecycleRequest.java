@@ -3,8 +3,10 @@ package com.dewarim.cinnamon.model.request.lifecycleState;
 import com.dewarim.cinnamon.api.ApiRequest;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
+import java.util.List;
+
 @JacksonXmlRootElement(localName = "attachLifecycleRequest")
-public class AttachLifecycleRequest implements ApiRequest {
+public class AttachLifecycleRequest implements ApiRequest<AttachLifecycleRequest> {
 
     private Long osdId;
     private Long lifecycleId;
@@ -61,5 +63,10 @@ private boolean forceChange;
 
     public void setForceChange(boolean forceChange) {
         this.forceChange = forceChange;
+    }
+
+    @Override
+    public List<ApiRequest<AttachLifecycleRequest>> examples() {
+        return List.of(new AttachLifecycleRequest(4L, 6L, 2L, true));
     }
 }

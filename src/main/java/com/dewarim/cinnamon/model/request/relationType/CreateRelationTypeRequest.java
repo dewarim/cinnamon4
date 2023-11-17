@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Objects;
 
 @JacksonXmlRootElement(localName = "createRelationTypeRequest")
-public class CreateRelationTypeRequest implements CreateRequest<RelationType>, ApiRequest {
+public class CreateRelationTypeRequest implements CreateRequest<RelationType>, ApiRequest<CreateRelationTypeRequest> {
 
     @JacksonXmlElementWrapper(localName = "relationTypes")
     @JacksonXmlProperty(localName = "relationType")
@@ -55,7 +55,7 @@ public class CreateRelationTypeRequest implements CreateRequest<RelationType>, A
     }
 
     @Override
-    public List<Object> examples() {
+    public List<ApiRequest<CreateRelationTypeRequest>> examples() {
         return List.of(new CreateRelationTypeRequest(List.of(new RelationType("thumbnail-relation", true, false, true, false, true, false))));
     }
 }

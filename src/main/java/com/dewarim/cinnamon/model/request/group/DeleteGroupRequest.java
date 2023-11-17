@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 @JacksonXmlRootElement(localName = "deleteGroupRequest")
-public class DeleteGroupRequest extends DeleteByIdRequest<Group> implements ApiRequest {
+public class DeleteGroupRequest extends DeleteByIdRequest<Group> implements ApiRequest<DeleteGroupRequest> {
 
     boolean recursive;
 
@@ -43,7 +43,7 @@ public class DeleteGroupRequest extends DeleteByIdRequest<Group> implements ApiR
     }
 
     @Override
-    public List<ApiRequest> examples() {
+    public List<ApiRequest<DeleteGroupRequest>> examples() {
         return List.of(new DeleteGroupRequest(List.of(4L,6L,7L),true));
     }
 }

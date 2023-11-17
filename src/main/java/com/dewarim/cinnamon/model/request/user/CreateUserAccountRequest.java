@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "createUserAccountRequest")
-public class CreateUserAccountRequest implements CreateRequest<UserAccount>, ApiRequest {
+public class CreateUserAccountRequest implements CreateRequest<UserAccount>, ApiRequest<CreateUserAccountRequest> {
 
     @JacksonXmlElementWrapper(localName = "userAccounts")
     @JacksonXmlProperty(localName = "userAccount")
@@ -65,7 +65,7 @@ public class CreateUserAccountRequest implements CreateRequest<UserAccount>, Api
     }
 
     @Override
-    public List<Object> examples() {
+    public List<ApiRequest<CreateUserAccountRequest>> examples() {
         CreateUserAccountRequest request = new CreateUserAccountRequest("jane", "super-secret", "Jane Doe", "jane@example.com", 1L,
                 LoginType.CINNAMON.name(), false, true, true);
         request.userAccounts.get(0).getGroupIds().add(12L);

@@ -10,7 +10,7 @@ import java.util.Optional;
 import static com.dewarim.cinnamon.model.request.search.SearchType.*;
 
 @JacksonXmlRootElement(localName = "searchIdsRequest")
-public class SearchIdsRequest implements ApiRequest {
+public class SearchIdsRequest implements ApiRequest<SearchIdsRequest> {
 
     @JsonFormat(shape = JsonFormat.Shape.STRING)
     private SearchType searchType;
@@ -53,7 +53,7 @@ public class SearchIdsRequest implements ApiRequest {
     }
 
     @Override
-    public List<ApiRequest> examples() {
+    public List<ApiRequest<SearchIdsRequest>> examples() {
         return List.of(new SearchIdsRequest(OSD, "<BooleanQuery><Clause occurs='must'><TermQuery fieldName='name'>test</TermQuery></Clause></BooleanQuery>"),
                 new SearchIdsRequest(FOLDER,"<BooleanQuery><Clause occurs='must'><TermQuery fieldName='acl'>123</TermQuery></Clause></BooleanQuery>" ),
                 new SearchIdsRequest(ALL,"<BooleanQuery><Clause occurs='must'><TermQuery fieldName='owner'>1337</TermQuery></Clause></BooleanQuery>" )

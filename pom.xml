@@ -298,7 +298,7 @@
                 <!-- https://maven.apache.org/plugins/maven-shade-plugin/examples/executable-jar.html -->
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.5.0</version>
+                <version>3.5.1</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -324,7 +324,7 @@
                 <!-- https://www.mojohaus.org/buildnumber-maven-plugin/ -->
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>buildnumber-maven-plugin</artifactId>
-                <version>1.4</version>
+                <version>3.2.0</version>
                 <executions>
                     <execution>
                         <!-- use "package" instead of default validate - we do not check remote git etc at the moment,

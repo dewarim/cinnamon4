@@ -3,10 +3,11 @@ package com.dewarim.cinnamon.model.request.user;
 import com.dewarim.cinnamon.api.ApiRequest;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
+import java.util.List;
 import java.util.Optional;
 
 @JacksonXmlRootElement(localName = "userPermissionRequest")
-public class UserPermissionRequest implements ApiRequest {
+public class UserPermissionRequest implements ApiRequest<UserPermissionRequest> {
 
     private Long userId;
     private Long aclId;
@@ -45,5 +46,10 @@ public class UserPermissionRequest implements ApiRequest {
         } else {
             return Optional.empty();
         }
+    }
+
+    @Override
+    public List<ApiRequest<UserPermissionRequest>> examples() {
+        return List.of(new UserPermissionRequest(6L,7L));
     }
 }

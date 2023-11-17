@@ -8,7 +8,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "deleteRelationRequest")
-public class DeleteRelationRequest  extends DeleteByIdRequest<Relation>  implements ApiRequest {
+public class DeleteRelationRequest  extends DeleteByIdRequest<Relation>  implements ApiRequest<DeleteRelationRequest> {
 
     public DeleteRelationRequest() {
     }
@@ -21,4 +21,8 @@ public class DeleteRelationRequest  extends DeleteByIdRequest<Relation>  impleme
         super(ids);
     }
 
+    @Override
+    public List<ApiRequest<DeleteRelationRequest>> examples() {
+        return List.of(new DeleteRelationRequest(68L));
+    }
 }

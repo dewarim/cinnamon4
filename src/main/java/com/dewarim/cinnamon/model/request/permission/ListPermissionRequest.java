@@ -8,10 +8,17 @@ import com.dewarim.cinnamon.model.response.PermissionWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
+import java.util.List;
+
 @JacksonXmlRootElement(localName = "listPermissionRequest")
-public class ListPermissionRequest extends DefaultListRequest implements ListRequest<Permission>, ApiRequest {
+public class ListPermissionRequest extends DefaultListRequest implements ListRequest<Permission>, ApiRequest<ListPermissionRequest> {
     @Override
     public Wrapper<Permission> fetchResponseWrapper() {
         return new PermissionWrapper();
+    }
+
+    @Override
+    public List<ApiRequest<ListPermissionRequest>> examples() {
+        return List.of(new ListPermissionRequest());
     }
 }

@@ -2,6 +2,7 @@ package com.dewarim.cinnamon.model.request.index;
 
 import com.dewarim.cinnamon.api.ApiRequest;
 import com.dewarim.cinnamon.model.IndexItem;
+import com.dewarim.cinnamon.model.index.IndexType;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.response.IndexItemWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
@@ -14,7 +15,7 @@ import java.util.List;
 import java.util.Objects;
 
 @JacksonXmlRootElement(localName = "updateIndexItemRequest")
-public class UpdateIndexItemRequest implements UpdateRequest<IndexItem>, ApiRequest {
+public class UpdateIndexItemRequest implements UpdateRequest<IndexItem>, ApiRequest<UpdateIndexItemRequest> {
 
     @JacksonXmlElementWrapper(localName = "indexItems")
     @JacksonXmlProperty(localName = "indexItem")
@@ -38,7 +39,7 @@ public class UpdateIndexItemRequest implements UpdateRequest<IndexItem>, ApiRequ
 
     @Override
     public boolean validated() {
-        if(indexItems == null || indexItems.isEmpty()){
+        if (indexItems == null || indexItems.isEmpty()) {
             return false;
         }
         return indexItems.stream().noneMatch(item ->
@@ -59,5 +60,12 @@ public class UpdateIndexItemRequest implements UpdateRequest<IndexItem>, ApiRequ
     @Override
     public Wrapper<IndexItem> fetchResponseWrapper() {
         return new IndexItemWrapper();
+    }
+
+    @Override
+    public List<ApiRequest<UpdateIndexItemRequest>> examples() {
+        IndexItem indexItem = new IndexItem("content", true, "headline", "//title", "true()", false, IndexType.DEFAULT_INDEXER);
+        indexItem.setId(550L);
+        return List.of(new UpdateIndexItemRequest(List.of(indexItem)));
     }
 }

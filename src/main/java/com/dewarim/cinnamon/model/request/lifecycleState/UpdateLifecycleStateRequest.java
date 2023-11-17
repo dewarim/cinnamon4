@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Objects;
 
 @JacksonXmlRootElement(localName = "updateLifecycleStateRequest")
-public class UpdateLifecycleStateRequest implements UpdateRequest<LifecycleState>, ApiRequest<LifecycleState> {
+public class UpdateLifecycleStateRequest implements UpdateRequest<LifecycleState>, ApiRequest<UpdateLifecycleStateRequest> {
 
     @JacksonXmlElementWrapper(localName = "lifecycleStates")
     @JacksonXmlProperty(localName = "lifecycleState")
@@ -57,7 +57,7 @@ public class UpdateLifecycleStateRequest implements UpdateRequest<LifecycleState
     }
 
     @Override
-    public List<ApiRequest<LifecycleState>> examples() {
+    public List<ApiRequest<UpdateLifecycleStateRequest>> examples() {
         var lifecycleState = new LifecycleState("review-state-update", "<config/>", ChangeAclState.class.getName(), 1L, null);
         lifecycleState.setId(232L);
         return List.of(new UpdateLifecycleStateRequest(List.of(lifecycleState)));

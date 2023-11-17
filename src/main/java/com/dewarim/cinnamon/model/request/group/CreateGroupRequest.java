@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "createGroupRequest")
-public class CreateGroupRequest implements CreateRequest<Group>, ApiRequest {
+public class CreateGroupRequest implements CreateRequest<Group>, ApiRequest<CreateGroupRequest> {
 
     @JacksonXmlElementWrapper(localName = "groups")
     @JacksonXmlProperty(localName = "group")
@@ -56,7 +56,7 @@ public class CreateGroupRequest implements CreateRequest<Group>, ApiRequest {
     }
 
     @Override
-    public List<Object> examples() {
+    public List<ApiRequest<CreateGroupRequest>> examples() {
         return List.of(new CreateGroupRequest(List.of(new Group("authors", 1L), new Group("reviewers", 1L), new Group("admins"))));
     }
 }

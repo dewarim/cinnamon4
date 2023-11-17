@@ -6,7 +6,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "getUserAccountRequest")
-public class GetUserAccountRequest implements ApiRequest {
+public class GetUserAccountRequest implements ApiRequest<GetUserAccountRequest> {
     
     private Long userId;
     private String username;
@@ -44,7 +44,7 @@ public class GetUserAccountRequest implements ApiRequest {
     }
 
     @Override
-    public List<Object> examples() {
+    public List<ApiRequest<GetUserAccountRequest>> examples() {
         return List.of(new GetUserAccountRequest(1L,null),new GetUserAccountRequest(null, "by-name") );
     }
 }

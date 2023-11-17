@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "updateRelationTypeRequest")
-public class UpdateRelationTypeRequest implements UpdateRequest<RelationType>, ApiRequest {
+public class UpdateRelationTypeRequest implements UpdateRequest<RelationType>, ApiRequest<UpdateRelationTypeRequest> {
 
     @JacksonXmlElementWrapper(localName = "relationTypes")
     @JacksonXmlProperty(localName = "relationType")
@@ -41,8 +41,8 @@ public class UpdateRelationTypeRequest implements UpdateRequest<RelationType>, A
     @Override
     public boolean validated() {
         return relationTypes.stream().allMatch(type ->
-            type != null && type.getName() != null && !type.getName().trim().isEmpty()
-                    && type.getId() != null && type.getId() > 0);
+                type != null && type.getName() != null && !type.getName().trim().isEmpty()
+                        && type.getId() != null && type.getId() > 0);
     }
 
     @Override
@@ -51,7 +51,7 @@ public class UpdateRelationTypeRequest implements UpdateRequest<RelationType>, A
     }
 
     @Override
-    public List<Object> examples() {
-        return List.of(new UpdateRelationTypeRequest(List.of(new RelationType("updated-type",true,true,true,true,true,true))));
+    public List<ApiRequest<UpdateRelationTypeRequest>> examples() {
+        return List.of(new UpdateRelationTypeRequest(List.of(new RelationType("updated-type", true, true, true, true, true, true))));
     }
 }

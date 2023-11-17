@@ -3,8 +3,10 @@ package com.dewarim.cinnamon.model.request.osd;
 import com.dewarim.cinnamon.api.ApiRequest;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
+import java.util.List;
+
 @JacksonXmlRootElement(localName = "osdByFolderRequest")
-public class OsdByFolderRequest implements ApiRequest {
+public class OsdByFolderRequest implements ApiRequest<OsdByFolderRequest> {
 
     private boolean          includeSummary;
     private long             folderId;
@@ -79,5 +81,10 @@ public class OsdByFolderRequest implements ApiRequest {
                 ", linksAsOsd=" + linksAsOsd +
                 ", includeCustomMetadata=" + includeCustomMetadata +
                 '}';
+    }
+
+    @Override
+    public List<ApiRequest<OsdByFolderRequest>> examples() {
+        return List.of(new OsdByFolderRequest(6L, false, true, true, VersionPredicate.BRANCH));
     }
 }

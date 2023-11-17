@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 @JacksonXmlRootElement(localName = "copyOsdRequest")
-public class CopyOsdRequest implements ApiRequest {
+public class CopyOsdRequest implements ApiRequest<CopyOsdRequest> {
 
     @JacksonXmlElementWrapper(localName = "sourceIds")
     @JacksonXmlProperty(localName = "sourceId")
@@ -76,7 +76,7 @@ public class CopyOsdRequest implements ApiRequest {
     }
 
     @Override
-    public List<Object> examples() {
+    public List<ApiRequest<CopyOsdRequest>> examples() {
         return List.of(new CopyOsdRequest(List.of(1L,2L,3L), 20L, List.of(13L, 15L, 2L)));
     }
 }

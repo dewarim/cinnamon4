@@ -8,7 +8,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "deleteFormatRequest")
-public class DeleteFormatRequest extends DeleteByIdRequest<Format> implements ApiRequest {
+public class DeleteFormatRequest extends DeleteByIdRequest<Format> implements ApiRequest<DeleteFormatRequest> {
 
     public DeleteFormatRequest() {
     }
@@ -19,5 +19,10 @@ public class DeleteFormatRequest extends DeleteByIdRequest<Format> implements Ap
 
     public DeleteFormatRequest(Long id) {
         super(id);
+    }
+
+    @Override
+    public List<ApiRequest<DeleteFormatRequest>> examples() {
+        return List.of(new DeleteFormatRequest(999L));
     }
 }

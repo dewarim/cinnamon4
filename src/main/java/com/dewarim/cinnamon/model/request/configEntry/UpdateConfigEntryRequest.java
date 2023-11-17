@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "updateConfigEntryRequest")
-public class UpdateConfigEntryRequest implements UpdateRequest<ConfigEntry>, ApiRequest {
+public class UpdateConfigEntryRequest implements UpdateRequest<ConfigEntry>, ApiRequest<UpdateRequest<ConfigEntry>> {
 
     @JacksonXmlElementWrapper(localName = "configEntries")
     @JacksonXmlProperty(localName = "configEntry")
@@ -53,10 +53,10 @@ public class UpdateConfigEntryRequest implements UpdateRequest<ConfigEntry>, Api
     }
 
     @Override
-    public List<Object> examples() {
+    public List<ApiRequest<UpdateRequest<ConfigEntry>>> examples() {
         return List.of(
-                new CreateConfigEntryRequest(321L, "default-ui-settings", "<xml><show-logo>true</show-logo></xml>", true),
-                new CreateConfigEntryRequest(444L, "render-server-password", "xxx", false)
+                new UpdateConfigEntryRequest(321L, "default-ui-settings", "<xml><show-logo>true</show-logo></xml>", true),
+                new UpdateConfigEntryRequest(444L, "render-server-password", "xxx", false)
         );
     }
 }

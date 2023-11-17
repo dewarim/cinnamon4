@@ -8,7 +8,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "deleteLifecycleStateRequest")
-public class DeleteLifecycleStateRequest extends DeleteByIdRequest<LifecycleState> implements ApiRequest<LifecycleState> {
+public class DeleteLifecycleStateRequest extends DeleteByIdRequest<LifecycleState> implements ApiRequest<DeleteLifecycleStateRequest> {
 
     public DeleteLifecycleStateRequest() {
     }
@@ -19,5 +19,10 @@ public class DeleteLifecycleStateRequest extends DeleteByIdRequest<LifecycleStat
 
     public DeleteLifecycleStateRequest(Long id) {
         super(id);
+    }
+
+    @Override
+    public List<ApiRequest<DeleteLifecycleStateRequest>> examples() {
+        return List.of(new DeleteLifecycleStateRequest(6L));
     }
 }

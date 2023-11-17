@@ -7,7 +7,9 @@ import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.links.LinkType;
 import com.dewarim.cinnamon.model.relations.Relation;
 import com.dewarim.cinnamon.model.relations.RelationType;
-import com.dewarim.cinnamon.model.request.*;
+import com.dewarim.cinnamon.model.request.IdListRequest;
+import com.dewarim.cinnamon.model.request.IdRequest;
+import com.dewarim.cinnamon.model.request.ListUrlMappingInfoRequest;
 import com.dewarim.cinnamon.model.request.acl.CreateAclRequest;
 import com.dewarim.cinnamon.model.request.acl.DeleteAclRequest;
 import com.dewarim.cinnamon.model.request.acl.ListAclRequest;
@@ -38,12 +40,16 @@ import com.dewarim.cinnamon.model.request.language.CreateLanguageRequest;
 import com.dewarim.cinnamon.model.request.language.DeleteLanguageRequest;
 import com.dewarim.cinnamon.model.request.language.ListLanguageRequest;
 import com.dewarim.cinnamon.model.request.language.UpdateLanguageRequest;
-import com.dewarim.cinnamon.model.request.lifecycle.*;
-import com.dewarim.cinnamon.model.request.lifecycleState.AttachLifecycleRequest;
-import com.dewarim.cinnamon.model.request.lifecycleState.ChangeLifecycleStateRequest;
-import com.dewarim.cinnamon.model.request.lifecycleState.CreateLifecycleStateRequest;
-import com.dewarim.cinnamon.model.request.lifecycleState.UpdateLifecycleStateRequest;
-import com.dewarim.cinnamon.model.request.link.*;
+import com.dewarim.cinnamon.model.request.lifecycle.CreateLifecycleRequest;
+import com.dewarim.cinnamon.model.request.lifecycle.DeleteLifecycleRequest;
+import com.dewarim.cinnamon.model.request.lifecycle.ListLifecycleRequest;
+import com.dewarim.cinnamon.model.request.lifecycle.UpdateLifecycleRequest;
+import com.dewarim.cinnamon.model.request.lifecycleState.*;
+import com.dewarim.cinnamon.model.request.link.CreateLinkRequest;
+import com.dewarim.cinnamon.model.request.link.DeleteLinkRequest;
+import com.dewarim.cinnamon.model.request.link.GetLinksRequest;
+import com.dewarim.cinnamon.model.request.link.UpdateLinkRequest;
+import com.dewarim.cinnamon.model.request.meta.*;
 import com.dewarim.cinnamon.model.request.metasetType.CreateMetasetTypeRequest;
 import com.dewarim.cinnamon.model.request.metasetType.DeleteMetasetTypeRequest;
 import com.dewarim.cinnamon.model.request.metasetType.ListMetasetTypeRequest;
@@ -1090,17 +1096,21 @@ public class CinnamonClient {
         return lifecycleUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
+    // convenience function for tests
     public Lifecycle getLifecycle(Long lifecycleId) throws IOException {
-        var request = new LifecycleRequest(lifecycleId, null);
-        var response = sendStandardRequest(UrlMapping.LIFECYCLE__GET, request);
-        return lifecycleUnwrapper.unwrap(response, 1).get(0);
+        var request = new ListLifecycleStateRequest();
+        var response = sendStandardRequest(LIFECYCLE__LIST, request);
+        return lifecycleUnwrapper.unwrap(response, EXPECTED_SIZE_ANY)
+                .stream().filter(lifecycle -> lifecycle.getId().equals(lifecycleId))
+                .findFirst().orElseThrow(ErrorCode.LIFECYCLE_NOT_FOUND.getException());
     }
 
-    public Lifecycle getLifecycle(String name) throws IOException {
-        var request = new LifecycleRequest(null, name);
-        var response = sendStandardRequest(UrlMapping.LIFECYCLE__GET, request);
-        return lifecycleUnwrapper.unwrap(response, 1).get(0);
-
+    // convenience function for tests
+    public Lifecycle getLifecycleByName(String name) throws IOException {
+        var response = sendStandardRequest(LIFECYCLE__LIST, new ListLifecycleStateRequest());
+        return lifecycleUnwrapper.unwrap(response, EXPECTED_SIZE_ANY)
+                .stream().filter(lifecycle -> lifecycle.getName().equals(name))
+                .findFirst().orElseThrow();
     }
 
     public Lifecycle updateLifecycle(Lifecycle lifecycle) throws IOException {
@@ -1258,8 +1268,8 @@ public class CinnamonClient {
     }
 
     public void updateFolderMeta(Meta meta) throws IOException {
-        UpdateMetaRequest request = new UpdateMetaRequest(List.of(meta));
-        StandardResponse response = sendStandardRequest(FOLDER__UPDATE_META_CONTENT, request);
+        UpdateMetaRequest request  = new UpdateMetaRequest(List.of(meta));
+        StandardResponse  response = sendStandardRequest(FOLDER__UPDATE_META_CONTENT, request);
         verifyResponseIsOkay(response);
     }
 

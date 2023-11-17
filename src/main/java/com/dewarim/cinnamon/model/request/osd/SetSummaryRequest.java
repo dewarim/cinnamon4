@@ -1,4 +1,4 @@
-package com.dewarim.cinnamon.model.request;
+package com.dewarim.cinnamon.model.request.osd;
 
 import com.dewarim.cinnamon.api.ApiRequest;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
@@ -6,7 +6,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "setSummaryRequest")
-public class SetSummaryRequest implements ApiRequest {
+public class SetSummaryRequest implements ApiRequest<SetSummaryRequest> {
     
     private Long id;
     private String summary;
@@ -36,7 +36,10 @@ public class SetSummaryRequest implements ApiRequest {
     }
 
     @Override
-    public List<ApiRequest> examples() {
-        return List.of(new SetSummaryRequest(45L, "<xml>summary</xml>"), new SetSummaryRequest(65L,"be careful when indexing non-xml summaries"));
+    public List<ApiRequest<SetSummaryRequest>> examples() {
+        return List.of(
+                new SetSummaryRequest(45L, "<xml>summary</xml>"),
+                new SetSummaryRequest(65L,"be careful when indexing non-xml summaries")
+        );
     }
 }

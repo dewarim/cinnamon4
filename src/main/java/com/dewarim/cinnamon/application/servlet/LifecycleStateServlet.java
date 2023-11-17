@@ -16,12 +16,7 @@ import com.dewarim.cinnamon.model.LifecycleState;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.request.IdRequest;
-import com.dewarim.cinnamon.model.request.lifecycleState.AttachLifecycleRequest;
-import com.dewarim.cinnamon.model.request.lifecycleState.ChangeLifecycleStateRequest;
-import com.dewarim.cinnamon.model.request.lifecycleState.CreateLifecycleStateRequest;
-import com.dewarim.cinnamon.model.request.lifecycleState.DeleteLifecycleStateRequest;
-import com.dewarim.cinnamon.model.request.lifecycleState.ListLifecycleStateRequest;
-import com.dewarim.cinnamon.model.request.lifecycleState.UpdateLifecycleStateRequest;
+import com.dewarim.cinnamon.model.request.lifecycleState.*;
 import com.dewarim.cinnamon.model.response.LifecycleStateWrapper;
 import com.dewarim.cinnamon.provider.StateProviderService;
 import com.dewarim.cinnamon.security.authorization.AccessFilter;
@@ -53,8 +48,7 @@ public class LifecycleStateServlet extends BaseServlet implements CruddyServlet<
         UserAccount       user             = ThreadLocalSqlSession.getCurrentUser();
 
         switch (mapping) {
-            case LIFECYCLE_STATE__ATTACH_LIFECYCLE ->
-                    attachLifecycleState(request, cinnamonResponse, osdDao, lifecycleDao, stateDao, user);
+            case LIFECYCLE_STATE__ATTACH_LIFECYCLE -> attachLifecycleState(request, cinnamonResponse, osdDao, lifecycleDao, stateDao, user);
             case LIFECYCLE_STATE__CHANGE_STATE -> changeState(request, cinnamonResponse, osdDao, stateDao, user);
             case LIFECYCLE_STATE__DETACH_LIFECYCLE -> detachLifecycleState(request, cinnamonResponse, osdDao, user);
             case LIFECYCLE_STATE__GET -> getLifecycleState(request, cinnamonResponse);
@@ -70,8 +64,7 @@ public class LifecycleStateServlet extends BaseServlet implements CruddyServlet<
                 superuserCheck();
                 update(convertUpdateRequest(request, UpdateLifecycleStateRequest.class), stateDao, cinnamonResponse);
             }
-            case LIFECYCLE_STATE__LIST ->
-                    list(convertListRequest(request, ListLifecycleStateRequest.class), stateDao, cinnamonResponse);
+            case LIFECYCLE_STATE__LIST -> list(convertListRequest(request, ListLifecycleStateRequest.class), stateDao, cinnamonResponse);
             case LIFECYCLE_STATE__GET_NEXT_STATES -> getNextStates(request, cinnamonResponse, osdDao, stateDao);
             default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
@@ -124,7 +117,8 @@ public class LifecycleStateServlet extends BaseServlet implements CruddyServlet<
             osd.setLifecycleStateId(lcState.getId());
             osdDao.updateOsd(osd, true);
             response.responseIsGenericOkay();
-        } else {
+        }
+        else {
             throw new FailedRequestException(ErrorCode.LIFECYCLE_STATE_CHANGE_FAILED, stateChangeResult.getCombinedMessages());
         }
     }
@@ -170,7 +164,8 @@ public class LifecycleStateServlet extends BaseServlet implements CruddyServlet<
             State newState = StateProviderService.getInstance().getStateProvider(lifecycleState.getStateClass()).getState();
             changeStateAndCreateResponse(newState, osd, lifecycleState, osdDao, response, attachReq.isForceChange());
 
-        } else {
+        }
+        else {
             ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.INVALID_REQUEST);
         }
     }
@@ -179,14 +174,10 @@ public class LifecycleStateServlet extends BaseServlet implements CruddyServlet<
         IdRequest         stateRequest = xmlMapper.readValue(request.getInputStream(), IdRequest.class);
         LifecycleStateDao stateDao     = new LifecycleStateDao();
         if (stateRequest.validated()) {
-            Optional<LifecycleState> state = stateDao.getLifecycleStateById(stateRequest.getId());
-            if (state.isPresent()) {
-                LifecycleStateWrapper wrapper = new LifecycleStateWrapper();
-                wrapper.setLifecycleStates(Collections.singletonList(state.get()));
-                response.setWrapper(wrapper);
-            } else {
-                ErrorCode.OBJECT_NOT_FOUND.throwUp();
-            }
+            Optional<LifecycleState> state   = stateDao.getLifecycleStateById(stateRequest.getId());
+            LifecycleStateWrapper    wrapper = new LifecycleStateWrapper();
+            wrapper.setLifecycleStates(Collections.singletonList(state.orElseThrow(ErrorCode.LIFECYCLE_STATE_NOT_FOUND.getException())));
+            response.setWrapper(wrapper);
             return;
         }
         ErrorCode.INVALID_REQUEST.throwUp();

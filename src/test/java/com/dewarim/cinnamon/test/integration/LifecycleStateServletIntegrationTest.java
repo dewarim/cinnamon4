@@ -38,12 +38,12 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
 
     @Test
     public void getLifecycleStateWithInvalidRequest() {
-        assertClientError(() -> client.getLifecycle(-1L), INVALID_REQUEST);
+        assertClientError(() -> client.getLifecycleState(-1L), INVALID_REQUEST);
     }
 
     @Test
     public void getLifecycleStateWhichDoesNotExist() {
-        assertClientError(() -> client.getLifecycle(Long.MAX_VALUE), OBJECT_NOT_FOUND);
+        assertClientError(() -> client.getLifecycleState(Long.MAX_VALUE), LIFECYCLE_STATE_NOT_FOUND);
     }
 
     @Test

@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "createObjectTypeRequest")
-public class CreateObjectTypeRequest implements CreateRequest<ObjectType>, ApiRequest {
+public class CreateObjectTypeRequest implements CreateRequest<ObjectType>, ApiRequest<CreateObjectTypeRequest> {
 
     @JacksonXmlElementWrapper(localName = "objectTypes")
     @JacksonXmlProperty(localName = "objectType")
@@ -52,7 +52,7 @@ public class CreateObjectTypeRequest implements CreateRequest<ObjectType>, ApiRe
     }
 
     @Override
-    public List<Object> examples() {
+    public List<ApiRequest<CreateObjectTypeRequest>> examples() {
         return List.of(new CreateObjectTypeRequest(
                 List.of(new ObjectType("default type"), new ObjectType("other type"))
         ));

@@ -1,15 +1,15 @@
 package com.dewarim.cinnamon.application.servlet;
 
 import com.dewarim.cinnamon.ErrorCode;
-import com.dewarim.cinnamon.FailedRequestException;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.dao.LifecycleDao;
 import com.dewarim.cinnamon.dao.LifecycleStateDao;
 import com.dewarim.cinnamon.model.Lifecycle;
-import com.dewarim.cinnamon.model.LifecycleState;
-import com.dewarim.cinnamon.model.request.lifecycle.*;
-import com.dewarim.cinnamon.model.response.LifecycleWrapper;
+import com.dewarim.cinnamon.model.request.lifecycle.CreateLifecycleRequest;
+import com.dewarim.cinnamon.model.request.lifecycle.DeleteLifecycleRequest;
+import com.dewarim.cinnamon.model.request.lifecycle.ListLifecycleRequest;
+import com.dewarim.cinnamon.model.request.lifecycle.UpdateLifecycleRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -17,10 +17,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -54,7 +52,6 @@ public class LifecycleServlet extends HttpServlet implements CruddyServlet<Lifec
                 list(convertListRequest(request, ListLifecycleRequest.class), lifecycleDao, cinnamonResponse);
                 addLifecycleStates(cinnamonResponse);
             }
-            case LIFECYCLE__GET -> getLifecycle(request, cinnamonResponse);
             default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
     }
@@ -66,30 +63,6 @@ public class LifecycleServlet extends HttpServlet implements CruddyServlet<Lifec
         stateDao.list().stream()
                 .filter(state -> lifecycleMap.containsKey(state.getLifecycleId()))
                 .forEach(state -> lifecycleMap.get(state.getLifecycleId()).getLifecycleStates().add(state));
-    }
-
-    private void getLifecycle(HttpServletRequest request, CinnamonResponse response) throws IOException {
-        LifecycleRequest lifecycleRequest = xmlMapper.readValue(request.getInputStream(), LifecycleRequest.class);
-        if (lifecycleRequest.validated()) {
-            Lifecycle            lifecycle       = getLifecycle(lifecycleRequest);
-            List<LifecycleState> lifecycleStates = new LifecycleStateDao().getLifecycleStatesByLifecycleId(lifecycle.getId());
-            lifecycle.setLifecycleStates(lifecycleStates);
-            LifecycleWrapper wrapper = new LifecycleWrapper(Collections.singletonList(lifecycle));
-            response.setWrapper(wrapper);
-        } else {
-            throw ErrorCode.INVALID_REQUEST.exception();
-        }
-    }
-
-    private static Lifecycle getLifecycle(LifecycleRequest lifecycleRequest) {
-        Long                id           = lifecycleRequest.getId();
-        LifecycleDao        lifecycleDao = new LifecycleDao();
-        Optional<Lifecycle> lifecycleOpt = lifecycleDao.getLifecycleById(id);
-        Lifecycle lifecycle = lifecycleOpt.orElseGet(() -> lifecycleDao.getLifecycleByName(lifecycleRequest.getName()).orElse(null));
-        if (lifecycle == null) {
-            throw new FailedRequestException(ErrorCode.OBJECT_NOT_FOUND);
-        }
-        return lifecycle;
     }
 
     @Override

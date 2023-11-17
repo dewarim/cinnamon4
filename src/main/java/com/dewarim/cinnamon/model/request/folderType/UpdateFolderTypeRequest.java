@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "updateFolderTypeRequest")
-public class UpdateFolderTypeRequest implements UpdateRequest<FolderType>, ApiRequest {
+public class UpdateFolderTypeRequest implements UpdateRequest<FolderType>, ApiRequest<UpdateFolderTypeRequest> {
 
     @JacksonXmlElementWrapper(localName = "folderTypes")
     @JacksonXmlProperty(localName = "folderType")
@@ -45,5 +45,10 @@ public class UpdateFolderTypeRequest implements UpdateRequest<FolderType>, ApiRe
     @Override
     public Wrapper<FolderType> fetchResponseWrapper() {
         return new FolderTypeWrapper();
+    }
+
+    @Override
+    public List<ApiRequest<UpdateFolderTypeRequest>> examples() {
+        return List.of(new UpdateFolderTypeRequest(665L, "almost-evil-type"));
     }
 }

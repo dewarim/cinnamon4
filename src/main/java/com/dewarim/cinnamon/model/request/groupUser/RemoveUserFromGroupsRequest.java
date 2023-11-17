@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 @JacksonXmlRootElement(localName = "removeUserFromGroupsRequest")
-public class RemoveUserFromGroupsRequest implements ApiRequest {
+public class RemoveUserFromGroupsRequest implements ApiRequest<RemoveUserFromGroupsRequest> {
 
     @JacksonXmlElementWrapper(localName = "groupIds")
     @JacksonXmlProperty(localName = "groupId")
@@ -45,7 +45,7 @@ public class RemoveUserFromGroupsRequest implements ApiRequest {
     }
 
     @Override
-    public List<Object> examples() {
+    public List<ApiRequest<RemoveUserFromGroupsRequest>> examples() {
         return List.of(new RemoveUserFromGroupsRequest(33L, List.of(1L, 2L, 3L)));
     }
 }

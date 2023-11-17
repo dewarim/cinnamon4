@@ -1,7 +1,7 @@
 package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.model.MetasetType;
-import com.dewarim.cinnamon.model.request.CreateMetaRequest;
+import com.dewarim.cinnamon.model.request.meta.CreateMetaRequest;
 import com.dewarim.cinnamon.test.TestObjectHolder;
 import org.junit.jupiter.api.Test;
 

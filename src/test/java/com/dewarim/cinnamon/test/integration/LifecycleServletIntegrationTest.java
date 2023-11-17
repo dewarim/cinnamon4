@@ -1,10 +1,8 @@
 package com.dewarim.cinnamon.test.integration;
 
-import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.lifecycle.NopState;
 import com.dewarim.cinnamon.model.Lifecycle;
 import com.dewarim.cinnamon.model.LifecycleState;
-import com.dewarim.cinnamon.model.request.lifecycle.LifecycleRequest;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -44,7 +42,7 @@ public class LifecycleServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getLifecycleHappyPathWithName() throws IOException {
-        Lifecycle lifecycle = client.getLifecycle("render.lc");
+        Lifecycle lifecycle = client.getLifecycleByName("render.lc");
         assertEquals("render.lc", lifecycle.getName());
         assertEquals(Long.valueOf(2), lifecycle.getId());
         List<LifecycleState> lifecycleStates = lifecycle.getLifecycleStates();
@@ -55,24 +53,13 @@ public class LifecycleServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void getLifecycleFailOnNotFound() throws IOException {
-        sendStandardRequestAndAssertError(UrlMapping.LIFECYCLE__GET, new LifecycleRequest(Long.MAX_VALUE, null), OBJECT_NOT_FOUND);
-        sendStandardRequestAndAssertError(UrlMapping.LIFECYCLE__GET, new LifecycleRequest(null, "does-not-exist"), OBJECT_NOT_FOUND);
-    }
-
-    @Test
-    public void getLifecycleFailOnInvalidRequest() throws IOException {
-        sendStandardRequestAndAssertError(UrlMapping.LIFECYCLE__GET, new LifecycleRequest(null, null), INVALID_REQUEST);
-        sendStandardRequestAndAssertError(UrlMapping.LIFECYCLE__GET, new LifecycleRequest(-1L, null), INVALID_REQUEST);
-        sendStandardRequestAndAssertError(UrlMapping.LIFECYCLE__GET, new LifecycleRequest(null, ""), INVALID_REQUEST);
-    }
-
-    @Test
     public void createLifecycleTest() throws IOException {
         Lifecycle lifecycle = adminClient.createLifecycle("foo-cycle");
         assertNotNull(lifecycle.getId());
         assertEquals("foo-cycle", lifecycle.getName());
-        Lifecycle fooCycle = client.getLifecycle("foo-cycle");
+        Lifecycle fooCycle = client.listLifecycles().stream()
+                .filter(lifecycle1 -> lifecycle1.getName().equals("foo-cycle"))
+                .findFirst().orElseThrow();
         assertEquals(lifecycle, fooCycle);
     }
 

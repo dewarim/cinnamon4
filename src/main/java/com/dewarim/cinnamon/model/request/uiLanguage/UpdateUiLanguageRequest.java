@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "updateUiLanguageRequest")
-public class UpdateUiLanguageRequest implements UpdateRequest<UiLanguage>, ApiRequest {
+public class UpdateUiLanguageRequest implements UpdateRequest<UiLanguage>, ApiRequest<UpdateUiLanguageRequest> {
 
     @JacksonXmlElementWrapper(localName = "uiLanguages")
     @JacksonXmlProperty(localName = "uiLanguage")
@@ -52,7 +52,7 @@ public class UpdateUiLanguageRequest implements UpdateRequest<UiLanguage>, ApiRe
     }
 
     @Override
-    public List<Object> examples() {
+    public List<ApiRequest<UpdateUiLanguageRequest>> examples() {
         return List.of(new UpdateUiLanguageRequest(List.of(new UiLanguage(69L, "FR"), new UiLanguage(96L, "GR"))));
     }
 }

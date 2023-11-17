@@ -4,6 +4,7 @@ import com.dewarim.cinnamon.api.ApiRequest;
 import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.links.LinkType;
 import com.dewarim.cinnamon.model.request.CreateRequest;
+import com.dewarim.cinnamon.model.response.LinkWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
@@ -13,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "createLinkRequest")
-public class CreateLinkRequest implements CreateRequest<Link>, ApiRequest {
+public class CreateLinkRequest implements CreateRequest<Link>, ApiRequest<CreateLinkRequest> {
 
     @JacksonXmlElementWrapper(localName = "links")
     @JacksonXmlProperty(localName = "link")
@@ -51,5 +52,13 @@ public class CreateLinkRequest implements CreateRequest<Link>, ApiRequest {
     @Override
     public Wrapper<Link> fetchResponseWrapper() {
         return new LinkWrapper();
+    }
+
+    @Override
+    public List<ApiRequest<CreateLinkRequest>> examples() {
+        return List.of(
+                new CreateLinkRequest(5L, LinkType.OBJECT, 1L, 1L, 2L, 3L),
+                new CreateLinkRequest(5L, LinkType.FOLDER, 1L, 1L, 2L, 3L)
+        );
     }
 }

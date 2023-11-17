@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 @JacksonXmlRootElement(localName = "getLinksRequest")
-public class GetLinksRequest implements ApiRequest {
+public class GetLinksRequest implements ApiRequest<GetLinksRequest> {
     
     private boolean includeSummary;
 
@@ -58,5 +58,8 @@ public class GetLinksRequest implements ApiRequest {
         }
     }
 
-
+    @Override
+    public List<ApiRequest<GetLinksRequest>> examples() {
+        return List.of(new GetLinksRequest(9L, true));
+    }
 }

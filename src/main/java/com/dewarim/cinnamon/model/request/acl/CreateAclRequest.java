@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "createAclRequest")
-public class CreateAclRequest implements CreateRequest<Acl>, ApiRequest {
+public class CreateAclRequest implements CreateRequest<Acl>, ApiRequest<CreateAclRequest> {
 
     @JacksonXmlElementWrapper(localName = "acls")
     @JacksonXmlProperty(localName = "acl")
@@ -48,7 +48,7 @@ public class CreateAclRequest implements CreateRequest<Acl>, ApiRequest {
     }
 
     @Override
-    public List<Object> examples() {
+    public List<ApiRequest<CreateAclRequest>> examples() {
         return List.of(new CreateAclRequest(List.of(new Acl("default acl"), new Acl( "reviewers"), new Acl("authors"))));
     }
 }

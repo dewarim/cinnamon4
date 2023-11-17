@@ -1,7 +1,6 @@
-package com.dewarim.cinnamon.model.request;
+package com.dewarim.cinnamon.model.request.meta;
 
 import com.dewarim.cinnamon.api.ApiRequest;
-import com.dewarim.cinnamon.model.Meta;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
@@ -10,7 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 @JacksonXmlRootElement(localName = "metaRequest")
-public class MetaRequest implements ApiRequest<Meta> {
+public class MetaRequest implements ApiRequest<MetaRequest> {
 
     private Long         id;
 
@@ -54,7 +53,7 @@ public class MetaRequest implements ApiRequest<Meta> {
     }
 
     @Override
-    public List<ApiRequest<Meta>> examples() {
+    public List<ApiRequest<MetaRequest>> examples() {
         return List.of(new MetaRequest(3L, List.of(12L, 13L)), new MetaRequest(1L, null));
     }
 }

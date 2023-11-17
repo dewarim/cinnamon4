@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "updateGroupRequest")
-public class UpdateGroupRequest implements UpdateRequest<Group>, ApiRequest {
+public class UpdateGroupRequest implements UpdateRequest<Group>, ApiRequest<UpdateGroupRequest> {
 
     @JacksonXmlElementWrapper(localName = "groups")
     @JacksonXmlProperty(localName = "group")
@@ -52,7 +52,7 @@ public class UpdateGroupRequest implements UpdateRequest<Group>, ApiRequest {
     }
 
     @Override
-    public List<Object> examples() {
+    public List<ApiRequest<UpdateGroupRequest>> examples() {
         return List.of(new UpdateGroupRequest(List.of(new Group(11L, "updated-group-name",2L))));
     }
 }

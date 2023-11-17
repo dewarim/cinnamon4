@@ -1,14 +1,13 @@
 package com.dewarim.cinnamon.model.request.osd;
 
 import com.dewarim.cinnamon.api.ApiRequest;
-import com.dewarim.cinnamon.model.relations.Relation;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.List;
 import java.util.Optional;
 
 @JacksonXmlRootElement(localName = "getRelationsRequest")
-public class GetRelationsRequest implements ApiRequest<Relation> {
+public class GetRelationsRequest implements ApiRequest<GetRelationsRequest> {
 
     private List<Long> ids;
     private boolean    includeMetadata;
@@ -50,7 +49,7 @@ public class GetRelationsRequest implements ApiRequest<Relation> {
     }
 
     @Override
-    public List<ApiRequest<Relation>> examples() {
+    public List<ApiRequest<GetRelationsRequest>> examples() {
         return List.of(new GetRelationsRequest(List.of(1L,32L,4L), false));
     }
 }

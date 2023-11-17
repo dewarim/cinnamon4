@@ -3,10 +3,11 @@ package com.dewarim.cinnamon.model.request;
 import com.dewarim.cinnamon.api.ApiRequest;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
+import java.util.List;
 import java.util.Optional;
 
 @JacksonXmlRootElement(localName = "idRequest")
-public class IdRequest implements ApiRequest {
+public class IdRequest implements ApiRequest<IdRequest> {
     
     private Long id;
 
@@ -43,5 +44,10 @@ public class IdRequest implements ApiRequest {
         return "IdRequest{" +
                 "id=" + id +
                 '}';
+    }
+
+    @Override
+    public List<ApiRequest<IdRequest>> examples() {
+        return List.of(new IdRequest(7L));
     }
 }

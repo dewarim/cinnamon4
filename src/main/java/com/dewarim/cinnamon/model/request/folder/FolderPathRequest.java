@@ -6,7 +6,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "folderPathRequest")
-public class FolderPathRequest implements ApiRequest {
+public class FolderPathRequest implements ApiRequest<FolderPathRequest> {
 
     private String path;
     private boolean includeSummary;
@@ -40,7 +40,7 @@ public class FolderPathRequest implements ApiRequest {
     }
 
     @Override
-    public List<ApiRequest> examples() {
+    public List<ApiRequest<FolderPathRequest>> examples() {
         return List.of(new FolderPathRequest("/home/creation/some-sub-folder", true));
     }
 }

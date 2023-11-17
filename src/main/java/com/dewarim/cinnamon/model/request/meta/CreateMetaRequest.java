@@ -1,4 +1,4 @@
-package com.dewarim.cinnamon.model.request;
+package com.dewarim.cinnamon.model.request.meta;
 
 import com.dewarim.cinnamon.api.ApiRequest;
 import com.dewarim.cinnamon.model.Meta;
@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 @JacksonXmlRootElement(localName = "createMetaRequest")
-public class CreateMetaRequest implements ApiRequest<Meta> {
+public class CreateMetaRequest implements ApiRequest<CreateMetaRequest> {
 
     @JacksonXmlElementWrapper(localName = "metasets")
     @JacksonXmlProperty(localName = "metaset")
@@ -59,7 +59,7 @@ public class CreateMetaRequest implements ApiRequest<Meta> {
     }
 
     @Override
-    public List<ApiRequest<Meta>> examples() {
+    public List<ApiRequest<CreateMetaRequest>> examples() {
         return List.of(new CreateMetaRequest(32L, "<xml>some meta</xml>", 3L),
                 new CreateMetaRequest(40L, "<meta>metadata</meta>", 10L));
     }

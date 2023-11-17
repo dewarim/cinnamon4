@@ -1,9 +1,8 @@
-package com.dewarim.cinnamon.model.request.link;
+package com.dewarim.cinnamon.model.response;
 
 import com.dewarim.cinnamon.api.ApiResponse;
 import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.links.LinkType;
-import com.dewarim.cinnamon.model.response.Wrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;

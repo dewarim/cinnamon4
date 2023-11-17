@@ -2,6 +2,7 @@ package com.dewarim.cinnamon.model.request.format;
 
 import com.dewarim.cinnamon.api.ApiRequest;
 import com.dewarim.cinnamon.model.Format;
+import com.dewarim.cinnamon.model.IndexMode;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.response.FormatWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
@@ -14,7 +15,7 @@ import java.util.List;
 import java.util.Objects;
 
 @JacksonXmlRootElement(localName = "updateFormatRequest")
-public class UpdateFormatRequest implements UpdateRequest<Format>, ApiRequest {
+public class UpdateFormatRequest implements UpdateRequest<Format>, ApiRequest<UpdateFormatRequest> {
 
     @JacksonXmlElementWrapper(localName = "formats")
     @JacksonXmlProperty(localName = "format")
@@ -59,5 +60,10 @@ public class UpdateFormatRequest implements UpdateRequest<Format>, ApiRequest {
     @Override
     public Wrapper<Format> fetchResponseWrapper() {
         return new FormatWrapper();
+    }
+
+    @Override
+    public List<ApiRequest<UpdateFormatRequest>> examples() {
+        return List.of(new UpdateFormatRequest(List.of(new Format("text/plain", "txt", "text", 2L, IndexMode.PLAIN_TEXT))));
     }
 }

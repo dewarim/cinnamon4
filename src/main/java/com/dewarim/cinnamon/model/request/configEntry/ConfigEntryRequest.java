@@ -13,7 +13,7 @@ import java.util.Optional;
  * Request a list of config entries either by a list of ids or names
  */
 @JacksonXmlRootElement(localName = "configEntryRequest")
-public class ConfigEntryRequest implements ApiRequest {
+public class ConfigEntryRequest implements ApiRequest<ConfigEntryRequest> {
     @JacksonXmlElementWrapper(localName = "ids")
     @JacksonXmlProperty(localName = "id")
     private List<Long> ids = new ArrayList<>();
@@ -47,7 +47,7 @@ public class ConfigEntryRequest implements ApiRequest {
     }
 
     @Override
-    public List<Object> examples() {
+    public List<ApiRequest<ConfigEntryRequest>> examples() {
         return List.of(new ConfigEntryRequest(123L), new ConfigEntryRequest(456L));
     }
 }

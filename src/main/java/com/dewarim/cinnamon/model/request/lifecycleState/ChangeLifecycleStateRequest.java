@@ -3,10 +3,11 @@ package com.dewarim.cinnamon.model.request.lifecycleState;
 import com.dewarim.cinnamon.api.ApiRequest;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
+import java.util.List;
 import java.util.Optional;
 
 @JacksonXmlRootElement(localName = "changeLifecycleStateRequest")
-public class ChangeLifecycleStateRequest implements ApiRequest {
+public class ChangeLifecycleStateRequest implements ApiRequest<ChangeLifecycleStateRequest> {
 
     private Long   osdId;
     private Long   stateId;
@@ -46,5 +47,10 @@ public class ChangeLifecycleStateRequest implements ApiRequest {
 
     public void setStateId(Long stateId) {
         this.stateId = stateId;
+    }
+
+    @Override
+    public List<ApiRequest<ChangeLifecycleStateRequest>> examples() {
+        return List.of(new ChangeLifecycleStateRequest(5L,32L));
     }
 }

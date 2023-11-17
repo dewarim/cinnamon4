@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 @JacksonXmlRootElement(localName = "folderRequest")
-public class FolderRequest implements ApiRequest {
+public class FolderRequest implements ApiRequest<FolderRequest> {
 
     @JacksonXmlElementWrapper(localName = "ids")
     @JacksonXmlProperty(localName = "id")
@@ -55,5 +55,10 @@ public class FolderRequest implements ApiRequest {
         } else {
             return Optional.empty();
         }
+    }
+
+    @Override
+    public List<ApiRequest<FolderRequest>> examples() {
+        return List.of(new FolderRequest(List.of(1L,2L,3L),true));
     }
 }

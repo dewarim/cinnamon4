@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 @JacksonXmlRootElement(localName = "addUserToGroupsRequest")
-public class AddUserToGroupsRequest implements ApiRequest {
+public class AddUserToGroupsRequest implements ApiRequest<AddUserToGroupsRequest> {
 
     @JacksonXmlElementWrapper(localName = "groupIds")
     @JacksonXmlProperty(localName = "groupId")
@@ -46,7 +46,7 @@ public class AddUserToGroupsRequest implements ApiRequest {
     }
 
     @Override
-    public List<Object> examples() {
+    public List<ApiRequest<AddUserToGroupsRequest>> examples() {
         return List.of(new AddUserToGroupsRequest(33L, List.of(1L, 2L, 3L)));
     }
 }
