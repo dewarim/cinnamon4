@@ -9,12 +9,7 @@ import org.apache.ibatis.exceptions.PersistenceException;
 import org.apache.ibatis.session.SqlSession;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.dewarim.cinnamon.dao.SqlAction.*;
@@ -115,6 +110,9 @@ public interface CrudDao<T extends Identifiable> {
         };
     }
 
+    /**
+     *  partition test code in ConfigEntryServletIntegrationTest.createAndDeleteLotsOfObjects()
+     */
     static List<List<Long>> partitionLongList(List<Long> ids) {
         if (ids.size() < BATCH_SIZE) {
             return List.of(ids);

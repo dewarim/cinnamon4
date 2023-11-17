@@ -6,6 +6,7 @@ import com.dewarim.cinnamon.test.TestObjectHolder;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.dewarim.cinnamon.ErrorCode.*;
@@ -14,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class ConfigEntryServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
-    public void create() throws IOException{
+    public void create() throws IOException {
         var publicEntry = adminClient.createConfigEntry(new ConfigEntry("create", "<xml/>", true));
         assertEquals("create", publicEntry.getName());
         assertEquals("<xml/>", publicEntry.getConfig());
@@ -22,7 +23,7 @@ public class ConfigEntryServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void update() throws IOException{
+    public void update() throws IOException {
         var publicEntry = adminClient.createConfigEntry(new ConfigEntry("update", "<xml/>", true));
         publicEntry.setConfig("<xml>updated</xml>");
         publicEntry.setName("updated");
@@ -35,21 +36,21 @@ public class ConfigEntryServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void delete() throws IOException{
+    public void delete() throws IOException {
         var entry = adminClient.createConfigEntry(new ConfigEntry("delete-me", "<xml/>", true));
         adminClient.deleteConfigEntry(entry.getId());
     }
 
     @Test
-    public void deleteNonAdmin() throws IOException{
+    public void deleteNonAdmin() throws IOException {
         var entry = adminClient.createConfigEntry(new ConfigEntry("delete-me", "<xml/>", true));
-        assertClientError( () -> client.deleteConfigEntry(entry.getId()),REQUIRES_SUPERUSER_STATUS);
+        assertClientError(() -> client.deleteConfigEntry(entry.getId()), REQUIRES_SUPERUSER_STATUS);
     }
 
     @Test
     public void doesNotExistPath() {
         // more a test of the client than the server - which will return simply an empty list.
-        assertClientError( () -> client.getConfigEntry(Long.MAX_VALUE),OBJECT_NOT_FOUND);
+        assertClientError(() -> client.getConfigEntry(Long.MAX_VALUE), OBJECT_NOT_FOUND);
     }
 
     @Test
@@ -69,7 +70,7 @@ public class ConfigEntryServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void reloadLogging() throws IOException{
+    public void reloadLogging() throws IOException {
         var toh = new TestObjectHolder(client, userId);
         assertClientError(toh::reloadLogging, REQUIRES_SUPERUSER_STATUS);
         var adminToh = new TestObjectHolder(adminClient, adminId);
@@ -78,5 +79,28 @@ public class ConfigEntryServletIntegrationTest extends CinnamonIntegrationTest {
         adminToh.reloadLogging();
         CinnamonServer.config.getServerConfig().setLog4jConfigPath("src/test/resources/log4j2-test.xml");
         adminToh.reloadLogging();
+    }
+
+
+    /**
+     * Check if we can successfully delete more than BATCH_SIZE objects.
+     */
+    @Test
+    public void createAndDeleteLotsOfObjects() throws IOException {
+        List<ConfigEntry> configEntries = new ArrayList<>(1200);
+        for (int i = 0; i < 1100; i++) {
+            configEntries.add(new ConfigEntry(String.valueOf(i), "<xml/>", true));
+        }
+
+        // create sequentially (no batch insert yet)
+        var entries        = adminClient.createConfigEntries(configEntries);
+        var configEntryIds = entries.stream().map(ConfigEntry::getId).toList();
+        // read by batch:
+        var getListBatch = client.getConfigEntries(configEntryIds);
+        assertEquals(configEntryIds.size(), getListBatch.size());
+        // delete by batch
+        adminClient.deleteConfigEntries(configEntryIds);
+        List<ConfigEntry> nonDeleted = adminClient.getConfigEntries(configEntryIds);
+        assertTrue(nonDeleted.isEmpty());
     }
 }

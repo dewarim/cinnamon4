@@ -210,6 +210,18 @@ public class CinnamonClient {
         verifyResponseIsOkay(response);
     }
 
+    public List<ConfigEntry> createConfigEntries(List<ConfigEntry> configEntries) throws IOException {
+        var request = new CreateConfigEntryRequest(configEntries);
+        var response = sendStandardRequest(UrlMapping.CONFIG_ENTRY__CREATE, request);
+        return configEntryUnwrapper.unwrap(response, configEntries.size());
+    }
+
+    public void deleteConfigEntries(List<Long> configEntryIds) throws IOException {
+        var request = new DeleteConfigEntryRequest(configEntryIds);
+        var response = sendStandardRequest(CONFIG_ENTRY__DELETE, request);
+        verifyResponseIsOkay(response);
+    }
+
     public class WrappedRequest<T, W extends Wrapper<T>> {
         public List<T> send(UrlMapping urlMapping, Object request, Unwrapper<T, W> unwrapper, int expectedSize) throws IOException {
             String requestStr = mapper.writeValueAsString(request);
