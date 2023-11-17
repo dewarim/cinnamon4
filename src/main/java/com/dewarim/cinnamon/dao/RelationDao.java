@@ -13,6 +13,7 @@ import java.util.Map;
 public class RelationDao implements CrudDao<Relation> {
 
     public List<Relation> getRelations(Collection<Long> leftIds, Collection<Long> rightIds, Collection<Long> relationTypeIds, boolean includeMetadata) {
+        // cannot use Map.of here since values may be null & SQL code has conditions for non-null
         Map<String, Object> params = new HashMap<>();
         params.put("leftIds", leftIds);
         params.put("rightIds", rightIds);

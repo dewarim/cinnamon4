@@ -35,7 +35,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -143,8 +142,7 @@ public class CinnamonSearchTest {
 
     private void searchWithNormalQuery(IndexSearcher searcher) throws QueryNodeException, IOException {
         PointsConfig              longConfig      = new PointsConfig(new DecimalFormat(), Long.class);
-        Map<String, PointsConfig> pointsConfigMap = new HashMap<>();
-        pointsConfigMap.put("p", longConfig);
+        Map<String, PointsConfig> pointsConfigMap = Map.of("p", longConfig);
         StandardQueryParser queryParser = new StandardQueryParser(new StandardAnalyzer());
         queryParser.setPointsConfigMap(pointsConfigMap);
         Query   query   = queryParser.parse("300", "p");

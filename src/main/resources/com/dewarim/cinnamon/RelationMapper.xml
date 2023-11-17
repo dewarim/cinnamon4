@@ -35,29 +35,6 @@
         )
     </select>
 
-    <!-- currently unused -->
-    <!--    <select id="getAllRelationsOfObjects" parameterType="map" resultMap="relationMap">-->
-    <!--        SELECT-->
-    <!--        r.id,-->
-    <!--        r.left_id,-->
-    <!--        r.right_id,-->
-    <!--        r.type_id-->
-    <!--        FROM relations r-->
-    <!--        WHERE-->
-    <!--        ( r.left_id in-->
-    <!--        <foreach item="item" index="index" collection="ids"-->
-    <!--                 open="(" separator="," close=")">-->
-    <!--            #{item}-->
-    <!--        </foreach>-->
-    <!--        )-->
-    <!--        OR (r.right_id in-->
-    <!--        <foreach item="item" index="index" collection="ids"-->
-    <!--                 open="(" separator="," close=")">-->
-    <!--            #{item}-->
-    <!--        </foreach>-->
-    <!--        )-->
-    <!--    </select>-->
-
     <select id="getRelationsWithCriteria" parameterType="map" resultMap="relationMap">
         SELECT
         r.id,
