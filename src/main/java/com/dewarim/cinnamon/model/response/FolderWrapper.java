@@ -10,6 +10,8 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.dewarim.cinnamon.api.Constants.FOLDER_EXAMPLE;
+
 @JacksonXmlRootElement(localName = "cinnamon")
 public class FolderWrapper implements Wrapper<Folder>, ApiResponse {
 
@@ -41,5 +43,10 @@ public class FolderWrapper implements Wrapper<Folder>, ApiResponse {
     public Wrapper<Folder> setList(List<Folder> folders) {
         setFolders(folders);
         return this;
+    }
+
+    @Override
+    public List<Object> examples() {
+        return List.of(new FolderWrapper(List.of(FOLDER_EXAMPLE)));
     }
 }

@@ -35,4 +35,12 @@ public class RelationTypeWrapper implements Wrapper<RelationType>, ApiResponse {
         this.setRelationTypes(relationTypes);
         return this;
     }
+
+    @Override
+    public List<Object> examples() {
+        RelationTypeWrapper wrapper = new RelationTypeWrapper();
+        RelationType rt = new RelationType("html-to-image", true,false,false,false,false,false);
+        wrapper.getRelationTypes().add(rt);
+        return List.of(wrapper);
+    }
 }

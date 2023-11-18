@@ -2,6 +2,7 @@ package com.dewarim.cinnamon.model.response;
 
 import com.dewarim.cinnamon.api.ApiResponse;
 import com.dewarim.cinnamon.model.ChangeTrigger;
+import com.dewarim.cinnamon.model.ChangeTriggerType;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
@@ -40,5 +41,11 @@ public class ChangeTriggerWrapper implements Wrapper<ChangeTrigger>, ApiResponse
     public Wrapper<ChangeTrigger> setList(List<ChangeTrigger> changeTriggers) {
         setChangeTriggers(changeTriggers);
         return this;
+    }
+
+    @Override
+    public List<Object> examples() {
+        return List.of(new ChangeTriggerWrapper(List.of(new ChangeTrigger(4L, "logging-trigger", "osd", "delete", true, false, true,
+                false, "<config><!-- define URL to send notice of successful delete events to --></config>", ChangeTriggerType.MICROSERVICE, 1000))));
     }
 }

@@ -44,6 +44,6 @@ public class AclWrapper implements Wrapper<Acl>, ApiResponse {
 
     @Override
     public List<Object> examples() {
-        return List.of(new AclWrapper(List.of(new Acl(1L,"DEFAULT_ACL"), new Acl("reviewers"))));
+        return List.of(new AclWrapper(List.of(new Acl(1L,"DEFAULT_ACL"), new Acl(43L, "reviewers"))));
     }
 }

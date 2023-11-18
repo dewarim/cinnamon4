@@ -43,4 +43,9 @@ public class DeleteResponse implements Wrapper<DeleteResponse>, ApiResponse {
     public boolean isSuccess() {
         return success;
     }
+
+    @Override
+    public List<Object> examples() {
+        return List.of(new DeleteResponse(false));
+    }
 }

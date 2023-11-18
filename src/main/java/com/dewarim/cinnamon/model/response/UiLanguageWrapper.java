@@ -35,4 +35,10 @@ public class UiLanguageWrapper implements Wrapper<UiLanguage>, ApiResponse {
         setUiLanguages(uiLanguages);
         return this;
     }
+    @Override
+    public List<Object> examples() {
+        UiLanguageWrapper uiLanguageWrapper = new UiLanguageWrapper();
+        uiLanguageWrapper.getUiLanguages().add(new UiLanguage(54L, "DOG"));
+        return List.of(uiLanguageWrapper);
+    }
 }

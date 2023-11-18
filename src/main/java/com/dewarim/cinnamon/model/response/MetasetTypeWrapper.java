@@ -35,4 +35,13 @@ public class MetasetTypeWrapper implements Wrapper<MetasetType>, ApiResponse {
         setMetasetTypes(metasetTypes);
         return this;
     }
+
+    @Override
+    public List<Object> examples() {
+        MetasetTypeWrapper wrapper = new MetasetTypeWrapper();
+        MetasetType        metasetType = new MetasetType(6L, "license-key");
+        metasetType.setUnique(true);
+        wrapper.getMetasetTypes().add(metasetType);
+        return List.of(wrapper);
+    }
 }

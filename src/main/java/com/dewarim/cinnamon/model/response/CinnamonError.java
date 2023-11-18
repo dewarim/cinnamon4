@@ -2,6 +2,10 @@ package com.dewarim.cinnamon.model.response;
 
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
+/**
+ * CinnamonErrors should always be sent as part of and CinnamonErrorWrapper (easier for the client to have only
+ * one type of error message).
+ */
 @JacksonXmlRootElement(localName = "error")
 public class CinnamonError {
 

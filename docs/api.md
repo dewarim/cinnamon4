@@ -1,3 +1,8 @@
+# API Endpoint Documentation
+
+Note: response examples are not directly matching request examples, they just show the format you can expect.
+
+
 # /api/aclGroup/create
 Create a new ACL group. Note: permissions parameter is not yet implemented.
 
@@ -228,7 +233,16 @@ It does not otherwise change the AclGroup (as it only contains of a group and ac
 
 ```xml
 <cinnamon>
-  <acls/>
+  <acls>
+    <acl>
+      <id>1</id>
+      <name>DEFAULT_ACL</name>
+    </acl>
+    <acl>
+      <id>43</id>
+      <name>reviewers</name>
+    </acl>
+  </acls>
 </cinnamon>
 
 ```
@@ -272,7 +286,7 @@ It does not otherwise change the AclGroup (as it only contains of a group and ac
 
 ```xml
 <idRequest>
-  <id/>
+  <id>7</id>
 </idRequest>
 
 ```
@@ -282,7 +296,16 @@ It does not otherwise change the AclGroup (as it only contains of a group and ac
 
 ```xml
 <cinnamon>
-  <acls/>
+  <acls>
+    <acl>
+      <id>1</id>
+      <name>DEFAULT_ACL</name>
+    </acl>
+    <acl>
+      <id>43</id>
+      <name>reviewers</name>
+    </acl>
+  </acls>
 </cinnamon>
 
 ```
@@ -307,7 +330,16 @@ It does not otherwise change the AclGroup (as it only contains of a group and ac
 
 ```xml
 <cinnamon>
-  <acls/>
+  <acls>
+    <acl>
+      <id>1</id>
+      <name>DEFAULT_ACL</name>
+    </acl>
+    <acl>
+      <id>43</id>
+      <name>reviewers</name>
+    </acl>
+  </acls>
 </cinnamon>
 
 ```
@@ -337,7 +369,16 @@ It does not otherwise change the AclGroup (as it only contains of a group and ac
 
 ```xml
 <cinnamon>
-  <acls/>
+  <acls>
+    <acl>
+      <id>1</id>
+      <name>DEFAULT_ACL</name>
+    </acl>
+    <acl>
+      <id>43</id>
+      <name>reviewers</name>
+    </acl>
+  </acls>
 </cinnamon>
 
 ```
@@ -376,7 +417,21 @@ It does not otherwise change the AclGroup (as it only contains of a group and ac
 
 ```xml
 <cinnamon>
-  <changeTriggers/>
+  <changeTriggers>
+    <changeTrigger>
+      <id>4</id>
+      <name>logging-trigger</name>
+      <controller>osd</controller>
+      <action>delete</action>
+      <active>true</active>
+      <preTrigger>false</preTrigger>
+      <postTrigger>true</postTrigger>
+      <copyFileContent>false</copyFileContent>
+      <ranking>1000</ranking>
+      <config>&lt;config>&lt;!-- define URL to send notice of successful delete events to -->&lt;/config></config>
+      <triggerType>MICROSERVICE</triggerType>
+    </changeTrigger>
+  </changeTriggers>
 </cinnamon>
 
 ```
@@ -427,7 +482,21 @@ It does not otherwise change the AclGroup (as it only contains of a group and ac
 
 ```xml
 <cinnamon>
-  <changeTriggers/>
+  <changeTriggers>
+    <changeTrigger>
+      <id>4</id>
+      <name>logging-trigger</name>
+      <controller>osd</controller>
+      <action>delete</action>
+      <active>true</active>
+      <preTrigger>false</preTrigger>
+      <postTrigger>true</postTrigger>
+      <copyFileContent>false</copyFileContent>
+      <ranking>1000</ranking>
+      <config>&lt;config>&lt;!-- define URL to send notice of successful delete events to -->&lt;/config></config>
+      <triggerType>MICROSERVICE</triggerType>
+    </changeTrigger>
+  </changeTriggers>
 </cinnamon>
 
 ```
@@ -466,7 +535,21 @@ It does not otherwise change the AclGroup (as it only contains of a group and ac
 
 ```xml
 <cinnamon>
-  <changeTriggers/>
+  <changeTriggers>
+    <changeTrigger>
+      <id>4</id>
+      <name>logging-trigger</name>
+      <controller>osd</controller>
+      <action>delete</action>
+      <active>true</active>
+      <preTrigger>false</preTrigger>
+      <postTrigger>true</postTrigger>
+      <copyFileContent>false</copyFileContent>
+      <ranking>1000</ranking>
+      <config>&lt;config>&lt;!-- define URL to send notice of successful delete events to -->&lt;/config></config>
+      <triggerType>MICROSERVICE</triggerType>
+    </changeTrigger>
+  </changeTriggers>
 </cinnamon>
 
 ```
@@ -562,10 +645,10 @@ Delete a list of config entries
 ## Request
 
 ```xml
-<DeleteConfigEntryRequest>
+<deleteConfigRequest>
   <ignoreNotFound>false</ignoreNotFound>
   <ids/>
-</DeleteConfigEntryRequest>
+</deleteConfigRequest>
 
 ```
 
@@ -662,7 +745,7 @@ Update a list of config entries
 ## Request
 
 ```xml
-<createConfigEntryRequest>
+<updateConfigEntryRequest>
   <configEntries>
     <configEntry>
       <id>321</id>
@@ -671,11 +754,11 @@ Update a list of config entries
       <publicVisibility>true</publicVisibility>
     </configEntry>
   </configEntries>
-</createConfigEntryRequest>
+</updateConfigEntryRequest>
 
 ```
 ```xml
-<createConfigEntryRequest>
+<updateConfigEntryRequest>
   <configEntries>
     <configEntry>
       <id>444</id>
@@ -684,7 +767,7 @@ Update a list of config entries
       <publicVisibility>false</publicVisibility>
     </configEntry>
   </configEntries>
-</createConfigEntryRequest>
+</updateConfigEntryRequest>
 
 ```
 
@@ -821,7 +904,12 @@ Create a new folder type
 
 ```xml
 <cinnamon>
-  <folderTypes/>
+  <folderTypes>
+    <folderType>
+      <id>1</id>
+      <name>system-folder</name>
+    </folderType>
+  </folderTypes>
 </cinnamon>
 
 ```
@@ -837,7 +925,10 @@ Delete a folder type
 ```xml
 <deleteFolderTypeRequest>
   <ignoreNotFound>false</ignoreNotFound>
-  <ids/>
+  <ids>
+    <id>543</id>
+    <id>44</id>
+  </ids>
 </deleteFolderTypeRequest>
 
 ```
@@ -872,7 +963,12 @@ List all folder types
 
 ```xml
 <cinnamon>
-  <folderTypes/>
+  <folderTypes>
+    <folderType>
+      <id>1</id>
+      <name>system-folder</name>
+    </folderType>
+  </folderTypes>
 </cinnamon>
 
 ```
@@ -887,7 +983,12 @@ List all folder types
 
 ```xml
 <updateFolderTypeRequest>
-  <folderTypes/>
+  <folderTypes>
+    <folderType>
+      <id>665</id>
+      <name>almost-evil-type</name>
+    </folderType>
+  </folderTypes>
 </updateFolderTypeRequest>
 
 ```
@@ -897,7 +998,12 @@ List all folder types
 
 ```xml
 <cinnamon>
-  <folderTypes/>
+  <folderTypes>
+    <folderType>
+      <id>1</id>
+      <name>system-folder</name>
+    </folderType>
+  </folderTypes>
 </cinnamon>
 
 ```
@@ -986,7 +1092,20 @@ Create a new folder.
 
 ```xml
 <cinnamon>
-  <metasets/>
+  <metasets>
+    <metaset>
+      <id/>
+      <objectId>6</objectId>
+      <typeId>8</typeId>
+      <content>&lt;xml> folder meta object &lt;/xml></content>
+    </metaset>
+    <metaset>
+      <id/>
+      <objectId>7</objectId>
+      <typeId>65</typeId>
+      <content>&lt;xml> osd meta object &lt;/xml></content>
+    </metaset>
+  </metasets>
 </cinnamon>
 
 ```
@@ -1118,7 +1237,20 @@ Fetch a single folder
 
 ```xml
 <cinnamon>
-  <folders/>
+  <folders>
+    <folder>
+      <id>2</id>
+      <name>images</name>
+      <aclId>1</aclId>
+      <ownerId>33</ownerId>
+      <parentId>3</parentId>
+      <typeId>5</typeId>
+      <metadataChanged>false</metadataChanged>
+      <summary>&lt;summary></summary>
+      <hasSubfolders>false</hasSubfolders>
+      <created>2022-08-10T01:21:00+0000</created>
+    </folder>
+  </folders>
 </cinnamon>
 
 ```
@@ -1133,8 +1265,12 @@ Fetch a single folder
 
 ```xml
 <folderRequest>
-  <includeSummary>false</includeSummary>
-  <ids/>
+  <includeSummary>true</includeSummary>
+  <ids>
+    <id>1</id>
+    <id>2</id>
+    <id>3</id>
+  </ids>
 </folderRequest>
 
 ```
@@ -1144,7 +1280,20 @@ Fetch a single folder
 
 ```xml
 <cinnamon>
-  <folders/>
+  <folders>
+    <folder>
+      <id>2</id>
+      <name>images</name>
+      <aclId>1</aclId>
+      <ownerId>33</ownerId>
+      <parentId>3</parentId>
+      <typeId>5</typeId>
+      <metadataChanged>false</metadataChanged>
+      <summary>&lt;summary></summary>
+      <hasSubfolders>false</hasSubfolders>
+      <created>2022-08-10T01:21:00+0000</created>
+    </folder>
+  </folders>
 </cinnamon>
 
 ```
@@ -1170,7 +1319,20 @@ Fetch a single folder
 
 ```xml
 <cinnamon>
-  <folders/>
+  <folders>
+    <folder>
+      <id>2</id>
+      <name>images</name>
+      <aclId>1</aclId>
+      <ownerId>33</ownerId>
+      <parentId>3</parentId>
+      <typeId>5</typeId>
+      <metadataChanged>false</metadataChanged>
+      <summary>&lt;summary></summary>
+      <hasSubfolders>false</hasSubfolders>
+      <created>2022-08-10T01:21:00+0000</created>
+    </folder>
+  </folders>
 </cinnamon>
 
 ```
@@ -1205,7 +1367,20 @@ Fetch a single folder
 
 ```xml
 <cinnamon>
-  <metasets/>
+  <metasets>
+    <metaset>
+      <id/>
+      <objectId>6</objectId>
+      <typeId>8</typeId>
+      <content>&lt;xml> folder meta object &lt;/xml></content>
+    </metaset>
+    <metaset>
+      <id/>
+      <objectId>7</objectId>
+      <typeId>65</typeId>
+      <content>&lt;xml> osd meta object &lt;/xml></content>
+    </metaset>
+  </metasets>
 </cinnamon>
 
 ```
@@ -1238,7 +1413,20 @@ Fetch a single folder
 
 ```xml
 <cinnamon>
-  <folders/>
+  <folders>
+    <folder>
+      <id>2</id>
+      <name>images</name>
+      <aclId>1</aclId>
+      <ownerId>33</ownerId>
+      <parentId>3</parentId>
+      <typeId>5</typeId>
+      <metadataChanged>false</metadataChanged>
+      <summary>&lt;summary></summary>
+      <hasSubfolders>false</hasSubfolders>
+      <created>2022-08-10T01:21:00+0000</created>
+    </folder>
+  </folders>
 </cinnamon>
 
 ```
@@ -1267,7 +1455,12 @@ Fetch a single folder
 
 ```xml
 <cinnamon>
-  <summaries/>
+  <summaries>
+    <summary>
+      <id>5</id>
+      <content>&lt;summary> a summary of an OSD's content &lt;/summary></content>
+    </summary>
+  </summaries>
 </cinnamon>
 
 ```
@@ -1301,7 +1494,7 @@ Add a summary to an object, for example a short description of this folder's con
 ```xml
 <genericResponse>
   <message/>
-  <successful>false</successful>
+  <successful>true</successful>
 </genericResponse>
 
 ```
@@ -1328,7 +1521,7 @@ Add a summary to an object, for example a short description of this folder's con
       <metadataChanged>false</metadataChanged>
       <summary>&lt;summary>update this&lt;/summary></summary>
       <hasSubfolders>false</hasSubfolders>
-      <created>2023-11-10T00:00:00+0000</created>
+      <created>2022-08-10T01:21:00+0000</created>
     </folder>
   </folders>
 </updateFolderRequest>
@@ -1341,7 +1534,7 @@ Add a summary to an object, for example a short description of this folder's con
 ```xml
 <genericResponse>
   <message/>
-  <successful>false</successful>
+  <successful>true</successful>
 </genericResponse>
 
 ```
@@ -1374,7 +1567,7 @@ Update the content of a given folder metaset
 ```xml
 <genericResponse>
   <message/>
-  <successful>false</successful>
+  <successful>true</successful>
 </genericResponse>
 
 ```
@@ -1389,7 +1582,16 @@ Update the content of a given folder metaset
 
 ```xml
 <createFormatRequest>
-  <formats/>
+  <formats>
+    <format>
+      <id/>
+      <contentType>application/cinnamon</contentType>
+      <extension>cnm</extension>
+      <name>CinnamonType</name>
+      <defaultObjectTypeId>1</defaultObjectTypeId>
+      <indexMode>NONE</indexMode>
+    </format>
+  </formats>
 </createFormatRequest>
 
 ```
@@ -1399,7 +1601,16 @@ Update the content of a given folder metaset
 
 ```xml
 <cinnamon>
-  <formats/>
+  <formats>
+    <format>
+      <id>50</id>
+      <contentType>text/adoc</contentType>
+      <extension>adoc</extension>
+      <name>AsciiDoc</name>
+      <defaultObjectTypeId>1</defaultObjectTypeId>
+      <indexMode>PLAIN_TEXT</indexMode>
+    </format>
+  </formats>
 </cinnamon>
 
 ```
@@ -1415,7 +1626,9 @@ Update the content of a given folder metaset
 ```xml
 <deleteFormatRequest>
   <ignoreNotFound>false</ignoreNotFound>
-  <ids/>
+  <ids>
+    <id>999</id>
+  </ids>
 </deleteFormatRequest>
 
 ```
@@ -1450,7 +1663,16 @@ Update the content of a given folder metaset
 
 ```xml
 <cinnamon>
-  <formats/>
+  <formats>
+    <format>
+      <id>50</id>
+      <contentType>text/adoc</contentType>
+      <extension>adoc</extension>
+      <name>AsciiDoc</name>
+      <defaultObjectTypeId>1</defaultObjectTypeId>
+      <indexMode>PLAIN_TEXT</indexMode>
+    </format>
+  </formats>
 </cinnamon>
 
 ```
@@ -1465,7 +1687,16 @@ Update the content of a given folder metaset
 
 ```xml
 <updateFormatRequest>
-  <formats/>
+  <formats>
+    <format>
+      <id/>
+      <contentType>text/plain</contentType>
+      <extension>txt</extension>
+      <name>text</name>
+      <defaultObjectTypeId>2</defaultObjectTypeId>
+      <indexMode>PLAIN_TEXT</indexMode>
+    </format>
+  </formats>
 </updateFormatRequest>
 
 ```
@@ -1475,7 +1706,16 @@ Update the content of a given folder metaset
 
 ```xml
 <cinnamon>
-  <formats/>
+  <formats>
+    <format>
+      <id>50</id>
+      <contentType>text/adoc</contentType>
+      <extension>adoc</extension>
+      <name>AsciiDoc</name>
+      <defaultObjectTypeId>1</defaultObjectTypeId>
+      <indexMode>PLAIN_TEXT</indexMode>
+    </format>
+  </formats>
 </cinnamon>
 
 ```
@@ -1506,7 +1746,7 @@ Update the content of a given folder metaset
 ```xml
 <genericResponse>
   <message/>
-  <successful>false</successful>
+  <successful>true</successful>
 </genericResponse>
 
 ```
@@ -1656,7 +1896,7 @@ Update the content of a given folder metaset
 ```xml
 <genericResponse>
   <message/>
-  <successful>false</successful>
+  <successful>true</successful>
 </genericResponse>
 
 ```
@@ -1757,7 +1997,9 @@ Update the content of a given folder metaset
 ```xml
 <deleteIndexItemRequest>
   <ignoreNotFound>false</ignoreNotFound>
-  <ids/>
+  <ids>
+    <id>679</id>
+  </ids>
 </deleteIndexItemRequest>
 
 ```
@@ -1768,7 +2010,7 @@ Update the content of a given folder metaset
 ```xml
 <genericResponse>
   <message/>
-  <successful>false</successful>
+  <successful>true</successful>
 </genericResponse>
 
 ```
@@ -1815,7 +2057,18 @@ Update the content of a given folder metaset
 
 ```xml
 <updateIndexItemRequest>
-  <indexItems/>
+  <indexItems>
+    <indexItem>
+      <id>550</id>
+      <name>headline</name>
+      <fieldName>content</fieldName>
+      <searchString>//title</searchString>
+      <searchCondition>true()</searchCondition>
+      <multipleResults>true</multipleResults>
+      <indexType>DEFAULT_INDEXER</indexType>
+      <storeField>false</storeField>
+    </indexItem>
+  </indexItems>
 </updateIndexItemRequest>
 
 ```
@@ -1951,7 +2204,12 @@ Rebuild the Lucene search index in parts or completely. When reindexing large nu
 
 ```xml
 <cinnamon>
-  <languages/>
+  <languages>
+    <language>
+      <id>54</id>
+      <isoCode>DOG</isoCode>
+    </language>
+  </languages>
 </cinnamon>
 
 ```
@@ -1967,7 +2225,9 @@ Rebuild the Lucene search index in parts or completely. When reindexing large nu
 ```xml
 <deleteLanguageRequest>
   <ignoreNotFound>false</ignoreNotFound>
-  <ids/>
+  <ids>
+    <id>999</id>
+  </ids>
 </deleteLanguageRequest>
 
 ```
@@ -2002,7 +2262,12 @@ Rebuild the Lucene search index in parts or completely. When reindexing large nu
 
 ```xml
 <cinnamon>
-  <languages/>
+  <languages>
+    <language>
+      <id>54</id>
+      <isoCode>DOG</isoCode>
+    </language>
+  </languages>
 </cinnamon>
 
 ```
@@ -2032,7 +2297,12 @@ Rebuild the Lucene search index in parts or completely. When reindexing large nu
 
 ```xml
 <cinnamon>
-  <languages/>
+  <languages>
+    <language>
+      <id>54</id>
+      <isoCode>DOG</isoCode>
+    </language>
+  </languages>
 </cinnamon>
 
 ```
@@ -2047,10 +2317,10 @@ Only superusers may use forceChange parameter to attach any state without verifi
 
 ```xml
 <attachLifecycleRequest>
-  <osdId/>
-  <lifecycleId/>
-  <lifecycleStateId/>
-  <forceChange>false</forceChange>
+  <osdId>4</osdId>
+  <lifecycleId>6</lifecycleId>
+  <lifecycleStateId>2</lifecycleStateId>
+  <forceChange>true</forceChange>
 </attachLifecycleRequest>
 
 ```
@@ -2061,7 +2331,7 @@ Only superusers may use forceChange parameter to attach any state without verifi
 ```xml
 <genericResponse>
   <message/>
-  <successful>false</successful>
+  <successful>true</successful>
 </genericResponse>
 
 ```
@@ -2076,8 +2346,8 @@ Only superusers may use forceChange parameter to attach any state without verifi
 
 ```xml
 <changeLifecycleStateRequest>
-  <osdId/>
-  <stateId/>
+  <osdId>5</osdId>
+  <stateId>32</stateId>
 </changeLifecycleStateRequest>
 
 ```
@@ -2088,7 +2358,7 @@ Only superusers may use forceChange parameter to attach any state without verifi
 ```xml
 <genericResponse>
   <message/>
-  <successful>false</successful>
+  <successful>true</successful>
 </genericResponse>
 
 ```
@@ -2130,7 +2400,16 @@ Only superusers may use forceChange parameter to attach any state without verifi
 
 ```xml
 <cinnamon>
-  <lifecycleStates/>
+  <lifecycleStates>
+    <lifecycleState>
+      <id>79</id>
+      <name>published</name>
+      <config>&lt;config/></config>
+      <stateClass>com.dewarim.cinnamon.lifecycle.ChangeAclState</stateClass>
+      <lifecycleId>6</lifecycleId>
+      <lifecycleStateForCopyId>77</lifecycleStateForCopyId>
+    </lifecycleState>
+  </lifecycleStates>
 </cinnamon>
 
 ```
@@ -2146,7 +2425,9 @@ Only superusers may use forceChange parameter to attach any state without verifi
 ```xml
 <deleteLifecycleStateRequest>
   <ignoreNotFound>false</ignoreNotFound>
-  <ids/>
+  <ids>
+    <id>6</id>
+  </ids>
 </deleteLifecycleStateRequest>
 
 ```
@@ -2171,7 +2452,7 @@ Only superusers may use forceChange parameter to attach any state without verifi
 
 ```xml
 <idRequest>
-  <id/>
+  <id>7</id>
 </idRequest>
 
 ```
@@ -2182,7 +2463,7 @@ Only superusers may use forceChange parameter to attach any state without verifi
 ```xml
 <genericResponse>
   <message/>
-  <successful>false</successful>
+  <successful>true</successful>
 </genericResponse>
 
 ```
@@ -2197,7 +2478,7 @@ Only superusers may use forceChange parameter to attach any state without verifi
 
 ```xml
 <idRequest>
-  <id/>
+  <id>7</id>
 </idRequest>
 
 ```
@@ -2207,7 +2488,16 @@ Only superusers may use forceChange parameter to attach any state without verifi
 
 ```xml
 <cinnamon>
-  <lifecycleStates/>
+  <lifecycleStates>
+    <lifecycleState>
+      <id>79</id>
+      <name>published</name>
+      <config>&lt;config/></config>
+      <stateClass>com.dewarim.cinnamon.lifecycle.ChangeAclState</stateClass>
+      <lifecycleId>6</lifecycleId>
+      <lifecycleStateForCopyId>77</lifecycleStateForCopyId>
+    </lifecycleState>
+  </lifecycleStates>
 </cinnamon>
 
 ```
@@ -2222,7 +2512,7 @@ Only superusers may use forceChange parameter to attach any state without verifi
 
 ```xml
 <idRequest>
-  <id/>
+  <id>7</id>
 </idRequest>
 
 ```
@@ -2232,7 +2522,16 @@ Only superusers may use forceChange parameter to attach any state without verifi
 
 ```xml
 <cinnamon>
-  <lifecycleStates/>
+  <lifecycleStates>
+    <lifecycleState>
+      <id>79</id>
+      <name>published</name>
+      <config>&lt;config/></config>
+      <stateClass>com.dewarim.cinnamon.lifecycle.ChangeAclState</stateClass>
+      <lifecycleId>6</lifecycleId>
+      <lifecycleStateForCopyId>77</lifecycleStateForCopyId>
+    </lifecycleState>
+  </lifecycleStates>
 </cinnamon>
 
 ```
@@ -2257,7 +2556,16 @@ Only superusers may use forceChange parameter to attach any state without verifi
 
 ```xml
 <cinnamon>
-  <lifecycleStates/>
+  <lifecycleStates>
+    <lifecycleState>
+      <id>79</id>
+      <name>published</name>
+      <config>&lt;config/></config>
+      <stateClass>com.dewarim.cinnamon.lifecycle.ChangeAclState</stateClass>
+      <lifecycleId>6</lifecycleId>
+      <lifecycleStateForCopyId>77</lifecycleStateForCopyId>
+    </lifecycleState>
+  </lifecycleStates>
 </cinnamon>
 
 ```
@@ -2291,7 +2599,16 @@ Only superusers may use forceChange parameter to attach any state without verifi
 
 ```xml
 <cinnamon>
-  <lifecycleStates/>
+  <lifecycleStates>
+    <lifecycleState>
+      <id>79</id>
+      <name>published</name>
+      <config>&lt;config/></config>
+      <stateClass>com.dewarim.cinnamon.lifecycle.ChangeAclState</stateClass>
+      <lifecycleId>6</lifecycleId>
+      <lifecycleStateForCopyId>77</lifecycleStateForCopyId>
+    </lifecycleState>
+  </lifecycleStates>
 </cinnamon>
 
 ```
@@ -2329,7 +2646,39 @@ Create lifecycles. Note: does not create lifecycle states, defaultStateId should
 
 ```xml
 <cinnamon>
-  <lifecycles/>
+  <lifecycles>
+    <lifecycle>
+      <id/>
+      <name>review-lifecycle</name>
+      <defaultStateId>1</defaultStateId>
+      <lifecycleStates>
+        <lifecycleState>
+          <id>1</id>
+          <name>needs-edits</name>
+          <config>&lt;config/></config>
+          <stateClass>com.dewarim.cinnamon.provider.state.NopStateProvider</stateClass>
+          <lifecycleId>1</lifecycleId>
+          <lifecycleStateForCopyId>1</lifecycleStateForCopyId>
+        </lifecycleState>
+        <lifecycleState>
+          <id>2</id>
+          <name>needs-review</name>
+          <config>&lt;config/></config>
+          <stateClass>com.dewarim.cinnamon.provider.state.NopStateProvider</stateClass>
+          <lifecycleId>1</lifecycleId>
+          <lifecycleStateForCopyId>2</lifecycleStateForCopyId>
+        </lifecycleState>
+        <lifecycleState>
+          <id>3</id>
+          <name>published</name>
+          <config>&lt;config/></config>
+          <stateClass>com.dewarim.cinnamon.provider.state.NopStateProvider</stateClass>
+          <lifecycleId>1</lifecycleId>
+          <lifecycleStateForCopyId>3</lifecycleStateForCopyId>
+        </lifecycleState>
+      </lifecycleStates>
+    </lifecycle>
+  </lifecycles>
 </cinnamon>
 
 ```
@@ -2345,7 +2694,9 @@ Delete lifecycles
 ```xml
 <deleteLifecycleRequest>
   <ignoreNotFound>false</ignoreNotFound>
-  <ids/>
+  <ids>
+    <id>1024</id>
+  </ids>
 </deleteLifecycleRequest>
 
 ```
@@ -2356,32 +2707,6 @@ Delete lifecycles
 ```xml
 <cinnamon>
   <success>false</success>
-</cinnamon>
-
-```
-
-
----
-
-# /api/lifecycle/get
-
-
-## Request
-
-```xml
-<lifecycleRequest>
-  <id/>
-  <name/>
-</lifecycleRequest>
-
-```
-
-
-## Response
-
-```xml
-<cinnamon>
-  <lifecycles/>
 </cinnamon>
 
 ```
@@ -2406,7 +2731,39 @@ List lifecycles
 
 ```xml
 <cinnamon>
-  <lifecycles/>
+  <lifecycles>
+    <lifecycle>
+      <id/>
+      <name>review-lifecycle</name>
+      <defaultStateId>1</defaultStateId>
+      <lifecycleStates>
+        <lifecycleState>
+          <id>1</id>
+          <name>needs-edits</name>
+          <config>&lt;config/></config>
+          <stateClass>com.dewarim.cinnamon.provider.state.NopStateProvider</stateClass>
+          <lifecycleId>1</lifecycleId>
+          <lifecycleStateForCopyId>1</lifecycleStateForCopyId>
+        </lifecycleState>
+        <lifecycleState>
+          <id>2</id>
+          <name>needs-review</name>
+          <config>&lt;config/></config>
+          <stateClass>com.dewarim.cinnamon.provider.state.NopStateProvider</stateClass>
+          <lifecycleId>1</lifecycleId>
+          <lifecycleStateForCopyId>2</lifecycleStateForCopyId>
+        </lifecycleState>
+        <lifecycleState>
+          <id>3</id>
+          <name>published</name>
+          <config>&lt;config/></config>
+          <stateClass>com.dewarim.cinnamon.provider.state.NopStateProvider</stateClass>
+          <lifecycleId>1</lifecycleId>
+          <lifecycleStateForCopyId>3</lifecycleStateForCopyId>
+        </lifecycleState>
+      </lifecycleStates>
+    </lifecycle>
+  </lifecycles>
 </cinnamon>
 
 ```
@@ -2421,7 +2778,14 @@ Update lifecycles. Note: does not update lifecycle states
 
 ```xml
 <updateLifecycleRequest>
-  <lifecycles/>
+  <lifecycles>
+    <lifecycle>
+      <id/>
+      <name>my new LC</name>
+      <defaultStateId>5</defaultStateId>
+      <lifecycleStates/>
+    </lifecycle>
+  </lifecycles>
 </updateLifecycleRequest>
 
 ```
@@ -2431,7 +2795,39 @@ Update lifecycles. Note: does not update lifecycle states
 
 ```xml
 <cinnamon>
-  <lifecycles/>
+  <lifecycles>
+    <lifecycle>
+      <id/>
+      <name>review-lifecycle</name>
+      <defaultStateId>1</defaultStateId>
+      <lifecycleStates>
+        <lifecycleState>
+          <id>1</id>
+          <name>needs-edits</name>
+          <config>&lt;config/></config>
+          <stateClass>com.dewarim.cinnamon.provider.state.NopStateProvider</stateClass>
+          <lifecycleId>1</lifecycleId>
+          <lifecycleStateForCopyId>1</lifecycleStateForCopyId>
+        </lifecycleState>
+        <lifecycleState>
+          <id>2</id>
+          <name>needs-review</name>
+          <config>&lt;config/></config>
+          <stateClass>com.dewarim.cinnamon.provider.state.NopStateProvider</stateClass>
+          <lifecycleId>1</lifecycleId>
+          <lifecycleStateForCopyId>2</lifecycleStateForCopyId>
+        </lifecycleState>
+        <lifecycleState>
+          <id>3</id>
+          <name>published</name>
+          <config>&lt;config/></config>
+          <stateClass>com.dewarim.cinnamon.provider.state.NopStateProvider</stateClass>
+          <lifecycleId>1</lifecycleId>
+          <lifecycleStateForCopyId>3</lifecycleStateForCopyId>
+        </lifecycleState>
+      </lifecycleStates>
+    </lifecycle>
+  </lifecycles>
 </cinnamon>
 
 ```
@@ -2446,7 +2842,33 @@ Update lifecycles. Note: does not update lifecycle states
 
 ```xml
 <createLinkRequest>
-  <links/>
+  <links>
+    <link>
+      <id/>
+      <type>OBJECT</type>
+      <ownerId>1</ownerId>
+      <aclId>1</aclId>
+      <parentId>5</parentId>
+      <folderId>2</folderId>
+      <objectId>3</objectId>
+    </link>
+  </links>
+</createLinkRequest>
+
+```
+```xml
+<createLinkRequest>
+  <links>
+    <link>
+      <id/>
+      <type>FOLDER</type>
+      <ownerId>1</ownerId>
+      <aclId>1</aclId>
+      <parentId>5</parentId>
+      <folderId>2</folderId>
+      <objectId>3</objectId>
+    </link>
+  </links>
 </createLinkRequest>
 
 ```
@@ -2490,7 +2912,9 @@ Update lifecycles. Note: does not update lifecycle states
 ```xml
 <deleteLinkRequest>
   <ignoreNotFound>false</ignoreNotFound>
-  <ids/>
+  <ids>
+    <id>51</id>
+  </ids>
 </deleteLinkRequest>
 
 ```
@@ -2515,8 +2939,10 @@ Update lifecycles. Note: does not update lifecycle states
 
 ```xml
 <getLinksRequest>
-  <includeSummary>false</includeSummary>
-  <ids/>
+  <includeSummary>true</includeSummary>
+  <ids>
+    <id>9</id>
+  </ids>
 </getLinksRequest>
 
 ```
@@ -2526,7 +2952,69 @@ Update lifecycles. Note: does not update lifecycle states
 
 ```xml
 <cinnamon>
-  <links/>
+  <links>
+    <link>
+      <id/>
+      <type/>
+      <ownerId/>
+      <aclId/>
+      <parentId/>
+      <folderId/>
+      <objectId/>
+      <osd>
+        <id>1</id>
+        <name>my osd</name>
+        <contentPath/>
+        <contentSize/>
+        <predecessorId/>
+        <rootId/>
+        <creatorId>1</creatorId>
+        <modifierId>1</modifierId>
+        <ownerId>3</ownerId>
+        <lockerId/>
+        <created>2022-08-10T01:21:00+0000</created>
+        <modified>2022-08-10T01:21:00+0000</modified>
+        <languageId>4</languageId>
+        <aclId>5</aclId>
+        <parentId>5</parentId>
+        <formatId>23</formatId>
+        <typeId>1</typeId>
+        <latestHead>false</latestHead>
+        <latestBranch>true</latestBranch>
+        <contentChanged>false</contentChanged>
+        <metadataChanged>false</metadataChanged>
+        <cmnVersion>1</cmnVersion>
+        <lifecycleStateId/>
+        <summary>&lt;summary/></summary>
+        <contentHash/>
+        <contentProvider>FILE_SYSTEM</contentProvider>
+        <metasets/>
+      </osd>
+      <folder/>
+    </link>
+    <link>
+      <id/>
+      <type/>
+      <ownerId/>
+      <aclId/>
+      <parentId/>
+      <folderId/>
+      <objectId/>
+      <osd/>
+      <folder>
+        <id>2</id>
+        <name>images</name>
+        <aclId>1</aclId>
+        <ownerId>33</ownerId>
+        <parentId>3</parentId>
+        <typeId>5</typeId>
+        <metadataChanged>false</metadataChanged>
+        <summary>&lt;summary></summary>
+        <hasSubfolders>false</hasSubfolders>
+        <created>2022-08-10T01:21:00+0000</created>
+      </folder>
+    </link>
+  </links>
 </cinnamon>
 
 ```
@@ -2594,7 +3082,13 @@ Update lifecycles. Note: does not update lifecycle states
 
 ```xml
 <createMetasetTypeRequest>
-  <metasetTypes/>
+  <metasetTypes>
+    <metasetType>
+      <id/>
+      <name>tika</name>
+      <unique>true</unique>
+    </metasetType>
+  </metasetTypes>
 </createMetasetTypeRequest>
 
 ```
@@ -2604,7 +3098,13 @@ Update lifecycles. Note: does not update lifecycle states
 
 ```xml
 <cinnamon>
-  <metasetTypes/>
+  <metasetTypes>
+    <metasetType>
+      <id>6</id>
+      <name>license-key</name>
+      <unique>true</unique>
+    </metasetType>
+  </metasetTypes>
 </cinnamon>
 
 ```
@@ -2620,7 +3120,9 @@ Update lifecycles. Note: does not update lifecycle states
 ```xml
 <deleteMetasetTypeRequest>
   <ignoreNotFound>false</ignoreNotFound>
-  <ids/>
+  <ids>
+    <id>7</id>
+  </ids>
 </deleteMetasetTypeRequest>
 
 ```
@@ -2655,7 +3157,13 @@ Update lifecycles. Note: does not update lifecycle states
 
 ```xml
 <cinnamon>
-  <metasetTypes/>
+  <metasetTypes>
+    <metasetType>
+      <id>6</id>
+      <name>license-key</name>
+      <unique>true</unique>
+    </metasetType>
+  </metasetTypes>
 </cinnamon>
 
 ```
@@ -2670,7 +3178,13 @@ Update lifecycles. Note: does not update lifecycle states
 
 ```xml
 <updateMetasetTypeRequest>
-  <metasetTypes/>
+  <metasetTypes>
+    <metasetType>
+      <id>1</id>
+      <name>thumbnail</name>
+      <unique>false</unique>
+    </metasetType>
+  </metasetTypes>
 </updateMetasetTypeRequest>
 
 ```
@@ -2680,7 +3194,13 @@ Update lifecycles. Note: does not update lifecycle states
 
 ```xml
 <cinnamon>
-  <metasetTypes/>
+  <metasetTypes>
+    <metasetType>
+      <id>6</id>
+      <name>license-key</name>
+      <unique>true</unique>
+    </metasetType>
+  </metasetTypes>
 </cinnamon>
 
 ```
@@ -2719,7 +3239,12 @@ Update lifecycles. Note: does not update lifecycle states
 
 ```xml
 <cinnamon>
-  <objectTypes/>
+  <objectTypes>
+    <objectType>
+      <id>8</id>
+      <name>image</name>
+    </objectType>
+  </objectTypes>
 </cinnamon>
 
 ```
@@ -2735,7 +3260,10 @@ Update lifecycles. Note: does not update lifecycle states
 ```xml
 <deleteObjectTypeRequest>
   <ignoreNotFound>false</ignoreNotFound>
-  <ids/>
+  <ids>
+    <id>2</id>
+    <id>3</id>
+  </ids>
 </deleteObjectTypeRequest>
 
 ```
@@ -2770,7 +3298,12 @@ Update lifecycles. Note: does not update lifecycle states
 
 ```xml
 <cinnamon>
-  <objectTypes/>
+  <objectTypes>
+    <objectType>
+      <id>8</id>
+      <name>image</name>
+    </objectType>
+  </objectTypes>
 </cinnamon>
 
 ```
@@ -2800,7 +3333,12 @@ Update lifecycles. Note: does not update lifecycle states
 
 ```xml
 <cinnamon>
-  <objectTypes/>
+  <objectTypes>
+    <objectType>
+      <id>8</id>
+      <name>image</name>
+    </objectType>
+  </objectTypes>
 </cinnamon>
 
 ```
@@ -2834,35 +3372,42 @@ Update lifecycles. Note: does not update lifecycle states
 ## Response
 
 ```xml
-<objectSystemData>
-  <id>1</id>
-  <name>my osd</name>
-  <contentPath/>
-  <contentSize/>
-  <predecessorId/>
-  <rootId/>
-  <creatorId>1</creatorId>
-  <modifierId>1</modifierId>
-  <ownerId>3</ownerId>
-  <lockerId/>
-  <created>2023-11-10T00:00:00+0000</created>
-  <modified>2023-11-10T00:00:00+0000</modified>
-  <languageId>4</languageId>
-  <aclId>5</aclId>
-  <parentId>5</parentId>
-  <formatId>23</formatId>
-  <typeId>1</typeId>
-  <latestHead>false</latestHead>
-  <latestBranch>true</latestBranch>
-  <contentChanged>false</contentChanged>
-  <metadataChanged>false</metadataChanged>
-  <cmnVersion>1</cmnVersion>
-  <lifecycleStateId/>
-  <summary>&lt;summary/></summary>
-  <contentHash/>
-  <contentProvider>FILE_SYSTEM</contentProvider>
-  <metasets/>
-</objectSystemData>
+<cinnamon>
+  <osds>
+    <osd>
+      <id>1</id>
+      <name>my osd</name>
+      <contentPath/>
+      <contentSize/>
+      <predecessorId/>
+      <rootId/>
+      <creatorId>1</creatorId>
+      <modifierId>1</modifierId>
+      <ownerId>3</ownerId>
+      <lockerId/>
+      <created>2022-08-10T01:21:00+0000</created>
+      <modified>2022-08-10T01:21:00+0000</modified>
+      <languageId>4</languageId>
+      <aclId>5</aclId>
+      <parentId>5</parentId>
+      <formatId>23</formatId>
+      <typeId>1</typeId>
+      <latestHead>false</latestHead>
+      <latestBranch>true</latestBranch>
+      <contentChanged>false</contentChanged>
+      <metadataChanged>false</metadataChanged>
+      <cmnVersion>1</cmnVersion>
+      <lifecycleStateId/>
+      <summary>&lt;summary/></summary>
+      <contentHash/>
+      <contentProvider>FILE_SYSTEM</contentProvider>
+      <metasets/>
+    </osd>
+  </osds>
+  <links/>
+  <references/>
+  <relations/>
+</cinnamon>
 
 ```
 
@@ -2906,7 +3451,20 @@ Update lifecycles. Note: does not update lifecycle states
 
 ```xml
 <cinnamon>
-  <metasets/>
+  <metasets>
+    <metaset>
+      <id/>
+      <objectId>6</objectId>
+      <typeId>8</typeId>
+      <content>&lt;xml> folder meta object &lt;/xml></content>
+    </metaset>
+    <metaset>
+      <id/>
+      <objectId>7</objectId>
+      <typeId>65</typeId>
+      <content>&lt;xml> osd meta object &lt;/xml></content>
+    </metaset>
+  </metasets>
 </cinnamon>
 
 ```
@@ -2941,35 +3499,42 @@ should contain data.
 ## Response
 
 ```xml
-<objectSystemData>
-  <id>1</id>
-  <name>my osd</name>
-  <contentPath/>
-  <contentSize/>
-  <predecessorId/>
-  <rootId/>
-  <creatorId>1</creatorId>
-  <modifierId>1</modifierId>
-  <ownerId>3</ownerId>
-  <lockerId/>
-  <created>2023-11-10T00:00:00+0000</created>
-  <modified>2023-11-10T00:00:00+0000</modified>
-  <languageId>4</languageId>
-  <aclId>5</aclId>
-  <parentId>5</parentId>
-  <formatId>23</formatId>
-  <typeId>1</typeId>
-  <latestHead>false</latestHead>
-  <latestBranch>true</latestBranch>
-  <contentChanged>false</contentChanged>
-  <metadataChanged>false</metadataChanged>
-  <cmnVersion>1</cmnVersion>
-  <lifecycleStateId/>
-  <summary>&lt;summary/></summary>
-  <contentHash/>
-  <contentProvider>FILE_SYSTEM</contentProvider>
-  <metasets/>
-</objectSystemData>
+<cinnamon>
+  <osds>
+    <osd>
+      <id>1</id>
+      <name>my osd</name>
+      <contentPath/>
+      <contentSize/>
+      <predecessorId/>
+      <rootId/>
+      <creatorId>1</creatorId>
+      <modifierId>1</modifierId>
+      <ownerId>3</ownerId>
+      <lockerId/>
+      <created>2022-08-10T01:21:00+0000</created>
+      <modified>2022-08-10T01:21:00+0000</modified>
+      <languageId>4</languageId>
+      <aclId>5</aclId>
+      <parentId>5</parentId>
+      <formatId>23</formatId>
+      <typeId>1</typeId>
+      <latestHead>false</latestHead>
+      <latestBranch>true</latestBranch>
+      <contentChanged>false</contentChanged>
+      <metadataChanged>false</metadataChanged>
+      <cmnVersion>1</cmnVersion>
+      <lifecycleStateId/>
+      <summary>&lt;summary/></summary>
+      <contentHash/>
+      <contentProvider>FILE_SYSTEM</contentProvider>
+      <metasets/>
+    </osd>
+  </osds>
+  <links/>
+  <references/>
+  <relations/>
+</cinnamon>
 
 ```
 
@@ -2983,9 +3548,12 @@ should contain data.
 
 ```xml
 <deleteOsdRequest>
-  <deleteDescendants>false</deleteDescendants>
-  <deleteAllVersions>false</deleteAllVersions>
-  <ids/>
+  <deleteDescendants>true</deleteDescendants>
+  <deleteAllVersions>true</deleteAllVersions>
+  <ids>
+    <id>4</id>
+    <id>6</id>
+  </ids>
 </deleteOsdRequest>
 
 ```
@@ -3079,7 +3647,7 @@ Returns an OSD's content according to it's format's content type.
 
 ```xml
 <idRequest>
-  <id/>
+  <id>7</id>
 </idRequest>
 
 ```
@@ -3118,7 +3686,20 @@ Returns an OSD's content according to it's format's content type.
 
 ```xml
 <cinnamon>
-  <metasets/>
+  <metasets>
+    <metaset>
+      <id/>
+      <objectId>6</objectId>
+      <typeId>8</typeId>
+      <content>&lt;xml> folder meta object &lt;/xml></content>
+    </metaset>
+    <metaset>
+      <id/>
+      <objectId>7</objectId>
+      <typeId>65</typeId>
+      <content>&lt;xml> osd meta object &lt;/xml></content>
+    </metaset>
+  </metasets>
 </cinnamon>
 
 ```
@@ -3134,10 +3715,10 @@ Returns an OSD's content according to it's format's content type.
 ```xml
 <osdByFolderRequest>
   <includeSummary>false</includeSummary>
-  <folderId>0</folderId>
+  <folderId>6</folderId>
   <linksAsOsd>true</linksAsOsd>
-  <includeCustomMetadata>false</includeCustomMetadata>
-  <versionPredicate>HEAD</versionPredicate>
+  <includeCustomMetadata>true</includeCustomMetadata>
+  <versionPredicate>BRANCH</versionPredicate>
 </osdByFolderRequest>
 
 ```
@@ -3146,35 +3727,42 @@ Returns an OSD's content according to it's format's content type.
 ## Response
 
 ```xml
-<objectSystemData>
-  <id>1</id>
-  <name>my osd</name>
-  <contentPath/>
-  <contentSize/>
-  <predecessorId/>
-  <rootId/>
-  <creatorId>1</creatorId>
-  <modifierId>1</modifierId>
-  <ownerId>3</ownerId>
-  <lockerId/>
-  <created>2023-11-10T00:00:00+0000</created>
-  <modified>2023-11-10T00:00:00+0000</modified>
-  <languageId>4</languageId>
-  <aclId>5</aclId>
-  <parentId>5</parentId>
-  <formatId>23</formatId>
-  <typeId>1</typeId>
-  <latestHead>false</latestHead>
-  <latestBranch>true</latestBranch>
-  <contentChanged>false</contentChanged>
-  <metadataChanged>false</metadataChanged>
-  <cmnVersion>1</cmnVersion>
-  <lifecycleStateId/>
-  <summary>&lt;summary/></summary>
-  <contentHash/>
-  <contentProvider>FILE_SYSTEM</contentProvider>
-  <metasets/>
-</objectSystemData>
+<cinnamon>
+  <osds>
+    <osd>
+      <id>1</id>
+      <name>my osd</name>
+      <contentPath/>
+      <contentSize/>
+      <predecessorId/>
+      <rootId/>
+      <creatorId>1</creatorId>
+      <modifierId>1</modifierId>
+      <ownerId>3</ownerId>
+      <lockerId/>
+      <created>2022-08-10T01:21:00+0000</created>
+      <modified>2022-08-10T01:21:00+0000</modified>
+      <languageId>4</languageId>
+      <aclId>5</aclId>
+      <parentId>5</parentId>
+      <formatId>23</formatId>
+      <typeId>1</typeId>
+      <latestHead>false</latestHead>
+      <latestBranch>true</latestBranch>
+      <contentChanged>false</contentChanged>
+      <metadataChanged>false</metadataChanged>
+      <cmnVersion>1</cmnVersion>
+      <lifecycleStateId/>
+      <summary>&lt;summary/></summary>
+      <contentHash/>
+      <contentProvider>FILE_SYSTEM</contentProvider>
+      <metasets/>
+    </osd>
+  </osds>
+  <links/>
+  <references/>
+  <relations/>
+</cinnamon>
 
 ```
 
@@ -3203,35 +3791,42 @@ Returns an OSD's content according to it's format's content type.
 ## Response
 
 ```xml
-<objectSystemData>
-  <id>1</id>
-  <name>my osd</name>
-  <contentPath/>
-  <contentSize/>
-  <predecessorId/>
-  <rootId/>
-  <creatorId>1</creatorId>
-  <modifierId>1</modifierId>
-  <ownerId>3</ownerId>
-  <lockerId/>
-  <created>2023-11-10T00:00:00+0000</created>
-  <modified>2023-11-10T00:00:00+0000</modified>
-  <languageId>4</languageId>
-  <aclId>5</aclId>
-  <parentId>5</parentId>
-  <formatId>23</formatId>
-  <typeId>1</typeId>
-  <latestHead>false</latestHead>
-  <latestBranch>true</latestBranch>
-  <contentChanged>false</contentChanged>
-  <metadataChanged>false</metadataChanged>
-  <cmnVersion>1</cmnVersion>
-  <lifecycleStateId/>
-  <summary>&lt;summary/></summary>
-  <contentHash/>
-  <contentProvider>FILE_SYSTEM</contentProvider>
-  <metasets/>
-</objectSystemData>
+<cinnamon>
+  <osds>
+    <osd>
+      <id>1</id>
+      <name>my osd</name>
+      <contentPath/>
+      <contentSize/>
+      <predecessorId/>
+      <rootId/>
+      <creatorId>1</creatorId>
+      <modifierId>1</modifierId>
+      <ownerId>3</ownerId>
+      <lockerId/>
+      <created>2022-08-10T01:21:00+0000</created>
+      <modified>2022-08-10T01:21:00+0000</modified>
+      <languageId>4</languageId>
+      <aclId>5</aclId>
+      <parentId>5</parentId>
+      <formatId>23</formatId>
+      <typeId>1</typeId>
+      <latestHead>false</latestHead>
+      <latestBranch>true</latestBranch>
+      <contentChanged>false</contentChanged>
+      <metadataChanged>false</metadataChanged>
+      <cmnVersion>1</cmnVersion>
+      <lifecycleStateId/>
+      <summary>&lt;summary/></summary>
+      <contentHash/>
+      <contentProvider>FILE_SYSTEM</contentProvider>
+      <metasets/>
+    </osd>
+  </osds>
+  <links/>
+  <references/>
+  <relations/>
+</cinnamon>
 
 ```
 
@@ -3293,7 +3888,12 @@ Returns an OSD's content according to it's format's content type.
 
 ```xml
 <cinnamon>
-  <summaries/>
+  <summaries>
+    <summary>
+      <id>5</id>
+      <content>&lt;summary> a summary of an OSD's content &lt;/summary></content>
+    </summary>
+  </summaries>
 </cinnamon>
 
 ```
@@ -3323,7 +3923,7 @@ Returns an OSD's content according to it's format's content type.
 ```xml
 <genericResponse>
   <message/>
-  <successful>false</successful>
+  <successful>true</successful>
 </genericResponse>
 
 ```
@@ -3351,7 +3951,7 @@ Set an OSD's content. Requires a multipart-mime request, with part "cinnamonRequ
 ```xml
 <genericResponse>
   <message/>
-  <successful>false</successful>
+  <successful>true</successful>
 </genericResponse>
 
 ```
@@ -3385,7 +3985,7 @@ Add a summary to an object, for example a short description of the content.
 ```xml
 <genericResponse>
   <message/>
-  <successful>false</successful>
+  <successful>true</successful>
 </genericResponse>
 
 ```
@@ -3400,7 +4000,7 @@ Add a summary to an object, for example a short description of the content.
 
 ```xml
 <idRequest>
-  <id/>
+  <id>7</id>
 </idRequest>
 
 ```
@@ -3411,7 +4011,7 @@ Add a summary to an object, for example a short description of the content.
 ```xml
 <genericResponse>
   <message/>
-  <successful>false</successful>
+  <successful>true</successful>
 </genericResponse>
 
 ```
@@ -3440,8 +4040,8 @@ Add a summary to an object, for example a short description of the content.
       <modifierId/>
       <ownerId>45</ownerId>
       <lockerId/>
-      <created>2023-11-17T10:42:46+0000</created>
-      <modified>2023-11-17T10:42:46+0000</modified>
+      <created>2022-08-10T01:21:00+0000</created>
+      <modified>2022-08-10T01:21:00+0000</modified>
       <languageId>1</languageId>
       <aclId>56</aclId>
       <parentId>2</parentId>
@@ -3478,8 +4078,8 @@ Add a summary to an object, for example a short description of the content.
       <modifierId/>
       <ownerId>45</ownerId>
       <lockerId/>
-      <created>2023-11-17T10:42:46+0000</created>
-      <modified>2023-11-17T10:42:46+0000</modified>
+      <created>2022-08-10T01:21:00+0000</created>
+      <modified>2022-08-10T01:21:00+0000</modified>
       <languageId>1</languageId>
       <aclId>56</aclId>
       <parentId>2</parentId>
@@ -3507,7 +4107,7 @@ Add a summary to an object, for example a short description of the content.
 ```xml
 <genericResponse>
   <message/>
-  <successful>false</successful>
+  <successful>true</successful>
 </genericResponse>
 
 ```
@@ -3540,7 +4140,7 @@ Update the content of a given OSD metaset
 ```xml
 <genericResponse>
   <message/>
-  <successful>false</successful>
+  <successful>true</successful>
 </genericResponse>
 
 ```
@@ -3581,35 +4181,42 @@ part "file", if the new version should contain data.
 ## Response
 
 ```xml
-<objectSystemData>
-  <id>1</id>
-  <name>my osd</name>
-  <contentPath/>
-  <contentSize/>
-  <predecessorId/>
-  <rootId/>
-  <creatorId>1</creatorId>
-  <modifierId>1</modifierId>
-  <ownerId>3</ownerId>
-  <lockerId/>
-  <created>2023-11-10T00:00:00+0000</created>
-  <modified>2023-11-10T00:00:00+0000</modified>
-  <languageId>4</languageId>
-  <aclId>5</aclId>
-  <parentId>5</parentId>
-  <formatId>23</formatId>
-  <typeId>1</typeId>
-  <latestHead>false</latestHead>
-  <latestBranch>true</latestBranch>
-  <contentChanged>false</contentChanged>
-  <metadataChanged>false</metadataChanged>
-  <cmnVersion>1</cmnVersion>
-  <lifecycleStateId/>
-  <summary>&lt;summary/></summary>
-  <contentHash/>
-  <contentProvider>FILE_SYSTEM</contentProvider>
-  <metasets/>
-</objectSystemData>
+<cinnamon>
+  <osds>
+    <osd>
+      <id>1</id>
+      <name>my osd</name>
+      <contentPath/>
+      <contentSize/>
+      <predecessorId/>
+      <rootId/>
+      <creatorId>1</creatorId>
+      <modifierId>1</modifierId>
+      <ownerId>3</ownerId>
+      <lockerId/>
+      <created>2022-08-10T01:21:00+0000</created>
+      <modified>2022-08-10T01:21:00+0000</modified>
+      <languageId>4</languageId>
+      <aclId>5</aclId>
+      <parentId>5</parentId>
+      <formatId>23</formatId>
+      <typeId>1</typeId>
+      <latestHead>false</latestHead>
+      <latestBranch>true</latestBranch>
+      <contentChanged>false</contentChanged>
+      <metadataChanged>false</metadataChanged>
+      <cmnVersion>1</cmnVersion>
+      <lifecycleStateId/>
+      <summary>&lt;summary/></summary>
+      <contentHash/>
+      <contentProvider>FILE_SYSTEM</contentProvider>
+      <metasets/>
+    </osd>
+  </osds>
+  <links/>
+  <references/>
+  <relations/>
+</cinnamon>
 
 ```
 
@@ -3644,7 +4251,7 @@ part "file", if the new version should contain data.
 ```xml
 <genericResponse>
   <message/>
-  <successful>false</successful>
+  <successful>true</successful>
 </genericResponse>
 
 ```
@@ -3659,8 +4266,8 @@ part "file", if the new version should contain data.
 
 ```xml
 <userPermissionRequest>
-  <userId/>
-  <aclId/>
+  <userId>6</userId>
+  <aclId>7</aclId>
 </userPermissionRequest>
 
 ```
@@ -3670,7 +4277,16 @@ part "file", if the new version should contain data.
 
 ```xml
 <cinnamon>
-  <permissions/>
+  <permissions>
+    <permission>
+      <id>98</id>
+      <name>log viewer permission</name>
+    </permission>
+    <permission>
+      <id>99</id>
+      <name>log writer permission </name>
+    </permission>
+  </permissions>
 </cinnamon>
 
 ```
@@ -3695,7 +4311,16 @@ part "file", if the new version should contain data.
 
 ```xml
 <cinnamon>
-  <permissions/>
+  <permissions>
+    <permission>
+      <id>98</id>
+      <name>log viewer permission</name>
+    </permission>
+    <permission>
+      <id>99</id>
+      <name>log writer permission </name>
+    </permission>
+  </permissions>
 </cinnamon>
 
 ```
@@ -3731,7 +4356,18 @@ part "file", if the new version should contain data.
 
 ```xml
 <cinnamon>
-  <relationTypes/>
+  <relationTypes>
+    <relationType>
+      <id/>
+      <leftObjectProtected>true</leftObjectProtected>
+      <rightObjectProtected>false</rightObjectProtected>
+      <name>html-to-image</name>
+      <cloneOnRightCopy>false</cloneOnRightCopy>
+      <cloneOnLeftCopy>false</cloneOnLeftCopy>
+      <cloneOnLeftVersion>false</cloneOnLeftVersion>
+      <cloneOnRightVersion>false</cloneOnRightVersion>
+    </relationType>
+  </relationTypes>
 </cinnamon>
 
 ```
@@ -3747,7 +4383,10 @@ part "file", if the new version should contain data.
 ```xml
 <deleteRelationTypeRequest>
   <ignoreNotFound>false</ignoreNotFound>
-  <ids/>
+  <ids>
+    <id>333</id>
+    <id>543</id>
+  </ids>
 </deleteRelationTypeRequest>
 
 ```
@@ -3782,7 +4421,18 @@ part "file", if the new version should contain data.
 
 ```xml
 <cinnamon>
-  <relationTypes/>
+  <relationTypes>
+    <relationType>
+      <id/>
+      <leftObjectProtected>true</leftObjectProtected>
+      <rightObjectProtected>false</rightObjectProtected>
+      <name>html-to-image</name>
+      <cloneOnRightCopy>false</cloneOnRightCopy>
+      <cloneOnLeftCopy>false</cloneOnLeftCopy>
+      <cloneOnLeftVersion>false</cloneOnLeftVersion>
+      <cloneOnRightVersion>false</cloneOnRightVersion>
+    </relationType>
+  </relationTypes>
 </cinnamon>
 
 ```
@@ -3818,7 +4468,18 @@ part "file", if the new version should contain data.
 
 ```xml
 <cinnamon>
-  <relationTypes/>
+  <relationTypes>
+    <relationType>
+      <id/>
+      <leftObjectProtected>true</leftObjectProtected>
+      <rightObjectProtected>false</rightObjectProtected>
+      <name>html-to-image</name>
+      <cloneOnRightCopy>false</cloneOnRightCopy>
+      <cloneOnLeftCopy>false</cloneOnLeftCopy>
+      <cloneOnLeftVersion>false</cloneOnLeftVersion>
+      <cloneOnRightVersion>false</cloneOnRightVersion>
+    </relationType>
+  </relationTypes>
 </cinnamon>
 
 ```
@@ -3885,7 +4546,9 @@ part "file", if the new version should contain data.
 ```xml
 <deleteRelationRequest>
   <ignoreNotFound>false</ignoreNotFound>
-  <ids/>
+  <ids>
+    <id>68</id>
+  </ids>
 </deleteRelationRequest>
 
 ```
@@ -3896,7 +4559,7 @@ part "file", if the new version should contain data.
 ```xml
 <genericResponse>
   <message/>
-  <successful>false</successful>
+  <successful>true</successful>
 </genericResponse>
 
 ```
@@ -4097,7 +4760,12 @@ Returns status code 400
 
 ```xml
 <cinnamon>
-  <uiLanguages/>
+  <uiLanguages>
+    <uiLanguage>
+      <id>54</id>
+      <isoCode>DOG</isoCode>
+    </uiLanguage>
+  </uiLanguages>
 </cinnamon>
 
 ```
@@ -4113,7 +4781,9 @@ Returns status code 400
 ```xml
 <deleteUiLanguageRequest>
   <ignoreNotFound>false</ignoreNotFound>
-  <ids/>
+  <ids>
+    <id>90</id>
+  </ids>
 </deleteUiLanguageRequest>
 
 ```
@@ -4148,7 +4818,12 @@ Returns status code 400
 
 ```xml
 <cinnamon>
-  <uiLanguages/>
+  <uiLanguages>
+    <uiLanguage>
+      <id>54</id>
+      <isoCode>DOG</isoCode>
+    </uiLanguage>
+  </uiLanguages>
 </cinnamon>
 
 ```
@@ -4182,7 +4857,12 @@ Returns status code 400
 
 ```xml
 <cinnamon>
-  <uiLanguages/>
+  <uiLanguages>
+    <uiLanguage>
+      <id>54</id>
+      <isoCode>DOG</isoCode>
+    </uiLanguage>
+  </uiLanguages>
 </cinnamon>
 
 ```
@@ -4275,7 +4955,7 @@ Note: this is not optimized for users who own vast collections of objects or fol
 ```xml
 <genericResponse>
   <message/>
-  <successful>false</successful>
+  <successful>true</successful>
 </genericResponse>
 
 ```
@@ -4400,7 +5080,7 @@ Update a user's individual configuration
 ```xml
 <genericResponse>
   <message/>
-  <successful>false</successful>
+  <successful>true</successful>
 </genericResponse>
 
 ```
@@ -4427,7 +5107,7 @@ Update a user's individual configuration
 ```xml
 <genericResponse>
   <message/>
-  <successful>false</successful>
+  <successful>true</successful>
 </genericResponse>
 
 ```

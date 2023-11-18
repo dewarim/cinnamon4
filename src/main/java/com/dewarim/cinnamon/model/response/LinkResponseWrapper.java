@@ -8,6 +8,9 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.dewarim.cinnamon.api.Constants.FOLDER_EXAMPLE;
+import static com.dewarim.cinnamon.api.Constants.OSD_EXAMPLE;
+
 @JacksonXmlRootElement(localName = "cinnamon")
 public class LinkResponseWrapper implements Wrapper<LinkResponse>, ApiResponse {
 
@@ -43,5 +46,14 @@ public class LinkResponseWrapper implements Wrapper<LinkResponse>, ApiResponse {
     public Wrapper<LinkResponse> setList(List<LinkResponse> linkResponses) {
         setLinks(linkResponses);
         return this;
+    }
+
+    @Override
+    public List<Object> examples() {
+        LinkResponse osdLink = new LinkResponse();
+        osdLink.setOsd(OSD_EXAMPLE);
+        LinkResponse folderLink = new LinkResponse();
+        folderLink.setFolder(FOLDER_EXAMPLE);
+        return List.of(new LinkResponseWrapper(List.of(osdLink, folderLink)));
     }
 }

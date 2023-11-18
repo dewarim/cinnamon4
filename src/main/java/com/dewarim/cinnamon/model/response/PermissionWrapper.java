@@ -34,4 +34,13 @@ public class PermissionWrapper implements Wrapper<Permission>, ApiResponse {
         setPermissions(permissions);
         return this;
     }
+
+    @Override
+    public List<Object> examples() {
+        PermissionWrapper wrapper = new PermissionWrapper();
+        Permission permission1 = new Permission(98L, "log viewer permission");
+        Permission permission2 = new Permission(99L, "log writer permission ");
+        wrapper.setPermissions(List.of(permission1,permission2));
+        return List.of(wrapper);
+    }
 }

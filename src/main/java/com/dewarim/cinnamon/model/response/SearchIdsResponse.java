@@ -55,7 +55,4 @@ public class SearchIdsResponse implements ApiResponse {
                 '}';
     }
 
-    //    public static void main(String[] args) throws IOException {
-//        new XmlMapper().writeValue(System.out,new SearchIdsResponse(List.of(1L,32L), List.of(100L, 200L)));
-//    }
 }

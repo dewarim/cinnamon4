@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.model.response;
 
+import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.ApiResponse;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
@@ -43,5 +44,13 @@ public class CinnamonErrorWrapper implements Wrapper<CinnamonError>, ApiResponse
     public Wrapper<CinnamonError> setList(List<CinnamonError> cinnamonErrors) {
         setErrors(cinnamonErrors);
         return this;
+    }
+
+    @Override
+    public List<Object> examples() {
+        return List.of(new CinnamonErrorWrapper(List.of(
+                new CinnamonError(ErrorCode.ACL_NOT_FOUND.getCode(), 43L),
+                new CinnamonError(ErrorCode.FOLDER_NOT_FOUND.getCode(), 54L)
+        )));
     }
 }

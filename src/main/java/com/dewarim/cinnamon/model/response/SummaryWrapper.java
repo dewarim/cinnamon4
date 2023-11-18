@@ -33,4 +33,12 @@ public class SummaryWrapper implements Wrapper<Summary>, ApiResponse {
         this.summaries = summaries;
         return this;
     }
+
+    @Override
+    public List<Object> examples() {
+        SummaryWrapper wrapper = new SummaryWrapper();
+        Summary summary = new Summary(5L, "<summary> a summary of an OSD's content </summary>");
+        wrapper.getSummaries().add(summary);
+        return List.of(wrapper);
+    }
 }

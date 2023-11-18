@@ -3,6 +3,8 @@ package com.dewarim.cinnamon.model.response;
 import com.dewarim.cinnamon.api.ApiResponse;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
+import java.util.List;
+
 /**
  * A simple class to report the success or failure of an operation.
  * (Just using http status code 204 is a little ambiguous)
@@ -20,11 +22,6 @@ public class GenericResponse implements ApiResponse {
         this.successful = successful;
     }
 
-    public GenericResponse(String message, boolean successful) {
-        this.message = message;
-        this.successful = successful;
-    }
-
     public boolean isSuccessful() {
         return successful;
     }
@@ -39,5 +36,10 @@ public class GenericResponse implements ApiResponse {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    @Override
+    public List<Object> examples() {
+        return List.of(new GenericResponse( true));
     }
 }

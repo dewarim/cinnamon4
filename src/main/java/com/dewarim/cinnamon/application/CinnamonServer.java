@@ -309,6 +309,12 @@ public class CinnamonServer {
         XmlMapper mapper = new XmlMapper();
         mapper.configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL, true);
         mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+        System.out.println("""
+        # API Endpoint Documentation
+        
+        Note: response examples are not directly matching request examples, they just show the format you can expect.
+         
+        """);
         Arrays.stream(UrlMapping.values()).forEach(urlMapping -> {
                     String formatted;
                     if (urlMapping.getRequestClass() != null) {

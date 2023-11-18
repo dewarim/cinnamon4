@@ -6,12 +6,12 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+
+import static com.dewarim.cinnamon.api.Constants.DATE_EXAMPLE;
 
 @JacksonXmlRootElement(localName = "updateOsdRequest")
 public class UpdateOsdRequest implements ApiRequest<UpdateOsdRequest> {
@@ -106,8 +106,8 @@ public class UpdateOsdRequest implements ApiRequest<UpdateOsdRequest> {
 
     @Override
     public List<ApiRequest<UpdateOsdRequest>> examples() {
-        Date             date     = new Date(LocalDateTime.of(2023, 11, 17, 0, 0, 0).toInstant(ZoneOffset.UTC).toEpochMilli());
-        UpdateOsdRequest request = new UpdateOsdRequest(1L, 2L, "new name", 45L, 56L, 1L, 1L, null, true);
+        Date             date     = DATE_EXAMPLE;
+        UpdateOsdRequest request  = new UpdateOsdRequest(1L, 2L, "new name", 45L, 56L, 1L, 1L, null, true);
         UpdateOsdRequest request2 = new UpdateOsdRequest(1L, 2L, "new name", 45L, 56L, 1L, 1L, null, true);
         request.getOsds().get(0).setCreated(date);
         request2.getOsds().get(0).setCreated(date);

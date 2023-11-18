@@ -34,4 +34,12 @@ public class ObjectTypeWrapper implements Wrapper<ObjectType>, ApiResponse {
         setObjectTypes(objectTypes);
         return this;
     }
+
+    @Override
+    public List<Object> examples() {
+        ObjectTypeWrapper wrapper = new ObjectTypeWrapper();
+        ObjectType        image   = new ObjectType(8L, "image");
+        wrapper.getObjectTypes().add(image);
+        return List.of(wrapper);
+    }
 }

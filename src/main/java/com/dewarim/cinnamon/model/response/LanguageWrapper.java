@@ -35,4 +35,11 @@ public class LanguageWrapper implements Wrapper<Language>, ApiResponse {
         setLanguages(languages);
         return this;
     }
+
+    @Override
+    public List<Object> examples() {
+        LanguageWrapper languageWrapper = new LanguageWrapper();
+        languageWrapper.getLanguages().add(new Language(54L, "DOG"));
+        return List.of(languageWrapper);
+    }
 }

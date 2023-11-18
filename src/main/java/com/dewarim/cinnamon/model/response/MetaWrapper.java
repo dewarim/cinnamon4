@@ -40,4 +40,11 @@ public class MetaWrapper implements Wrapper<Meta>, ApiResponse {
         this.metasets = metas;
         return this;
     }
+
+    @Override
+    public List<Object> examples() {
+        Meta folderMeta = new Meta(6L, 8L, "<xml> folder meta object </xml>");
+        Meta osdMeta = new Meta(7L, 65L, "<xml> osd meta object </xml>");
+        return List.of(new MetaWrapper(List.of(folderMeta,osdMeta)));
+    }
 }

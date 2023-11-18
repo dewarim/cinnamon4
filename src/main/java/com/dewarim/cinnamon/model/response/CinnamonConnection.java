@@ -5,6 +5,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 @JacksonXmlRootElement(localName = "connection")
 public class CinnamonConnection implements Wrapper<CinnamonConnection>, ApiResponse {
@@ -34,5 +35,10 @@ public class CinnamonConnection implements Wrapper<CinnamonConnection>, ApiRespo
         }
         this.ticket = cinnamonConnections.get(0).ticket;
         return this;
+    }
+
+    @Override
+    public List<Object> examples() {
+        return List.of(new CinnamonConnection(UUID.randomUUID().toString()));
     }
 }

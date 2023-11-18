@@ -2,6 +2,7 @@ package com.dewarim.cinnamon.model.response;
 
 
 import com.dewarim.cinnamon.api.ApiResponse;
+import com.dewarim.cinnamon.lifecycle.ChangeAclState;
 import com.dewarim.cinnamon.model.LifecycleState;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
@@ -39,7 +40,16 @@ public class LifecycleStateWrapper implements Wrapper<LifecycleState>, ApiRespon
 
     @Override
     public Wrapper<LifecycleState> setList(List<LifecycleState> lifecycleStates) {
-        this.lifecycleStates=lifecycleStates;
+        this.lifecycleStates = lifecycleStates;
         return this;
+    }
+
+    @Override
+    public List<Object> examples() {
+        LifecycleStateWrapper lifecycleStateWrapper = new LifecycleStateWrapper();
+        LifecycleState        lifecycleState        = new LifecycleState("published", "<config/>", ChangeAclState.class.getName(), 6L, 77L);
+        lifecycleState.setId(79L);
+        lifecycleStateWrapper.getLifecycleStates().add(lifecycleState);
+        return List.of(new LifecycleStateWrapper(List.of(lifecycleState)));
     }
 }

@@ -39,4 +39,9 @@ public class DisconnectResponse implements Wrapper<DisconnectResponse>, ApiRespo
         this.disconnectSuccessful = disconnectResponses.get(0).disconnectSuccessful;
         return this;
     }
+
+    @Override
+    public List<Object> examples() {
+        return List.of(new DisconnectResponse(true));
+    }
 }

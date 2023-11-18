@@ -35,4 +35,11 @@ public class FolderTypeWrapper implements Wrapper<FolderType>, ApiResponse {
         setFolderTypes(folderTypes);
         return this;
     }
+
+    @Override
+    public List<Object> examples() {
+        FolderTypeWrapper folderTypeWrapper = new FolderTypeWrapper();
+        folderTypeWrapper.getFolderTypes().add(new FolderType(1L, "system-folder"));
+        return List.of(folderTypeWrapper);
+    }
 }
