@@ -8,10 +8,17 @@ import com.dewarim.cinnamon.model.response.FolderTypeWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
+import java.util.List;
+
 @JacksonXmlRootElement(localName = "listFolderTypeRequest")
-public class ListFolderTypeRequest extends DefaultListRequest implements ListRequest<FolderType>, ApiRequest {
+public class ListFolderTypeRequest extends DefaultListRequest implements ListRequest<FolderType>, ApiRequest<ListFolderTypeRequest> {
     @Override
     public Wrapper<FolderType> fetchResponseWrapper() {
         return new FolderTypeWrapper();
+    }
+
+    @Override
+    public List<ApiRequest<ListFolderTypeRequest>> examples() {
+        return List.of(new ListFolderTypeRequest());
     }
 }

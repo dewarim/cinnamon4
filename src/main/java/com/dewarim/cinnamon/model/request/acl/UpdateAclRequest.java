@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "updateAclRequest")
-public class UpdateAclRequest implements UpdateRequest<Acl>, ApiRequest {
+public class UpdateAclRequest implements UpdateRequest<Acl>, ApiRequest<UpdateAclRequest> {
 
     @JacksonXmlElementWrapper(localName = "acls")
     @JacksonXmlProperty(localName = "acl")
@@ -52,7 +52,7 @@ public class UpdateAclRequest implements UpdateRequest<Acl>, ApiRequest {
     }
 
     @Override
-    public List<Object> examples() {
+    public List<ApiRequest<UpdateAclRequest>> examples() {
         return List.of(new UpdateAclRequest(1L, "updated-name"));
     }
 }

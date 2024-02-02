@@ -132,7 +132,7 @@ public class IndexService implements Runnable {
                         jobDao.commit();
                     }
                     indexWriter.close();
-                    // TODO: avoid busy waiting
+                    // TODO: avoid busy waiting -> use blocking queue or semaphore?
                     Thread.sleep(config.getMillisToWaitBetweenRuns());
                     seen.clear();
                 } catch (InterruptedException e) {

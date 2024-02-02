@@ -8,7 +8,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "deleteAclGroupRequest")
-public class DeleteAclGroupRequest extends DeleteByIdRequest<AclGroup> implements ApiRequest {
+public class DeleteAclGroupRequest extends DeleteByIdRequest<AclGroup> implements ApiRequest<DeleteAclGroupRequest> {
 
     public DeleteAclGroupRequest() {
     }
@@ -22,7 +22,7 @@ public class DeleteAclGroupRequest extends DeleteByIdRequest<AclGroup> implement
     }
 
     @Override
-    public List<ApiRequest> examples() {
+    public List<ApiRequest<DeleteAclGroupRequest>> examples() {
         return List.of(new DeleteAclGroupRequest(List.of(5L,78L)));
     }
 }

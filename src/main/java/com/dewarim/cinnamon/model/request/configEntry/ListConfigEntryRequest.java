@@ -8,11 +8,18 @@ import com.dewarim.cinnamon.model.response.ConfigEntryWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
+import java.util.List;
+
 @JacksonXmlRootElement(localName = "listConfigEntryRequest")
-public class ListConfigEntryRequest extends DefaultListRequest implements ListRequest<ConfigEntry>, ApiRequest {
+public class ListConfigEntryRequest extends DefaultListRequest implements ListRequest<ConfigEntry>, ApiRequest<ListConfigEntryRequest> {
 
     @Override
     public Wrapper<ConfigEntry> fetchResponseWrapper() {
         return new ConfigEntryWrapper();
+    }
+
+    @Override
+    public List<ApiRequest<ListConfigEntryRequest>> examples() {
+        return List.of(new ListConfigEntryRequest());
     }
 }

@@ -8,7 +8,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "deleteChangeTriggerRequest")
-public class DeleteChangeTriggerRequest extends DeleteByIdRequest<ChangeTrigger> implements ApiRequest {
+public class DeleteChangeTriggerRequest extends DeleteByIdRequest<ChangeTrigger> implements ApiRequest<DeleteChangeTriggerRequest> {
 
     public DeleteChangeTriggerRequest() {
     }
@@ -19,5 +19,10 @@ public class DeleteChangeTriggerRequest extends DeleteByIdRequest<ChangeTrigger>
 
     public DeleteChangeTriggerRequest(Long id) {
         super(id);
+    }
+
+    @Override
+    public List<ApiRequest<DeleteChangeTriggerRequest>> examples() {
+        return List.of(new DeleteChangeTriggerRequest(77L));
     }
 }

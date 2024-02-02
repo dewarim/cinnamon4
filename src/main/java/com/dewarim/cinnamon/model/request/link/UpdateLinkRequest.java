@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @JacksonXmlRootElement(localName = "updateLinkRequest")
-public class UpdateLinkRequest implements UpdateRequest<Link>, ApiRequest {
+public class UpdateLinkRequest implements UpdateRequest<Link>, ApiRequest<UpdateLinkRequest> {
 
     @JacksonXmlElementWrapper(localName = "links")
     @JacksonXmlProperty(localName = "link")
@@ -72,7 +72,7 @@ public class UpdateLinkRequest implements UpdateRequest<Link>, ApiRequest {
     }
 
     @Override
-    public List<Object> examples() {
+    public List<ApiRequest<UpdateLinkRequest>> examples() {
         return List.of(new UpdateLinkRequest(List.of(new Link(1L,LinkType.OBJECT, 2L,3L,4L,5L,6L))));
     }
 }

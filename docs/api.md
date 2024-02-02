@@ -447,7 +447,9 @@ It does not otherwise change the AclGroup (as it only contains of a group and ac
 ```xml
 <deleteChangeTriggerRequest>
   <ignoreNotFound>false</ignoreNotFound>
-  <ids/>
+  <ids>
+    <id>77</id>
+  </ids>
 </deleteChangeTriggerRequest>
 
 ```

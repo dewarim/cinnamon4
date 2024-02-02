@@ -15,7 +15,7 @@ import java.util.List;
 import static java.util.Objects.isNull;
 
 @JacksonXmlRootElement(localName = "updateAclGroupRequest")
-public class UpdateAclGroupRequest implements UpdateRequest<AclGroup>, ApiRequest {
+public class UpdateAclGroupRequest implements UpdateRequest<AclGroup>, ApiRequest<UpdateAclGroupRequest> {
 
     @JacksonXmlElementWrapper(localName = "aclGroups")
     @JacksonXmlProperty(localName = "aclGroup")
@@ -62,7 +62,7 @@ public class UpdateAclGroupRequest implements UpdateRequest<AclGroup>, ApiReques
     }
 
     @Override
-    public List<Object> examples() {
+    public List<ApiRequest<UpdateAclGroupRequest>> examples() {
         AclGroup aclGroup = new AclGroup(1345L, 54L, 4L);
         aclGroup.getPermissionIds().add(5L);
         aclGroup.getPermissionIds().add(2L);
