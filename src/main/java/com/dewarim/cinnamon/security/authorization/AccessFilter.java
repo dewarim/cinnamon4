@@ -5,25 +5,12 @@ import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.Accessible;
 import com.dewarim.cinnamon.api.Ownable;
-import com.dewarim.cinnamon.dao.AclDao;
-import com.dewarim.cinnamon.dao.AclGroupDao;
-import com.dewarim.cinnamon.dao.AclGroupPermissionDao;
-import com.dewarim.cinnamon.dao.GroupDao;
-import com.dewarim.cinnamon.dao.PermissionDao;
-import com.dewarim.cinnamon.dao.UserAccountDao;
-import com.dewarim.cinnamon.model.Acl;
-import com.dewarim.cinnamon.model.AclGroup;
-import com.dewarim.cinnamon.model.Group;
-import com.dewarim.cinnamon.model.Permission;
-import com.dewarim.cinnamon.model.UserAccount;
+import com.dewarim.cinnamon.dao.*;
+import com.dewarim.cinnamon.model.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -99,11 +86,12 @@ public class AccessFilter {
         }
         Permission permission = nameToPermissionMapping.get(defaultPermission.getName());
         if (permission == null) {
-            throw new IllegalStateException("unknown permission name was used.");
+            String message = String.format("unknown permission name '%s' was used with aclId %d", defaultPermission.getName(), aclId);
+            throw new IllegalStateException(message);
         }
         Acl acl = idToAclMapping.get(aclId);
         if (acl == null) {
-            throw new IllegalStateException("unknown acl id was used.");
+            throw new IllegalStateException(String.format("unknown acl id %d was used.", aclId));
         }
 
         AclPermission aclPermission = new AclPermission(aclId, permission.getId(), checkOwnerPermission);
@@ -260,7 +248,7 @@ public class AccessFilter {
         }
         Long aclId = accessible.getAclId();
         if (aclId == null) {
-            throw new IllegalArgumentException("Cannot check permissions without the accessible providing an AclId!");
+            throw new IllegalArgumentException("Cannot check permissions without the accessible providing an aclId!");
         }
         if (ownable.getOwnerId() != null && user.getId().equals(ownable.getOwnerId())) {
             return hasPermission(aclId, permission) || hasPermission(aclId, permission, true);
