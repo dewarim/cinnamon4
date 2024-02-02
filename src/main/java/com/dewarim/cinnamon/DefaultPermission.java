@@ -70,7 +70,7 @@ public enum DefaultPermission {
     /**
      * Permission to move an object or folder, depending on which it is set.
      */
-    SET_PARENT("parent_folder.write"),
+    SET_PARENT("node.parent_folder.write"),
     SET_SUMMARY("node.summary.write"),
 
     SET_TYPE("node.type.write"),
