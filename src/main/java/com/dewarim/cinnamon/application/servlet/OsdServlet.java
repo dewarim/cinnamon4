@@ -140,7 +140,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                 List<Meta> metas = metasetDao.listByOsd(sourceId);
                 var metaCopies = metas.stream()
                         .filter(meta -> copyTask.getMetasetTypeIds().contains(meta.getTypeId()))
-                        .map(meta -> new Meta(sourceId, meta.getTypeId(), meta.getContent()))
+                        .map(meta -> new Meta(targetId, meta.getTypeId(), meta.getContent()))
                         .collect(Collectors.toList());
                 metasetDao.create(metaCopies);
             }
@@ -189,7 +189,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                 if (!accessFilter.hasPermissionOnOwnable(target, DefaultPermission.WRITE_OBJECT_CONTENT, target)) {
                     errors.add(new CinnamonError(NO_WRITE_PERMISSION.getCode(), targetId));
                 }
-                if (!accessFilter.hasPermissionOnOwnable(target, DefaultPermission.LOCK, target)) {
+                if (!target.lockedByUser(user)) {
                     errors.add(new CinnamonError(OBJECT_MUST_BE_LOCKED_BY_USER.getCode(), targetId));
                 }
             }

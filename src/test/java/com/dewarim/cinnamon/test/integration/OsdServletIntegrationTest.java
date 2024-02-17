@@ -4,6 +4,7 @@ import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonServer;
+import com.dewarim.cinnamon.client.CinnamonClientException;
 import com.dewarim.cinnamon.client.StandardResponse;
 import com.dewarim.cinnamon.lifecycle.NopState;
 import com.dewarim.cinnamon.model.*;
@@ -42,10 +43,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.dewarim.cinnamon.DefaultPermission.*;
 import static com.dewarim.cinnamon.ErrorCode.*;
@@ -222,7 +221,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         assertEquals("2", newVersion.getCmnVersion());
         ObjectSystemData firstBranch = client.version(new CreateNewVersionRequest(id));
         assertEquals("1.1-1", firstBranch.getCmnVersion());
-        long newVersionId =newVersion.getId();
+        long newVersionId = newVersion.getId();
         for (int i = 0; i < 12; i++) {
             ObjectSystemData newMainVersion = client.version(new CreateNewVersionRequest(newVersionId));
             newVersionId = newMainVersion.getId();
@@ -238,7 +237,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         Long id         = toh.osd.getId();
         var  newVersion = client.version(new CreateNewVersionRequest(id));
         assertEquals("2", newVersion.getCmnVersion());
-        ObjectSystemData firstBranch = client.version(new CreateNewVersionRequest(id));
+        ObjectSystemData firstBranch  = client.version(new CreateNewVersionRequest(id));
         ObjectSystemData secondBranch = client.version(new CreateNewVersionRequest(id));
         assertEquals("1.1-1", firstBranch.getCmnVersion());
         assertEquals("1.2-1", secondBranch.getCmnVersion());
@@ -1639,6 +1638,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         ObjectSystemData version2 = client.version(new CreateNewVersionRequest(version1.getId()));
         client.deleteOsd(toh.osd.getId(), true);
     }
+
     @Test
     public void deleteVersionedOsdAndUpdateLatestHeadAndBranch() throws IOException {
         var              toh      = prepareAclGroupWithPermissions(List.of(DELETE, VERSION_OBJECT, BROWSE)).createOsd();
@@ -2221,6 +2221,57 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void updateOsdMetaInvalidRequest() {
         assertClientError(() -> client.updateOsdMeta(new Meta()), INVALID_REQUEST);
+    }
+
+    @Test
+    public void copyToExistingOsdHappyPath() throws IOException {
+        // set up source object:
+        Format imagePng = TestObjectHolder.formats.stream()
+                .filter(f -> f.getName().equals("image.png")).findFirst().orElseThrow();
+        File bun = new File("data/cinnamon-bun.png");
+        var toh = new TestObjectHolder(client, userId)
+                .createOsdWithContent("bunny-to-reproduce", imagePng, bun)
+                .createOsdMeta("<xml>my metaset</xml");
+        var sourceOsd = toh.osd;
+
+        // set up target:
+        var targetOsd = toh.createOsd().lockOsd().osd;
+
+        client.copyToExistingOsd(sourceOsd, targetOsd, List.of(TestObjectHolder.metasetTypes.get(0).getId()), true);
+
+        ObjectSystemData target = client.getOsdById(targetOsd.getId(), false, true);
+        ObjectSystemData source = client.getOsdById(sourceOsd.getId(), false, true);
+        assertEquals(source.getFormatId(), target.getFormatId());
+        assertEquals(source.getContentSize(), target.getContentSize());
+        assertEquals(source.getMetas().get(0).getContent(), target.getMetas().get(0).getContent());
+    }
+
+    @Test
+    public void copyToExistingOsdMissingPermissions() throws IOException {
+        // set up source object:
+        Format imagePng = TestObjectHolder.formats.stream()
+                .filter(f -> f.getName().equals("image.png")).findFirst().orElseThrow();
+        File bun = new File("data/cinnamon-bun.png");
+        var toh = prepareAclGroupWithPermissions(List.of())
+                .createOsdWithContent("bunny-to-reproduce", imagePng, bun)
+                .createOsdMeta("<xml>my metaset</xml");
+        var sourceOsd = toh.osd;
+
+        // set up target (not locked, so we get the OBJECT_MUST_BE_LOCKED error message):
+        var targetOsd = toh.createOsd().osd;
+
+        try {
+            client.copyToExistingOsd(sourceOsd, targetOsd, List.of(TestObjectHolder.metasetTypes.get(0).getId()), true);
+            fail();
+        } catch (CinnamonClientException e) {
+            assertEquals(8, e.getErrorWrapper().getErrors().size());
+            Set<ErrorCode> actualErrors = e.getErrorWrapper().getErrors().stream().map(ce -> ErrorCode.valueOf(ce.getCode())).collect(Collectors.toSet());
+            Set<ErrorCode> expectedErrors = new HashSet<>(Set.of(COPY_TO_EXISTING_FAILED, NO_BROWSE_PERMISSION,
+                    NO_READ_CUSTOM_METADATA_PERMISSION, NO_WRITE_CUSTOM_METADATA_PERMISSION,
+                    NO_READ_PERMISSION, NO_WRITE_PERMISSION,
+                    OBJECT_MUST_BE_LOCKED_BY_USER));
+            assertFalse(expectedErrors.retainAll(actualErrors));
+        }
     }
 
 }
