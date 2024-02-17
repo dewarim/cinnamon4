@@ -228,6 +228,12 @@ public class CinnamonClient {
         verifyResponseIsOkay(response);
     }
 
+    public void copyToExistingOsd(ObjectSystemData sourceOsd, ObjectSystemData targetOsd, List<Long> metasetTypeIds, boolean copyContent) throws IOException {
+        var request = new CopyToExistingOsdRequest(List.of(new CopyTask(sourceOsd.getId(), targetOsd.getId(), copyContent, metasetTypeIds)));
+        var response = sendStandardRequest(OSD__COPY_TO_EXISTING, request);
+        verifyResponseIsOkay(response);
+    }
+
     public class WrappedRequest<T, W extends Wrapper<T>> {
         public List<T> send(UrlMapping urlMapping, Object request, Unwrapper<T, W> unwrapper, int expectedSize) throws IOException {
             String requestStr = mapper.writeValueAsString(request);

@@ -26,6 +26,15 @@ public enum ErrorCode {
     CONNECTION_FAIL_ACCOUNT_LOCKED("account locked", SC_UNAUTHORIZED),
     CONNECTION_FAIL_INVALID_USERNAME("invalid username", SC_UNAUTHORIZED),
     CONNECTION_FAIL_WRONG_PASSWORD("authentication failed (wrong password or account does not exist?)", SC_UNAUTHORIZED),
+    COPY_TO_EXISTING_INCONSISTENCY("""
+            number of source/target objects found in database is inconsistent (not all objects for copying or all targets were found - or you have duplicate source/target ids)
+            """, SC_BAD_REQUEST),
+    COPY_TO_EXISTING_FAILED("""
+            Failed to copy to existing object(s), most likely due to missing permission - see included error list for more details.
+            """, SC_BAD_REQUEST),
+    COPY_TO_EXISTING_OVERLAP("""
+            When copying from a list of source OSDs to existing target objects, the lists must not have any overlap.
+            """, SC_BAD_REQUEST),
     DB_DELETE_FAILED("db delete failed", HttpServletResponse.SC_INTERNAL_SERVER_ERROR),
     DB_INSERT_FAILED("db insert failed", HttpServletResponse.SC_INTERNAL_SERVER_ERROR),
     DB_IS_MISSING_LANGUAGE_CODE("db does not contain ISO code for undetermined language.", HttpServletResponse.SC_INTERNAL_SERVER_ERROR),

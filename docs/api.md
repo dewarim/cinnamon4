@@ -3416,6 +3416,42 @@ Update lifecycles. Note: does not update lifecycle states
 
 ---
 
+# /api/osd/copyToExisting
+
+
+## Request
+
+```xml
+<copyToExistingOsdRequest>
+  <copyTasks>
+    <copyTask>
+      <sourceOsdId>100</sourceOsdId>
+      <targetOsdId>200</targetOsdId>
+      <copyContent>true</copyContent>
+      <metasetTypeIds>
+        <metasetTypeId>12</metasetTypeId>
+        <metasetTypeId>13</metasetTypeId>
+      </metasetTypeIds>
+    </copyTask>
+  </copyTasks>
+</copyToExistingOsdRequest>
+
+```
+
+
+## Response
+
+```xml
+<genericResponse>
+  <message/>
+  <successful>true</successful>
+</genericResponse>
+
+```
+
+
+---
+
 # /api/osd/createMeta
 
 

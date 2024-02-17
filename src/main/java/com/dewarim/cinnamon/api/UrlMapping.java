@@ -202,6 +202,7 @@ public enum UrlMapping {
     OBJECT_TYPE__LIST("objectType", "list", "/api", "", ListObjectTypeRequest.class, ObjectTypeWrapper.class),
     OBJECT_TYPE__UPDATE("objectType", "update", "/api", "", UpdateObjectTypeRequest.class, ObjectTypeWrapper.class),
     OSD__COPY("osd", "copy", "/api", "", CopyOsdRequest.class, OsdWrapper.class),
+    OSD__COPY_TO_EXISTING("osd", "copyToExisting", "/api", "", CopyToExistingOsdRequest.class, GenericResponse.class),
     OSD__CREATE_META("osd", "createMeta", "/api", "", CreateMetaRequest.class, MetaWrapper.class),
     OSD__CREATE_OSD("osd", "createOsd", "/api", """
             Create a new OSD. Requires: this must be a multipart-mime request, with part "cinnamonRequest" and optional part "file" if this object
