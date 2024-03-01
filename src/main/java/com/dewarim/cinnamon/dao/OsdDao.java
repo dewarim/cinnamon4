@@ -22,14 +22,14 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
     private SqlSession sqlSession;
 
     public List<ObjectSystemData> getObjectsById(List<Long> ids, boolean includeSummary) {
-        if(ids == null || ids.isEmpty()){
+        if (ids == null || ids.isEmpty()) {
             return List.of();
         }
-        SqlSession sqlSession = getSqlSession();
-        List<ObjectSystemData> results = new ArrayList<>(ids.size());
-        int requestSize = ids.size();
-        int rowCount = 0;
-        Map<String, Object> params = new HashMap<>();
+        SqlSession             sqlSession  = getSqlSession();
+        List<ObjectSystemData> results     = new ArrayList<>(ids.size());
+        int                    requestSize = ids.size();
+        int                    rowCount    = 0;
+        Map<String, Object>    params      = new HashMap<>();
         params.put("includeSummary", includeSummary);
         while (rowCount < requestSize) {
             int lastIndex = rowCount + BATCH_SIZE;
@@ -50,8 +50,8 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
     }
 
     public List<ObjectSystemData> getObjectsByFolderId(long folderId, boolean includeSummary, VersionPredicate versionPredicate) {
-        SqlSession sqlSession = getSqlSession();
-        Map<String, Object> params = new HashMap<>();
+        SqlSession          sqlSession = getSqlSession();
+        Map<String, Object> params     = new HashMap<>();
         params.put("includeSummary", includeSummary);
         params.put("folderId", folderId);
 
@@ -82,12 +82,12 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
             }
         }
         sqlSession.update("com.dewarim.cinnamon.model.ObjectSystemData.updateOsd", osd);
-        new IndexJobDao().insertIndexJob(new IndexJob(IndexJobType.OSD, osd.getId(), IndexJobAction.UPDATE,false ));
+        new IndexJobDao().insertIndexJob(new IndexJob(IndexJobType.OSD, osd.getId(), IndexJobAction.UPDATE, false));
     }
 
     public ObjectSystemData saveOsd(ObjectSystemData osd) {
         SqlSession sqlSession = getSqlSession();
-        int resultRows = sqlSession.insert("com.dewarim.cinnamon.model.ObjectSystemData.insertOsd", osd);
+        int        resultRows = sqlSession.insert("com.dewarim.cinnamon.model.ObjectSystemData.insertOsd", osd);
         if (resultRows != 1) {
             ErrorCode.DB_INSERT_FAILED.throwUp();
         }
@@ -95,7 +95,7 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
             osd.setRootId(osd.getId());
             updateOsd(osd, false);
         }
-        IndexJob indexJob = new IndexJob(IndexJobType.OSD, osd.getId(), IndexJobAction.CREATE, false );
+        IndexJob indexJob = new IndexJob(IndexJobType.OSD, osd.getId(), IndexJobAction.CREATE, false);
         new IndexJobDao().insertIndexJob(indexJob);
         return osd;
     }
@@ -116,6 +116,11 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
     public void deleteOsds(List<Long> osdIdsToToDelete) {
         SqlSession sqlSession = getSqlSession();
         sqlSession.delete("com.dewarim.cinnamon.model.ObjectSystemData.deleteOsds", osdIdsToToDelete);
+        IndexJobDao jobDao = new IndexJobDao();
+        osdIdsToToDelete.forEach(id -> {
+            IndexJob indexJob = new IndexJob(IndexJobType.OSD, id, IndexJobAction.DELETE, false);
+            jobDao.insertIndexJob(indexJob);
+        });
     }
 
     public Set<Long> getOsdIdByIdWithDescendants(Long id) {
@@ -141,8 +146,8 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
     }
 
     public void updateOwnershipAndModifierAndCreatorAndLocker(Long userId, Long assetReceiverId, Long adminUserId) {
-        List<ObjectSystemData> osds = getOsdByModifierOrCreatorOrOwnerOrLocker(userId);
-        Date currentDate = new Date();
+        List<ObjectSystemData> osds        = getOsdByModifierOrCreatorOrOwnerOrLocker(userId);
+        Date                   currentDate = new Date();
         osds.forEach(osd -> {
             if (osd.getOwnerId().equals(userId)) {
                 osd.setOwnerId(assetReceiverId);

@@ -12,8 +12,10 @@ import com.dewarim.cinnamon.model.request.meta.CreateMetaRequest;
 import com.dewarim.cinnamon.model.request.meta.DeleteMetaRequest;
 import com.dewarim.cinnamon.model.request.meta.MetaRequest;
 import com.dewarim.cinnamon.model.request.osd.SetSummaryRequest;
+import com.dewarim.cinnamon.model.request.search.SearchType;
 import com.dewarim.cinnamon.model.response.Summary;
 import com.dewarim.cinnamon.test.TestObjectHolder;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -799,6 +801,18 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void updateFolderMetaInvalidRequest() {
         assertClientError(() -> client.updateFolderMeta(new Meta()), INVALID_REQUEST);
+    }
+
+    @Test
+    @Disabled("manual only since it sleeps")
+    public void deleteFolderAndSearch() throws IOException, InterruptedException {
+        var toh = new TestObjectHolder(client, userId).createFolder();
+        var folderId = toh.folder.getId();
+        Thread.sleep(4000);
+        assertTrue(verifySearchFindsPointField("id", folderId, 1, SearchType.FOLDER));
+        toh.deleteFolder(folderId);
+        Thread.sleep(4000);
+        assertTrue(verifySearchFindsPointField("id", folderId, 0, SearchType.FOLDER));
     }
 
 }

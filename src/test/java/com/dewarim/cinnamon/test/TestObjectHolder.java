@@ -9,6 +9,7 @@ import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.relations.Relation;
 import com.dewarim.cinnamon.model.relations.RelationType;
 import com.dewarim.cinnamon.model.request.folder.UpdateFolderRequest;
+import com.dewarim.cinnamon.model.request.osd.CreateNewVersionRequest;
 import com.dewarim.cinnamon.model.request.osd.CreateOsdRequest;
 
 import java.io.File;
@@ -58,12 +59,12 @@ public class TestObjectHolder {
     public Meta             meta;
     public Link             link;
 
-    public  List<Meta>  metas;
-    public  String      summary = DEFAULT_SUMMARY;
-    public MetasetType metasetType;
+    public List<Meta>   metas;
+    public String       summary = DEFAULT_SUMMARY;
+    public MetasetType  metasetType;
     public Relation     relation;
     public RelationType relationType;
-    public String newUserPassword;
+    public String       newUserPassword;
 
     /**
      * Initialize a new TestObjectHolder with default values, using the given client
@@ -93,7 +94,7 @@ public class TestObjectHolder {
         setAcl(defaultCreationAcl);
         setUser(userId);
         // during initial test class setup, defaultCreationFolderId is still null.
-        if(defaultCreationFolderId != null) {
+        if (defaultCreationFolderId != null) {
             setFolder(defaultCreationFolderId);
         }
         initialize();
@@ -107,14 +108,14 @@ public class TestObjectHolder {
         if (!initialized) {
             synchronized (SYNC_OBJECT) {
                 try {
-                    permissions = client.listPermissions();
-                    formats = client.listFormats();
-                    objectTypes = client.listObjectTypes();
+                    permissions  = client.listPermissions();
+                    formats      = client.listFormats();
+                    objectTypes  = client.listObjectTypes();
                     metasetTypes = client.listMetasetTypes();
-                    folderTypes = client.listFolderTypes();
-                    languages = client.listLanguages();
-                    acls = client.listAcls();
-                    groups = client.listGroups();
+                    folderTypes  = client.listFolderTypes();
+                    languages    = client.listLanguages();
+                    acls         = client.listAcls();
+                    groups       = client.listGroups();
                 } catch (IOException e) {
                     throw new IllegalStateException("Failed to initialize test object holder", e);
                 }
@@ -137,6 +138,16 @@ public class TestObjectHolder {
         return createOsd(createRandomName());
     }
 
+    public TestObjectHolder unlockOsd() throws IOException {
+        return unlockOsd(this.osd.getId());
+    }
+
+    public TestObjectHolder unlockOsd(Long id) throws IOException {
+        client.unlockOsd(id);
+        return this;
+    }
+
+
     public TestObjectHolder createOsd(String name) throws IOException {
         CreateOsdRequest request = new CreateOsdRequest(name, folder.getId(), user.getId(), acl.getId(),
                 objectType.getId(),
@@ -150,6 +161,7 @@ public class TestObjectHolder {
         osd = client.createOsd(request);
         return this;
     }
+
     public TestObjectHolder createOsdWithContent(String name, Format format, File content) throws IOException {
         CreateOsdRequest request = new CreateOsdRequest(name, folder.getId(), user.getId(), acl.getId(),
                 objectType.getId(),
@@ -188,6 +200,7 @@ public class TestObjectHolder {
         acl = client.createAcls(List.of(name)).get(0);
         return this;
     }
+
     public TestObjectHolder createAcl() throws IOException {
         return createAcl(createRandomName());
     }
@@ -200,6 +213,7 @@ public class TestObjectHolder {
     public TestObjectHolder createGroup() throws IOException {
         return createGroup(createRandomName());
     }
+
     public TestObjectHolder createGroup(Long parentId) throws IOException {
         group = client.createGroup(new Group(createRandomName(), parentId));
         return this;
@@ -285,6 +299,7 @@ public class TestObjectHolder {
         objectType = client.createObjectTypes(List.of(name)).get(0);
         return this;
     }
+
     public TestObjectHolder createObjectType() throws IOException {
         return createObjectType(createRandomName());
     }
@@ -293,6 +308,7 @@ public class TestObjectHolder {
         meta = client.createOsdMeta(osd.getId(), content, Objects.requireNonNullElse(metasetType, metasetTypes.get(0)).getId());
         return this;
     }
+
     public TestObjectHolder createFolderMeta(String content) throws IOException {
         meta = client.createFolderMeta(folder.getId(), content, Objects.requireNonNullElse(metasetType, metasetTypes.get(0)).getId()).get(0);
         return this;
@@ -306,6 +322,7 @@ public class TestObjectHolder {
         link = client.createLinkToOsd(folder.getId(), acl.getId(), user.getId(), osd.getId());
         return this;
     }
+
     public TestObjectHolder createLinkToOsd() throws IOException {
         link = client.createLinkToOsd(folder.getId(), acl.getId(), user.getId(), osd.getId());
         return this;
@@ -330,7 +347,7 @@ public class TestObjectHolder {
     }
 
     public TestObjectHolder setGroup(Group group) {
-        this.group=group;
+        this.group = group;
         return this;
     }
 
@@ -338,16 +355,18 @@ public class TestObjectHolder {
         client.setFolderSummary(folder.getId(), foo);
         return this;
     }
+
     public TestObjectHolder setSummaryOnOsd(String foo) throws IOException {
         client.setSummary(osd.getId(), foo);
         return this;
     }
 
-    public TestObjectHolder createMetaSetType(boolean unique) throws IOException{
-        createMetaSetType(createRandomName(),unique);
+    public TestObjectHolder createMetaSetType(boolean unique) throws IOException {
+        createMetaSetType(createRandomName(), unique);
         return this;
     }
-    public TestObjectHolder createMetaSetType(String name, boolean unique) throws IOException{
+
+    public TestObjectHolder createMetaSetType(String name, boolean unique) throws IOException {
         metasetType = client.createMetasetType(name, unique);
         return this;
     }
@@ -355,12 +374,12 @@ public class TestObjectHolder {
     /**
      * Create a relation type with random name and all flags set to true
      */
-    public TestObjectHolder createRelationType() throws IOException{
-        relationType = client.createRelationType(new RelationType(createRandomName(), true,true,true,true,true,true));
+    public TestObjectHolder createRelationType() throws IOException {
+        relationType = client.createRelationType(new RelationType(createRandomName(), true, true, true, true, true, true));
         return this;
     }
 
-    public TestObjectHolder createRelation(Long rightId, String metadata) throws IOException{
+    public TestObjectHolder createRelation(Long rightId, String metadata) throws IOException {
         relation = client.createRelation(osd.getId(), rightId, relationType.getId(), metadata);
         return this;
     }
@@ -368,16 +387,48 @@ public class TestObjectHolder {
 
     public TestObjectHolder createUser() throws IOException {
         newUserPassword = createRandomName();
-        user = client.createUser(new UserAccount(createRandomName(),newUserPassword , "-", "-", 1L, LoginType.CINNAMON.name(), true, true, true));
+        user            = client.createUser(new UserAccount(createRandomName(), newUserPassword, "-", "-", 1L, LoginType.CINNAMON.name(), true, true, true));
         return this;
     }
 
     public TestObjectHolder deleteUser(Long userId, Long assetReceiverId) throws IOException {
-        client.deleteUser(userId,assetReceiverId );
+        client.deleteUser(userId, assetReceiverId);
         return this;
     }
 
     public void reloadLogging() throws IOException {
         client.reloadLogging();
+    }
+
+    public TestObjectHolder version() throws IOException {
+        return version(this.osd.getId());
+
+    }
+
+    public TestObjectHolder version(Long id) throws IOException {
+        this.osd = client.version(new CreateNewVersionRequest(id));
+        return this;
+    }
+
+    public TestObjectHolder deleteOsd() throws IOException {
+        return deleteOsd(osd.getId());
+    }
+    public TestObjectHolder deleteOsd(Long id) throws IOException {
+        client.deleteOsd(id);
+        return this;
+    }
+
+    public TestObjectHolder deleteFolder() throws IOException {
+        deleteFolder(folder.getId());
+        return this;
+    }
+
+
+        /**
+         * Delete folder, without recursion into sub folders or deleting content (will fail if content/subfolders exist)
+         */
+    public TestObjectHolder deleteFolder(Long folderId) throws IOException {
+        client.deleteFolder(folderId, false, false);
+        return this;
     }
 }
