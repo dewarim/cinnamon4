@@ -2274,4 +2274,38 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         }
     }
 
+    /**
+     * Verify that locked / unlocked OSDs are correctly indexed by Lucene.
+     */
+    @Test
+    @Disabled("manual only since it sleeps")
+    public void lockAndUnlockAndSearch() throws IOException, InterruptedException {
+        var toh = new TestObjectHolder(client, userId)
+                .createOsd().lockOsd();
+        var v1 = toh.osd;
+        var v2 = toh.version().lockOsd().osd;
+        Thread.sleep(4000);
+        assertTrue(verifySearchFindsPointField("locker", userId, 2));
+        toh.unlockOsd(v1.getId());
+        Thread.sleep(4000);
+        assertTrue(verifySearchFindsPointField("locker", userId, 1));
+        Thread.sleep(4000);
+        toh.unlockOsd(v2.getId());
+        Thread.sleep(4000);
+        assertTrue(verifySearchFindsPointField("locker", userId, 0));
+    }
+
+    @Test
+    @Disabled("manual only since it sleeps")
+    public void deleteAndSearch() throws IOException, InterruptedException {
+        var toh = new TestObjectHolder(client, userId).createOsd().lockOsd();
+        var v1  = toh.osd;
+        var v2  = toh.version().lockOsd().osd;
+        Thread.sleep(4000);
+        assertTrue(verifySearchFindsPointField("locker", userId, 2));
+        toh.deleteOsd(v2.getId());
+        Thread.sleep(4000);
+        assertTrue(verifySearchFindsPointField("locker", userId, 1));
+    }
+
 }

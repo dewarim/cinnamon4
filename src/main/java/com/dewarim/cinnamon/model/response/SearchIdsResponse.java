@@ -5,6 +5,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "searchIdsResponse")
@@ -27,6 +28,9 @@ public class SearchIdsResponse implements ApiResponse {
     }
 
     public List<Long> getOsdIds() {
+        if (osdIds == null){
+            osdIds = new ArrayList<>();
+        }
         return osdIds;
     }
 
@@ -35,6 +39,9 @@ public class SearchIdsResponse implements ApiResponse {
     }
 
     public List<Long> getFolderIds() {
+        if(folderIds == null){
+            folderIds=new ArrayList<>();
+        }
         return folderIds;
     }
 

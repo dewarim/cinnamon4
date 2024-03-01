@@ -12,6 +12,7 @@ import com.dewarim.cinnamon.client.StandardResponse;
 import com.dewarim.cinnamon.dao.GroupDao;
 import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.Folder;
+import com.dewarim.cinnamon.model.request.search.SearchType;
 import com.dewarim.cinnamon.model.response.CinnamonConnection;
 import com.dewarim.cinnamon.model.response.CinnamonError;
 import com.dewarim.cinnamon.model.response.CinnamonErrorWrapper;
@@ -19,7 +20,10 @@ import com.dewarim.cinnamon.test.TestObjectHolder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
-import org.apache.hc.core5.http.*;
+import org.apache.hc.core5.http.ClassicHttpRequest;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.HttpStatus;
 import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.jdbc.ScriptRunner;
@@ -37,6 +41,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -56,7 +61,7 @@ public class CinnamonIntegrationTest {
     private final static Logger log = LogManager.getLogger(CinnamonIntegrationTest.class);
 
     static final String PASSWORD_PARAMETER_NAME = "password";
-    static final String XML_SUMMARY="<xml>a summary</xml>";
+    static final String XML_SUMMARY             = "<xml>a summary</xml>";
 
     static int            cinnamonTestPort = 19999;
     static CinnamonServer cinnamonServer;
@@ -114,7 +119,7 @@ public class CinnamonIntegrationTest {
             ticket = getAdminTicket();
             log.info("admin ticket: " + ticket);
 
-            client = new CinnamonClient(cinnamonTestPort, "localhost", "http", "doe", "admin");
+            client      = new CinnamonClient(cinnamonTestPort, "localhost", "http", "doe", "admin");
             adminClient = new CinnamonClient(cinnamonTestPort, "localhost", "http", "admin", "admin");
             // TODO: rename to value of DEFAULT_ACL once CreateTestDb is cleaned up.
             // create a default ACL with browse permissions
@@ -126,18 +131,18 @@ public class CinnamonIntegrationTest {
             adminClient.updateFolder(root);
 
             var toh = prepareAclGroupWithPermissions("creation.acl", Arrays.stream(DefaultPermission.values()).toList());
-            defaultCreationAcl = toh.acl;
-            creationFolder = adminClient.createFolder(1L, "creation", adminId, defaultCreationAcl.getId(), 1L);
-            createFolderId = creationFolder.getId();
+            defaultCreationAcl                       = toh.acl;
+            creationFolder                           = adminClient.createFolder(1L, "creation", adminId, defaultCreationAcl.getId(), 1L);
+            createFolderId                           = creationFolder.getId();
             TestObjectHolder.defaultCreationFolderId = createFolderId;
-            TestObjectHolder.defaultCreationAcl = defaultCreationAcl;
+            TestObjectHolder.defaultCreationAcl      = defaultCreationAcl;
         }
     }
 
     /**
      * @return a ticket for the Cinnamon administrator
      */
-    protected static String getAdminTicket() throws IOException, ParseException {
+    protected static String getAdminTicket() throws IOException {
         String url = "http://localhost:" + cinnamonTestPort + UrlMapping.CINNAMON__CONNECT.getPath();
         try (StandardResponse response = httpClient.execute(ClassicRequestBuilder.post(url)
                 .addParameter("user", "admin")
@@ -185,7 +190,7 @@ public class CinnamonIntegrationTest {
         assertTrue(responseText.contains(errorCode.getCode()), "response should contain errorCode " + errorCode + " but was " + responseText);
         assertThat(errorCode.getHttpResponseCode(), equalTo(response.getCode()));
         CinnamonError cinnamonError = mapper.readValue(response.getEntity().getContent(), CinnamonErrorWrapper.class).getErrors().get(0);
-        assertEquals(errorCode.getCode(),cinnamonError.getCode());
+        assertEquals(errorCode.getCode(), cinnamonError.getCode());
     }
 
     protected void assertClientError(Executable executable, ErrorCode... errorCode) {
@@ -297,5 +302,40 @@ public class CinnamonIntegrationTest {
 
     protected Acl getReviewerAcl() {
         return new TestObjectHolder(client).getAcls().stream().filter(a -> a.getName().equals("reviewers.acl")).toList().get(0);
+    }
+
+    /**
+     * Verify that a search request for an exact id finds the expected number of documents.
+     *
+     * @param fieldName field used by IndexService in the Lucene index
+     * @param id        id of an indexed LongPoint
+     * @param expected  number of OSDs you expect
+     */
+    public static boolean verifySearchFindsPointField(String fieldName, Long id, int expected) {
+        return verifySearchFindsPointField(fieldName, id, expected, SearchType.OSD);
+    }
+
+    public static boolean verifySearchFindsPointField(String fieldName, Long id, int expected, SearchType searchType) {
+        try {
+            var response = client.search("<ExactPointQuery fieldName='__NAME__' value='__ID__' type='long'/>".replace("__ID__", id.toString()).replace("__NAME__", fieldName), searchType);
+            List<Long> ids = new ArrayList<>();
+            switch (searchType){
+                case OSD -> ids = response.getOsdIds();
+                case FOLDER -> ids = response.getFolderIds();
+                case ALL -> {
+                    ids.addAll(response.getFolderIds());
+                    ids.addAll(response.getOsdIds());
+                }
+            }
+            log.debug("found: {} items vs {} expected", ids.size(), expected);
+            if (ids.size() == expected) {
+                return true;
+            }
+            log.debug("response: " + response);
+            return false;
+        } catch (
+                IOException e) {
+            return false;
+        }
     }
 }
