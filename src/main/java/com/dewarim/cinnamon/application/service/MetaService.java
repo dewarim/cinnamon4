@@ -4,12 +4,13 @@ import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.FailedRequestException;
 import com.dewarim.cinnamon.api.Ownable;
-import com.dewarim.cinnamon.dao.CrudDao;
-import com.dewarim.cinnamon.dao.MetaDao;
-import com.dewarim.cinnamon.dao.MetasetTypeDao;
+import com.dewarim.cinnamon.dao.*;
 import com.dewarim.cinnamon.model.Meta;
 import com.dewarim.cinnamon.model.MetasetType;
 import com.dewarim.cinnamon.model.UserAccount;
+import com.dewarim.cinnamon.model.index.IndexJob;
+import com.dewarim.cinnamon.model.index.IndexJobAction;
+import com.dewarim.cinnamon.model.index.IndexJobType;
 import com.dewarim.cinnamon.security.authorization.AuthorizationService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -45,7 +46,26 @@ public class MetaService<T extends CrudDao<Meta> & MetaDao, O extends CrudDao<? 
         for (Ownable ownable : ownables) {
             throwUnlessCustomMetaIsWritable(ownable, user);
         }
-        metaDao.delete(metas.stream().map(Meta::getId).toList());
+        List<Long> metaIds =metas.stream().map(Meta::getId).toList(); 
+        metaDao.delete(metaIds);
+        updateIndex(metas, ownableDao);
+    }
+
+    // this may create additional indexItems if the OSD or Folder is subject to update anyway.
+    private void updateIndex(List<Meta> metas, O ownableDao) {
+        IndexJobDao indexJobDao = new IndexJobDao();
+        metas.forEach(meta -> {
+            IndexJob indexJob;
+            // a little bit hacky
+            if(ownableDao instanceof OsdDao){
+                indexJob = new IndexJob(IndexJobType.OSD, meta.getObjectId(), IndexJobAction.UPDATE, false);    
+            }
+            else{
+                indexJob = new IndexJob(IndexJobType.FOLDER, meta.getObjectId(), IndexJobAction.UPDATE, false);
+            }
+            indexJobDao.insertIndexJob(indexJob);
+            log.debug("insert index job: "+indexJob);
+        });
     }
 
     public List<Meta> createMeta(T dao, List<Meta> metas, O ownableDao, UserAccount user) {
@@ -80,6 +100,7 @@ public class MetaService<T extends CrudDao<Meta> & MetaDao, O extends CrudDao<? 
 
         List<Meta> metasToCreate = metas.stream().map(meta -> new Meta(meta.getObjectId(), meta.getTypeId(), meta.getContent()))
                 .collect(Collectors.toList());
+        updateIndex(metas, ownableDao);
         return dao.create(metasToCreate);
     }
 
@@ -104,6 +125,7 @@ public class MetaService<T extends CrudDao<Meta> & MetaDao, O extends CrudDao<? 
 
         try{
             dao.update(updates);
+            updateIndex(metas, ownableDao);
         }
         catch (SQLException e){
             log.warn(String.format("DB update failed: %s with status %s and error code %d",

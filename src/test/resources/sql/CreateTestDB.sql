@@ -693,6 +693,11 @@ values (nextval('seq_index_item_id'), 'xml_content', false,'xml content',
 );
 insert into index_items(id, fieldname, multiple_results,
    name, search_string, search_condition, store_field, index_type)
+values (nextval('seq_index_item_id'), 'meta_content', true,'meta content',
+  '/objectSystemData/metasets/metaset/content', 'true()',true, 'DESCENDING_STRING_INDEXER'
+);
+insert into index_items(id, fieldname, multiple_results,
+   name, search_string, search_condition, store_field, index_type)
 values (nextval('seq_index_item_id'), 'xml_content', false,'xml content:tika',
   '/objectSystemData/metasets/meta/content/descendant::*', 'true()',true, 'DESCENDING_STRING_INDEXER'
 );

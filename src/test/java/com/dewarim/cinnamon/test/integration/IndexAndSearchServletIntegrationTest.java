@@ -13,6 +13,7 @@ import com.dewarim.cinnamon.test.TestObjectHolder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -52,7 +53,7 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
                 .createRelation(relatedOsdId, "<xml><imageSize x='100' y='200'/></xml>")
                 .createFolder("search-me-folder", createFolderId)
                 .createFolderMeta("<xml><folder-meta-data archived='no'/></xml>");
-        osdId = toh.osd.getId();
+        osdId    = toh.osd.getId();
         folderId = toh.folder.getId();
         log.info("created search-me objects: osd: " + osdId + " folder: " + folderId);
 
@@ -144,12 +145,12 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
 
     @Test
     public void reindexIsForbiddenForNonAdmins() {
-        assertClientError( () -> client.reindex(new ReindexRequest()),REQUIRES_SUPERUSER_STATUS);
+        assertClientError(() -> client.reindex(new ReindexRequest()), REQUIRES_SUPERUSER_STATUS);
     }
 
     @Test
     public void reindexInvalidRequest() {
-        assertClientError( () -> adminClient.reindex(new ReindexRequest(List.of(-1L), List.of())),INVALID_REQUEST);
+        assertClientError(() -> adminClient.reindex(new ReindexRequest(List.of(-1L), List.of())), INVALID_REQUEST);
     }
 
     @Test
@@ -166,6 +167,23 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
         assertEquals(1, response.getFoldersToIndex());
         assertEquals(1, response.getDocumentsToIndex());
         Thread.sleep(3000);
+    }
+
+    // ticket 389: meta operations do not trigger reindex
+    @Disabled("manual test due to waiting")
+    @Test
+    public void updateMetaTest() throws IOException, InterruptedException {
+        var toh = new TestObjectHolder(client, userId)
+                .createOsd();
+        Thread.sleep(4000);
+
+        toh.createOsdMeta("<xml>issue389</xml>");
+        Thread.sleep(4000);
+
+        String termQuery = createTermQuery("meta_content", "issue389");
+        SearchIdsResponse response = client.search(termQuery, SearchType.OSD);
+        assertTrue(response.getOsdIds().size() > 0);
+        assertEquals(toh.osd.getId(),response.getOsdIds().get(0));
     }
 
 }

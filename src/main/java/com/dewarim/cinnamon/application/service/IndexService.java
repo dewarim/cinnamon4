@@ -107,17 +107,23 @@ public class IndexService implements Runnable {
                                 continue;
                             }
 
-                            try {
-                                switch (job.getAction()) {
-                                    case DELETE -> deleteFromIndex(indexKey);
-                                    case CREATE, UPDATE -> handleIndexItem(job, indexKey, indexItems);
+                            IndexResult indexResult;
+                            switch (job.getAction()) {
+                                case DELETE -> indexResult = deleteFromIndex(indexKey);
+                                case CREATE, UPDATE -> indexResult = handleIndexItem(job, indexKey, indexItems);
+                                default -> indexResult = IndexResult.IGNORE;
+                            }
+                            switch (indexResult) {
+                                case SUCCESS -> {
+                                    jobsToDelete.add(job);
+                                    indexChanged = true;
                                 }
-                                jobsToDelete.add(job);
-                                indexChanged = true;
-                            } catch (Exception e) {
-                                log.info("IndexJob failed with: ", e);
-                                job.setFailed(job.getFailed() + 1);
-                                jobDao.updateStatus(job);
+                                case FAILED -> {
+                                    job.setFailed(job.getFailed() + 1);
+                                    jobDao.updateStatus(job);
+                                }
+                                case IGNORE, NO_OBJECT -> {
+                                }
                             }
                             seen.add(indexKey);
                         }
@@ -155,157 +161,178 @@ public class IndexService implements Runnable {
 
     }
 
-    private void handleIndexItem(IndexJob job, IndexKey key, List<IndexItem> indexItems) throws IOException {
+    private IndexResult handleIndexItem(IndexJob job, IndexKey key, List<IndexItem> indexItems) throws IOException {
         Document doc = new Document();
         doc.add(new StringField(LUCENE_FIELD_UNIQUE_ID, key.toString(), Field.Store.NO));
         doc.add(new Field(LUCENE_FIELD_CINNAMON_CLASS, key.type.toString(), StringField.TYPE_STORED));
 
-        boolean isOkay = false;
+        IndexResult indexResult;
         switch (job.getJobType()) {
-            case OSD -> isOkay = indexOsd(job.getItemId(), doc, indexItems, job.isUpdateTikaMetaset());
-            case FOLDER -> isOkay = indexFolder(job.getItemId(), doc, indexItems);
+            case OSD -> indexResult = indexOsd(job.getItemId(), doc, indexItems, job.isUpdateTikaMetaset());
+            case FOLDER -> indexResult = indexFolder(job.getItemId(), doc, indexItems);
+            default -> indexResult = IndexResult.IGNORE;
         }
-        if (!isOkay) {
-            log.info("Failed to index " + job);
-            return;
+
+        switch (indexResult) {
+            case FAILED -> log.info("Failed to index " + job);
+            case SUCCESS -> {
+                switch (job.getAction()) {
+                    case UPDATE -> indexWriter.updateDocument(new Term(LUCENE_FIELD_UNIQUE_ID, key.toString()), doc);
+                    case CREATE -> indexWriter.addDocument(doc);
+                }
+            }
+            default -> {
+            }
         }
-        switch (job.getAction()) {
-            case UPDATE -> indexWriter.updateDocument(new Term(LUCENE_FIELD_UNIQUE_ID, key.toString()), doc);
-            case CREATE -> indexWriter.addDocument(doc);
-        }
+        return indexResult;
     }
 
-    private boolean indexFolder(Long id, Document doc, List<IndexItem> indexItems) throws JsonProcessingException {
+    enum IndexResult {
+        SUCCESS,
+        NO_OBJECT,
+        FAILED,
+        IGNORE
+    }
+
+    private IndexResult indexFolder(Long id, Document doc, List<IndexItem> indexItems) throws JsonProcessingException {
         Optional<Folder> folderOpt = folderDao.getFolderById(id);
         if (folderOpt.isEmpty()) {
             log.debug("Folder " + id + " not found for indexing.");
-            return false;
+            return IndexResult.NO_OBJECT;
         }
         Folder folder = folderOpt.get();
-        //// index sysMeta
+        try {
+            //// index sysMeta
+            // folderpath
+            String folderPath = folderDao.getFolderPath(folder.getParentId());
+            log.debug("folderpath: " + folderPath);
+            doc.add(new StringField("folderpath", folderPath.toLowerCase(), Field.Store.NO));
 
-        // folderpath
-        String folderPath = folderDao.getFolderPath(folder.getParentId());
-        log.debug("folderpath: " + folderPath);
-        doc.add(new StringField("folderpath", folderPath.toLowerCase(), Field.Store.NO));
+            doc.add(new StoredField("acl", folder.getAclId()));
+            doc.add(new LongPoint("acl", folder.getAclId()));
+            // option: add a NumericDocValueField for scoring by age
+            doc.add(new LongPoint("id", folder.getId()));
+            doc.add(new StoredField("id", folder.getId()));
+            doc.add(new StringField("created", DateTools.dateToString(folder.getCreated(), DateTools.Resolution.MILLISECOND), Field.Store.NO));
+            doc.add(new LongPoint("created", folder.getCreated().getTime()));
+            doc.add(new StringField("name", folder.getName().toLowerCase(), Field.Store.NO));
+            doc.add(new LongPoint("owner", folder.getOwnerId()));
+            doc.add(new StoredField("owner", folder.getOwnerId()));
+            if (folder.getParentId() != null) {
+                doc.add(new LongPoint("parent", folder.getParentId()));
+            }
+            doc.add(new TextField("summary", folder.getSummary(), Field.Store.NO));
+            doc.add(new LongPoint("folder_type", folder.getTypeId()));
 
-        doc.add(new StoredField("acl", folder.getAclId()));
-        doc.add(new LongPoint("acl", folder.getAclId()));
-        // option: add a NumericDocValueField for scoring by age
-        doc.add(new LongPoint("id", folder.getId()));
-        doc.add(new StoredField("id", folder.getId()));
-        doc.add(new StringField("created", DateTools.dateToString(folder.getCreated(), DateTools.Resolution.MILLISECOND), Field.Store.NO));
-        doc.add(new LongPoint("created", folder.getCreated().getTime()));
-        doc.add(new StringField("name", folder.getName().toLowerCase(), Field.Store.NO));
-        doc.add(new LongPoint("owner", folder.getOwnerId()));
-        doc.add(new StoredField("owner", folder.getOwnerId()));
-        if (folder.getParentId() != null) {
-            doc.add(new LongPoint("parent", folder.getParentId()));
+            FolderMetaDao metaDao = new FolderMetaDao(TransactionIsolationLevel.READ_COMMITTED);
+            List<Meta>    metas   = metaDao.listByFolderId(folder.getId());
+            metaDao.closePrivateSession();
+            folder.setMetas(metas);
+
+            applyIndexItems(doc, indexItems, xmlMapper.writeValueAsString(folder), NO_CONTENT, folderPath);
+        } catch (Exception e) {
+            log.warn("Failed to index folder #" + id, e);
+            return IndexResult.FAILED;
         }
-        doc.add(new TextField("summary", folder.getSummary(), Field.Store.NO));
-        doc.add(new LongPoint("folder_type", folder.getTypeId()));
-
-        FolderMetaDao metaDao = new FolderMetaDao(TransactionIsolationLevel.READ_COMMITTED);
-        List<Meta>    metas   = metaDao.listByFolderId(folder.getId());
-        metaDao.closePrivateSession();
-        folder.setMetas(metas);
-
-        applyIndexItems(doc, indexItems, xmlMapper.writeValueAsString(folder), NO_CONTENT, folderPath);
-        return true;
+        return IndexResult.SUCCESS;
     }
 
-    private boolean indexOsd(Long id, Document doc, List<IndexItem> indexItems, boolean updateTikaMetaset) throws JsonProcessingException {
+    private IndexResult indexOsd(Long id, Document doc, List<IndexItem> indexItems, boolean updateTikaMetaset) throws JsonProcessingException {
         Optional<ObjectSystemData> osdOpt = osdDao.getObjectById(id);
         if (osdOpt.isEmpty()) {
             log.debug("osd " + id + " not found for indexing");
-            return false;
+            return IndexResult.NO_OBJECT;
         }
         ObjectSystemData osd = osdOpt.get();
+        try {
+            // index sysMeta
+            String folderPath = folderDao.getFolderPath(osd.getParentId());
+            doc.add(new StringField("folderpath", folderPath.toLowerCase(), Field.Store.NO));
 
-        // index sysMeta
-        String folderPath = folderDao.getFolderPath(osd.getParentId());
-        doc.add(new StringField("folderpath", folderPath.toLowerCase(), Field.Store.NO));
-
-        doc.add(new StoredField("acl", osd.getAclId()));
-        doc.add(new LongPoint("acl", osd.getAclId()));
-        doc.add(new StringField("cmn_version", osd.getCmnVersion(), Field.Store.NO));
-        doc.add(new StringField("content_changed", String.valueOf(osd.isContentChanged()), Field.Store.NO));
-        if (osd.getContentSize() != null) {
-            doc.add(new LongPoint("content_size", osd.getContentSize()));
-        }
-        // option: add a NumericDocValueField for scoring by age
-        doc.add(new StringField("created", DateTools.dateToString(osd.getCreated(), DateTools.Resolution.MILLISECOND), Field.Store.NO));
-        doc.add(new LongPoint("created", osd.getCreated().getTime()));
-        doc.add(new StringField("modified", DateTools.dateToString(osd.getCreated(), DateTools.Resolution.MILLISECOND), Field.Store.NO));
-        doc.add(new LongPoint("modified", osd.getCreated().getTime()));
-
-        doc.add(new LongPoint("creator", osd.getCreatorId()));
-        doc.add(new LongPoint("modifier", osd.getModifierId()));
-        if (osd.getFormatId() != null) {
-            doc.add(new LongPoint("format", osd.getFormatId()));
-        }
-        doc.add(new LongPoint("id", osd.getId()));
-        doc.add(new StoredField("id", osd.getId()));
-        if (osd.getLanguageId() != null) {
-            doc.add(new LongPoint("language", osd.getLanguageId()));
-        }
-        doc.add(new StringField("latest_branch", String.valueOf(osd.isLatestBranch()), Field.Store.NO));
-        doc.add(new StringField("latest_head", String.valueOf(osd.isLatestHead()), Field.Store.NO));
-        if (osd.getLockerId() != null) {
-            log.debug("locker: {}", osd.getLockerId());
-            doc.add(new LongPoint("locker", osd.getLockerId()));
-        }
-        doc.add(new StringField("metadata_changed", String.valueOf(osd.isMetadataChanged()), Field.Store.NO));
-        doc.add(new StringField("name", osd.getName().toLowerCase(), Field.Store.NO));
-        doc.add(new LongPoint("owner", osd.getOwnerId()));
-        doc.add(new StoredField("owner", osd.getOwnerId()));
-        doc.add(new LongPoint("parent", osd.getParentId()));
-        if (osd.getPredecessorId() != null) {
-            doc.add(new LongPoint("predecessor", osd.getPredecessorId()));
-        }
-        if (osd.getRootId() != null) {
-            doc.add(new LongPoint("root", osd.getRootId()));
-        }
-        if (osd.getLifecycleStateId() != null) {
-            doc.add(new LongPoint("lifecycle_state", osd.getLifecycleStateId()));
-        }
-        doc.add(new TextField("summary", osd.getSummary(), Field.Store.NO));
-        doc.add(new LongPoint("object_type", osd.getTypeId()));
-
-        List<Long>     relationCriteria = List.of(osd.getId());
-        List<Relation> relations        = new RelationDao().getRelationsOrMode(relationCriteria, relationCriteria, Collections.emptyList(), true);
-        osd.setRelations(relations);
-
-        byte[] content = NO_CONTENT;
-        if (osd.getContentPath() != null && osd.getFormatId() != null) {
-            Format          format          = new FormatDao().getObjectById(osd.getFormatId()).orElseThrow(() -> new CinnamonException(ErrorCode.FORMAT_NOT_FOUND.getCode()));
-            ContentProvider contentProvider = ContentProviderService.getInstance().getContentProvider(osd.getContentProvider());
-            try (InputStream contentStream = contentProvider.getContentStream(osd)) {
-                switch (format.getIndexMode()) {
-                    case XML -> content = contentStream.readAllBytes();
-                    case TIKA -> {
-                        // TODO: add test for this
-                        if (updateTikaMetaset && tikaService.isEnabled()) {
-                            log.debug("update tika metaset");
-                            tikaService.convertContentToTikaMetaset(osd, contentStream, format);
-                        }
-                        else {
-                            log.debug("ignore format with tika flag");
-                        }
-                    }
-                    case PLAIN_TEXT -> content = ("<plainText>" + new String(contentStream.readAllBytes(), StandardCharsets.UTF_8) + "</plainText>").getBytes();
-                }
-            } catch (IOException e) {
-                throw new CinnamonException("Failed to load content for OSD " + osd.getId() + " at " + osd.getContentPath(), e);
+            doc.add(new StoredField("acl", osd.getAclId()));
+            doc.add(new LongPoint("acl", osd.getAclId()));
+            doc.add(new StringField("cmn_version", osd.getCmnVersion(), Field.Store.NO));
+            doc.add(new StringField("content_changed", String.valueOf(osd.isContentChanged()), Field.Store.NO));
+            if (osd.getContentSize() != null) {
+                doc.add(new LongPoint("content_size", osd.getContentSize()));
             }
-        }
-        OsdMetaDao metaDao = new OsdMetaDao(TransactionIsolationLevel.READ_COMMITTED);
-        List<Meta> metas   = metaDao.listByOsd(osd.getId());
-        metaDao.closePrivateSession();
-        osd.setMetas(metas);
+            // option: add a NumericDocValueField for scoring by age
+            doc.add(new StringField("created", DateTools.dateToString(osd.getCreated(), DateTools.Resolution.MILLISECOND), Field.Store.NO));
+            doc.add(new LongPoint("created", osd.getCreated().getTime()));
+            doc.add(new StringField("modified", DateTools.dateToString(osd.getCreated(), DateTools.Resolution.MILLISECOND), Field.Store.NO));
+            doc.add(new LongPoint("modified", osd.getCreated().getTime()));
 
-        applyIndexItems(doc, indexItems, xmlMapper.writeValueAsString(osd), content, folderPath);
-        return true;
+            doc.add(new LongPoint("creator", osd.getCreatorId()));
+            doc.add(new LongPoint("modifier", osd.getModifierId()));
+            if (osd.getFormatId() != null) {
+                doc.add(new LongPoint("format", osd.getFormatId()));
+            }
+            doc.add(new LongPoint("id", osd.getId()));
+            doc.add(new StoredField("id", osd.getId()));
+            if (osd.getLanguageId() != null) {
+                doc.add(new LongPoint("language", osd.getLanguageId()));
+            }
+            doc.add(new StringField("latest_branch", String.valueOf(osd.isLatestBranch()), Field.Store.NO));
+            doc.add(new StringField("latest_head", String.valueOf(osd.isLatestHead()), Field.Store.NO));
+            if (osd.getLockerId() != null) {
+                log.debug("locker: {}", osd.getLockerId());
+                doc.add(new LongPoint("locker", osd.getLockerId()));
+            }
+            doc.add(new StringField("metadata_changed", String.valueOf(osd.isMetadataChanged()), Field.Store.NO));
+            doc.add(new StringField("name", osd.getName().toLowerCase(), Field.Store.NO));
+            doc.add(new LongPoint("owner", osd.getOwnerId()));
+            doc.add(new StoredField("owner", osd.getOwnerId()));
+            doc.add(new LongPoint("parent", osd.getParentId()));
+            if (osd.getPredecessorId() != null) {
+                doc.add(new LongPoint("predecessor", osd.getPredecessorId()));
+            }
+            if (osd.getRootId() != null) {
+                doc.add(new LongPoint("root", osd.getRootId()));
+            }
+            if (osd.getLifecycleStateId() != null) {
+                doc.add(new LongPoint("lifecycle_state", osd.getLifecycleStateId()));
+            }
+            doc.add(new TextField("summary", osd.getSummary(), Field.Store.NO));
+            doc.add(new LongPoint("object_type", osd.getTypeId()));
+
+            List<Long>     relationCriteria = List.of(osd.getId());
+            List<Relation> relations        = new RelationDao().getRelationsOrMode(relationCriteria, relationCriteria, Collections.emptyList(), true);
+            osd.setRelations(relations);
+
+            byte[] content = NO_CONTENT;
+            if (osd.getContentPath() != null && osd.getFormatId() != null) {
+                Format          format          = new FormatDao().getObjectById(osd.getFormatId()).orElseThrow(() -> new CinnamonException(ErrorCode.FORMAT_NOT_FOUND.getCode()));
+                ContentProvider contentProvider = ContentProviderService.getInstance().getContentProvider(osd.getContentProvider());
+                try (InputStream contentStream = contentProvider.getContentStream(osd)) {
+                    switch (format.getIndexMode()) {
+                        case XML -> content = contentStream.readAllBytes();
+                        case TIKA -> {
+                            // TODO: add test for this
+                            if (updateTikaMetaset && tikaService.isEnabled()) {
+                                log.debug("update tika metaset");
+                                tikaService.convertContentToTikaMetaset(osd, contentStream, format);
+                            }
+                            else {
+                                log.debug("ignore format with tika flag");
+                            }
+                        }
+                        case PLAIN_TEXT -> content = ("<plainText>" + new String(contentStream.readAllBytes(), StandardCharsets.UTF_8) + "</plainText>").getBytes();
+                    }
+                } catch (IOException e) {
+                    throw new CinnamonException("Failed to load content for OSD " + osd.getId() + " at " + osd.getContentPath(), e);
+                }
+            }
+            OsdMetaDao metaDao = new OsdMetaDao(TransactionIsolationLevel.READ_COMMITTED);
+            List<Meta> metas   = metaDao.listByOsd(osd.getId());
+            metaDao.closePrivateSession();
+            osd.setMetas(metas);
+
+            applyIndexItems(doc, indexItems, xmlMapper.writeValueAsString(osd), content, folderPath);
+        } catch (Exception e) {
+            log.warn("Indexing failed for OSD #" + id, e);
+            return IndexResult.FAILED;
+        }
+        return IndexResult.SUCCESS;
 
     }
 
@@ -329,8 +356,14 @@ public class IndexService implements Runnable {
         }
     }
 
-    private void deleteFromIndex(IndexKey key) throws IOException {
-        indexWriter.deleteDocuments(new Term(LUCENE_FIELD_UNIQUE_ID, key.toString()));
+    private IndexResult deleteFromIndex(IndexKey key) {
+        try {
+            indexWriter.deleteDocuments(new Term(LUCENE_FIELD_UNIQUE_ID, key.toString()));
+            return IndexResult.SUCCESS;
+        } catch (Exception e) {
+            log.warn("Failed to delete document from Lucene index: " + key);
+            return IndexResult.FAILED;
+        }
     }
 
     public void setStopped(boolean stopped) {
