@@ -5,9 +5,12 @@ import com.dewarim.cinnamon.FailedRequestException;
 import com.dewarim.cinnamon.api.Identifiable;
 import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
+import com.dewarim.cinnamon.model.response.CinnamonError;
 import org.apache.ibatis.exceptions.PersistenceException;
 import org.apache.ibatis.session.SqlSession;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -21,12 +24,14 @@ public interface CrudDao<T extends Identifiable> {
     default List<T> create(List<T> items) {
         List<T>    createdItems = new ArrayList<>();
         SqlSession sqlSession   = getSqlSession();
+        // TODO: partitionList for when user inserts many items?
         items.forEach(item -> {
             String sqlAction = getMapperNamespace(INSERT);
             try {
                 sqlSession.insert(sqlAction, item);
             } catch (PersistenceException e) {
-                throw new FailedRequestException(ErrorCode.DB_INSERT_FAILED, e);
+                CinnamonError error = new CinnamonError(ErrorCode.DB_INSERT_FAILED.getCode(), "insert failed with:\n" + convertStackTrace(e) + "\n while trying to insert: " + item);
+                throw new FailedRequestException(ErrorCode.DB_INSERT_FAILED, List.of(error));
             }
             createdItems.add(item);
         });
@@ -45,7 +50,8 @@ public interface CrudDao<T extends Identifiable> {
             try {
                 deleteCount.getAndAdd(sqlSession.delete(getMapperNamespace(DELETE), partition));
             } catch (PersistenceException e) {
-                throw new FailedRequestException(ErrorCode.DB_DELETE_FAILED, e);
+                CinnamonError error = new CinnamonError(ErrorCode.DB_DELETE_FAILED.getCode(), "delete failed with:\n" + convertStackTrace(e) + "\n while trying to delete items #" + partition);
+                throw new FailedRequestException(ErrorCode.DB_DELETE_FAILED, List.of(error));
             }
         });
         return deleteCount.get();
@@ -69,13 +75,14 @@ public interface CrudDao<T extends Identifiable> {
     }
 
     default Optional<T> getObjectById(Long id) {
-        if(id == null){
+        if (id == null) {
             return Optional.empty();
         }
         List<T> items = getObjectsById(List.of(id));
         if (items.size() == 0) {
             return Optional.empty();
-        } else {
+        }
+        else {
             // since ids are unique primary keys, we do not have to check for size() > 1.
             return Optional.of(items.get(0));
         }
@@ -111,7 +118,7 @@ public interface CrudDao<T extends Identifiable> {
     }
 
     /**
-     *  partition test code in ConfigEntryServletIntegrationTest.createAndDeleteLotsOfObjects()
+     * partition test code in ConfigEntryServletIntegrationTest.createAndDeleteLotsOfObjects()
      */
     static List<List<Long>> partitionLongList(List<Long> ids) {
         if (ids.size() < BATCH_SIZE) {
@@ -139,8 +146,9 @@ public interface CrudDao<T extends Identifiable> {
             String sqlAction = getMapperNamespace(UPDATE);
             // some more effort to check if an object does exist, so we can
             // return a proper error message.
+            T existing = null;
             if (verifyExistence()) {
-                T existing = sqlSession.selectOne(getMapperNamespace(GET_ALL_BY_ID), Collections.singletonList(item.getId()));
+                existing = sqlSession.selectOne(getMapperNamespace(GET_ALL_BY_ID), Collections.singletonList(item.getId()));
                 if (existing == null) {
                     throw new FailedRequestException(ErrorCode.OBJECT_NOT_FOUND, "Object with id " + item.getId() + " was not found in the database.");
                 }
@@ -153,7 +161,8 @@ public interface CrudDao<T extends Identifiable> {
                     }
                 }
             } catch (PersistenceException e) {
-                throw new FailedRequestException(ErrorCode.DB_UPDATE_FAILED, e);
+                CinnamonError error = new CinnamonError(ErrorCode.DB_UPDATE_FAILED.getCode(), "delete failed with:\n" + convertStackTrace(e) + "\n while trying to update existing item " + existing + "\n with" + item);
+                throw new FailedRequestException(ErrorCode.DB_UPDATE_FAILED, List.of(error));
             }
             updatedItems.add(item);
         });
@@ -178,5 +187,12 @@ public interface CrudDao<T extends Identifiable> {
 
     default SqlSession getSqlSession() {
         return ThreadLocalSqlSession.getSqlSession();
+    }
+
+    static String convertStackTrace(Exception e) {
+        StringWriter sw = new StringWriter();
+        PrintWriter  pw = new PrintWriter(sw);
+        e.printStackTrace(pw);
+        return sw.toString();
     }
 }

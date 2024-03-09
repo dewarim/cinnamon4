@@ -55,4 +55,14 @@ public class Deletion implements Identifiable {
     public Long getId() {
         return osdId;
     }
+
+    @Override
+    public String toString() {
+        return "Deletion{" +
+                "osdId=" + osdId +
+                ", contentPath='" + contentPath + '\'' +
+                ", deleted=" + deleted +
+                ", deleteFailed=" + deleteFailed +
+                '}';
+    }
 }

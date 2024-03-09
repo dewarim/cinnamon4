@@ -118,4 +118,18 @@ public class RelationType implements Identifiable {
 
         return Objects.hash(name);
     }
+
+    @Override
+    public String toString() {
+        return "RelationType{" +
+                "id=" + id +
+                ", leftObjectProtected=" + leftObjectProtected +
+                ", rightObjectProtected=" + rightObjectProtected +
+                ", name='" + name + '\'' +
+                ", cloneOnRightCopy=" + cloneOnRightCopy +
+                ", cloneOnLeftCopy=" + cloneOnLeftCopy +
+                ", cloneOnLeftVersion=" + cloneOnLeftVersion +
+                ", cloneOnRightVersion=" + cloneOnRightVersion +
+                '}';
+    }
 }
