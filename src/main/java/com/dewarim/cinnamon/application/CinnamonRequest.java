@@ -1,16 +1,18 @@
 package com.dewarim.cinnamon.application;
 
 
+import com.dewarim.cinnamon.ErrorCode;
+import com.dewarim.cinnamon.FailedRequestException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.Part;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Optional;
 
 import static com.dewarim.cinnamon.api.Constants.CINNAMON_REQUEST_PART;
@@ -18,13 +20,14 @@ import static com.dewarim.cinnamon.api.Constants.MULTIPART;
 
 public class CinnamonRequest extends HttpServletRequestWrapper {
 
-    private       CinnamonServletInputStream byteInput;
-    private       boolean                    useCopy = false;
-    private final boolean                    multiPart;
-    private final HttpServletRequest         request;
-    private       Part                       cinnamonRequestPart;
-    private       FilePart                   filePart;
-    private       String                     filename;
+    private static final Logger                     log     = LoggerFactory.getLogger(CinnamonRequest.class);
+    private              CinnamonServletInputStream byteInput;
+    private              boolean                    useCopy = false;
+    private final        boolean                    multiPart;
+    private final        HttpServletRequest         request;
+    private              Part                       cinnamonRequestPart;
+    private              FilePart                   filePart;
+    private              String                     filename;
 
     public CinnamonRequest(HttpServletRequest request) {
         super(request);
@@ -36,14 +39,24 @@ public class CinnamonRequest extends HttpServletRequestWrapper {
 
     public void copyInputStream(boolean copyFileContent) throws IOException, ServletException {
         if (multiPart) {
-            cinnamonRequestPart = new RequestPart(request.getPart(CINNAMON_REQUEST_PART));
-            if (copyFileContent) {
-                filePart = new FilePart(request.getPart("file"));
-                Path tempFile = Files.createTempFile("cinnamon-upload-", ".data");
-                filename = tempFile.toAbsolutePath().toString();
-                filePart.write(filename);
+            Part crp = request.getPart(CINNAMON_REQUEST_PART);
+            if (crp == null) {
+                throw new FailedRequestException(ErrorCode.INVALID_REQUEST, "missing " + CINNAMON_REQUEST_PART + " in multi-part request");
             }
-        } else {
+            cinnamonRequestPart = new RequestPart(crp);
+            if (copyFileContent) {
+                /*
+                 We may have createOsd requests that do not have a file.
+                 In that case, the MicroserviceChangeTrigger skips adding the file part.
+                 */
+                Part fp = request.getPart("file");
+                if(fp != null) {
+                    filePart = new FilePart(fp);
+                    filename = filePart.getTempFile().getAbsolutePath();
+                }
+            }
+        }
+        else {
             byteInput = new CinnamonServletInputStream(new ByteArrayInputStream(getRequest().getInputStream().readAllBytes()));
         }
         useCopy = true;
@@ -51,9 +64,12 @@ public class CinnamonRequest extends HttpServletRequestWrapper {
 
     @Override
     public ServletInputStream getInputStream() throws IOException {
+//        log.debug("reading input stream, useCopy: {}",useCopy);
         if (useCopy) {
+            log.debug("byteInput: '{}'", byteInput.getContent());
             return byteInput;
-        } else {
+        }
+        else {
             return request.getInputStream();
         }
     }

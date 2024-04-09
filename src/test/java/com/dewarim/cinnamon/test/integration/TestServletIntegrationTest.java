@@ -12,7 +12,7 @@ public class TestServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void testEcho() throws IOException {
-        String message = "<xml>test</xml>";
+        String message = "<xml><foo>test</foo></xml>";
         String echo    = client.testEcho(message);
         assertEquals(message, echo);
     }

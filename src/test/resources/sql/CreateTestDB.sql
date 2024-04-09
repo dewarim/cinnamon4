@@ -780,7 +780,7 @@ insert into metaset_types(id, name, is_unique) VALUES (nextval('seq_metaset_type
 
 insert into change_triggers(id, name, active, ranking, action, pre_trigger, post_trigger, copy_file_content, config,
                             controller, trigger_type)
-values (nextval('seq_change_trigger_id'), 'echo-test', true, 1,'echo',true,true, true,'<config><url>http://localhost:9090/cinnamon/test/echo</url></config>','test','MICROSERVICE');
+values (nextval('seq_change_trigger_id'), 'echo-test', true, 1,'echo',true,true,true,'<config><remoteServer>http://localhost:19999/cinnamon/test/echo</remoteServer></config>','test','MICROSERVICE');
 
 -- add a failed index job:
 insert into index_jobs (id, job_type, item_id, failed, action, update_tika_metaset)

@@ -102,14 +102,16 @@ public class MicroserviceChangeTrigger implements Trigger {
             }
             cleanupHeaders(requestBuilder);
             if (cinnamonRequest.isMultiPart()) {
-                String cinnamonPayload = new String(cinnamonRequest.getCinnamonRequestPart().getInputStream().readAllBytes());
-                StringBody stringBody = new StringBody(cinnamonPayload, ContentType.parseLenient(cinnamonRequest.getContentType()));
-                HttpEntity entity = MultipartEntityBuilder.create()
-                        .addPart("file", new FileBody(new File(cinnamonRequest.getFilename())))
-                        .addPart(CINNAMON_REQUEST_PART, stringBody)
-                        .build();
+                String                 cinnamonPayload = new String(cinnamonRequest.getCinnamonRequestPart().getInputStream().readAllBytes());
+                StringBody             stringBody      = new StringBody(cinnamonPayload, ContentType.parseLenient(cinnamonRequest.getContentType()));
+                MultipartEntityBuilder entityBuilder   = MultipartEntityBuilder.create().addPart(CINNAMON_REQUEST_PART, stringBody);
+                if (cinnamonRequest.getFilename() != null) {
+                    entityBuilder.addPart("file", new FileBody(new File(cinnamonRequest.getFilename())));
+                }
+                HttpEntity entity = entityBuilder.build();
                 requestBuilder.setEntity(entity);
-            } else {
+            }
+            else {
                 requestBuilder.setEntity(cinnamonRequest.getByteInput().getContent());
             }
 
@@ -158,7 +160,8 @@ public class MicroserviceChangeTrigger implements Trigger {
             if (response.getCode() != HttpStatus.SC_OK) {
                 log.warn("response from microservice call " + url + " was not OK but " + response.getCode());
                 return TriggerResult.STOP;
-            } else {
+            }
+            else {
                 addResponseHeader(response, cinnamonResponse, url);
                 return TriggerResult.CONTINUE;
             }
@@ -187,7 +190,8 @@ public class MicroserviceChangeTrigger implements Trigger {
         log.debug("remoteResponse from  " + url + " is:\n" + remoteContent);
         if (remoteContent.length() > 0) {
             cinnamonResponse.addHeader("microservice-response", remoteContent);
-        } else {
+        }
+        else {
             cinnamonResponse.addHeader("microservice-response", "<no-content/>");
         }
     }

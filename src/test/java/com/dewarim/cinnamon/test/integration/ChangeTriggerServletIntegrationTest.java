@@ -8,12 +8,13 @@ import java.util.List;
 
 import static com.dewarim.cinnamon.ErrorCode.REQUIRES_SUPERUSER_STATUS;
 import static com.dewarim.cinnamon.model.ChangeTriggerType.MICROSERVICE;
+import static com.dewarim.cinnamon.model.ChangeTriggerType.NOP_TRIGGER;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ChangeTriggerServletIntegrationTest extends CinnamonIntegrationTest{
     private final ChangeTrigger changeTrigger = new ChangeTrigger(1L, "triggerThumbnailGenerator", "osd", "setContent", true,
-            false, true, false, "<config><url>http://localhost:64888/createThumbnail</url></config>",
-            MICROSERVICE, 100);
+            false, true, true, "<config><remoteServer>http://localhost:"+cinnamonTestPort+"/echo</remoteServer></config>",
+            NOP_TRIGGER, 100);
     @Test
     public void list() throws IOException {
         List<ChangeTrigger> triggers = client.listChangeTriggers();

@@ -35,6 +35,9 @@ public class CinnamonServletInputStream extends ServletInputStream {
     }
 
     public String getContent() {
-        return new String(byteInput.readAllBytes());
+        byteInput.reset();
+        String content = new String(byteInput.readAllBytes());
+        byteInput.reset();
+        return content;
     }
 }

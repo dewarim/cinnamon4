@@ -2,10 +2,7 @@ package com.dewarim.cinnamon.application;
 
 import jakarta.servlet.http.Part;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.file.Files;
 import java.util.Collection;
 
@@ -18,7 +15,13 @@ public class FilePart implements Part {
     public FilePart(Part part) throws IOException {
         this.part = part;
         this.tempFile = Files.createTempFile("cinnamon-file-upload-", ".binary").toFile();
-        part.write(tempFile.getAbsolutePath());
+        try(FileOutputStream fos = new FileOutputStream(tempFile)){
+            part.getInputStream().transferTo(fos);
+        }
+    }
+
+    public File getTempFile() {
+        return tempFile;
     }
 
     @Override
