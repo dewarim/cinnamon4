@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class ChangeTriggerServletIntegrationTest extends CinnamonIntegrationTest{
     private final ChangeTrigger changeTrigger = new ChangeTrigger(1L, "triggerThumbnailGenerator", "osd", "setContent", true,
             false, true, true, "<config><remoteServer>http://localhost:"+cinnamonTestPort+"/echo</remoteServer></config>",
-            NOP_TRIGGER, 100);
+            NOP_TRIGGER, 100, false);
     @Test
     public void list() throws IOException {
         List<ChangeTrigger> triggers = client.listChangeTriggers();

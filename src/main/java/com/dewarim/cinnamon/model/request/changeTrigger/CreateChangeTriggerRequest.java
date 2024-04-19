@@ -50,6 +50,6 @@ public class CreateChangeTriggerRequest implements CreateRequest<ChangeTrigger>,
         return List.of(new CreateChangeTriggerRequest(
                 List.of(new ChangeTrigger(1L, "triggerThumbnailGenerator", "osd", "setContent", true,
                         false,true,false,"<config><remoteServer>http://localhost:64888/createThumbnail</remoteServer></config>",
-                        ChangeTriggerType.MICROSERVICE,100 ))));
+                        ChangeTriggerType.MICROSERVICE,100, true ))));
     }
 }

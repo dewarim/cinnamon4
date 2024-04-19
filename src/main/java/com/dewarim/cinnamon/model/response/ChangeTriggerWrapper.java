@@ -46,6 +46,6 @@ public class ChangeTriggerWrapper implements Wrapper<ChangeTrigger>, ApiResponse
     @Override
     public List<Object> examples() {
         return List.of(new ChangeTriggerWrapper(List.of(new ChangeTrigger(4L, "logging-trigger", "osd", "delete", true, false, true,
-                false, "<config><!-- define URL to send notice of successful delete events to --></config>", ChangeTriggerType.MICROSERVICE, 1000))));
+                false, "<config><!-- define URL to send notice of successful delete events to --></config>", ChangeTriggerType.MICROSERVICE, 1000, true))));
     }
 }

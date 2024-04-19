@@ -21,6 +21,8 @@ public class RequestResponseFilter implements Filter {
 
     private boolean logResponses = false;
 
+    private PostCommitChangeTriggerHandler postCommitChangeTriggerHandler = new PostCommitChangeTriggerHandler();
+
     @Override
     public void init(FilterConfig filterConfig) {
 
@@ -39,8 +41,10 @@ public class RequestResponseFilter implements Filter {
         try {
             CinnamonRequest cinnamonRequest  = new CinnamonRequest((HttpServletRequest) request);
             chain.doFilter(cinnamonRequest, cinnamonResponse);
-            //
             ThreadLocalSqlSession.getSqlSession().commit();
+
+            postCommitChangeTriggerHandler.executeTriggers(cinnamonRequest, cinnamonResponse);
+
             cinnamonResponse.renderResponseIfNecessary(logResponses);
         } catch (FailedRequestException e) {
             ThreadLocalSqlSession.setTransactionStatus(TransactionStatus.ROLLBACK);

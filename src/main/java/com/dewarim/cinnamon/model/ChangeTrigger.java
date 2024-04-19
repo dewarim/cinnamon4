@@ -4,16 +4,17 @@ import com.dewarim.cinnamon.api.Identifiable;
 
 public class ChangeTrigger implements Identifiable {
 
-    private Long id;
-    private String name;
-    private String controller;
-    private String action;
-    private boolean active;
-    private boolean preTrigger;
-    private boolean postTrigger;
-    private boolean copyFileContent;
-    private int ranking;
-    private String config = "<config/>";
+    private Long              id;
+    private String            name;
+    private String            controller;
+    private String            action;
+    private boolean           active;
+    private boolean           preTrigger;
+    private boolean           postTrigger;
+    private boolean           postCommitTrigger;
+    private boolean           copyFileContent;
+    private int               ranking;
+    private String            config = "<config/>";
     private ChangeTriggerType triggerType;
 
     public ChangeTrigger() {
@@ -21,18 +22,27 @@ public class ChangeTrigger implements Identifiable {
 
     public ChangeTrigger(Long id, String name, String controller, String action,
                          boolean active, boolean preTrigger, boolean postTrigger, boolean copyFileContent,
-                         String config, ChangeTriggerType changeTriggerType, int ranking) {
-        this.id = id;
-        this.name = name;
-        this.controller = controller;
-        this.action = action;
-        this.active = active;
-        this.preTrigger = preTrigger;
-        this.postTrigger = postTrigger;
-        this.copyFileContent = copyFileContent;
-        this.config = config;
-        this.triggerType=changeTriggerType;
-        this.ranking=ranking;
+                         String config, ChangeTriggerType changeTriggerType, int ranking, boolean postCommitTrigger) {
+        this.id                = id;
+        this.name              = name;
+        this.controller        = controller;
+        this.action            = action;
+        this.active            = active;
+        this.preTrigger        = preTrigger;
+        this.postTrigger       = postTrigger;
+        this.copyFileContent   = copyFileContent;
+        this.config            = config;
+        this.triggerType       = changeTriggerType;
+        this.ranking           = ranking;
+        this.postCommitTrigger = postCommitTrigger;
+    }
+
+    public boolean isPostCommitTrigger() {
+        return postCommitTrigger;
+    }
+
+    public void setPostCommitTrigger(boolean postCommitTrigger) {
+        this.postCommitTrigger = postCommitTrigger;
     }
 
     public int getRanking() {
@@ -133,10 +143,11 @@ public class ChangeTrigger implements Identifiable {
                 ", active=" + active +
                 ", preTrigger=" + preTrigger +
                 ", postTrigger=" + postTrigger +
+                ", postCommitTrigger=" + postCommitTrigger +
                 ", copyFileContent=" + copyFileContent +
+                ", ranking=" + ranking +
                 ", config='" + config + '\'' +
+                ", triggerType=" + triggerType +
                 '}';
     }
-
-
 }

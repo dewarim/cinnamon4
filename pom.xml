@@ -7,20 +7,20 @@
     <groupId>com.dewarim.cinnamon</groupId>
     <artifactId>cinnamon-cms</artifactId>
     <packaging>jar</packaging>
-    <version>1.0.3</version>
+    <version>1.0.5</version>
     <name>Cinnamon CMS</name>
 
     <properties>
         <jetty.version>11.0.18</jetty.version>
         <jetty.annotations.version>11.0.18</jetty.annotations.version>
         <jackson.version>2.14.3</jackson.version>
-        <junit.version>5.10.0</junit.version>
+        <junit.version>5.10.2</junit.version>
         <lucene.version>9.6.0</lucene.version>
         <mybatis.version>3.5.14</mybatis.version>
         <postgresql.version>42.7.2</postgresql.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.plugin.version>3.11.0</maven.compiler.plugin.version>
-        <log4j.version>2.21.1</log4j.version>
+        <log4j.version>2.23.1</log4j.version>
         <slf4j-api.version>2.0.9</slf4j-api.version>
         <httpcomponents.version>4.5.14</httpcomponents.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -29,7 +29,7 @@
         <dom4j.version>2.1.4</dom4j.version>
         <tika.version>2.9.1</tika.version>
         <unbound.ldap.version>6.0.10</unbound.ldap.version>
-        <commons.io.version>2.15.0</commons.io.version>
+        <commons.io.version>2.16.1</commons.io.version>
     </properties>
 
     <scm>
@@ -244,7 +244,7 @@
         <dependency>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
-            <version>1.16.0</version>
+            <version>1.16.1</version>
         </dependency>
 
         <!-- ldap connectivity -->
@@ -350,5 +350,11 @@
             </plugin>
         </plugins>
     </build>
+    <repositories>
+        <repository>
+            <id>apache</id>
+            <url>https://repo.maven.apache.org/maven2/</url>
+        </repository>
+    </repositories>
 
 </project>

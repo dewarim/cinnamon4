@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.test.integration;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -10,6 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TestServletIntegrationTest extends CinnamonIntegrationTest {
 
+    @Disabled("needs a proper (mocked) server")
     @Test
     public void testEcho() throws IOException {
         String message = "<xml><foo>test</foo></xml>";
@@ -17,6 +19,7 @@ public class TestServletIntegrationTest extends CinnamonIntegrationTest {
         assertEquals(message, echo);
     }
 
+    @Disabled("needs a proper (mocked) server")
     @Test
     public void testBrokenEcho() {
         String message = "<xml-is-broken";

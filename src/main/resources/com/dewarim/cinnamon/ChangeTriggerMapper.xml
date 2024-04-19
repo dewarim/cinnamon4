@@ -16,6 +16,7 @@
         <result property="config" column="config"/>
         <result property="controller" column="controller"/>
         <result property="triggerType" column="trigger_type"/>
+        <result property="postCommitTrigger" column="post_commit_trigger"/>
     </resultMap>
 
     <select id="list" resultMap="changeTriggerMap">
@@ -50,7 +51,8 @@
             copy_file_content = #{copyFileContent},
             config            = #{config},
             controller        = #{controller},
-            trigger_type      = #{triggerType}
+            trigger_type      = #{triggerType},
+            post_commit_trigger = #{postCommitTrigger}
         WHERE id = #{id}
     </update>
 
@@ -59,10 +61,10 @@
             select nextval('seq_index_item_id')
         </selectKey>
         INSERT INTO change_triggers(id, name, active, ranking, action, pre_trigger, post_trigger,
-        copy_file_content, config, controller, trigger_type)
+        copy_file_content, config, controller, trigger_type, post_commit_trigger)
         values (#{id}, #{name},
         #{active}, #{ranking}, #{action}, #{preTrigger}, #{postTrigger},
-        #{copyFileContent}, #{config}, #{controller}, #{triggerType} )
+        #{copyFileContent}, #{config}, #{controller}, #{triggerType}, #{postCommitTrigger} )
     </insert>
 
     <select id="getAllById" parameterType="list" resultMap="changeTriggerMap">

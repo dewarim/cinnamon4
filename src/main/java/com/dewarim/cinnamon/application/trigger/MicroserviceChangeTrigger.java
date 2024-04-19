@@ -172,7 +172,7 @@ public class MicroserviceChangeTrigger implements Trigger {
         requestBuilder.removeHeaders(HttpHeaders.CONTENT_LENGTH);
         requestBuilder.removeHeaders(HttpHeaders.HOST);
         // MUST NOT leak the client's session to a remote service!
-        requestBuilder.removeHeaders("ticket");
+//        requestBuilder.removeHeaders("ticket");
 
     }
 

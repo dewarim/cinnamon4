@@ -539,18 +539,19 @@ create sequence seq_change_trigger_id;
 drop table if exists change_triggers;
 create table change_triggers
 (
-    id                bigint                          not null
+    id                  bigint                             not null
         primary key,
-    name              varchar(255) unique             not null,
-    active            boolean                         not null,
-    ranking           integer                         not null,
-    action            varchar(255)                    not null,
-    pre_trigger       boolean                         not null,
-    post_trigger      boolean                         not null,
-    copy_file_content boolean                         not null,
-    config            text default '<config />'::text not null,
-    controller        varchar(255)                    not null,
-    trigger_type      varchar(255)                    not null
+    name                varchar(255) unique                not null,
+    active              boolean                            not null,
+    ranking             integer                            not null,
+    action              varchar(255)                       not null,
+    pre_trigger         boolean                            not null,
+    post_trigger        boolean                            not null,
+    copy_file_content   boolean                            not null,
+    post_commit_trigger boolean default false              not null,
+    config              text    default '<config />'::text not null,
+    controller          varchar(255)                       not null,
+    trigger_type        varchar(255)                       not null
 );
 
 
@@ -779,8 +780,12 @@ insert into metaset_types(id, name, is_unique) VALUES (nextval('seq_metaset_type
 insert into metaset_types(id, name, is_unique) VALUES (nextval('seq_metaset_type_id'), 'tika', true);
 
 insert into change_triggers(id, name, active, ranking, action, pre_trigger, post_trigger, copy_file_content, config,
-                            controller, trigger_type)
-values (nextval('seq_change_trigger_id'), 'echo-test', true, 1,'echo',true,true,true,'<config><remoteServer>http://localhost:19999/cinnamon/test/echo</remoteServer></config>','test','MICROSERVICE');
+                            controller, trigger_type, post_commit_trigger )
+values (nextval('seq_change_trigger_id'), 'echo-test', true, 1,'echo',true,true,true,'<config><remoteServer>http://localhost:9998/</remoteServer></config>','test','MICROSERVICE', false);
+
+-- insert into change_triggers(id, name, active, ranking, action, pre_trigger, post_trigger, copy_file_content, config,
+--                             controller, trigger_type)
+-- values (nextval('seq_change_trigger_id'), 'lock-test', true, 1,'lock',true,true,true,'<config><remoteServer>http://localhost:19999/api/test/echo</remoteServer></config>','osd','MICROSERVICE');
 
 -- add a failed index job:
 insert into index_jobs (id, job_type, item_id, failed, action, update_tika_metaset)

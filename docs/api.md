@@ -386,6 +386,7 @@ It does not otherwise change the AclGroup (as it only contains of a group and ac
 
 ---
 
+2024-04-19T08:46:29.576419964Z main WARN Runtime environment or build system does not support multi-release JARs. This will impact location-based features.
 # /api/changeTrigger/create
 
 
@@ -402,9 +403,10 @@ It does not otherwise change the AclGroup (as it only contains of a group and ac
       <active>true</active>
       <preTrigger>false</preTrigger>
       <postTrigger>true</postTrigger>
+      <postCommitTrigger>true</postCommitTrigger>
       <copyFileContent>false</copyFileContent>
       <ranking>100</ranking>
-      <config>&lt;config>&lt;url>http://localhost:64888/createThumbnail&lt;/url>&lt;/config></config>
+      <config>&lt;config>&lt;remoteServer>http://localhost:64888/createThumbnail&lt;/remoteServer>&lt;/config></config>
       <triggerType>MICROSERVICE</triggerType>
     </changeTrigger>
   </changeTriggers>
@@ -426,6 +428,7 @@ It does not otherwise change the AclGroup (as it only contains of a group and ac
       <active>true</active>
       <preTrigger>false</preTrigger>
       <postTrigger>true</postTrigger>
+      <postCommitTrigger>true</postCommitTrigger>
       <copyFileContent>false</copyFileContent>
       <ranking>1000</ranking>
       <config>&lt;config>&lt;!-- define URL to send notice of successful delete events to -->&lt;/config></config>
@@ -493,6 +496,7 @@ It does not otherwise change the AclGroup (as it only contains of a group and ac
       <active>true</active>
       <preTrigger>false</preTrigger>
       <postTrigger>true</postTrigger>
+      <postCommitTrigger>true</postCommitTrigger>
       <copyFileContent>false</copyFileContent>
       <ranking>1000</ranking>
       <config>&lt;config>&lt;!-- define URL to send notice of successful delete events to -->&lt;/config></config>
@@ -522,6 +526,7 @@ It does not otherwise change the AclGroup (as it only contains of a group and ac
       <active>true</active>
       <preTrigger>false</preTrigger>
       <postTrigger>true</postTrigger>
+      <postCommitTrigger>false</postCommitTrigger>
       <copyFileContent>false</copyFileContent>
       <ranking>100</ranking>
       <config>&lt;config>&lt;url>http://localhost:64888/createThumbnail&lt;/url>&lt;/config></config>
@@ -546,6 +551,7 @@ It does not otherwise change the AclGroup (as it only contains of a group and ac
       <active>true</active>
       <preTrigger>false</preTrigger>
       <postTrigger>true</postTrigger>
+      <postCommitTrigger>true</postCommitTrigger>
       <copyFileContent>false</copyFileContent>
       <ranking>1000</ranking>
       <config>&lt;config>&lt;!-- define URL to send notice of successful delete events to -->&lt;/config></config>

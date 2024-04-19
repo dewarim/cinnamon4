@@ -41,6 +41,7 @@ public class DbSessionFilter implements Filter {
             if (ThreadLocalSqlSession.getTransactionStatus() == TransactionStatus.OK) {
                 log.debug("commit changes (if any)");
                 try {
+                    // TODO: RequestResponseFilter also commits... due to http5client being so fast.
                     sqlSession.commit();
                 }
                 catch (Exception e){
