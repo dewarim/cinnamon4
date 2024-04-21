@@ -1,19 +1,18 @@
 package com.dewarim.cinnamon.application.service;
 
-import com.dewarim.cinnamon.dao.*;
+import com.dewarim.cinnamon.dao.GroupDao;
+import com.dewarim.cinnamon.dao.GroupUserDao;
+import com.dewarim.cinnamon.dao.UiLanguageDao;
+import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.model.*;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static com.dewarim.cinnamon.ErrorCode.SYSTEM_FOLDER_NOT_FOUND;
 import static com.dewarim.cinnamon.ErrorCode.UI_LANGUAGE_NOT_FOUND;
 
 public class UserService {
-    private static final Logger log = LogManager.getLogger();
 
     public UserAccount createOrUpdateUserAccount(String username, List<String> cinnamonGroups, LoginType loginType, String language) {
         UiLanguageDao uiLanguageDao = new UiLanguageDao();
@@ -38,24 +37,8 @@ public class UserService {
         List<Long> groupIds = new GroupDao().getGroupsByName(cinnamonGroups).stream().map(Group::getId).toList();
         groupUserDao.addUserToGroups(userId, groupIds);
 
-        // create folders for user:
-        createFoldersForUser(user.getId(), username);
         return user;
     }
 
-    private void createFoldersForUser(Long userId, String username) {
-        FolderDao folderDao = new FolderDao();
-        List<Folder> userFolders = folderDao.getFolderByPathWithAncestors("/system/users", false);
-        if (userFolders.isEmpty()) {
-            log.warn("/system/users not found.");
-            return;
-        }
-        Folder allUsersFolder = userFolders.stream().filter(folder -> folder.getName().equals("users")).findFirst().orElseThrow(SYSTEM_FOLDER_NOT_FOUND.getException());
-        Folder userFolder = folderDao.getOrCreateFolder(allUsersFolder.getId(), username, userId);
-        final String[] defaultSystemFolders = {"home", "searches", "carts", "config"};
-        for (String systemFolder : defaultSystemFolders) {
-            folderDao.getOrCreateFolder(userFolder.getId(), systemFolder, userId);
-        }
-    }
 
 }
