@@ -45,4 +45,5 @@ public interface LoginResult {
      */
     String getUiLanguageCode();
 
+    boolean newUserCreated();
 }

@@ -113,19 +113,20 @@ public class UnboundIdLdapConnector {
             log.debug("Search for DN returned: {}", buffer);
 
             String[] dnAttributeValues = dnSearchResult.getAttributeValues(searchAttributeDn);
-            switch (dnAttributeValues.length) {
-                case 0:
+            return switch (dnAttributeValues.length) {
+                case 0 -> {
                     log.info("Failed login - could not find DN for user {}", username);
-                    return Optional.empty();
-
-                case 1:
+                    yield Optional.empty();
+                }
+                case 1 -> {
                     log.info("Success - Found DN '{}' for user {}", dnAttributeValues[0], username);
-                    return Optional.of(dnAttributeValues[0]);
-
-                default:
+                    yield Optional.of(dnAttributeValues[0]);
+                }
+                default -> {
                     log.info("Found more than one DN, will not proceed:\n {}", String.join("\n", dnAttributeValues));
-                    return Optional.empty();
-            }
+                    yield Optional.empty();
+                }
+            };
         } catch (LDAPSearchException e) {
             log.warn(String.format("Failed to search for DN %s for user %s", ldapGroupName, username), e);
             return Optional.empty();

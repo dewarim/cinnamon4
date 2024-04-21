@@ -26,6 +26,7 @@ public class UserService {
             String randomPwd = UUID.randomUUID().toString();
             user = new UserAccount(username, randomPwd, username, username + "@invalid", uiLanguage.getId(), loginType.name(), true, true, true);
             userDao.create(List.of(user));
+            user.setNewUser(true);
         } else {
             user = account.get();
         }

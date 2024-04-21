@@ -46,9 +46,9 @@ public class LdapLoginProvider implements LoginProvider {
             result.getGroupMappings().forEach( mapping -> cinnamonGroups.add(mapping.getCinnamonGroup()));
 
             UserAccount user = userService.createOrUpdateUserAccount(username,cinnamonGroups,LoginType.LDAP, result.getDefaultLanguageCode());
-            log.info("Created user account via LDAP: "+user);
+            log.info("Created or updated user account via LDAP: {} ",user);
             boolean passwordIsCorrect = HashMaker.compareWithHash(password, userAccount.getPasswordHash());
-            return CinnamonLoginResult.createLoginResult(passwordIsCorrect);
+            return CinnamonLoginResult.createLoginResult(passwordIsCorrect, user.isNewUser());
         }
         throw ErrorCode.LDAP_LOGIN_FAILED.exception();
     }

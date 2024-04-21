@@ -62,7 +62,7 @@ public class CinnamonServer {
 
     private static final Logger log = LogManager.getLogger(CinnamonServer.class);
 
-    public static final String           VERSION       = "1.0.5";
+    public static final String           VERSION       = "1.1.0";
     private             Server           server;
     private             DbSessionFactory dbSessionFactory;
     private final       WebAppContext    webAppContext = new WebAppContext();
@@ -238,6 +238,7 @@ public class CinnamonServer {
         // use standard RequestResponseFilter for /cinnamon endpoints: we do not want to enable logging there,
         // since those are used for login
         handler.addFilter(RequestResponseFilter.class, "/cinnamon/*", EnumSet.of(DispatcherType.REQUEST));
+        handler.addFilter(ChangeTriggerFilter.class, "/cinnamon/connect", EnumSet.of(DispatcherType.REQUEST));
         handler.addFilter(requestResponseFilterHolder, "/test/*", EnumSet.of(DispatcherType.REQUEST));
     }
 

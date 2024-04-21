@@ -14,6 +14,8 @@ import java.util.Date;
  */
 public class Constants {
 
+    public static final String NEW_USER_HEADER_FLAG = "cinnamon-new-user";
+
     /**
      * Date object for API examples (so we do not have changes in generated file
      * api.md on each build)

@@ -18,7 +18,7 @@ public class CinnamonLoginProvider implements LoginProvider {
     @Override
     public LoginResult connect(LoginUser userAccount, String password) {
         boolean passwordIsCorrect = HashMaker.compareWithHash(password, userAccount.getPasswordHash());
-        return CinnamonLoginResult.createLoginResult(passwordIsCorrect);
+        return CinnamonLoginResult.createLoginResult(passwordIsCorrect,false);
         
     }
 }

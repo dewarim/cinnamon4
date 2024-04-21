@@ -9,18 +9,18 @@ import java.util.List;
 
 @JacksonXmlRootElement(localName = "ldapResult")
 public class LdapLoginResult implements LoginResult {
-    private String errorMessage;
-    private boolean validUser;
+    private String             errorMessage;
+    private boolean            validUser;
     private List<GroupMapping> groupMappings = Collections.emptyList();
-    private String defaultLanguageCode;
+    private String             defaultLanguageCode;
 
     public LdapLoginResult(String errorMessage) {
         this.errorMessage = errorMessage;
     }
 
     public LdapLoginResult(boolean validUser, List<GroupMapping> groupMappings, String defaultLanguageCode) {
-        this.validUser = validUser;
-        this.groupMappings = groupMappings;
+        this.validUser           = validUser;
+        this.groupMappings       = groupMappings;
         this.defaultLanguageCode = defaultLanguageCode;
     }
 
@@ -65,5 +65,14 @@ public class LdapLoginResult implements LoginResult {
 
     public void setDefaultLanguageCode(String defaultLanguageCode) {
         this.defaultLanguageCode = defaultLanguageCode;
+    }
+
+    /**
+     * LdapLoginResult is only used internally at a point where we do not yet know
+     * if we need to create a new user, so this will always return false.
+     */
+    @Override
+    public boolean newUserCreated() {
+        return false;
     }
 }

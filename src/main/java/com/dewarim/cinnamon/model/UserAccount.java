@@ -16,41 +16,43 @@ import java.util.Objects;
  */
 public class UserAccount implements Principal, LoginUser, Identifiable {
 
-    private Long       id;
-    private String     name;
-    private String     loginType;
-    private String     password;
-    private boolean    activated;
-    private boolean    locked;
-    private Long       uiLanguageId;
-    private String     fullname;
-    private String     email;
-    private boolean    changeTracking;
-    private boolean    activateTriggers = true;
+    private Long    id;
+    private String  name;
+    private String  loginType;
+    private String  password;
+    private boolean activated;
+    private boolean locked;
+    private Long    uiLanguageId;
+    private String  fullname;
+    private String  email;
+    private boolean changeTracking;
+    private boolean activateTriggers = true;
     @JsonIgnore
-    private String     token;
+    private String  token;
     @JsonIgnore
-    private int        tokensToday;
-    private boolean    passwordExpired;
+    private int     tokensToday;
+    private boolean passwordExpired;
 
     @JacksonXmlElementWrapper(localName = "groupIds")
     @JacksonXmlProperty(localName = "groupId")
-    private List<Long> groupIds         = new ArrayList<>();
-    private String     config           = "<config/>";
+    private List<Long> groupIds = new ArrayList<>();
+    private String     config   = "<config/>";
+    @JsonIgnore
+    private boolean    newUser  = false;
 
     public UserAccount() {
     }
 
     public UserAccount(String name, String password, String fullname, String email, Long uiLanguageId, String loginType,
                        Boolean changeTracking, Boolean activated, Boolean activateTriggers) {
-        this.name = name;
-        this.password = password;
-        this.fullname = fullname;
-        this.email = email;
-        this.uiLanguageId = uiLanguageId;
-        this.loginType = loginType;
-        this.changeTracking = changeTracking;
-        this.activated = activated;
+        this.name             = name;
+        this.password         = password;
+        this.fullname         = fullname;
+        this.email            = email;
+        this.uiLanguageId     = uiLanguageId;
+        this.loginType        = loginType;
+        this.changeTracking   = changeTracking;
+        this.activated        = activated;
         this.activateTriggers = activateTriggers;
     }
 
@@ -193,6 +195,14 @@ public class UserAccount implements Principal, LoginUser, Identifiable {
 
     public void setConfig(String config) {
         this.config = config;
+    }
+
+    public boolean isNewUser() {
+        return newUser;
+    }
+
+    public void setNewUser(boolean newUser) {
+        this.newUser = newUser;
     }
 
     @Override
