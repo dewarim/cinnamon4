@@ -144,7 +144,7 @@ public class MicroserviceChangeTrigger implements Trigger {
             }
 
             cleanupHeaders(requestBuilder);
-
+            requestBuilder.setHeader("cinnamon-request", cinnamonRequest.getByteInput().getContent());
             requestBuilder.setEntity(cinnamonResponse.getPendingContentAsString());
 
             return executeRequest(cinnamonResponse, url, requestBuilder);
