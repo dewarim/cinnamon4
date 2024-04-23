@@ -15,6 +15,7 @@ import java.util.Date;
 public class Constants {
 
     public static final String NEW_USER_HEADER_FLAG = "cinnamon-new-user";
+    public static final String CINNAMON_REQUEST_HEADER = "cinnamon-request";
 
     /**
      * Date object for API examples (so we do not have changes in generated file

@@ -38,6 +38,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Enumeration;
 
+import static com.dewarim.cinnamon.api.Constants.CINNAMON_REQUEST_HEADER;
 import static com.dewarim.cinnamon.api.Constants.CINNAMON_REQUEST_PART;
 
 public class MicroserviceChangeTrigger implements Trigger {
@@ -144,7 +145,13 @@ public class MicroserviceChangeTrigger implements Trigger {
             }
 
             cleanupHeaders(requestBuilder);
-            requestBuilder.setHeader("cinnamon-request", cinnamonRequest.getByteInput().getContent());
+            if(cinnamonRequest.isMultiPart()) {
+                byte[] cinnamonRequestPart = cinnamonRequest.getCinnamonRequestPart().getInputStream().readAllBytes();
+                requestBuilder.setHeader(CINNAMON_REQUEST_HEADER,new String(cinnamonRequestPart));
+            }
+            else{
+                requestBuilder.setHeader(CINNAMON_REQUEST_HEADER,cinnamonRequest.getByteInput().getContent());
+            }
             requestBuilder.setEntity(cinnamonResponse.getPendingContentAsString());
 
             return executeRequest(cinnamonResponse, url, requestBuilder);
