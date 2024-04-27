@@ -25,7 +25,8 @@ public class PostCommitChangeTriggerHandler  {
                 .filter(changeTrigger -> {
                             if (mapping.getServlet().equals(changeTrigger.getController()) &&
                                     changeTrigger.getAction().equals(mapping.getAction()) &&
-                                    changeTrigger.isPostCommitTrigger()) {
+                                    changeTrigger.isPostCommitTrigger() &&
+                                    changeTrigger.isActive()) {
                                 log.debug("Found post commit change trigger {} for {}", changeTrigger.getName(), mapping.getPath());
                                 return true;
                             }

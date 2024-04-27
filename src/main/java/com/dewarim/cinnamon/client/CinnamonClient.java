@@ -18,6 +18,7 @@ import com.dewarim.cinnamon.model.request.aclGroup.DeleteAclGroupRequest;
 import com.dewarim.cinnamon.model.request.aclGroup.ListAclGroupRequest;
 import com.dewarim.cinnamon.model.request.aclGroup.UpdateAclGroupRequest;
 import com.dewarim.cinnamon.model.request.changeTrigger.CreateChangeTriggerRequest;
+import com.dewarim.cinnamon.model.request.changeTrigger.DeleteChangeTriggerRequest;
 import com.dewarim.cinnamon.model.request.changeTrigger.ListChangeTriggerRequest;
 import com.dewarim.cinnamon.model.request.configEntry.*;
 import com.dewarim.cinnamon.model.request.folder.*;
@@ -231,6 +232,12 @@ public class CinnamonClient {
     public void copyToExistingOsd(ObjectSystemData sourceOsd, ObjectSystemData targetOsd, List<Long> metasetTypeIds, boolean copyContent) throws IOException {
         var request  = new CopyToExistingOsdRequest(List.of(new CopyTask(sourceOsd.getId(), targetOsd.getId(), copyContent, metasetTypeIds)));
         var response = sendStandardRequest(OSD__COPY_TO_EXISTING, request);
+        verifyResponseIsOkay(response);
+    }
+
+    public void deleteChangeTrigger(long versionId) throws IOException {
+        var request = new DeleteChangeTriggerRequest(versionId);
+        var response = sendStandardRequest(CHANGE_TRIGGER__DELETE, request);
         verifyResponseIsOkay(response);
     }
 

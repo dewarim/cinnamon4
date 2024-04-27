@@ -491,10 +491,6 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         }
     }
 
-    private File getPomXml() {
-        return new File("pom.xml");
-    }
-
     @Test
     public void setContentWithoutFile() throws IOException {
         long osdId = new TestObjectHolder(client, userId)

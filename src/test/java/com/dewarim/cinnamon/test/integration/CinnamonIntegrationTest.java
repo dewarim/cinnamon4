@@ -33,10 +33,7 @@ import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.function.Executable;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.Reader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -338,4 +335,9 @@ public class CinnamonIntegrationTest {
             return false;
         }
     }
+
+    public File getPomXml() {
+        return new File("pom.xml");
+    }
+
 }

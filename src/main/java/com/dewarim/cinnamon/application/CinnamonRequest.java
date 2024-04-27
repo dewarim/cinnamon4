@@ -20,14 +20,15 @@ import static com.dewarim.cinnamon.api.Constants.MULTIPART;
 
 public class CinnamonRequest extends HttpServletRequestWrapper {
 
-    private static final Logger                     log     = LoggerFactory.getLogger(CinnamonRequest.class);
+    private static final Logger                     log                  = LoggerFactory.getLogger(CinnamonRequest.class);
     private              CinnamonServletInputStream byteInput;
-    private              boolean                    useCopy = false;
+    private              boolean                    useCopy              = false;
     private final        boolean                    multiPart;
     private final        HttpServletRequest         request;
     private              Part                       cinnamonRequestPart;
     private              FilePart                   filePart;
     private              String                     filename;
+    private              boolean                    useCopiedFileContent = false;
 
     public CinnamonRequest(HttpServletRequest request) {
         super(request);
@@ -50,10 +51,11 @@ public class CinnamonRequest extends HttpServletRequestWrapper {
                  In that case, the MicroserviceChangeTrigger skips adding the file part.
                  */
                 Part fp = request.getPart("file");
-                if(fp != null) {
+                if (fp != null) {
                     filePart = new FilePart(fp);
                     filename = filePart.getTempFile().getAbsolutePath();
                 }
+                useCopiedFileContent=true;
             }
         }
         else {
@@ -79,7 +81,7 @@ public class CinnamonRequest extends HttpServletRequestWrapper {
         if (useCopy && multiPart && CINNAMON_REQUEST_PART.equals(name)) {
             return cinnamonRequestPart;
         }
-        if (useCopy && multiPart && "file".equals(name)) {
+        if (multiPart && "file".equals(name) && useCopiedFileContent) {
             return filePart;
         }
         return super.getPart(name);

@@ -36,7 +36,8 @@ public class ChangeTriggerFilter extends HttpFilter {
         List<ChangeTrigger> triggers = new ChangeTriggerDao().list().stream()
                 .filter(changeTrigger -> {
                             if (mapping.getServlet().equals(changeTrigger.getController()) &&
-                                    changeTrigger.getAction().equals(mapping.getAction())) {
+                                    changeTrigger.getAction().equals(mapping.getAction()) &&
+                                    changeTrigger.isActive()) {
                                 log.debug("Found change trigger {} for {}", changeTrigger.getName(), mapping.getPath());
                                 return true;
                             }
