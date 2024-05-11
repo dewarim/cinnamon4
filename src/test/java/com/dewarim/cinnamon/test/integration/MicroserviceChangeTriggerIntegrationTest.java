@@ -1,10 +1,13 @@
 package com.dewarim.cinnamon.test.integration;
 
+import com.dewarim.cinnamon.application.CinnamonServer;
+import com.dewarim.cinnamon.configuration.ChangeTriggerConfig;
 import com.dewarim.cinnamon.model.ChangeTrigger;
 import com.dewarim.cinnamon.model.Format;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.request.osd.CreateNewVersionRequest;
 import com.dewarim.cinnamon.test.TestObjectHolder;
+import org.apache.hc.core5.http.ssl.TLS;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -16,6 +19,7 @@ import org.mockserver.matchers.Times;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.stream.Stream;
 
 import static com.dewarim.cinnamon.model.ChangeTriggerType.MICROSERVICE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -33,7 +37,7 @@ public class MicroserviceChangeTriggerIntegrationTest extends CinnamonIntegratio
             false, true, false, "<config><remoteServer>http://localhost:" + MOCK_PORT + "/echo</remoteServer></config>",
             MICROSERVICE, 200, true);
     private final static ChangeTrigger mctVersion = new ChangeTrigger(1L, "version-ct", "osd", "version", true,
-            false, true, false, "<config><remoteServer>http://localhost:" + MOCK_PORT + "/echo2</remoteServer></config>",
+            false, true, false, "<config><remoteServer>https://localhost:" + MOCK_PORT + "/echo2</remoteServer></config>",
             MICROSERVICE, 200, true);
 
     private static long    mctCreateId;
@@ -49,6 +53,13 @@ public class MicroserviceChangeTriggerIntegrationTest extends CinnamonIntegratio
             mctCreateId   = adminClient.createChangeTrigger(mctCreate).getId();
             mctVersionId  = adminClient.createChangeTrigger(mctVersion).getId();
             triggerExists = true;
+            ChangeTriggerConfig changeTriggerConfig = CinnamonServer.config.getChangeTriggerConfig();
+            changeTriggerConfig.setUseCustomTrustStore(true);
+
+            // https://github.com/mock-server/mockserver/issues/1837
+            // downgrade to TLS 1.2 because mock-server does weird things:
+            changeTriggerConfig.setTlsVersions(Stream.of(TLS.V_1_2, TLS.V_1_3).map(Enum::toString).toList());
+            MICROSERVICE.trigger.configure(changeTriggerConfig);
         }
     }
 

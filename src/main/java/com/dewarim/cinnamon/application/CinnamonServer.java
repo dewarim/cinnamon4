@@ -9,15 +9,13 @@ import com.dewarim.cinnamon.application.service.IndexService;
 import com.dewarim.cinnamon.application.service.SearchService;
 import com.dewarim.cinnamon.application.service.TikaService;
 import com.dewarim.cinnamon.application.servlet.*;
-import com.dewarim.cinnamon.configuration.CinnamonConfig;
-import com.dewarim.cinnamon.configuration.HttpConnectorConfig;
-import com.dewarim.cinnamon.configuration.HttpsConnectorConfig;
-import com.dewarim.cinnamon.configuration.ServerConfig;
+import com.dewarim.cinnamon.configuration.*;
 import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.filter.AuthenticationFilter;
 import com.dewarim.cinnamon.filter.ChangeTriggerFilter;
 import com.dewarim.cinnamon.filter.DbSessionFilter;
 import com.dewarim.cinnamon.filter.RequestResponseFilter;
+import com.dewarim.cinnamon.model.ChangeTriggerType;
 import com.dewarim.cinnamon.model.UserAccount;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -98,6 +96,7 @@ public class CinnamonServer {
 
         addFilters(webAppContext);
         addServlets(webAppContext);
+        configureChangeTriggers(config.getChangeTriggerConfig());
 
         ServerConfig     serverConfig = config.getServerConfig();
         QueuedThreadPool threadPool   = new QueuedThreadPool(serverConfig.getMaxThreads());
@@ -136,6 +135,12 @@ public class CinnamonServer {
         if(!enableHttp && !enableHttps){
             log.warn("You have disabled both http and https endpoints, so there is no way for you to talk to me." +
                     " Still starting the server, perhaps you want to just enable indexing etc.");
+        }
+    }
+
+    private void configureChangeTriggers(ChangeTriggerConfig changeTriggerConfig) {
+        for (ChangeTriggerType changeTriggerType : ChangeTriggerType.values()) {
+            changeTriggerType.trigger.configure(changeTriggerConfig);
         }
     }
 

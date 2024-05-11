@@ -2,7 +2,7 @@ package com.dewarim.cinnamon.application.trigger;
 
 import com.dewarim.cinnamon.application.CinnamonRequest;
 import com.dewarim.cinnamon.application.CinnamonResponse;
-import com.dewarim.cinnamon.application.CinnamonServer;
+import com.dewarim.cinnamon.application.SslContextConfigurer;
 import com.dewarim.cinnamon.application.exception.CinnamonException;
 import com.dewarim.cinnamon.application.service.index.ParamParser;
 import com.dewarim.cinnamon.configuration.ChangeTriggerConfig;
@@ -44,13 +44,23 @@ import static com.dewarim.cinnamon.api.Constants.CINNAMON_REQUEST_PART;
 public class MicroserviceChangeTrigger implements Trigger {
     private static final Logger log = LogManager.getLogger(MicroserviceChangeTrigger.class);
 
-    private final HttpClient httpClient;
+    private HttpClient httpClient;
 
     public MicroserviceChangeTrigger() {
 
-        // unclean:
-        ChangeTriggerConfig config = CinnamonServer.config.getChangeTriggerConfig();
+    }
 
+    @Override
+    public void configure(ChangeTriggerConfig config) {
+        if (config.isUseCustomTrustStore()) {
+            try {
+                SslContextConfigurer.addAdditionalTrustStore(new File(config.getPathToCustomTrustStore()), config.getPasswordForCustomTrustStore());
+            } catch (Exception e) {
+                String message = "Failed to add custom trust store for MicroserviceChangeTrigger.";
+                log.error(message, e);
+                throw new CinnamonException(message, e);
+            }
+        }
 
         PoolingHttpClientConnectionManager connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
                 .setSSLSocketFactory(SSLConnectionSocketFactoryBuilder.create()
@@ -80,7 +90,9 @@ public class MicroserviceChangeTrigger implements Trigger {
 
     @Override
     public TriggerResult executePreCommand(ChangeTrigger changeTrigger, CinnamonRequest cinnamonRequest, CinnamonResponse cinnamonResponse) {
-
+        if(httpClient == null){
+            throw new CinnamonException("MicroserviceChangeTrigger has not been initialized yet. You must call configure method before using it");
+        }
         log.debug("preCommand of MicroserviceChangeTrigger");
 
         try {
@@ -145,12 +157,12 @@ public class MicroserviceChangeTrigger implements Trigger {
             }
 
             cleanupHeaders(requestBuilder);
-            if(cinnamonRequest.isMultiPart()) {
+            if (cinnamonRequest.isMultiPart()) {
                 byte[] cinnamonRequestPart = cinnamonRequest.getCinnamonRequestPart().getInputStream().readAllBytes();
-                requestBuilder.setHeader(CINNAMON_REQUEST_HEADER,new String(cinnamonRequestPart));
+                requestBuilder.setHeader(CINNAMON_REQUEST_HEADER, new String(cinnamonRequestPart));
             }
-            else{
-                requestBuilder.setHeader(CINNAMON_REQUEST_HEADER,cinnamonRequest.getByteInput().getContent());
+            else {
+                requestBuilder.setHeader(CINNAMON_REQUEST_HEADER, cinnamonRequest.getByteInput().getContent());
             }
             requestBuilder.setEntity(cinnamonResponse.getPendingContentAsString());
 
