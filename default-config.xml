@@ -5,6 +5,8 @@
     <enableHttps>false</enableHttps>
     <enableHttp>true</enableHttp>
     <maxThreads>200</maxThreads>
+    <log4jConfigPath></log4jConfigPath>
+    <logResponses>false</logResponses>
     <httpConnectorConfig>
       <port>8080</port>
       <acceptors>1</acceptors>
@@ -21,8 +23,6 @@
     </httpsConnectorConfig>
     <verifyExistence>true</verifyExistence>
     <ignoreNopUpdates>false</ignoreNopUpdates>
-    <log4jConfigPath/>
-    <logResponses>false</logResponses>
   </serverConfig>
   <systemAdministratorEmail/>
   <mailConfig>
@@ -47,12 +47,7 @@
       <searchAttributeForDn>distinguishedName</searchAttributeForDn>
       <defaultLanguageCode>und</defaultLanguageCode>
       <staticBindPassword/>
-      <groupMappings>
-        <groupMapping>
-          <externalGroup>authors</externalGroup>
-          <cinnamonGroup>group.authors</cinnamonGroup>
-        </groupMapping>
-      </groupMappings>
+      <groupMappings/>
     </ldapConfig>
   </securityConfig>
   <databaseConfig>
@@ -77,6 +72,9 @@
     <socketTimeoutSeconds>60</socketTimeoutSeconds>
     <connectionTimeoutSeconds>60</connectionTimeoutSeconds>
     <timeToLiveSeconds>600</timeToLiveSeconds>
+    <useCustomTrustStore>false</useCustomTrustStore>
+    <pathToCustomTrustStore>src/test/resources/keystore-for-testing.jks</pathToCustomTrustStore>
+    <passwordForCustomTrustStore>changeit</passwordForCustomTrustStore>
     <tlsVersions>
       <tlsVersion>V_1_3</tlsVersion>
     </tlsVersions>
