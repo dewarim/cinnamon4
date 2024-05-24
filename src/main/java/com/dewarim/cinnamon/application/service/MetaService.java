@@ -72,7 +72,7 @@ public class MetaService<T extends CrudDao<Meta> & MetaDao, O extends CrudDao<? 
         // load objects
         List<Long>              ownableIds = metas.stream().map(Meta::getObjectId).collect(Collectors.toList());
         List<? extends Ownable> ownables   = ownableDao.getObjectsById(ownableIds);
-        if (ownables.size() != ownableIds.size()) {
+        if (ownables.size() != Set.of(ownableIds).size()) {
             throw ErrorCode.OBJECT_NOT_FOUND.getException().get();
         }
 

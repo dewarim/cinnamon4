@@ -3,8 +3,9 @@ package com.dewarim.cinnamon.model.request;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public abstract class DeleteByIdRequest<T> implements DeleteRequest<T> {
 
@@ -12,17 +13,21 @@ public abstract class DeleteByIdRequest<T> implements DeleteRequest<T> {
 
     @JacksonXmlElementWrapper(localName = "ids")
     @JacksonXmlProperty(localName = "id")
-    private List<Long> ids = new ArrayList<>();
+    private Set<Long> ids = new HashSet<>();
+
+    public DeleteByIdRequest(List<Long> ids) {
+        this.ids = new HashSet<>(ids);
+    }
 
     @Override
     public List<Long> list() {
-        return ids;
+        return ids.stream().toList();
     }
 
     public DeleteByIdRequest() {
     }
 
-    public DeleteByIdRequest(List<Long> ids) {
+    public DeleteByIdRequest(Set<Long> ids) {
         this.ids = ids;
     }
 
@@ -40,7 +45,7 @@ public abstract class DeleteByIdRequest<T> implements DeleteRequest<T> {
         return ids != null && ids.stream().allMatch(id -> id != null && id > 0);
     }
 
-    public List<Long> getIds() {
+    public Set<Long> getIds() {
         return ids;
     }
 

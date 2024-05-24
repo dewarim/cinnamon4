@@ -227,7 +227,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
         OsdMetaDao metaDao = new OsdMetaDao();
-        List<Meta> metas   = metaDao.listMetaByObjectIds(metaRequest.getIds());
+        List<Meta> metas   = metaDao.listMetaByObjectIds(metaRequest.getIds().stream().toList());
         new MetaService<>().deleteMetas(metaDao, metas, osdDao, user);
         cinnamonResponse.setWrapper(new DeleteResponse(true));
     }
@@ -484,7 +484,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
         OsdMetaDao osdMetaDao = new OsdMetaDao();
-        List<Meta> metas      = osdMetaDao.getObjectsById(metaRequest.getIds());
+        List<Meta> metas      = osdMetaDao.getObjectsById(metaRequest.list());
         if (metas.size() != metaRequest.getIds().size() && !metaRequest.isIgnoreNotFound()) {
             throw ErrorCode.METASET_NOT_FOUND.exception();
         }
@@ -700,7 +700,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
             osdDao) throws IOException {
         IdListRequest          idListRequest = xmlMapper.readValue(request.getInputStream(), IdListRequest.class);
         SummaryWrapper         wrapper       = new SummaryWrapper();
-        List<ObjectSystemData> osds          = osdDao.getObjectsById(idListRequest.getIds(), true);
+        List<ObjectSystemData> osds          = osdDao.getObjectsById(idListRequest.getIds().stream().toList(), true);
         osds.forEach(osd -> {
             if (authorizationService.hasUserOrOwnerPermission(osd, DefaultPermission.READ_OBJECT_SYS_METADATA, user)) {
                 wrapper.getSummaries().add(new Summary(osd.getId(), osd.getSummary()));

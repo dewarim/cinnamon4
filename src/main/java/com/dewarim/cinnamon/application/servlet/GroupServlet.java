@@ -61,7 +61,7 @@ public class GroupServlet extends HttpServlet implements CruddyServlet<Group> {
                 superuserCheck();
                 DeleteGroupRequest deleteRequest = getMapper().readValue(request.getInputStream(), DeleteGroupRequest.class)
                         .validate().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
-                List<Long> groupIds = deleteRequest.getIds();
+                List<Long> groupIds = deleteRequest.list();
                 for (Long groupId : groupIds) {
                     if (groupDao.hasChildren(groupId) && !deleteRequest.isRecursive()) {
                         log.debug("Group with id " + groupId + " still has child groups.");

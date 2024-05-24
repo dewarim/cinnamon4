@@ -8,6 +8,9 @@ import java.util.Optional;
 
 public interface DeleteRequest<T> {
 
+    /**
+     * @return a list of unique ids
+     */
     List<Long> list();
 
     boolean validated();

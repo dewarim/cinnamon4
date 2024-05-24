@@ -536,7 +536,7 @@ public class CinnamonClient {
 
     public List<Meta> createOsdMeta(CreateMetaRequest metaRequest) throws IOException {
         var response = sendStandardRequest(UrlMapping.OSD__CREATE_META, metaRequest);
-        return metaUnwrapper.unwrap(response, 1);
+        return metaUnwrapper.unwrap(response, metaRequest.getMetas().size());
     }
 
     public Meta createOsdMeta(Long osdId, String content, Long metaTypeId) throws IOException {

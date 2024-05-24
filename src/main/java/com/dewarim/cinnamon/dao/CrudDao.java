@@ -62,8 +62,8 @@ public interface CrudDao<T extends Identifiable> {
         return sqlSession.selectList(getMapperNamespace(LIST));
     }
 
-    default List<T> getObjectsById(List<Long> ids) {
-        List<List<Long>> partitions = partitionLongList(ids);
+    default List<T> getObjectsById(Collection<Long> ids) {
+        List<List<Long>> partitions = partitionLongList(ids.stream().toList());
         SqlSession       sqlSession = getSqlSession();
         List<T>          results    = new ArrayList<>(ids.size());
         partitions.forEach(partition -> {

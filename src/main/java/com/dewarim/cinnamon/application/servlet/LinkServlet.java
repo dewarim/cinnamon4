@@ -217,7 +217,7 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
         DeleteLinkRequest deleteRequest = (DeleteLinkRequest) xmlMapper.readValue(request.getInputStream(), DeleteLinkRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         List<Link> links = linkDao.getObjectsById(deleteRequest.list());
-        if (links.isEmpty()) {
+        if (links.isEmpty() || links.size() != deleteRequest.list().size()) {
             ErrorCode.OBJECT_NOT_FOUND.throwUp();
         }
         UserAccount user          = ThreadLocalSqlSession.getCurrentUser();

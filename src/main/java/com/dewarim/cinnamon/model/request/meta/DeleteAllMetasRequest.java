@@ -6,6 +6,7 @@ import com.dewarim.cinnamon.model.request.DeleteByIdRequest;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.List;
+import java.util.Set;
 
 @JacksonXmlRootElement(localName = "deleteAllMetasRequest")
 public class DeleteAllMetasRequest extends DeleteByIdRequest<Meta> implements ApiRequest<DeleteAllMetasRequest> {
@@ -13,7 +14,7 @@ public class DeleteAllMetasRequest extends DeleteByIdRequest<Meta> implements Ap
     public DeleteAllMetasRequest() {
     }
 
-    public DeleteAllMetasRequest(List<Long> ids) {
+    public DeleteAllMetasRequest(Set<Long> ids) {
         super(ids);
     }
 
@@ -23,6 +24,6 @@ public class DeleteAllMetasRequest extends DeleteByIdRequest<Meta> implements Ap
 
     @Override
     public List<ApiRequest<DeleteAllMetasRequest>> examples() {
-        return List.of(new DeleteAllMetasRequest(List.of(14L,15L)));
+        return List.of(new DeleteAllMetasRequest(Set.of(14L,15L)));
     }
 }

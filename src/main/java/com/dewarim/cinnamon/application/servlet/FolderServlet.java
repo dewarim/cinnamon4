@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.dewarim.cinnamon.DefaultPermission.SET_TYPE;
@@ -90,7 +91,7 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
         FolderMetaDao metaDao = new FolderMetaDao();
-        List<Meta>    metas   = metaDao.listMetaByObjectIds(metaRequest.getIds());
+        List<Meta>    metas   = metaDao.listMetaByObjectIds(metaRequest.getIds().stream().toList());
         new MetaService<>().deleteMetas(metaDao, metas, folderDao, user);
         cinnamonResponse.setWrapper(new DeleteResponse(true));
     }
@@ -139,7 +140,8 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
         cinnamonResponse.setWrapper(deleteResponse);
     }
 
-    private List<Folder> loadFolders(List<Long> ids, boolean recursively, boolean deleteContent, FolderDao folderDao) {
+    private List<Folder> loadFolders(Set<Long> idSet, boolean recursively, boolean deleteContent, FolderDao folderDao) {
+        List<Long> ids = new ArrayList<>(idSet);
         List<Folder> folders = folderDao.getFoldersById(ids, false);
         if (folders.size() != ids.size()) {
             throw ErrorCode.FOLDER_NOT_FOUND.getException().get();
@@ -152,7 +154,7 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
                 if (subFolders.size() > 0) {
                     checkFoldersForContent(ids, deleteContent, folderDao);
                     foldersWithSubfolders.addAll(subFolders);
-                    foldersWithSubfolders.addAll(loadFolders(subFolders.stream().map(Folder::getId).collect(Collectors.toList()), true, deleteContent, folderDao));
+                    foldersWithSubfolders.addAll(loadFolders(subFolders.stream().map(Folder::getId).collect(Collectors.toSet()), true, deleteContent, folderDao));
                 }
             }
         }
@@ -462,7 +464,7 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
     private void getSummaries(HttpServletRequest request, CinnamonResponse response, UserAccount user, FolderDao folderDao) throws IOException {
         IdListRequest  idListRequest = xmlMapper.readValue(request.getInputStream(), IdListRequest.class);
         SummaryWrapper wrapper       = new SummaryWrapper();
-        List<Folder>   folders       = folderDao.getFoldersById(idListRequest.getIds(), true);
+        List<Folder>   folders       = folderDao.getFoldersById(idListRequest.getIds().stream().toList(), true);
         folders.forEach(folder -> {
             if (authorizationService.hasUserOrOwnerPermission(folder, DefaultPermission.READ_OBJECT_SYS_METADATA, user)) {
                 wrapper.getSummaries().add(new Summary(folder.getId(), folder.getSummary()));

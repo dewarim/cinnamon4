@@ -599,8 +599,8 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void lockAndUnlockShouldFailWithInvalidRequest() {
-        assertClientError(() -> client.lockOsd(List.of()), INVALID_REQUEST);
-        assertClientError(() -> client.unlockOsd(List.of()), INVALID_REQUEST);
+        assertClientError(() -> client.lockOsd(List.of(-1L)), INVALID_REQUEST);
+        assertClientError(() -> client.unlockOsd(List.of(-1L)), INVALID_REQUEST);
     }
 
     @Test
@@ -759,6 +759,22 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
                 .createOsdMeta("<xml>smile</xml>");
         assertEquals("<xml>smile</xml>", toh.meta.getContent());
         assertEquals(metasetType.getId(), toh.meta.getTypeId());
+    }
+
+    @Test
+    public void createMetaMetasetHappyPathMultipleForSameOsd() throws IOException {
+        TestObjectHolder adminToh = new TestObjectHolder(adminClient, adminId)
+                .createMetaSetType(false);
+        var type1 = adminToh.metasetType;
+        var type2 = adminToh.createMetaSetType(false).metasetType;
+
+        var osdId = new TestObjectHolder(client, userId).createOsd().osd.getId();
+
+        List<Meta> metas = List.of(new Meta(osdId, type1.getId(), "<xml>foo</xml>"),
+                new Meta(osdId, type2.getId(), "<xml>bar</xml>"));
+        var newMetas = client.createOsdMeta(new CreateMetaRequest(metas));
+        assertTrue(newMetas.stream().anyMatch(newMeta -> metas.stream().anyMatch(meta -> newMeta.getContent().equals(meta.getContent()))));
+
     }
 
     @Test

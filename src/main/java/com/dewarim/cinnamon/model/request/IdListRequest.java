@@ -5,15 +5,17 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @JacksonXmlRootElement(localName = "idListRequest")
 public class IdListRequest implements ApiRequest<IdListRequest> {
 
     @JacksonXmlElementWrapper(localName = "ids")
     @JacksonXmlProperty(localName = "id")
-    private List<Long> ids;
+    private Set<Long> ids = new HashSet<>();
 
     public IdListRequest() {
     }
@@ -34,15 +36,20 @@ public class IdListRequest implements ApiRequest<IdListRequest> {
     }
 
     public IdListRequest(List<Long> ids) {
-        this.ids = ids;
+        this.ids = new HashSet<>(ids);
     }
 
-    public List<Long> getIds() {
+    public Set<Long> getIds() {
         return ids;
     }
 
     public void setIds(List<Long> ids) {
-        this.ids = ids;
+        if(ids == null){
+            this.ids = new HashSet<>();
+        }
+        else {
+            this.ids = new HashSet<>(ids);
+        }
     }
 
     @Override

@@ -20,6 +20,10 @@ public class CreateMetaRequest implements ApiRequest<CreateMetaRequest> {
     public CreateMetaRequest() {
     }
 
+    public CreateMetaRequest(List<Meta> metas) {
+        this.metas = metas;
+    }
+
     public CreateMetaRequest(Long id, String content, Long typeId) {
         metas.add(new Meta(id, typeId, content));
     }
