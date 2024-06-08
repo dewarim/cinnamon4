@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.api;
 
+import com.dewarim.cinnamon.model.request.ConnectionRequest;
 import com.dewarim.cinnamon.model.request.IdListRequest;
 import com.dewarim.cinnamon.model.request.IdRequest;
 import com.dewarim.cinnamon.model.request.ListUrlMappingInfoRequest;
@@ -100,20 +101,20 @@ public enum UrlMapping {
     CHANGE_TRIGGER__LIST("changeTrigger", "list", "/api", "", ListChangeTriggerRequest.class, ChangeTriggerWrapper.class),
     CHANGE_TRIGGER__UPDATE("changeTrigger", "update", "/api", "", UpdateChangeTriggerRequest.class, ChangeTriggerWrapper.class),
     CINNAMON__CONNECT("cinnamon", "connect", "", """
-            Connect to the cinnamon server by sending a form-encoded username and password.
+            Connect to the cinnamon server by sending a ConnectionRequest.
                         
             Example call:
                         
-                TICKET=$(curl --silent --show-error -X POST "http://localhost:9090/cinnamon/connect?user=admin&password=admin&format=text")
+                TICKET=$(curl --silent --show-error -X POST "<connectionRequest><username>joe</username><password>1234Geheim</password><format>xml</format></connectionRequest>",)
                        
-            If you add the "format=text" parameter, you will receive a plain/text response with just the session ticket.
+            If you choose "format=text", you will receive a plain/text response with just the session ticket.
             Otherwise, you will get:
                         
-                <connection><ticket>72ca5288-c802-4da7-9315-6881f5e593b5</ticket></connection>
+                <cinnamon><cinnamonConnection><ticket>9d55332e-9ef3-4743-969c-28316e58e146</ticket></cinnamonConnection></cinnamon>
                         
             The ticket is a session id that must be sent with all other requests to the server,
             in the request header field "ticket".
-            """, null, null),
+            """, ConnectionRequest.class, CinnamonConnectionResponse.class),
     CINNAMON__DISCONNECT("cinnamon", "disconnect", "", """
             Disconnect from the cinnamon server by invalidating the session ticket.
             """, null, null),

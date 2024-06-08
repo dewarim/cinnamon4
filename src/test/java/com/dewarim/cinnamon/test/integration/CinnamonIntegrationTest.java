@@ -12,8 +12,9 @@ import com.dewarim.cinnamon.client.StandardResponse;
 import com.dewarim.cinnamon.dao.GroupDao;
 import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.Folder;
+import com.dewarim.cinnamon.model.request.ConnectionRequest;
 import com.dewarim.cinnamon.model.request.search.SearchType;
-import com.dewarim.cinnamon.model.response.CinnamonConnection;
+import com.dewarim.cinnamon.model.response.CinnamonConnectionResponse;
 import com.dewarim.cinnamon.model.response.CinnamonError;
 import com.dewarim.cinnamon.model.response.CinnamonErrorWrapper;
 import com.dewarim.cinnamon.test.TestObjectHolder;
@@ -140,13 +141,16 @@ public class CinnamonIntegrationTest {
      * @return a ticket for the Cinnamon administrator
      */
     protected static String getAdminTicket() throws IOException {
-        String url = "http://localhost:" + cinnamonTestPort + UrlMapping.CINNAMON__CONNECT.getPath();
+        var    request = new ConnectionRequest("admin", "admin", null);
+        String url     = "http://localhost:" + cinnamonTestPort + UrlMapping.CINNAMON__CONNECT.getPath();
         try (StandardResponse response = httpClient.execute(ClassicRequestBuilder.post(url)
-                .addParameter("user", "admin")
-                .addParameter("password", "admin")
+                .setEntity(mapper.writeValueAsString(request))
                 .build(), StandardResponse::new)) {
-            CinnamonConnection cinnamonConnection = XML_MAPPER.readValue(response.getEntity().getContent(), CinnamonConnection.class);
-            return cinnamonConnection.getTicket();
+            if (response.getCode() != HttpStatus.SC_OK) {
+                throw new IllegalStateException("Failed to get admin ticket: response code is " + response.getCode());
+            }
+            CinnamonConnectionResponse cinnamonConnection = XML_MAPPER.readValue(response.getEntity().getContent(), CinnamonConnectionResponse.class);
+            return cinnamonConnection.list().get(0).getTicket();
         }
     }
 
@@ -159,14 +163,13 @@ public class CinnamonIntegrationTest {
      */
     protected static String getDoesTicket(boolean newTicket) throws IOException {
         if (ticketForDoe == null || newTicket) {
+            var request = new ConnectionRequest("doe", "admin", null);
             String url = "http://localhost:" + cinnamonTestPort + UrlMapping.CINNAMON__CONNECT.getPath();
             try (StandardResponse response = httpClient.execute(ClassicRequestBuilder.post(url)
-                    .addParameter("user", "doe")
-                    .addParameter("password", "admin")
+                    .setEntity(mapper.writeValueAsString(request))
                     .build(), StandardResponse::new)) {
-                String             tokenRequestResult = responseToString(response);
-                CinnamonConnection cinnamonConnection = mapper.readValue(tokenRequestResult, CinnamonConnection.class);
-                ticketForDoe = cinnamonConnection.getTicket();
+                CinnamonConnectionResponse cinnamonConnection = XML_MAPPER.readValue(response.getEntity().getContent(), CinnamonConnectionResponse.class);
+                ticketForDoe = cinnamonConnection.list().get(0).getTicket();
             }
         }
         return ticketForDoe;
@@ -314,9 +317,9 @@ public class CinnamonIntegrationTest {
 
     public static boolean verifySearchFindsPointField(String fieldName, Long id, int expected, SearchType searchType) {
         try {
-            var response = client.search("<ExactPointQuery fieldName='__NAME__' value='__ID__' type='long'/>".replace("__ID__", id.toString()).replace("__NAME__", fieldName), searchType);
-            List<Long> ids = new ArrayList<>();
-            switch (searchType){
+            var        response = client.search("<ExactPointQuery fieldName='__NAME__' value='__ID__' type='long'/>".replace("__ID__", id.toString()).replace("__NAME__", fieldName), searchType);
+            List<Long> ids      = new ArrayList<>();
+            switch (searchType) {
                 case OSD -> ids = response.getOsdIds();
                 case FOLDER -> ids = response.getFolderIds();
                 case ALL -> {

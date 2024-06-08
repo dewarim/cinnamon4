@@ -259,8 +259,8 @@ It does not otherwise change the AclGroup (as it only contains of a group and ac
 <deleteAclRequest>
   <ignoreNotFound>false</ignoreNotFound>
   <ids>
-    <id>43</id>
     <id>99</id>
+    <id>43</id>
   </ids>
 </deleteAclRequest>
 
@@ -386,7 +386,6 @@ It does not otherwise change the AclGroup (as it only contains of a group and ac
 
 ---
 
-2024-04-19T08:46:29.576419964Z main WARN Runtime environment or build system does not support multi-release JARs. This will impact location-based features.
 # /api/changeTrigger/create
 
 
@@ -566,19 +565,51 @@ It does not otherwise change the AclGroup (as it only contains of a group and ac
 ---
 
 # /cinnamon/connect
-Connect to the cinnamon server by sending a form-encoded username and password.
+Connect to the cinnamon server by sending a ConnectionRequest.
 
 Example call:
 
-    TICKET=$(curl --silent --show-error -X POST "http://localhost:9090/cinnamon/connect?user=admin&password=admin&format=text")
+    TICKET=$(curl --silent --show-error -X POST "<connectionRequest><username>joe</username><password>1234Geheim</password><format>xml</format></connectionRequest>",)
 
-If you add the "format=text" parameter, you will receive a plain/text response with just the session ticket.
+If you choose "format=text", you will receive a plain/text response with just the session ticket.
 Otherwise, you will get:
 
-    <connection><ticket>72ca5288-c802-4da7-9315-6881f5e593b5</ticket></connection>
+    <cinnamon><cinnamonConnection><ticket>9d55332e-9ef3-4743-969c-28316e58e146</ticket></cinnamonConnection></cinnamon>
 
 The ticket is a session id that must be sent with all other requests to the server,
 in the request header field "ticket".
+
+
+## Request
+
+```xml
+<connectionRequest>
+  <username>john</username>
+  <password>password</password>
+  <format>text</format>
+</connectionRequest>
+
+```
+```xml
+<connectionRequest>
+  <username>jane</username>
+  <password>password</password>
+  <format/>
+</connectionRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <cinnamonConnection>
+    <ticket>64772ea0-0184-4f94-96d4-6348d88e9e82</ticket>
+  </cinnamonConnection>
+</cinnamon>
+
+```
 
 
 ---
@@ -934,8 +965,8 @@ Delete a folder type
 <deleteFolderTypeRequest>
   <ignoreNotFound>false</ignoreNotFound>
   <ids>
-    <id>543</id>
     <id>44</id>
+    <id>543</id>
   </ids>
 </deleteFolderTypeRequest>
 
@@ -1451,8 +1482,8 @@ Fetch a single folder
 <idListRequest>
   <ids>
     <id>1</id>
-    <id>44</id>
     <id>5</id>
+    <id>44</id>
   </ids>
 </idListRequest>
 
@@ -3920,8 +3951,8 @@ Returns an OSD's content according to it's format's content type.
 <idListRequest>
   <ids>
     <id>1</id>
-    <id>44</id>
     <id>5</id>
+    <id>44</id>
   </ids>
 </idListRequest>
 
@@ -3954,8 +3985,8 @@ Returns an OSD's content according to it's format's content type.
 <idListRequest>
   <ids>
     <id>1</id>
-    <id>44</id>
     <id>5</id>
+    <id>44</id>
   </ids>
 </idListRequest>
 

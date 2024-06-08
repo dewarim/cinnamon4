@@ -13,7 +13,9 @@ import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.model.LoginType;
 import com.dewarim.cinnamon.model.Session;
 import com.dewarim.cinnamon.model.UserAccount;
+import com.dewarim.cinnamon.model.request.ConnectionRequest;
 import com.dewarim.cinnamon.model.response.CinnamonConnection;
+import com.dewarim.cinnamon.model.response.CinnamonConnectionResponse;
 import com.dewarim.cinnamon.model.response.DisconnectResponse;
 import com.dewarim.cinnamon.security.LoginProviderService;
 import com.fasterxml.jackson.annotation.JsonRootName;
@@ -79,9 +81,11 @@ public class CinnamonServlet extends HttpServlet {
     }
 
     private void connect(CinnamonRequest request, CinnamonResponse response) throws IOException {
-        String username = request.getParameter("user");
-        String password = request.getParameter("password");
-        String format   = request.getParameter("format");
+        ConnectionRequest conRequest = xmlMapper.readValue(request.getInputStream(), ConnectionRequest.class)
+                .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
+        String username = conRequest.getUsername();
+        String password = conRequest.getPassword();
+        String format   = conRequest.getFormat();
         // TODO: maybe add a ConnectionRequest object (with fields user & password) for consistency
         SecurityConfig securityConfig = CinnamonServer.config.getSecurityConfig();
 
@@ -144,8 +148,8 @@ public class CinnamonServlet extends HttpServlet {
             }
             response.addHeader(NEW_USER_HEADER_FLAG, String.valueOf(user.isNewUser()));
 
-            CinnamonConnection cinnamonConnection = new CinnamonConnection(session.getTicket());
-            response.setWrapper(cinnamonConnection);
+            var cinnamonConnectionResponse = new CinnamonConnectionResponse(new CinnamonConnection(session.getTicket()));
+            response.setWrapper(cinnamonConnectionResponse);
         }
         else {
             CONNECTION_FAIL_WRONG_PASSWORD.throwUp();

@@ -7,6 +7,7 @@ import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.links.LinkType;
 import com.dewarim.cinnamon.model.relations.Relation;
 import com.dewarim.cinnamon.model.relations.RelationType;
+import com.dewarim.cinnamon.model.request.ConnectionRequest;
 import com.dewarim.cinnamon.model.request.IdListRequest;
 import com.dewarim.cinnamon.model.request.IdRequest;
 import com.dewarim.cinnamon.model.request.ListUrlMappingInfoRequest;
@@ -115,35 +116,36 @@ public class CinnamonClient {
     private final XmlMapper  mapper     = XML_MAPPER;
     private final HttpClient httpClient = HttpClients.createDefault();
 
-    private final Unwrapper<ChangeTrigger, ChangeTriggerWrapper>    changeTriggerUnwrapper         = new Unwrapper<>(ChangeTriggerWrapper.class);
-    private final Unwrapper<ConfigEntry, ConfigEntryWrapper>        configEntryUnwrapper           = new Unwrapper<>(ConfigEntryWrapper.class);
-    private final Unwrapper<ObjectSystemData, OsdWrapper>           osdUnwrapper                   = new Unwrapper<>(OsdWrapper.class);
-    private final Unwrapper<FolderType, FolderTypeWrapper>          folderTypeUnwrapper            = new Unwrapper<>(FolderTypeWrapper.class);
-    private final Unwrapper<ObjectType, ObjectTypeWrapper>          objectTypeUnwrapper            = new Unwrapper<>(ObjectTypeWrapper.class);
-    private final Unwrapper<Folder, FolderWrapper>                  folderUnwrapper                = new Unwrapper<>(FolderWrapper.class);
-    private final Unwrapper<Format, FormatWrapper>                  formatUnwrapper                = new Unwrapper<>(FormatWrapper.class);
-    private final Unwrapper<Meta, MetaWrapper>                      metaUnwrapper                  = new Unwrapper<>(MetaWrapper.class);
-    private final Unwrapper<UserAccount, UserAccountWrapper>        userUnwrapper                  = new Unwrapper<>(UserAccountWrapper.class);
-    private final Unwrapper<DeleteResponse, DeleteResponse>         deleteResponseWrapper          = new Unwrapper<>(DeleteResponse.class);
-    private final Unwrapper<CinnamonError, CinnamonErrorWrapper>    errorUnwrapper                 = new Unwrapper<>(CinnamonErrorWrapper.class);
-    private final Unwrapper<Acl, AclWrapper>                        aclUnwrapper                   = new Unwrapper<>(AclWrapper.class);
-    private final Unwrapper<AclGroup, AclGroupWrapper>              aclGroupUnwrapper              = new Unwrapper<>(AclGroupWrapper.class);
-    private final Unwrapper<Group, GroupWrapper>                    groupUnwrapper                 = new Unwrapper<>(GroupWrapper.class);
-    private final Unwrapper<Language, LanguageWrapper>              languageUnwrapper              = new Unwrapper<>(LanguageWrapper.class);
-    private final Unwrapper<UiLanguage, UiLanguageWrapper>          uiLanguageUnwrapper            = new Unwrapper<>(UiLanguageWrapper.class);
-    private final Unwrapper<Link, LinkWrapper>                      linkUnwrapper                  = new Unwrapper<>(LinkWrapper.class);
-    private final Unwrapper<Lifecycle, LifecycleWrapper>            lifecycleUnwrapper             = new Unwrapper<>(LifecycleWrapper.class);
-    private final Unwrapper<LifecycleState, LifecycleStateWrapper>  lifecycleStateUnwrapper        = new Unwrapper<>(LifecycleStateWrapper.class);
+    private final Unwrapper<ChangeTrigger, ChangeTriggerWrapper>            changeTriggerUnwrapper         = new Unwrapper<>(ChangeTriggerWrapper.class);
+    private final Unwrapper<ConfigEntry, ConfigEntryWrapper>                configEntryUnwrapper           = new Unwrapper<>(ConfigEntryWrapper.class);
+    private final Unwrapper<ObjectSystemData, OsdWrapper>                   osdUnwrapper                   = new Unwrapper<>(OsdWrapper.class);
+    private final Unwrapper<FolderType, FolderTypeWrapper>                  folderTypeUnwrapper            = new Unwrapper<>(FolderTypeWrapper.class);
+    private final Unwrapper<ObjectType, ObjectTypeWrapper>                  objectTypeUnwrapper            = new Unwrapper<>(ObjectTypeWrapper.class);
+    private final Unwrapper<Folder, FolderWrapper>                          folderUnwrapper                = new Unwrapper<>(FolderWrapper.class);
+    private final Unwrapper<Format, FormatWrapper>                          formatUnwrapper                = new Unwrapper<>(FormatWrapper.class);
+    private final Unwrapper<Meta, MetaWrapper>                              metaUnwrapper                  = new Unwrapper<>(MetaWrapper.class);
+    private final Unwrapper<UserAccount, UserAccountWrapper>                userUnwrapper                  = new Unwrapper<>(UserAccountWrapper.class);
+    private final Unwrapper<DeleteResponse, DeleteResponse>                 deleteResponseWrapper          = new Unwrapper<>(DeleteResponse.class);
+    private final Unwrapper<CinnamonError, CinnamonErrorWrapper>            errorUnwrapper                 = new Unwrapper<>(CinnamonErrorWrapper.class);
+    private final Unwrapper<Acl, AclWrapper>                                aclUnwrapper                   = new Unwrapper<>(AclWrapper.class);
+    private final Unwrapper<AclGroup, AclGroupWrapper>                      aclGroupUnwrapper              = new Unwrapper<>(AclGroupWrapper.class);
+    private final Unwrapper<Group, GroupWrapper>                            groupUnwrapper                 = new Unwrapper<>(GroupWrapper.class);
+    private final Unwrapper<Language, LanguageWrapper>                      languageUnwrapper              = new Unwrapper<>(LanguageWrapper.class);
+    private final Unwrapper<UiLanguage, UiLanguageWrapper>                  uiLanguageUnwrapper            = new Unwrapper<>(UiLanguageWrapper.class);
+    private final Unwrapper<Link, LinkWrapper>                              linkUnwrapper                  = new Unwrapper<>(LinkWrapper.class);
+    private final Unwrapper<Lifecycle, LifecycleWrapper>                    lifecycleUnwrapper             = new Unwrapper<>(LifecycleWrapper.class);
+    private final Unwrapper<LifecycleState, LifecycleStateWrapper>          lifecycleStateUnwrapper        = new Unwrapper<>(LifecycleStateWrapper.class);
     // LinkResponse contains full OSD/Folder objects, Link itself contains only ids.
-    private final Unwrapper<LinkResponse, LinkResponseWrapper>      linkResponseUnwrapper          = new Unwrapper<>(LinkResponseWrapper.class);
-    private final Unwrapper<Relation, RelationWrapper>              relationUnwrapper              = new Unwrapper<>(RelationWrapper.class);
-    private final Unwrapper<RelationType, RelationTypeWrapper>      relationTypeUnwrapper          = new Unwrapper<>(RelationTypeWrapper.class);
-    private final Unwrapper<Summary, SummaryWrapper>                summaryUnwrapper               = new Unwrapper<>(SummaryWrapper.class);
-    private final Unwrapper<Permission, PermissionWrapper>          permissionUnwrapper            = new Unwrapper<>(PermissionWrapper.class);
-    private final Unwrapper<DisconnectResponse, DisconnectResponse> disconnectUnwrapper            = new Unwrapper<>(DisconnectResponse.class);
-    private final Unwrapper<MetasetType, MetasetTypeWrapper>        metasetTypeUnwrapper           = new Unwrapper<>(MetasetTypeWrapper.class);
-    private final Unwrapper<IndexItem, IndexItemWrapper>            indexItemUnwrapper             = new Unwrapper<>(IndexItemWrapper.class);
-    private final Unwrapper<UrlMappingInfo, UrlMappingInfoWrapper>  urlMappingInfoWrapperUnwrapper = new Unwrapper<>(UrlMappingInfoWrapper.class);
+    private final Unwrapper<LinkResponse, LinkResponseWrapper>              linkResponseUnwrapper          = new Unwrapper<>(LinkResponseWrapper.class);
+    private final Unwrapper<Relation, RelationWrapper>                      relationUnwrapper              = new Unwrapper<>(RelationWrapper.class);
+    private final Unwrapper<RelationType, RelationTypeWrapper>              relationTypeUnwrapper          = new Unwrapper<>(RelationTypeWrapper.class);
+    private final Unwrapper<Summary, SummaryWrapper>                        summaryUnwrapper               = new Unwrapper<>(SummaryWrapper.class);
+    private final Unwrapper<Permission, PermissionWrapper>                  permissionUnwrapper            = new Unwrapper<>(PermissionWrapper.class);
+    private final Unwrapper<DisconnectResponse, DisconnectResponse>         disconnectUnwrapper            = new Unwrapper<>(DisconnectResponse.class);
+    private final Unwrapper<CinnamonConnection, CinnamonConnectionResponse> connectUnwrapper               = new Unwrapper<>(CinnamonConnectionResponse.class);
+    private final Unwrapper<MetasetType, MetasetTypeWrapper>                metasetTypeUnwrapper           = new Unwrapper<>(MetasetTypeWrapper.class);
+    private final Unwrapper<IndexItem, IndexItemWrapper>                    indexItemUnwrapper             = new Unwrapper<>(IndexItemWrapper.class);
+    private final Unwrapper<UrlMappingInfo, UrlMappingInfoWrapper>          urlMappingInfoWrapperUnwrapper = new Unwrapper<>(UrlMappingInfoWrapper.class);
 
     private boolean generateTicketIfNull = true;
 
@@ -198,6 +200,14 @@ public class CinnamonClient {
         return httpClient.execute(requestBuilder.build(), StandardResponse::new);
     }
 
+    protected StandardResponse sendConnectionRequest(Object request) throws IOException {
+        String requestStr = mapper.writeValueAsString(request);
+        ClassicRequestBuilder requestBuilder = ClassicRequestBuilder.create("POST")
+                .setUri((String.format("%s://%s:%s", protocol, host, port) + UrlMapping.CINNAMON__CONNECT.getPath()))
+                .setEntity(requestStr, APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
+        return httpClient.execute(requestBuilder.build(), StandardResponse::new);
+    }
+
     public static String responseToString(StandardResponse response) throws IOException {
         return new String(response.getEntity().getContent().readAllBytes());
     }
@@ -236,7 +246,7 @@ public class CinnamonClient {
     }
 
     public void deleteChangeTrigger(long versionId) throws IOException {
-        var request = new DeleteChangeTriggerRequest(versionId);
+        var request  = new DeleteChangeTriggerRequest(versionId);
         var response = sendStandardRequest(CHANGE_TRIGGER__DELETE, request);
         verifyResponseIsOkay(response);
     }
@@ -269,18 +279,9 @@ public class CinnamonClient {
 
     protected String getTicket(boolean newTicket) throws IOException {
         if ((ticket == null && generateTicketIfNull) || newTicket) {
-            String url = "http://localhost:" + port + UrlMapping.CINNAMON__CONNECT.getPath();
-            CinnamonConnection cinnamonConnection = httpClient.execute(ClassicRequestBuilder.post(url)
-                    .addParameter("user", username)
-                    .addParameter("password", password)
-                    .build(), response -> {
-                StandardResponse standardResponse = new StandardResponse(response);
-                log.debug("{}: {}", NEW_USER_HEADER_FLAG, standardResponse.getHeader(NEW_USER_HEADER_FLAG));
-                verifyResponseIsOkay(standardResponse);
-                String tokenRequestResult = new String(standardResponse.getEntity().getContent().readAllBytes());
-                return mapper.readValue(tokenRequestResult, CinnamonConnection.class);
-
-            });
+            var request            = new ConnectionRequest(username, password, null);
+            var response           = sendConnectionRequest(request);
+            var cinnamonConnection = connectUnwrapper.unwrap(response, 1).get(0);
             ticket = cinnamonConnection.getTicket();
         }
         return ticket;
@@ -848,12 +849,8 @@ public class CinnamonClient {
      */
     public String connect(String username, String password, String format) throws IOException {
         String responseFormat = Objects.requireNonNullElse(format, "xml");
-        String url            = "http://localhost:" + port + UrlMapping.CINNAMON__CONNECT.getPath();
-        var response = httpClient.execute(ClassicRequestBuilder.post(url)
-                .addParameter("user", username)
-                .addParameter("password", password)
-                .addParameter("format", responseFormat)
-                .build(), StandardResponse::new);
+        ConnectionRequest request = new ConnectionRequest(username,password,responseFormat);
+        StandardResponse response = sendConnectionRequest(request);
         verifyResponseIsOkay(response);
         return new String(response.getEntity().getContent().readAllBytes());
     }

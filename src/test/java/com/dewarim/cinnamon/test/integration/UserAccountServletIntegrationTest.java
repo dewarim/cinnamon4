@@ -13,7 +13,6 @@ import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.request.user.GetUserAccountRequest;
 import com.dewarim.cinnamon.model.request.user.SetPasswordRequest;
 import com.dewarim.cinnamon.test.TestObjectHolder;
-import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Test;
@@ -79,16 +78,12 @@ public class UserAccountServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void setUsersOwnPassword() throws IOException {
-        SetPasswordRequest setPasswordRequest = new SetPasswordRequest(2L, "testTest");
+        String newPassword = "testTest";
+        SetPasswordRequest setPasswordRequest = new SetPasswordRequest(2L, newPassword );
         StandardResponse response = sendStandardRequest(UrlMapping.USER__SET_PASSWORD, setPasswordRequest);
         assertResponseOkay(response);
-        String url = "http://localhost:" + cinnamonTestPort + UrlMapping.CINNAMON__CONNECT.getPath();
-
-        try (StandardResponse ticketResponse = httpClient.execute(ClassicRequestBuilder.post(url)
-                .addParameter("user", "doe")
-                .addParameter(PASSWORD_PARAMETER_NAME, "testTest").build(), StandardResponse::new)) {
-            assertResponseOkay(ticketResponse);
-        }
+        String rawResponse = client.connect("doe", newPassword, "xml");
+        assertNotNull(rawResponse);
 
         // cleanup:
         CinnamonServer.config.getSecurityConfig().setMinimumPasswordLength(4);
