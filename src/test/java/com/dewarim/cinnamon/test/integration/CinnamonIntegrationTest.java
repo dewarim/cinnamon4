@@ -14,7 +14,7 @@ import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.Folder;
 import com.dewarim.cinnamon.model.request.ConnectionRequest;
 import com.dewarim.cinnamon.model.request.search.SearchType;
-import com.dewarim.cinnamon.model.response.CinnamonConnectionResponse;
+import com.dewarim.cinnamon.model.response.CinnamonConnectionWrapper;
 import com.dewarim.cinnamon.model.response.CinnamonError;
 import com.dewarim.cinnamon.model.response.CinnamonErrorWrapper;
 import com.dewarim.cinnamon.test.TestObjectHolder;
@@ -149,7 +149,7 @@ public class CinnamonIntegrationTest {
             if (response.getCode() != HttpStatus.SC_OK) {
                 throw new IllegalStateException("Failed to get admin ticket: response code is " + response.getCode());
             }
-            CinnamonConnectionResponse cinnamonConnection = XML_MAPPER.readValue(response.getEntity().getContent(), CinnamonConnectionResponse.class);
+            CinnamonConnectionWrapper cinnamonConnection = XML_MAPPER.readValue(response.getEntity().getContent(), CinnamonConnectionWrapper.class);
             return cinnamonConnection.list().get(0).getTicket();
         }
     }
@@ -168,7 +168,7 @@ public class CinnamonIntegrationTest {
             try (StandardResponse response = httpClient.execute(ClassicRequestBuilder.post(url)
                     .setEntity(mapper.writeValueAsString(request))
                     .build(), StandardResponse::new)) {
-                CinnamonConnectionResponse cinnamonConnection = XML_MAPPER.readValue(response.getEntity().getContent(), CinnamonConnectionResponse.class);
+                CinnamonConnectionWrapper cinnamonConnection = XML_MAPPER.readValue(response.getEntity().getContent(), CinnamonConnectionWrapper.class);
                 ticketForDoe = cinnamonConnection.list().get(0).getTicket();
             }
         }

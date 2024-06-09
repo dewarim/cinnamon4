@@ -385,7 +385,6 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         if (contentRequest == null) {
             throw ErrorCode.MISSING_REQUEST_PAYLOAD.exception();
         }
-
         CreateOsdRequest createRequest = xmlMapper.readValue(contentRequest.getInputStream(), CreateOsdRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 

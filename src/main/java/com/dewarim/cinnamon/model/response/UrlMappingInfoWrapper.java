@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class UrlMappingInfoWrapper implements Wrapper<UrlMappingInfo>, ApiResponse {
+public class UrlMappingInfoWrapper extends BaseResponse implements Wrapper<UrlMappingInfo>, ApiResponse {
 
     @JacksonXmlElementWrapper(localName = "urlMappings")
     @JacksonXmlProperty(localName = "urlMapping")

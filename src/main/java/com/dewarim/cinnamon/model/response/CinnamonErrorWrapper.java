@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class CinnamonErrorWrapper implements Wrapper<CinnamonError>, ApiResponse {
+public class CinnamonErrorWrapper extends BaseResponse implements Wrapper<CinnamonError>, ApiResponse {
 
     @JacksonXmlElementWrapper(localName = "errors")
     @JacksonXmlProperty(localName = "error")

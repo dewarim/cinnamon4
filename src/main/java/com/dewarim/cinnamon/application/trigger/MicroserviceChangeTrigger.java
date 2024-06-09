@@ -7,6 +7,7 @@ import com.dewarim.cinnamon.application.exception.CinnamonException;
 import com.dewarim.cinnamon.application.service.index.ParamParser;
 import com.dewarim.cinnamon.configuration.ChangeTriggerConfig;
 import com.dewarim.cinnamon.model.ChangeTrigger;
+import com.dewarim.cinnamon.model.response.ChangeTriggerResponse;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.config.ConnectionConfig;
 import org.apache.hc.client5.http.config.RequestConfig;
@@ -90,7 +91,7 @@ public class MicroserviceChangeTrigger implements Trigger {
 
     @Override
     public TriggerResult executePreCommand(ChangeTrigger changeTrigger, CinnamonRequest cinnamonRequest, CinnamonResponse cinnamonResponse) {
-        if(httpClient == null){
+        if (httpClient == null) {
             throw new CinnamonException("MicroserviceChangeTrigger has not been initialized yet. You must call configure method before using it");
         }
         log.debug("preCommand of MicroserviceChangeTrigger");
@@ -176,12 +177,12 @@ public class MicroserviceChangeTrigger implements Trigger {
 
     private TriggerResult executeRequest(CinnamonResponse cinnamonResponse, String url, ClassicRequestBuilder requestBuilder) throws IOException {
         return httpClient.execute(requestBuilder.build(), response -> {
+            addChangeTriggerResponseToCinnamonResponse(response, cinnamonResponse, url);
             if (response.getCode() != HttpStatus.SC_OK) {
                 log.warn("response from microservice call " + url + " was not OK but " + response.getCode());
                 return TriggerResult.STOP;
             }
             else {
-                addResponseHeader(response, cinnamonResponse, url);
                 return TriggerResult.CONTINUE;
             }
         });
@@ -190,7 +191,8 @@ public class MicroserviceChangeTrigger implements Trigger {
     private void cleanupHeaders(ClassicRequestBuilder requestBuilder) {
         requestBuilder.removeHeaders(HttpHeaders.CONTENT_LENGTH);
         requestBuilder.removeHeaders(HttpHeaders.HOST);
-        // MUST NOT leak the client's session to a remote service!
+        // MUST NOT leak the client's session to a remote service! - superseded by: client needs session ticket
+        // TODO: make removal of ticket header configurable #minor
 //        requestBuilder.removeHeaders("ticket");
 
     }
@@ -201,17 +203,21 @@ public class MicroserviceChangeTrigger implements Trigger {
         return remoteServerNode.getText();
     }
 
-    void addResponseHeader(ClassicHttpResponse remoteResponse, CinnamonResponse cinnamonResponse, String url) throws IOException {
-        cinnamonResponse.addHeader("microservice-url", url);
+    void addChangeTriggerResponseToCinnamonResponse(ClassicHttpResponse remoteResponse, CinnamonResponse cinnamonResponse, String url) throws IOException {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         remoteResponse.getEntity().writeTo(os);
         String remoteContent = os.toString();
         log.debug("remoteResponse from  " + url + " is:\n" + remoteContent);
+
         if (remoteContent.length() > 0) {
-            cinnamonResponse.addHeader("microservice-response", remoteContent);
+            cinnamonResponse.getChangeTriggerResponses().add(
+                    new ChangeTriggerResponse(url, remoteContent, remoteResponse.getCode())
+            );
         }
         else {
-            cinnamonResponse.addHeader("microservice-response", "<no-content/>");
+            cinnamonResponse.getChangeTriggerResponses().add(
+                    new ChangeTriggerResponse(url, "<no-content/>", remoteResponse.getCode())
+            );
         }
     }
 }

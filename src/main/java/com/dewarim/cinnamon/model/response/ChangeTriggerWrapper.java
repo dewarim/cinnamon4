@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class ChangeTriggerWrapper implements Wrapper<ChangeTrigger>, ApiResponse {
+public class ChangeTriggerWrapper extends BaseResponse implements Wrapper<ChangeTrigger>, ApiResponse {
 
     @JacksonXmlElementWrapper(localName = "changeTriggers")
     @JacksonXmlProperty(localName = "changeTrigger")

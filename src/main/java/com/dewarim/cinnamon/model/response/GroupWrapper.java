@@ -11,7 +11,7 @@ import java.util.List;
 
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class GroupWrapper implements Wrapper<Group>, ApiResponse {
+public class GroupWrapper extends BaseResponse implements Wrapper<Group>, ApiResponse {
 
     @JacksonXmlElementWrapper(localName = "groups")
     @JacksonXmlProperty(localName = "group")

@@ -13,7 +13,7 @@ import java.util.List;
 import static com.dewarim.cinnamon.api.Constants.FOLDER_EXAMPLE;
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class FolderWrapper implements Wrapper<Folder>, ApiResponse {
+public class FolderWrapper extends BaseResponse implements Wrapper<Folder>, ApiResponse {
 
     @JacksonXmlElementWrapper(localName = "folders")
     @JacksonXmlProperty(localName = "folder")

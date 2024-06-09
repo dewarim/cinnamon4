@@ -1,12 +1,13 @@
 package com.dewarim.cinnamon.model.response.index;
 
 import com.dewarim.cinnamon.api.ApiResponse;
+import com.dewarim.cinnamon.model.response.BaseResponse;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "reindexResponse")
-public class ReindexResponse implements ApiResponse {
+public class ReindexResponse extends BaseResponse implements ApiResponse {
 
     private int documentsToIndex;
     private int foldersToIndex;

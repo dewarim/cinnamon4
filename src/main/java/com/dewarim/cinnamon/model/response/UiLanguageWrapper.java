@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class UiLanguageWrapper implements Wrapper<UiLanguage>, ApiResponse {
+public class UiLanguageWrapper extends BaseResponse implements Wrapper<UiLanguage>, ApiResponse {
 
     @JacksonXmlElementWrapper(localName = "uiLanguages")
     @JacksonXmlProperty(localName = "uiLanguage")

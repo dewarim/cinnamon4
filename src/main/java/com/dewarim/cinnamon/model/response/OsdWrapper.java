@@ -14,7 +14,7 @@ import java.util.List;
 import static com.dewarim.cinnamon.api.Constants.OSD_EXAMPLE;
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class OsdWrapper implements Wrapper<ObjectSystemData>, ApiResponse {
+public class OsdWrapper extends BaseResponse implements Wrapper<ObjectSystemData>, ApiResponse {
 
     @JacksonXmlElementWrapper(localName = "osds")
     @JacksonXmlProperty(localName = "osd")

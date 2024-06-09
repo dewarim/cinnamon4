@@ -8,4 +8,5 @@ public interface ApiResponse {
     default List<Object> examples(){
         return Collections.singletonList(this);
     }
+
 }

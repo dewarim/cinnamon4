@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class FormatWrapper implements Wrapper<Format>, ApiResponse {
+public class FormatWrapper extends BaseResponse implements Wrapper<Format>, ApiResponse {
 
     @JacksonXmlElementWrapper(localName = "formats")
     @JacksonXmlProperty(localName = "format")

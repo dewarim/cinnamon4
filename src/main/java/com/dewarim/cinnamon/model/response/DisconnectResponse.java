@@ -7,7 +7,7 @@ import java.util.Collections;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class DisconnectResponse implements Wrapper<DisconnectResponse>, ApiResponse {
+public class DisconnectResponse extends BaseResponse implements Wrapper<DisconnectResponse>, ApiResponse {
 
     boolean disconnectSuccessful;
 

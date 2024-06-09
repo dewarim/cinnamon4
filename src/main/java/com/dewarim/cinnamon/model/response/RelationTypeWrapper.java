@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class RelationTypeWrapper implements Wrapper<RelationType>, ApiResponse {
+public class RelationTypeWrapper extends BaseResponse implements Wrapper<RelationType>, ApiResponse {
 
     @JacksonXmlElementWrapper(localName = "relationTypes")
     @JacksonXmlProperty(localName = "relationType")

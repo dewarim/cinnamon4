@@ -15,7 +15,7 @@ import com.dewarim.cinnamon.model.Session;
 import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.request.ConnectionRequest;
 import com.dewarim.cinnamon.model.response.CinnamonConnection;
-import com.dewarim.cinnamon.model.response.CinnamonConnectionResponse;
+import com.dewarim.cinnamon.model.response.CinnamonConnectionWrapper;
 import com.dewarim.cinnamon.model.response.DisconnectResponse;
 import com.dewarim.cinnamon.security.LoginProviderService;
 import com.fasterxml.jackson.annotation.JsonRootName;
@@ -148,7 +148,7 @@ public class CinnamonServlet extends HttpServlet {
             }
             response.addHeader(NEW_USER_HEADER_FLAG, String.valueOf(user.isNewUser()));
 
-            var cinnamonConnectionResponse = new CinnamonConnectionResponse(new CinnamonConnection(session.getTicket()));
+            var cinnamonConnectionResponse = new CinnamonConnectionWrapper(new CinnamonConnection(session.getTicket()));
             response.setWrapper(cinnamonConnectionResponse);
         }
         else {

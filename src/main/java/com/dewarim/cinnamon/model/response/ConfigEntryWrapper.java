@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class ConfigEntryWrapper implements ApiResponse, Wrapper<ConfigEntry> {
+public class ConfigEntryWrapper extends BaseResponse implements ApiResponse, Wrapper<ConfigEntry> {
 
     @JacksonXmlElementWrapper(localName = "configEntries")
     @JacksonXmlProperty(localName = "configEntry")

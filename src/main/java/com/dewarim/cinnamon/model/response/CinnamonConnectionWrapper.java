@@ -7,15 +7,15 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class CinnamonConnectionResponse implements Wrapper<CinnamonConnection>, ApiResponse {
+public class CinnamonConnectionWrapper extends BaseResponse implements Wrapper<CinnamonConnection>, ApiResponse {
 
     @JsonProperty("cinnamonConnection")
     private CinnamonConnection cinnamonConnection;
 
-    public CinnamonConnectionResponse() {
+    public CinnamonConnectionWrapper() {
     }
 
-    public CinnamonConnectionResponse(CinnamonConnection cinnamonConnection) {
+    public CinnamonConnectionWrapper(CinnamonConnection cinnamonConnection) {
         this.cinnamonConnection = cinnamonConnection;
     }
 
@@ -32,7 +32,7 @@ public class CinnamonConnectionResponse implements Wrapper<CinnamonConnection>, 
 
     @Override
     public List<Object> examples() {
-        return List.of(new CinnamonConnectionResponse(new CinnamonConnection("64772ea0-0184-4f94-96d4-6348d88e9e82")));
+        return List.of(new CinnamonConnectionWrapper(new CinnamonConnection("64772ea0-0184-4f94-96d4-6348d88e9e82")));
     }
 
     @Override

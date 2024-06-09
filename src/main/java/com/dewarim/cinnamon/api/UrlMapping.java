@@ -114,7 +114,7 @@ public enum UrlMapping {
                         
             The ticket is a session id that must be sent with all other requests to the server,
             in the request header field "ticket".
-            """, ConnectionRequest.class, CinnamonConnectionResponse.class),
+            """, ConnectionRequest.class, CinnamonConnectionWrapper.class),
     CINNAMON__DISCONNECT("cinnamon", "disconnect", "", """
             Disconnect from the cinnamon server by invalidating the session ticket.
             """, null, null),

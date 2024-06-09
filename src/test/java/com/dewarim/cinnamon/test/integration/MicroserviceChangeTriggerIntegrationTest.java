@@ -1,15 +1,18 @@
 package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.application.CinnamonServer;
+import com.dewarim.cinnamon.client.CinnamonClient;
 import com.dewarim.cinnamon.configuration.ChangeTriggerConfig;
 import com.dewarim.cinnamon.model.ChangeTrigger;
 import com.dewarim.cinnamon.model.Format;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.request.osd.CreateNewVersionRequest;
+import com.dewarim.cinnamon.model.response.ChangeTriggerResponse;
 import com.dewarim.cinnamon.test.TestObjectHolder;
 import org.apache.hc.core5.http.ssl.TLS;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockserver.client.MockServerClient;
@@ -19,14 +22,24 @@ import org.mockserver.matchers.Times;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.stream.Stream;
 
 import static com.dewarim.cinnamon.model.ChangeTriggerType.MICROSERVICE;
+import static org.apache.hc.core5.http.HttpStatus.SC_OK;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockserver.model.HttpRequest.request;
 import static org.mockserver.model.HttpResponse.response;
 
+/**
+ * TODO: create test script that runs against standalone Cinnamon server for index/search/changeTrigger tests.
+ * Note: this test is broken. The manual changeTriggerResponseTest will work and actually call the MCT
+ * and generate the expected changeTriggerResponses.
+ * <br>
+ * But due to DB session magic when running this in the same thread as the DB session, this will not actually create
+ * the change triggers, rendering the test useless.
+ */
 @ExtendWith(MockServerExtension.class)
 @MockServerSettings(ports = {MicroserviceChangeTriggerIntegrationTest.MOCK_PORT})
 public class MicroserviceChangeTriggerIntegrationTest extends CinnamonIntegrationTest {
@@ -86,6 +99,33 @@ public class MicroserviceChangeTriggerIntegrationTest extends CinnamonIntegratio
         TestObjectHolder toh = new TestObjectHolder(client, userId);
         ObjectSystemData osd = toh.createOsd().osd;
         assertNull(osd.getContentSize());
+    }
+
+    @Test
+    @Disabled("you need to insert ChangeTrigger for changeTriggerResponseTest in CreateTestDB")
+    public void changeTriggerResponseTest() throws IOException {
+        mockClient.when(
+                        request()
+                                .withMethod("POST")
+                                .withPath("/echo"),
+                        Times.exactly(2)
+                )
+                .respond(
+                        response()
+                                .withStatusCode(200)
+                                .withBody("Hello Test")
+                );
+
+        TestObjectHolder toh = new TestObjectHolder(client, userId);
+        ObjectSystemData osd = toh.createOsd().osd;
+        assertNull(osd.getContentSize());
+
+        List<ChangeTriggerResponse> changeTriggerResponses = CinnamonClient.changeTriggerResponseLocal.get();
+        assertEquals(2, changeTriggerResponses.size());
+        ChangeTriggerResponse changeTriggerResponse = changeTriggerResponses.get(0);
+        assertEquals("Hello Test", changeTriggerResponse.getResponse());
+        assertEquals(SC_OK, changeTriggerResponse.getHttpCode());
+        assertEquals("http://localhost:" + MOCK_PORT + "/echo", changeTriggerResponse.getUrl());
     }
 
     // bug reported by Boris: after versioning, document file length is 0

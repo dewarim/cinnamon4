@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class MetaWrapper implements Wrapper<Meta>, ApiResponse {
+public class MetaWrapper extends BaseResponse implements Wrapper<Meta>, ApiResponse {
 
     @JacksonXmlElementWrapper(localName = "metasets")
     @JacksonXmlProperty(localName = "metaset")

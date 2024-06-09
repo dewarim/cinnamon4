@@ -1,6 +1,7 @@
 package com.dewarim.cinnamon.client;
 
 import com.dewarim.cinnamon.ErrorCode;
+import com.dewarim.cinnamon.model.response.BaseResponse;
 import com.dewarim.cinnamon.model.response.Wrapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import org.apache.logging.log4j.LogManager;
@@ -12,6 +13,7 @@ import java.util.List;
 
 import static com.dewarim.cinnamon.api.Constants.EXPECTED_SIZE_ANY;
 import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
+import static com.dewarim.cinnamon.client.CinnamonClient.changeTriggerResponseLocal;
 
 public class Unwrapper<T, W extends Wrapper<T>> {
 
@@ -35,7 +37,7 @@ public class Unwrapper<T, W extends Wrapper<T>> {
                 throw new CinnamonClientException(message);
             }
         }
-        if(list == null){
+        if (list == null) {
             return new ArrayList<>();
         }
         return list;
@@ -45,7 +47,11 @@ public class Unwrapper<T, W extends Wrapper<T>> {
         try (response) {
             CinnamonClient.checkResponseForErrors(response, mapper);
             String  content = new String(response.getEntity().getContent().readAllBytes());
-            List<T> items   = mapper.readValue(content, clazz).list();
+            W       wrapper = mapper.readValue(content, clazz);
+            if(wrapper instanceof BaseResponse) {
+                changeTriggerResponseLocal.get().addAll(((BaseResponse) wrapper).getChangeTriggerResponses());
+            }
+            List<T> items   = wrapper.list();
             return checkList(items, expectedSize);
         }
     }

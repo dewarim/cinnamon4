@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class PermissionWrapper implements Wrapper<Permission>, ApiResponse {
+public class PermissionWrapper extends BaseResponse implements Wrapper<Permission>, ApiResponse {
 
     @JacksonXmlElementWrapper(localName = "permissions")
     @JacksonXmlProperty(localName = "permission")

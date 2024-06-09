@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class LifecycleStateWrapper implements Wrapper<LifecycleState>, ApiResponse {
+public class LifecycleStateWrapper extends BaseResponse implements Wrapper<LifecycleState>, ApiResponse {
 
     @JacksonXmlElementWrapper(localName = "lifecycleStates")
     @JacksonXmlProperty(localName = "lifecycleState")

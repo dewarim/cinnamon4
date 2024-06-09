@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class MetasetTypeWrapper implements Wrapper<MetasetType>, ApiResponse {
+public class MetasetTypeWrapper extends BaseResponse implements Wrapper<MetasetType>, ApiResponse {
 
     @JacksonXmlElementWrapper(localName = "metasetTypes")
     @JacksonXmlProperty(localName = "metasetType")

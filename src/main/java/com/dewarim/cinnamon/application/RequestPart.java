@@ -19,6 +19,7 @@ public class RequestPart implements Part {
 
     @Override
     public InputStream getInputStream() throws IOException {
+        bytePart.reset();
         return bytePart;
     }
 

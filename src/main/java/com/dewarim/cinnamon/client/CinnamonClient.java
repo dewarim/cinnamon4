@@ -91,10 +91,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.dewarim.cinnamon.api.Constants.*;
@@ -115,6 +112,13 @@ public class CinnamonClient {
     private       String     ticket;
     private final XmlMapper  mapper     = XML_MAPPER;
     private final HttpClient httpClient = HttpClients.createDefault();
+
+    public static final ThreadLocal<List<ChangeTriggerResponse>> changeTriggerResponseLocal = new ThreadLocal<>() {
+        @Override
+        protected List<ChangeTriggerResponse> initialValue() {
+            return new ArrayList<>();
+        }
+    };
 
     private final Unwrapper<ChangeTrigger, ChangeTriggerWrapper>            changeTriggerUnwrapper         = new Unwrapper<>(ChangeTriggerWrapper.class);
     private final Unwrapper<ConfigEntry, ConfigEntryWrapper>                configEntryUnwrapper           = new Unwrapper<>(ConfigEntryWrapper.class);
@@ -141,9 +145,9 @@ public class CinnamonClient {
     private final Unwrapper<RelationType, RelationTypeWrapper>              relationTypeUnwrapper          = new Unwrapper<>(RelationTypeWrapper.class);
     private final Unwrapper<Summary, SummaryWrapper>                        summaryUnwrapper               = new Unwrapper<>(SummaryWrapper.class);
     private final Unwrapper<Permission, PermissionWrapper>                  permissionUnwrapper            = new Unwrapper<>(PermissionWrapper.class);
-    private final Unwrapper<DisconnectResponse, DisconnectResponse>         disconnectUnwrapper            = new Unwrapper<>(DisconnectResponse.class);
-    private final Unwrapper<CinnamonConnection, CinnamonConnectionResponse> connectUnwrapper               = new Unwrapper<>(CinnamonConnectionResponse.class);
-    private final Unwrapper<MetasetType, MetasetTypeWrapper>                metasetTypeUnwrapper           = new Unwrapper<>(MetasetTypeWrapper.class);
+    private final Unwrapper<DisconnectResponse, DisconnectResponse>        disconnectUnwrapper  = new Unwrapper<>(DisconnectResponse.class);
+    private final Unwrapper<CinnamonConnection, CinnamonConnectionWrapper> connectUnwrapper     = new Unwrapper<>(CinnamonConnectionWrapper.class);
+    private final Unwrapper<MetasetType, MetasetTypeWrapper>               metasetTypeUnwrapper = new Unwrapper<>(MetasetTypeWrapper.class);
     private final Unwrapper<IndexItem, IndexItemWrapper>                    indexItemUnwrapper             = new Unwrapper<>(IndexItemWrapper.class);
     private final Unwrapper<UrlMappingInfo, UrlMappingInfoWrapper>          urlMappingInfoWrapperUnwrapper = new Unwrapper<>(UrlMappingInfoWrapper.class);
 
@@ -1345,6 +1349,7 @@ public class CinnamonClient {
         if (response.containsHeader(HEADER_FIELD_CINNAMON_ERROR)) {
             CinnamonErrorWrapper wrapper = mapper.readValue(response.getEntity().getContent(), CinnamonErrorWrapper.class);
             log.warn("Found errors: " + wrapper.getErrors().stream().map(CinnamonError::toString).collect(Collectors.joining(",")));
+            CinnamonClient.changeTriggerResponseLocal.get().addAll(wrapper.getChangeTriggerResponses());
             throw new CinnamonClientException(wrapper);
         }
         if (response.getCode() != SC_OK) {

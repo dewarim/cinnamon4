@@ -1,19 +1,7 @@
 package com.dewarim.cinnamon.model.response;
 
 import com.dewarim.cinnamon.api.ApiResponse;
-import com.dewarim.cinnamon.model.Acl;
-import com.dewarim.cinnamon.model.FolderType;
-import com.dewarim.cinnamon.model.Format;
-import com.dewarim.cinnamon.model.Group;
-import com.dewarim.cinnamon.model.IndexItem;
-import com.dewarim.cinnamon.model.Language;
-import com.dewarim.cinnamon.model.Lifecycle;
-import com.dewarim.cinnamon.model.MetasetType;
-import com.dewarim.cinnamon.model.ObjectType;
-import com.dewarim.cinnamon.model.Permission;
-import com.dewarim.cinnamon.model.ProviderClass;
-import com.dewarim.cinnamon.model.UiLanguage;
-import com.dewarim.cinnamon.model.UserAccount;
+import com.dewarim.cinnamon.model.*;
 import com.dewarim.cinnamon.model.relations.RelationType;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
@@ -24,7 +12,7 @@ import java.util.Collections;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class ConfigWrapper implements ApiResponse, Wrapper<ConfigWrapper> {
+public class ConfigWrapper extends BaseResponse implements ApiResponse, Wrapper<ConfigWrapper> {
 
     @JacksonXmlElementWrapper(localName = "acls")
     @JacksonXmlProperty(localName = "acl")

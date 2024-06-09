@@ -32,21 +32,23 @@ Create a new ACL group. Note: permissions parameter is not yet implemented.
 ## Response
 
 ```xml
-<aclGroup>
-  <id>1</id>
-  <aclId>1</aclId>
-  <groupId>2</groupId>
-  <permissions/>
-</aclGroup>
-
-```
-```xml
-<aclGroup>
-  <id>2</id>
-  <aclId>1</aclId>
-  <groupId>3</groupId>
-  <permissions/>
-</aclGroup>
+<cinnamon>
+  <changeTriggerResponses/>
+  <aclGroups>
+    <aclGroup>
+      <id>1</id>
+      <aclId>1</aclId>
+      <groupId>2</groupId>
+      <permissions/>
+    </aclGroup>
+    <aclGroup>
+      <id>2</id>
+      <aclId>1</aclId>
+      <groupId>3</groupId>
+      <permissions/>
+    </aclGroup>
+  </aclGroups>
+</cinnamon>
 
 ```
 
@@ -75,6 +77,7 @@ Create a new ACL group. Note: permissions parameter is not yet implemented.
 ```xml
 <cinnamon>
   <success>false</success>
+  <changeTriggerResponses/>
 </cinnamon>
 
 ```
@@ -98,21 +101,23 @@ Create a new ACL group. Note: permissions parameter is not yet implemented.
 ## Response
 
 ```xml
-<aclGroup>
-  <id>1</id>
-  <aclId>1</aclId>
-  <groupId>2</groupId>
-  <permissions/>
-</aclGroup>
-
-```
-```xml
-<aclGroup>
-  <id>2</id>
-  <aclId>1</aclId>
-  <groupId>3</groupId>
-  <permissions/>
-</aclGroup>
+<cinnamon>
+  <changeTriggerResponses/>
+  <aclGroups>
+    <aclGroup>
+      <id>1</id>
+      <aclId>1</aclId>
+      <groupId>2</groupId>
+      <permissions/>
+    </aclGroup>
+    <aclGroup>
+      <id>2</id>
+      <aclId>1</aclId>
+      <groupId>3</groupId>
+      <permissions/>
+    </aclGroup>
+  </aclGroups>
+</cinnamon>
 
 ```
 
@@ -143,21 +148,23 @@ Create a new ACL group. Note: permissions parameter is not yet implemented.
 ## Response
 
 ```xml
-<aclGroup>
-  <id>1</id>
-  <aclId>1</aclId>
-  <groupId>2</groupId>
-  <permissions/>
-</aclGroup>
-
-```
-```xml
-<aclGroup>
-  <id>2</id>
-  <aclId>1</aclId>
-  <groupId>3</groupId>
-  <permissions/>
-</aclGroup>
+<cinnamon>
+  <changeTriggerResponses/>
+  <aclGroups>
+    <aclGroup>
+      <id>1</id>
+      <aclId>1</aclId>
+      <groupId>2</groupId>
+      <permissions/>
+    </aclGroup>
+    <aclGroup>
+      <id>2</id>
+      <aclId>1</aclId>
+      <groupId>3</groupId>
+      <permissions/>
+    </aclGroup>
+  </aclGroups>
+</cinnamon>
 
 ```
 
@@ -182,21 +189,23 @@ It does not otherwise change the AclGroup (as it only contains of a group and ac
 ## Response
 
 ```xml
-<aclGroup>
-  <id>1</id>
-  <aclId>1</aclId>
-  <groupId>2</groupId>
-  <permissions/>
-</aclGroup>
-
-```
-```xml
-<aclGroup>
-  <id>2</id>
-  <aclId>1</aclId>
-  <groupId>3</groupId>
-  <permissions/>
-</aclGroup>
+<cinnamon>
+  <changeTriggerResponses/>
+  <aclGroups>
+    <aclGroup>
+      <id>1</id>
+      <aclId>1</aclId>
+      <groupId>2</groupId>
+      <permissions/>
+    </aclGroup>
+    <aclGroup>
+      <id>2</id>
+      <aclId>1</aclId>
+      <groupId>3</groupId>
+      <permissions/>
+    </aclGroup>
+  </aclGroups>
+</cinnamon>
 
 ```
 
@@ -233,6 +242,7 @@ It does not otherwise change the AclGroup (as it only contains of a group and ac
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <acls>
     <acl>
       <id>1</id>
@@ -272,6 +282,7 @@ It does not otherwise change the AclGroup (as it only contains of a group and ac
 ```xml
 <cinnamon>
   <success>false</success>
+  <changeTriggerResponses/>
 </cinnamon>
 
 ```
@@ -296,6 +307,7 @@ It does not otherwise change the AclGroup (as it only contains of a group and ac
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <acls>
     <acl>
       <id>1</id>
@@ -330,6 +342,7 @@ It does not otherwise change the AclGroup (as it only contains of a group and ac
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <acls>
     <acl>
       <id>1</id>
@@ -369,6 +382,7 @@ It does not otherwise change the AclGroup (as it only contains of a group and ac
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <acls>
     <acl>
       <id>1</id>
@@ -418,6 +432,7 @@ It does not otherwise change the AclGroup (as it only contains of a group and ac
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <changeTriggers>
     <changeTrigger>
       <id>4</id>
@@ -462,6 +477,7 @@ It does not otherwise change the AclGroup (as it only contains of a group and ac
 ```xml
 <cinnamon>
   <success>false</success>
+  <changeTriggerResponses/>
 </cinnamon>
 
 ```
@@ -486,6 +502,7 @@ It does not otherwise change the AclGroup (as it only contains of a group and ac
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <changeTriggers>
     <changeTrigger>
       <id>4</id>
@@ -541,6 +558,7 @@ It does not otherwise change the AclGroup (as it only contains of a group and ac
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <changeTriggers>
     <changeTrigger>
       <id>4</id>
@@ -604,6 +622,7 @@ in the request header field "ticket".
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <cinnamonConnection>
     <ticket>64772ea0-0184-4f94-96d4-6348d88e9e82</ticket>
   </cinnamonConnection>
@@ -663,6 +682,7 @@ Create a new config entry
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <configEntries>
     <configEntry>
       <id>1</id>
@@ -697,6 +717,7 @@ Delete a list of config entries
 ```xml
 <cinnamon>
   <success>false</success>
+  <changeTriggerResponses/>
 </cinnamon>
 
 ```
@@ -731,6 +752,7 @@ Retrieve a config entries by names or ids
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <configEntries>
     <configEntry>
       <id>1</id>
@@ -763,6 +785,7 @@ List all config entries the current user is allowed to see (superuser: all, norm
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <configEntries>
     <configEntry>
       <id>1</id>
@@ -815,6 +838,7 @@ Update a list of config entries
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <configEntries>
     <configEntry>
       <id>1</id>
@@ -848,6 +872,7 @@ List of all objects the client may want to cache, for example users, object type
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <acls/>
   <folderTypes/>
   <formats/>
@@ -891,6 +916,7 @@ List URL Mappings
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <urlMappings>
     <urlMapping>
       <controller>test</controller>
@@ -943,6 +969,7 @@ Create a new folder type
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <folderTypes>
     <folderType>
       <id>1</id>
@@ -978,6 +1005,7 @@ Delete a folder type
 ```xml
 <cinnamon>
   <success>false</success>
+  <changeTriggerResponses/>
 </cinnamon>
 
 ```
@@ -1002,6 +1030,7 @@ List all folder types
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <folderTypes>
     <folderType>
       <id>1</id>
@@ -1037,6 +1066,7 @@ List all folder types
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <folderTypes>
     <folderType>
       <id>1</id>
@@ -1131,6 +1161,7 @@ Create a new folder.
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <metasets>
     <metaset>
       <id/>
@@ -1176,6 +1207,7 @@ Create a new folder.
 ```xml
 <cinnamon>
   <success>false</success>
+  <changeTriggerResponses/>
 </cinnamon>
 
 ```
@@ -1205,6 +1237,7 @@ Delete all metasets linked to the given Folder ids. Parameter ignoreNotFound is 
 ```xml
 <cinnamon>
   <success>false</success>
+  <changeTriggerResponses/>
 </cinnamon>
 
 ```
@@ -1244,6 +1277,7 @@ Delete the folder metasets with the given meta ids.
 ```xml
 <cinnamon>
   <success>false</success>
+  <changeTriggerResponses/>
 </cinnamon>
 
 ```
@@ -1276,6 +1310,7 @@ Fetch a single folder
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <folders>
     <folder>
       <id>2</id>
@@ -1319,6 +1354,7 @@ Fetch a single folder
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <folders>
     <folder>
       <id>2</id>
@@ -1358,6 +1394,7 @@ Fetch a single folder
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <folders>
     <folder>
       <id>2</id>
@@ -1406,6 +1443,7 @@ Fetch a single folder
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <metasets>
     <metaset>
       <id/>
@@ -1452,6 +1490,7 @@ Fetch a single folder
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <folders>
     <folder>
       <id>2</id>
@@ -1494,6 +1533,7 @@ Fetch a single folder
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <summaries>
     <summary>
       <id>5</id>
@@ -1534,6 +1574,7 @@ Add a summary to an object, for example a short description of this folder's con
 <genericResponse>
   <message/>
   <successful>true</successful>
+  <changeTriggerResponses/>
 </genericResponse>
 
 ```
@@ -1574,6 +1615,7 @@ Add a summary to an object, for example a short description of this folder's con
 <genericResponse>
   <message/>
   <successful>true</successful>
+  <changeTriggerResponses/>
 </genericResponse>
 
 ```
@@ -1607,6 +1649,7 @@ Update the content of a given folder metaset
 <genericResponse>
   <message/>
   <successful>true</successful>
+  <changeTriggerResponses/>
 </genericResponse>
 
 ```
@@ -1640,6 +1683,7 @@ Update the content of a given folder metaset
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <formats>
     <format>
       <id>50</id>
@@ -1678,6 +1722,7 @@ Update the content of a given folder metaset
 ```xml
 <cinnamon>
   <success>false</success>
+  <changeTriggerResponses/>
 </cinnamon>
 
 ```
@@ -1702,6 +1747,7 @@ Update the content of a given folder metaset
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <formats>
     <format>
       <id>50</id>
@@ -1745,6 +1791,7 @@ Update the content of a given folder metaset
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <formats>
     <format>
       <id>50</id>
@@ -1786,6 +1833,7 @@ Update the content of a given folder metaset
 <genericResponse>
   <message/>
   <successful>true</successful>
+  <changeTriggerResponses/>
 </genericResponse>
 
 ```
@@ -1826,6 +1874,7 @@ Update the content of a given folder metaset
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <groups>
     <group>
       <id>1</id>
@@ -1869,6 +1918,7 @@ Update the content of a given folder metaset
 ```xml
 <cinnamon>
   <success>false</success>
+  <changeTriggerResponses/>
 </cinnamon>
 
 ```
@@ -1893,6 +1943,7 @@ Update the content of a given folder metaset
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <groups>
     <group>
       <id>1</id>
@@ -1936,6 +1987,7 @@ Update the content of a given folder metaset
 <genericResponse>
   <message/>
   <successful>true</successful>
+  <changeTriggerResponses/>
 </genericResponse>
 
 ```
@@ -1966,6 +2018,7 @@ Update the content of a given folder metaset
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <groups>
     <group>
       <id>1</id>
@@ -2012,16 +2065,21 @@ Update the content of a given folder metaset
 ## Response
 
 ```xml
-<indexItem>
-  <id>43</id>
-  <name>Titles</name>
-  <fieldName>title</fieldName>
-  <searchString>//title/text()</searchString>
-  <searchCondition>true()</searchCondition>
-  <multipleResults>true</multipleResults>
-  <indexType>DEFAULT_INDEXER</indexType>
-  <storeField>false</storeField>
-</indexItem>
+<cinnamon>
+  <changeTriggerResponses/>
+  <indexItems>
+    <indexItem>
+      <id>43</id>
+      <name>Titles</name>
+      <fieldName>title</fieldName>
+      <searchString>//title/text()</searchString>
+      <searchCondition>true()</searchCondition>
+      <multipleResults>true</multipleResults>
+      <indexType>DEFAULT_INDEXER</indexType>
+      <storeField>false</storeField>
+    </indexItem>
+  </indexItems>
+</cinnamon>
 
 ```
 
@@ -2050,6 +2108,7 @@ Update the content of a given folder metaset
 <genericResponse>
   <message/>
   <successful>true</successful>
+  <changeTriggerResponses/>
 </genericResponse>
 
 ```
@@ -2073,16 +2132,21 @@ Update the content of a given folder metaset
 ## Response
 
 ```xml
-<indexItem>
-  <id>43</id>
-  <name>Titles</name>
-  <fieldName>title</fieldName>
-  <searchString>//title/text()</searchString>
-  <searchCondition>true()</searchCondition>
-  <multipleResults>true</multipleResults>
-  <indexType>DEFAULT_INDEXER</indexType>
-  <storeField>false</storeField>
-</indexItem>
+<cinnamon>
+  <changeTriggerResponses/>
+  <indexItems>
+    <indexItem>
+      <id>43</id>
+      <name>Titles</name>
+      <fieldName>title</fieldName>
+      <searchString>//title/text()</searchString>
+      <searchCondition>true()</searchCondition>
+      <multipleResults>true</multipleResults>
+      <indexType>DEFAULT_INDEXER</indexType>
+      <storeField>false</storeField>
+    </indexItem>
+  </indexItems>
+</cinnamon>
 
 ```
 
@@ -2116,16 +2180,21 @@ Update the content of a given folder metaset
 ## Response
 
 ```xml
-<indexItem>
-  <id>43</id>
-  <name>Titles</name>
-  <fieldName>title</fieldName>
-  <searchString>//title/text()</searchString>
-  <searchCondition>true()</searchCondition>
-  <multipleResults>true</multipleResults>
-  <indexType>DEFAULT_INDEXER</indexType>
-  <storeField>false</storeField>
-</indexItem>
+<cinnamon>
+  <changeTriggerResponses/>
+  <indexItems>
+    <indexItem>
+      <id>43</id>
+      <name>Titles</name>
+      <fieldName>title</fieldName>
+      <searchString>//title/text()</searchString>
+      <searchCondition>true()</searchCondition>
+      <multipleResults>true</multipleResults>
+      <indexType>DEFAULT_INDEXER</indexType>
+      <storeField>false</storeField>
+    </indexItem>
+  </indexItems>
+</cinnamon>
 
 ```
 
@@ -2164,6 +2233,7 @@ Provides information on the status of the Lucene search index
     </failedIndexJobs>
   </failedIndexJobs>
   <jobCount>41</jobCount>
+  <changeTriggerResponses/>
 </indexInfoResponse>
 
 ```
@@ -2206,6 +2276,7 @@ Rebuild the Lucene search index in parts or completely. When reindexing large nu
 <reindexResponse>
   <documentsToIndex>1000</documentsToIndex>
   <foldersToIndex>123</foldersToIndex>
+  <changeTriggerResponses/>
 </reindexResponse>
 
 ```
@@ -2243,6 +2314,7 @@ Rebuild the Lucene search index in parts or completely. When reindexing large nu
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <languages>
     <language>
       <id>54</id>
@@ -2277,6 +2349,7 @@ Rebuild the Lucene search index in parts or completely. When reindexing large nu
 ```xml
 <cinnamon>
   <success>false</success>
+  <changeTriggerResponses/>
 </cinnamon>
 
 ```
@@ -2301,6 +2374,7 @@ Rebuild the Lucene search index in parts or completely. When reindexing large nu
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <languages>
     <language>
       <id>54</id>
@@ -2336,6 +2410,7 @@ Rebuild the Lucene search index in parts or completely. When reindexing large nu
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <languages>
     <language>
       <id>54</id>
@@ -2371,6 +2446,7 @@ Only superusers may use forceChange parameter to attach any state without verifi
 <genericResponse>
   <message/>
   <successful>true</successful>
+  <changeTriggerResponses/>
 </genericResponse>
 
 ```
@@ -2398,6 +2474,7 @@ Only superusers may use forceChange parameter to attach any state without verifi
 <genericResponse>
   <message/>
   <successful>true</successful>
+  <changeTriggerResponses/>
 </genericResponse>
 
 ```
@@ -2439,6 +2516,7 @@ Only superusers may use forceChange parameter to attach any state without verifi
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <lifecycleStates>
     <lifecycleState>
       <id>79</id>
@@ -2477,6 +2555,7 @@ Only superusers may use forceChange parameter to attach any state without verifi
 ```xml
 <cinnamon>
   <success>false</success>
+  <changeTriggerResponses/>
 </cinnamon>
 
 ```
@@ -2503,6 +2582,7 @@ Only superusers may use forceChange parameter to attach any state without verifi
 <genericResponse>
   <message/>
   <successful>true</successful>
+  <changeTriggerResponses/>
 </genericResponse>
 
 ```
@@ -2527,6 +2607,7 @@ Only superusers may use forceChange parameter to attach any state without verifi
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <lifecycleStates>
     <lifecycleState>
       <id>79</id>
@@ -2561,6 +2642,7 @@ Only superusers may use forceChange parameter to attach any state without verifi
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <lifecycleStates>
     <lifecycleState>
       <id>79</id>
@@ -2595,6 +2677,7 @@ Only superusers may use forceChange parameter to attach any state without verifi
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <lifecycleStates>
     <lifecycleState>
       <id>79</id>
@@ -2638,6 +2721,7 @@ Only superusers may use forceChange parameter to attach any state without verifi
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <lifecycleStates>
     <lifecycleState>
       <id>79</id>
@@ -2685,6 +2769,7 @@ Create lifecycles. Note: does not create lifecycle states, defaultStateId should
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <lifecycles>
     <lifecycle>
       <id/>
@@ -2746,6 +2831,7 @@ Delete lifecycles
 ```xml
 <cinnamon>
   <success>false</success>
+  <changeTriggerResponses/>
 </cinnamon>
 
 ```
@@ -2770,6 +2856,7 @@ List lifecycles
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <lifecycles>
     <lifecycle>
       <id/>
@@ -2834,6 +2921,7 @@ Update lifecycles. Note: does not update lifecycle states
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <lifecycles>
     <lifecycle>
       <id/>
@@ -2916,27 +3004,29 @@ Update lifecycles. Note: does not update lifecycle states
 ## Response
 
 ```xml
-<link>
-  <id>1</id>
-  <type>OBJECT</type>
-  <ownerId>2</ownerId>
-  <aclId>3</aclId>
-  <parentId>4</parentId>
-  <folderId/>
-  <objectId>123</objectId>
-</link>
-
-```
-```xml
-<link>
-  <id>1</id>
-  <type>FOLDER</type>
-  <ownerId>2</ownerId>
-  <aclId>3</aclId>
-  <parentId>4</parentId>
-  <folderId>321</folderId>
-  <objectId/>
-</link>
+<cinnamon>
+  <changeTriggerResponses/>
+  <links>
+    <link>
+      <id>1</id>
+      <type>OBJECT</type>
+      <ownerId>2</ownerId>
+      <aclId>3</aclId>
+      <parentId>4</parentId>
+      <folderId/>
+      <objectId>123</objectId>
+    </link>
+    <link>
+      <id>1</id>
+      <type>FOLDER</type>
+      <ownerId>2</ownerId>
+      <aclId>3</aclId>
+      <parentId>4</parentId>
+      <folderId>321</folderId>
+      <objectId/>
+    </link>
+  </links>
+</cinnamon>
 
 ```
 
@@ -2964,6 +3054,7 @@ Update lifecycles. Note: does not update lifecycle states
 ```xml
 <cinnamon>
   <success>false</success>
+  <changeTriggerResponses/>
 </cinnamon>
 
 ```
@@ -2991,6 +3082,7 @@ Update lifecycles. Note: does not update lifecycle states
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <links>
     <link>
       <id/>
@@ -3087,27 +3179,29 @@ Update lifecycles. Note: does not update lifecycle states
 ## Response
 
 ```xml
-<link>
-  <id>1</id>
-  <type>OBJECT</type>
-  <ownerId>2</ownerId>
-  <aclId>3</aclId>
-  <parentId>4</parentId>
-  <folderId/>
-  <objectId>123</objectId>
-</link>
-
-```
-```xml
-<link>
-  <id>1</id>
-  <type>FOLDER</type>
-  <ownerId>2</ownerId>
-  <aclId>3</aclId>
-  <parentId>4</parentId>
-  <folderId>321</folderId>
-  <objectId/>
-</link>
+<cinnamon>
+  <changeTriggerResponses/>
+  <links>
+    <link>
+      <id>1</id>
+      <type>OBJECT</type>
+      <ownerId>2</ownerId>
+      <aclId>3</aclId>
+      <parentId>4</parentId>
+      <folderId/>
+      <objectId>123</objectId>
+    </link>
+    <link>
+      <id>1</id>
+      <type>FOLDER</type>
+      <ownerId>2</ownerId>
+      <aclId>3</aclId>
+      <parentId>4</parentId>
+      <folderId>321</folderId>
+      <objectId/>
+    </link>
+  </links>
+</cinnamon>
 
 ```
 
@@ -3137,6 +3231,7 @@ Update lifecycles. Note: does not update lifecycle states
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <metasetTypes>
     <metasetType>
       <id>6</id>
@@ -3172,6 +3267,7 @@ Update lifecycles. Note: does not update lifecycle states
 ```xml
 <cinnamon>
   <success>false</success>
+  <changeTriggerResponses/>
 </cinnamon>
 
 ```
@@ -3196,6 +3292,7 @@ Update lifecycles. Note: does not update lifecycle states
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <metasetTypes>
     <metasetType>
       <id>6</id>
@@ -3233,6 +3330,7 @@ Update lifecycles. Note: does not update lifecycle states
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <metasetTypes>
     <metasetType>
       <id>6</id>
@@ -3278,6 +3376,7 @@ Update lifecycles. Note: does not update lifecycle states
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <objectTypes>
     <objectType>
       <id>8</id>
@@ -3313,6 +3412,7 @@ Update lifecycles. Note: does not update lifecycle states
 ```xml
 <cinnamon>
   <success>false</success>
+  <changeTriggerResponses/>
 </cinnamon>
 
 ```
@@ -3337,6 +3437,7 @@ Update lifecycles. Note: does not update lifecycle states
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <objectTypes>
     <objectType>
       <id>8</id>
@@ -3372,6 +3473,7 @@ Update lifecycles. Note: does not update lifecycle states
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <objectTypes>
     <objectType>
       <id>8</id>
@@ -3412,6 +3514,7 @@ Update lifecycles. Note: does not update lifecycle states
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <osds>
     <osd>
       <id>1</id>
@@ -3482,6 +3585,7 @@ Update lifecycles. Note: does not update lifecycle states
 <genericResponse>
   <message/>
   <successful>true</successful>
+  <changeTriggerResponses/>
 </genericResponse>
 
 ```
@@ -3526,6 +3630,7 @@ Update lifecycles. Note: does not update lifecycle states
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <metasets>
     <metaset>
       <id/>
@@ -3575,6 +3680,7 @@ should contain data.
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <osds>
     <osd>
       <id>1</id>
@@ -3639,6 +3745,7 @@ should contain data.
 ```xml
 <cinnamon>
   <success>false</success>
+  <changeTriggerResponses/>
 </cinnamon>
 
 ```
@@ -3669,6 +3776,7 @@ should contain data.
 ```xml
 <cinnamon>
   <success>false</success>
+  <changeTriggerResponses/>
 </cinnamon>
 
 ```
@@ -3708,6 +3816,7 @@ Delete the OSD metasets with the given meta ids.
 ```xml
 <cinnamon>
   <success>false</success>
+  <changeTriggerResponses/>
 </cinnamon>
 
 ```
@@ -3761,6 +3870,7 @@ Returns an OSD's content according to it's format's content type.
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <metasets>
     <metaset>
       <id/>
@@ -3803,6 +3913,7 @@ Returns an OSD's content according to it's format's content type.
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <osds>
     <osd>
       <id>1</id>
@@ -3867,6 +3978,7 @@ Returns an OSD's content according to it's format's content type.
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <osds>
     <osd>
       <id>1</id>
@@ -3929,13 +4041,18 @@ Returns an OSD's content according to it's format's content type.
 ## Response
 
 ```xml
-<relation>
-  <id>399</id>
-  <leftId>1</leftId>
-  <rightId>4</rightId>
-  <typeId>1</typeId>
-  <metadata>&lt;generatedBy>PDF Renderer&lt;/generatedBy</metadata>
-</relation>
+<cinnamon>
+  <changeTriggerResponses/>
+  <relations>
+    <relation>
+      <id>399</id>
+      <leftId>1</leftId>
+      <rightId>4</rightId>
+      <typeId>1</typeId>
+      <metadata>&lt;generatedBy>PDF Renderer&lt;/generatedBy</metadata>
+    </relation>
+  </relations>
+</cinnamon>
 
 ```
 
@@ -3963,6 +4080,7 @@ Returns an OSD's content according to it's format's content type.
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <summaries>
     <summary>
       <id>5</id>
@@ -3999,6 +4117,7 @@ Returns an OSD's content according to it's format's content type.
 <genericResponse>
   <message/>
   <successful>true</successful>
+  <changeTriggerResponses/>
 </genericResponse>
 
 ```
@@ -4027,6 +4146,7 @@ Set an OSD's content. Requires a multipart-mime request, with part "cinnamonRequ
 <genericResponse>
   <message/>
   <successful>true</successful>
+  <changeTriggerResponses/>
 </genericResponse>
 
 ```
@@ -4061,6 +4181,7 @@ Add a summary to an object, for example a short description of the content.
 <genericResponse>
   <message/>
   <successful>true</successful>
+  <changeTriggerResponses/>
 </genericResponse>
 
 ```
@@ -4087,6 +4208,7 @@ Add a summary to an object, for example a short description of the content.
 <genericResponse>
   <message/>
   <successful>true</successful>
+  <changeTriggerResponses/>
 </genericResponse>
 
 ```
@@ -4183,6 +4305,7 @@ Add a summary to an object, for example a short description of the content.
 <genericResponse>
   <message/>
   <successful>true</successful>
+  <changeTriggerResponses/>
 </genericResponse>
 
 ```
@@ -4216,6 +4339,7 @@ Update the content of a given OSD metaset
 <genericResponse>
   <message/>
   <successful>true</successful>
+  <changeTriggerResponses/>
 </genericResponse>
 
 ```
@@ -4257,6 +4381,7 @@ part "file", if the new version should contain data.
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <osds>
     <osd>
       <id>1</id>
@@ -4327,6 +4452,7 @@ part "file", if the new version should contain data.
 <genericResponse>
   <message/>
   <successful>true</successful>
+  <changeTriggerResponses/>
 </genericResponse>
 
 ```
@@ -4352,6 +4478,7 @@ part "file", if the new version should contain data.
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <permissions>
     <permission>
       <id>98</id>
@@ -4386,6 +4513,7 @@ part "file", if the new version should contain data.
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <permissions>
     <permission>
       <id>98</id>
@@ -4431,6 +4559,7 @@ part "file", if the new version should contain data.
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <relationTypes>
     <relationType>
       <id/>
@@ -4472,6 +4601,7 @@ part "file", if the new version should contain data.
 ```xml
 <cinnamon>
   <success>false</success>
+  <changeTriggerResponses/>
 </cinnamon>
 
 ```
@@ -4496,6 +4626,7 @@ part "file", if the new version should contain data.
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <relationTypes>
     <relationType>
       <id/>
@@ -4543,6 +4674,7 @@ part "file", if the new version should contain data.
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <relationTypes>
     <relationType>
       <id/>
@@ -4600,13 +4732,18 @@ part "file", if the new version should contain data.
 ## Response
 
 ```xml
-<relation>
-  <id>399</id>
-  <leftId>1</leftId>
-  <rightId>4</rightId>
-  <typeId>1</typeId>
-  <metadata>&lt;generatedBy>PDF Renderer&lt;/generatedBy</metadata>
-</relation>
+<cinnamon>
+  <changeTriggerResponses/>
+  <relations>
+    <relation>
+      <id>399</id>
+      <leftId>1</leftId>
+      <rightId>4</rightId>
+      <typeId>1</typeId>
+      <metadata>&lt;generatedBy>PDF Renderer&lt;/generatedBy</metadata>
+    </relation>
+  </relations>
+</cinnamon>
 
 ```
 
@@ -4635,6 +4772,7 @@ part "file", if the new version should contain data.
 <genericResponse>
   <message/>
   <successful>true</successful>
+  <changeTriggerResponses/>
 </genericResponse>
 
 ```
@@ -4672,13 +4810,18 @@ Search for relations matching all( with orMode=false) or some (with orMode=true)
 ## Response
 
 ```xml
-<relation>
-  <id>399</id>
-  <leftId>1</leftId>
-  <rightId>4</rightId>
-  <typeId>1</typeId>
-  <metadata>&lt;generatedBy>PDF Renderer&lt;/generatedBy</metadata>
-</relation>
+<cinnamon>
+  <changeTriggerResponses/>
+  <relations>
+    <relation>
+      <id>399</id>
+      <leftId>1</leftId>
+      <rightId>4</rightId>
+      <typeId>1</typeId>
+      <metadata>&lt;generatedBy>PDF Renderer&lt;/generatedBy</metadata>
+    </relation>
+  </relations>
+</cinnamon>
 
 ```
 
@@ -4765,6 +4908,7 @@ Field of objects contain the id, so acl field will index the acl.id.
 
 ```xml
 <searchIdsResponse>
+  <changeTriggerResponses/>
   <osdIds>
     <osdId>1</osdId>
     <osdId>32</osdId>
@@ -4835,6 +4979,7 @@ Returns status code 400
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <uiLanguages>
     <uiLanguage>
       <id>54</id>
@@ -4869,6 +5014,7 @@ Returns status code 400
 ```xml
 <cinnamon>
   <success>false</success>
+  <changeTriggerResponses/>
 </cinnamon>
 
 ```
@@ -4893,6 +5039,7 @@ Returns status code 400
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <uiLanguages>
     <uiLanguage>
       <id>54</id>
@@ -4932,6 +5079,7 @@ Returns status code 400
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <uiLanguages>
     <uiLanguage>
       <id>54</id>
@@ -4981,6 +5129,7 @@ Returns status code 400
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <users>
     <user>
       <id/>
@@ -5031,6 +5180,7 @@ Note: this is not optimized for users who own vast collections of objects or fol
 <genericResponse>
   <message/>
   <successful>true</successful>
+  <changeTriggerResponses/>
 </genericResponse>
 
 ```
@@ -5063,6 +5213,7 @@ Note: this is not optimized for users who own vast collections of objects or fol
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <users>
     <user>
       <id/>
@@ -5108,6 +5259,7 @@ Note: this is not optimized for users who own vast collections of objects or fol
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <users>
     <user>
       <id/>
@@ -5156,6 +5308,7 @@ Update a user's individual configuration
 <genericResponse>
   <message/>
   <successful>true</successful>
+  <changeTriggerResponses/>
 </genericResponse>
 
 ```
@@ -5183,6 +5336,7 @@ Update a user's individual configuration
 <genericResponse>
   <message/>
   <successful>true</successful>
+  <changeTriggerResponses/>
 </genericResponse>
 
 ```
@@ -5230,6 +5384,7 @@ Update a user's account. This also updates the user's groups,
 
 ```xml
 <cinnamon>
+  <changeTriggerResponses/>
   <users>
     <user>
       <id/>

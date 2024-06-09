@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class UserAccountWrapper implements Wrapper<UserAccount>, ApiResponse {
+public class UserAccountWrapper extends BaseResponse implements Wrapper<UserAccount>, ApiResponse {
 
 
     @JacksonXmlElementWrapper(localName = "users")

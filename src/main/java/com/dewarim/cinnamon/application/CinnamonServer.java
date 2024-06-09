@@ -60,7 +60,7 @@ public class CinnamonServer {
 
     private static final Logger log = LogManager.getLogger(CinnamonServer.class);
 
-    public static final String           VERSION       = "1.2.0";
+    public static final String           VERSION       = "1.3.0";
     private             Server           server;
     private             DbSessionFactory dbSessionFactory;
     private final       WebAppContext    webAppContext = new WebAppContext();
@@ -329,11 +329,11 @@ public class CinnamonServer {
                             String template = """
                                     # __endpoint__
                                     __description__
-                                                                        
+                                    
                                     ## Request
-                                                                        
+                                    
                                     __request__
-                                                                        
+                                    
                                     ## Response
 
                                     __response__

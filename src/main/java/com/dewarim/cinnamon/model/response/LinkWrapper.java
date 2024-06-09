@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class LinkWrapper implements Wrapper<Link>, ApiResponse {
+public class LinkWrapper extends BaseResponse implements Wrapper<Link>, ApiResponse {
 
     @JacksonXmlElementWrapper(localName = "links")
     @JacksonXmlProperty(localName = "link")
@@ -45,9 +45,11 @@ public class LinkWrapper implements Wrapper<Link>, ApiResponse {
 
     @Override
     public List<Object> examples() {
-        return List.of(
-                new Link(1L, LinkType.OBJECT, 2L, 3L, 4L, null, 123L),
-                new Link(1L, LinkType.FOLDER, 2L, 3L, 4L, 321L, null)
-        );
+        return List.of(new LinkWrapper(
+                List.of(
+                        new Link(1L, LinkType.OBJECT, 2L, 3L, 4L, null, 123L),
+                        new Link(1L, LinkType.FOLDER, 2L, 3L, 4L, 321L, null)
+                )
+        ));
     }
 }

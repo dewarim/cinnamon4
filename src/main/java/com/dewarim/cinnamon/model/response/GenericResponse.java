@@ -10,7 +10,7 @@ import java.util.List;
  * (Just using http status code 204 is a little ambiguous)
  */
 @JacksonXmlRootElement(localName = "genericResponse")
-public class GenericResponse implements ApiResponse {
+public class GenericResponse extends BaseResponse implements ApiResponse {
 
     private String  message;
     private boolean successful;

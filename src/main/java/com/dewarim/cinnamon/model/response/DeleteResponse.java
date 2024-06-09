@@ -8,7 +8,7 @@ import java.util.List;
 
 // not the most beautiful class, but using the Wrapper-interface is more consistent and allows late-rendering of responses.
 @JacksonXmlRootElement(localName = "cinnamon")
-public class DeleteResponse implements Wrapper<DeleteResponse>, ApiResponse {
+public class DeleteResponse extends BaseResponse implements Wrapper<DeleteResponse>, ApiResponse {
 
     private boolean success;
 

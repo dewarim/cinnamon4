@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class FolderTypeWrapper implements Wrapper<FolderType>, ApiResponse {
+public class FolderTypeWrapper extends BaseResponse implements Wrapper<FolderType>, ApiResponse {
 
     @JacksonXmlElementWrapper(localName = "folderTypes")
     @JacksonXmlProperty(localName = "folderType")

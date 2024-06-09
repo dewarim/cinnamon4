@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class RelationWrapper implements Wrapper<Relation>, ApiResponse {
+public class RelationWrapper extends BaseResponse implements Wrapper<Relation>, ApiResponse {
 
     @JacksonXmlElementWrapper(localName = "relations")
     @JacksonXmlProperty(localName = "relation")
@@ -47,6 +47,6 @@ public class RelationWrapper implements Wrapper<Relation>, ApiResponse {
     public List<Object> examples() {
         Relation relation = new Relation(1L, 4L, 1L, "<generatedBy>PDF Renderer</generatedBy");
         relation.setId(399L);
-        return List.of(relation);
+        return List.of(new RelationWrapper(List.of(relation)));
     }
 }

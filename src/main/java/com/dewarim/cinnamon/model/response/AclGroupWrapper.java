@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class AclGroupWrapper implements Wrapper<AclGroup>, ApiResponse {
+public class AclGroupWrapper extends BaseResponse implements Wrapper<AclGroup>, ApiResponse {
 
     @JacksonXmlElementWrapper(localName = "aclGroups")
     @JacksonXmlProperty(localName = "aclGroup")
@@ -45,6 +45,7 @@ public class AclGroupWrapper implements Wrapper<AclGroup>, ApiResponse {
 
     @Override
     public List<Object> examples() {
-        return List.of(new AclGroup(1L, 1L, 2L), new AclGroup(2L, 1L, 3L));
+        return List.of(
+                new AclGroupWrapper(List.of(new AclGroup(1L, 1L, 2L), new AclGroup(2L, 1L, 3L))));
     }
 }

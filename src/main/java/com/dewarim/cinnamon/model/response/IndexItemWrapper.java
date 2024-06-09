@@ -12,11 +12,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class IndexItemWrapper implements Wrapper<IndexItem>, ApiResponse {
+public class IndexItemWrapper extends BaseResponse implements Wrapper<IndexItem>, ApiResponse {
 
     @JacksonXmlElementWrapper(localName = "indexItems")
     @JacksonXmlProperty(localName = "indexItem")
     List<IndexItem> indexItems = new ArrayList<>();
+
+    public IndexItemWrapper() {
+    }
+
+    public IndexItemWrapper(List<IndexItem> indexItems) {
+        this.indexItems = indexItems;
+    }
 
     public List<IndexItem> getIndexItems() {
         return indexItems;
@@ -42,6 +49,6 @@ public class IndexItemWrapper implements Wrapper<IndexItem>, ApiResponse {
         IndexItem item = new IndexItem("title", true, "Titles",
                 "//title/text()","true()", false, IndexType.DEFAULT_INDEXER );
         item.setId(43L);
-        return List.of(item);
+        return List.of(new IndexItemWrapper(List.of(item)));
     }
 }

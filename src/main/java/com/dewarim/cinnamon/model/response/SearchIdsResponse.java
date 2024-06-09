@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "searchIdsResponse")
-public class SearchIdsResponse implements ApiResponse {
+public class SearchIdsResponse extends BaseResponse implements ApiResponse {
 
     @JacksonXmlElementWrapper(localName = "osdIds")
     @JacksonXmlProperty(localName = "osdId")

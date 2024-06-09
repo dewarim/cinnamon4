@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class ObjectTypeWrapper implements Wrapper<ObjectType>, ApiResponse {
+public class ObjectTypeWrapper extends BaseResponse implements Wrapper<ObjectType>, ApiResponse {
 
     @JacksonXmlElementWrapper(localName = "objectTypes")
     @JacksonXmlProperty(localName = "objectType")

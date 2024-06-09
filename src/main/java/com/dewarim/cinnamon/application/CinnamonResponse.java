@@ -3,10 +3,7 @@ package com.dewarim.cinnamon.application;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.ApiResponse;
 import com.dewarim.cinnamon.application.exception.CinnamonException;
-import com.dewarim.cinnamon.model.response.CinnamonError;
-import com.dewarim.cinnamon.model.response.CinnamonErrorWrapper;
-import com.dewarim.cinnamon.model.response.GenericResponse;
-import com.dewarim.cinnamon.model.response.Wrapper;
+import com.dewarim.cinnamon.model.response.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpServletResponseWrapper;
@@ -17,6 +14,7 @@ import org.apache.logging.log4j.Logger;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -25,11 +23,12 @@ import static com.dewarim.cinnamon.api.Constants.*;
 public class CinnamonResponse extends HttpServletResponseWrapper {
     private static final Logger log = LogManager.getLogger(CinnamonResponse.class);
 
-    private final ObjectMapper        xmlMapper  = XML_MAPPER;
-    private final HttpServletResponse servletResponse;
-    private       Wrapper<?>          wrapper;
-    private       int                 statusCode = HttpStatus.SC_OK;
-    private       ApiResponse         response;
+    private final ObjectMapper                xmlMapper              = XML_MAPPER;
+    private final HttpServletResponse         servletResponse;
+    private       Wrapper<?>                  wrapper;
+    private       int                         statusCode             = HttpStatus.SC_OK;
+    private       ApiResponse                 response;
+    private final List<ChangeTriggerResponse> changeTriggerResponses = new ArrayList<>();
 
     public CinnamonResponse(HttpServletResponse servletResponse) {
         super(servletResponse);
@@ -46,12 +45,13 @@ public class CinnamonResponse extends HttpServletResponseWrapper {
         CinnamonErrorWrapper wrapper = new CinnamonErrorWrapper();
         wrapper.getErrors().add(error);
         wrapper.getErrors().addAll(errors);
+        wrapper.setChangeTriggerResponses(changeTriggerResponses);
         try {
             servletResponse.setStatus(statusCode);
             servletResponse.setContentType(CONTENT_TYPE_XML);
             servletResponse.setCharacterEncoding("UTF-8");
             servletResponse.setHeader(HEADER_FIELD_CINNAMON_ERROR, errorCode.name());
-            if(logResponses) {
+            if (logResponses) {
                 log.debug("sending response to client:\n{}", xmlMapper.writeValueAsString(wrapper));
             }
             xmlMapper.writeValue(servletResponse.getWriter(), wrapper);
@@ -83,6 +83,13 @@ public class CinnamonResponse extends HttpServletResponseWrapper {
      */
     public void renderResponseIfNecessary(boolean logResponses) throws IOException {
         if (hasPendingContent()) {
+            if (wrapper != null && wrapper instanceof BaseResponse) {
+                ((BaseResponse) wrapper).setChangeTriggerResponses(changeTriggerResponses);
+            }
+            else if (response != null && response instanceof BaseResponse) {
+                ((BaseResponse) response).setChangeTriggerResponses(changeTriggerResponses);
+            }
+
             ResponseUtil.responseIsXmlWithStatus(servletResponse, statusCode);
             if (logResponses) {
                 String output;
@@ -131,5 +138,9 @@ public class CinnamonResponse extends HttpServletResponseWrapper {
 
     public void setResponse(ApiResponse response) {
         this.response = response;
+    }
+
+    public List<ChangeTriggerResponse> getChangeTriggerResponses() {
+        return changeTriggerResponses;
     }
 }

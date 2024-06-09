@@ -12,7 +12,7 @@ import static com.dewarim.cinnamon.api.Constants.FOLDER_EXAMPLE;
 import static com.dewarim.cinnamon.api.Constants.OSD_EXAMPLE;
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class LinkResponseWrapper implements Wrapper<LinkResponse>, ApiResponse {
+public class LinkResponseWrapper extends BaseResponse implements Wrapper<LinkResponse>, ApiResponse {
 
     @JacksonXmlElementWrapper(localName = "links")
     @JacksonXmlProperty(localName = "link")

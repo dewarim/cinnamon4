@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @JacksonXmlRootElement(localName = "cinnamon")
-public class SummaryWrapper implements Wrapper<Summary>, ApiResponse {
+public class SummaryWrapper extends BaseResponse implements Wrapper<Summary>, ApiResponse {
 
     @JacksonXmlElementWrapper(localName = "summaries")
     @JacksonXmlProperty(localName = "summary")

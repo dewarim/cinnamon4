@@ -5,7 +5,7 @@ import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.servlet.CinnamonServlet;
 import com.dewarim.cinnamon.client.CinnamonClient;
 import com.dewarim.cinnamon.client.StandardResponse;
-import com.dewarim.cinnamon.model.response.CinnamonConnectionResponse;
+import com.dewarim.cinnamon.model.response.CinnamonConnectionWrapper;
 import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
 import org.junit.jupiter.api.Test;
 
@@ -88,7 +88,7 @@ public class CinnamonServletIntegrationTest extends CinnamonIntegrationTest {
     public void connectWithoutFormatParameter() throws IOException {
         String rawResponse = client.connect("admin", "admin", null);
         assertNotNull(rawResponse);
-        CinnamonConnectionResponse connection = mapper.readValue(rawResponse, CinnamonConnectionResponse.class);
+        CinnamonConnectionWrapper connection = mapper.readValue(rawResponse, CinnamonConnectionWrapper.class);
         assertTrue(connection.list().get(0).getTicket().matches(UUID_PATTERN));
     }
 
