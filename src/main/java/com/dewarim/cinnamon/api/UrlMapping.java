@@ -100,6 +100,7 @@ public enum UrlMapping {
     CHANGE_TRIGGER__DELETE("changeTrigger", "delete", "/api", "", DeleteChangeTriggerRequest.class, DeleteResponse.class),
     CHANGE_TRIGGER__LIST("changeTrigger", "list", "/api", "", ListChangeTriggerRequest.class, ChangeTriggerWrapper.class),
     CHANGE_TRIGGER__UPDATE("changeTrigger", "update", "/api", "", UpdateChangeTriggerRequest.class, ChangeTriggerWrapper.class),
+    CHANGE_TRIGGER__NOP("changeTrigger", "nop", "/api", "", null, ChangeTriggerResponseWrapper.class),
     CINNAMON__CONNECT("cinnamon", "connect", "", """
             Connect to the cinnamon server by sending a ConnectionRequest.
                         

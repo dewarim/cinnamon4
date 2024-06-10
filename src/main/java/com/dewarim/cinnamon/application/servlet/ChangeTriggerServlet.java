@@ -9,11 +9,13 @@ import com.dewarim.cinnamon.model.request.changeTrigger.CreateChangeTriggerReque
 import com.dewarim.cinnamon.model.request.changeTrigger.DeleteChangeTriggerRequest;
 import com.dewarim.cinnamon.model.request.changeTrigger.ListChangeTriggerRequest;
 import com.dewarim.cinnamon.model.request.changeTrigger.UpdateChangeTriggerRequest;
+import com.dewarim.cinnamon.model.response.ChangeTriggerResponseWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.apache.hc.core5.http.HttpStatus;
 
 import java.io.IOException;
 
@@ -44,8 +46,17 @@ public class ChangeTriggerServlet extends HttpServlet implements CruddyServlet<C
                 superuserCheck();
                 delete(convertDeleteRequest(request, DeleteChangeTriggerRequest.class), changeTriggerDao, cinnamonResponse);
             }
+            case CHANGE_TRIGGER__NOP -> {
+                nop(request,response,cinnamonResponse);
+            }
             default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
+    }
+
+    private void nop(HttpServletRequest request, HttpServletResponse response, CinnamonResponse cinnamonResponse) {
+        var ctrWrapper = new ChangeTriggerResponseWrapper();
+        cinnamonResponse.setWrapper(ctrWrapper);
+        cinnamonResponse.setStatusCode(HttpStatus.SC_OK);
     }
 
     @Override

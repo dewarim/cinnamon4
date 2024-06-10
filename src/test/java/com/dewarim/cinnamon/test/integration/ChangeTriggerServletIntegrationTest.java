@@ -1,6 +1,7 @@
 package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.model.ChangeTrigger;
+import com.dewarim.cinnamon.model.response.ChangeTriggerResponse;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -44,6 +45,12 @@ public class ChangeTriggerServletIntegrationTest extends CinnamonIntegrationTest
     @Test
     public void createChangeTriggerWithoutSuperuserStatus() {
         assertClientError( () -> client.createChangeTrigger(changeTrigger),REQUIRES_SUPERUSER_STATUS);
+    }
+
+    @Test
+    public void nopTest() throws IOException {
+        List<ChangeTriggerResponse> nops = client.changeTriggerNop();
+        assertNotNull(nops);
     }
 
     // TODO: test changeTrigger-update + delete with/without superuser
