@@ -2,6 +2,7 @@ package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.model.ChangeTrigger;
 import com.dewarim.cinnamon.model.response.ChangeTriggerResponse;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -48,6 +49,7 @@ public class ChangeTriggerServletIntegrationTest extends CinnamonIntegrationTest
     }
 
     @Test
+    @Disabled("this is tested in MCT integration test (where we have a mocked server to respond)")
     public void nopTest() throws IOException {
         List<ChangeTriggerResponse> nops = client.changeTriggerNop();
         assertNotNull(nops);

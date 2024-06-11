@@ -19,6 +19,8 @@ import org.mockserver.client.MockServerClient;
 import org.mockserver.junit.jupiter.MockServerExtension;
 import org.mockserver.junit.jupiter.MockServerSettings;
 import org.mockserver.matchers.Times;
+import org.mockserver.mock.Expectation;
+import org.mockserver.model.HttpError;
 
 import java.io.File;
 import java.io.IOException;
@@ -84,11 +86,11 @@ public class MicroserviceChangeTriggerIntegrationTest extends CinnamonIntegratio
 
     @Test
     public void changeTriggerTest() throws IOException {
-        mockClient.when(
+        var expectations = mockClient.when(
                         request()
                                 .withMethod("POST")
                                 .withPath("/echo"),
-                        Times.exactly(2)
+                        Times.exactly(1)
                 )
                 .respond(
                         response()
@@ -96,12 +98,28 @@ public class MicroserviceChangeTriggerIntegrationTest extends CinnamonIntegratio
                                 .withBody("Hello Test")
                 );
 
-        TestObjectHolder toh = new TestObjectHolder(client, userId);
-        ObjectSystemData osd = toh.createOsd().osd;
-        assertNull(osd.getContentSize());
+        var changeTriggerResponses = client.changeTriggerNop();
+        assertEquals(1,changeTriggerResponses.size());
+        for (Expectation expectation : expectations) {
+            mockClient.verify(expectation.getId());
+        }
+
+    }
+    @Test
+    @Disabled("needs refactor - breaks maven build somehow")
+    public void changeTriggerWithoutChangeTriggerUserTest() throws IOException {
+        mockClient.when(
+                        request()
+                                .withMethod("POST")
+                                .withPath("/echo")
+                )
+                .error(new HttpError());
+        // test admin user does not trigger changeTriggers:
+        assertEquals(0,adminClient.changeTriggerNop().size());
     }
 
     @Test
+    // TODO: needs trigger to be created in SQL init script - or just use changeTriggerNop
     @Disabled("you need to insert ChangeTrigger for changeTriggerResponseTest in CreateTestDB")
     public void changeTriggerResponseTest() throws IOException {
         mockClient.when(
@@ -130,6 +148,7 @@ public class MicroserviceChangeTriggerIntegrationTest extends CinnamonIntegratio
 
     // bug reported by Boris: after versioning, document file length is 0
     @Test
+    // TODO: needs trigger to be created in SQL init script
     public void versionShouldNotGenerateContentWithZeroLength() throws IOException {
         mockClient.when(
                         request()

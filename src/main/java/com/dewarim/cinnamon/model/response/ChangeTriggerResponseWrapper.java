@@ -11,7 +11,7 @@ public class ChangeTriggerResponseWrapper extends BaseResponse implements Wrappe
 
     @Override
     public List<ChangeTriggerResponse> list() {
-        return List.of();
+        return getChangeTriggerResponses();
     }
 
     @Override

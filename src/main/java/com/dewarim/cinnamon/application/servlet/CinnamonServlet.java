@@ -118,7 +118,7 @@ public class CinnamonServlet extends HttpServlet {
         else {
             user = userOpt.get();
         }
-
+        response.setUser(user);
         if (!user.isActivated()) {
             throw ErrorCode.CONNECTION_FAIL_ACCOUNT_INACTIVE.exception();
         }

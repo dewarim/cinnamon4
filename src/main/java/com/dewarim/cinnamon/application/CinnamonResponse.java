@@ -3,6 +3,7 @@ package com.dewarim.cinnamon.application;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.ApiResponse;
 import com.dewarim.cinnamon.application.exception.CinnamonException;
+import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.response.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
@@ -29,6 +30,7 @@ public class CinnamonResponse extends HttpServletResponseWrapper {
     private       int                         statusCode             = HttpStatus.SC_OK;
     private       ApiResponse                 response;
     private final List<ChangeTriggerResponse> changeTriggerResponses = new ArrayList<>();
+    private UserAccount user;
 
     public CinnamonResponse(HttpServletResponse servletResponse) {
         super(servletResponse);
@@ -142,5 +144,13 @@ public class CinnamonResponse extends HttpServletResponseWrapper {
 
     public List<ChangeTriggerResponse> getChangeTriggerResponses() {
         return changeTriggerResponses;
+    }
+
+    public UserAccount getUser() {
+        return user;
+    }
+
+    public void setUser(UserAccount user) {
+        this.user = user;
     }
 }

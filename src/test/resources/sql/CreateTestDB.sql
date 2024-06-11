@@ -782,6 +782,9 @@ insert into metaset_types(id, name, is_unique) VALUES (nextval('seq_metaset_type
 insert into change_triggers(id, name, active, ranking, action, pre_trigger, post_trigger, copy_file_content, config,
                             controller, trigger_type, post_commit_trigger )
 values (nextval('seq_change_trigger_id'), 'echo-test', true, 1,'echo',true,true,true,'<config><remoteServer>http://localhost:20001/</remoteServer></config>','test','MICROSERVICE', false);
+insert into change_triggers(id, name, active, ranking, action, pre_trigger, post_trigger, copy_file_content, config,
+                            controller, trigger_type, post_commit_trigger )
+values (nextval('seq_change_trigger_id'), 'nop-test', true, 1,'nop',true,true,true,'<config><remoteServer>http://localhost:20001/echo</remoteServer></config>','changeTrigger','MICROSERVICE', false);
 
 -- for manual test of changeTriggerResponseTest()
 -- insert into change_triggers(id, name, active, ranking, action, pre_trigger, post_trigger, copy_file_content, config,
