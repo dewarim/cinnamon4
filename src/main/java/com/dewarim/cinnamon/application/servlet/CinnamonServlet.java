@@ -118,7 +118,7 @@ public class CinnamonServlet extends HttpServlet {
         else {
             user = userOpt.get();
         }
-        response.setUser(user);
+
         if (!user.isActivated()) {
             throw ErrorCode.CONNECTION_FAIL_ACCOUNT_INACTIVE.exception();
         }
@@ -149,12 +149,13 @@ public class CinnamonServlet extends HttpServlet {
             response.addHeader(NEW_USER_HEADER_FLAG, String.valueOf(user.isNewUser()));
 
             var cinnamonConnectionResponse = new CinnamonConnectionWrapper(new CinnamonConnection(session.getTicket()));
+            response.setHeader("ticket", session.getTicket());
             response.setWrapper(cinnamonConnectionResponse);
         }
         else {
             CONNECTION_FAIL_WRONG_PASSWORD.throwUp();
         }
-
+        response.setUser(user);
     }
 
     private void disconnect(HttpServletRequest request, CinnamonResponse response) {

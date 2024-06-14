@@ -158,6 +158,9 @@ public class MicroserviceChangeTrigger implements Trigger {
             }
 
             cleanupHeaders(requestBuilder);
+            if(cinnamonResponse.containsHeader("ticket")){
+                requestBuilder.setHeader("ticket", cinnamonResponse.getHeader("ticket"));
+            }
             if (cinnamonRequest.isMultiPart()) {
                 byte[] cinnamonRequestPart = cinnamonRequest.getCinnamonRequestPart().getInputStream().readAllBytes();
                 requestBuilder.setHeader(CINNAMON_REQUEST_HEADER, new String(cinnamonRequestPart));
