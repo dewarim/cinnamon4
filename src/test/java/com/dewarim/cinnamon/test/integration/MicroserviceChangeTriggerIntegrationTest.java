@@ -98,8 +98,8 @@ public class MicroserviceChangeTriggerIntegrationTest extends CinnamonIntegratio
                                 .withBody("Hello Test")
                 );
 
-        var changeTriggerResponses = client.changeTriggerNop();
-        assertEquals(1,changeTriggerResponses.size());
+        var changeTriggerResponses = client.changeTriggerNop(true);
+        assertEquals(2,changeTriggerResponses.size());
         for (Expectation expectation : expectations) {
             mockClient.verify(expectation.getId());
         }
@@ -115,7 +115,7 @@ public class MicroserviceChangeTriggerIntegrationTest extends CinnamonIntegratio
                 )
                 .error(new HttpError());
         // test admin user does not trigger changeTriggers:
-        assertEquals(0,adminClient.changeTriggerNop().size());
+        assertEquals(0,adminClient.changeTriggerNop(false).size());
     }
 
     @Test

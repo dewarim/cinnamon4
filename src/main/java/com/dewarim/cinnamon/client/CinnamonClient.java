@@ -169,7 +169,6 @@ public class CinnamonClient {
     /**
      * Create a new Cinnamon client using the old client's connection data.
      *
-     * @param client
      */
     public CinnamonClient(CinnamonClient client, String username, String password) {
         this.port     = client.getPort();
@@ -256,9 +255,9 @@ public class CinnamonClient {
         verifyResponseIsOkay(response);
     }
 
-    public List<ChangeTriggerResponse> changeTriggerNop() throws IOException {
+    public List<ChangeTriggerResponse> changeTriggerNop(boolean ignoreError) throws IOException {
         var response = sendStandardRequest(CHANGE_TRIGGER__NOP, "");
-        return changeTriggerResponseUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
+        return changeTriggerResponseUnwrapper.unwrap(response, EXPECTED_SIZE_ANY, ignoreError);
     }
 
     public class WrappedRequest<T, W extends Wrapper<T>> {

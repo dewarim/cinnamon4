@@ -52,7 +52,7 @@ public class ChangeTriggerFilter extends HttpFilter {
                         }
                 ).toList();
         List<ChangeTrigger> preTriggers = triggers.stream().filter(ChangeTrigger::isPreTrigger)
-                .filter(changeTrigger -> user == null || !user.isActivateTriggers())
+                .filter(changeTrigger -> user == null || user.isActivateTriggers())
                 .sorted(Comparator.comparingLong(ChangeTrigger::getRanking)).toList();
 
         if (triggers.size() > 0) {
@@ -77,9 +77,9 @@ public class ChangeTriggerFilter extends HttpFilter {
             log.debug("After servlet: continue with post-triggers");
             // do post triggers:
             List<ChangeTrigger> postTriggers = triggers.stream().filter(ChangeTrigger::isPostTrigger)
-                    .filter(changeTrigger -> (user == null || !user.isActivateTriggers()) ||
+                    .filter(changeTrigger -> (user == null || user.isActivateTriggers()) ||
                             // check special case of /connect:
-                            (cinnamonResponse.getUser() == null || !cinnamonResponse.getUser().isActivateTriggers()))
+                            (cinnamonResponse.getUser() == null || cinnamonResponse.getUser().isActivateTriggers()))
                     .sorted(Comparator.comparingLong(ChangeTrigger::getRanking)).toList();
             for (ChangeTrigger trigger : postTriggers) {
                 log.debug("Calling changeTrigger {}", trigger.getName());

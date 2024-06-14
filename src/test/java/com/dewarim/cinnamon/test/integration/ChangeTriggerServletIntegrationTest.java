@@ -51,7 +51,7 @@ public class ChangeTriggerServletIntegrationTest extends CinnamonIntegrationTest
     @Test
     @Disabled("this is tested in MCT integration test (where we have a mocked server to respond)")
     public void nopTest() throws IOException {
-        List<ChangeTriggerResponse> nops = client.changeTriggerNop();
+        List<ChangeTriggerResponse> nops = client.changeTriggerNop(false);
         assertNotNull(nops);
     }
 
