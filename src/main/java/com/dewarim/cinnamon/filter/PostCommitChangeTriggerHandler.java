@@ -4,9 +4,11 @@ package com.dewarim.cinnamon.filter;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonRequest;
 import com.dewarim.cinnamon.application.CinnamonResponse;
+import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.application.trigger.TriggerResult;
 import com.dewarim.cinnamon.dao.ChangeTriggerDao;
 import com.dewarim.cinnamon.model.ChangeTrigger;
+import com.dewarim.cinnamon.model.UserAccount;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -18,6 +20,17 @@ public class PostCommitChangeTriggerHandler  {
 
     public void executeTriggers(CinnamonRequest cinnamonRequest, CinnamonResponse cinnamonResponse)  {
         log.debug("After servlet: continue with post-commit-change-triggers");
+
+        UserAccount user = ThreadLocalSqlSession.getCurrentUser();
+        if(user == null) {
+            // try and fetch connect() user
+            user = cinnamonResponse.getUser();
+        }
+        if(user != null && !user.isActivateTriggers()){
+            log.debug("User {} does not have activate triggers", user.getUsername());
+            return;
+        }
+
 
         // load triggers (later: cache them)
         UrlMapping mapping = UrlMapping.getByPath(cinnamonRequest.getRequestURI());
