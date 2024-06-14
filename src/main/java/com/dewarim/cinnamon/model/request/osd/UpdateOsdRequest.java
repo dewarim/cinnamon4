@@ -68,10 +68,7 @@ public class UpdateOsdRequest implements ApiRequest<UpdateOsdRequest> {
                     assertNullOrPositiveLong(osd.getAclId()) &&
                     assertNullOrPositiveLong(osd.getTypeId()) &&
                     assertNullOrPositiveLong(osd.getLanguageId()) &&
-                    osd.getId() != null && osd.getId() > 0 &&
-                    // an update request that does not change anything is invalid:
-                    !(name == null && osd.getParentId() == null && osd.getOwnerId() == null && osd.getAclId() == null && osd.getTypeId() == null && osd.getLanguageId() == null)
-                    ;
+                    osd.getId() != null && osd.getId() > 0;
         });
     }
 
