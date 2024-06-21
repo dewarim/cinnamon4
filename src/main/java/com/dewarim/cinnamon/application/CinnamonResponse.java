@@ -151,6 +151,7 @@ public class CinnamonResponse extends HttpServletResponseWrapper {
     }
 
     public void setUser(UserAccount user) {
+        log.debug("store user {} in response object: ",user);
         this.user = user;
     }
 }

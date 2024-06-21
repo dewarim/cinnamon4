@@ -52,9 +52,8 @@ public class ChangeTriggerFilter extends HttpFilter {
                         }
                 ).toList();
         List<ChangeTrigger> preTriggers = triggers.stream().filter(ChangeTrigger::isPreTrigger)
-                .filter(changeTrigger -> activeChangeTriggerFilter(user, cinnamonResponse))
                 .sorted(Comparator.comparingLong(ChangeTrigger::getRanking)).toList();
-
+        log.debug("Found {} preTriggers to execute.", preTriggers.size());
         if (triggers.size() > 0) {
             boolean doCopyFileContent = triggers.stream().anyMatch(ChangeTrigger::isCopyFileContent);
             log.debug("Found change trigger that requires copyFileContent: {}", doCopyFileContent);
@@ -62,23 +61,29 @@ public class ChangeTriggerFilter extends HttpFilter {
         }
 
         try {
-            // do pre triggers:
-            for (ChangeTrigger trigger : preTriggers) {
-                log.debug("Calling changeTrigger {}", trigger.getName());
-                TriggerResult result = trigger.getTriggerType().trigger.executePreCommand(trigger, cinnamonRequest, cinnamonResponse);
-                log.debug("Result of trigger call: {} ", result);
-                if (result == TriggerResult.STOP) {
-                    throw ErrorCode.REQUEST_DENIED_BY_CHANGE_TRIGGER.exception();
+            if(activeChangeTriggerFilter(user, cinnamonResponse)) {
+                // do pre triggers:
+                for (ChangeTrigger trigger : preTriggers) {
+                    log.debug("Calling changeTrigger {}", trigger.getName());
+                    TriggerResult result = trigger.getTriggerType().trigger.executePreCommand(trigger, cinnamonRequest, cinnamonResponse);
+                    log.debug("Result of trigger call: {} ", result);
+                    if (result == TriggerResult.STOP) {
+                        throw ErrorCode.REQUEST_DENIED_BY_CHANGE_TRIGGER.exception();
+                    }
                 }
             }
             log.debug("After pre-trigger: hand request over to servlet");
             // hand over to servlet:
             chain.doFilter(cinnamonRequest, cinnamonResponse);
             log.debug("After servlet: continue with post-triggers");
+
+            if(!activeChangeTriggerFilter(user, cinnamonResponse)){
+                return;
+            }
             // do post triggers:
             List<ChangeTrigger> postTriggers = triggers.stream().filter(ChangeTrigger::isPostTrigger)
-                    .filter(changeTrigger -> activeChangeTriggerFilter(user, cinnamonResponse))
                     .sorted(Comparator.comparingLong(ChangeTrigger::getRanking)).toList();
+            log.debug("Found {} postTriggers to execute.", postTriggers.size());
             for (ChangeTrigger trigger : postTriggers) {
                 log.debug("Calling changeTrigger {}", trigger.getName());
                 TriggerResult result = trigger.getTriggerType().trigger.executePostCommand(trigger, cinnamonRequest, cinnamonResponse);
@@ -94,9 +99,20 @@ public class ChangeTriggerFilter extends HttpFilter {
     }
 
     public static boolean activeChangeTriggerFilter(UserAccount user, CinnamonResponse cinnamonResponse) {
-        return (user != null && user.isActivateTriggers()) ||
-                // check special case of /connect:
-                (cinnamonResponse.getUser() != null && cinnamonResponse.getUser().isActivateTriggers());
+        UserAccount ua = user == null ? cinnamonResponse.getUser() : user;
+        if (ua == null) {
+            log.warn("Could not find any user associated with response, should not activate CT.");
+            return false;
+        }
+        if (ua.isActivateTriggers()) {
+            log.debug("User {} activates changeTriggers", ua);
+            return true;
+        }
+        else {
+            log.debug("User {} does not activate changeTriggers", ua);
+            return false;
+        }
     }
+
 
 }

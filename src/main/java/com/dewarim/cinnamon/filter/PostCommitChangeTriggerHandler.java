@@ -14,23 +14,19 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.List;
 
-public class PostCommitChangeTriggerHandler  {
+import static com.dewarim.cinnamon.filter.ChangeTriggerFilter.activeChangeTriggerFilter;
+
+public class PostCommitChangeTriggerHandler {
 
     private static final Logger log = LogManager.getLogger(PostCommitChangeTriggerHandler.class);
 
-    public void executeTriggers(CinnamonRequest cinnamonRequest, CinnamonResponse cinnamonResponse)  {
+    public void executeTriggers(CinnamonRequest cinnamonRequest, CinnamonResponse cinnamonResponse) {
         log.debug("After servlet: continue with post-commit-change-triggers");
 
         UserAccount user = ThreadLocalSqlSession.getCurrentUser();
-        if(user == null) {
-            // try and fetch connect() user
-            user = cinnamonResponse.getUser();
-        }
-        if(user != null && !user.isActivateTriggers()){
-            log.debug("User {} does not have activate triggers", user.getUsername());
+        if (!activeChangeTriggerFilter(user, cinnamonResponse)) {
             return;
         }
-
 
         // load triggers (later: cache them)
         UrlMapping mapping = UrlMapping.getByPath(cinnamonRequest.getRequestURI());
@@ -49,7 +45,7 @@ public class PostCommitChangeTriggerHandler  {
                             }
                         }
                 ).toList();
-
+        log.debug("Found {} postCommitChangeTriggers to execute.", triggers.size());
         // do post triggers:
         for (ChangeTrigger trigger : triggers) {
             log.debug("Calling changeTrigger {}", trigger.getName());

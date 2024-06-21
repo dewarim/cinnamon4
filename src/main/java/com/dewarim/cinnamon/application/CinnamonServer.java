@@ -60,7 +60,7 @@ public class CinnamonServer {
 
     private static final Logger log = LogManager.getLogger(CinnamonServer.class);
 
-    public static final String           VERSION       = "1.3.6";
+    public static final String           VERSION       = "1.3.7";
     private             Server           server;
     private             DbSessionFactory dbSessionFactory;
     private final       WebAppContext    webAppContext = new WebAppContext();
@@ -319,7 +319,7 @@ public class CinnamonServer {
         # API Endpoint Documentation
         
         Note: response examples are not directly matching request examples, they just show the format you can expect.
-         
+        
         """);
         Arrays.stream(UrlMapping.values()).forEach(urlMapping -> {
                     String formatted;
@@ -354,7 +354,7 @@ public class CinnamonServer {
                         String template = """
                                 # __endpoint__
                                 __description__
-                                                                    
+                                
                                 ---
                                 """;
                         formatted = template
