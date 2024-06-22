@@ -60,7 +60,7 @@ public class CinnamonServer {
 
     private static final Logger log = LogManager.getLogger(CinnamonServer.class);
 
-    public static final String           VERSION       = "1.3.7";
+    public static final String           VERSION       = "1.3.8";
     private             Server           server;
     private             DbSessionFactory dbSessionFactory;
     private final       WebAppContext    webAppContext = new WebAppContext();
@@ -79,18 +79,23 @@ public class CinnamonServer {
     }
 
     public void start() throws Exception {
-        String log4jConfigPath = config.getServerConfig().getLog4jConfigPath();
-        if(!log4jConfigPath.isEmpty()) {
-            log.info("reconfigure logging to use: "+log4jConfigPath);
-            Configurator.reconfigure(URI.create(log4jConfigPath));
+        String log4j2ConfigPath = config.getServerConfig().getLog4jConfigPath();
+        if (!log4j2ConfigPath.isEmpty()) {
+            if(!new File(log4j2ConfigPath).exists()) {
+                log.error("log4j2 config file {} does not exist", log4j2ConfigPath);
+            }
+            log.info("reconfigure logging to use: {}", log4j2ConfigPath);
+            org.apache.ibatis.logging.LogFactory.useLog4J2Logging();
+            Configurator.reconfigure(URI.create(log4j2ConfigPath));
         }
+
 
         webAppContext.setContextPath("/");
         webAppContext.setInitParameter("org.eclipse.jetty.servlet.Default.dirAllowed", "false");
         // set the resource to a non-existent root directory - Jetty needs a resource base, but we do not want to serve
         // any files or risk remote users accessing the file system.
         Set<PosixFilePermission> readPermissions = Set.of(PosixFilePermission.OWNER_READ, PosixFilePermission.GROUP_READ);
-        String tempDir = Files.createTempDirectory("cinnamon-temp-dir", PosixFilePermissions.asFileAttribute(readPermissions)).toString();
+        String                   tempDir         = Files.createTempDirectory("cinnamon-temp-dir", PosixFilePermissions.asFileAttribute(readPermissions)).toString();
         webAppContext.setResourceBase(tempDir);
         webAppContext.getObjectFactory().addDecorator(new AnnotationDecorator(webAppContext));
 
@@ -105,9 +110,9 @@ public class CinnamonServer {
         server = new Server(threadPool);
 
         boolean enableHttps = serverConfig.isEnableHttps();
-        boolean enableHttp = serverConfig.isEnableHttp();
+        boolean enableHttp  = serverConfig.isEnableHttp();
 
-        if(enableHttp) {
+        if (enableHttp) {
             Connector httpConnector = createHttpConnector(serverConfig.getHttpConnectorConfig());
             server.addConnector(httpConnector);
         }
@@ -126,13 +131,13 @@ public class CinnamonServer {
         // TODO: make number of threads and timeout configurable
         executorService = new ThreadPoolExecutor(4, 16, 5, TimeUnit.MINUTES, new ArrayBlockingQueue<>(100));
 
-        if(enableHttp) {
+        if (enableHttp) {
             log.info("Server is running at http @ port {}", config.getServerConfig().getHttpConnectorConfig().getPort());
         }
         if (enableHttps) {
             log.info("Server is also allowing connections via https @ port {}", config.getServerConfig().getHttpsConnectorConfig().getPort());
         }
-        if(!enableHttp && !enableHttps){
+        if (!enableHttp && !enableHttps) {
             log.warn("You have disabled both http and https endpoints, so there is no way for you to talk to me." +
                     " Still starting the server, perhaps you want to just enable indexing etc.");
         }
@@ -186,7 +191,7 @@ public class CinnamonServer {
 
 
     public void startIndexService() {
-        indexService = new IndexService(config.getLuceneConfig(), tikaService);
+        indexService       = new IndexService(config.getLuceneConfig(), tikaService);
         indexServiceThread = new Thread(indexService);
         indexServiceThread.setName("Index-Service");
         indexServiceThread.start();
@@ -232,9 +237,9 @@ public class CinnamonServer {
         handler.addFilter(DbSessionFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
         handler.addFilter(AuthenticationFilter.class, "/api/*", EnumSet.of(DispatcherType.REQUEST));
 
-        RequestResponseFilter requestResponseFilter = new RequestResponseFilter(config.getServerConfig().isLogResponses());
-        var requestResponseFilterHolder = new FilterHolder(requestResponseFilter);
-        handler.addFilter(requestResponseFilterHolder,"/api/*", EnumSet.of(DispatcherType.REQUEST) );
+        RequestResponseFilter requestResponseFilter       = new RequestResponseFilter(config.getServerConfig().isLogResponses());
+        var                   requestResponseFilterHolder = new FilterHolder(requestResponseFilter);
+        handler.addFilter(requestResponseFilterHolder, "/api/*", EnumSet.of(DispatcherType.REQUEST));
 
         // TODO: it would be cleaner to add filter params to ChangeTriggerFilter here instead of fetching
         //  the server config statically.
@@ -299,6 +304,7 @@ public class CinnamonServer {
         }
 
         if (cliArguments.configFilename != null) {
+            log.debug("reading config file {}", cliArguments.configFilename);
             config = readConfig(cliArguments.configFilename);
         }
 
@@ -316,11 +322,11 @@ public class CinnamonServer {
         mapper.configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL, true);
         mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
         System.out.println("""
-        # API Endpoint Documentation
-        
-        Note: response examples are not directly matching request examples, they just show the format you can expect.
-        
-        """);
+                # API Endpoint Documentation
+                        
+                Note: response examples are not directly matching request examples, they just show the format you can expect.
+                        
+                """);
         Arrays.stream(UrlMapping.values()).forEach(urlMapping -> {
                     String formatted;
                     if (urlMapping.getRequestClass() != null) {
@@ -329,11 +335,11 @@ public class CinnamonServer {
                             String template = """
                                     # __endpoint__
                                     __description__
-                                    
+                                                                        
                                     ## Request
-                                    
+                                                                        
                                     __request__
-                                    
+                                                                        
                                     ## Response
 
                                     __response__
@@ -354,7 +360,7 @@ public class CinnamonServer {
                         String template = """
                                 # __endpoint__
                                 __description__
-                                
+                                                                
                                 ---
                                 """;
                         formatted = template

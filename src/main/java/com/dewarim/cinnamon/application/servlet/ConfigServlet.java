@@ -47,20 +47,20 @@ public class ConfigServlet extends HttpServlet {
         UrlMapping mapping = UrlMapping.getByPath(request.getRequestURI());
         switch (mapping) {
             case CONFIG__LIST_ALL_CONFIGURATIONS -> listAllConfigurations(request, cinnamonResponse);
-            case CONFIG__URL_MAPPINGS -> listUrlMappings(request, cinnamonResponse);
-            case CONFIG__RELOAD_LOGGING -> reloadLogging(request, cinnamonResponse);
+            case CONFIG__URL_MAPPINGS -> listUrlMappings(cinnamonResponse);
+            case CONFIG__RELOAD_LOGGING -> reloadLogging(cinnamonResponse);
             default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
     }
 
-    private void reloadLogging(HttpServletRequest request, CinnamonResponse cinnamonResponse) {
+    private void reloadLogging(CinnamonResponse cinnamonResponse) {
         if (!UserAccountDao.currentUserIsSuperuser()) {
             throw ErrorCode.REQUIRES_SUPERUSER_STATUS.getException().get();
         }
         ServerConfig serverConfig    = CinnamonServer.config.getServerConfig();
         String       log4jConfigPath = serverConfig.getLog4jConfigPath();
         boolean      logResponses    = serverConfig.isLogResponses();
-        if (log4jConfigPath.isEmpty()) {
+        if (log4jConfigPath == null || log4jConfigPath.isEmpty()) {
             log.info("will not reload logging without valid config");
             cinnamonResponse.generateErrorMessage(HttpServletResponse.SC_BAD_REQUEST,
                     ErrorCode.NEED_EXTERNAL_LOGGING_CONFIG,
@@ -73,7 +73,7 @@ public class ConfigServlet extends HttpServlet {
         }
     }
 
-    private void listUrlMappings(HttpServletRequest request, CinnamonResponse cinnamonResponse) {
+    private void listUrlMappings(CinnamonResponse cinnamonResponse) {
         List<UrlMappingInfo> urlMappingInfos = Arrays.stream(UrlMapping.values()).toList().stream()
                 .map(urlMapping -> new UrlMappingInfo(urlMapping.getServlet(), urlMapping.getAction(), urlMapping.getPath(), urlMapping.getDescription()))
                 .collect(Collectors.toList());

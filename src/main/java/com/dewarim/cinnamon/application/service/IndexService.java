@@ -12,7 +12,6 @@ import com.dewarim.cinnamon.model.index.IndexJob;
 import com.dewarim.cinnamon.model.index.IndexJobType;
 import com.dewarim.cinnamon.model.relations.Relation;
 import com.dewarim.cinnamon.provider.ContentProviderService;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.TransactionIsolationLevel;
@@ -134,6 +133,9 @@ public class IndexService implements Runnable {
                         else {
                             log.debug("no change to index");
                         }
+                        if(!jobsToDelete.isEmpty()){
+                            log.debug("deleting {} index jobs", jobsToDelete.size());
+                        }
                         jobsToDelete.forEach(jobDao::delete);
                         jobDao.commit();
                     }
@@ -194,7 +196,7 @@ public class IndexService implements Runnable {
         IGNORE
     }
 
-    private IndexResult indexFolder(Long id, Document doc, List<IndexItem> indexItems) throws JsonProcessingException {
+    private IndexResult indexFolder(Long id, Document doc, List<IndexItem> indexItems) {
         Optional<Folder> folderOpt = folderDao.getFolderById(id);
         if (folderOpt.isEmpty()) {
             log.debug("Folder " + id + " not found for indexing.");
@@ -237,7 +239,7 @@ public class IndexService implements Runnable {
         return IndexResult.SUCCESS;
     }
 
-    private IndexResult indexOsd(Long id, Document doc, List<IndexItem> indexItems, boolean updateTikaMetaset) throws JsonProcessingException {
+    private IndexResult indexOsd(Long id, Document doc, List<IndexItem> indexItems, boolean updateTikaMetaset) {
         Optional<ObjectSystemData> osdOpt = osdDao.getObjectById(id);
         if (osdOpt.isEmpty()) {
             log.debug("osd " + id + " not found for indexing");

@@ -1,6 +1,7 @@
 #!/bin/bash
 
-#java -jar target/cinnamon-server.jar --config debug-config.xml &
+cd ../../../
+java -jar target/cinnamon-server.jar --config default-config.xml &
 
 PORT=8080
 TICKET=$(curl --silent --show-error -X POST "http://localhost:${PORT}/cinnamon/connect?user=admin&password=admin&format=text")

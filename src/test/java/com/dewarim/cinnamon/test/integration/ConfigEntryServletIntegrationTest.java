@@ -74,6 +74,9 @@ public class ConfigEntryServletIntegrationTest extends CinnamonIntegrationTest {
         var toh = new TestObjectHolder(client, userId);
         assertClientError(toh::reloadLogging, REQUIRES_SUPERUSER_STATUS);
         var adminToh = new TestObjectHolder(adminClient, adminId);
+
+        CinnamonServer.config.getServerConfig().setLog4jConfigPath("");
+
         assertClientError(adminToh::reloadLogging, NEED_EXTERNAL_LOGGING_CONFIG);
         CinnamonServer.config.getServerConfig().setLog4jConfigPath("log4j2-example.xml");
         adminToh.reloadLogging();

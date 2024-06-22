@@ -22,7 +22,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.core5.http.ClassicHttpRequest;
-import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.HttpStatus;
 import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
@@ -89,6 +88,7 @@ public class CinnamonIntegrationTest {
         if (cinnamonServer == null) {
             log.info("Create new CinnamonServer.");
             cinnamonServer = new CinnamonServer(cinnamonTestPort);
+            CinnamonServer.config.getServerConfig().setLog4jConfigPath("src/test/resources/log4j2-test.xml");
             CinnamonServer.config.getServerConfig().setLogResponses(true);
 
             DbSessionFactory dbSessionFactory = new DbSessionFactory("sql/mybatis.test.properties.xml");
@@ -152,10 +152,6 @@ public class CinnamonIntegrationTest {
             CinnamonConnectionWrapper cinnamonConnection = XML_MAPPER.readValue(response.getEntity().getContent(), CinnamonConnectionWrapper.class);
             return cinnamonConnection.list().get(0).getTicket();
         }
-    }
-
-    public static String responseToString(ClassicHttpResponse response) throws IOException {
-        return new String(response.getEntity().getContent().readAllBytes());
     }
 
     /**
