@@ -43,8 +43,10 @@ public class ErrorResponseGenerator {
                 }
             }
             xmlMapper.writeValue(writer, wrapper);
-        } catch (IOException e) {
-            throw new CinnamonException("Failed to generate error message:", e);
+        } catch (IllegalStateException | IOException e) {
+            String msg = String.format("Error occurred while generating error message, code: %s message: %s ", errorCode.getCode(), message);
+            log.info(msg, e);
+            throw new CinnamonException(msg, e);
         } finally {
             ThreadLocalSqlSession.setTransactionStatus(TransactionStatus.ROLLBACK);
         }
