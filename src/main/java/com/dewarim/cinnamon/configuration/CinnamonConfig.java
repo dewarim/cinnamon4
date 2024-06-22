@@ -93,4 +93,19 @@ public class CinnamonConfig {
     public void setChangeTriggerConfig(ChangeTriggerConfig changeTriggerConfig) {
         this.changeTriggerConfig = changeTriggerConfig;
     }
+
+    @Override
+    public String toString() {
+        return "CinnamonConfig{" +
+                "serverConfig=" + serverConfig +
+                ", systemAdministratorEmail='" + systemAdministratorEmail + '\'' +
+                ", mailConfig=" + mailConfig +
+                ", securityConfig=" + securityConfig +
+                ", databaseConfig=" + databaseConfig +
+                ", luceneConfig=" + luceneConfig +
+                ", cinnamonTikaConfig=" + cinnamonTikaConfig +
+                ", loginProviders=" + loginProviders +
+                ", changeTriggerConfig=" + changeTriggerConfig +
+                '}';
+    }
 }

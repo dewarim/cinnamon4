@@ -2,3 +2,4 @@ target/
 *.idea/**
 cinnamon-server/target/
 cinnamon-server/temp/
+temp

@@ -29,4 +29,13 @@ public class MailConfig {
     public void setSmtpPassword(String smtpPassword) {
         this.smtpPassword = smtpPassword;
     }
+
+    @Override
+    public String toString() {
+        return "MailConfig{" +
+                "smtpHost='" + smtpHost + '\'' +
+                ", smtpUser='" + smtpUser + '\'' +
+                ", smtpPassword='" + smtpPassword + '\'' +
+                '}';
+    }
 }

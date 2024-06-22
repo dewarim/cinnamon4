@@ -58,4 +58,15 @@ public class HttpsConnectorConfig {
         this.acceptQueueSize = acceptQueueSize;
     }
 
+    @Override
+    public String toString() {
+        return "HttpsConnectorConfig{" +
+                "port=" + port +
+                ", acceptors=" + acceptors +
+                ", selectors=" + selectors +
+                ", acceptQueueSize=" + acceptQueueSize +
+                ", keyStorePath='" + keyStorePath + '\'' +
+                ", keyStorePassword='" + keyStorePassword + '\'' +
+                '}';
+    }
 }

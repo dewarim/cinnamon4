@@ -57,4 +57,16 @@ public class SecurityConfig {
     public void setLdapConfig(LdapConfig ldapConfig) {
         this.ldapConfig = ldapConfig;
     }
+
+    @Override
+    public String toString() {
+        return "SecurityConfig{" +
+                "passwordRounds=" + passwordRounds +
+                ", minimumPasswordLength=" + minimumPasswordLength +
+                ", transferAssetsAllowed=" + transferAssetsAllowed +
+                ", deleteUserAllowed=" + deleteUserAllowed +
+                ", sessionLengthInMillis=" + sessionLengthInMillis +
+                ", ldapConfig=" + ldapConfig +
+                '}';
+    }
 }

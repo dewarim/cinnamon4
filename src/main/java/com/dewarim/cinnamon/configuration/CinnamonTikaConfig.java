@@ -28,4 +28,12 @@ public class CinnamonTikaConfig {
     public String getBaseUrl() {
         return baseUrl;
     }
+
+    @Override
+    public String toString() {
+        return "CinnamonTikaConfig{" +
+                "baseUrl='" + baseUrl + '\'' +
+                ", useTika=" + useTika +
+                '}';
+    }
 }

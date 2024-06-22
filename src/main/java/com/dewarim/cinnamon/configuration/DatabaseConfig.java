@@ -63,4 +63,16 @@ public class DatabaseConfig {
     public String getDatabaseUrl(){
         return String.format("jdbc:postgresql://%s:%s/%s",host,port,database);
     }
+
+    @Override
+    public String toString() {
+        return "DatabaseConfig{" +
+                "driver='" + driver + '\'' +
+                ", host='" + host + '\'' +
+                ", port='" + port + '\'' +
+                ", database='" + database + '\'' +
+                ", user='" + user + '\'' +
+                ", password='" + password + '\'' +
+                '}';
+    }
 }
