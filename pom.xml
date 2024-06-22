@@ -17,7 +17,7 @@
         <junit.version>5.10.2</junit.version>
         <lucene.version>9.6.0</lucene.version>
         <mybatis.version>3.5.16</mybatis.version>
-        <postgresql.version>42.7.2</postgresql.version>
+        <postgresql.version>42.7.3</postgresql.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.plugin.version>3.13.0</maven.compiler.plugin.version>
         <log4j.version>2.23.1</log4j.version>
@@ -218,7 +218,7 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <version>5.7.0</version>
+            <version>5.11.0</version>
             <scope>test</scope>
         </dependency>
 
