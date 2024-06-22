@@ -4,9 +4,6 @@ import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.application.*;
 import com.dewarim.cinnamon.dao.DeletionDao;
 import com.dewarim.cinnamon.model.Deletion;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import com.fasterxml.jackson.dataformat.xml.deser.FromXmlParser;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletRequest;
@@ -28,7 +25,6 @@ public class DbSessionFilter implements Filter {
 
     private static final Logger log = LogManager.getLogger(DbSessionFilter.class);
 
-    private final ObjectMapper xmlMapper   = new XmlMapper().configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL, true);
     private final DeletionDao  deletionDao = new DeletionDao();
 
     @Override
@@ -63,6 +59,9 @@ public class DbSessionFilter implements Filter {
             log.warn("Caught unexpected exception -> rollback:", e);
             ThreadLocalSqlSession.getSqlSession().rollback();
             ErrorResponseGenerator.generateErrorMessage( (HttpServletResponse) response, INTERNAL_SERVER_ERROR_TRY_AGAIN_LATER, e.getMessage());
+        }
+        finally {
+            ThreadLocalSqlSession.setCurrentUser(null);
         }
     }
 

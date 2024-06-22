@@ -105,6 +105,14 @@ public class MicroserviceChangeTriggerIntegrationTest extends CinnamonIntegratio
         }
 
     }
+
+    @Disabled("for manual connection test, needs connect trigger")
+    @Test
+    public void connectionTest() throws IOException {
+        CinnamonClient cinnamonClient1 = new CinnamonClient(client, "doe", "admin");
+        cinnamonClient1.connect();
+    }
+
     @Test
     @Disabled("needs refactor - breaks maven build somehow")
     public void changeTriggerWithoutChangeTriggerUserTest() throws IOException {

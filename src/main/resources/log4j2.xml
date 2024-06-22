@@ -36,5 +36,15 @@
         <Logger name="com.dewarim.cinnamon.filter" level="info">
             <AppenderRef ref="Console"/>
         </Logger>
+        <Logger name="com.dewarim.cinnamon.filter.ChangeTriggerFilter" level="debug">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="com.dewarim.cinnamon.filter.PostCommitChangeTriggerHandler" level="debug">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="org.apache.hc.client5.http" level="warn">
+            <AppenderRef ref="Console"/>
+        </Logger>
+
     </Loggers>
 </Configuration>

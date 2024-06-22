@@ -6,6 +6,7 @@ import com.dewarim.cinnamon.api.login.LoginResult;
 import com.dewarim.cinnamon.application.CinnamonRequest;
 import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.application.CinnamonServer;
+import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.application.exception.CinnamonException;
 import com.dewarim.cinnamon.configuration.SecurityConfig;
 import com.dewarim.cinnamon.dao.SessionDao;
@@ -52,7 +53,7 @@ public class CinnamonServlet extends HttpServlet {
 
         UrlMapping mapping = UrlMapping.getByPath(request.getRequestURI());
         switch (mapping) {
-            case CINNAMON__INFO -> info(request, response);
+            case CINNAMON__INFO -> info(response);
             default -> hello(response);
         }
 
@@ -68,7 +69,7 @@ public class CinnamonServlet extends HttpServlet {
         }
     }
 
-    private void info(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    private void info(HttpServletResponse response) throws IOException {
         response.setContentType("application/xml");
         response.setStatus(HttpServletResponse.SC_OK);
         response.getWriter().println(xmlMapper.writeValueAsString(cinnamonVersion));
@@ -155,6 +156,7 @@ public class CinnamonServlet extends HttpServlet {
         else {
             CONNECTION_FAIL_WRONG_PASSWORD.throwUp();
         }
+        ThreadLocalSqlSession.setCurrentUser(user);
         response.setUser(user);
     }
 

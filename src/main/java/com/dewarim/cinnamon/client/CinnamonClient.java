@@ -1364,4 +1364,16 @@ public class CinnamonClient {
             throw new CinnamonClientException(message);
         }
     }
+
+    @Override
+    public String toString() {
+        return "CinnamonClient{" +
+                "port=" + port +
+                ", host='" + host + '\'' +
+                ", protocol='" + protocol + '\'' +
+                ", username='" + username + '\'' +
+                ", password='" + password + '\'' +
+                ", ticket='" + ticket + '\'' +
+                '}';
+    }
 }

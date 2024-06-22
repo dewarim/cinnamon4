@@ -8,12 +8,7 @@ import com.dewarim.cinnamon.dao.SessionDao;
 import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.model.Session;
 import com.dewarim.cinnamon.model.UserAccount;
-import jakarta.servlet.Filter;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.FilterConfig;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.ServletResponse;
+import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.logging.log4j.LogManager;
@@ -72,6 +67,7 @@ public class AuthenticationFilter implements Filter {
     }
 
     private void failAuthentication(HttpServletResponse servletResponse, ErrorCode errorCode) {
+        log.info("Authentication failed: {}", errorCode);
         ErrorResponseGenerator.generateErrorMessage(servletResponse, errorCode);
     }
 
