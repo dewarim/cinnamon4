@@ -17,7 +17,7 @@ import java.util.List;
  * Provide LDAP login functionality for Cinnamon server.
  */
 public class LdapLoginProvider implements LoginProvider {
-    private static final Logger log = LogManager.getLogger();
+    private static final Logger log = LogManager.getLogger(LdapLoginProvider.class);
 
     public final UserService userService = new UserService();
 

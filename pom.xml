@@ -7,7 +7,7 @@
     <groupId>com.dewarim.cinnamon</groupId>
     <artifactId>cinnamon-cms</artifactId>
     <packaging>jar</packaging>
-    <version>1.3.10</version>
+    <version>1.3.11</version>
     <name>Cinnamon CMS</name>
 
     <properties>
@@ -83,10 +83,60 @@
                 <version>${jetty.annotations.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-handler</artifactId>
+                <version>4.1.108.Final</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-handler-proxy</artifactId>
+                <version>4.1.108.Final</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-buffer</artifactId>
+                <version>4.1.108.Final</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-codec</artifactId>
+                <version>4.1.108.Final</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-codec-http</artifactId>
+                <version>4.1.108.Final</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>33.2.1-jre</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-codec-http2</artifactId>
+                <version>4.1.108.Final</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-tcnative-boringssl-static</artifactId>
+                <version>2.0.65.Final</version>
+            </dependency>
+            <dependency>
+                <groupId>com.jayway.jsonpath</groupId>
+                <artifactId>json-path</artifactId>
+                <version>2.9.0</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
     <dependencies>
+
+        <dependency>
+            <groupId>com.jayway.jsonpath</groupId>
+            <artifactId>json-path</artifactId>
+        </dependency>
 
         <!-- jetty server -->
         <dependency>
@@ -193,7 +243,7 @@
         <dependency>
             <groupId>org.apache.httpcomponents.client5</groupId>
             <artifactId>httpclient5</artifactId>
-            <version>5.2.1</version>
+            <version>5.3</version>
         </dependency>
 
         <!-- testing -->
@@ -267,6 +317,16 @@
             <artifactId>mockserver-core</artifactId>
             <version>5.15.0</version>
             <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.jayway.jsonpath</groupId>
+                    <artifactId>json-path</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>commons-collections</groupId>
+                    <artifactId>commons-collections</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.mock-server</groupId>
@@ -342,6 +402,16 @@
                                     </manifestEntries>
                                 </transformer>
                             </transformers>
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
                         </configuration>
                     </execution>
                 </executions>
