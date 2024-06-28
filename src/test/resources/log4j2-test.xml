@@ -15,6 +15,12 @@
             <AppenderRef ref="Console"/>
         </Logger>
         <Logger name="com.dewarim.cinnamon.model.UserAccount" level="warn"><AppenderRef ref="Console"/></Logger>
+        <Logger name="com.dewarim.cinnamon.filter.ChangeTriggerFilter" level="debug">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="com.dewarim.cinnamon.filter.PostCommitChangeTriggerHandler" level="debug">
+            <AppenderRef ref="Console"/>
+        </Logger>
         <Logger name="com.dewarim.cinnamon.model.Group" level="warn"><AppenderRef ref="Console"/></Logger>
         <Logger name="com.dewarim.cinnamon.model.GroupUser" level="warn"><AppenderRef ref="Console"/></Logger>
         <Logger name="com.dewarim.cinnamon.model.AclGroup" level="warn"><AppenderRef ref="Console"/></Logger>
@@ -26,6 +32,12 @@
         <Logger name="com.dewarim.cinnamon.model.SessionMapper" level="warn"><AppenderRef ref="Console"/></Logger>
         <Logger name="com.dewarim.cinnamon.filter.AuthenticationFilter" level="warn"><AppenderRef ref="Console"/></Logger>
         <Logger name="org.apache.hc.client5.http" level="warn"><AppenderRef ref="Console"/></Logger>
-
+        <Logger name="io.netty.util" level="warn"><AppenderRef ref="Console"/></Logger>
+        <Logger name="com.networknt" level="warn">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="com.networknt.schema.TypeValidator" level="warn">
+            <AppenderRef ref="Console"/>
+        </Logger>
     </Loggers>
 </Configuration>
