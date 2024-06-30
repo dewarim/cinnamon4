@@ -1,6 +1,7 @@
 package com.dewarim.cinnamon.security;
 
 import com.dewarim.cinnamon.api.login.GroupMapping;
+import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.configuration.LdapConfig;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.unboundid.ldap.sdk.LDAPConnection;
@@ -31,15 +32,10 @@ public class UnboundIdLdapConnector {
 
     private static final Logger log = LoggerFactory.getLogger(UnboundIdLdapConnector.class);
 
-    /**
-     * Loaded once at start by BootStrap. If no ldap-config.xml is found, this remains an empty object.
-     */
-    public static LdapConfig config = new LdapConfig();
-
     private final LdapConfig ldapConfig;
 
     public UnboundIdLdapConnector() {
-        ldapConfig = config;
+        ldapConfig = CinnamonServer.getConfig().getSecurityConfig().getLdapConfig();
     }
 
     public UnboundIdLdapConnector(LdapConfig ldapConfig) {
@@ -194,8 +190,10 @@ public class UnboundIdLdapConnector {
         System.out.println("\n");
     }
 
+    // used by LdapLoginProvider
+    @SuppressWarnings({"unused"})
     public String getDefaultLanguageCode() {
-        return config.getDefaultLanguageCode();
+        return ldapConfig.getDefaultLanguageCode();
     }
 
 }
