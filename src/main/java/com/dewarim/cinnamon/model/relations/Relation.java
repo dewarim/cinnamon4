@@ -1,99 +1,32 @@
 package com.dewarim.cinnamon.model.relations;
 
 import com.dewarim.cinnamon.api.Identifiable;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
-import java.util.Objects;
+@JsonDeserialize(as = RelationImpl.class)
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, visible = false)
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = RelationImpl.class, name = "relation"),
+        @JsonSubTypes.Type(value = ExtendedRelation.class, name = "extendedRelation")
+})
+public interface Relation extends Identifiable {
+    void setId(Long id);
 
-@JacksonXmlRootElement(localName = "relation")
-//@JsonSerialize(using = RelationSerializer.class)
-public class Relation implements Identifiable {
-    
-    private Long id;
-    private Long leftId;
-    private Long rightId;
-    private Long typeId;
-    private String metadata;
+    Long getLeftId();
 
-    public Relation() {
-    }
+    void setLeftId(Long leftId);
 
-    public Relation(Long leftId, Long rightId, Long typeId, String metadata) {
-        this.leftId = leftId;
-        this.rightId = rightId;
-        this.typeId = typeId;
-        this.metadata = metadata;
-    }
+    Long getRightId();
 
-    public Long getId() {
-        return id;
-    }
+    void setRightId(Long rightId);
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    Long getTypeId();
 
-    public Long getLeftId() {
-        return leftId;
-    }
+    void setTypeId(Long typeId);
 
-    public void setLeftId(Long leftId) {
-        this.leftId = leftId;
-    }
+    String getMetadata();
 
-    public Long getRightId() {
-        return rightId;
-    }
-
-    public void setRightId(Long rightId) {
-        this.rightId = rightId;
-    }
-
-    public Long getTypeId() {
-        return typeId;
-    }
-
-    public void setTypeId(Long typeId) {
-        this.typeId = typeId;
-    }
-
-    public String getMetadata() {
-        return metadata;
-    }
-
-    public void setMetadata(String metadata) {
-        this.metadata = metadata;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        Relation relation = (Relation) o;
-        return Objects.equals(leftId, relation.leftId) &&
-               Objects.equals(rightId, relation.rightId) &&
-               Objects.equals(typeId, relation.typeId) &&
-               Objects.equals(metadata, relation.metadata);
-    }
-
-    @Override
-    public int hashCode() {
-
-        return Objects.hash(leftId, rightId, typeId);
-    }
-
-    @Override
-    public String toString() {
-        return "Relation{" +
-               "id=" + id +
-               ", leftId=" + leftId +
-               ", rightId=" + rightId +
-               ", typeId=" + typeId +
-               ", metadata='" + metadata + '\'' +
-               '}';
-    }
+    void setMetadata(String metadata);
 }

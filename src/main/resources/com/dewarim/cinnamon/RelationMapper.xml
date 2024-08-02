@@ -5,7 +5,7 @@
 
 <mapper namespace="com.dewarim.cinnamon.model.relations.Relation">
 
-    <resultMap id="relationMap" type="com.dewarim.cinnamon.model.relations.Relation">
+    <resultMap id="relationMap" type="com.dewarim.cinnamon.model.relations.RelationImpl">
         <id property="id" column="id"/>
         <result property="leftId" column="left_id"/>
         <result property="rightId" column="right_id"/>

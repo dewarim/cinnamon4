@@ -115,6 +115,8 @@ An OSD document as seen by the index service:
     <relations>
         <relation>
             <id>1</id>
+            <isParent>true</isParent>
+            <isChild>false</isChild>
             <leftId>4</leftId>
             <rightId>3</rightId>
             <typeId>3</typeId>
