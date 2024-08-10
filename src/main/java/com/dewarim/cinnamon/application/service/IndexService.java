@@ -301,7 +301,7 @@ public class IndexService implements Runnable {
             List<Long>     relationCriteria = List.of(osd.getId());
             List<Relation> relations        = new RelationDao().getRelationsOrMode(relationCriteria, relationCriteria, Collections.emptyList(), true);
             List<Relation> familyRelations = relations.stream().map(relation ->
-                    (Relation) new ExtendedRelation(relation.getLeftId(), relation.getRightId(), relation.getTypeId(),
+                    (Relation) new ExtendedRelation(relation.getId(), relation.getLeftId(), relation.getRightId(), relation.getTypeId(),
                             relation.getMetadata(), relation.getLeftId().equals(osd.getId()))).toList();
             osd.setRelations(familyRelations);
 

@@ -15,10 +15,9 @@ public class ExtendedRelation implements Relation {
     private Long    typeId;
     private String  metadata;
 
-    public ExtendedRelation() {
-    }
 
-    public ExtendedRelation(Long leftId, Long rightId, Long typeId, String metadata, boolean parent) {
+    public ExtendedRelation(Long id, Long leftId, Long rightId, Long typeId, String metadata, boolean parent) {
+        this.id       = id;
         this.leftId   = leftId;
         this.rightId  = rightId;
         this.typeId   = typeId;
@@ -26,7 +25,7 @@ public class ExtendedRelation implements Relation {
     }
 
     @JsonProperty("isChild")
-    public boolean isChild(){
+    public boolean isChild() {
         return !parent;
     }
 
@@ -105,7 +104,7 @@ public class ExtendedRelation implements Relation {
     public String toString() {
         return "ExtendedRelation{" +
                 "isParent=" + parent +
-                ", isChild=" + isChild()+
+                ", isChild=" + isChild() +
                 ", id=" + id +
                 ", leftId=" + leftId +
                 ", rightId=" + rightId +
