@@ -299,6 +299,9 @@ public class IndexService implements Runnable {
 
             List<Long>     relationCriteria = List.of(osd.getId());
             List<Relation> relations        = new RelationDao().getRelationsOrMode(relationCriteria, relationCriteria, Collections.emptyList(), true);
+            for (Relation relation : relations) {
+                relation.setParent(relation.getLeftId().equals(osd.getId()));
+            }
             osd.setRelations(relations);
 
             byte[] content = NO_CONTENT;

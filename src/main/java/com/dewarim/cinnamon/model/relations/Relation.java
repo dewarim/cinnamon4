@@ -1,6 +1,7 @@
 package com.dewarim.cinnamon.model.relations;
 
 import com.dewarim.cinnamon.api.Identifiable;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.Objects;
@@ -14,6 +15,7 @@ public class Relation implements Identifiable {
     private Long rightId;
     private Long typeId;
     private String metadata;
+    private Boolean isParent;
 
     public Relation() {
     }
@@ -23,6 +25,23 @@ public class Relation implements Identifiable {
         this.rightId = rightId;
         this.typeId = typeId;
         this.metadata = metadata;
+    }
+
+    public void setParent(Boolean parent) {
+        isParent = parent;
+    }
+
+    @JsonProperty("isParent")
+    public Boolean getParent() {
+        return isParent;
+    }
+
+    @JsonProperty("isChild")
+    public Boolean isChild(){
+        if(isParent == null){
+            return null;
+        }
+        return !isParent;
     }
 
     public Long getId() {

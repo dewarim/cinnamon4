@@ -5,6 +5,7 @@ import com.dewarim.cinnamon.application.service.index.DescendingStringIndexer;
 import com.dewarim.cinnamon.application.service.search.WildcardQueryBuilder;
 import com.dewarim.cinnamon.model.Meta;
 import com.dewarim.cinnamon.model.ObjectSystemData;
+import com.dewarim.cinnamon.model.relations.Relation;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -73,6 +74,9 @@ public class CinnamonSearchTest {
         osd = new ObjectSystemData();
         Meta meta = new Meta(1L,1L,"<html><body><div><p>Schnitzel und Verbrechen</p></div></body></html>");
         osd.setMetas(List.of(meta));
+        Relation relation = new Relation(1L,2L,3L,"<meta>sxx</meta>");
+        relation.setParent(true);
+        osd.setRelations(List.of(relation));
     }
 
     @Test

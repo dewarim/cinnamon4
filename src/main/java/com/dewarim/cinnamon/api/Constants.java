@@ -2,6 +2,7 @@ package com.dewarim.cinnamon.api;
 
 import com.dewarim.cinnamon.model.Folder;
 import com.dewarim.cinnamon.model.ObjectSystemData;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.dataformat.xml.deser.FromXmlParser;
 
@@ -43,7 +44,8 @@ public class Constants {
     }
 
     public static final XmlMapper XML_MAPPER = (XmlMapper) new XmlMapper()
-            .configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL, true);
+            .configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL, true)
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     public static final String DEFAULT_DATABASE_SESSION_FACTORY = "com.dewarim.cinnamon.application.DbSessionFactory";
     public static final String DATA_ROOT_PATH_PROPERTY_NAME     = "dataRootPath";
