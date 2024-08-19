@@ -142,6 +142,10 @@ public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
         var rightOsd = toh.createOsd("right-osd").osd;
         // create
         var createdRelation = client.createRelation(leftOsd.getId(), rightOsd.getId(), 1L, "<meta>m</meta>");
+        assertNotNull(createdRelation);
+        assertEquals(createdRelation.getLeftId(), leftOsd.getId());
+        assertEquals(createdRelation.getRightId(), rightOsd.getId());
+        assertEquals(1L, (long) createdRelation.getTypeId());
 
         // verify relation exists:
 
