@@ -2,7 +2,6 @@ package com.dewarim.cinnamon.model.request.relation;
 
 import com.dewarim.cinnamon.api.ApiRequest;
 import com.dewarim.cinnamon.model.relations.Relation;
-import com.dewarim.cinnamon.model.relations.RelationImpl;
 import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.response.RelationWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
@@ -26,7 +25,7 @@ public class CreateRelationRequest implements CreateRequest<Relation>, ApiReques
     }
 
     public CreateRelationRequest(Long leftId, Long rightId, Long typeId, String metadata) {
-        relations.add(new RelationImpl(leftId, rightId, typeId, metadata));
+        relations.add(new Relation(leftId, rightId, typeId, metadata));
     }
 
     public CreateRelationRequest() {

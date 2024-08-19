@@ -10,7 +10,6 @@ import com.dewarim.cinnamon.dao.*;
 import com.dewarim.cinnamon.model.*;
 import com.dewarim.cinnamon.model.index.IndexJob;
 import com.dewarim.cinnamon.model.index.IndexJobType;
-import com.dewarim.cinnamon.model.relations.ExtendedRelation;
 import com.dewarim.cinnamon.model.relations.Relation;
 import com.dewarim.cinnamon.provider.ContentProviderService;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -134,7 +133,7 @@ public class IndexService implements Runnable {
                         else {
                             log.debug("no change to index");
                         }
-                        if (!jobsToDelete.isEmpty()) {
+                        if(!jobsToDelete.isEmpty()){
                             log.debug("deleting {} index jobs", jobsToDelete.size());
                         }
                         jobsToDelete.forEach(jobDao::delete);
@@ -300,10 +299,7 @@ public class IndexService implements Runnable {
 
             List<Long>     relationCriteria = List.of(osd.getId());
             List<Relation> relations        = new RelationDao().getRelationsOrMode(relationCriteria, relationCriteria, Collections.emptyList(), true);
-            List<Relation> familyRelations = relations.stream().map(relation ->
-                    (Relation) new ExtendedRelation(relation.getLeftId(), relation.getRightId(), relation.getTypeId(),
-                            relation.getMetadata(), relation.getLeftId().equals(osd.getId()))).toList();
-            osd.setRelations(familyRelations);
+            osd.setRelations(relations);
 
             byte[] content = NO_CONTENT;
             if (osd.getContentPath() != null && osd.getFormatId() != null) {

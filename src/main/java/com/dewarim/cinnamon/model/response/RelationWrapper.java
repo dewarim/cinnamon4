@@ -3,7 +3,6 @@ package com.dewarim.cinnamon.model.response;
 
 import com.dewarim.cinnamon.api.ApiResponse;
 import com.dewarim.cinnamon.model.relations.Relation;
-import com.dewarim.cinnamon.model.relations.RelationImpl;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
@@ -46,7 +45,7 @@ public class RelationWrapper extends BaseResponse implements Wrapper<Relation>, 
 
     @Override
     public List<Object> examples() {
-        Relation relation = new RelationImpl(1L, 4L, 1L, "<generatedBy>PDF Renderer</generatedBy");
+        Relation relation = new Relation(1L, 4L, 1L, "<generatedBy>PDF Renderer</generatedBy");
         relation.setId(399L);
         return List.of(new RelationWrapper(List.of(relation)));
     }

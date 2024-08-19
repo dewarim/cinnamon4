@@ -18,7 +18,6 @@ import com.dewarim.cinnamon.dao.*;
 import com.dewarim.cinnamon.model.*;
 import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.relations.Relation;
-import com.dewarim.cinnamon.model.relations.RelationImpl;
 import com.dewarim.cinnamon.model.relations.RelationType;
 import com.dewarim.cinnamon.model.request.IdListRequest;
 import com.dewarim.cinnamon.model.request.IdRequest;
@@ -323,11 +322,11 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
             for (Relation relation : relations) {
                 RelationType relationType = relationTypes.get(relation.getTypeId());
                 if (relationType.isCloneOnLeftCopy() && relation.getLeftId().equals(id)) {
-                    Relation rel = new RelationImpl(copy.getId(), relation.getRightId(), relation.getTypeId(), relation.getMetadata());
+                    Relation rel = new Relation(copy.getId(), relation.getRightId(), relation.getTypeId(), relation.getMetadata());
                     relationCopies.add(rel);
                 }
                 if (relationType.isCloneOnRightCopy() && relation.getRightId().equals(id)) {
-                    Relation rel = new RelationImpl(relation.getLeftId(), copy.getId(), relation.getTypeId(), relation.getMetadata());
+                    Relation rel = new Relation(relation.getLeftId(), copy.getId(), relation.getTypeId(), relation.getMetadata());
                     relationCopies.add(rel);
                 }
             }
@@ -934,11 +933,11 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         for (Relation relation : relations) {
             RelationType relationType = relationTypes.get(relation.getTypeId());
             if (relationType.isCloneOnLeftVersion() && relation.getLeftId().equals(preOsd.getId())) {
-                Relation rel = new RelationImpl(savedOsd.getId(), relation.getRightId(), relation.getTypeId(), relation.getMetadata());
+                Relation rel = new Relation(savedOsd.getId(), relation.getRightId(), relation.getTypeId(), relation.getMetadata());
                 relationCopies.add(rel);
             }
             if (relationType.isCloneOnRightVersion() && relation.getRightId().equals(preOsd.getId())) {
-                Relation rel = new RelationImpl(relation.getLeftId(), savedOsd.getId(), relation.getTypeId(), relation.getMetadata());
+                Relation rel = new Relation(relation.getLeftId(), savedOsd.getId(), relation.getTypeId(), relation.getMetadata());
                 relationCopies.add(rel);
             }
         }
