@@ -4,6 +4,7 @@ import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.Constants;
 import com.dewarim.cinnamon.client.CinnamonClient;
+import com.dewarim.cinnamon.client.CinnamonClientException;
 import com.dewarim.cinnamon.model.*;
 import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.relations.Relation;
@@ -11,6 +12,7 @@ import com.dewarim.cinnamon.model.relations.RelationType;
 import com.dewarim.cinnamon.model.request.folder.UpdateFolderRequest;
 import com.dewarim.cinnamon.model.request.osd.CreateNewVersionRequest;
 import com.dewarim.cinnamon.model.request.osd.CreateOsdRequest;
+import com.dewarim.cinnamon.model.request.osd.UpdateOsdRequest;
 
 import java.io.File;
 import java.io.IOException;
@@ -65,6 +67,7 @@ public class TestObjectHolder {
     public Relation     relation;
     public RelationType relationType;
     public String       newUserPassword;
+    public Lifecycle    lifecycle;
 
     /**
      * Initialize a new TestObjectHolder with default values, using the given client
@@ -328,6 +331,27 @@ public class TestObjectHolder {
         return this;
     }
 
+    public TestObjectHolder createLifecycle() throws IOException {
+        lifecycle = client.createLifecycle(createRandomName());
+        return this;
+    }
+
+    public TestObjectHolder attachLifecycle() throws IOException {
+        client.attachLifecycle(osd.getId(), lifecycle.getId(), lifecycleState.getId(), true);
+        return this;
+    }
+
+    public TestObjectHolder loadOsd(Long osdId) throws IOException {
+        osd = client.getOsdById(osdId, true, true);
+        return this;
+    }
+
+
+    public TestObjectHolder createLifecycleState(LifecycleState lcs) throws IOException {
+        lifecycleState = client.createLifecycleState(lcs);
+        return this;
+    }
+
     /**
      * Create a link to the given folder using the current folder, acl, owner.
      * New link object is stored in TOH.link field.
@@ -384,6 +408,13 @@ public class TestObjectHolder {
         return this;
     }
 
+    public TestObjectHolder setAclByNameOnOsd(String aclName) throws IOException {
+        var myAcl = acls.stream().filter(acl -> acl.getName().equals(aclName))
+                .findFirst().orElseThrow(() -> new CinnamonClientException("Could not find ACL: " + aclName));
+        client.updateOsd(new UpdateOsdRequest(osd.getId(), null, null, null, myAcl.getId(), null, null, false, false));
+        osd = client.getOsdById(osd.getId(), true, true);
+        return this;
+    }
 
     public TestObjectHolder createUser() throws IOException {
         newUserPassword = createRandomName();
@@ -413,6 +444,7 @@ public class TestObjectHolder {
     public TestObjectHolder deleteOsd() throws IOException {
         return deleteOsd(osd.getId());
     }
+
     public TestObjectHolder deleteOsd(Long id) throws IOException {
         client.deleteOsd(id);
         return this;
@@ -424,9 +456,9 @@ public class TestObjectHolder {
     }
 
 
-        /**
-         * Delete folder, without recursion into sub folders or deleting content (will fail if content/subfolders exist)
-         */
+    /**
+     * Delete folder, without recursion into sub folders or deleting content (will fail if content/subfolders exist)
+     */
     public TestObjectHolder deleteFolder(Long folderId) throws IOException {
         client.deleteFolder(folderId, false, false);
         return this;

@@ -2,6 +2,7 @@ package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.ErrorCode;
+import com.dewarim.cinnamon.api.Constants;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.api.lifecycle.LifecycleStateConfig;
 import com.dewarim.cinnamon.application.service.index.ParamParser;
@@ -26,15 +27,14 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-import static com.dewarim.cinnamon.DefaultPermission.CREATE_OBJECT;
-import static com.dewarim.cinnamon.DefaultPermission.LIFECYCLE_STATE_WRITE;
+import static com.dewarim.cinnamon.DefaultPermission.*;
 import static com.dewarim.cinnamon.ErrorCode.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTest {
-    private final static Logger log = LogManager.getLogger(LifecycleStateServletIntegrationTest.class);
-    public static final String CONFIG = "<config/>";
-    public static final String NOP_STATE = NopState.class.getName();
+    private final static Logger log       = LogManager.getLogger(LifecycleStateServletIntegrationTest.class);
+    public static final  String CONFIG    = "<config/>";
+    public static final  String NOP_STATE = NopState.class.getName();
 
     @Test
     public void getLifecycleStateWithInvalidRequest() {
@@ -145,8 +145,8 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
 
     @Test()
     public void attachLifecycleHappyPathWithNonDefaultState() throws IOException, InterruptedException {
-        var toh = new TestObjectHolder(client, userId).createOsd();
-        long osdId = toh.osd.getId();
+        var       toh       = new TestObjectHolder(client, userId).createOsd();
+        long      osdId     = toh.osd.getId();
         Lifecycle lifecycle = adminClient.createLifecycle("attachLifecycleHappyPathWithNonDefaultState");
         LifecycleState state = adminClient.createLifecycleState(new LifecycleState("authoring2", """
                 <config>
@@ -187,7 +187,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
 
     @Test
     public void detachLifecycleHappyPath() throws IOException {
-        var toh = new TestObjectHolder(client, userId).createOsd();
+        var  toh   = new TestObjectHolder(client, userId).createOsd();
         long osdId = toh.osd.getId();
 
         // attach lifecycle:
@@ -219,15 +219,53 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
     }
 
     @Test
+    public void changeStateHappyPathWithVersioning() throws IOException {
+        var adminToh = prepareAclGroupWithPermissions(
+                List.of(CREATE_OBJECT, LIFECYCLE_STATE_WRITE, VERSION_OBJECT, BROWSE))
+                .createLifecycle();
+        String config = """
+                <config>
+                <properties><property><name>aclName</name><value>__acl__</value></property></properties>
+                <nextStates><name>published</name></nextStates>
+                </config>
+                """;
+        LifecycleState versionState = new LifecycleState("versionState", config.replace("__acl__", adminToh.acl.getName()),
+                "com.dewarim.cinnamon.lifecycle.ChangeAclState",
+                adminToh.lifecycle.getId(),
+                null);
+
+        adminToh.createLifecycleState(versionState)
+                .createOsd()
+                .setAclByNameOnOsd(Constants.ACL_DEFAULT)
+                // attach the current lifecycle with the current lifecycle state to the current OSD
+                .attachLifecycle();
+
+        // breaking state for debugging by appending xxx to the acl name so the ChangeAcl action fails:
+//        versionState.setConfig(config.replace("</value>","xxx</value>"));
+//        versionState.setId(adminToh.lifecycleState.getId());
+//        adminClient.updateLifecycleState(versionState);
+
+        var userToh = new TestObjectHolder(client, userId);
+        userToh.osd = adminToh.osd;
+        log.debug("acl before version: {}", client.getAclById(userToh.osd.getAclId()).getName());
+        userToh.version();
+        log.debug("acl after version: {}", client.getAclById(userToh.osd.getAclId()).getName());
+
+        // should have new ACL, not default ACL:
+        assertEquals(adminToh.acl.getId(), userToh.osd.getAclId());
+        assertNotEquals(Constants.ACL_DEFAULT, client.getAclById(userToh.osd.getAclId()).getName());
+    }
+
+    @Test
     public void changeStateHappyPath() throws IOException {
         var toh = prepareAclGroupWithPermissions(List.of(CREATE_OBJECT, LIFECYCLE_STATE_WRITE))
-                .createOsd("changeStateHappyPath");
+                .createOsd();
         long osdId = toh.osd.getId();
         adminClient.attachLifecycle(osdId, 2L, 2L, true);
         // when the test-lifecycle is attached, it changes the ACL to one with all permissions, so
         // we need to change to a more restricted here to verify LIFECYCLE_STATE_WRITE is allowed.
         adminClient.lockOsd(osdId);
-        adminClient.updateOsd(new UpdateOsdRequest(osdId, null, null, null, toh.acl.getId(), null, null,null,null));
+        adminClient.updateOsd(new UpdateOsdRequest(osdId, null, null, null, toh.acl.getId(), null, null, null, null));
         client.changeLifecycleState(osdId, 3L);
         // we have to fetch the OSD via adminClient, because after change to ACL#1, it's no longer browsable
         // for the normal test user
@@ -239,13 +277,13 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
 
     @Test
     public void changeStateNoLifecycleStateWritePermission() throws IOException {
-        var toh = prepareAclGroupWithPermissions(List.of(CREATE_OBJECT)).createOsd();
+        var  toh   = prepareAclGroupWithPermissions(List.of(CREATE_OBJECT)).createOsd();
         long osdId = toh.osd.getId();
         adminClient.attachLifecycle(osdId, 2L, 2L, true);
         // when the test-lifecycle is attached, it changes the ACL to one with all permissions, so
         // we need to change to a more restricted here to verify LIFECYCLE_STATE_WRITE is allowed.
         adminClient.lockOsd(osdId);
-        adminClient.updateOsd(new UpdateOsdRequest(osdId, null, null, null, toh.acl.getId(), null, null,null,null));
+        adminClient.updateOsd(new UpdateOsdRequest(osdId, null, null, null, toh.acl.getId(), null, null, null, null));
         assertClientError(() -> client.changeLifecycleState(osdId, 3L), NO_LIFECYCLE_STATE_WRITE_PERMISSION);
     }
 
@@ -277,7 +315,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
 
     @Test
     public void getNextStatesHappyPath() throws IOException {
-        var toh = new TestObjectHolder(client, userId).createOsd("getNextStatesHappyPath");
+        var  toh   = new TestObjectHolder(client, userId).createOsd("getNextStatesHappyPath");
         Long osdId = toh.osd.getId();
         adminClient.attachLifecycle(osdId, 3L, 2L, true);
         List<LifecycleState> lifecycleStates = client.getNextLifecycleStates(osdId);
