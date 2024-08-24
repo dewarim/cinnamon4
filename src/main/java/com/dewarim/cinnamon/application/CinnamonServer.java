@@ -5,6 +5,7 @@ import com.beust.jcommander.Parameter;
 import com.dewarim.cinnamon.api.ApiRequest;
 import com.dewarim.cinnamon.api.ApiResponse;
 import com.dewarim.cinnamon.api.UrlMapping;
+import com.dewarim.cinnamon.application.exception.CinnamonException;
 import com.dewarim.cinnamon.application.service.IndexService;
 import com.dewarim.cinnamon.application.service.SearchService;
 import com.dewarim.cinnamon.application.service.TikaService;
@@ -60,7 +61,7 @@ public class CinnamonServer {
 
     private static final Logger log = LogManager.getLogger(CinnamonServer.class);
 
-    public static final String           VERSION       = "1.3.14";
+    public static final String           VERSION       = "1.3.15";
     private             Server           server;
     private             DbSessionFactory dbSessionFactory;
     private final       WebAppContext    webAppContext = new WebAppContext();
@@ -122,6 +123,8 @@ public class CinnamonServer {
             server.addConnector(httpsConnector);
         }
 
+        configureDebugLog();
+
         server.setHandler(webAppContext);
         log.info("Starting CinnamonServer.");
         addSingletons();
@@ -140,6 +143,26 @@ public class CinnamonServer {
         if (!enableHttp && !enableHttps) {
             log.warn("You have disabled both http and https endpoints, so there is no way for you to talk to me." +
                     " Still starting the server, perhaps you want to just enable indexing etc.");
+        }
+
+    }
+
+    public static boolean isDebugEnabled() {
+        // maybe later return it based on user config
+        return config.getDebugConfig().isDebugEnabled();
+    }
+
+    private void configureDebugLog() {
+        log.info("Debug log is enabled: {} ", isDebugEnabled());
+        if (isDebugEnabled()) {
+
+            File debugFolder = new File(config.getDebugConfig().getDebugFolderPath());
+            if (!debugFolder.exists()) {
+                boolean makeDirResult = debugFolder.mkdirs();
+                if (!makeDirResult) {
+                    throw new CinnamonException("Unable to create debug folder at {}.", debugFolder.getAbsolutePath());
+                }
+            }
         }
     }
 
@@ -323,9 +346,9 @@ public class CinnamonServer {
         mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
         System.out.println("""
                 # API Endpoint Documentation
-                        
+                
                 Note: response examples are not directly matching request examples, they just show the format you can expect.
-                        
+                
                 """);
         Arrays.stream(UrlMapping.values()).forEach(urlMapping -> {
                     String formatted;
@@ -335,15 +358,15 @@ public class CinnamonServer {
                             String template = """
                                     # __endpoint__
                                     __description__
-                                                                        
+                                    
                                     ## Request
-                                                                        
+                                    
                                     __request__
-                                                                        
+                                    
                                     ## Response
-
+                                    
                                     __response__
-
+                                    
                                     ---
                                     """;
                             formatted = template
@@ -360,7 +383,7 @@ public class CinnamonServer {
                         String template = """
                                 # __endpoint__
                                 __description__
-                                                                
+                                
                                 ---
                                 """;
                         formatted = template

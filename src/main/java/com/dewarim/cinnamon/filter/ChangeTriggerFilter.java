@@ -5,7 +5,9 @@ import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonRequest;
 import com.dewarim.cinnamon.application.CinnamonResponse;
+import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
+import com.dewarim.cinnamon.application.service.debug.DebugLogService;
 import com.dewarim.cinnamon.application.trigger.TriggerResult;
 import com.dewarim.cinnamon.dao.ChangeTriggerDao;
 import com.dewarim.cinnamon.model.ChangeTrigger;
@@ -54,14 +56,22 @@ public class ChangeTriggerFilter extends HttpFilter {
         List<ChangeTrigger> preTriggers = triggers.stream().filter(ChangeTrigger::isPreTrigger)
                 .sorted(Comparator.comparingLong(ChangeTrigger::getRanking)).toList();
         log.debug("Found {} preTriggers to execute.", preTriggers.size());
-        if (triggers.size() > 0) {
+        boolean isDebugEnabled = CinnamonServer.isDebugEnabled();
+        if (triggers.size() > 0 || isDebugEnabled) {
             boolean doCopyFileContent = triggers.stream().anyMatch(ChangeTrigger::isCopyFileContent);
             log.debug("Found change trigger that requires copyFileContent: {}", doCopyFileContent);
+            if (isDebugEnabled) {
+                log.debug("copy request for debugging");
+                doCopyFileContent = true;
+            }
             cinnamonRequest.copyInputStream(doCopyFileContent);
+            if(isDebugEnabled && cinnamonRequest.getByteInput() != null) {
+                DebugLogService.log("cinnamonRequest:", cinnamonRequest.getByteInput().getContent());
+            }
         }
 
         try {
-            if(activeChangeTriggerFilter(user, cinnamonResponse)) {
+            if (activeChangeTriggerFilter(user, cinnamonResponse)) {
                 // do pre triggers:
                 for (ChangeTrigger trigger : preTriggers) {
                     log.debug("Calling changeTrigger {}", trigger.getName());
@@ -77,7 +87,7 @@ public class ChangeTriggerFilter extends HttpFilter {
             chain.doFilter(cinnamonRequest, cinnamonResponse);
             log.debug("After servlet: continue with post-triggers");
 
-            if(!activeChangeTriggerFilter(user, cinnamonResponse)){
+            if (!activeChangeTriggerFilter(user, cinnamonResponse)) {
                 return;
             }
             // do post triggers:

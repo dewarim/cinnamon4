@@ -54,7 +54,7 @@ public class PermissionServlet extends HttpServlet implements CruddyServlet<Perm
     }
 
     private void changePermissions(HttpServletRequest request, CinnamonResponse cinnamonResponse) throws IOException {
-        ChangePermissionsRequest changeRequest = getMapper().readValue(request.getReader(), ChangePermissionsRequest.class)
+        ChangePermissionsRequest changeRequest = getMapper().readValue(request.getInputStream(), ChangePermissionsRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         var            aclGroupDao = new AclGroupDao();
         List<AclGroup> aclGroups   = aclGroupDao.getObjectsById(List.of(changeRequest.getAclGroupId()));
@@ -70,7 +70,7 @@ public class PermissionServlet extends HttpServlet implements CruddyServlet<Perm
     }
 
     private void getUserPermissions(HttpServletRequest request, CinnamonResponse response) throws IOException {
-        UserPermissionRequest permissionRequest = getMapper().readValue(request.getReader(), UserPermissionRequest.class).validateRequest()
+        UserPermissionRequest permissionRequest = getMapper().readValue(request.getInputStream(), UserPermissionRequest.class).validateRequest()
                 .orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
         long      userId   = permissionRequest.getUserId();

@@ -7,20 +7,23 @@ public class CinnamonConfig {
 
     private ServerConfig serverConfig = new ServerConfig();
 
-    private String     systemAdministratorEmail;
-    private MailConfig mailConfig = new MailConfig();
+    private String                    systemAdministratorEmail;
+    private MailConfig                mailConfig          = new MailConfig();
+    private SecurityConfig            securityConfig      = new SecurityConfig();
+    private DatabaseConfig            databaseConfig      = new DatabaseConfig();
+    private LuceneConfig              luceneConfig        = new LuceneConfig();
+    private CinnamonTikaConfig        cinnamonTikaConfig  = new CinnamonTikaConfig();
+    private List<LoginProviderConfig> loginProviders      = new ArrayList<>();
+    private ChangeTriggerConfig       changeTriggerConfig = new ChangeTriggerConfig();
+    private DebugConfig               debugConfig         = new DebugConfig();
 
-    private SecurityConfig securityConfig = new SecurityConfig();
+    public DebugConfig getDebugConfig() {
+        return debugConfig;
+    }
 
-    private DatabaseConfig databaseConfig = new DatabaseConfig();
-
-    private LuceneConfig luceneConfig = new LuceneConfig();
-
-    private CinnamonTikaConfig cinnamonTikaConfig = new CinnamonTikaConfig();
-
-    private List<LoginProviderConfig> loginProviders = new ArrayList<>();
-
-    private ChangeTriggerConfig changeTriggerConfig = new ChangeTriggerConfig();
+    public void setDebugConfig(DebugConfig debugConfig) {
+        this.debugConfig = debugConfig;
+    }
 
     public String getSystemAdministratorEmail() {
         return systemAdministratorEmail;

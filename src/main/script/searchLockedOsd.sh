@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PORT=8080
-TICKET=$(curl --silent --show-error -X POST "http://localhost:${PORT}/cinnamon/connect?user=admin&password=admin&format=text")
+TICKET=$(curl --silent --show-error -X POST "http://localhost:${PORT}/cinnamon/connect" --data "<connectionRequest><username>admin</username><password>admin</password><format>text</format></connectionRequest>")
 
 echo "<xml>Foo the Fool</xml>" > /tmp/content.xml
 echo "<createOsdRequest><name>Bar</name><parentId>1</parentId><ownerId>1</ownerId><aclId>1</aclId><typeId>1</typeId><formatId>1</formatId><languageId>1</languageId><lifecycleStateId/><metas/></createOsdRequest>" > /tmp/osd.xml

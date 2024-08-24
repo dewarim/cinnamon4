@@ -53,4 +53,11 @@ public class CinnamonErrorWrapper extends BaseResponse implements Wrapper<Cinnam
                 new CinnamonError(ErrorCode.FOLDER_NOT_FOUND.getCode(), 54L)
         )));
     }
+
+    @Override
+    public String toString() {
+        return "CinnamonErrorWrapper{" +
+                "errors=" + errors +
+                '}';
+    }
 }

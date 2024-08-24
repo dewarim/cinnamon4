@@ -2,7 +2,6 @@ package com.dewarim.cinnamon.application;
 
 
 import com.dewarim.cinnamon.ErrorCode;
-import com.dewarim.cinnamon.FailedRequestException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.HttpServletRequest;
@@ -42,7 +41,7 @@ public class CinnamonRequest extends HttpServletRequestWrapper {
         if (multiPart) {
             Part crp = request.getPart(CINNAMON_REQUEST_PART);
             if (crp == null) {
-                throw new FailedRequestException(ErrorCode.INVALID_REQUEST, "missing " + CINNAMON_REQUEST_PART + " in multi-part request");
+                throw ErrorCode.MISSING_REQUEST_PAYLOAD.exception();
             }
             cinnamonRequestPart = new RequestPart(crp);
             if (copyFileContent) {

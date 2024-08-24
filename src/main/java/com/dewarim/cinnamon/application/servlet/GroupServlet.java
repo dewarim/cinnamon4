@@ -92,7 +92,7 @@ public class GroupServlet extends HttpServlet implements CruddyServlet<Group> {
     }
 
     private void removeUserFromGroups(HttpServletRequest request, UserAccount user, CinnamonResponse cinnamonResponse) throws IOException {
-        RemoveUserFromGroupsRequest removeRequest = getMapper().readValue(request.getReader(), RemoveUserFromGroupsRequest.class)
+        RemoveUserFromGroupsRequest removeRequest = getMapper().readValue(request.getInputStream(), RemoveUserFromGroupsRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         GroupUserDao groupUserDao = new GroupUserDao();
         groupUserDao.removeUserFromGroups(removeRequest.getUserId(), removeRequest.getGroupIds());
@@ -101,7 +101,7 @@ public class GroupServlet extends HttpServlet implements CruddyServlet<Group> {
     }
 
     private void addUserToGroups(HttpServletRequest request, CinnamonResponse cinnamonResponse) throws IOException {
-        AddUserToGroupsRequest addRequest = getMapper().readValue(request.getReader(), AddUserToGroupsRequest.class)
+        AddUserToGroupsRequest addRequest = getMapper().readValue(request.getInputStream(), AddUserToGroupsRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         GroupUserDao groupUserDao = new GroupUserDao();
         groupUserDao.addUserToGroups(addRequest.getUserId(), addRequest.getGroupIds());

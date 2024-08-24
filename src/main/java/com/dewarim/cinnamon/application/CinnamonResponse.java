@@ -3,6 +3,7 @@ package com.dewarim.cinnamon.application;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.ApiResponse;
 import com.dewarim.cinnamon.application.exception.CinnamonException;
+import com.dewarim.cinnamon.application.service.debug.DebugLogService;
 import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.response.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -30,7 +31,7 @@ public class CinnamonResponse extends HttpServletResponseWrapper {
     private       int                         statusCode             = HttpStatus.SC_OK;
     private       ApiResponse                 response;
     private final List<ChangeTriggerResponse> changeTriggerResponses = new ArrayList<>();
-    private UserAccount user;
+    private       UserAccount                 user;
 
     public CinnamonResponse(HttpServletResponse servletResponse) {
         super(servletResponse);
@@ -54,7 +55,10 @@ public class CinnamonResponse extends HttpServletResponseWrapper {
             servletResponse.setCharacterEncoding("UTF-8");
             servletResponse.setHeader(HEADER_FIELD_CINNAMON_ERROR, errorCode.name());
             if (logResponses) {
-                log.debug("sending response to client:\n{}", xmlMapper.writeValueAsString(wrapper));
+                log.debug("sending error response to client:\n{}", xmlMapper.writeValueAsString(wrapper));
+            }
+            if (CinnamonServer.isDebugEnabled()) {
+                DebugLogService.log("errorResponse:", wrapper);
             }
             xmlMapper.writeValue(servletResponse.getWriter(), wrapper);
         } catch (IOException e) {
@@ -93,7 +97,7 @@ public class CinnamonResponse extends HttpServletResponseWrapper {
             }
 
             ResponseUtil.responseIsXmlWithStatus(servletResponse, statusCode);
-            if (logResponses) {
+            if (logResponses || CinnamonServer.isDebugEnabled()) {
                 String output;
                 if (wrapper != null) {
                     output = xmlMapper.writeValueAsString(wrapper);
@@ -102,7 +106,16 @@ public class CinnamonResponse extends HttpServletResponseWrapper {
                     output = xmlMapper.writeValueAsString(response);
                 }
                 log.debug("sending response to client:\n{}", output);
-                servletResponse.getOutputStream().write(output.getBytes(StandardCharsets.UTF_8));
+                if(logResponses) {
+                    servletResponse.getOutputStream().write(output.getBytes(StandardCharsets.UTF_8));
+                }
+                if(CinnamonServer.isDebugEnabled()) {
+                    if(!logResponses) {
+                        servletResponse.getOutputStream().write(output.getBytes(StandardCharsets.UTF_8));
+                    }
+                    DebugLogService.log("CinnamonResponse:", wrapper);
+                    DebugLogService.stop();
+                }
             }
             else {
                 if (wrapper != null) {
@@ -151,7 +164,7 @@ public class CinnamonResponse extends HttpServletResponseWrapper {
     }
 
     public void setUser(UserAccount user) {
-        log.debug("store user {} in response object: ",user);
+        log.debug("store user {} in response object: ", user);
         this.user = user;
     }
 }
