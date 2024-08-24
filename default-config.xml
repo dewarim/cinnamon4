@@ -79,4 +79,8 @@
       <tlsVersion>V_1_3</tlsVersion>
     </tlsVersions>
   </changeTriggerConfig>
+  <debugConfig>
+    <debugFolderPath>/tmp/cinnamon-debug</debugFolderPath>
+    <debugEnabled>true</debugEnabled>
+  </debugConfig>
 </CinnamonConfig>

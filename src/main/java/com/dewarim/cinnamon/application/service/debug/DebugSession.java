@@ -72,6 +72,6 @@ public class DebugSession {
         } catch (IOException e) {
             throw new CinnamonException("Failed to write debug log: " + e.getMessage(), e);
         }
-        log.debug("sessionId{} ", object);
+        log.debug("session: {} {}",sessionId, object);
     }
 }

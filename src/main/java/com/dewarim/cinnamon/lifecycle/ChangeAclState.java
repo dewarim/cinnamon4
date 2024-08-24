@@ -40,7 +40,7 @@ public class ChangeAclState implements State {
         if (acl == null) {
             return new StateChangeResult(false, Arrays.asList(ErrorCode.ACL_NOT_FOUND.getCode(), aclName));
         }
-        log.debug("Setting acl from " + osd.getAclId() + " to " + acl.getId());
+        log.debug("Setting acl from {} to {}", osd.getAclId(), acl.getId());
         OsdDao osdDao = new OsdDao();
         osd.setAclId(acl.getId());
         osdDao.updateOsd((ObjectSystemData) osd, false);
@@ -49,7 +49,7 @@ public class ChangeAclState implements State {
 
     @Override
     public StateChangeResult exit(CinnamonObject osd, State nextState, LifecycleStateConfig config) {
-        log.debug("osd " + osd.getId() + " left ChangeAclState.");
+        log.debug("osd {} left ChangeAclState.", osd.getId());
         return new StateChangeResult(true);
     }
 

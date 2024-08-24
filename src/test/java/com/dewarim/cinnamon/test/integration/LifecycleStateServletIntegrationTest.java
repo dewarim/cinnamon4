@@ -221,7 +221,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
     @Test
     public void changeStateHappyPathWithVersioning() throws IOException {
         var adminToh = prepareAclGroupWithPermissions(
-                List.of(CREATE_OBJECT, LIFECYCLE_STATE_WRITE, VERSION_OBJECT, BROWSE))
+                List.of(CREATE_OBJECT, LIFECYCLE_STATE_WRITE, VERSION_OBJECT, BROWSE, READ_OBJECT_CUSTOM_METADATA))
                 .createLifecycle();
         String config = """
                 <config>
@@ -240,20 +240,23 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
                 // attach the current lifecycle with the current lifecycle state to the current OSD
                 .attachLifecycle();
 
-        // breaking state for debugging by appending xxx to the acl name so the ChangeAcl action fails:
-//        versionState.setConfig(config.replace("</value>","xxx</value>"));
-//        versionState.setId(adminToh.lifecycleState.getId());
-//        adminClient.updateLifecycleState(versionState);
-
+        // verify after attach: osd should have new aclId after attach-with-enter
         var userToh = new TestObjectHolder(client, userId);
-        userToh.osd = adminToh.osd;
+        userToh.loadOsd(adminToh.osd.getId());
+        assertEquals(userToh.osd.getAclId(), (adminToh.acl.getId()));
+
+        // now configure LCS to set default_acl on lifecycle state change:
+        versionState.setConfig(config.replace("__acl__",Constants.ACL_DEFAULT));
+        versionState.setId(adminToh.lifecycleState.getId());
+        adminClient.updateLifecycleState(versionState);
+
         log.debug("acl before version: {}", client.getAclById(userToh.osd.getAclId()).getName());
         userToh.version();
         log.debug("acl after version: {}", client.getAclById(userToh.osd.getAclId()).getName());
 
-        // should have new ACL, not default ACL:
-        assertEquals(adminToh.acl.getId(), userToh.osd.getAclId());
-        assertNotEquals(Constants.ACL_DEFAULT, client.getAclById(userToh.osd.getAclId()).getName());
+        // should be the default ACL, not newly created one:
+        assertNotEquals(adminToh.acl.getId(), userToh.osd.getAclId());
+        assertEquals(Constants.ACL_DEFAULT, client.getAclById(userToh.osd.getAclId()).getName());
     }
 
     @Test
