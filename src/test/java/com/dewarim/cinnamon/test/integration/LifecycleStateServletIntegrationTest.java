@@ -2,7 +2,6 @@ package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.ErrorCode;
-import com.dewarim.cinnamon.api.Constants;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.api.lifecycle.LifecycleStateConfig;
 import com.dewarim.cinnamon.application.service.index.ParamParser;
@@ -29,6 +28,7 @@ import java.util.List;
 
 import static com.dewarim.cinnamon.DefaultPermission.*;
 import static com.dewarim.cinnamon.ErrorCode.*;
+import static com.dewarim.cinnamon.api.Constants.ACL_DEFAULT;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTest {
@@ -220,6 +220,52 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
 
     @Test
     public void changeStateHappyPathWithVersioning() throws IOException {
+        List<DefaultPermission> permissions = List.of(CREATE_OBJECT, LIFECYCLE_STATE_WRITE, VERSION_OBJECT, BROWSE, READ_OBJECT_CUSTOM_METADATA);
+        var                     adminToh    = prepareAclGroupWithPermissions(permissions);
+        var                     versionAcl  = adminToh.acl;
+        adminToh = prepareAclGroupWithPermissions(permissions)
+                .createLifecycle();
+        var reviewAcl = adminToh.acl;
+        String config = """
+                <config>
+                <properties><property><name>aclName</name><value>__acl__</value></property></properties>
+                <nextStates><name>published</name></nextStates>
+                </config>
+                """;
+        LifecycleState versionState = new LifecycleState(adminToh.createRandomName(), config.replace("__acl__", versionAcl.getName()),
+                "com.dewarim.cinnamon.lifecycle.ChangeAclState",
+                adminToh.lifecycle.getId(),
+                null);
+
+        LifecycleState reviewState = new LifecycleState(adminToh.createRandomName(), config.replace("__acl__", reviewAcl.getName()),
+                "com.dewarim.cinnamon.lifecycle.ChangeAclState",
+                adminToh.lifecycle.getId(),
+                null);
+
+
+        adminToh.createLifecycleState(versionState);
+        reviewState.setLifecycleStateForCopyId(adminToh.lifecycleState.getId());
+
+        adminToh.createLifecycleState(reviewState)
+                // make reviewState the default state:
+                .updateLifecycleDefaultState()
+                .createOsd()
+                // attach the current lifecycle with the current default state to the current OSD
+                .attachLifecycle();
+
+        // verify after attach: osd should have new aclId after attach-with-enter
+        var userToh = new TestObjectHolder(client, userId);
+        userToh.loadOsd(adminToh.osd.getId());
+
+        // we have set the ACL to the new admin acl:
+        assertEquals(client.getAclById(userToh.osd.getAclId()).getId(), reviewAcl.getId());
+        userToh.version();
+        // after versioning, expect the OSD's acl to be the one specified by lifecycleStateForCopy (versionState -> new acl):
+        assertEquals(client.getAclById(userToh.osd.getAclId()).getId(), versionAcl.getId());
+    }
+
+    @Test
+    public void changeStateHappyPathWithAttachDefaultState() throws IOException {
         var adminToh = prepareAclGroupWithPermissions(
                 List.of(CREATE_OBJECT, LIFECYCLE_STATE_WRITE, VERSION_OBJECT, BROWSE, READ_OBJECT_CUSTOM_METADATA))
                 .createLifecycle();
@@ -229,14 +275,15 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
                 <nextStates><name>published</name></nextStates>
                 </config>
                 """;
-        LifecycleState versionState = new LifecycleState("versionState", config.replace("__acl__", adminToh.acl.getName()),
+        LifecycleState defaultState = new LifecycleState(adminToh.createRandomName(), config.replace("__acl__", adminToh.acl.getName()),
                 "com.dewarim.cinnamon.lifecycle.ChangeAclState",
                 adminToh.lifecycle.getId(),
                 null);
 
-        adminToh.createLifecycleState(versionState)
+        adminToh.createLifecycleState(defaultState)
                 .createOsd()
-                .setAclByNameOnOsd(Constants.ACL_DEFAULT)
+                .setAclByNameOnOsd(ACL_DEFAULT)
+                .updateLifecycleDefaultState()
                 // attach the current lifecycle with the current lifecycle state to the current OSD
                 .attachLifecycle();
 
@@ -244,19 +291,6 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
         var userToh = new TestObjectHolder(client, userId);
         userToh.loadOsd(adminToh.osd.getId());
         assertEquals(userToh.osd.getAclId(), (adminToh.acl.getId()));
-
-        // now configure LCS to set default_acl on lifecycle state change:
-        versionState.setConfig(config.replace("__acl__",Constants.ACL_DEFAULT));
-        versionState.setId(adminToh.lifecycleState.getId());
-        adminClient.updateLifecycleState(versionState);
-
-        log.debug("acl before version: {}", client.getAclById(userToh.osd.getAclId()).getName());
-        userToh.version();
-        log.debug("acl after version: {}", client.getAclById(userToh.osd.getAclId()).getName());
-
-        // should be the default ACL, not newly created one:
-        assertNotEquals(adminToh.acl.getId(), userToh.osd.getAclId());
-        assertEquals(Constants.ACL_DEFAULT, client.getAclById(userToh.osd.getAclId()).getName());
     }
 
     @Test

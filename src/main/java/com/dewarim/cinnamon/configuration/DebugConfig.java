@@ -3,7 +3,7 @@ package com.dewarim.cinnamon.configuration;
 public class DebugConfig {
 
     private String  debugFolderPath = "/tmp/cinnamon-debug";
-    private boolean debugEnabled    = true;
+    private boolean debugEnabled    = false;
 
     public String getDebugFolderPath() {
         return debugFolderPath;

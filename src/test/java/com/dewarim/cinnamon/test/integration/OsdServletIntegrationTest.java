@@ -487,7 +487,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         HttpEntity multipartEntity = MultipartEntityBuilder.create()
                 .addPart("file", fileBody).build();
         try (StandardResponse response = sendStandardMultipartRequest(UrlMapping.OSD__SET_CONTENT, multipartEntity)) {
-            assertCinnamonError(response, MISSING_REQUEST_PAYLOAD);
+            assertCinnamonError(response, INVALID_REQUEST);
         }
     }
 

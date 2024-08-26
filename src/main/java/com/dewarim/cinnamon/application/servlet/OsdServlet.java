@@ -975,15 +975,25 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
 
         // set lifecycle state
         if (preOsd.getLifecycleStateId() != null) {
-            LifecycleState lifecycleState = new LifecycleStateDao()
+            LifecycleStateDao stateDao = new LifecycleStateDao();
+            LifecycleState lifecycleState = stateDao
                     .getLifecycleStateById(preOsd.getLifecycleStateId())
                     .orElseThrow(ErrorCode.LIFECYCLE_STATE_NOT_FOUND.getException());
-            State             stateImpl         = StateProviderService.getInstance().getStateProvider(lifecycleState.getStateClass()).getState();
-            StateChangeResult attachStateResult = stateImpl.enter(osd, lifecycleState.getLifecycleStateConfig());
-            if (!attachStateResult.isSuccessful()) {
-                throw ErrorCode.LIFECYCLE_STATE_CHANGE_FAILED.exception();
+            Long copyId = lifecycleState.getLifecycleStateForCopyId();
+            if(copyId == null) {
+                log.debug("lifecycleStateForCopy is not set on OSD {}", osd.getId());
+                osd.setLifecycleStateId(null);
             }
-            osd.setLifecycleStateId(lifecycleState.getLifecycleStateForCopyId());
+            else {
+                LifecycleState stateForCopy = stateDao.getLifecycleStateById(copyId)
+                        .orElseThrow(LIFECYCLE_STATE_NOT_FOUND.getException());
+                State             stateImpl         = StateProviderService.getInstance().getStateProvider(stateForCopy.getStateClass()).getState();
+                StateChangeResult attachStateResult = stateImpl.enter(osd, stateForCopy.getLifecycleStateConfig());
+                if (!attachStateResult.isSuccessful()) {
+                    throw ErrorCode.LIFECYCLE_STATE_CHANGE_FAILED.exception();
+                }
+                osd.setLifecycleStateId(stateForCopy.getId());
+            }
         }
         osdDao.updateOsd(osd, false);
         OsdWrapper wrapper = new OsdWrapper();

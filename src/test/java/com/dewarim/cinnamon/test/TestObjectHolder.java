@@ -409,7 +409,7 @@ public class TestObjectHolder {
     }
 
     public TestObjectHolder setAclByNameOnOsd(String aclName) throws IOException {
-        var myAcl = acls.stream().filter(acl -> acl.getName().equals(aclName))
+        var myAcl = client.listAcls().stream().filter(acl -> acl.getName().equals(aclName))
                 .findFirst().orElseThrow(() -> new CinnamonClientException("Could not find ACL: " + aclName));
         client.updateOsd(new UpdateOsdRequest(osd.getId(), null, null, null, myAcl.getId(), null, null, false, false));
         osd = client.getOsdById(osd.getId(), true, true);
@@ -461,6 +461,12 @@ public class TestObjectHolder {
      */
     public TestObjectHolder deleteFolder(Long folderId) throws IOException {
         client.deleteFolder(folderId, false, false);
+        return this;
+    }
+
+    public TestObjectHolder updateLifecycleDefaultState() throws IOException {
+        lifecycle.setDefaultStateId(lifecycleState.getId());
+        client.updateLifecycle(lifecycle);
         return this;
     }
 }
