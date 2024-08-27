@@ -116,15 +116,17 @@ public class DeleteOsdService {
         Set<Long>              predecessorIds = osds.stream().map(ObjectSystemData::getPredecessorId).filter(Objects::nonNull).collect(Collectors.toSet());
         List<ObjectSystemData> predecessors   = osdDao.getObjectsById(predecessorIds.stream().toList(), false).stream().toList();
         for (ObjectSystemData predecessor : predecessors) {
+            Set<Long> predDescendants = osdDao.getOsdIdByIdWithDescendants(predecessor.getId());
             if (MAIN_BRANCH.matcher(predecessor.getCmnVersion()).matches()){
-                Set<Long> predDescendants = osdDao.getOsdIdByIdWithDescendants(predecessor.getId());
                 // ensure there are no descendants:
                 if(predDescendants.isEmpty()) {
                     predecessor.setLatestHead(true);
                 }
             }
             else{
-                predecessor.setLatestBranch(true);
+                if(predDescendants.isEmpty()) {
+                    predecessor.setLatestBranch(true);
+                }
             }
             osdDao.updateOsd(predecessor, false);
         }

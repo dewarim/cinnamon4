@@ -2339,4 +2339,33 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         assertFalse(toh.loadOsd(v1.getId()).osd.isLatestBranch());
     }
 
+    @Test
+    public void deleteAndSetLatestBranchOnBranchWithBranches() throws IOException {
+        var toh = new TestObjectHolder(client, userId).createOsd();
+        var v1  = toh.osd;
+        // create v2:
+        var v2 = toh.version().osd;
+
+        // create v1.1 :
+        toh.osd = v1;
+        // create v1.1-1
+        var v1ofBranch1 = toh.version().osd;
+
+        assertEquals("1.1-1", toh.osd.getCmnVersion());
+        toh.version();
+        assertEquals("1.1-2", toh.osd.getCmnVersion());
+
+        // create v1.2:
+        toh.osd = v1;
+        toh.version();
+        assertEquals("1.2-1", toh.osd.getCmnVersion());
+
+        toh.osd = v1ofBranch1;
+        toh.version();
+        assertEquals("1.1-1.1-1", toh.osd.getCmnVersion());
+        toh.osd = v1ofBranch1;
+        toh.version();
+        toh.deleteOsd();
+        assertFalse(toh.loadOsd(v1ofBranch1.getId()).osd.isLatestBranch());
+    }
 }
