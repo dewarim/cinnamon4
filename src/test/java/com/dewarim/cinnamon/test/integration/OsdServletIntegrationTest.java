@@ -1659,7 +1659,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         client.deleteOsd(version2.getId(), false);
         ObjectSystemData newHead = client.getOsdById(version1.getId(), false, false);
         assertTrue(newHead.isLatestHead());
-        assertTrue(newHead.isLatestBranch());
+        assertFalse(newHead.isLatestBranch());
     }
 
     @Test
@@ -2318,6 +2318,25 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         toh.deleteOsd(v2.getId());
         Thread.sleep(4000);
         assertTrue(verifySearchFindsPointField("locker", userId, 1));
+    }
+
+    @Test
+    public void testDeleteWithVersionAndLatestHead() throws IOException {
+        var toh = new TestObjectHolder(client, userId).createOsd();
+        var v1  = toh.osd;
+        // create v2:
+        var v2 = toh.version().osd;
+
+        // create v1.1 and delete it:
+        toh.osd = v1;
+        toh.version().deleteOsd();
+
+        // now v2 should remain latest head
+        assertTrue(toh.loadOsd(v2.getId()).osd.isLatestHead());
+        assertTrue(toh.loadOsd(v2.getId()).osd.isLatestBranch());
+        // and v1 should not be the latest head
+        assertFalse(toh.loadOsd(v1.getId()).osd.isLatestHead());
+        assertFalse(toh.loadOsd(v1.getId()).osd.isLatestBranch());
     }
 
 }
