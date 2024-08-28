@@ -1,12 +1,9 @@
 package com.dewarim.cinnamon.dao;
 
 import com.dewarim.cinnamon.ErrorCode;
-import com.dewarim.cinnamon.api.Constants;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.application.exception.BadArgumentException;
-import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.Folder;
-import com.dewarim.cinnamon.model.FolderType;
 import com.dewarim.cinnamon.model.index.IndexJob;
 import com.dewarim.cinnamon.model.index.IndexJobAction;
 import com.dewarim.cinnamon.model.index.IndexJobType;
@@ -14,9 +11,11 @@ import org.apache.ibatis.session.SqlSession;
 
 import java.util.*;
 
-import static com.dewarim.cinnamon.ErrorCode.DEFAULT_ACL_NOT_FOUND;
 import static com.dewarim.cinnamon.api.Constants.ROOT_FOLDER_NAME;
 
+/*
+ * note: calling default update() implementation on Folder will not update changeTracking.
+ */
 public class FolderDao implements CrudDao<Folder> {
 
     private              SqlSession sqlSession;
@@ -78,21 +77,6 @@ public class FolderDao implements CrudDao<Folder> {
         Map<String, Object> params     = Map.of("includeSummary", includeSummary, "name", name, "parentId", parentId);
         Folder              folder     = sqlSession.selectOne("com.dewarim.cinnamon.model.Folder.getFolderByParentAndName", params);
         return Optional.ofNullable(folder);
-    }
-
-    public Folder getOrCreateFolder(Long parentId, String name, Long ownerId) {
-        Optional<Folder> userFolderOpt = getFolderByParentAndName(parentId, name, false);
-        Folder           folder;
-        if (userFolderOpt.isEmpty()) {
-            Acl        defaultAcl        = new AclDao().getAclByName(Constants.ACL_DEFAULT).orElseThrow(DEFAULT_ACL_NOT_FOUND.getException());
-            FolderType defaultFolderType = new FolderTypeDao().getFolderTypeByName(Constants.FOLDER_TYPE_DEFAULT).orElseThrow();
-            folder = create(List.of(new Folder(name, defaultAcl.getId(), ownerId, parentId,
-                    defaultFolderType.getId(), null))).get(0);
-        }
-        else {
-            folder = userFolderOpt.get();
-        }
-        return folder;
     }
 
     public List<Folder> getDirectSubFolders(Long id, boolean includeSummary) {

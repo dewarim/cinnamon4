@@ -165,6 +165,35 @@
         WHERE id = #{id}
     </update>
 
+    <update id="update">
+        UPDATE objects
+        SET content_hash     = #{contentHash},
+            content_size     = #{contentSize},
+            content_path     = #{contentPath},
+            created          = #{created},
+            latest_branch    = #{latestBranch},
+            latest_head      = #{latestHead},
+            modified         = #{modified},
+            name             = #{name},
+            cmn_version      = #{cmnVersion},
+            acl_id           = #{aclId},
+            creator_id       = #{creatorId},
+            format_id        = #{formatId},
+            language_id      = #{languageId},
+            locker_id        = #{lockerId},
+            modifier_id      = #{modifierId},
+            owner_id         = #{ownerId},
+            parent_id        = #{parentId},
+            predecessor_id   = #{predecessorId},
+            root_id          = #{rootId},
+            type_id          = #{typeId},
+            state_id         = #{lifecycleStateId},
+            content_changed  = #{contentChanged},
+            metadata_changed = #{metadataChanged},
+            summary          = #{summary}
+        WHERE id = #{id}
+    </update>
+
     <insert id="insertOsd" parameterType="com.dewarim.cinnamon.model.ObjectSystemData">
         <selectKey keyProperty="id" resultType="long" order="BEFORE">
             select nextval('seq_folder_and_object_ids')

@@ -13,6 +13,9 @@ import org.apache.ibatis.session.SqlSession;
 
 import java.util.*;
 
+/*
+ * note: calling default update() implementation on OSD will not update changeTracking.
+ */
 public class OsdDao implements CrudDao<ObjectSystemData> {
 
     /**

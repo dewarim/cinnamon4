@@ -11,6 +11,7 @@ import com.dewarim.cinnamon.api.lifecycle.StateChangeResult;
 import com.dewarim.cinnamon.application.CinnamonRequest;
 import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
+import com.dewarim.cinnamon.application.exception.CinnamonException;
 import com.dewarim.cinnamon.application.service.DeleteOsdService;
 import com.dewarim.cinnamon.application.service.MetaService;
 import com.dewarim.cinnamon.application.service.TikaService;
@@ -44,6 +45,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -219,6 +221,18 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         OsdMetaDao osdMetaDao = new OsdMetaDao();
         new MetaService<>().updateMeta(osdMetaDao, metaRequest.getMetas(), osdDao, user);
+        if(user.isChangeTracking()) {
+            Set<Long>              osdIds = metaRequest.getMetas().stream().map(Meta::getObjectId).collect(Collectors.toSet());
+            List<ObjectSystemData> osds      = osdDao.getObjectsById(osdIds);
+            for (ObjectSystemData osd : osds) {
+                osd.setMetadataChanged(true);
+            }
+            try {
+                osdDao.update(osds);
+            } catch (SQLException e) {
+                throw new CinnamonException("Failed to update metadataChanged flag on osds", e);
+            }
+        }
         cinnamonResponse.setResponse(new GenericResponse(true));
     }
 

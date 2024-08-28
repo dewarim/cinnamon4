@@ -104,8 +104,8 @@ public class UpdateOsdRequest implements ApiRequest<UpdateOsdRequest> {
     @Override
     public List<ApiRequest<UpdateOsdRequest>> examples() {
         Date             date     = DATE_EXAMPLE;
-        UpdateOsdRequest request  = new UpdateOsdRequest(1L, 2L, "new name", 45L, 56L, 1L, 1L, null, true);
-        UpdateOsdRequest request2 = new UpdateOsdRequest(1L, 2L, "new name", 45L, 56L, 1L, 1L, null, true);
+        UpdateOsdRequest request  = new UpdateOsdRequest(1L, 2L, "new name", 45L, 56L, 1L, 1L, false, true);
+        UpdateOsdRequest request2 = new UpdateOsdRequest(1L, 2L, "new name", 45L, 56L, 1L, 1L, false, true);
         request.getOsds().get(0).setCreated(date);
         request2.getOsds().get(0).setCreated(date);
         request.getOsds().get(0).setModified(date);

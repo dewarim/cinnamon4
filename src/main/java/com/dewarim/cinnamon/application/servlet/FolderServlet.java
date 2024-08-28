@@ -7,6 +7,7 @@ import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.application.exception.BadArgumentException;
+import com.dewarim.cinnamon.application.exception.CinnamonException;
 import com.dewarim.cinnamon.application.service.DeleteLinkService;
 import com.dewarim.cinnamon.application.service.DeleteOsdService;
 import com.dewarim.cinnamon.application.service.MetaService;
@@ -33,6 +34,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -83,6 +85,18 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         FolderMetaDao folderMetaDao = new FolderMetaDao();
         new MetaService<>().updateMeta(folderMetaDao, metaRequest.getMetas(), folderDao, user);
+        if(user.isChangeTracking()) {
+            Set<Long>    folderIds = metaRequest.getMetas().stream().map(Meta::getObjectId).collect(Collectors.toSet());
+            List<Folder> folders   = folderDao.getObjectsById(folderIds);
+            for (Folder folder : folders) {
+                folder.setMetadataChanged(true);
+            }
+            try {
+                folderDao.update(folders);
+            } catch (SQLException e) {
+                throw new CinnamonException("Failed to update metadataChanged flag on folders", e);
+            }
+        }
         cinnamonResponse.setResponse(new GenericResponse(true));
     }
 
@@ -115,7 +129,8 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
                 List<ObjectSystemData> osds = osdDao.getObjectsByFolderId(folder.getId(), false, VersionPredicate.ALL);
                 deleteOsdService.verifyAndDelete(osds, true, true, user);
             }
-        } else if (folderDao.hasContent(folderIds)) {
+        }
+        else if (folderDao.hasContent(folderIds)) {
             throw ErrorCode.FOLDER_IS_NOT_EMPTY.exception();
         }
 
@@ -141,7 +156,7 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
     }
 
     private List<Folder> loadFolders(Set<Long> idSet, boolean recursively, boolean deleteContent, FolderDao folderDao) {
-        List<Long> ids = new ArrayList<>(idSet);
+        List<Long>   ids     = new ArrayList<>(idSet);
         List<Folder> folders = folderDao.getFoldersById(ids, false);
         if (folders.size() != ids.size()) {
             throw ErrorCode.FOLDER_NOT_FOUND.getException().get();
@@ -190,7 +205,8 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
             if (typeId == null) {
                 typeId = typeDao.getFolderTypeByName(Constants.FOLDER_TYPE_DEFAULT)
                         .orElseThrow(ErrorCode.FOLDER_TYPE_NOT_FOUND.getException()).getId();
-            } else {
+            }
+            else {
                 typeId = typeDao.getFolderTypeById(typeId)
                         .orElseThrow(ErrorCode.FOLDER_TYPE_NOT_FOUND.getException()).getId();
             }
@@ -198,7 +214,8 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
             Long ownerId = folder.getOwnerId();
             if (ownerId == null) {
                 ownerId = parentFolder.getOwnerId();
-            } else {
+            }
+            else {
                 ownerId = new UserAccountDao().getUserAccountById(ownerId)
                         .orElseThrow(ErrorCode.USER_ACCOUNT_NOT_FOUND.getException()).getId();
             }
@@ -206,7 +223,8 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
             Long aclId = folder.getAclId();
             if (aclId == null) {
                 aclId = parentFolder.getAclId();
-            } else {
+            }
+            else {
                 aclId = new AclDao().getObjectById(aclId)
                         .orElseThrow(ErrorCode.ACL_NOT_FOUND.getException()).getId();
             }
@@ -233,13 +251,13 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
         UpdateFolderRequest updateRequest = xmlMapper.readValue(request.getInputStream(), UpdateFolderRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
-        for(Folder updateFolder : updateRequest.getFolders()) {
-            Long folderId = updateFolder.getId();
-            Folder folder = folderDao.getFolderById(folderId, true).orElseThrow(ErrorCode.FOLDER_NOT_FOUND.getException());
+        for (Folder updateFolder : updateRequest.getFolders()) {
+            Long         folderId     = updateFolder.getId();
+            Folder       folder       = folderDao.getFolderById(folderId, true).orElseThrow(ErrorCode.FOLDER_NOT_FOUND.getException());
             AccessFilter accessFilter = AccessFilter.getInstance(user);
 
             boolean reIndexSubfolders = false;
-            boolean changed = false;
+            boolean changed           = false;
             // change parent folder
             Long parentId = updateFolder.getParentId();
             if (parentId != null) {
@@ -257,7 +275,7 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
 
                 folder.setParentId(parentFolder.getId());
                 reIndexSubfolders = true;
-                changed = true;
+                changed           = true;
             }
 
             // change name
@@ -269,7 +287,8 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
                 Folder parentFolder;
                 if (folder.getParentId() == null) {
                     parentFolder = folderDao.getRootFolder(false);
-                } else {
+                }
+                else {
                     parentFolder = folderDao.getFolderById(folder.getParentId())
                             .orElseThrow(ErrorCode.PARENT_FOLDER_NOT_FOUND.getException());
                 }
@@ -277,7 +296,7 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
                 folderDao.getFolderByParentAndName(parentFolder.getId(), name, false)
                         .ifPresent(f -> ErrorCode.DUPLICATE_FOLDER_NAME_FORBIDDEN.throwUp());
                 folder.setName(name);
-                changed = true;
+                changed           = true;
                 reIndexSubfolders = true;
             }
 
@@ -377,7 +396,8 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
         List<Meta> metaList;
         if (metaRequest.getTypeIds() != null) {
             metaList = new FolderMetaDao().getMetaByTypeIdsAndOsd(metaRequest.getTypeIds(), folderId);
-        } else {
+        }
+        else {
             metaList = new FolderMetaDao().listByFolderId(folderId);
         }
 
@@ -407,7 +427,8 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
                 throw ErrorCode.OBJECT_NOT_FOUND.exception();
             }
             response.setWrapper(new FolderWrapper(folders));
-        } else {
+        }
+        else {
             throw ErrorCode.INVALID_REQUEST.exception();
         }
     }
@@ -454,7 +475,8 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
                 folderDao.updateFolder(folder);
                 response.responseIsGenericOkay();
                 return;
-            } else {
+            }
+            else {
                 throw ErrorCode.NO_SET_SUMMARY_PERMISSION.exception();
             }
         }
@@ -468,7 +490,8 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
         folders.forEach(folder -> {
             if (authorizationService.hasUserOrOwnerPermission(folder, DefaultPermission.READ_OBJECT_SYS_METADATA, user)) {
                 wrapper.getSummaries().add(new Summary(folder.getId(), folder.getSummary()));
-            } else {
+            }
+            else {
                 throw ErrorCode.NO_READ_OBJECT_SYS_METADATA_PERMISSION.exception();
             }
         });

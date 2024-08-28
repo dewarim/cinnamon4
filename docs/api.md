@@ -1229,8 +1229,8 @@ Delete all metasets linked to the given Folder ids. Parameter ignoreNotFound is 
 <deleteAllMetasRequest>
   <ignoreNotFound>false</ignoreNotFound>
   <ids>
-    <id>15</id>
     <id>14</id>
+    <id>15</id>
   </ids>
 </deleteAllMetasRequest>
 
@@ -3768,8 +3768,8 @@ should contain data.
 <deleteAllMetasRequest>
   <ignoreNotFound>false</ignoreNotFound>
   <ids>
-    <id>15</id>
     <id>14</id>
+    <id>15</id>
   </ids>
 </deleteAllMetasRequest>
 
@@ -4055,6 +4055,8 @@ Returns an OSD's content according to it's format's content type.
       <rightId>4</rightId>
       <typeId>1</typeId>
       <metadata>&lt;generatedBy>PDF Renderer&lt;/generatedBy</metadata>
+      <isParent/>
+      <isChild/>
     </relation>
   </relations>
 </cinnamon>
@@ -4251,7 +4253,7 @@ Add a summary to an object, for example a short description of the content.
       <typeId>1</typeId>
       <latestHead>false</latestHead>
       <latestBranch>true</latestBranch>
-      <contentChanged/>
+      <contentChanged>false</contentChanged>
       <metadataChanged>true</metadataChanged>
       <cmnVersion>1</cmnVersion>
       <lifecycleStateId/>
@@ -4289,7 +4291,7 @@ Add a summary to an object, for example a short description of the content.
       <typeId>1</typeId>
       <latestHead>false</latestHead>
       <latestBranch>true</latestBranch>
-      <contentChanged/>
+      <contentChanged>false</contentChanged>
       <metadataChanged>true</metadataChanged>
       <cmnVersion>1</cmnVersion>
       <lifecycleStateId/>
@@ -4713,6 +4715,8 @@ part "file", if the new version should contain data.
       <rightId>2</rightId>
       <typeId>3</typeId>
       <metadata>&lt;meta/></metadata>
+      <isParent/>
+      <isChild/>
     </relation>
   </relations>
 </createRelationRequest>
@@ -4727,6 +4731,8 @@ part "file", if the new version should contain data.
       <rightId>1</rightId>
       <typeId>10</typeId>
       <metadata>&lt;xml>test&lt;/xml></metadata>
+      <isParent/>
+      <isChild/>
     </relation>
   </relations>
 </createRelationRequest>
@@ -4746,6 +4752,8 @@ part "file", if the new version should contain data.
       <rightId>4</rightId>
       <typeId>1</typeId>
       <metadata>&lt;generatedBy>PDF Renderer&lt;/generatedBy</metadata>
+      <isParent/>
+      <isChild/>
     </relation>
   </relations>
 </cinnamon>
@@ -4824,6 +4832,8 @@ Search for relations matching all( with orMode=false) or some (with orMode=true)
       <rightId>4</rightId>
       <typeId>1</typeId>
       <metadata>&lt;generatedBy>PDF Renderer&lt;/generatedBy</metadata>
+      <isParent/>
+      <isChild/>
     </relation>
   </relations>
 </cinnamon>

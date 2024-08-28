@@ -219,6 +219,18 @@
             summary          = #{summary}
         WHERE id = #{id}
     </update>
+    <update id="update">
+        UPDATE folders
+        SET created          = #{created},
+            name             = #{name},
+            acl_id           = #{aclId},
+            owner_id         = #{ownerId},
+            parent_id        = #{parentId},
+            type_id          = #{typeId},
+            metadata_changed = #{metadataChanged},
+            summary          = #{summary}
+        WHERE id = #{id}
+    </update>
 
 
     <insert id="insertFolder" parameterType="com.dewarim.cinnamon.model.Folder">

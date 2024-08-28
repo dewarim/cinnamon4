@@ -3,27 +3,7 @@
 PORT=8080
 TICKET=$(curl --silent --show-error -X POST "http://localhost:${PORT}/cinnamon/connect" --data "<connectionRequest><username>admin</username><password>admin</password><format>text</format></connectionRequest>")
 
-echo "<xml>Foo the Fool</xml>" > /tmp/content.xml
-echo "<createOsdRequest><name>Bar</name><parentId>1</parentId><ownerId>1</ownerId><aclId>1</aclId><typeId>1</typeId><formatId>1</formatId><languageId>1</languageId><lifecycleStateId/><metas/></createOsdRequest>" > /tmp/osd.xml
-osd=$(curl --silent --show-error --header "ticket: ${TICKET}" -F "cinnamonRequest=</tmp/osd.xml" -F "file=</tmp/content.xml" "http://localhost:${PORT}/api/osd/createOsd")
-echo;
-echo "created osd:"
-echo "${osd}"
-echo "sleep for 5"
-echo;
-sleep 5;
-
-echo "<idListRequest>
-        <ids>
-          <id>1</id>
-        </ids>
-      </idListRequest>" > /tmp/lockOsd.xml
-osd=$(curl --silent --show-error --header "ticket: ${TICKET}" -F "cinnamonRequest=</tmp/osd.xml" "http://localhost:${PORT}/api/osd/updateOsd")
-
-sleep 5;
-
-
-echo " <BooleanQuery><Clause occurs='must'><PointRangeQuery fieldName='id' lowerTerm='4' upperTerm='6' type='long'/></Clause></BooleanQuery>" > /tmp/booleanQuery.xml
+echo " <BooleanQuery><Clause occurs='must'><PointRangeQuery fieldName='root' lowerTerm='2' upperTerm='3' type='long'/></Clause></BooleanQuery>" > /tmp/booleanQuery.xml
 #echo " <BooleanQuery><Clause occurs='must'><ExactPointQuery fieldName='id' value='26' type='long'/></Clause></BooleanQuery>" > /tmp/booleanQuery.xml
 #echo " <BooleanQuery><Clause occurs='must'><TermQuery fieldName='name'>test</TermQuery></Clause></BooleanQuery>" > /tmp/booleanQuery.xml
 #echo " <BooleanQuery><Clause occurs='must'><TermQuery fieldName='name'>bar</TermQuery></Clause></BooleanQuery>" > /tmp/booleanQuery.xml
@@ -37,7 +17,7 @@ echo;
 encoded=$(sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g; s/"/\&quot;/g; s/'"'"'/\&#39;/g' < /tmp/booleanQuery.xml)
 
 query="<searchIdsRequest>
-                <searchType>OSD</searchType>
+                <searchType>FOLDER</searchType>
                 <query>
                 ${encoded}
                 </query>
