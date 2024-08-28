@@ -77,7 +77,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         UserAccount user   = ThreadLocalSqlSession.getCurrentUser();
         OsdDao      osdDao = new OsdDao();
 
-        CinnamonRequest cinnamonRequest = (CinnamonRequest) request; 
+        CinnamonRequest  cinnamonRequest  = (CinnamonRequest) request;
         CinnamonResponse cinnamonResponse = (CinnamonResponse) response;
         UrlMapping       mapping          = UrlMapping.getByPath(request.getRequestURI());
         switch (mapping) {
@@ -221,11 +221,14 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         OsdMetaDao osdMetaDao = new OsdMetaDao();
         new MetaService<>().updateMeta(osdMetaDao, metaRequest.getMetas(), osdDao, user);
-        if(user.isChangeTracking()) {
-            Set<Long>              osdIds = metaRequest.getMetas().stream().map(Meta::getObjectId).collect(Collectors.toSet());
-            List<ObjectSystemData> osds      = osdDao.getObjectsById(osdIds);
+        if (user.isChangeTracking()) {
+            Set<Long>              osdIds      = metaRequest.getMetas().stream().map(Meta::getObjectId).collect(Collectors.toSet());
+            List<ObjectSystemData> osds        = osdDao.getObjectsById(osdIds);
+            Date                   currentDate = new Date();
             for (ObjectSystemData osd : osds) {
                 osd.setMetadataChanged(true);
+                osd.setModified(currentDate);
+                osd.setModifierId(user.getId());
             }
             try {
                 osdDao.update(osds);
@@ -994,7 +997,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                     .getLifecycleStateById(preOsd.getLifecycleStateId())
                     .orElseThrow(ErrorCode.LIFECYCLE_STATE_NOT_FOUND.getException());
             Long copyId = lifecycleState.getLifecycleStateForCopyId();
-            if(copyId == null) {
+            if (copyId == null) {
                 log.debug("lifecycleStateForCopy is not set on OSD {}", osd.getId());
                 osd.setLifecycleStateId(null);
             }
