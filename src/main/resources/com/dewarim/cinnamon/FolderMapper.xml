@@ -219,6 +219,7 @@
             summary          = #{summary}
         WHERE id = #{id}
     </update>
+
     <update id="update">
         UPDATE folders
         SET created          = #{created},

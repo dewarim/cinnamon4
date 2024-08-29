@@ -487,7 +487,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         HttpEntity multipartEntity = MultipartEntityBuilder.create()
                 .addPart("file", fileBody).build();
         try (StandardResponse response = sendStandardMultipartRequest(UrlMapping.OSD__SET_CONTENT, multipartEntity)) {
-            assertCinnamonError(response, INVALID_REQUEST);
+            assertCinnamonError(response, MISSING_REQUEST_PAYLOAD);
         }
     }
 
@@ -1086,7 +1086,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     public void adminMayUpdateOsdWithoutLock() throws IOException {
         TestObjectHolder toh              = new TestObjectHolder(adminClient, userId).createOsd();
         long             id               = toh.osd.getId();
-        UpdateOsdRequest updateOsdRequest = new UpdateOsdRequest(id, null, toh.createRandomName(), null, null, null, null, null, null);
+        UpdateOsdRequest updateOsdRequest = new UpdateOsdRequest(id, null, toh.createRandomName(), null, null, null, null, false, false);
         assertClientError(() -> client.updateOsd(updateOsdRequest), OBJECT_MUST_BE_LOCKED_BY_USER);
         assertTrue(adminClient.updateOsd(updateOsdRequest));
     }
@@ -1327,7 +1327,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateOsdWithOsdNotFound() {
-        UpdateOsdRequest request = new UpdateOsdRequest(Long.MAX_VALUE, 1L, "-", 1L, 1L, 1L, 1L, null, null);
+        UpdateOsdRequest request = new UpdateOsdRequest(Long.MAX_VALUE, 1L, "-", 1L, 1L, 1L, 1L, false, false);
         assertClientError(() -> client.updateOsd(request), OBJECT_NOT_FOUND);
     }
 
@@ -1339,7 +1339,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var id = toh.osd.getId();
         client.lockOsd(id);
 
-        UpdateOsdRequest request = new UpdateOsdRequest(id, Long.MAX_VALUE, "-", 1L, 1L, 1L, 1L, null, null);
+        UpdateOsdRequest request = new UpdateOsdRequest(id, Long.MAX_VALUE, "-", 1L, 1L, 1L, 1L, true,true);
         assertClientError(() -> client.updateOsd(request), PARENT_FOLDER_NOT_FOUND);
     }
 
@@ -1351,7 +1351,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var id = toh.osd.getId();
         client.lockOsd(id);
 
-        UpdateOsdRequest request = new UpdateOsdRequest(id, 1L, "-", 1L, 1L, 1L, 1L, null, null);
+        UpdateOsdRequest request = new UpdateOsdRequest(id, 1L, "-", 1L, 1L, 1L, 1L, true,true);
         assertClientError(() -> client.updateOsd(request), NO_CREATE_PERMISSION);
     }
 
@@ -1363,7 +1363,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var id = toh.osd.getId();
         client.lockOsd(id);
 
-        var request = new UpdateOsdRequest(id, createFolderId, "-", 1L, 1L, 1L, 1L, null, null);
+        var request = new UpdateOsdRequest(id, createFolderId, "-", 1L, 1L, 1L, 1L, false,true);
         assertClientError(() -> client.updateOsd(request), NO_SET_PARENT_PERMISSION);
     }
 
@@ -1377,7 +1377,8 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var id = toh.osd.getId();
         client.lockOsd(id);
 
-        var request = new UpdateOsdRequest(id, toh.folder.getId(), null, null, null, null, null, null, null);
+        var request = new UpdateOsdRequest(id, toh.folder.getId(), null, null, null, null,
+                null, false,false);
         client.updateOsd(request);
         var osd = client.getOsdById(id, false, false);
         assertEquals(toh.folder.getId(), osd.getParentId());
@@ -1389,7 +1390,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
                 .createOsd("update-osd-rename");
         var id = toh.osd.getId();
 
-        var request = new UpdateOsdRequest(id, null, "new name", null, null, null, null, null, null);
+        var request = new UpdateOsdRequest(id, null, "new name", null, null, null, null, false,false);
         client.lockOsd(id);
         client.updateOsd(request);
         var osd = client.getOsdById(id, false, false);
@@ -1447,7 +1448,8 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
                 .createOsd("update-osd-rename-no-perm");
         var id = toh.osd.getId();
         client.lockOsd(id);
-        var request = new UpdateOsdRequest(id, null, "new name", null, null, null, null, null, null);
+        var request = new UpdateOsdRequest(id, null, "new name", null, null, null,
+                null, false,false);
         assertClientError(() -> client.updateOsd(request), NO_NAME_WRITE_PERMISSION);
     }
 
@@ -1456,7 +1458,8 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var toh = prepareAclGroupWithPermissions(List.of(SET_TYPE, LOCK)).createOsd("update-osd-rename");
         var id  = toh.osd.getId();
 
-        var request = new UpdateOsdRequest(id, null, null, null, null, Long.MAX_VALUE, null, null, null);
+        var request = new UpdateOsdRequest(id, null, null, null, null, Long.MAX_VALUE,
+                null, false,false);
         client.lockOsd(id);
         assertClientError(() -> client.updateOsd(request), OBJECT_TYPE_NOT_FOUND);
     }
@@ -1470,7 +1473,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var id = toh.osd.getId();
         client.lockOsd(id);
         var request = new UpdateOsdRequest(id, null, null, null, null,
-                toh.objectType.getId(), null, null, null);
+                toh.objectType.getId(), null, false,false);
         assertClientError(() -> client.updateOsd(request), NO_TYPE_WRITE_PERMISSION);
     }
 
@@ -1483,7 +1486,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         client.lockOsd(id);
 
         var request = new UpdateOsdRequest(id, null, null, null, null,
-                toh.objectType.getId(), null, null, null);
+                toh.objectType.getId(), null, false,false);
         client.updateOsd(request);
         var osd = client.getOsdById(id, false, false);
         assertEquals(toh.objectType.getId(), osd.getTypeId());
@@ -1505,7 +1508,8 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var id = toh.osd.getId();
         client.lockOsd(id);
 
-        var request = new UpdateOsdRequest(id, null, null, null, toh.acl.getId(), null, null, null, null);
+        var request = new UpdateOsdRequest(id, null, null, null, toh.acl.getId(), null,
+                null, false,false);
         assertClientError(() -> client.updateOsd(request), MISSING_SET_ACL_PERMISSION);
     }
 
@@ -1516,7 +1520,8 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var id = toh.osd.getId();
         client.lockOsd(id);
 
-        var request = new UpdateOsdRequest(id, null, null, null, Long.MAX_VALUE, null, null, null, null);
+        var request = new UpdateOsdRequest(id, null, null, null, Long.MAX_VALUE, null,
+                null, false,false);
         assertClientError(() -> client.updateOsd(request), ACL_NOT_FOUND);
     }
 
@@ -1529,7 +1534,8 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var id = toh.osd.getId();
         client.lockOsd(id);
 
-        var request = new UpdateOsdRequest(id, null, null, null, toh.acl.getId(), null, null, null, null);
+        var request = new UpdateOsdRequest(id, null, null, null, toh.acl.getId(), null,
+                null, false,false);
         client.updateOsd(request);
         var osd = client.getOsdById(id, false, false);
         assertEquals(toh.acl.getId(), osd.getAclId());
@@ -1542,7 +1548,8 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var id = toh.osd.getId();
         client.lockOsd(id);
 
-        var request = new UpdateOsdRequest(id, null, null, Long.MAX_VALUE, null, null, null, null, null);
+        var request = new UpdateOsdRequest(id, null, null, Long.MAX_VALUE, null, null,
+                null, false,false);
         assertClientError(() -> client.updateOsd(request), USER_ACCOUNT_NOT_FOUND);
     }
 
@@ -1553,7 +1560,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var id = toh.osd.getId();
         client.lockOsd(id);
 
-        var request = new UpdateOsdRequest(id, null, null, adminId, null, null, null, null, null);
+        var request = new UpdateOsdRequest(id, null, null, adminId, null, null, null,false,false);
         client.updateOsd(request);
         var osd = client.getOsdById(id, false, false);
         assertEquals(adminId, osd.getOwnerId());
@@ -1566,7 +1573,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var id = toh.osd.getId();
         client.lockOsd(id);
 
-        var request = new UpdateOsdRequest(id, null, null, null, null, null, Long.MAX_VALUE, null, null);
+        var request = new UpdateOsdRequest(id, null, null, null, null, null, Long.MAX_VALUE, false,false);
         assertClientError(() -> client.updateOsd(request), LANGUAGE_NOT_FOUND);
     }
 
@@ -1581,7 +1588,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var            newLang   = languages.get(1);
         assertNotEquals(toh.osd.getLanguageId(), newLang.getId());
 
-        var request = new UpdateOsdRequest(id, null, null, null, null, null, newLang.getId(), null, null);
+        var request = new UpdateOsdRequest(id, null, null, null, null, null, newLang.getId(), false,false);
         client.updateOsd(request);
         var osd = client.getOsdById(id, false, false);
         assertEquals(newLang.getId(), osd.getLanguageId());
@@ -1593,7 +1600,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         toh.createOsd("osd-update-forbidden");
         var id = toh.osd.getId();
         adminClient.lockOsd(id);
-        var request = new UpdateOsdRequest(id, 1L, "-", 1L, 1L, 1L, 1L, null, null);
+        var request = new UpdateOsdRequest(id, 1L, "-", 1L, 1L, 1L, 1L, false,false);
         assertClientError(() -> client.updateOsd(request), OBJECT_LOCKED_BY_OTHER_USER);
     }
 
@@ -1602,7 +1609,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var toh = new TestObjectHolder(client, userId);
         toh.createOsd("osd-update-forbidden");
         var id      = toh.osd.getId();
-        var request = new UpdateOsdRequest(id, 1L, "-", 1L, 1L, 1L, 1L, null, null);
+        var request = new UpdateOsdRequest(id, 1L, "-", 1L, 1L, 1L, 1L, false,false);
         assertClientError(() -> client.updateOsd(request), OBJECT_MUST_BE_LOCKED_BY_USER);
     }
 

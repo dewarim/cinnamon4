@@ -4,10 +4,10 @@ import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.FailedRequestException;
 import com.dewarim.cinnamon.api.Ownable;
+import com.dewarim.cinnamon.api.OwnableWithMetadata;
+import com.dewarim.cinnamon.application.exception.CinnamonException;
 import com.dewarim.cinnamon.dao.*;
-import com.dewarim.cinnamon.model.Meta;
-import com.dewarim.cinnamon.model.MetasetType;
-import com.dewarim.cinnamon.model.UserAccount;
+import com.dewarim.cinnamon.model.*;
 import com.dewarim.cinnamon.model.index.IndexJob;
 import com.dewarim.cinnamon.model.index.IndexJobAction;
 import com.dewarim.cinnamon.model.index.IndexJobType;
@@ -16,16 +16,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.dewarim.cinnamon.ErrorCode.OBJECT_NOT_FOUND;
 
-public class MetaService<T extends CrudDao<Meta> & MetaDao, O extends CrudDao<? extends Ownable>> {
+public class MetaService<T extends CrudDao<Meta> & MetaDao, O extends CrudDao<? extends OwnableWithMetadata>> {
     private static final Logger log = LogManager.getLogger(MetaService.class);
 
     private final AuthorizationService authorizationService = new AuthorizationService();
@@ -42,12 +39,13 @@ public class MetaService<T extends CrudDao<Meta> & MetaDao, O extends CrudDao<? 
             return;
         }
         List<Long>              objectIds = metas.stream().map(Meta::getObjectId).toList();
-        List<? extends Ownable> ownables  = ownableDao.getObjectsById(objectIds);
+        List<? extends OwnableWithMetadata> ownables  = ownableDao.getObjectsById(objectIds);
         for (Ownable ownable : ownables) {
             throwUnlessCustomMetaIsWritable(ownable, user);
         }
-        List<Long> metaIds =metas.stream().map(Meta::getId).toList(); 
+        List<Long> metaIds = metas.stream().map(Meta::getId).toList();
         metaDao.delete(metaIds);
+        updateMetadataChanged(user, ownables, ownableDao );
         updateIndex(metas, ownableDao);
     }
 
@@ -57,26 +55,26 @@ public class MetaService<T extends CrudDao<Meta> & MetaDao, O extends CrudDao<? 
         metas.forEach(meta -> {
             IndexJob indexJob;
             // a little bit hacky
-            if(ownableDao instanceof OsdDao){
-                indexJob = new IndexJob(IndexJobType.OSD, meta.getObjectId(), IndexJobAction.UPDATE, false);    
+            if (ownableDao instanceof OsdDao) {
+                indexJob = new IndexJob(IndexJobType.OSD, meta.getObjectId(), IndexJobAction.UPDATE, false);
             }
-            else{
+            else {
                 indexJob = new IndexJob(IndexJobType.FOLDER, meta.getObjectId(), IndexJobAction.UPDATE, false);
             }
             indexJobDao.insertIndexJob(indexJob);
-            log.debug("insert index job: "+indexJob);
+            log.debug("insert index job: " + indexJob);
         });
     }
 
     public List<Meta> createMeta(T dao, List<Meta> metas, O ownableDao, UserAccount user) {
         // load objects
-        List<Long>              ownableIds = metas.stream().map(Meta::getObjectId).collect(Collectors.toList());
-        List<? extends Ownable> ownables   = ownableDao.getObjectsById(ownableIds);
+        List<Long>                          ownableIds = metas.stream().map(Meta::getObjectId).collect(Collectors.toList());
+        List<? extends OwnableWithMetadata> ownables   = ownableDao.getObjectsById(ownableIds);
         if (ownables.size() != Set.of(ownableIds).size()) {
             throw ErrorCode.OBJECT_NOT_FOUND.getException().get();
         }
 
-        Map<Long, Ownable> ownableMap = ownables.stream().filter(osd -> {
+        Map<Long, OwnableWithMetadata> ownableMap = ownables.stream().filter(osd -> {
             throwUnlessCustomMetaIsWritable(osd, user);
             return true;
         }).collect(Collectors.toMap(Ownable::getId, Function.identity()));
@@ -100,18 +98,21 @@ public class MetaService<T extends CrudDao<Meta> & MetaDao, O extends CrudDao<? 
 
         List<Meta> metasToCreate = metas.stream().map(meta -> new Meta(meta.getObjectId(), meta.getTypeId(), meta.getContent()))
                 .collect(Collectors.toList());
+        updateMetadataChanged(user, ownableMap.values().stream().toList(), ownableDao);
         updateIndex(metas, ownableDao);
         return dao.create(metasToCreate);
     }
 
     public void updateMeta(T dao, List<Meta> metas, O ownableDao, UserAccount user) {
 
-        List<Meta> updates = new ArrayList<>();
+        List<Meta>                updates  = new ArrayList<>();
+        List<OwnableWithMetadata> ownables = new ArrayList<>();
         for (Meta metaUpdate : metas) {
             Meta meta = dao.getMetaById(metaUpdate.getId())
                     .orElseThrow(ErrorCode.METASET_NOT_FOUND.getException());
-            Ownable ownable = ownableDao.getObjectById(meta.getObjectId())
+            OwnableWithMetadata ownable = ownableDao.getObjectById(meta.getObjectId())
                     .orElseThrow(OBJECT_NOT_FOUND.getException());
+            ownables.add(ownable);
             if (!ownable.getId().equals(metaUpdate.getObjectId()) ||
                     !meta.getTypeId().equals(metaUpdate.getTypeId())) {
                 // changing the type or moving a metaset to another owning object has no use case yet,
@@ -123,14 +124,40 @@ public class MetaService<T extends CrudDao<Meta> & MetaDao, O extends CrudDao<? 
             updates.add(metaUpdate);
         }
 
-        try{
+        try {
             dao.update(updates);
+            updateMetadataChanged(user, ownables, ownableDao);
             updateIndex(metas, ownableDao);
-        }
-        catch (SQLException e){
+        } catch (SQLException e) {
             log.warn(String.format("DB update failed: %s with status %s and error code %d",
-                    e.getMessage(), e.getSQLState(), e.getErrorCode()),e);
+                    e.getMessage(), e.getSQLState(), e.getErrorCode()), e);
             throw new FailedRequestException(ErrorCode.DB_UPDATE_FAILED, e);
         }
     }
+
+    /**
+     * Update metadataChanged
+     */
+    private void updateMetadataChanged(UserAccount user, List<? extends OwnableWithMetadata> ownables, O dao) {
+        if (user.isChangeTracking()) {
+            for (OwnableWithMetadata item : ownables) {
+                item.setMetadataChanged(true);
+                item.setModified(new Date());
+                item.setModifierId(user.getId());
+            }
+            try {
+                if (dao.getTypeClassName().equals(ObjectSystemData.class.getName())) {
+                    List<ObjectSystemData> osds = (List<ObjectSystemData>) ownables;
+                    ((OsdDao) dao).update(osds);
+                }
+                else {
+                    List<Folder> folders = (List<Folder>) ownables;
+                    ((FolderDao) dao).update(folders);
+                }
+            } catch (SQLException e) {
+                throw new CinnamonException("Failed to update metadataChanged flag", e);
+            }
+        }
+    }
+
 }

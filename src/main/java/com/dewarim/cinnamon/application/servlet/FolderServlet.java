@@ -7,7 +7,6 @@ import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.application.exception.BadArgumentException;
-import com.dewarim.cinnamon.application.exception.CinnamonException;
 import com.dewarim.cinnamon.application.service.DeleteLinkService;
 import com.dewarim.cinnamon.application.service.DeleteOsdService;
 import com.dewarim.cinnamon.application.service.MetaService;
@@ -34,7 +33,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -85,20 +83,9 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         FolderMetaDao folderMetaDao = new FolderMetaDao();
         new MetaService<>().updateMeta(folderMetaDao, metaRequest.getMetas(), folderDao, user);
-        if(user.isChangeTracking()) {
-            Set<Long>    folderIds = metaRequest.getMetas().stream().map(Meta::getObjectId).collect(Collectors.toSet());
-            List<Folder> folders   = folderDao.getObjectsById(folderIds);
-            for (Folder folder : folders) {
-                folder.setMetadataChanged(true);
-            }
-            try {
-                folderDao.update(folders);
-            } catch (SQLException e) {
-                throw new CinnamonException("Failed to update metadataChanged flag on folders", e);
-            }
-        }
         cinnamonResponse.setResponse(new GenericResponse(true));
     }
+
 
     private void deleteAllMetas(HttpServletRequest request, CinnamonResponse cinnamonResponse, UserAccount user, FolderDao folderDao) throws IOException {
         DeleteAllMetasRequest metaRequest = (DeleteAllMetasRequest) getMapper().readValue(request.getInputStream(), DeleteAllMetasRequest.class)
@@ -337,11 +324,12 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
             }
 
             // metadataChanged:
-            if (updateRequest.isUpdateMetadataChanged() && updateFolder.getMetadataChanged() != null) {
+            if (updateRequest.isUpdateMetadataChanged()) {
                 if (user.isChangeTracking()) {
                     throw ErrorCode.CHANGED_FLAG_ONLY_USABLE_BY_UNTRACKED_USERS.exception();
                 }
-                folder.setMetadataChanged(updateFolder.getMetadataChanged());
+                folder.setMetadataChanged(updateFolder.isMetadataChanged());
+                changed = true;
             }
 
             // update folder:

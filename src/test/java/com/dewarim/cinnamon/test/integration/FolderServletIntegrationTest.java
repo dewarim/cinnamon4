@@ -452,7 +452,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         adminClient.updateFolder(request);
         Folder updatedFolder = client.getFolderById(request.getFolders().get(0).getId(), false);
         assertEquals(targetFolderId, updatedFolder.getParentId());
-        assertTrue(updatedFolder.getMetadataChanged());
+        assertTrue(updatedFolder.isMetadataChanged());
     }
 
     @Test

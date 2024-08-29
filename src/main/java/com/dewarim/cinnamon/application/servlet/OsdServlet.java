@@ -465,11 +465,17 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         if (!createRequest.getMetas().isEmpty()) {
             var metas = createMetas(createRequest.getMetas(), osd.getId());
             osd.setMetas(metas);
+            if(user.isChangeTracking()){
+                osd.setMetadataChanged(true);
+            }
         }
 
         Part file = request.getPart("file");
         if (file != null) {
             storeFileUpload(file.getInputStream(), osd, createRequest.getFormatId());
+            if(user.isChangeTracking()){
+                osd.setContentChanged(true);
+            }
             osdDao.updateOsd(osd, false);
         }
         OsdWrapper osdWrapper = new OsdWrapper(Collections.singletonList(osd));
@@ -651,7 +657,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         verifyIsMultipart(request);
         Part contentRequest = request.getPart(CINNAMON_REQUEST_PART);
         if (contentRequest == null) {
-            throw ErrorCode.INVALID_REQUEST.exception();
+            throw MISSING_REQUEST_PAYLOAD.exception();
         }
         Part file = request.getPart("file");
         if (file == null) {
@@ -670,6 +676,9 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         }
 
         storeFileUpload(file.getInputStream(), osd, setContentRequest.getFormatId());
+        if(user.isChangeTracking()) {
+            osd.setContentChanged(true);
+        }
         osdDao.updateOsd(osd, true);
         response.responseIsGenericOkay();
     }
@@ -822,7 +831,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
             }
 
             // contentChanged
-            if (updateRequest.isUpdateContentChanged() && update.isContentChanged() != null) {
+            if (updateRequest.isUpdateContentChanged()) {
                 if (user.isChangeTracking()) {
                     throw ErrorCode.CHANGED_FLAG_ONLY_USABLE_BY_UNTRACKED_USERS.exception();
                 }
@@ -830,11 +839,12 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
             }
 
             // metadataChanged
-            if (updateRequest.isUpdateMetadataChanged() && update.isMetadataChanged() != null) {
+            if (updateRequest.isUpdateMetadataChanged()) {
                 if (user.isChangeTracking()) {
                     throw ErrorCode.CHANGED_FLAG_ONLY_USABLE_BY_UNTRACKED_USERS.exception();
                 }
                 osd.setMetadataChanged(update.isMetadataChanged());
+                changed = true;
             }
 
             // update osd:
@@ -982,12 +992,18 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                 // for now, just throw the first error.
                 throw errorCodes.get(0).exception();
             }
+            if(user.isChangeTracking()){
+                osd.setMetadataChanged(true);
+            }
         }
 
         // saveFileUpload
         Part file = request.getPart("file");
         if (file != null) {
             storeFileUpload(file.getInputStream(), osd, versionRequest.getFormatId());
+            if(user.isChangeTracking()) {
+                osd.setContentChanged(true);
+            }
         }
 
         // set lifecycle state

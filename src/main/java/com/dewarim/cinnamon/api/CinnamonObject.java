@@ -29,9 +29,9 @@ public interface CinnamonObject extends ContentMetadata, Ownable {
 
     boolean isLatestBranch();
 
-    Boolean isContentChanged();
+    boolean isContentChanged();
 
-    Boolean isMetadataChanged();
+    boolean isMetadataChanged();
 
     Long getLifecycleStateId();
 

@@ -302,7 +302,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
         // when the test-lifecycle is attached, it changes the ACL to one with all permissions, so
         // we need to change to a more restricted here to verify LIFECYCLE_STATE_WRITE is allowed.
         adminClient.lockOsd(osdId);
-        adminClient.updateOsd(new UpdateOsdRequest(osdId, null, null, null, toh.acl.getId(), null, null, null, null));
+        adminClient.updateOsd(new UpdateOsdRequest(osdId, null, null, null, toh.acl.getId(), null, null, true, false));
         client.changeLifecycleState(osdId, 3L);
         // we have to fetch the OSD via adminClient, because after change to ACL#1, it's no longer browsable
         // for the normal test user
@@ -320,7 +320,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
         // when the test-lifecycle is attached, it changes the ACL to one with all permissions, so
         // we need to change to a more restricted here to verify LIFECYCLE_STATE_WRITE is allowed.
         adminClient.lockOsd(osdId);
-        adminClient.updateOsd(new UpdateOsdRequest(osdId, null, null, null, toh.acl.getId(), null, null, null, null));
+        adminClient.updateOsd(new UpdateOsdRequest(osdId, null, null, null, toh.acl.getId(), null, null, false, false));
         assertClientError(() -> client.changeLifecycleState(osdId, 3L), NO_LIFECYCLE_STATE_WRITE_PERMISSION);
     }
 

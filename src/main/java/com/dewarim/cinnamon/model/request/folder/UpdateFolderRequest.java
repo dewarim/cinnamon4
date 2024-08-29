@@ -18,11 +18,12 @@ public class UpdateFolderRequest implements ApiRequest<UpdateFolderRequest> {
     @JacksonXmlElementWrapper(localName = "folders")
     @JacksonXmlProperty(localName = "folder")
     private List<Folder> folders = new ArrayList<>();
-private boolean updateMetadataChanged;
+    private boolean      updateMetadataChanged;
 
     public void setUpdateMetadataChanged(boolean updateMetadataChanged) {
         this.updateMetadataChanged = updateMetadataChanged;
     }
+
     public UpdateFolderRequest() {
     }
 
@@ -39,7 +40,7 @@ private boolean updateMetadataChanged;
     }
 
     public UpdateFolderRequest(Long id, Long parentId, String name, Long ownerId, Long typeId, Long aclId) {
-        this(id, parentId, name, ownerId, typeId, aclId, null);
+        this(id, parentId, name, ownerId, typeId, aclId, true);
     }
 
     public UpdateFolderRequest(List<Folder> folder) {
@@ -75,7 +76,8 @@ private boolean updateMetadataChanged;
     public Optional<UpdateFolderRequest> validateRequest() {
         if (validated()) {
             return Optional.of(this);
-        } else {
+        }
+        else {
             return Optional.empty();
         }
     }
@@ -92,6 +94,7 @@ private boolean updateMetadataChanged;
         Folder folder = new Folder("new name", 1L, 2L, 3L, 4L, "<summary>update this</summary>");
         folder.setCreated(DATE_EXAMPLE);
         UpdateFolderRequest request = new UpdateFolderRequest(List.of(folder));
+        request.setUpdateMetadataChanged(false);
         return List.of(request);
     }
 }

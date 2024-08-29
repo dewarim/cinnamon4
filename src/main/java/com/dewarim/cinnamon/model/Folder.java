@@ -1,7 +1,7 @@
 package com.dewarim.cinnamon.model;
 
 import com.dewarim.cinnamon.api.Identifiable;
-import com.dewarim.cinnamon.api.Ownable;
+import com.dewarim.cinnamon.api.OwnableWithMetadata;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
@@ -14,7 +14,7 @@ import java.util.Objects;
 import static com.dewarim.cinnamon.api.Constants.DEFAULT_SUMMARY;
 
 @JacksonXmlRootElement(localName = "folder")
-public class Folder implements Ownable, Identifiable {
+public class Folder implements OwnableWithMetadata, Identifiable {
 
     private Long    id;
     private String  name;
@@ -22,7 +22,7 @@ public class Folder implements Ownable, Identifiable {
     private Long    ownerId;
     private Long    parentId;
     private Long    typeId;
-    private Boolean metadataChanged;
+    private boolean metadataChanged;
     private String  summary;
     /**
      * Is true if other folders have this folder as parent folder.
@@ -92,14 +92,6 @@ public class Folder implements Ownable, Identifiable {
         this.typeId = typeId;
     }
 
-    public Boolean getMetadataChanged() {
-        return metadataChanged;
-    }
-
-    public void setMetadataChanged(Boolean metadataChanged) {
-        this.metadataChanged = metadataChanged;
-    }
-
     public String getSummary() {
         return summary;
     }
@@ -157,6 +149,26 @@ public class Folder implements Ownable, Identifiable {
                 Objects.equals(typeId, folder.typeId) &&
                 Objects.equals(metadataChanged, folder.metadataChanged) &&
                 Objects.equals(summary, folder.summary);
+    }
+
+    @Override
+    public boolean isMetadataChanged() {
+        return metadataChanged;
+    }
+
+    @Override
+    public void setMetadataChanged(boolean metadataChanged) {
+        this.metadataChanged = metadataChanged;
+    }
+
+    @Override
+    public void setModified(Date modified) {
+        // ignore
+    }
+
+    @Override
+    public void setModifierId(Long modifierId) {
+        // ignore
     }
 
     @Override

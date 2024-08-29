@@ -1,7 +1,7 @@
 package com.dewarim.cinnamon.model;
 
 import com.dewarim.cinnamon.api.CinnamonObject;
-import com.dewarim.cinnamon.api.Identifiable;
+import com.dewarim.cinnamon.api.OwnableWithMetadata;
 import com.dewarim.cinnamon.api.content.ContentMetadata;
 import com.dewarim.cinnamon.model.relations.Relation;
 import com.dewarim.cinnamon.provider.DefaultContentProvider;
@@ -22,7 +22,7 @@ import static com.dewarim.cinnamon.api.Constants.DEFAULT_SUMMARY;
  * It's abbreviated to OSD.
  */
 @JacksonXmlRootElement(localName = "objectSystemData")
-public class ObjectSystemData implements ContentMetadata, CinnamonObject, Identifiable {
+public class ObjectSystemData implements ContentMetadata, CinnamonObject, OwnableWithMetadata {
     private static final Logger log = LogManager.getLogger(ObjectSystemData.class);
 
     private Long   id;
@@ -66,8 +66,8 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject, Identi
      * You can only delete an object without descendants.
      */
     private boolean latestBranch    = true;
-    private Boolean contentChanged  = false;
-    private Boolean metadataChanged = false;
+    private boolean contentChanged  = false;
+    private boolean metadataChanged = false;
     private String  cmnVersion      = "1";
     private Long    lifecycleStateId;
     private String  summary         = DEFAULT_SUMMARY;
@@ -402,20 +402,13 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject, Identi
         return latestBranch;
     }
 
-    public void setLatestBranch(boolean latestBranch) {
-        this.latestBranch = latestBranch;
-    }
-
-    public Boolean isContentChanged() {
+    @Override
+    public boolean isContentChanged() {
         return contentChanged;
     }
 
-    public void setContentChanged(Boolean contentChanged) {
-        this.contentChanged = contentChanged;
-    }
-
-    public Boolean isMetadataChanged() {
-        return metadataChanged;
+    public void setLatestBranch(boolean latestBranch) {
+        this.latestBranch = latestBranch;
     }
 
     public void setMetadataChanged(Boolean metadataChanged) {
@@ -575,5 +568,19 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject, Identi
 
     public boolean lockedByOtherUser(UserAccount user) {
         return lockerId != null && !user.getId().equals(lockerId);
+    }
+
+    @Override
+    public boolean isMetadataChanged() {
+        return metadataChanged;
+    }
+
+    public void setContentChanged(boolean contentChanged) {
+        this.contentChanged = contentChanged;
+    }
+
+    @Override
+    public void setMetadataChanged(boolean metadataChanged) {
+        this.metadataChanged = metadataChanged;
     }
 }
