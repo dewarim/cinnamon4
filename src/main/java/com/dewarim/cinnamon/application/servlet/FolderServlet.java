@@ -218,6 +218,15 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
 
             Folder newFolder = new Folder(name, aclId, ownerId, parentId, typeId, folder.getSummary());
             folders.add(folderDao.saveFolder(newFolder));
+
+            // handle custom metadata
+            if (folder.getMetas() != null && !folder.getMetas().isEmpty()) {
+                var metas = createMetas(folder.getMetas(), newFolder.getId());
+                folder.setMetas(metas);
+                if(user.isChangeTracking()){
+                    newFolder.setMetadataChanged(true);
+                }
+            }
         }
 
         FolderWrapper wrapper = new FolderWrapper(folders);
@@ -489,5 +498,13 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
     @Override
     public ObjectMapper getMapper() {
         return xmlMapper;
+    }
+
+    private List<Meta> createMetas(List<Meta> metas, Long id) {
+        var dao = new FolderMetaDao();
+        checkMetaUniqueness(metas);
+        metas.forEach(meta -> meta.setObjectId(id));
+        dao.create(metas);
+        return dao.listByFolderId(id);
     }
 }

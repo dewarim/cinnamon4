@@ -69,7 +69,6 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
     public OsdServlet() {
         super();
         ThreadLocalSqlSession.refreshSession();
-        Optional<MetasetType> tikaMetasetType = new MetasetTypeDao().list().stream().filter(meta -> meta.getName().equals(TIKA_METASET_NAME)).findFirst();
     }
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -488,16 +487,6 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         metas.forEach(meta -> meta.setObjectId(id));
         dao.create(metas);
         return dao.listByOsd(id);
-    }
-
-    private void checkMetaUniqueness(List<Meta> metas) {
-        Set<Long> uniqueTypes = new MetasetTypeDao().list().stream().filter(MetasetType::getUnique).map(MetasetType::getId).collect(Collectors.toSet());
-        boolean multipleUniques = metas.stream().map(Meta::getTypeId).anyMatch(typeId ->
-                uniqueTypes.contains(typeId) && metas.stream().filter(meta -> meta.getTypeId().equals(typeId)).count() > 1
-        );
-        if (multipleUniques) {
-            throw ErrorCode.METASET_UNIQUE_CHECK_FAILED.exception();
-        }
     }
 
     private void deleteMeta(CinnamonRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws
