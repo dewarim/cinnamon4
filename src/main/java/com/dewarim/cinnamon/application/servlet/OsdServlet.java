@@ -825,7 +825,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
             }
             else{
                 if(user.isChangeTracking()){
-                    osd.setContentChanged(true);
+                    osd.setMetadataChanged(true);
                 }
             }
 
