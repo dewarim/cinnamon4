@@ -11,7 +11,6 @@ import com.dewarim.cinnamon.api.lifecycle.StateChangeResult;
 import com.dewarim.cinnamon.application.CinnamonRequest;
 import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
-import com.dewarim.cinnamon.application.exception.CinnamonException;
 import com.dewarim.cinnamon.application.service.DeleteOsdService;
 import com.dewarim.cinnamon.application.service.MetaService;
 import com.dewarim.cinnamon.application.service.TikaService;
@@ -45,7 +44,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.sql.SQLException;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -135,7 +133,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                 if (contentPath != null && !contentPath.isEmpty()) {
                     deletions.add(new Deletion(targetId, contentPath, false));
                 }
-                copyContent(osdDao, target, source, source.getFormatId());
+                copyContent(user, osdDao, target, source, source.getFormatId());
             }
             if (copyTask.getMetasetTypeIds() != null && !copyTasks.isEmpty()) {
                 // delete _ALL_ metasets on target: (cinnamon3 behavior)
@@ -146,6 +144,9 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                         .map(meta -> new Meta(targetId, meta.getTypeId(), meta.getContent()))
                         .collect(Collectors.toList());
                 metasetDao.create(metaCopies);
+                if(user.isChangeTracking()){
+                    target.setMetadataChanged(true);
+                }
             }
         }
         if (!deletions.isEmpty()) {
@@ -200,7 +201,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         return errors;
     }
 
-    private void copyContent(OsdDao osdDao, ObjectSystemData target, ObjectSystemData source, Long formatId) throws IOException {
+    private void copyContent(UserAccount user, OsdDao osdDao, ObjectSystemData target, ObjectSystemData source, Long formatId) throws IOException {
         ContentProvider contentProvider = ContentProviderService.getInstance().getContentProvider(source.getContentProvider());
         try (InputStream contentStream = contentProvider.getContentStream(source)) {
             ContentMetadata metadata = contentProvider.writeContentStream(target, contentStream);
@@ -211,6 +212,9 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
             target.setFormatId(formatId);
             Format format = new FormatDao().getObjectById(source.getFormatId()).orElseThrow();
             tikaService.convertContentToTikaMetaset(target, contentProvider.getContentStream(metadata), format);
+            if(user.isChangeTracking()){
+                target.setContentChanged(true);
+            }
             osdDao.updateOsd(target, false);
         }
     }
@@ -220,21 +224,6 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         OsdMetaDao osdMetaDao = new OsdMetaDao();
         new MetaService<>().updateMeta(osdMetaDao, metaRequest.getMetas(), osdDao, user);
-        if (user.isChangeTracking()) {
-            Set<Long>              osdIds      = metaRequest.getMetas().stream().map(Meta::getObjectId).collect(Collectors.toSet());
-            List<ObjectSystemData> osds        = osdDao.getObjectsById(osdIds);
-            Date                   currentDate = new Date();
-            for (ObjectSystemData osd : osds) {
-                osd.setMetadataChanged(true);
-                osd.setModified(currentDate);
-                osd.setModifierId(user.getId());
-            }
-            try {
-                osdDao.update(osds);
-            } catch (SQLException e) {
-                throw new CinnamonException("Failed to update metadataChanged flag on osds", e);
-            }
-        }
         cinnamonResponse.setResponse(new GenericResponse(true));
     }
 
@@ -363,12 +352,12 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                         .filter(meta -> copyOsdRequest.getMetasetTypeIds().contains(meta.getTypeId()))
                         .map(meta -> new Meta(copy.getId(), meta.getTypeId(), meta.getContent()))
                         .collect(Collectors.toList());
-                metasetDao.create(metaCopies);
+                new MetaService<>().createMeta(metasetDao, metaCopies, osdDao, user);
             }
 
             // copy content
             if (osd.getContentHash() != null) {
-                copyContent(osdDao, copy, osd, osd.getFormatId());
+                copyContent(user, osdDao, copy, osd, osd.getFormatId());
             }
             copies.add(copy);
         }
@@ -457,16 +446,15 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         osd.setCreatorId(user.getId());
         osd.setModifierId(user.getId());
         osd.setSummary(Objects.requireNonNullElse(createRequest.getSummary(), DEFAULT_SUMMARY));
-
+        if(user.isChangeTracking()){
+            osd.setMetadataChanged(true);
+        }
         osd = osdDao.saveOsd(osd);
 
         // handle custom metadata
         if (!createRequest.getMetas().isEmpty()) {
             var metas = createMetas(createRequest.getMetas(), osd.getId());
             osd.setMetas(metas);
-            if(user.isChangeTracking()){
-                osd.setMetadataChanged(true);
-            }
         }
 
         Part file = request.getPart("file");
@@ -826,6 +814,11 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                 }
                 osd.setContentChanged(update.isContentChanged());
             }
+            else{
+                if(user.isChangeTracking()){
+                    osd.setMetadataChanged(true);
+                }
+            }
 
             // metadataChanged
             if (updateRequest.isUpdateMetadataChanged()) {
@@ -834,6 +827,11 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                 }
                 osd.setMetadataChanged(update.isMetadataChanged());
                 changed = true;
+            }
+            else{
+                if(user.isChangeTracking()){
+                    osd.setContentChanged(true);
+                }
             }
 
             // update osd:
