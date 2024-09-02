@@ -16,6 +16,7 @@ import com.dewarim.cinnamon.model.request.meta.CreateMetaRequest;
 import com.dewarim.cinnamon.model.request.meta.DeleteMetaRequest;
 import com.dewarim.cinnamon.model.request.meta.MetaRequest;
 import com.dewarim.cinnamon.model.request.osd.*;
+import com.dewarim.cinnamon.model.response.CinnamonError;
 import com.dewarim.cinnamon.model.response.OsdWrapper;
 import com.dewarim.cinnamon.model.response.Summary;
 import com.dewarim.cinnamon.test.TestObjectHolder;
@@ -701,7 +702,9 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     public void createMetaObjectNotFound() throws IOException {
         CreateMetaRequest request      = new CreateMetaRequest(Long.MAX_VALUE, "foo", 1L);
         StandardResponse  metaResponse = sendStandardRequest(UrlMapping.OSD__CREATE_META, request);
-        assertCinnamonError(metaResponse, ErrorCode.OBJECT_NOT_FOUND);
+        CinnamonError     cinnamonError = assertCinnamonError(metaResponse, OBJECT_NOT_FOUND);
+        String            message = cinnamonError.getMessage();
+        assertEquals("Could not find one of the following OSDs: "+Long.MAX_VALUE, message);
     }
 
     @Test
@@ -1339,7 +1342,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var id = toh.osd.getId();
         client.lockOsd(id);
 
-        UpdateOsdRequest request = new UpdateOsdRequest(id, Long.MAX_VALUE, "-", 1L, 1L, 1L, 1L, true,true);
+        UpdateOsdRequest request = new UpdateOsdRequest(id, Long.MAX_VALUE, "-", 1L, 1L, 1L, 1L, true, true);
         assertClientError(() -> client.updateOsd(request), PARENT_FOLDER_NOT_FOUND);
     }
 
@@ -1351,7 +1354,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var id = toh.osd.getId();
         client.lockOsd(id);
 
-        UpdateOsdRequest request = new UpdateOsdRequest(id, 1L, "-", 1L, 1L, 1L, 1L, true,true);
+        UpdateOsdRequest request = new UpdateOsdRequest(id, 1L, "-", 1L, 1L, 1L, 1L, true, true);
         assertClientError(() -> client.updateOsd(request), NO_CREATE_PERMISSION);
     }
 
@@ -1363,7 +1366,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var id = toh.osd.getId();
         client.lockOsd(id);
 
-        var request = new UpdateOsdRequest(id, createFolderId, "-", 1L, 1L, 1L, 1L, false,true);
+        var request = new UpdateOsdRequest(id, createFolderId, "-", 1L, 1L, 1L, 1L, false, true);
         assertClientError(() -> client.updateOsd(request), NO_SET_PARENT_PERMISSION);
     }
 
@@ -1378,7 +1381,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         client.lockOsd(id);
 
         var request = new UpdateOsdRequest(id, toh.folder.getId(), null, null, null, null,
-                null, false,false);
+                null, false, false);
         client.updateOsd(request);
         var osd = client.getOsdById(id, false, false);
         assertEquals(toh.folder.getId(), osd.getParentId());
@@ -1390,7 +1393,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
                 .createOsd("update-osd-rename");
         var id = toh.osd.getId();
 
-        var request = new UpdateOsdRequest(id, null, "new name", null, null, null, null, false,false);
+        var request = new UpdateOsdRequest(id, null, "new name", null, null, null, null, false, false);
         client.lockOsd(id);
         client.updateOsd(request);
         var osd = client.getOsdById(id, false, false);
@@ -1449,7 +1452,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var id = toh.osd.getId();
         client.lockOsd(id);
         var request = new UpdateOsdRequest(id, null, "new name", null, null, null,
-                null, false,false);
+                null, false, false);
         assertClientError(() -> client.updateOsd(request), NO_NAME_WRITE_PERMISSION);
     }
 
@@ -1459,7 +1462,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var id  = toh.osd.getId();
 
         var request = new UpdateOsdRequest(id, null, null, null, null, Long.MAX_VALUE,
-                null, false,false);
+                null, false, false);
         client.lockOsd(id);
         assertClientError(() -> client.updateOsd(request), OBJECT_TYPE_NOT_FOUND);
     }
@@ -1473,7 +1476,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var id = toh.osd.getId();
         client.lockOsd(id);
         var request = new UpdateOsdRequest(id, null, null, null, null,
-                toh.objectType.getId(), null, false,false);
+                toh.objectType.getId(), null, false, false);
         assertClientError(() -> client.updateOsd(request), NO_TYPE_WRITE_PERMISSION);
     }
 
@@ -1486,7 +1489,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         client.lockOsd(id);
 
         var request = new UpdateOsdRequest(id, null, null, null, null,
-                toh.objectType.getId(), null, false,false);
+                toh.objectType.getId(), null, false, false);
         client.updateOsd(request);
         var osd = client.getOsdById(id, false, false);
         assertEquals(toh.objectType.getId(), osd.getTypeId());
@@ -1509,7 +1512,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         client.lockOsd(id);
 
         var request = new UpdateOsdRequest(id, null, null, null, toh.acl.getId(), null,
-                null, false,false);
+                null, false, false);
         assertClientError(() -> client.updateOsd(request), MISSING_SET_ACL_PERMISSION);
     }
 
@@ -1521,7 +1524,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         client.lockOsd(id);
 
         var request = new UpdateOsdRequest(id, null, null, null, Long.MAX_VALUE, null,
-                null, false,false);
+                null, false, false);
         assertClientError(() -> client.updateOsd(request), ACL_NOT_FOUND);
     }
 
@@ -1535,7 +1538,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         client.lockOsd(id);
 
         var request = new UpdateOsdRequest(id, null, null, null, toh.acl.getId(), null,
-                null, false,false);
+                null, false, false);
         client.updateOsd(request);
         var osd = client.getOsdById(id, false, false);
         assertEquals(toh.acl.getId(), osd.getAclId());
@@ -1549,7 +1552,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         client.lockOsd(id);
 
         var request = new UpdateOsdRequest(id, null, null, Long.MAX_VALUE, null, null,
-                null, false,false);
+                null, false, false);
         assertClientError(() -> client.updateOsd(request), USER_ACCOUNT_NOT_FOUND);
     }
 
@@ -1560,7 +1563,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var id = toh.osd.getId();
         client.lockOsd(id);
 
-        var request = new UpdateOsdRequest(id, null, null, adminId, null, null, null,false,false);
+        var request = new UpdateOsdRequest(id, null, null, adminId, null, null, null, false, false);
         client.updateOsd(request);
         var osd = client.getOsdById(id, false, false);
         assertEquals(adminId, osd.getOwnerId());
@@ -1573,7 +1576,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var id = toh.osd.getId();
         client.lockOsd(id);
 
-        var request = new UpdateOsdRequest(id, null, null, null, null, null, Long.MAX_VALUE, false,false);
+        var request = new UpdateOsdRequest(id, null, null, null, null, null, Long.MAX_VALUE, false, false);
         assertClientError(() -> client.updateOsd(request), LANGUAGE_NOT_FOUND);
     }
 
@@ -1588,7 +1591,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var            newLang   = languages.get(1);
         assertNotEquals(toh.osd.getLanguageId(), newLang.getId());
 
-        var request = new UpdateOsdRequest(id, null, null, null, null, null, newLang.getId(), false,false);
+        var request = new UpdateOsdRequest(id, null, null, null, null, null, newLang.getId(), false, false);
         client.updateOsd(request);
         var osd = client.getOsdById(id, false, false);
         assertEquals(newLang.getId(), osd.getLanguageId());
@@ -1600,7 +1603,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         toh.createOsd("osd-update-forbidden");
         var id = toh.osd.getId();
         adminClient.lockOsd(id);
-        var request = new UpdateOsdRequest(id, 1L, "-", 1L, 1L, 1L, 1L, false,false);
+        var request = new UpdateOsdRequest(id, 1L, "-", 1L, 1L, 1L, 1L, false, false);
         assertClientError(() -> client.updateOsd(request), OBJECT_LOCKED_BY_OTHER_USER);
     }
 
@@ -1609,7 +1612,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var toh = new TestObjectHolder(client, userId);
         toh.createOsd("osd-update-forbidden");
         var id      = toh.osd.getId();
-        var request = new UpdateOsdRequest(id, 1L, "-", 1L, 1L, 1L, 1L, false,false);
+        var request = new UpdateOsdRequest(id, 1L, "-", 1L, 1L, 1L, 1L, false, false);
         assertClientError(() -> client.updateOsd(request), OBJECT_MUST_BE_LOCKED_BY_USER);
     }
 
@@ -2032,15 +2035,17 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void copyWithMetasets() throws IOException {
-        var                    toh      = createCopySourceObject("copyWithMetasets");
-        MetasetType            foo      = adminClient.createMetasetType("foo", false);
-        long                   osdId    = toh.osd.getId();
-        Meta                   osdMeta  = adminClient.createOsdMeta(osdId, "<xml>some meta</xml>", foo.getId());
-        List<ObjectSystemData> copies   = adminClient.copyOsds(createFolderId, List.of(osdId), List.of(foo.getId()));
-        ObjectSystemData       copy     = copies.get(0);
-        Meta                   copyMeta = adminClient.getOsdMetas(copy.getId()).get(0);
-        assertEquals(osdMeta.getContent(), copyMeta.getContent());
-        assertEquals(osdMeta.getTypeId(), copyMeta.getTypeId());
+        var toh = createCopySourceObject(UUID.randomUUID().toString());
+        var mt1 = toh.createMetaSetType(false)
+                .createOsdMeta("<xml>a</xml>").metasetType;
+        var mt2 = toh.createMetaSetType(false)
+                .createOsdMeta("<xml>b</xml>").metasetType;
+        var                    unusedMT  = toh.createMetaSetType(false).metasetType;
+        long                   osdId     = toh.osd.getId();
+        List<ObjectSystemData> copies    = adminClient.copyOsds(createFolderId, List.of(osdId), List.of(mt1.getId(), mt2.getId(), unusedMT.getId()));
+        ObjectSystemData       copy      = copies.get(0);
+        var                    copyMetas = adminClient.getOsdMetas(copy.getId());
+        assertEquals(2, copyMetas.size());
     }
 
     @Test

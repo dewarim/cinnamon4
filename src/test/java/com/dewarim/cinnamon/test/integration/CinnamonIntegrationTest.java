@@ -181,12 +181,13 @@ public class CinnamonIntegrationTest {
         }
     }
 
-    protected void assertCinnamonError(StandardResponse response, ErrorCode errorCode) throws IOException {
+    protected CinnamonError assertCinnamonError(StandardResponse response, ErrorCode errorCode) throws IOException {
         String responseText = new String(response.getEntity().getContent().readAllBytes());
         assertTrue(responseText.contains(errorCode.getCode()), "response should contain errorCode " + errorCode + " but was " + responseText);
         assertThat(errorCode.getHttpResponseCode(), equalTo(response.getCode()));
         CinnamonError cinnamonError = mapper.readValue(response.getEntity().getContent(), CinnamonErrorWrapper.class).getErrors().get(0);
         assertEquals(errorCode.getCode(), cinnamonError.getCode());
+        return cinnamonError;
     }
 
     protected void assertClientError(Executable executable, ErrorCode... errorCode) {

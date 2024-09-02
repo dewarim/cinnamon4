@@ -50,10 +50,11 @@ public class RequestResponseFilter implements Filter {
             ThreadLocalSqlSession.setTransactionStatus(TransactionStatus.ROLLBACK);
             log.debug("Failed request: ", e);
             ErrorCode errorCode = e.getErrorCode();
+            String message = e.getMessage() != null ? e.getMessage() : errorCode.getDescription();
             if (e.getErrors().isEmpty()) {
-                cinnamonResponse.generateErrorMessage(errorCode.getHttpResponseCode(), errorCode, errorCode.getDescription(), logResponses);
+                cinnamonResponse.generateErrorMessage(errorCode.getHttpResponseCode(), errorCode, message, logResponses);
             } else {
-                cinnamonResponse.generateErrorMessage(errorCode.getHttpResponseCode(), errorCode, errorCode.getDescription(), e.getErrors(), logResponses);
+                cinnamonResponse.generateErrorMessage(errorCode.getHttpResponseCode(), errorCode, message, e.getErrors(), logResponses);
             }
         }
 

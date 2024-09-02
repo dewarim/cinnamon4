@@ -38,14 +38,14 @@ public class MetaService<T extends CrudDao<Meta> & MetaDao, O extends CrudDao<? 
         if (metas.isEmpty()) {
             return;
         }
-        List<Long>              objectIds = metas.stream().map(Meta::getObjectId).toList();
+        List<Long>                          objectIds = metas.stream().map(Meta::getObjectId).toList();
         List<? extends OwnableWithMetadata> ownables  = ownableDao.getObjectsById(objectIds);
         for (Ownable ownable : ownables) {
             throwUnlessCustomMetaIsWritable(ownable, user);
         }
         List<Long> metaIds = metas.stream().map(Meta::getId).toList();
         metaDao.delete(metaIds);
-        updateMetadataChanged(user, ownables, ownableDao );
+        updateMetadataChanged(user, ownables, ownableDao);
         updateIndex(metas, ownableDao);
     }
 
@@ -67,11 +67,15 @@ public class MetaService<T extends CrudDao<Meta> & MetaDao, O extends CrudDao<? 
     }
 
     public List<Meta> createMeta(T dao, List<Meta> metas, O ownableDao, UserAccount user) {
+        if (metas.isEmpty()) {
+            return List.of();
+        }
         // load objects
-        List<Long>                          ownableIds = metas.stream().map(Meta::getObjectId).collect(Collectors.toList());
+        Set<Long>                           ownableIds = metas.stream().map(Meta::getObjectId).collect(Collectors.toSet());
         List<? extends OwnableWithMetadata> ownables   = ownableDao.getObjectsById(ownableIds);
-        if (ownables.size() != Set.of(ownableIds).size()) {
-            throw ErrorCode.OBJECT_NOT_FOUND.getException().get();
+        if (ownables.size() != ownableIds.size()) {
+            throw new FailedRequestException(ErrorCode.OBJECT_NOT_FOUND, "Could not find one of the following OSDs: " +
+                    (ownableIds.stream().map(Object::toString).collect(Collectors.joining(","))));
         }
 
         Map<Long, OwnableWithMetadata> ownableMap = ownables.stream().filter(osd -> {
@@ -111,7 +115,7 @@ public class MetaService<T extends CrudDao<Meta> & MetaDao, O extends CrudDao<? 
             Meta meta = dao.getMetaById(metaUpdate.getId())
                     .orElseThrow(ErrorCode.METASET_NOT_FOUND.getException());
             OwnableWithMetadata ownable = ownableDao.getObjectById(meta.getObjectId())
-                    .orElseThrow(OBJECT_NOT_FOUND.getException());
+                    .orElseThrow(() -> new FailedRequestException(OBJECT_NOT_FOUND, "Could not find Ownable with id:"+ String.valueOf(meta.getObjectId())));
             ownables.add(ownable);
             if (!ownable.getId().equals(metaUpdate.getObjectId()) ||
                     !meta.getTypeId().equals(metaUpdate.getTypeId())) {
