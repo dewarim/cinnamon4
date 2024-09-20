@@ -136,7 +136,7 @@ public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void happyPathCreateAndDeleteRelation() throws IOException {
         var toh = prepareAclGroupWithPermissions("happyPathCreateAndDeleteRelation",
-                List.of(READ_OBJECT_SYS_METADATA, RELATION_CHILD_ADD, RELATION_PARENT_ADD,
+                List.of(BROWSE, RELATION_CHILD_ADD, RELATION_PARENT_ADD,
                         RELATION_CHILD_REMOVE, RELATION_PARENT_REMOVE));
         var leftOsd = toh.createOsd("left-osd").osd;
         var rightOsd = toh.createOsd("right-osd").osd;
@@ -169,7 +169,7 @@ public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createRelationFailsWithoutChildAddPermission() throws IOException {
-        var toh = prepareAclGroupWithPermissions("createRelationFailsWithoutChildAddPermission", List.of(READ_OBJECT_SYS_METADATA));
+        var toh = prepareAclGroupWithPermissions("createRelationFailsWithoutChildAddPermission", List.of(BROWSE));
         var leftOsd = toh.createOsd("left-osd").osd;
         var rightOsd = toh.createOsd("right-osd").osd;
 
@@ -181,7 +181,7 @@ public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void deleteRelationFailsWithoutChildRemovePermission() throws IOException {
         var toh = prepareAclGroupWithPermissions("deleteRelationFailsWithoutChildRemovePermission",
-                List.of(READ_OBJECT_SYS_METADATA, RELATION_CHILD_ADD, RELATION_PARENT_ADD));
+                List.of(BROWSE, RELATION_CHILD_ADD, RELATION_PARENT_ADD));
         var leftOsd = toh.createOsd("left-osd").osd;
         var rightOsd = toh.createOsd("right-osd").osd;
 
@@ -196,7 +196,7 @@ public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void deleteRelationFailsWithoutParentRemovePermission() throws IOException {
         var toh = prepareAclGroupWithPermissions("deleteRelationFailsWithoutParentRemovePermission",
-                List.of(READ_OBJECT_SYS_METADATA, RELATION_CHILD_ADD, RELATION_PARENT_ADD,
+                List.of(BROWSE, RELATION_CHILD_ADD, RELATION_PARENT_ADD,
                         RELATION_CHILD_REMOVE));
         var leftOsd = toh.createOsd("left-osd").osd;
         var rightOsd = toh.createOsd("right-osd").osd;
@@ -210,7 +210,7 @@ public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createRelationFailsWithoutParentAddPermission() throws IOException {
-        var toh = prepareAclGroupWithPermissions("createRelationFailsWithoutParentAddPermission", List.of(READ_OBJECT_SYS_METADATA, RELATION_CHILD_ADD));
+        var toh = prepareAclGroupWithPermissions("createRelationFailsWithoutParentAddPermission", List.of(BROWSE, RELATION_CHILD_ADD));
         var leftOsd = toh.createOsd("left-osd").osd;
         var rightOsd = toh.createOsd("right-osd").osd;
 
@@ -248,7 +248,7 @@ public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void getRelations() throws IOException {
         var toh = prepareAclGroupWithPermissions("getRelations",
-                List.of(RELATION_CHILD_ADD, RELATION_PARENT_ADD, READ_OBJECT_SYS_METADATA));
+                List.of(RELATION_CHILD_ADD, RELATION_PARENT_ADD, BROWSE));
 
         var left1 = toh.createOsd("left and 1").osd;
         var left2 = toh.createOsd("left and 2").osd;

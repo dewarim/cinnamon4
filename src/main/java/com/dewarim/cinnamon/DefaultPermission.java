@@ -34,7 +34,6 @@ public enum DefaultPermission {
      */
     LOCK("object.lock"),
 
-
     /**
      * Permission to read to an object's content.
      */
@@ -44,10 +43,6 @@ public enum DefaultPermission {
      * Permission to read an object's custom metadata
      */
     READ_OBJECT_CUSTOM_METADATA("node.metadata.read"),
-    /**
-     * Permission to read an object's system metadata
-     */
-    READ_OBJECT_SYS_METADATA("node.sysmetadata.read"),
 
     RELATION_CHILD_ADD("relation.child.add"),
 

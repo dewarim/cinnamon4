@@ -89,7 +89,6 @@ public enum ErrorCode {
     NO_LOCK_PERMISSION("missing permission to (un)lock this object", SC_UNAUTHORIZED),
     NO_NAME_WRITE_PERMISSION("missing permission to rename object", SC_UNAUTHORIZED),
     NO_READ_CUSTOM_METADATA_PERMISSION("missing permission to read custom metadata", SC_UNAUTHORIZED),
-    NO_READ_OBJECT_SYS_METADATA_PERMISSION("missing permission to read system metadata", SC_UNAUTHORIZED),
     NO_READ_PERMISSION("missing read content permission for current object", SC_UNAUTHORIZED),
     NO_RELATION_CHILD_ADD_PERMISSION("missing relation.child.add permission", SC_UNAUTHORIZED),
     NO_RELATION_CHILD_REMOVE_PERMISSION("missing relation.child.remove permission", SC_UNAUTHORIZED),

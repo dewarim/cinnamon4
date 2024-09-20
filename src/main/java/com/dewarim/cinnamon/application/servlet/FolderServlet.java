@@ -491,11 +491,11 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
         SummaryWrapper wrapper       = new SummaryWrapper();
         List<Folder>   folders       = folderDao.getFoldersById(idListRequest.getIds().stream().toList(), true);
         folders.forEach(folder -> {
-            if (authorizationService.hasUserOrOwnerPermission(folder, DefaultPermission.READ_OBJECT_SYS_METADATA, user)) {
+            if (authorizationService.hasUserOrOwnerPermission(folder, DefaultPermission.BROWSE, user)) {
                 wrapper.getSummaries().add(new Summary(folder.getId(), folder.getSummary()));
             }
             else {
-                throw ErrorCode.NO_READ_OBJECT_SYS_METADATA_PERMISSION.exception();
+                throw ErrorCode.NO_BROWSE_PERMISSION.exception();
             }
         });
         response.setWrapper(wrapper);

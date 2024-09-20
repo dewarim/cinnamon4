@@ -95,7 +95,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
                 .createGroup("attachLifecycleMissingWritePermission")
                 .createAclGroup()
                 .addUserToGroup(userId)
-                .addPermissions(List.of(DefaultPermission.READ_OBJECT_SYS_METADATA))
+                .addPermissions(List.of(DefaultPermission.BROWSE))
                 .createOsd("attachLifecycleMissingWritePermission");
         long osdId = toh.osd.getId();
 
@@ -347,7 +347,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
         var toh = new TestObjectHolder(adminClient, adminId)
                 .createAcl("no permissions for read system meta")
                 .createOsd("getNextStatesRequiresReadPermission");
-        assertClientError(() -> client.getNextLifecycleStates(toh.osd.getId()), NO_READ_OBJECT_SYS_METADATA_PERMISSION);
+        assertClientError(() -> client.getNextLifecycleStates(toh.osd.getId()), NO_BROWSE_PERMISSION);
     }
 
     @Test

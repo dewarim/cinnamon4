@@ -244,9 +244,9 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         var                    accessFilter = AccessFilter.getInstance(user);
         List<ObjectSystemData> osds         = osdDao.getObjectsById(relationRequest.getIds(), false);
         boolean hasReadSysMetaPermission = osds.stream().allMatch(osd ->
-                accessFilter.hasPermissionOnOwnable(osd, DefaultPermission.READ_OBJECT_SYS_METADATA, osd));
+                accessFilter.hasPermissionOnOwnable(osd, DefaultPermission.BROWSE, osd));
         if (!hasReadSysMetaPermission) {
-            ErrorCode.NO_READ_OBJECT_SYS_METADATA_PERMISSION.throwUp();
+            ErrorCode.NO_BROWSE_PERMISSION.throwUp();
             return;
         }
         List<Long>      ids             = osds.stream().map(ObjectSystemData::getId).collect(Collectors.toList());
@@ -275,9 +275,9 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
             return;
         }
         boolean hasReadSysMetaPermission = sourceOsds.stream().allMatch(osd ->
-                accessFilter.hasPermissionOnOwnable(osd, DefaultPermission.READ_OBJECT_SYS_METADATA, osd));
+                accessFilter.hasPermissionOnOwnable(osd, DefaultPermission.BROWSE, osd));
         if (!hasReadSysMetaPermission) {
-            ErrorCode.NO_READ_OBJECT_SYS_METADATA_PERMISSION.throwUp();
+            ErrorCode.NO_BROWSE_PERMISSION.throwUp();
             return;
         }
 
@@ -704,7 +704,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         SummaryWrapper         wrapper       = new SummaryWrapper();
         List<ObjectSystemData> osds          = osdDao.getObjectsById(idListRequest.getIds().stream().toList(), true);
         osds.forEach(osd -> {
-            if (authorizationService.hasUserOrOwnerPermission(osd, DefaultPermission.READ_OBJECT_SYS_METADATA, user)) {
+            if (authorizationService.hasUserOrOwnerPermission(osd, DefaultPermission.BROWSE, user)) {
                 wrapper.getSummaries().add(new Summary(osd.getId(), osd.getSummary()));
             }
         });

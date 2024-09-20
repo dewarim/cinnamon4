@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.dewarim.cinnamon.DefaultPermission.READ_OBJECT_SYS_METADATA;
+import static com.dewarim.cinnamon.DefaultPermission.BROWSE;
 import static com.dewarim.cinnamon.ErrorCode.NO_READ_CUSTOM_METADATA_PERMISSION;
 
 public class BaseServlet extends HttpServlet {
@@ -26,9 +26,9 @@ public class BaseServlet extends HttpServlet {
 
     static void throwUnlessSysMetadataIsReadable(Ownable ownable) {
         UserAccount user        = ThreadLocalSqlSession.getCurrentUser();
-        boolean     readAllowed = authorizationService.hasUserOrOwnerPermission(ownable, READ_OBJECT_SYS_METADATA, user);
+        boolean     readAllowed = authorizationService.hasUserOrOwnerPermission(ownable, BROWSE, user);
         if (!readAllowed) {
-            throw ErrorCode.NO_READ_OBJECT_SYS_METADATA_PERMISSION.getException().get();
+            throw ErrorCode.NO_BROWSE_PERMISSION.getException().get();
         }
     }
 

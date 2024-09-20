@@ -621,7 +621,6 @@ insert into permissions values (nextval('seq_permission_id'),'link.target.write'
 insert into permissions values (nextval('seq_permission_id'),'node.parent_folder.write');
 insert into permissions values (nextval('seq_permission_id'),'object.content.read');
 insert into permissions values (nextval('seq_permission_id'),'node.metadata.read');
-insert into permissions values (nextval('seq_permission_id'),'node.sysmetadata.read');
 insert into permissions values (nextval('seq_permission_id'),'node.acl.write');
 insert into permissions values (nextval('seq_permission_id'),'node.summary.write');
 insert into permissions values (nextval('seq_permission_id'),'node.owner.write');

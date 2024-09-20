@@ -66,7 +66,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     public void getSummariesMissingPermission() throws IOException {
         var folderId = prepareAclGroupWithPermissions(List.of())
                 .createFolder().setSummaryOnFolder(XML_SUMMARY).folder.getId();
-        assertClientError(() -> client.getFolderSummaries(List.of(folderId)), NO_READ_OBJECT_SYS_METADATA_PERMISSION);
+        assertClientError(() -> client.getFolderSummaries(List.of(folderId)), NO_BROWSE_PERMISSION);
     }
 
     @Test
