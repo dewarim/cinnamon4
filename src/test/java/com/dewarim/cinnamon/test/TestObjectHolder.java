@@ -16,6 +16,7 @@ import com.dewarim.cinnamon.model.request.osd.UpdateOsdRequest;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -224,6 +225,13 @@ public class TestObjectHolder {
 
     public TestObjectHolder createAclGroup() throws IOException {
         aclGroup = client.createAclGroups(List.of(new AclGroup(acl.getId(), group.getId()))).get(0);
+        return this;
+    }
+
+    public TestObjectHolder createAclGroupWithPermissionIds(List<Long> permissionIds) throws IOException {
+        AclGroup group1 = new AclGroup(acl.getId(), group.getId());
+        group1.getPermissionIds().addAll(permissionIds);
+        aclGroup = client.createAclGroups(List.of(group1)).get(0);
         return this;
     }
 
@@ -467,6 +475,11 @@ public class TestObjectHolder {
     public TestObjectHolder updateLifecycleDefaultState() throws IOException {
         lifecycle.setDefaultStateId(lifecycleState.getId());
         client.updateLifecycle(lifecycle);
+        return this;
+    }
+
+    public TestObjectHolder deleteAclGroup() throws IOException {
+        client.deleteAclGroups(Collections.singletonList(this.aclGroup.getId()));
         return this;
     }
 }

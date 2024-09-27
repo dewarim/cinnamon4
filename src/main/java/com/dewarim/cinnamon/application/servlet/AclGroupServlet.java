@@ -7,6 +7,7 @@ import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.dao.AclGroupDao;
 import com.dewarim.cinnamon.dao.AclGroupPermissionDao;
 import com.dewarim.cinnamon.model.AclGroup;
+import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.request.DeleteRequest;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.request.aclGroup.*;
@@ -22,6 +23,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
 
@@ -44,30 +46,43 @@ public class AclGroupServlet extends HttpServlet implements CruddyServlet<AclGro
             }
             case ACL_GROUP__CREATE -> {
                 superuserCheck();
-                create(convertCreateRequest(request, CreateAclGroupRequest.class), aclGroupDao, cinnamonResponse);
+                CreateRequest<AclGroup> createRequest = convertCreateRequest(request, CreateAclGroupRequest.class);
+                List<AclGroup> aclGroupsToCreate = createRequest.list();
+                List<AclGroup> aclGroups         = aclGroupDao.create(aclGroupsToCreate);
+                AclGroupPermissionDao aclGroupPermissionDao = new AclGroupPermissionDao();
+                for (AclGroup aclGroup : aclGroupsToCreate) {
+                    if (aclGroup.getPermissionIds().size() > 0) {
+                        Optional<AclGroup> newGroup = aclGroups.stream().filter(ag -> ag.getAclId().equals(aclGroup.getAclId()) && ag.getGroupId().equals(aclGroup.getGroupId()))
+                                .findFirst();
+                        // if we cannot create all the aclGroups, create() should throw an DB_INSERT_FAILED error.
+                        // therefore we do not handle missing group here.
+                        newGroup.ifPresent(group -> aclGroupPermissionDao.addPermissions(group, aclGroup.getPermissionIds()));
+                    }
+                }
+                cinnamonResponse.setWrapper(createRequest.fetchResponseWrapper().setList(aclGroups));
             }
             case ACL_GROUP__DELETE -> {
                 superuserCheck();
                 DeleteRequest<AclGroup> aclGroupDeleteRequest = convertDeleteRequest(request, DeleteAclGroupRequest.class);
-                List<AclGroup> groupsToDelete = aclGroupDao.getObjectsById(aclGroupDeleteRequest.list());
+                List<AclGroup>          groupsToDelete        = aclGroupDao.getObjectsById(aclGroupDeleteRequest.list());
                 aclGroupDao.loadPermissionsIntoAclGroups(groupsToDelete);
                 AclGroupPermissionDao permissionDao = new AclGroupPermissionDao();
-                groupsToDelete.forEach(group -> permissionDao.removePermissions(group,group.getPermissionIds()));
-                delete(aclGroupDeleteRequest, aclGroupDao,cinnamonResponse);
+                groupsToDelete.forEach(group -> permissionDao.removePermissions(group, group.getPermissionIds()));
+                delete(aclGroupDeleteRequest, aclGroupDao, cinnamonResponse);
             }
             case ACL_GROUP__UPDATE -> {
                 superuserCheck();
-                UpdateRequest<AclGroup> updateRequest = convertUpdateRequest(request, UpdateAclGroupRequest.class);
-                List<Long> aclGroupIds = updateRequest.list().stream().map(AclGroup::getId).toList();
-                AclGroupPermissionDao permissionDao = new AclGroupPermissionDao();
-                List<AclGroup> currentGroupsFromDb = aclGroupDao.getObjectsById(aclGroupIds);
+                UpdateRequest<AclGroup> updateRequest       = convertUpdateRequest(request, UpdateAclGroupRequest.class);
+                List<Long>              aclGroupIds         = updateRequest.list().stream().map(AclGroup::getId).toList();
+                AclGroupPermissionDao   permissionDao       = new AclGroupPermissionDao();
+                List<AclGroup>          currentGroupsFromDb = aclGroupDao.getObjectsById(aclGroupIds);
                 aclGroupDao.loadPermissionsIntoAclGroups(currentGroupsFromDb);
-                Map<Long,AclGroup> requestGroups = new HashMap<>();
-                updateRequest.list().forEach(ag -> requestGroups.put(ag.getId(),ag));
+                Map<Long, AclGroup> requestGroups = new HashMap<>();
+                updateRequest.list().forEach(ag -> requestGroups.put(ag.getId(), ag));
                 for (AclGroup currentGroup : currentGroupsFromDb) {
-                    permissionDao.removePermissions(currentGroup,currentGroup.getPermissionIds());
+                    permissionDao.removePermissions(currentGroup, currentGroup.getPermissionIds());
                     AclGroup requestGroup = requestGroups.get(currentGroup.getId());
-                    permissionDao.addPermissions(currentGroup,requestGroup.getPermissionIds());
+                    permissionDao.addPermissions(currentGroup, requestGroup.getPermissionIds());
                 }
                 AclGroupWrapper aclGroupWrapper = new AclGroupWrapper(updateRequest.list());
                 cinnamonResponse.setWrapper(aclGroupWrapper);

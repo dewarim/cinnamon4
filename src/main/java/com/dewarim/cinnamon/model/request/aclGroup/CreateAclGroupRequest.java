@@ -51,6 +51,8 @@ public class CreateAclGroupRequest implements CreateRequest<AclGroup>, ApiReques
 
     @Override
     public List<ApiRequest<CreateAclGroupRequest>> examples() {
-        return List.of(new CreateAclGroupRequest(List.of(new AclGroup(1L,2L), new AclGroup(1L,3L))));
+        AclGroup aclGroup = new AclGroup(1L, 2L);
+        aclGroup.setPermissionIds(List.of(10L,12L));
+        return List.of(new CreateAclGroupRequest(List.of(aclGroup, new AclGroup(1L,3L))));
     }
 }

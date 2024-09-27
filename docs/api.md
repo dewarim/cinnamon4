@@ -15,7 +15,10 @@ Create a new ACL group. Note: permissions parameter is not yet implemented.
       <id/>
       <aclId>1</aclId>
       <groupId>2</groupId>
-      <permissions/>
+      <permissions>
+        <permissionId>10</permissionId>
+        <permissionId>12</permissionId>
+      </permissions>
     </aclGroup>
     <aclGroup>
       <id/>
@@ -1104,6 +1107,7 @@ Create a new folder.
       <summary>&lt;summary>&lt;description>contains images&lt;/description>&lt;/summary></summary>
       <hasSubfolders>false</hasSubfolders>
       <created>2022-08-10T01:21:00+0000</created>
+      <metasets/>
     </folder>
     <folder>
       <id/>
@@ -1116,6 +1120,7 @@ Create a new folder.
       <summary>&lt;summary/></summary>
       <hasSubfolders>false</hasSubfolders>
       <created>2022-08-10T01:21:00+0000</created>
+      <metasets/>
     </folder>
   </folders>
 </createFolderRequest>
@@ -1229,8 +1234,8 @@ Delete all metasets linked to the given Folder ids. Parameter ignoreNotFound is 
 <deleteAllMetasRequest>
   <ignoreNotFound>false</ignoreNotFound>
   <ids>
-    <id>14</id>
     <id>15</id>
+    <id>14</id>
   </ids>
 </deleteAllMetasRequest>
 
@@ -1328,6 +1333,7 @@ Fetch a single folder
       <summary>&lt;summary></summary>
       <hasSubfolders>false</hasSubfolders>
       <created>2022-08-10T01:21:00+0000</created>
+      <metasets/>
     </folder>
   </folders>
 </cinnamon>
@@ -1372,6 +1378,7 @@ Fetch a single folder
       <summary>&lt;summary></summary>
       <hasSubfolders>false</hasSubfolders>
       <created>2022-08-10T01:21:00+0000</created>
+      <metasets/>
     </folder>
   </folders>
 </cinnamon>
@@ -1412,6 +1419,7 @@ Fetch a single folder
       <summary>&lt;summary></summary>
       <hasSubfolders>false</hasSubfolders>
       <created>2022-08-10T01:21:00+0000</created>
+      <metasets/>
     </folder>
   </folders>
 </cinnamon>
@@ -1508,6 +1516,7 @@ Fetch a single folder
       <summary>&lt;summary></summary>
       <hasSubfolders>false</hasSubfolders>
       <created>2022-08-10T01:21:00+0000</created>
+      <metasets/>
     </folder>
   </folders>
 </cinnamon>
@@ -1607,6 +1616,7 @@ Add a summary to an object, for example a short description of this folder's con
       <summary>&lt;summary>update this&lt;/summary></summary>
       <hasSubfolders>false</hasSubfolders>
       <created>2022-08-10T01:21:00+0000</created>
+      <metasets/>
     </folder>
   </folders>
 </updateFolderRequest>
@@ -3148,6 +3158,7 @@ Update lifecycles. Note: does not update lifecycle states
         <summary>&lt;summary></summary>
         <hasSubfolders>false</hasSubfolders>
         <created>2022-08-10T01:21:00+0000</created>
+        <metasets/>
       </folder>
     </link>
   </links>
@@ -3768,8 +3779,8 @@ should contain data.
 <deleteAllMetasRequest>
   <ignoreNotFound>false</ignoreNotFound>
   <ids>
-    <id>14</id>
     <id>15</id>
+    <id>14</id>
   </ids>
 </deleteAllMetasRequest>
 
