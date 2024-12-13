@@ -364,8 +364,8 @@ public class TestObjectHolder {
      * Create a link to the given folder using the current folder, acl, owner.
      * New link object is stored in TOH.link field.
      */
-    public TestObjectHolder createLinkToFolder(Folder folder) throws IOException {
-        link = client.createLinkToFolder(folder.getId(), acl.getId(), user.getId(), folder.getId());
+    public TestObjectHolder createLinkToFolder(Folder targetFolder) throws IOException {
+        link = client.createLinkToFolder(folder.getId(), acl.getId(), user.getId(), targetFolder.getId());
         return this;
     }
 

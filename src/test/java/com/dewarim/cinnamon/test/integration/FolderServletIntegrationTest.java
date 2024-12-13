@@ -13,6 +13,7 @@ import com.dewarim.cinnamon.model.request.meta.DeleteMetaRequest;
 import com.dewarim.cinnamon.model.request.meta.MetaRequest;
 import com.dewarim.cinnamon.model.request.osd.SetSummaryRequest;
 import com.dewarim.cinnamon.model.request.search.SearchType;
+import com.dewarim.cinnamon.model.response.FolderWrapper;
 import com.dewarim.cinnamon.model.response.Summary;
 import com.dewarim.cinnamon.test.TestObjectHolder;
 import org.junit.jupiter.api.Disabled;
@@ -55,7 +56,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getSummaryHappyPath() throws IOException {
-        var toh = new TestObjectHolder(client, userId).createFolder().setSummaryOnFolder("foo-folder");
+        var           toh       = new TestObjectHolder(client, userId).createFolder().setSummaryOnFolder("foo-folder");
         List<Summary> summaries = client.getFolderSummaries(List.of(toh.folder.getId()));
         assertNotNull(summaries);
         assertFalse(summaries.isEmpty());
@@ -93,6 +94,24 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
+    public void onGetSubFoldersReturnLinkedFoldersButNotObjects() throws IOException {
+        var toh              = new TestObjectHolder(client, userId);
+        var linkFolderTarget = toh.createFolder().folder;
+        var linkOsdTarget    = toh.createOsd().osd;
+        var parentFolderId   = toh.createFolder().folder.getId();
+        // create folder and put two links inside - we only expect the folder link to be returned:
+        toh.createFolder()
+                .createLinkToFolder(linkFolderTarget)
+                .createLinkToOsd(linkOsdTarget);
+        FolderWrapper subFolders = client.getSubFolderWrapper(parentFolderId, false);
+        assertEquals(1, subFolders.getFolders().size());
+        assertEquals(toh.folder.getId(),subFolders.getFolders().getFirst().getId());
+        assertNotNull(subFolders.getLinks());
+        assertEquals(1, subFolders.getLinks().size());
+        assertEquals(linkFolderTarget.getId(), subFolders.getLinks().getFirst().getFolderId());
+    }
+
+    @Test
     public void getFolderInvalidRequest() throws IOException {
         SingleFolderRequest singleRequest = new SingleFolderRequest(0L, false);
         sendStandardRequestAndAssertError(UrlMapping.FOLDER__GET_FOLDER, singleRequest, INVALID_REQUEST);
@@ -106,7 +125,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getFoldersHappyPath() throws IOException {
-        var folder = new TestObjectHolder(client, userId).createFolder().folder;
+        var          folder  = new TestObjectHolder(client, userId).createFolder().folder;
         List<Folder> folders = client.getFolders(List.of(folder.getId()), false);
         assertEquals(1, folders.size());
         assertEquals(folder, folders.get(0));
@@ -150,8 +169,8 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getFolderByPathHappyPath() throws IOException {
-        String folderName = new TestObjectHolder(client, userId).createFolder().folder.getName();
-        List<Folder> folders = client.getFoldersByPath("/creation/" + folderName);
+        String       folderName  = new TestObjectHolder(client, userId).createFolder().folder.getName();
+        List<Folder> folders     = client.getFoldersByPath("/creation/" + folderName);
         List<String> folderNames = folders.stream().map(Folder::getName).toList();
         assertTrue(folderNames.contains("root"));
         assertTrue(folderNames.contains("creation"));
@@ -217,8 +236,8 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createMetaMetasetTypeByIdNotFound() throws IOException {
-        var folderId = new TestObjectHolder(client, userId).createFolder().folder.getId();
-        CreateMetaRequest request = new CreateMetaRequest(folderId, "foo", Long.MAX_VALUE);
+        var               folderId = new TestObjectHolder(client, userId).createFolder().folder.getId();
+        CreateMetaRequest request  = new CreateMetaRequest(folderId, "foo", Long.MAX_VALUE);
         assertClientError(() -> client.createFolderMeta(request), METASET_TYPE_NOT_FOUND);
     }
 
@@ -255,7 +274,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void deleteAllMetas() throws IOException {
-        Acl acl = prepareAclGroupWithPermissions(List.of(READ_OBJECT_CUSTOM_METADATA, WRITE_OBJECT_CUSTOM_METADATA)).acl;
+        Acl    acl    = prepareAclGroupWithPermissions(List.of(READ_OBJECT_CUSTOM_METADATA, WRITE_OBJECT_CUSTOM_METADATA)).acl;
         Folder folder = client.createFolder(createFolderId, "folder-deleteAllMetas", userId, acl.getId(), 1L);
         client.createFolderMeta(new CreateMetaRequest(folder.getId(), "<xml>...</xml>", 1L));
         client.createFolderMeta(new CreateMetaRequest(folder.getId(), "<xml>...</xml>", 1L));
@@ -323,8 +342,8 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateFolderCannotMoveFolderIntoItself() throws IOException {
-        var folderId = new TestObjectHolder(client, userId).createFolder().folder.getId();
-        UpdateFolderRequest request = new UpdateFolderRequest(folderId, folderId, null, null, null, null);
+        var                 folderId = new TestObjectHolder(client, userId).createFolder().folder.getId();
+        UpdateFolderRequest request  = new UpdateFolderRequest(folderId, folderId, null, null, null, null);
         assertClientError(() -> client.updateFolder(request), CANNOT_MOVE_FOLDER_INTO_ITSELF);
     }
 
@@ -348,7 +367,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateFolderNoMovePermission() throws IOException {
-        var targetFolder = new TestObjectHolder(client, userId).createFolder().folder;
+        var targetFolder    = new TestObjectHolder(client, userId).createFolder().folder;
         var unmovableFolder = prepareAclGroupWithPermissions(List.of()).createFolder().folder;
         UpdateFolderRequest request = new UpdateFolderRequest(
                 unmovableFolder.getId(), targetFolder.getId(), null, null, null, null);
@@ -464,10 +483,10 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
                 .createFolder();
         UpdateFolderRequest request = new UpdateFolderRequest(
                 adminToh.folder.getId(), targetFolderId, null, 1L,
-                adminToh.folderType.getId(), adminToh.acl.getId(),true
+                adminToh.folderType.getId(), adminToh.acl.getId(), true
         );
         request.setUpdateMetadataChanged(true);
-        assertClientError( () -> client.updateFolder(request),CHANGED_FLAG_ONLY_USABLE_BY_UNTRACKED_USERS);
+        assertClientError(() -> client.updateFolder(request), CHANGED_FLAG_ONLY_USABLE_BY_UNTRACKED_USERS);
     }
 
     @Test
@@ -484,13 +503,13 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getSubFoldersHappyPath() throws IOException {
-        var toh = new TestObjectHolder(client, userId);
+        var toh            = new TestObjectHolder(client, userId);
         var parentFolderId = toh.createFolder().folder.getId();
         toh.createFolder("a", parentFolderId)
                 .createFolder("b", parentFolderId)
                 .createFolder("c", parentFolderId);
-        List<Folder> folders = client.getSubFolders(parentFolderId, false);
-        Set<String> folderNames = folders.stream().map(Folder::getName).collect(Collectors.toSet());
+        List<Folder> folders     = client.getSubFolders(parentFolderId, false);
+        Set<String>  folderNames = folders.stream().map(Folder::getName).collect(Collectors.toSet());
         assertTrue(folderNames.containsAll(Set.of("a", "b", "c")));
     }
 
@@ -558,7 +577,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void deleteFolderInvalidRequest() {
         assertClientError(
-                () -> client.deleteFolder(Collections.emptyList(), false, false),INVALID_REQUEST);
+                () -> client.deleteFolder(Collections.emptyList(), false, false), INVALID_REQUEST);
     }
 
     @Test
@@ -566,7 +585,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         TestObjectHolder toh = new TestObjectHolder(adminClient, userId);
         toh.createAcl("deleteFolderNoDeletePermission")
                 .createFolder("unloeschbar", createFolderId);
-        assertClientError( () -> client.deleteFolder(toh.folder.getId(), false, false),NO_DELETE_PERMISSION);
+        assertClientError(() -> client.deleteFolder(toh.folder.getId(), false, false), NO_DELETE_PERMISSION);
     }
 
     @Test
@@ -598,8 +617,8 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
      */
     @Test
     public void deleteFolderFailWithSubfolderNonRecursively() throws IOException {
-        TestObjectHolder toh = prepareAclGroupWithOwnerPermissions(List.of(DefaultPermission.DELETE, DefaultPermission.CREATE_FOLDER));
-        Folder folderWithSubfolder = toh.createFolder("folderWithSubfolderFail", createFolderId).folder;
+        TestObjectHolder toh                 = prepareAclGroupWithOwnerPermissions(List.of(DefaultPermission.DELETE, DefaultPermission.CREATE_FOLDER));
+        Folder           folderWithSubfolder = toh.createFolder("folderWithSubfolderFail", createFolderId).folder;
         client.createFolder(folderWithSubfolder.getId(), "subfolder", userId, toh.acl.getId(), folderWithSubfolder.getTypeId());
 
         assertClientError(() -> client.deleteFolder(folderWithSubfolder.getId(), false, false),
@@ -612,11 +631,11 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
      */
     @Test
     public void deleteFolderWithSubfoldersRecursively() throws IOException {
-        TestObjectHolder toh = prepareAclGroupWithOwnerPermissions(List.of(DefaultPermission.DELETE, DefaultPermission.CREATE_FOLDER));
-        Folder folderWithSubfolder = toh.createFolder("folderWithSubfolder", createFolderId).folder;
+        TestObjectHolder toh                 = prepareAclGroupWithOwnerPermissions(List.of(DefaultPermission.DELETE, DefaultPermission.CREATE_FOLDER));
+        Folder           folderWithSubfolder = toh.createFolder("folderWithSubfolder", createFolderId).folder;
         client.createFolder(folderWithSubfolder.getId(), "subfolder", userId, toh.acl.getId(), folderWithSubfolder.getTypeId());
         client.deleteFolder(folderWithSubfolder.getId(), true, false);
-        assertClientError( () -> client.getFolderById(folderWithSubfolder.getId(), false),FOLDER_NOT_FOUND);
+        assertClientError(() -> client.getFolderById(folderWithSubfolder.getId(), false), FOLDER_NOT_FOUND);
     }
 
     /**
@@ -627,7 +646,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         TestObjectHolder toh = prepareAclGroupWithOwnerPermissions(List.of(DefaultPermission.DELETE))
                 .createFolder("folderWithContentFail", createFolderId)
                 .createOsd("undeleted");
-        assertClientError( () -> client.deleteFolder(toh.folder.getId(), false, false),
+        assertClientError(() -> client.deleteFolder(toh.folder.getId(), false, false),
                 FOLDER_IS_NOT_EMPTY);
     }
 
@@ -716,7 +735,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         RelationType relationType = adminClient.createRelationType(new RelationType("protected-relation", false, true,
                 false, false, false, false));
         Relation relation = adminClient.createRelation(relationSource.getId(), relationTarget.getId(), relationType.getId(), "");
-        var ex = assertThrows(CinnamonClientException.class, () -> client.deleteFolder(toh.folder.getId(), false, true));
+        var      ex       = assertThrows(CinnamonClientException.class, () -> client.deleteFolder(toh.folder.getId(), false, true));
         // at the moment, links without delete permission will not return a list of errors
         //  assertEquals(CANNOT_DELETE_DUE_TO_ERRORS, ex.getErrorCode());
         assertTrue(ex.getErrorWrapper().getErrors().stream().anyMatch(e -> e.getCode().equals(OBJECT_HAS_PROTECTED_RELATIONS.getCode())));
@@ -724,8 +743,8 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void deleteFolderWithMetadata() throws IOException {
-        TestObjectHolder toh = new TestObjectHolder(client, userId);
-        Folder folder = toh.createFolder("deleteFolderWithMetadata", createFolderId).folder;
+        TestObjectHolder toh    = new TestObjectHolder(client, userId);
+        Folder           folder = toh.createFolder("deleteFolderWithMetadata", createFolderId).folder;
         client.createFolderMeta(new CreateMetaRequest(folder.getId(), "some content", 1L));
         adminClient.deleteFolder(folder.getId(), false, false);
     }
@@ -806,7 +825,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     @Disabled("manual only since it sleeps")
     public void deleteFolderAndSearch() throws IOException, InterruptedException {
-        var toh = new TestObjectHolder(client, userId).createFolder();
+        var toh      = new TestObjectHolder(client, userId).createFolder();
         var folderId = toh.folder.getId();
         Thread.sleep(4000);
         assertTrue(verifySearchFindsPointField("id", folderId, 1, SearchType.FOLDER));

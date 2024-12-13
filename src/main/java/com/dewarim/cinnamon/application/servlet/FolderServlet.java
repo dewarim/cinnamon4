@@ -16,6 +16,7 @@ import com.dewarim.cinnamon.model.index.IndexJob;
 import com.dewarim.cinnamon.model.index.IndexJobAction;
 import com.dewarim.cinnamon.model.index.IndexJobType;
 import com.dewarim.cinnamon.model.links.Link;
+import com.dewarim.cinnamon.model.links.LinkType;
 import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.request.IdListRequest;
 import com.dewarim.cinnamon.model.request.folder.*;
@@ -241,7 +242,16 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
         List<Folder>       subFolders          = folderDao.getDirectSubFolders(folder.getId(), folderRequest.isIncludeSummary());
         final AccessFilter accessFilter        = AccessFilter.getInstance(user);
         List<Folder>       browsableSubFolders = subFolders.stream().filter(accessFilter::hasBrowsePermissionForOwnable).collect(Collectors.toList());
-        response.setWrapper(new FolderWrapper(browsableSubFolders));
+        LinkDao            linkDao             = new LinkDao();
+        List<Folder> parentAndSubFolders = new ArrayList<>();
+        parentAndSubFolders.add(folder);
+        parentAndSubFolders.addAll(browsableSubFolders);
+        List<Long> folderIdsForLinkQuery = parentAndSubFolders.stream().map(Folder::getId).toList();
+        List<Link> folderLinks = linkDao.getLinksByFolderIdAndLinkType(folderIdsForLinkQuery, LinkType.FOLDER)
+                .stream().filter(accessFilter::hasBrowsePermissionForOwnable).collect(Collectors.toList());
+        FolderWrapper folderWrapper = new FolderWrapper(browsableSubFolders);
+        folderWrapper.setLinks(folderLinks);
+        response.setWrapper(folderWrapper);
     }
 
     private void updateFolder(HttpServletRequest request, CinnamonResponse response, UserAccount user, FolderDao folderDao) throws IOException {

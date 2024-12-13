@@ -1,7 +1,9 @@
 package com.dewarim.cinnamon.dao;
 
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
+import com.dewarim.cinnamon.model.links.IdsAndLinkType;
 import com.dewarim.cinnamon.model.links.Link;
+import com.dewarim.cinnamon.model.links.LinkType;
 import org.apache.ibatis.session.SqlSession;
 
 import java.util.List;
@@ -24,10 +26,15 @@ public class LinkDao implements CrudDao<Link> {
         return sqlSession.selectList("com.dewarim.cinnamon.model.links.Link.getLinkByFolderId", folderId);
     }
 
+    public List<Link> getLinksByFolderIdAndLinkType(List<Long> folderIds, LinkType linkType) {
+        SqlSession     sqlSession     = ThreadLocalSqlSession.getSqlSession();
+        IdsAndLinkType idsAndLinkType = new IdsAndLinkType(folderIds, linkType);
+        return sqlSession.selectList("com.dewarim.cinnamon.model.links.Link.getLinkByFolderIdAndLinkType", idsAndLinkType);
+    }
+
     public int updateLink(Link link) {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
         return sqlSession.update("com.dewarim.cinnamon.model.links.Link.updateLink", link);
-
     }
 
     public void deleteAllLinksToObjects(List<Long> osdIds) {

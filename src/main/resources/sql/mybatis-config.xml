@@ -8,7 +8,7 @@
         <setting name="defaultEnumTypeHandler" value="org.apache.ibatis.type.EnumTypeHandler"/>
     </settings>
     <typeHandlers>
-        <typeHandler javaType="com.dewarim.cinnamon.model.links.LinkType" handler="org.apache.ibatis.type.EnumTypeHandler" jdbcType="VARCHAR"/>
+        <typeHandler javaType="com.dewarim.cinnamon.model.links.LinkType" handler="com.dewarim.cinnamon.model.links.LinkTypeEnumHandler" jdbcType="VARCHAR"/>
         <typeHandler javaType="com.dewarim.cinnamon.model.IndexMode" handler="org.apache.ibatis.type.EnumTypeHandler" jdbcType="VARCHAR"/>
         <typeHandler javaType="com.dewarim.cinnamon.model.ChangeTriggerType" handler="org.apache.ibatis.type.EnumTypeHandler" jdbcType="VARCHAR"/>
         <typeHandler javaType="com.dewarim.cinnamon.model.index.IndexType" handler="com.dewarim.cinnamon.model.index.IndexTypeEnumHandler" jdbcType="VARCHAR"/>

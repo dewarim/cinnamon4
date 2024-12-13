@@ -295,12 +295,12 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getObjectsByFolderIdWithLinksAsOsds() throws IOException {
-        var toh = prepareAclGroupWithPermissions("getObjectsByFolderIdWithLinksAsOsds",
+        var toh = prepareAclGroupWithPermissions(
                 List.of(BROWSE, CREATE_OBJECT, CREATE_FOLDER));
-        var osdAsLinkTarget = toh.createOsd("osdAsLinkTarget").osd;
-        var folder          = toh.createFolder("getObjectsByFolderIdWithLinksAsOsds", createFolderId).folder;
-        toh.createOsd("osd-x-by-folder-id")
-                .createLinkToOsd(osdAsLinkTarget);
+        var osdAsLinkTarget = toh.createOsd().osd;
+        var folder          = toh.createFolder(createFolderId).folder;
+        toh.createOsd().createLinkToOsd(osdAsLinkTarget);
+
         OsdWrapper             osdWrapper = client.getOsdsInFolder(folder.getId(), true, true, false, ALL);
         List<Link>             links      = osdWrapper.getLinks();
         List<ObjectSystemData> linkedOsds = osdWrapper.getReferences();
@@ -700,11 +700,11 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createMetaObjectNotFound() throws IOException {
-        CreateMetaRequest request      = new CreateMetaRequest(Long.MAX_VALUE, "foo", 1L);
-        StandardResponse  metaResponse = sendStandardRequest(UrlMapping.OSD__CREATE_META, request);
+        CreateMetaRequest request       = new CreateMetaRequest(Long.MAX_VALUE, "foo", 1L);
+        StandardResponse  metaResponse  = sendStandardRequest(UrlMapping.OSD__CREATE_META, request);
         CinnamonError     cinnamonError = assertCinnamonError(metaResponse, OBJECT_NOT_FOUND);
-        String            message = cinnamonError.getMessage();
-        assertEquals("Could not find one of the following OSDs: "+Long.MAX_VALUE, message);
+        String            message       = cinnamonError.getMessage();
+        assertEquals("Could not find one of the following OSDs: " + Long.MAX_VALUE, message);
     }
 
     @Test

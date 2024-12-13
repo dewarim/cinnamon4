@@ -21,6 +21,17 @@
         WHERE id = #{id}
     </select>
 
+    <select id="getLinkByFolderIdAndLinkType" parameterType="com.dewarim.cinnamon.model.links.IdsAndLinkType" resultMap="linkMap">
+        SELECT *
+        FROM links
+        WHERE parent_id in
+        <foreach item="item" index="index" collection="folderIds"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        AND type = #{linkType}
+    </select>
+
     <select id="getLinkByFolderId" parameterType="long" resultMap="linkMap">
         SELECT *
         FROM links
@@ -91,6 +102,10 @@
                  open="(" separator="," close=")">
             #{item}
         </foreach>
+    </select>
+
+    <select id="list" resultMap="linkMap">
+        select * from links
     </select>
 
 </mapper>

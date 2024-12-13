@@ -17,6 +17,7 @@ import com.dewarim.cinnamon.application.service.TikaService;
 import com.dewarim.cinnamon.dao.*;
 import com.dewarim.cinnamon.model.*;
 import com.dewarim.cinnamon.model.links.Link;
+import com.dewarim.cinnamon.model.links.LinkType;
 import com.dewarim.cinnamon.model.relations.Relation;
 import com.dewarim.cinnamon.model.relations.RelationType;
 import com.dewarim.cinnamon.model.request.IdListRequest;
@@ -884,7 +885,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
             filteredOsds.forEach(osd -> osd.setMetas(metaDao.listByOsd(osd.getId())));
         }
         LinkDao    linkDao       = new LinkDao();
-        List<Link> links         = linkDao.getLinksByFolderId(folderId);
+        List<Link> links         = linkDao.getLinksByFolderIdAndLinkType(List.of(folderId), LinkType.OBJECT);
         List<Link> filteredLinks = authorizationService.filterLinksByBrowsePermission(links, user);
 
         OsdWrapper wrapper = new OsdWrapper();
