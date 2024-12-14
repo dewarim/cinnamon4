@@ -82,7 +82,7 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
             ErrorCode.PARENT_FOLDER_NOT_FOUND.throwUp();
         }
 
-        Folder       parentFolder     = parentFolders.getFirst();
+        Folder       parentFolder     = parentFolders.get(0);
         AccessFilter accessFilter     = AccessFilter.getInstance(user);
         boolean      browsePermission = accessFilter.hasPermissionOnOwnable(parentFolder, DefaultPermission.BROWSE, parentFolder);
         boolean      writePermission  = accessFilter.hasPermissionOnOwnable(parentFolder, DefaultPermission.CREATE_OBJECT, parentFolder);
@@ -124,7 +124,7 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
             default -> throw new IllegalStateException("invalid link type: " + link.getType());
         }
 
-        return linkDao.create(Collections.singletonList(link)).getFirst();
+        return linkDao.create(Collections.singletonList(link)).get(0);
     }
 
     private void update(HttpServletRequest request, LinkDao linkDao, CinnamonResponse response) throws IOException {

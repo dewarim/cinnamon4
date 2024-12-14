@@ -7,7 +7,7 @@
     <groupId>com.dewarim.cinnamon</groupId>
     <artifactId>cinnamon-cms</artifactId>
     <packaging>jar</packaging>
-    <version>1.5.2</version>
+    <version>1.5.3</version>
     <name>Cinnamon CMS</name>
 
     <properties>
@@ -15,7 +15,7 @@
         <jetty.annotations.version>11.0.18</jetty.annotations.version>
         <jackson.version>2.14.3</jackson.version>
         <junit.version>5.11.1</junit.version>
-        <lucene.version>9.12.0</lucene.version>
+        <lucene.version>9.6.0</lucene.version>
         <mybatis.version>3.5.16</mybatis.version>
         <postgresql.version>42.7.4</postgresql.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -23,9 +23,9 @@
         <log4j.version>2.23.1</log4j.version>
         <httpcomponents.version>4.5.14</httpcomponents.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <java.version>21</java.version>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
+        <java.version>17</java.version>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
         <unbound.ldap.version>6.0.10</unbound.ldap.version>
     </properties>
 
@@ -175,19 +175,24 @@
             <groupId>org.apache.lucene</groupId>
             <artifactId>lucene-core</artifactId>
             <version>${lucene.version}</version>
-            <scope>provided</scope>
+<!--            <scope>provided</scope>-->
         </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.apache.lucene</groupId>-->
+<!--            <artifactId>lucene-analysis-common</artifactId>-->
+<!--            <version>${lucene.version}</version>-->
+<!--&lt;!&ndash;            <scope>provided</scope>&ndash;&gt;-->
+<!--        </dependency>-->
         <dependency>
             <groupId>org.apache.lucene</groupId>
-            <artifactId>lucene-analysis-common</artifactId>
-            <version>${lucene.version}</version>
-            <scope>provided</scope>
+            <artifactId>lucene-analyzers-common</artifactId>
+            <version>8.11.4</version>
         </dependency>
         <dependency>
             <groupId>org.apache.lucene</groupId>
             <artifactId>lucene-queryparser</artifactId>
             <version>${lucene.version}</version>
-            <scope>provided</scope>
+<!--            <scope>provided</scope>-->
         </dependency>
 
         <!-- database dependencies -->
@@ -412,14 +417,14 @@
                                     </excludes>
                                 </filter>
                             </filters>
-                            <artifactSet>
-                                <excludes>
-                                    <exclude>org.apache.lucene:lucene-analysis-common:jar</exclude>
-                                    <exclude>org.apache.lucene:lucene-core:jar</exclude>
-                                    <exclude>org.apache.lucene:lucene-queryparser:jar</exclude>
-                                    <exclude>org.apache.lucene:lucene-*:jar</exclude>
-                                </excludes>
-                            </artifactSet>
+<!--                            <artifactSet>-->
+<!--                                <excludes>-->
+<!--                                    <exclude>org.apache.lucene:lucene-analysis-common:jar</exclude>-->
+<!--                                    <exclude>org.apache.lucene:lucene-core:jar</exclude>-->
+<!--                                    <exclude>org.apache.lucene:lucene-queryparser:jar</exclude>-->
+<!--                                    <exclude>org.apache.lucene:lucene-*:jar</exclude>-->
+<!--                                </excludes>-->
+<!--                            </artifactSet>-->
                         </configuration>
                     </execution>
                 </executions>

@@ -105,10 +105,10 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
                 .createLinkToOsd(linkOsdTarget);
         FolderWrapper subFolders = client.getSubFolderWrapper(parentFolderId, false);
         assertEquals(1, subFolders.getFolders().size());
-        assertEquals(toh.folder.getId(),subFolders.getFolders().getFirst().getId());
+        assertEquals(toh.folder.getId(),subFolders.getFolders().get(0).getId());
         assertNotNull(subFolders.getLinks());
         assertEquals(1, subFolders.getLinks().size());
-        assertEquals(linkFolderTarget.getId(), subFolders.getLinks().getFirst().getFolderId());
+        assertEquals(linkFolderTarget.getId(), subFolders.getLinks().get(0).getFolderId());
     }
 
     @Test
