@@ -109,6 +109,10 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         assertNotNull(subFolders.getLinks());
         assertEquals(1, subFolders.getLinks().size());
         assertEquals(linkFolderTarget.getId(), subFolders.getLinks().get(0).getFolderId());
+        List<Folder> references = subFolders.getReferences();
+        assertEquals(1, references.size());
+        assertEquals(linkFolderTarget.getId(), references.get(0).getId());
+        assertEquals(linkFolderTarget.getName(), references.get(0).getName());
     }
 
     @Test
