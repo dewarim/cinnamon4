@@ -16,12 +16,11 @@ public class ThreadLocalSqlSession {
     private  static final Logger log = LogManager.getLogger(ThreadLocalSqlSession.class);
     
     static DbSessionFactory dbSessionFactory;
-    static TransactionIsolationLevel transactionIsolationLevel = TransactionIsolationLevel.READ_COMMITTED;
-    
+
     private static final ThreadLocal<SqlSession> localSqlSession = new ThreadLocal<>() {
         @Override
         protected SqlSession initialValue() {
-            return dbSessionFactory.getSqlSessionFactory().openSession(transactionIsolationLevel);
+            return dbSessionFactory.getSqlSessionFactory().openSession();
         }
     };
     
@@ -45,7 +44,7 @@ public class ThreadLocalSqlSession {
                 log.debug("Closing sql session resulted in: ",e);
             }
         }
-        SqlSession sqlSession = dbSessionFactory.getSqlSessionFactory().openSession(transactionIsolationLevel);
+        SqlSession sqlSession = dbSessionFactory.getSqlSessionFactory().openSession();
         localSqlSession.set(sqlSession);
         setTransactionStatus(TransactionStatus.OK);
         return sqlSession;
@@ -55,7 +54,7 @@ public class ThreadLocalSqlSession {
         if(isolationLevel != null){
             return dbSessionFactory.getSqlSessionFactory().openSession(ExecutorType.SIMPLE, isolationLevel);
         }
-        return dbSessionFactory.getSqlSessionFactory().openSession(ExecutorType.SIMPLE, transactionIsolationLevel);
+        return dbSessionFactory.getSqlSessionFactory().openSession(ExecutorType.SIMPLE);
     }
     
     public static TransactionStatus getTransactionStatus(){

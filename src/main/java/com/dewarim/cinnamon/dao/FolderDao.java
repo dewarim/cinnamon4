@@ -1,6 +1,7 @@
 package com.dewarim.cinnamon.dao;
 
 import com.dewarim.cinnamon.ErrorCode;
+import com.dewarim.cinnamon.api.Ownable;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.application.exception.BadArgumentException;
 import com.dewarim.cinnamon.model.Folder;
@@ -221,5 +222,13 @@ public class FolderDao implements CrudDao<Folder> {
         IndexJobDao jobDao = new IndexJobDao();
         ids.forEach(id -> jobDao.insertIndexJob(new IndexJob(IndexJobType.FOLDER, id, IndexJobAction.DELETE, false)));
         return CrudDao.super.delete(ids);
+    }
+
+    public List<Ownable> getFoldersAsOwnables(Set<Long> folderIds) {
+        SqlSession sqlSession = getSqlSession();
+        if (folderIds == null || folderIds.isEmpty()) {
+            return List.of();
+        }
+        return sqlSession.selectList("com.dewarim.cinnamon.model.Folder.getFoldersAsOwnables", folderIds.stream().toList());
     }
 }

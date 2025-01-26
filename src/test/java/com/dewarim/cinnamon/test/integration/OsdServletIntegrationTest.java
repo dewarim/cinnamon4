@@ -9,6 +9,7 @@ import com.dewarim.cinnamon.client.StandardResponse;
 import com.dewarim.cinnamon.lifecycle.NopState;
 import com.dewarim.cinnamon.model.*;
 import com.dewarim.cinnamon.model.links.Link;
+import com.dewarim.cinnamon.model.links.LinkResolver;
 import com.dewarim.cinnamon.model.relations.Relation;
 import com.dewarim.cinnamon.model.relations.RelationType;
 import com.dewarim.cinnamon.model.request.IdRequest;
@@ -2371,5 +2372,47 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         toh.version();
         toh.deleteOsd();
         assertFalse(toh.loadOsd(v1ofBranch1.getId()).osd.isLatestBranch());
+    }
+
+    @Test
+    public void linkWithLatestHeadResolverWillBeDeleted() throws IOException {
+        var toh = new TestObjectHolder(client, userId).createOsd()
+                .createFolder()
+                .createLinkToOsd(LinkResolver.LATEST_HEAD)
+                .deleteOsd();
+        assertClientError(() -> client.getLinkById(toh.link.getId(), false), OBJECT_NOT_FOUND);
+    }
+
+    @Test
+    public void linkWithLatestHeadResolverWillBeUpdatedIfTargetIsDeletedButRootRemains() throws IOException {
+        var toh = new TestObjectHolder(client, userId).createOsd();
+        var osd = toh.osd;
+        // create v2
+        toh.version()
+                .createFolder()
+                // link to v2
+                .createLinkToOsd(LinkResolver.LATEST_HEAD)
+                // when we delete v2, the link should remain, but should be updated to point to v1
+                .deleteOsd();
+        var targetId = client.getLinkById(toh.link.getId(), false).getOsd().getId();
+        assertEquals(osd.getId(), targetId);
+    }
+
+    @Test
+    public void linkWithLatestHeadResolverWillBeUntouchedIfNonHeadNonRootTargetIsDeleted() throws IOException {
+        // this is a variant of linkWithLatestHeadResolverWillBeDeleted:
+        var toh = new TestObjectHolder(client, userId).createOsd();
+        // create v2
+        toh.version();
+        var osd = toh.osd;
+        toh.createFolder()
+                // link to v2
+                .createLinkToOsd(LinkResolver.LATEST_HEAD)
+                .version()
+                // when we delete v3, the link to v2 should remain and be left untouched
+                // no need to update it to point to root id
+                .deleteOsd();
+        var targetId = client.getLinkById(toh.link.getId(), false).getOsd().getId();
+        assertEquals(osd.getId(), targetId);
     }
 }

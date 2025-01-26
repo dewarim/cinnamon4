@@ -4,10 +4,13 @@ import com.beust.jcommander.Strings;
 import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.FailedRequestException;
+import com.dewarim.cinnamon.api.IdAndRootId;
 import com.dewarim.cinnamon.dao.*;
 import com.dewarim.cinnamon.model.Deletion;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.UserAccount;
+import com.dewarim.cinnamon.model.links.Link;
+import com.dewarim.cinnamon.model.links.LinkResolver;
 import com.dewarim.cinnamon.model.relations.Relation;
 import com.dewarim.cinnamon.model.relations.RelationType;
 import com.dewarim.cinnamon.model.response.CinnamonError;
@@ -103,13 +106,40 @@ public class DeleteOsdService {
         if (errors.size() > 0) {
             throw new FailedRequestException(ErrorCode.CANNOT_DELETE_DUE_TO_ERRORS, errors);
         }
-        List<Long> osdIdsToToDelete = new ArrayList<>(osdIds);
+        List<Long> osdIdsToToDelete = new ArrayList<>(osdIds).stream().sorted(Comparator.reverseOrder()).collect(Collectors.toList());
         log.debug("delete " + Strings.join(",", osdIdsToToDelete.stream().map(String::valueOf).collect(Collectors.toList())));
         var relationDao = new RelationDao();
         relationDao.deleteAllUnprotectedRelationsOfObjects(osdIdsToToDelete);
         relationDao.delete(protectedRelations.stream().map(Relation::getId).collect(Collectors.toList()));
         // TODO: in case of more than 32K ids, split osdIds into sub-lists for deletion
-        new LinkDao().deleteAllLinksToObjects(osdIdsToToDelete);
+        LinkDao linkDao = new LinkDao();
+        Set<IdAndRootId> idAndRootIds = osdDao.getIdAndRootsById(osdIdsToToDelete);
+        List<Long> linkIdsToDelete = new ArrayList<>();
+        List<Link> linksWeMayWantToDelete = linkDao.getLinksWeMayWantToDelete(osdIdsToToDelete);
+        linksWeMayWantToDelete.forEach(link -> {
+            if(link.getResolver()== LinkResolver.FIXED) {
+                linkIdsToDelete.add(link.getId());
+            }
+            else {
+                Optional<IdAndRootId> idAndRootIdOpt = idAndRootIds.stream().filter(i -> i.getId().equals(link.getObjectId())).findFirst();
+                if(idAndRootIdOpt.isPresent()) {
+                    IdAndRootId idAndRootId = idAndRootIdOpt.get();
+                    if(idAndRootId.getId().equals(idAndRootId.getRootId())) {
+                        // the link resolves to the root id, which we will delete: delete the link, too
+                        linkIdsToDelete.add(link.getId());
+                    }
+                    else{
+                        // the link currently resolves to this id, so we delete the OSD and update the link
+                        // to point to the root id, which should be safe.
+                        link.setObjectId(idAndRootId.getRootId());
+                        linkDao.updateLink(link);
+                    }
+                }
+
+            }
+        });
+        linkDao.delete(linkIdsToDelete);
+
         new OsdMetaDao().deleteByOsdIds(osdIdsToToDelete);
         osdDao.deleteOsds(osdIdsToToDelete);
 

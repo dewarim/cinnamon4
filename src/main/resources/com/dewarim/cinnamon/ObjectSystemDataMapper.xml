@@ -33,6 +33,21 @@
         <result property="summary" column="summary"/>
     </resultMap>
 
+    <resultMap id="tinyOwnableMap" type="com.dewarim.cinnamon.api.TinyOwnable">
+        <result column="id" property="id"/>
+        <result column="owner_id" property="ownerId"/>
+        <result column="acl_id" property="aclId"/>
+    </resultMap>
+
+    <resultMap id="rootAndLatestHeadMap" type="com.dewarim.cinnamon.api.RootAndLatestHead">
+        <result column="id" property="headId"/>
+        <result column="root_id" property="rootId"/>
+    </resultMap>
+    <resultMap id="idAndRootMap" type="com.dewarim.cinnamon.api.IdAndRootId">
+        <result column="id" property="id"/>
+        <result column="root_id" property="rootId"/>
+    </resultMap>
+
     <select id="getOsdsById" parameterType="map" resultMap="osdMap">
         SELECT
         id,
@@ -121,11 +136,29 @@
             ${versionPredicate}
     </select>
 
-    <select id="com.dewarim.cinnamon.model.ObjectSystemData.getLatestHead" parameterType="long" resultMap="osdMap">
-        select *
+    <select id="com.dewarim.cinnamon.model.ObjectSystemData.getIdAndRoot"
+            parameterType="list" resultMap="idAndRootMap">
+        select id,
+        root_id
         from objects
-        where root_id = #{id}
-          and latest_head = true
+        where id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="com.dewarim.cinnamon.model.ObjectSystemData.getLatestHeads"
+            parameterType="list" resultMap="rootAndLatestHeadMap">
+        select id,
+               root_id
+        from objects
+        where root_id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and latest_head = true
     </select>
 
     <select id="com.dewarim.cinnamon.model.ObjectSystemData.findLastDescendantVersion" parameterType="long"
@@ -237,7 +270,18 @@
     <select id="getOsdByModifierOrCreatorOrOwnerOrLocker" parameterType="long" resultMap="osdMap">
         SELECT *
         FROM objects
-        WHERE owner_id = #{id} or modifier_id = #{id} or creator_id = #{id} or locker_id = #{id}
+        WHERE owner_id = #{id}
+           or modifier_id = #{id}
+           or creator_id = #{id}
+           or locker_id = #{id}
+    </select>
+
+    <select id="getOsdsAsOwnables" parameterType="java.util.List" resultMap="tinyOwnableMap">
+        SELECT id,
+        acl_id,
+        owner_id
+        FROM objects
+        WHERE id in <foreach item="item" index="index" collection="list" open="(" separator="," close=")">#{item}</foreach>
     </select>
 
     <!-- should only be used for debugging -->
@@ -245,5 +289,6 @@
         SELECT *
         FROM objects
     </select>
+
 
 </mapper>

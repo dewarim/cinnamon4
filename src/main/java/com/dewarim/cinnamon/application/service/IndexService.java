@@ -33,6 +33,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -96,47 +98,87 @@ public class IndexService implements Runnable {
                             break;
                         }
                         log.debug("Found {} IndexJobs with not more than {} failed attempts.", jobs.size(), config.getMaxIndexAttempts());
-                        boolean        indexChanged = false;
-                        List<IndexJob> jobsToDelete = new ArrayList<>();
-                        for (IndexJob job : jobs) {
+                        List<IndexJob> jobsToDelete  = new ArrayList<>();
+                        List<IndexJob> jobsToUpdate  = new ArrayList<>();
+                        AtomicInteger  changeCounter = new AtomicInteger();
+                        AtomicBoolean  error         = new AtomicBoolean(false);
+
+                        // TODO: use parallelStream ... currently, this will exhaust all DB connections since each Thread has a ThreadLocal session.
+                        jobs.forEach(job -> {
                             IndexKey indexKey = new IndexKey(job.getJobType(), job.getItemId());
                             if (seen.contains(indexKey)) {
                                 // remove duplicate jobs in the current transaction
-                                jobDao.delete(job);
-                                continue;
+                                jobsToDelete.add(job);
+                                return;
                             }
 
                             IndexResult indexResult;
                             switch (job.getAction()) {
                                 case DELETE -> indexResult = deleteFromIndex(indexKey);
-                                case CREATE, UPDATE -> indexResult = handleIndexItem(job, indexKey, indexItems);
+                                case CREATE, UPDATE -> {
+                                    try {
+                                        indexResult = handleIndexItem(job, indexKey, indexItems);
+                                    } catch (IOException e) {
+                                        log.error("Failed to handle IndexItem: {}", indexKey, e);
+                                        indexResult = IndexResult.ERROR;
+                                    }
+                                }
                                 default -> indexResult = IndexResult.IGNORE;
                             }
+
                             switch (indexResult) {
+                                case ERROR -> {
+                                    error.set(true);
+                                    // TODO add to list of jobs to update
+                                    job.setFailed(job.getFailed() + 1);
+                                }
                                 case SUCCESS -> {
                                     jobsToDelete.add(job);
-                                    indexChanged = true;
+                                    changeCounter.incrementAndGet();
                                 }
                                 case FAILED -> {
                                     job.setFailed(job.getFailed() + 1);
-                                    jobDao.updateStatus(job);
+                                    // TODO add to list of jobs to update
+                                    jobsToUpdate.add(job);
                                 }
                                 case IGNORE, NO_OBJECT -> {
                                 }
                             }
                             seen.add(indexKey);
+                        });
+
+                        if (error.get()) {
+                            log.error("Error during indexing; trying to roll back indexWriter.");
+                            indexWriter.rollback();
+                            log.error("Also trying to mark jobs as failed after index error");
+                            List<IndexJob> allJobs = new ArrayList<>(jobsToUpdate);
+                            allJobs.addAll(jobsToDelete);
+                            allJobs.forEach(job -> {
+                                job.setFailed(job.getFailed() + 1);
+                                jobDao.updateStatus(job);
+                            });
+                            jobDao.commit();
+                            log.error("... trying to continue with indexing.");
+                            // TODO: add status message
+                            continue;
                         }
-                        if (indexChanged) {
+
+                        if (changeCounter.get() > 0) {
                             long sequenceNr = indexWriter.commit();
-                            log.debug("sequenceNr: " + sequenceNr);
+                            log.debug("sequenceNr: {}", sequenceNr);
                         }
                         else {
                             log.debug("no change to index");
                         }
-                        if(!jobsToDelete.isEmpty()){
+
+                        if (!jobsToDelete.isEmpty()) {
                             log.debug("deleting {} index jobs", jobsToDelete.size());
+                            jobsToDelete.forEach(jobDao::delete);
                         }
-                        jobsToDelete.forEach(jobDao::delete);
+                        if (!jobsToUpdate.isEmpty()) {
+                            log.debug("updating {} index jobs", jobsToUpdate.size());
+                            jobsToUpdate.forEach(jobDao::updateStatus);
+                        }
                         jobDao.commit();
                     }
                     indexWriter.close();
@@ -193,7 +235,7 @@ public class IndexService implements Runnable {
         SUCCESS,
         NO_OBJECT,
         FAILED,
-        IGNORE
+        ERROR, IGNORE
     }
 
     private IndexResult indexFolder(Long id, Document doc, List<IndexItem> indexItems) {
@@ -366,7 +408,7 @@ public class IndexService implements Runnable {
             indexWriter.deleteDocuments(new Term(LUCENE_FIELD_UNIQUE_ID, key.toString()));
             return IndexResult.SUCCESS;
         } catch (Exception e) {
-            log.warn("Failed to delete document from Lucene index: " + key);
+            log.warn("Failed to delete document from Lucene index: {}", key);
             return IndexResult.FAILED;
         }
     }

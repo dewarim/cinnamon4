@@ -2,6 +2,7 @@ package com.dewarim.cinnamon.model.request.link;
 
 import com.dewarim.cinnamon.api.ApiRequest;
 import com.dewarim.cinnamon.model.links.Link;
+import com.dewarim.cinnamon.model.links.LinkResolver;
 import com.dewarim.cinnamon.model.links.LinkType;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.response.LinkResponse;
@@ -38,7 +39,7 @@ public class UpdateLinkRequest implements UpdateRequest<Link>, ApiRequest<Update
 
     public UpdateLinkRequest(long id, Long aclId, Long parentId, Long objectId, Long folderId, Long ownerId) {
         var type = objectId != null ? LinkType.OBJECT : LinkType.FOLDER;
-        var link = new Link(id, type, ownerId, aclId, parentId, folderId, objectId);
+        var link = new Link(id, type, ownerId, aclId, parentId, folderId, objectId, LinkResolver.FIXED);
         links.add(link);
     }
 
@@ -73,6 +74,6 @@ public class UpdateLinkRequest implements UpdateRequest<Link>, ApiRequest<Update
 
     @Override
     public List<ApiRequest<UpdateLinkRequest>> examples() {
-        return List.of(new UpdateLinkRequest(List.of(new Link(1L,LinkType.OBJECT, 2L,3L,4L,5L,6L))));
+        return List.of(new UpdateLinkRequest(List.of(new Link(1L,LinkType.OBJECT, 2L,3L,4L,5L,6L,LinkResolver.FIXED))));
     }
 }

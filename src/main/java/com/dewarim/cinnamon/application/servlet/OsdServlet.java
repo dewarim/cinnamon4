@@ -145,7 +145,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                         .map(meta -> new Meta(targetId, meta.getTypeId(), meta.getContent()))
                         .collect(Collectors.toList());
                 metasetDao.create(metaCopies);
-                if(user.isChangeTracking()){
+                if (user.isChangeTracking()) {
                     target.setMetadataChanged(true);
                 }
             }
@@ -213,7 +213,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
             target.setFormatId(formatId);
             Format format = new FormatDao().getObjectById(source.getFormatId()).orElseThrow();
             tikaService.convertContentToTikaMetaset(target, contentProvider.getContentStream(metadata), format);
-            if(user.isChangeTracking()){
+            if (user.isChangeTracking()) {
                 target.setContentChanged(true);
             }
             osdDao.updateOsd(target, false);
@@ -447,7 +447,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         osd.setCreatorId(user.getId());
         osd.setModifierId(user.getId());
         osd.setSummary(Objects.requireNonNullElse(createRequest.getSummary(), DEFAULT_SUMMARY));
-        if(user.isChangeTracking()){
+        if (user.isChangeTracking()) {
             osd.setMetadataChanged(true);
         }
         osd = osdDao.saveOsd(osd);
@@ -461,7 +461,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         Part file = request.getPart("file");
         if (file != null) {
             storeFileUpload(file.getInputStream(), osd, createRequest.getFormatId());
-            if(user.isChangeTracking()){
+            if (user.isChangeTracking()) {
                 osd.setContentChanged(true);
             }
             osdDao.updateOsd(osd, false);
@@ -654,7 +654,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         }
 
         storeFileUpload(file.getInputStream(), osd, setContentRequest.getFormatId());
-        if(user.isChangeTracking()) {
+        if (user.isChangeTracking()) {
             osd.setContentChanged(true);
         }
         osdDao.updateOsd(osd, true);
@@ -824,8 +824,8 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                 osd.setMetadataChanged(update.isMetadataChanged());
                 changed = true;
             }
-            else{
-                if(user.isChangeTracking()){
+            else {
+                if (user.isChangeTracking()) {
                     osd.setMetadataChanged(true);
                 }
             }
@@ -886,13 +886,14 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         }
         LinkDao    linkDao       = new LinkDao();
         List<Link> links         = linkDao.getLinksByFolderIdAndLinkType(List.of(folderId), LinkType.OBJECT);
-        List<Link> filteredLinks = authorizationService.filterLinksByBrowsePermission(links, user);
+        List<Link> filteredLinks = authorizationService.filterOsdLinksAndTargetsByBrowsePermission(links, user);
 
         OsdWrapper wrapper = new OsdWrapper();
         wrapper.setOsds(filteredOsds);
         wrapper.setLinks(filteredLinks);
         if (osdRequest.isLinksAsOsd()) {
-            List<ObjectSystemData> references = osdDao.getObjectsById(filteredLinks.stream().map(Link::getObjectId).filter(Objects::nonNull).collect(Collectors.toList()), includeSummary);
+            List<Long>             resolvedIds = filteredLinks.stream().map(Link::resolveLink).filter(Objects::nonNull).toList();
+            List<ObjectSystemData> references  = osdDao.getObjectsById(resolvedIds, includeSummary);
             if (includeMeta) {
                 references.forEach(osd -> osd.setMetas(metaDao.listByOsd(osd.getId())));
             }
@@ -975,7 +976,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                 // for now, just throw the first error.
                 throw errorCodes.get(0).exception();
             }
-            if(user.isChangeTracking()){
+            if (user.isChangeTracking()) {
                 osd.setMetadataChanged(true);
             }
         }
@@ -984,7 +985,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         Part file = request.getPart("file");
         if (file != null) {
             storeFileUpload(file.getInputStream(), osd, versionRequest.getFormatId());
-            if(user.isChangeTracking()) {
+            if (user.isChangeTracking()) {
                 osd.setContentChanged(true);
             }
         }

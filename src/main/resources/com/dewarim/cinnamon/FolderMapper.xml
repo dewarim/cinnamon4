@@ -18,6 +18,12 @@
         <result property="hasSubfolders" column="has_subfolders"/>
     </resultMap>
 
+    <resultMap id="tinyOwnableMap" type="com.dewarim.cinnamon.api.TinyOwnable">
+        <result column="id" property="id"/>
+        <result column="owner_id" property="ownerId"/>
+        <result column="acl_id" property="aclId"/>
+    </resultMap>
+
     <select id="getFoldersById" parameterType="map" resultMap="folderMap">
         SELECT
         id,
@@ -299,5 +305,14 @@
         select id
         from sub_folders;
     </select>
+
+    <select id="getFoldersAsOwnables" parameterType="java.util.List" resultMap="tinyOwnableMap">
+        SELECT id,
+        acl_id,
+        owner_id
+        FROM folders
+        WHERE id in <foreach item="item" index="index" collection="list" open="(" separator="," close=")">#{item}</foreach>
+    </select>
+
 
 </mapper>

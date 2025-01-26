@@ -13,6 +13,7 @@ import com.dewarim.cinnamon.model.Folder;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.links.Link;
+import com.dewarim.cinnamon.model.links.LinkResolver;
 import com.dewarim.cinnamon.model.links.LinkType;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.request.link.CreateLinkRequest;
@@ -81,7 +82,9 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
         if (parentFolders.isEmpty()) {
             ErrorCode.PARENT_FOLDER_NOT_FOUND.throwUp();
         }
-
+        if (link.getResolver() == null) {
+            link.setResolver(LinkResolver.FIXED);
+        }
         Folder       parentFolder     = parentFolders.get(0);
         AccessFilter accessFilter     = AccessFilter.getInstance(user);
         boolean      browsePermission = accessFilter.hasPermissionOnOwnable(parentFolder, DefaultPermission.BROWSE, parentFolder);
@@ -112,7 +115,8 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
                 if (folderOpt.isPresent()) {
                     folder = folderOpt.get();
                     accessFilter.verifyHasPermissionOnOwnable(folder, DefaultPermission.BROWSE, folder, ErrorCode.UNAUTHORIZED);
-                } else {
+                }
+                else {
                     ErrorCode.FOLDER_NOT_FOUND.throwUp();
                 }
             }
@@ -143,7 +147,9 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
         if (link.getType() != update.getType()) {
             ErrorCode.CANNOT_CHANGE_LINK_TYPE.throwUp();
         }
-
+        if (update.getResolver() != null) {
+            link.setResolver(update.getResolver());
+        }
         // no update allowed for links that the user cannot even see:
         accessFilter.verifyHasPermissionOnOwnable(link, DefaultPermission.BROWSE, link, ErrorCode.NO_BROWSE_PERMISSION);
 
@@ -152,7 +158,8 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
         }
         if (link.getType() == FOLDER && !Objects.equals(link.getFolderId(), update.getFolderId())) {
             updateFolder(update, link, linkDao, accessFilter);
-        } else if (!Objects.equals(link.getObjectId(), update.getObjectId())) {
+        }
+        else if (!Objects.equals(link.getObjectId(), update.getObjectId())) {
             updateObject(update, link, linkDao, accessFilter);
         }
         if (!Objects.equals(link.getParentId(), update.getParentId())) {
@@ -175,7 +182,7 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
     }
 
     private void updateParent(Link updateRequest, Link link, LinkDao linkDao, AccessFilter accessFilter) {
-        Folder      parentFolder = new FolderDao().getFolderById(updateRequest.getParentId()).orElseThrow(ErrorCode.FOLDER_NOT_FOUND.getException());
+        Folder parentFolder = new FolderDao().getFolderById(updateRequest.getParentId()).orElseThrow(ErrorCode.FOLDER_NOT_FOUND.getException());
         accessFilter.verifyHasPermissionOnOwnable(parentFolder, DefaultPermission.BROWSE, parentFolder, ErrorCode.NO_BROWSE_PERMISSION);
         accessFilter.verifyHasPermissionOnOwnable(parentFolder, DefaultPermission.CREATE_OBJECT, parentFolder, ErrorCode.NO_CREATE_PERMISSION);
         accessFilter.verifyHasPermissionOnOwnable(link, DefaultPermission.SET_PARENT, link, ErrorCode.NO_SET_PARENT_PERMISSION);
@@ -243,8 +250,15 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
         }
 
         // check the ACLs of all links.
-        UserAccount user          = ThreadLocalSqlSession.getCurrentUser();
-        List<Link>  filteredLinks = authorizationService.filterLinksByBrowsePermission(links, user);
+        UserAccount user        = ThreadLocalSqlSession.getCurrentUser();
+        List<Link>  folderLinks = links.stream().filter(link -> link.getFolderId() != null).toList();
+        List<Link>  osdLinks    = links.stream().filter(link -> link.getObjectId() != null).toList();
+        List<Link> filteredFolderLinks = authorizationService.filterFolderLinksAndTargetsByBrowsePermission(folderLinks, user);
+        List<Link> filteredOsdLinks    = authorizationService.filterOsdLinksAndTargetsByBrowsePermission(osdLinks, user);
+
+        List<Link> filteredLinks = new ArrayList<>(filteredOsdLinks);
+        filteredLinks.addAll(filteredFolderLinks);
+
         if (filteredLinks.size() != idCount) {
             throw ErrorCode.NO_BROWSE_PERMISSION.getException().get();
         }
@@ -284,22 +298,35 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
     }
 
     private LinkResponse handleOsdLink(Link link, UserAccount user, boolean includeSummary) {
-        OsdDao                 osdDao = new OsdDao();
-        List<ObjectSystemData> osds   = osdDao.getObjectsById(Collections.singletonList(link.getObjectId()), includeSummary);
-        ObjectSystemData       osd    = osds.get(0);
+        OsdDao osdDao = new OsdDao();
+        Long   osdId  = link.getObjectId();
+        if (link.getResolver() == LinkResolver.LATEST_HEAD) {
+            ObjectSystemData osd        = osdDao.getObjectById(osdId).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
+            ObjectSystemData latestHead = osdDao.getLatestHeads(List.of(osd)).get(osdId);
+            osdId = latestHead.getId();
+            link.setResolvedId(osdId);
+        }
+        List<ObjectSystemData> osds = osdDao.getObjectsById(List.of(osdId), includeSummary);
+        ObjectSystemData       osd  = osds.get(0);
 
         if (authorizationService.hasUserOrOwnerPermission(link, DefaultPermission.BROWSE, user)) {
-            LinkResponse linkResponse = new LinkResponse();
-            linkResponse.setType(LinkType.OBJECT);
-            linkResponse.setOsd(osd);
-            linkResponse.setObjectId(osd.getId());
-            linkResponse.setAclId(link.getAclId());
-            linkResponse.setId(link.getId());
-            linkResponse.setOwnerId(link.getOwnerId());
-            linkResponse.setParentId(link.getParentId());
-            return linkResponse;
+            return getLinkResponse(link, osd);
         }
         throw ErrorCode.UNAUTHORIZED.getException().get();
+    }
+
+    private static LinkResponse getLinkResponse(Link link, ObjectSystemData osd) {
+        LinkResponse linkResponse = new LinkResponse();
+        linkResponse.setType(LinkType.OBJECT);
+        linkResponse.setOsd(osd);
+        linkResponse.setObjectId(osd.getId());
+        linkResponse.setAclId(link.getAclId());
+        linkResponse.setId(link.getId());
+        linkResponse.setOwnerId(link.getOwnerId());
+        linkResponse.setParentId(link.getParentId());
+        linkResponse.setResolver(link.getResolver());
+        linkResponse.setResolvedId(link.resolveLink());
+        return linkResponse;
     }
 
     @Override

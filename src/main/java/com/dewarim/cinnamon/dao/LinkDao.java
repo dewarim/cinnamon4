@@ -37,10 +37,10 @@ public class LinkDao implements CrudDao<Link> {
         return sqlSession.update("com.dewarim.cinnamon.model.links.Link.updateLink", link);
     }
 
-    public void deleteAllLinksToObjects(List<Long> osdIds) {
-        // TODO maybe: batch deleteAllLinksToObjects - or fetch links, then delete via CRUD
+    public void deleteAllFixedLinksToObjects(List<Long> osdIds) {
+        // TODO maybe: batch deleteAllFixedLinksToObjects - or fetch links, then delete via CRUD
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
-        sqlSession.delete("com.dewarim.cinnamon.model.links.Link.deleteAllLinksToObjects", osdIds);
+        sqlSession.delete("com.dewarim.cinnamon.model.links.Link.deleteAllFixedLinksToObjects", osdIds);
     }
 
     public List<Link> getLinksToOutsideStuff(List<Long> folderIds) {
@@ -53,5 +53,10 @@ public class LinkDao implements CrudDao<Link> {
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
         sqlSession.delete("com.dewarim.cinnamon.model.links.Link.deleteAllLinksToFolders", folderIds);
 
+    }
+
+    public List<Link> getLinksWeMayWantToDelete(List<Long> objectIds) {
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        return sqlSession.selectList("com.dewarim.cinnamon.model.links.Link.getLinksWeMayWantToDelete", objectIds);
     }
 }

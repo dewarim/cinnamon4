@@ -1,6 +1,9 @@
 package com.dewarim.cinnamon.dao;
 
 import com.dewarim.cinnamon.ErrorCode;
+import com.dewarim.cinnamon.api.IdAndRootId;
+import com.dewarim.cinnamon.api.Ownable;
+import com.dewarim.cinnamon.api.RootAndLatestHead;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.application.service.debug.DebugLogService;
 import com.dewarim.cinnamon.model.ObjectSystemData;
@@ -12,6 +15,7 @@ import com.dewarim.cinnamon.model.request.osd.VersionPredicate;
 import org.apache.ibatis.session.SqlSession;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /*
  * note: calling default update() implementation on OSD will not update changeTracking.
@@ -49,9 +53,33 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
         return results;
     }
 
-    public ObjectSystemData getLatestHead(long id) {
-        SqlSession sqlSession = getSqlSession();
-        return sqlSession.selectOne("com.dewarim.cinnamon.model.ObjectSystemData.getLatestHead", id);
+    public Set<IdAndRootId> getIdAndRootsById(List<Long> ids) {
+        SqlSession             sqlSession = getSqlSession();
+        List<IdAndRootId> idAndRoots =  sqlSession.selectList("com.dewarim.cinnamon.model.ObjectSystemData.getIdAndRoot", ids);
+        return new HashSet<>(idAndRoots);
+    }
+
+    public Map<Long, ObjectSystemData> getLatestHeads(List<ObjectSystemData> osds) {
+        if(osds == null || osds.isEmpty()) {
+            return Map.of();
+        }
+        SqlSession                  sqlSession         = getSqlSession();
+        Set<Long>                   rootIds            = osds.stream().map(ObjectSystemData::getRootId).collect(Collectors.toSet());
+        List<RootAndLatestHead>     rootAndLatestHeads = sqlSession.selectList("com.dewarim.cinnamon.model.ObjectSystemData.getLatestHeads", rootIds.stream().toList());
+        Set<Long>                   headIds            = rootAndLatestHeads.stream().map(RootAndLatestHead::getHeadId).collect(Collectors.toSet());
+        List<ObjectSystemData>      heads              = getObjectsById(headIds.stream().toList(), false);
+        Map<Long, ObjectSystemData> latestHeadMappings = new HashMap<>();
+        for (ObjectSystemData osd : osds) {
+            Long rootId = osd.getRootId();
+            rootAndLatestHeads.stream()
+                    .filter(rootHead -> rootHead.getRootId().equals(rootId))
+                    .findFirst()
+                    .ifPresent(rootHead -> {
+                        Optional<ObjectSystemData> headOsd = heads.stream().filter(head -> head.getId().equals(rootHead.getHeadId())).findFirst();
+                        headOsd.ifPresent(objectSystemData -> latestHeadMappings.put(osd.getId(), objectSystemData));
+                    });
+        }
+        return latestHeadMappings;
     }
 
     public List<ObjectSystemData> getObjectsByFolderId(long folderId, boolean includeSummary, VersionPredicate versionPredicate) {
@@ -178,5 +206,18 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
         SqlSession sqlSession = getSqlSession();
         return sqlSession.selectList("com.dewarim.cinnamon.model.ObjectSystemData.getOsdByModifierOrCreatorOrOwnerOrLocker", userId);
 
+    }
+
+    public List<Ownable> getOsdsAsOwnables(Set<Long> osdIds) {
+        SqlSession sqlSession = getSqlSession();
+        if (osdIds == null || osdIds.isEmpty()) {
+            return List.of();
+        }
+        return sqlSession.selectList("com.dewarim.cinnamon.model.ObjectSystemData.getOsdsAsOwnables", osdIds.stream().toList());
+    }
+
+    public List<ObjectSystemData> getRootOsdsWithLatestHeadLinks(List<Long> osdIdsToToDelete) {
+        SqlSession session = getSqlSession();
+        return session.selectList("com.dewarim.cinnamon.model.ObjectSystemData.rootIdForLatestHeadLinks",osdIdsToToDelete);
     }
 }

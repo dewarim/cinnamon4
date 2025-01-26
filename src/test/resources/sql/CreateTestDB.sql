@@ -282,7 +282,7 @@ create table links
   osd_id bigint
     constraint links_osd_id_fk
     references objects,
-  version bigint default 0 not null
+  resolver varchar(32) default 'FIXED'
 );
 
 create index fki_links_folder_id_fk

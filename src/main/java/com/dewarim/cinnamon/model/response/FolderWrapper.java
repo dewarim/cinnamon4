@@ -4,6 +4,7 @@ package com.dewarim.cinnamon.model.response;
 import com.dewarim.cinnamon.api.ApiResponse;
 import com.dewarim.cinnamon.model.Folder;
 import com.dewarim.cinnamon.model.links.Link;
+import com.dewarim.cinnamon.model.links.LinkResolver;
 import com.dewarim.cinnamon.model.links.LinkType;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
@@ -77,7 +78,7 @@ public class FolderWrapper extends BaseResponse implements Wrapper<Folder>, ApiR
     @Override
     public List<Object> examples() {
         FolderWrapper folderWrapper = new FolderWrapper(List.of(FOLDER_EXAMPLE));
-        folderWrapper.setLinks(List.of(new Link(1L,  LinkType.FOLDER,3L, 2L,1L,20L,null)));
+        folderWrapper.setLinks(List.of(new Link(1L, LinkType.FOLDER, 3L, 2L, 1L, 20L, null, LinkResolver.FIXED)));
         Folder linkedFolder = new Folder("linked folder", 1L, 2L, 3L, 23L, "<summary/>");
         linkedFolder.setId(203L);
         folderWrapper.setReferences(List.of(linkedFolder));

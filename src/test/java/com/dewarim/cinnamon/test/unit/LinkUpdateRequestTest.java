@@ -17,7 +17,7 @@ public class LinkUpdateRequestTest {
         UpdateLinkRequest request = new UpdateLinkRequest();
         assertFalse(request.validated(), "request without params is invalid");
 
-        var newLink = new Link(1L,null,null,null,null,null,null);
+        var newLink = new Link(1L,null,null,null,null,null,null,null);
         request = new UpdateLinkRequest(List.of(newLink));
         assertFalse(request.validated(), "request with only id is invalid - nothing to update");
 
