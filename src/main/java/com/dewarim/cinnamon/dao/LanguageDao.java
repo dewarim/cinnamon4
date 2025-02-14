@@ -1,6 +1,5 @@
 package com.dewarim.cinnamon.dao;
 
-import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.model.Language;
 import org.apache.ibatis.session.SqlSession;
 
@@ -14,13 +13,13 @@ public class LanguageDao implements CrudDao<Language> {
     }
 
     public Optional<Language> getLanguageById(long id) {
-        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        SqlSession sqlSession = getSqlSession();
         Language   Language   = sqlSession.selectOne("com.dewarim.cinnamon.model.Language.getLanguageById", id);
         return Optional.ofNullable(Language);
     }
 
     public Optional<Language> getLanguageByIsoCode(String isoCode) {
-        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        SqlSession sqlSession = getSqlSession();
         Language   Language   = sqlSession.selectOne("com.dewarim.cinnamon.model.Language.getLanguageByIsoCode", isoCode);
         return Optional.ofNullable(Language);
     }

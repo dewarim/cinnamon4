@@ -25,6 +25,13 @@ public class FolderDao implements CrudDao<Folder> {
      */
     private static final int        BATCH_SIZE = 10000;
 
+    public FolderDao() {
+    }
+
+    public FolderDao(SqlSession sqlSession) {
+        this.sqlSession = sqlSession;
+    }
+
     // note: almost same code as OsdDao, although you could argue that fetching > 10K folders is a pathological case.
     public List<Folder> getFoldersById(List<Long> ids, boolean includeSummary) {
         SqlSession          sqlSession  = getSqlSession();
@@ -62,9 +69,9 @@ public class FolderDao implements CrudDao<Folder> {
             // root has no parent, so looking up it's ancestors would otherwise fail.
             return "/";
         }
-        SqlSession sqlSession = getSqlSession();
-        return "/" + String.join("/",
-                sqlSession.selectList("com.dewarim.cinnamon.model.Folder.getFolderPath", id));
+        SqlSession   sqlSession = getSqlSession();
+        List<String> paths      = sqlSession.selectList("com.dewarim.cinnamon.model.Folder.getFolderPath", id);
+        return "/" + String.join("/", paths);
     }
 
     public Folder getRootFolder(boolean includeSummary) {
@@ -92,7 +99,7 @@ public class FolderDao implements CrudDao<Folder> {
         if (resultRows != 1) {
             ErrorCode.DB_INSERT_FAILED.throwUp();
         }
-        new IndexJobDao().insertIndexJob(new IndexJob(IndexJobType.FOLDER, folder.getId(), IndexJobAction.CREATE, false));
+        new IndexJobDao(getSqlSession()).insertIndexJob(new IndexJob(IndexJobType.FOLDER, folder.getId(), IndexJobAction.CREATE, false));
         return folder;
     }
 
@@ -169,7 +176,7 @@ public class FolderDao implements CrudDao<Folder> {
     public void updateFolder(Folder folder) {
         SqlSession sqlSession = getSqlSession();
         sqlSession.update("com.dewarim.cinnamon.model.Folder.updateFolder", folder);
-        new IndexJobDao().insertIndexJob(new IndexJob(IndexJobType.FOLDER, folder.getId(), IndexJobAction.UPDATE, false));
+        new IndexJobDao(getSqlSession()).insertIndexJob(new IndexJob(IndexJobType.FOLDER, folder.getId(), IndexJobAction.UPDATE, false));
     }
 
     public boolean hasContent(List<Long> ids) {
@@ -194,11 +201,12 @@ public class FolderDao implements CrudDao<Folder> {
         return this;
     }
 
+    @Override
     public SqlSession getSqlSession() {
-        if (sqlSession != null) {
-            return sqlSession;
+        if (sqlSession == null) {
+            sqlSession = ThreadLocalSqlSession.getSqlSession();
         }
-        return ThreadLocalSqlSession.getSqlSession();
+        return sqlSession;
     }
 
     public List<Long> getRecursiveSubFolderIds(Long folderId) {
@@ -219,7 +227,7 @@ public class FolderDao implements CrudDao<Folder> {
 
     @Override
     public int delete(List<Long> ids) {
-        IndexJobDao jobDao = new IndexJobDao();
+        IndexJobDao jobDao = new IndexJobDao(getSqlSession());
         ids.forEach(id -> jobDao.insertIndexJob(new IndexJob(IndexJobType.FOLDER, id, IndexJobAction.DELETE, false)));
         return CrudDao.super.delete(ids);
     }

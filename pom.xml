@@ -7,7 +7,7 @@
     <groupId>com.dewarim.cinnamon</groupId>
     <artifactId>cinnamon-cms</artifactId>
     <packaging>jar</packaging>
-    <version>1.5.5</version>
+    <version>1.5.7</version>
     <name>Cinnamon CMS</name>
 
     <properties>
@@ -16,7 +16,7 @@
         <jackson.version>2.14.3</jackson.version>
         <junit.version>5.11.1</junit.version>
         <lucene.version>9.6.0</lucene.version>
-        <mybatis.version>3.5.16</mybatis.version>
+        <mybatis.version>3.5.19</mybatis.version>
         <postgresql.version>42.7.4</postgresql.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.plugin.version>3.13.0</maven.compiler.plugin.version>

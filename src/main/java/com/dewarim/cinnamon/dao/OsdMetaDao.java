@@ -6,7 +6,6 @@ import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.model.Meta;
 import org.apache.ibatis.exceptions.PersistenceException;
 import org.apache.ibatis.session.SqlSession;
-import org.apache.ibatis.session.TransactionIsolationLevel;
 
 import java.util.List;
 import java.util.Map;
@@ -19,8 +18,8 @@ public class OsdMetaDao implements CrudDao<Meta>, MetaDao {
     public OsdMetaDao() {
     }
 
-    public OsdMetaDao(TransactionIsolationLevel level) {
-        this.sqlSession = ThreadLocalSqlSession.getNewSession(level);
+    public OsdMetaDao(SqlSession sqlSession) {
+        this.sqlSession = sqlSession;
     }
 
     public List<Meta> listByOsd(long id) {
@@ -74,20 +73,10 @@ public class OsdMetaDao implements CrudDao<Meta>, MetaDao {
 
     @Override
     public SqlSession getSqlSession() {
-        if (sqlSession != null) {
-            return sqlSession;
-        } else {
-            return ThreadLocalSqlSession.getSqlSession();
+        if (sqlSession == null) {
+            sqlSession = ThreadLocalSqlSession.getSqlSession();
         }
+        return sqlSession;
     }
 
-    /**
-     * When indexing metasets, we create a new SqlSession for OsdMetaDao so that it's always fresh and has access to
-     * the newest metas. After reading the metadata, we should close this one-of session as quickly as possible.
-     */
-    public void closePrivateSession(){
-        if(sqlSession != null){
-            sqlSession.close();
-        }
-    }
 }

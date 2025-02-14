@@ -12,6 +12,15 @@ import java.util.Map;
 
 public class RelationDao implements CrudDao<Relation> {
 
+    private SqlSession sqlSession;
+
+    public RelationDao() {
+    }
+
+    public RelationDao(SqlSession sqlSession) {
+        this.sqlSession = sqlSession;
+    }
+
     public List<Relation> getRelations(Collection<Long> leftIds, Collection<Long> rightIds, Collection<Long> relationTypeIds, boolean includeMetadata) {
         // cannot use Map.of here since values may be null & SQL code has conditions for non-null
         Map<String, Object> params = new HashMap<>();
@@ -20,7 +29,7 @@ public class RelationDao implements CrudDao<Relation> {
         params.put("typeIds", relationTypeIds);
         params.put("includeMetadata", includeMetadata);
 
-        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        SqlSession sqlSession = getSqlSession();
         return sqlSession.selectList("com.dewarim.cinnamon.model.relations.Relation.getRelationsWithCriteria", params);
     }
 
@@ -37,17 +46,17 @@ public class RelationDao implements CrudDao<Relation> {
         }
         params.put("includeMetadata", includeMetadata);
 
-        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        SqlSession sqlSession = getSqlSession();
         return sqlSession.selectList("com.dewarim.cinnamon.model.relations.Relation.getRelationsWithCriteriaOr", params);
     }
 
     public List<Relation> getProtectedRelations(List<Long> osdIds) {
-        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        SqlSession sqlSession = getSqlSession();
         return sqlSession.selectList("com.dewarim.cinnamon.model.relations.Relation.getProtectedRelations", osdIds);
     }
 
     public void deleteAllUnprotectedRelationsOfObjects(List<Long> osdIds) {
-        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        SqlSession sqlSession = getSqlSession();
         sqlSession.delete("com.dewarim.cinnamon.model.relations.Relation.deleteAllUnprotectedRelationsOfObjects", osdIds);
     }
 
@@ -57,12 +66,20 @@ public class RelationDao implements CrudDao<Relation> {
     }
 
     public List<Relation> getRelationsToCopy(Long id) {
-        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        SqlSession sqlSession = getSqlSession();
         return sqlSession.selectList("com.dewarim.cinnamon.model.relations.Relation.getRelationsToCopy", id);
     }
 
     public List<Relation> getRelationsToCopyOnVersion(Long id) {
-        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        SqlSession sqlSession = getSqlSession();
         return sqlSession.selectList("com.dewarim.cinnamon.model.relations.Relation.getRelationsToCopyOnVersion", id);
+    }
+
+    @Override
+    public SqlSession getSqlSession() {
+        if(sqlSession == null){
+            sqlSession = ThreadLocalSqlSession.getSqlSession();
+        }
+        return sqlSession;
     }
 }

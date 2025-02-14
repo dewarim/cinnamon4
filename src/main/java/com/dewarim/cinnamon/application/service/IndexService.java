@@ -1,6 +1,5 @@
 package com.dewarim.cinnamon.application.service;
 
-import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.content.ContentProvider;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.application.exception.CinnamonException;
@@ -10,6 +9,8 @@ import com.dewarim.cinnamon.dao.*;
 import com.dewarim.cinnamon.model.*;
 import com.dewarim.cinnamon.model.index.IndexJob;
 import com.dewarim.cinnamon.model.index.IndexJobType;
+import com.dewarim.cinnamon.model.index.IndexJobWithDependencies;
+import com.dewarim.cinnamon.model.index.IndexKey;
 import com.dewarim.cinnamon.model.relations.Relation;
 import com.dewarim.cinnamon.provider.ContentProviderService;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -48,10 +49,8 @@ public class IndexService implements Runnable {
 
     public static boolean isInitialized = false;
 
-    private       boolean         stopped   = false;
+    private       boolean         stopped = false;
     private       IndexWriter     indexWriter;
-    private final OsdDao          osdDao    = new OsdDao();
-    private final FolderDao       folderDao = new FolderDao();
     private final LuceneConfig    config;
     private final Path            indexPath;
     private final XmlMapper       xmlMapper;
@@ -75,7 +74,6 @@ public class IndexService implements Runnable {
 
     public void run() {
         log.info("IndexService thread is running");
-        int limit = 100;
         try (Analyzer standardAnalyzer = new StandardAnalyzer();
              Directory indexDir = FSDirectory.open(indexPath, new SingleInstanceLockFactory())) {
 
@@ -86,13 +84,10 @@ public class IndexService implements Runnable {
                     writerConfig.setCommitOnClose(true);
                     indexWriter = new IndexWriter(indexDir, writerConfig);
 
-                    Set<IndexKey> seen   = new HashSet<>(128);
-                    IndexJobDao   jobDao = new IndexJobDao().setSqlSession(sqlSession);
-                    osdDao.setSqlSession(sqlSession);
-                    folderDao.setSqlSession(sqlSession);
+                    IndexJobDao jobDao = new IndexJobDao(sqlSession);
 
                     while (jobDao.countJobs() > 0) {
-                        List<IndexJob> jobs = jobDao.getIndexJobsByFailedCountWithLimit(config.getMaxIndexAttempts(), limit);
+                        List<IndexJob> jobs = jobDao.getIndexJobsByFailedCountWithLimit(config.getMaxIndexAttempts(), 100);
                         if (jobs.isEmpty()) {
                             log.trace("Found 0 IndexJobs.");
                             break;
@@ -103,21 +98,17 @@ public class IndexService implements Runnable {
                         AtomicInteger  changeCounter = new AtomicInteger();
                         AtomicBoolean  error         = new AtomicBoolean(false);
 
-                        // TODO: use parallelStream ... currently, this will exhaust all DB connections since each Thread has a ThreadLocal session.
-                        jobs.forEach(job -> {
-                            IndexKey indexKey = new IndexKey(job.getJobType(), job.getItemId());
-                            if (seen.contains(indexKey)) {
-                                // remove duplicate jobs in the current transaction
-                                jobsToDelete.add(job);
-                                return;
-                            }
+                        List<IndexJobWithDependencies> jobsToDo = extracted(sqlSession, jobs, jobsToDelete, jobsToUpdate);
 
+                        jobsToDo.parallelStream().forEach(jobWithDeps -> {
+                            IndexKey    indexKey = jobWithDeps.getIndexKey();
+                            IndexJob    job      = jobWithDeps.getIndexJob();
                             IndexResult indexResult;
                             switch (job.getAction()) {
                                 case DELETE -> indexResult = deleteFromIndex(indexKey);
                                 case CREATE, UPDATE -> {
                                     try {
-                                        indexResult = handleIndexItem(job, indexKey, indexItems);
+                                        indexResult = handleIndexItem(jobWithDeps, indexKey, indexItems);
                                     } catch (IOException e) {
                                         log.error("Failed to handle IndexItem: {}", indexKey, e);
                                         indexResult = IndexResult.ERROR;
@@ -144,7 +135,6 @@ public class IndexService implements Runnable {
                                 case IGNORE, NO_OBJECT -> {
                                 }
                             }
-                            seen.add(indexKey);
                         });
 
                         if (error.get()) {
@@ -184,7 +174,6 @@ public class IndexService implements Runnable {
                     indexWriter.close();
                     // TODO: avoid busy waiting -> use blocking queue or semaphore?
                     Thread.sleep(config.getMillisToWaitBetweenRuns());
-                    seen.clear();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     log.warn("Index thread was interrupted.");
@@ -205,15 +194,84 @@ public class IndexService implements Runnable {
 
     }
 
-    private IndexResult handleIndexItem(IndexJob job, IndexKey key, List<IndexItem> indexItems) throws IOException {
+    private static List<IndexJobWithDependencies> extracted(SqlSession sqlSession, List<IndexJob> jobs, List<IndexJob> jobsToDelete, List<IndexJob> jobsToUpdate) {
+        Set<IndexKey> seen = new HashSet<>();
+
+        List<IndexJobWithDependencies> jobsToDo = new ArrayList<>();
+
+        OsdDao        osdDao        = new OsdDao(sqlSession);
+        FolderDao     folderDao     = new FolderDao(sqlSession);
+        RelationDao   relationDao   = new RelationDao(sqlSession);
+        FormatDao     formatDao     = new FormatDao(sqlSession);
+        OsdMetaDao    osdMetaDao    = new OsdMetaDao(sqlSession);
+        FolderMetaDao folderMetaDao = new FolderMetaDao(sqlSession);
+
+        for (IndexJob indexJob : jobs) {
+            IndexKey indexKey = new IndexKey(indexJob.getJobType(), indexJob.getItemId(), indexJob.getAction(), indexJob.isUpdateTikaMetaset());
+            if (seen.add(indexKey)) {
+                IndexJobWithDependencies indexJobWithDependencies = new IndexJobWithDependencies(indexJob, indexKey);
+                if (indexJob.getJobType().equals(IndexJobType.OSD)) {
+                    // OSD:
+                    Optional<ObjectSystemData> osdOpt = osdDao.getObjectById(indexJob.getItemId());
+                    if (osdOpt.isEmpty()) {
+                        log.warn("IndexJob: OSD {} not found, skipping.", indexJob.getItemId());
+                        jobsToDelete.add(indexJob);
+                        continue;
+                    }
+                    ObjectSystemData osd = osdOpt.get();
+                    indexJobWithDependencies.setOsd(osd);
+                    String folderPath = folderDao.getFolderPath(osd.getParentId());
+                    indexJobWithDependencies.setFolderPath(folderPath);
+                    List<Long>     relationCriteria = List.of(osd.getId());
+                    List<Relation> relations        = relationDao.getRelationsOrMode(relationCriteria, relationCriteria, Collections.emptyList(), true);
+                    for (Relation relation : relations) {
+                        relation.setParent(relation.getLeftId().equals(osd.getId()));
+                    }
+                    osd.setRelations(relations);
+                    Optional<Format> formatOpt = formatDao.getObjectById(osd.getFormatId());
+                    formatOpt.ifPresent(indexJobWithDependencies::setFormat);
+                    if (formatOpt.isEmpty()) {
+                        log.error("Format {} not found for IndexJob {}!", osd.getFormatId(), indexJob.getId());
+                        indexJob.setFailed(indexJob.getFailed() + 1);
+                        jobsToUpdate.add(indexJob);
+                        continue;
+                    }
+                    List<Meta> metas = osdMetaDao.listByOsd(osd.getId());
+                    osd.setMetas(metas);
+                }
+                else {
+                    // Folder:
+                    Optional<Folder> folderOpt = folderDao.getObjectById(indexJob.getItemId());
+                    if (folderOpt.isEmpty()) {
+                        log.warn("IndexJob: Folder {} not found, skipping.", indexJob.getItemId());
+                        jobsToDelete.add(indexJob);
+                        continue;
+                    }
+                    Folder     folder     = folderOpt.get();
+                    String     folderPath = folderDao.getFolderPath(folder.getParentId());
+                    List<Meta> metas      = folderMetaDao.listByFolderId(folder.getId());
+                    indexJobWithDependencies.setFolderPath(folderPath);
+                    indexJobWithDependencies.setFolder(folder);
+                    folder.setMetas(metas);
+                }
+                jobsToDo.add(indexJobWithDependencies);
+            }
+            else {
+                jobsToDelete.add(indexJob);
+            }
+        }
+        return jobsToDo;
+    }
+
+    private IndexResult handleIndexItem(IndexJobWithDependencies jobWithDependencies, IndexKey key, List<IndexItem> indexItems) throws IOException {
         Document doc = new Document();
         doc.add(new StringField(LUCENE_FIELD_UNIQUE_ID, key.toString(), Field.Store.NO));
-        doc.add(new Field(LUCENE_FIELD_CINNAMON_CLASS, key.type.toString(), StringField.TYPE_STORED));
-
+        doc.add(new Field(LUCENE_FIELD_CINNAMON_CLASS, key.type().toString(), StringField.TYPE_STORED));
+        IndexJob    job = jobWithDependencies.getIndexJob();
         IndexResult indexResult;
         switch (job.getJobType()) {
-            case OSD -> indexResult = indexOsd(job.getItemId(), doc, indexItems, job.isUpdateTikaMetaset());
-            case FOLDER -> indexResult = indexFolder(job.getItemId(), doc, indexItems);
+            case OSD -> indexResult = indexOsd(jobWithDependencies, doc, indexItems, job.isUpdateTikaMetaset());
+            case FOLDER -> indexResult = indexFolder(jobWithDependencies, doc, indexItems);
             default -> indexResult = IndexResult.IGNORE;
         }
 
@@ -238,17 +296,12 @@ public class IndexService implements Runnable {
         ERROR, IGNORE
     }
 
-    private IndexResult indexFolder(Long id, Document doc, List<IndexItem> indexItems) {
-        Optional<Folder> folderOpt = folderDao.getFolderById(id);
-        if (folderOpt.isEmpty()) {
-            log.debug("Folder " + id + " not found for indexing.");
-            return IndexResult.NO_OBJECT;
-        }
-        Folder folder = folderOpt.get();
+    private IndexResult indexFolder(IndexJobWithDependencies job, Document doc, List<IndexItem> indexItems) {
+        Folder folder = job.getFolder();
         try {
             //// index sysMeta
             // folderpath
-            String folderPath = folderDao.getFolderPath(folder.getParentId());
+            String folderPath = job.getFolderPath();
             log.debug("folderpath: " + folderPath);
             doc.add(new StringField("folderpath", folderPath.toLowerCase(), Field.Store.NO));
 
@@ -267,31 +320,20 @@ public class IndexService implements Runnable {
             }
             doc.add(new TextField("summary", folder.getSummary(), Field.Store.NO));
             doc.add(new LongPoint("folder_type", folder.getTypeId()));
-
-            FolderMetaDao metaDao = new FolderMetaDao(TransactionIsolationLevel.READ_COMMITTED);
-            List<Meta>    metas   = metaDao.listByFolderId(folder.getId());
-            metaDao.closePrivateSession();
-            folder.setMetas(metas);
-
             applyIndexItems(doc, indexItems, xmlMapper.writeValueAsString(folder), NO_CONTENT, folderPath);
         } catch (Exception e) {
-            log.warn("Failed to index folder #" + id, e);
+            log.warn("Failed to index folder #{}", job.getFolder().getId(), e);
             return IndexResult.FAILED;
         }
         return IndexResult.SUCCESS;
     }
 
-    private IndexResult indexOsd(Long id, Document doc, List<IndexItem> indexItems, boolean updateTikaMetaset) {
-        Optional<ObjectSystemData> osdOpt = osdDao.getObjectById(id);
-        if (osdOpt.isEmpty()) {
-            log.debug("osd " + id + " not found for indexing");
-            return IndexResult.NO_OBJECT;
-        }
-        ObjectSystemData osd = osdOpt.get();
+    private IndexResult indexOsd(IndexJobWithDependencies job, Document doc, List<IndexItem> indexItems, boolean updateTikaMetaset) {
+        ObjectSystemData osd = job.getOsd();
         try {
             // index sysMeta
-            String folderPath = folderDao.getFolderPath(osd.getParentId());
-            doc.add(new StringField("folderpath", folderPath.toLowerCase(), Field.Store.NO));
+
+            doc.add(new StringField("folderpath", job.getFolderPath().toLowerCase(), Field.Store.NO));
 
             doc.add(new StoredField("acl", osd.getAclId()));
             doc.add(new LongPoint("acl", osd.getAclId()));
@@ -339,18 +381,11 @@ public class IndexService implements Runnable {
             doc.add(new TextField("summary", osd.getSummary(), Field.Store.NO));
             doc.add(new LongPoint("object_type", osd.getTypeId()));
 
-            List<Long>     relationCriteria = List.of(osd.getId());
-            List<Relation> relations        = new RelationDao().getRelationsOrMode(relationCriteria, relationCriteria, Collections.emptyList(), true);
-            for (Relation relation : relations) {
-                relation.setParent(relation.getLeftId().equals(osd.getId()));
-            }
-            osd.setRelations(relations);
-
             byte[] content = NO_CONTENT;
-            if (osd.getContentPath() != null && osd.getFormatId() != null) {
-                Format          format          = new FormatDao().getObjectById(osd.getFormatId()).orElseThrow(() -> new CinnamonException(ErrorCode.FORMAT_NOT_FOUND.getCode()));
+            if (osd.getContentPath() != null && job.getFormat() != null) {
                 ContentProvider contentProvider = ContentProviderService.getInstance().getContentProvider(osd.getContentProvider());
                 try (InputStream contentStream = contentProvider.getContentStream(osd)) {
+                    Format format = job.getFormat();
                     switch (format.getIndexMode()) {
                         case XML -> content = contentStream.readAllBytes();
                         case TIKA -> {
@@ -369,14 +404,9 @@ public class IndexService implements Runnable {
                     throw new CinnamonException("Failed to load content for OSD " + osd.getId() + " at " + osd.getContentPath(), e);
                 }
             }
-            OsdMetaDao metaDao = new OsdMetaDao(TransactionIsolationLevel.READ_COMMITTED);
-            List<Meta> metas   = metaDao.listByOsd(osd.getId());
-            metaDao.closePrivateSession();
-            osd.setMetas(metas);
-
-            applyIndexItems(doc, indexItems, xmlMapper.writeValueAsString(osd), content, folderPath);
+            applyIndexItems(doc, indexItems, xmlMapper.writeValueAsString(osd), content, job.getFolderPath());
         } catch (Exception e) {
-            log.warn("Indexing failed for OSD #" + id, e);
+            log.warn("Indexing failed for OSD #{}", job.getOsd().getId(), e);
             return IndexResult.FAILED;
         }
         return IndexResult.SUCCESS;
@@ -391,14 +421,14 @@ public class IndexService implements Runnable {
         for (IndexItem indexItem : indexItems) {
             String fieldName    = indexItem.getFieldName();
             String searchString = indexItem.getSearchString();
-            log.debug("indexing for field: " + fieldName + " with " + searchString);
+            log.debug("indexing for field: {} with {}", fieldName, searchString);
             // TODO: check search condition, probably with xmlDoc
             if (xmlDoc.valueOf(indexItem.getSearchCondition()).equals("true")) {
                 indexItem.getIndexType().getIndexer()
                         .indexObject(xmlDoc, contentContainer.asNode(), luceneDoc, fieldName, searchString, indexItem.isMultipleResults());
             }
             else {
-                log.debug("searchCondition failed: " + indexItem.getSearchCondition());
+                log.debug("searchCondition failed: {}", indexItem.getSearchCondition());
             }
         }
     }
@@ -415,38 +445,6 @@ public class IndexService implements Runnable {
 
     public void setStopped(boolean stopped) {
         this.stopped = stopped;
-    }
-
-    static class IndexKey {
-        private final IndexJobType type;
-        private final Long         itemId;
-
-        public IndexKey(IndexJobType type, Long itemId) {
-            this.type   = type;
-            this.itemId = itemId;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (o == null || getClass() != o.getClass()) {
-                return false;
-            }
-            IndexKey indexKey = (IndexKey) o;
-            return type == indexKey.type && itemId.equals(indexKey.itemId);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(type, itemId);
-        }
-
-        @Override
-        public String toString() {
-            return type.name() + "#" + itemId;
-        }
     }
 
     public void addIndexItems(List<IndexItem> indexItems) {

@@ -14,6 +14,13 @@ public class IndexJobDao {
 
     private SqlSession sqlSession;
 
+    public IndexJobDao() {
+    }
+
+    public IndexJobDao(SqlSession sqlSession) {
+        this.sqlSession = sqlSession;
+    }
+
     public List<IndexJob> getIndexJobsByFailedCountWithLimit(int failedCount, int limit) {
         SqlSession          sqlSession = getSqlSession();
         Map<String, Object> params     = Map.of("failed", failedCount);
@@ -56,10 +63,10 @@ public class IndexJobDao {
     }
 
     public SqlSession getSqlSession() {
-        if (sqlSession != null) {
-            return sqlSession;
+        if (sqlSession == null) {
+            sqlSession = ThreadLocalSqlSession.getSqlSession();
         }
-        return ThreadLocalSqlSession.getSqlSession();
+        return sqlSession;
     }
 
     public IndexRows fullReindex(boolean updateTikaMetaset) {
