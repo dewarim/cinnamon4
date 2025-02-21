@@ -7,10 +7,7 @@ import com.dewarim.cinnamon.application.service.index.ContentContainer;
 import com.dewarim.cinnamon.configuration.LuceneConfig;
 import com.dewarim.cinnamon.dao.*;
 import com.dewarim.cinnamon.model.*;
-import com.dewarim.cinnamon.model.index.IndexJob;
-import com.dewarim.cinnamon.model.index.IndexJobType;
-import com.dewarim.cinnamon.model.index.IndexJobWithDependencies;
-import com.dewarim.cinnamon.model.index.IndexKey;
+import com.dewarim.cinnamon.model.index.*;
 import com.dewarim.cinnamon.model.relations.Relation;
 import com.dewarim.cinnamon.provider.ContentProviderService;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -36,6 +33,7 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -98,18 +96,18 @@ public class IndexService implements Runnable {
                         AtomicInteger  changeCounter = new AtomicInteger();
                         AtomicBoolean  error         = new AtomicBoolean(false);
 
-                        List<IndexJobWithDependencies> jobsToDo = extracted(sqlSession, jobs, jobsToDelete, jobsToUpdate);
+                        List<IndexJobWithDependencies> jobsToDo = findJobs(sqlSession, jobs, jobsToDelete, jobsToUpdate);
 
-                        jobsToDo.parallelStream().forEach(jobWithDeps -> {
+                        Consumer<IndexJobWithDependencies> consumer = jobWithDeps -> {
                             IndexKey    indexKey = jobWithDeps.getIndexKey();
                             IndexJob    job      = jobWithDeps.getIndexJob();
                             IndexResult indexResult;
                             switch (job.getAction()) {
-                                case DELETE -> indexResult = deleteFromIndex(indexKey);
+                                case DELETE -> indexResult = IndexService.this.deleteFromIndex(indexKey);
                                 case CREATE, UPDATE -> {
                                     try {
-                                        indexResult = handleIndexItem(jobWithDeps, indexKey, indexItems);
-                                    } catch (IOException e) {
+                                        indexResult = IndexService.this.handleIndexItem(jobWithDeps, indexKey, indexItems);
+                                    } catch (Exception e) {
                                         log.error("Failed to handle IndexItem: {}", indexKey, e);
                                         indexResult = IndexResult.ERROR;
                                     }
@@ -135,7 +133,12 @@ public class IndexService implements Runnable {
                                 case IGNORE, NO_OBJECT -> {
                                 }
                             }
-                        });
+                        };
+
+                        // prevent a create index job to run after a delete or update index job due to concurrency
+                        jobsToDo.stream().filter(todo -> todo.getIndexJob().getAction().equals(IndexJobAction.CREATE)).toList().parallelStream().forEach(consumer);
+                        jobsToDo.stream().filter(todo -> todo.getIndexJob().getAction().equals(IndexJobAction.UPDATE)).toList().parallelStream().forEach(consumer);
+                        jobsToDo.stream().filter(todo -> todo.getIndexJob().getAction().equals(IndexJobAction.DELETE)).toList().parallelStream().forEach(consumer);
 
                         if (error.get()) {
                             log.error("Error during indexing; trying to roll back indexWriter.");
@@ -194,7 +197,7 @@ public class IndexService implements Runnable {
 
     }
 
-    private static List<IndexJobWithDependencies> extracted(SqlSession sqlSession, List<IndexJob> jobs, List<IndexJob> jobsToDelete, List<IndexJob> jobsToUpdate) {
+    private static List<IndexJobWithDependencies> findJobs(SqlSession sqlSession, List<IndexJob> jobs, List<IndexJob> jobsToDelete, List<IndexJob> jobsToUpdate) {
         Set<IndexKey> seen = new HashSet<>();
 
         List<IndexJobWithDependencies> jobsToDo = new ArrayList<>();
@@ -276,7 +279,7 @@ public class IndexService implements Runnable {
         }
 
         switch (indexResult) {
-            case FAILED -> log.info("Failed to index " + job);
+            case FAILED -> log.info("Failed to index {}", job);
             case SUCCESS -> {
                 switch (job.getAction()) {
                     case UPDATE -> indexWriter.updateDocument(new Term(LUCENE_FIELD_UNIQUE_ID, key.toString()), doc);

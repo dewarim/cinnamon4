@@ -81,10 +81,10 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
         // TODO: filter system indexItems before indexing with XML-Indexers
         // TODO: test filtering for unbrowsable items
         SearchIdsResponse response = client.search("<BooleanQuery><Clause occurs='must'><TermQuery fieldName='name'>search-me-osd</TermQuery></Clause></BooleanQuery>", SearchType.OSD);
-        log.info("searchIdsResponse for OSD search: " + response);
+        log.info("searchIdsResponse for OSD search: {}", response);
         assertEquals(1, response.getOsdIds().size());
         SearchIdsResponse folderResponse = client.search("<BooleanQuery><Clause occurs='must'><TermQuery fieldName='name'>search-me-folder</TermQuery></Clause></BooleanQuery>", SearchType.FOLDER);
-        log.info("searchIdsResponse for FOLDER search: " + response);
+        log.info("searchIdsResponse for FOLDER search: {}", response);
         assertEquals(1, folderResponse.getFolderIds().size());
 
         SearchIdsResponse allResponse = client.search("<BooleanQuery><Clause occurs='must'><WildcardQuery fieldName='name'>search-me-*</WildcardQuery></Clause></BooleanQuery>", SearchType.ALL);
