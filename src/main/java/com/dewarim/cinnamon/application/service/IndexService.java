@@ -135,7 +135,7 @@ public class IndexService implements Runnable {
                             }
                         };
 
-                        // prevent a create index job to run after a delete or update index job due to concurrency
+                        // prevent a CREATE index job to run after a delete or update index job due to concurrency
                         jobsToDo.stream().filter(todo -> todo.getIndexJob().getAction().equals(IndexJobAction.CREATE)).toList().parallelStream().forEach(consumer);
                         jobsToDo.stream().filter(todo -> todo.getIndexJob().getAction().equals(IndexJobAction.UPDATE)).toList().parallelStream().forEach(consumer);
                         jobsToDo.stream().filter(todo -> todo.getIndexJob().getAction().equals(IndexJobAction.DELETE)).toList().parallelStream().forEach(consumer);

@@ -114,7 +114,7 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
         return Optional.of(objectsById.get(0));
     }
 
-    public void updateOsd(ObjectSystemData osd, boolean updateModifier) {
+    public void updateOsd(ObjectSystemData osd, boolean updateModifier, boolean updateTikaMetaset) {
         SqlSession sqlSession = getSqlSession();
         if (updateModifier) {
             UserAccount currentUser = ThreadLocalSqlSession.getCurrentUser();
@@ -124,22 +124,26 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
             }
         }
         sqlSession.update("com.dewarim.cinnamon.model.ObjectSystemData.updateOsd", osd);
-        new IndexJobDao(getSqlSession()).insertIndexJob(new IndexJob(IndexJobType.OSD, osd.getId(), IndexJobAction.UPDATE, false));
+        new IndexJobDao(sqlSession).insertIndexJob(new IndexJob(IndexJobType.OSD, osd.getId(), IndexJobAction.UPDATE, false));
         DebugLogService.log("update:", osd);
+    }
+
+    public void updateOsd(ObjectSystemData osd, boolean updateModifier) {
+        updateOsd(osd, updateModifier, false);
     }
 
     public ObjectSystemData saveOsd(ObjectSystemData osd) {
         SqlSession sqlSession = getSqlSession();
         int        resultRows = sqlSession.insert("com.dewarim.cinnamon.model.ObjectSystemData.insertOsd", osd);
         if (resultRows != 1) {
-            ErrorCode.DB_INSERT_FAILED.throwUp();
+            throw ErrorCode.DB_INSERT_FAILED.exception();
         }
         if (osd.getRootId() == null) {
             osd.setRootId(osd.getId());
             updateOsd(osd, false);
         }
         IndexJob indexJob = new IndexJob(IndexJobType.OSD, osd.getId(), IndexJobAction.CREATE, false);
-        new IndexJobDao(getSqlSession()).insertIndexJob(indexJob);
+        new IndexJobDao(sqlSession).insertIndexJob(indexJob);
         DebugLogService.log("save:", osd);
         return osd;
     }

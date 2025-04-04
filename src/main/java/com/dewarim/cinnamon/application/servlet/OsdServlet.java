@@ -932,7 +932,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         if (osd.getCmnVersion().matches("^\\d+$")) {
             osd.setLatestHead(true);
         }
-        // save here to generate Id so metasets can be created and linked to the OSD.
+        // save here to generate id so metasets can be created and linked to the OSD.
         ObjectSystemData savedOsd = osdDao.saveOsd(osd);
 
         // copy relations
@@ -982,9 +982,11 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         }
 
         // saveFileUpload
+        boolean shouldUpdateTikaMetaset = false;
         Part file = request.getPart("file");
         if (file != null) {
             storeFileUpload(file.getInputStream(), osd, versionRequest.getFormatId());
+            shouldUpdateTikaMetaset = true;
             if (user.isChangeTracking()) {
                 osd.setContentChanged(true);
             }
@@ -1012,7 +1014,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                 osd.setLifecycleStateId(stateForCopy.getId());
             }
         }
-        osdDao.updateOsd(osd, false);
+        osdDao.updateOsd(osd, false, shouldUpdateTikaMetaset);
         OsdWrapper wrapper = new OsdWrapper();
         wrapper.setOsds(Collections.singletonList(savedOsd));
         response.setWrapper(wrapper);
