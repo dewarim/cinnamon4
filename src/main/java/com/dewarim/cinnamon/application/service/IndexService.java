@@ -31,6 +31,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -47,15 +48,19 @@ public class IndexService implements Runnable {
 
     public static boolean isInitialized = false;
 
-    private       boolean         stopped = false;
-    private       IndexWriter     indexWriter;
-    private final LuceneConfig    config;
-    private final Path            indexPath;
-    private final XmlMapper       xmlMapper;
-    private final TikaService     tikaService;
-    private final List<IndexItem> indexItems;
+    private       boolean                stopped = false;
+    private       IndexWriter            indexWriter;
+    private final LuceneConfig           config;
+    private final Path                   indexPath;
+    private final XmlMapper              xmlMapper;
+    private final TikaService            tikaService;
+    private final List<IndexItem>        indexItems;
+    private final ContentProviderService contentProviderService;
 
-    public IndexService(LuceneConfig config, TikaService tikaService) {
+    private static final IndexEvent SUCCESS_EVENT = new IndexEvent().setIndexResult(IndexResult.SUCCESS);
+    private static final IndexEvent IGNORE_EVENT  = new IndexEvent().setIndexResult(IndexResult.IGNORE);
+
+    public IndexService(LuceneConfig config, TikaService tikaService, ContentProviderService contentProviderService) {
         this.config = config;
         indexPath   = Paths.get(config.getIndexPath());
         if (!indexPath.toFile().exists()) {
@@ -64,9 +69,10 @@ public class IndexService implements Runnable {
                 throw new IllegalStateException("Could not create path to index: " + indexPath.toAbsolutePath());
             }
         }
-        indexItems       = new IndexItemDao().list();
-        xmlMapper        = new XmlMapper();
-        this.tikaService = tikaService;
+        indexItems                  = new IndexItemDao().list();
+        xmlMapper                   = new XmlMapper();
+        this.tikaService            = tikaService;
+        this.contentProviderService = contentProviderService;
     }
 
 
@@ -91,24 +97,33 @@ public class IndexService implements Runnable {
                             break;
                         }
                         log.debug("Found {} IndexJobs with not more than {} failed attempts.", jobs.size(), config.getMaxIndexAttempts());
-                        List<IndexJob> jobsToDelete  = new ArrayList<>();
-                        List<IndexJob> jobsToUpdate  = new ArrayList<>();
+                        ConcurrentLinkedQueue<IndexJob> jobsToDelete  = new ConcurrentLinkedQueue<>();
+                        ConcurrentLinkedQueue<IndexJob> jobsToUpdate  = new ConcurrentLinkedQueue<>();
                         AtomicInteger  changeCounter = new AtomicInteger();
                         AtomicBoolean  error         = new AtomicBoolean(false);
 
-                        List<IndexJobWithDependencies> jobsToDo = findJobs(sqlSession, jobs, jobsToDelete, jobsToUpdate);
+                        List<IndexJobWithDependencies>    jobsToDo    = findJobs(sqlSession, jobs, jobsToDelete, jobsToUpdate);
+                        ConcurrentLinkedQueue<IndexEvent> indexEvents = new ConcurrentLinkedQueue<>();
 
                         Consumer<IndexJobWithDependencies> consumer = jobWithDeps -> {
                             IndexKey    indexKey = jobWithDeps.getIndexKey();
                             IndexJob    job      = jobWithDeps.getIndexJob();
                             IndexResult indexResult;
                             switch (job.getAction()) {
-                                case DELETE -> indexResult = IndexService.this.deleteFromIndex(indexKey);
+                                case DELETE -> {
+                                    IndexEvent event = IndexService.this.deleteFromIndex(indexKey, job);
+                                    logEvent(indexEvents, event);
+                                    indexResult = event.getIndexResult();
+                                }
                                 case CREATE, UPDATE -> {
                                     try {
-                                        indexResult = IndexService.this.handleIndexItem(jobWithDeps, indexKey, indexItems);
+                                        IndexEvent indexEvent = IndexService.this.handleIndexItem(jobWithDeps, indexKey, indexItems);
+                                        logEvent(indexEvents, indexEvent);
+                                        indexResult = indexEvent.getIndexResult();
                                     } catch (Exception e) {
                                         log.error("Failed to handle IndexItem: {}", indexKey, e);
+                                        IndexEvent indexEvent = new IndexEvent(job.getId(), IndexEventType.LUCENE, IndexResult.ERROR, e.getMessage());
+                                        logEvent(indexEvents, indexEvent);
                                         indexResult = IndexResult.ERROR;
                                     }
                                 }
@@ -139,6 +154,19 @@ public class IndexService implements Runnable {
                         jobsToDo.stream().filter(todo -> todo.getIndexJob().getAction().equals(IndexJobAction.CREATE)).toList().parallelStream().forEach(consumer);
                         jobsToDo.stream().filter(todo -> todo.getIndexJob().getAction().equals(IndexJobAction.UPDATE)).toList().parallelStream().forEach(consumer);
                         jobsToDo.stream().filter(todo -> todo.getIndexJob().getAction().equals(IndexJobAction.DELETE)).toList().parallelStream().forEach(consumer);
+
+                        if(!indexEvents.isEmpty()) {
+                            log.info("Failed index events count: {}", indexEvents.size());
+                            IndexEventDao indexEventDao = new IndexEventDao();
+                            try {
+                                indexEventDao.create(indexEvents.stream().toList());
+                                indexEventDao.commit();
+                            }
+                            catch (Exception e) {
+                                log.error("Failed to save index events: {}", indexEvents, e);
+                                throw e;
+                            }
+                        }
 
                         if (error.get()) {
                             log.error("Error during indexing; trying to roll back indexWriter.");
@@ -197,7 +225,15 @@ public class IndexService implements Runnable {
 
     }
 
-    private static List<IndexJobWithDependencies> findJobs(SqlSession sqlSession, List<IndexJob> jobs, List<IndexJob> jobsToDelete, List<IndexJob> jobsToUpdate) {
+    private void logEvent(ConcurrentLinkedQueue<IndexEvent> indexEvents, IndexEvent event) {
+        if (event.getIndexResult() != IndexResult.SUCCESS && event.getIndexResult() != IndexResult.IGNORE) {
+            indexEvents.add(event);
+        }
+    }
+
+    private static List<IndexJobWithDependencies> findJobs(SqlSession sqlSession, List<IndexJob> jobs,
+                                                           ConcurrentLinkedQueue<IndexJob> jobsToDelete,
+                                                           ConcurrentLinkedQueue<IndexJob> jobsToUpdate) {
         Set<IndexKey> seen = new HashSet<>();
 
         List<IndexJobWithDependencies> jobsToDo = new ArrayList<>();
@@ -266,19 +302,19 @@ public class IndexService implements Runnable {
         return jobsToDo;
     }
 
-    private IndexResult handleIndexItem(IndexJobWithDependencies jobWithDependencies, IndexKey key, List<IndexItem> indexItems) throws IOException {
+    private IndexEvent handleIndexItem(IndexJobWithDependencies jobWithDependencies, IndexKey key, List<IndexItem> indexItems) throws IOException {
         Document doc = new Document();
         doc.add(new StringField(LUCENE_FIELD_UNIQUE_ID, key.toString(), Field.Store.NO));
         doc.add(new Field(LUCENE_FIELD_CINNAMON_CLASS, key.type().toString(), StringField.TYPE_STORED));
-        IndexJob    job = jobWithDependencies.getIndexJob();
-        IndexResult indexResult;
+        IndexJob   job = jobWithDependencies.getIndexJob();
+        IndexEvent indexEvent;
         switch (job.getJobType()) {
-            case OSD -> indexResult = indexOsd(jobWithDependencies, doc, indexItems, job.isUpdateTikaMetaset());
-            case FOLDER -> indexResult = indexFolder(jobWithDependencies, doc, indexItems);
-            default -> indexResult = IndexResult.IGNORE;
+            case OSD -> indexEvent = indexOsd(jobWithDependencies, doc, indexItems, job.isUpdateTikaMetaset());
+            case FOLDER -> indexEvent = indexFolder(jobWithDependencies, doc, indexItems);
+            default -> indexEvent = IGNORE_EVENT;
         }
 
-        switch (indexResult) {
+        switch (indexEvent.getIndexResult()) {
             case FAILED -> log.info("Failed to index {}", job);
             case SUCCESS -> {
                 switch (job.getAction()) {
@@ -289,17 +325,10 @@ public class IndexService implements Runnable {
             default -> {
             }
         }
-        return indexResult;
+        return indexEvent;
     }
 
-    enum IndexResult {
-        SUCCESS,
-        NO_OBJECT,
-        FAILED,
-        ERROR, IGNORE
-    }
-
-    private IndexResult indexFolder(IndexJobWithDependencies job, Document doc, List<IndexItem> indexItems) {
+    private IndexEvent indexFolder(IndexJobWithDependencies job, Document doc, List<IndexItem> indexItems) {
         Folder folder = job.getFolder();
         try {
             //// index sysMeta
@@ -323,15 +352,15 @@ public class IndexService implements Runnable {
             }
             doc.add(new TextField("summary", folder.getSummary(), Field.Store.NO));
             doc.add(new LongPoint("folder_type", folder.getTypeId()));
-            applyIndexItems(doc, indexItems, xmlMapper.writeValueAsString(folder), NO_CONTENT, folderPath);
+            applyIndexItems(doc, indexItems, xmlMapper.writeValueAsString(folder), NO_CONTENT, folderPath, job);
         } catch (Exception e) {
             log.warn("Failed to index folder #{}", job.getFolder().getId(), e);
-            return IndexResult.FAILED;
+            return new IndexEvent(job.getIndexJob().getId(), IndexEventType.GENERIC, IndexResult.FAILED, e.getMessage());
         }
-        return IndexResult.SUCCESS;
+        return SUCCESS_EVENT;
     }
 
-    private IndexResult indexOsd(IndexJobWithDependencies job, Document doc, List<IndexItem> indexItems, boolean updateTikaMetaset) {
+    private IndexEvent indexOsd(IndexJobWithDependencies job, Document doc, List<IndexItem> indexItems, boolean updateTikaMetaset) {
         ObjectSystemData osd = job.getOsd();
         try {
             // index sysMeta
@@ -386,7 +415,7 @@ public class IndexService implements Runnable {
 
             byte[] content = NO_CONTENT;
             if (osd.getContentPath() != null && job.getFormat() != null) {
-                ContentProvider contentProvider = ContentProviderService.getInstance().getContentProvider(osd.getContentProvider());
+                ContentProvider contentProvider = contentProviderService.getContentProvider(osd.getContentProvider());
                 try (InputStream contentStream = contentProvider.getContentStream(osd)) {
                     Format format = job.getFormat();
                     switch (format.getIndexMode()) {
@@ -407,18 +436,18 @@ public class IndexService implements Runnable {
                     throw new CinnamonException("Failed to load content for OSD " + osd.getId() + " at " + osd.getContentPath(), e);
                 }
             }
-            applyIndexItems(doc, indexItems, xmlMapper.writeValueAsString(osd), content, job.getFolderPath());
+            applyIndexItems(doc, indexItems, xmlMapper.writeValueAsString(osd), content, job.getFolderPath(), job);
         } catch (Exception e) {
             log.warn("Indexing failed for OSD #{}", job.getOsd().getId(), e);
-            return IndexResult.FAILED;
+            return new IndexEvent(job.getIndexJob().getId(), IndexEventType.GENERIC, IndexResult.FAILED, e.getMessage());
         }
-        return IndexResult.SUCCESS;
+        return SUCCESS_EVENT;
 
     }
 
     private void applyIndexItems(Document luceneDoc, List<IndexItem> indexItems,
-                                 String objectAsString, byte[] content, String folderPath) {
-        ContentContainer   contentContainer = new ContentContainer(objectAsString, content, folderPath);
+                                 String objectAsString, byte[] content, String folderPath, IndexJobWithDependencies job) {
+        ContentContainer   contentContainer = new ContentContainer(objectAsString, content, folderPath, job.getIndexKey().toString());
         org.dom4j.Document xmlDoc           = contentContainer.getCombinedDocument();
 
         for (IndexItem indexItem : indexItems) {
@@ -436,13 +465,13 @@ public class IndexService implements Runnable {
         }
     }
 
-    private IndexResult deleteFromIndex(IndexKey key) {
+    private IndexEvent deleteFromIndex(IndexKey key, IndexJob job) {
         try {
             indexWriter.deleteDocuments(new Term(LUCENE_FIELD_UNIQUE_ID, key.toString()));
-            return IndexResult.SUCCESS;
+            return SUCCESS_EVENT;
         } catch (Exception e) {
-            log.warn("Failed to delete document from Lucene index: {}", key);
-            return IndexResult.FAILED;
+            log.warn("Failed to delete document from Lucene index: {}", key, e);
+            return new IndexEvent(job.getId(), IndexEventType.GENERIC, IndexResult.FAILED, e.getMessage());
         }
     }
 

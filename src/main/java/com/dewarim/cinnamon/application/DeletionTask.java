@@ -16,11 +16,13 @@ import java.util.stream.Collectors;
 public class DeletionTask implements Runnable {
     private static final Logger log = LogManager.getLogger(DeletionTask.class);
 
-    private static ReentrantLock  lock = new ReentrantLock();
-    private final  List<Deletion> deletions;
+    private static final ReentrantLock  lock = new ReentrantLock();
+    private final        List<Deletion> deletions;
+    private final ContentProviderService contentProviderService;
 
-    public DeletionTask(List<Deletion> deletions) {
+    public DeletionTask(List<Deletion> deletions, ContentProviderService contentProviderService) {
         this.deletions = deletions;
+        this.contentProviderService = contentProviderService;
     }
 
     @Override
@@ -33,7 +35,7 @@ public class DeletionTask implements Runnable {
             }
             try {
                 DeletionDao deletionDao = new DeletionDao();
-                ContentProvider contentProvider     = ContentProviderService.getInstance().getContentProvider(DefaultContentProvider.FILE_SYSTEM.name());
+                ContentProvider contentProvider     = contentProviderService.getContentProvider(DefaultContentProvider.FILE_SYSTEM.name());
                 int             successfulDeletions = 0;
                 for (Deletion deletion : deletions) {
                     ContentMetadataLight metadataLight = new ContentMetadataLight();

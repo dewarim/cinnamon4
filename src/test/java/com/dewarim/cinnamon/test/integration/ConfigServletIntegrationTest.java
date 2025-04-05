@@ -36,7 +36,6 @@ public class ConfigServletIntegrationTest extends CinnamonIntegrationTest {
         assertFalse(config.getUiLanguages().isEmpty());
         assertFalse(config.getUsers().isEmpty());
         assertFalse(config.getProviderClasses().isEmpty());
-        assertTrue(config.getProviderClasses().stream().anyMatch(providerClass -> providerClass.getProviderType().equals(ProviderType.CONTENT_PROVIDER)));
         assertTrue(config.getProviderClasses().stream().anyMatch(providerClass -> providerClass.getProviderType().equals(ProviderType.LOGIN_PROVIDER)));
         assertTrue(config.getProviderClasses().stream().anyMatch(providerClass -> providerClass.getProviderType().equals(ProviderType.STATE_PROVIDER)));
 

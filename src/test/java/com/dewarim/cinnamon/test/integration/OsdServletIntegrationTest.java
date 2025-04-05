@@ -460,8 +460,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void setContentWithDefaultContentProviderHappyPath() throws IOException {
-        long osdId = new TestObjectHolder(client, userId)
-                .createOsd("setContentWithDefaultContentProviderHappyPath").osd.getId();
+        long osdId = new TestObjectHolder(client, userId).createOsd().osd.getId();
         createTestContentOnOsd(osdId, false);
 
         // check data is in content store:
@@ -2248,7 +2247,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         File bun = new File("data/cinnamon-bun.png");
         var toh = new TestObjectHolder(client, userId)
                 .createOsdWithContent("bunny-to-reproduce", imagePng, bun)
-                .createOsdMeta("<xml>my metaset</xml");
+                .createOsdMeta("<xml>my metaset</xml>");
         var sourceOsd = toh.osd;
 
         // set up target:
@@ -2271,7 +2270,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         File bun = new File("data/cinnamon-bun.png");
         var toh = prepareAclGroupWithPermissions(List.of())
                 .createOsdWithContent("bunny-to-reproduce", imagePng, bun)
-                .createOsdMeta("<xml>my metaset</xml");
+                .createOsdMeta("<xml>my metaset</xml>");
         var sourceOsd = toh.osd;
 
         // set up target (not locked, so we get the OBJECT_MUST_BE_LOCKED error message):

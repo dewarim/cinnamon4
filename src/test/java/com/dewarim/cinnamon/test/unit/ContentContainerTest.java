@@ -25,21 +25,21 @@ public class ContentContainerTest {
 
     @Test
     public void osdWithoutContentToDocument() throws JsonProcessingException {
-        ContentContainer contentContainer = new ContentContainer(xmlMapper.writeValueAsString(osd), NO_CONTENT, folderPath);
+        ContentContainer contentContainer = new ContentContainer(xmlMapper.writeValueAsString(osd), NO_CONTENT, folderPath, "OSD#0");
         assertTrue(contentContainer.getCombinedDocument().asXML().contains("<content><empty/></content>"));
     }
 
     @Test
     public void osdWithContentToDocument() throws JsonProcessingException {
         byte[]           content          = "<xml>test-string</xml>".getBytes(StandardCharsets.UTF_8);
-        ContentContainer contentContainer = new ContentContainer(xmlMapper.writeValueAsString(osd), content, folderPath);
+        ContentContainer contentContainer = new ContentContainer(xmlMapper.writeValueAsString(osd), content, folderPath, "OSD#0");
         assertTrue(contentContainer.getCombinedDocument().asXML().contains("<content><xml>test-string</xml></content>"));
     }
 
     @Test
     public void osdWithBinaryContentToDocument() throws JsonProcessingException {
         byte[]           content          = new byte[]{0, 1, 2, 3, 4};
-        ContentContainer contentContainer = new ContentContainer(xmlMapper.writeValueAsString(osd), content, folderPath);
+        ContentContainer contentContainer = new ContentContainer(xmlMapper.writeValueAsString(osd), content, folderPath, "OSD#0");
         assertTrue(contentContainer.getCombinedDocument().asXML().contains("<content><empty/></content>"));
     }
 

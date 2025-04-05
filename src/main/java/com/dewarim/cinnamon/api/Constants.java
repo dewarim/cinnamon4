@@ -78,6 +78,7 @@ public class Constants {
     public static final String INDEX_SERVICE   = "IndexService";
     public static final String SEARCH_SERVICE  = "SearchService";
     public static final String TIKA_SERVICE    = "TikaService";
+    public static final String CONTENT_PROVIDER_SERVICE    = "ContentProviderService";
     public static final String CINNAMON_CONFIG = "CinnamonConfig";
 
     public static final String LUCENE_FIELD_UNIQUE_ID      = "unique_id";

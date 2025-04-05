@@ -99,7 +99,7 @@ public class CinnamonSearchTest {
 
             Document doc = new Document();
             String objectAsString = new XmlMapper().writeValueAsString(osd);
-            ContentContainer contentContainer = new ContentContainer(objectAsString, new byte[0], "/root/home/sys");
+            ContentContainer contentContainer = new ContentContainer(objectAsString, new byte[0], "/root/home/sys", "OSD#0");
             org.dom4j.Document xmlDoc = contentContainer.getCombinedDocument();
             log.info("xmlDoc:\n"+xmlDoc.asXML());
             indexer.indexObject(xmlDoc, contentContainer.asNode(), doc, "content", "/objectSystemData/metasets/metaset[typeId='1']/content/html/body", true);

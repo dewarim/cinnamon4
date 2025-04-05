@@ -18,6 +18,7 @@ import com.dewarim.cinnamon.filter.DbSessionFilter;
 import com.dewarim.cinnamon.filter.RequestResponseFilter;
 import com.dewarim.cinnamon.model.ChangeTriggerType;
 import com.dewarim.cinnamon.model.UserAccount;
+import com.dewarim.cinnamon.provider.ContentProviderService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -61,7 +62,7 @@ public class CinnamonServer {
 
     private static final Logger log = LogManager.getLogger(CinnamonServer.class);
 
-    public static final String           VERSION       = "1.5.9";
+    public static final String           VERSION       = "1.6.0";
     private             Server           server;
     private             DbSessionFactory dbSessionFactory;
     private final       WebAppContext    webAppContext = new WebAppContext();
@@ -213,8 +214,8 @@ public class CinnamonServer {
     }
 
 
-    public void startIndexService() {
-        indexService       = new IndexService(config.getLuceneConfig(), tikaService);
+    public void startIndexService(ContentProviderService contentProviderService) {
+        indexService       = new IndexService(config.getLuceneConfig(), tikaService, contentProviderService);
         indexServiceThread = new Thread(indexService);
         indexServiceThread.setName("Index-Service");
         indexServiceThread.start();
@@ -238,14 +239,16 @@ public class CinnamonServer {
         server.setAttribute(DEFAULT_DATABASE_SESSION_FACTORY, dbSessionFactory);
 
         tikaService = new TikaService(config.getCinnamonTikaConfig());
+        ContentProviderService contentProviderService = new ContentProviderService();
         // order is important here: searchService waits for indexService to finish initialization
-        startIndexService();
+        startIndexService(contentProviderService);
         searchService = new SearchService(config.getLuceneConfig());
 
         webAppContext.setAttribute(TIKA_SERVICE, tikaService);
         webAppContext.setAttribute(SEARCH_SERVICE, searchService);
         webAppContext.setAttribute(INDEX_SERVICE, indexService);
         webAppContext.setAttribute(CINNAMON_CONFIG, config);
+        webAppContext.setAttribute(CONTENT_PROVIDER_SERVICE, contentProviderService);
 
         // test query:
         // add DAOs
@@ -253,7 +256,7 @@ public class CinnamonServer {
         // TODO: unused?
         server.setAttribute(DAO_USER_ACCOUNT, userAccountDao);
         List<UserAccount> userAccounts = userAccountDao.listUserAccounts();
-        log.info("Test query: database contains " + userAccounts.size() + " user accounts.");
+        log.info("Test query: database contains {} user accounts.", userAccounts.size());
     }
 
     private void addFilters(WebAppContext handler) {
@@ -472,7 +475,4 @@ public class CinnamonServer {
         boolean api;
     }
 
-    public IndexService getIndexService() {
-        return indexService;
-    }
 }

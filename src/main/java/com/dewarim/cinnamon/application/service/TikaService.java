@@ -37,7 +37,7 @@ public class TikaService {
         tikaMetasetTypeId = tikaMetasetType.map(MetasetType::getId).orElse(null);
     }
 
-    public String parseData(File input, Format format) throws IOException {
+    public String parseData(File input, Format format, Long osdId) throws IOException {
         if (input.length() == 0) {
             log.debug("Tika was given a file without content.");
             return "<empty/>";
@@ -51,7 +51,7 @@ public class TikaService {
             return httpclient.execute(httpPut, response -> {
 
                 if (response.getCode() != HTTP_OK) {
-                    log.info("Failed to parse tika file: " + response.getCode());
+                    log.info("Failed to parse tika file of OSD {}: {}",osdId, response.getCode());
                     // TODO: improve error handling & reporting of tikaService.
                     return "<tikaFailedToParse/>";
                 }
@@ -65,12 +65,12 @@ public class TikaService {
         return config.isUseTika();
     }
 
-    public String parseWithTika(InputStream contentStream, Format format) throws IOException {
+    public String parseWithTika(InputStream contentStream, Format format, Long osdId) throws IOException {
         File tempData = File.createTempFile("tika-indexing-", ".data");
         try (FileOutputStream tempFos = new FileOutputStream(tempData)) {
             tempFos.write(contentStream.readAllBytes());
             tempFos.flush();
-            return parseData(tempData, format);
+            return parseData(tempData, format, osdId);
         } finally {
             FileUtils.delete(tempData);
         }
@@ -79,7 +79,7 @@ public class TikaService {
     public void convertContentToTikaMetaset(ObjectSystemData osd, InputStream contentStream, Format format) throws IOException {
         OsdMetaDao osdMetaDao = new OsdMetaDao();
         if (isEnabled() && tikaMetasetTypeId != null && format.getIndexMode() == IndexMode.TIKA) {
-            String tikaMetadata = parseWithTika(contentStream, format);
+            String tikaMetadata = parseWithTika(contentStream, format, osd.getId());
             log.debug("Tika returned: " + tikaMetadata);
             Optional<Meta> tikaMetaset = osdMetaDao.listByOsd(osd.getId()).stream().filter(meta -> meta.getTypeId().equals(tikaMetasetTypeId)).findFirst();
             if (tikaMetaset.isPresent()) {

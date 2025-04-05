@@ -9,7 +9,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
- * <p>The DateTimeIndexer expects an XPath parameter as searchString and will stored
+ * <p>The DateTimeIndexer expects an XPath parameter as searchString and will store
  * the results of this search in the Lucene document.</p>
  * <p>Dates must be formatted as YYYY-MM-DDThh:mm:ss.</p>
  */
@@ -28,7 +28,7 @@ public class DateTimeIndexer extends DefaultIndexer {
      */
     public String convertNodeToString(Node node) {
         String val = node.getStringValue();
-        log.debug("Trying to index: " + val);
+        log.debug("Trying to index: {}", val);
 
         String result = null;
         try {
@@ -36,9 +36,9 @@ public class DateTimeIndexer extends DefaultIndexer {
             Date             date = sdf.parse(val);
             result = DateTools.dateToString(date, DateTools.Resolution.MILLISECOND);
         } catch (Exception e) {
-            log.debug("failed to parse date:", e);
+            log.debug("failed to parse date: {}", val, e);
         }
-        log.debug("Result of date conversion: " + result);
+        log.debug("Result of date conversion: {}", result);
         return result;
     }
 

@@ -23,13 +23,13 @@ public class TikaServiceIntegrationTest {
     // cinnamon-bun.png has exif metadata from stable diffusion containing the prompt "delicious cinnamon bun"
     private final File   bun         = new File("data/cinnamon-bun.png");
     private final Format imageFormat = new Format("image/png", "png", "image-png", 1L, IndexMode.TIKA);
-
+    private final long   osdId       = 0L;
 
     @Disabled("Requires Apache Tika server @ localhost:9998")
     @Test
     public void tikaHappyTest() throws IOException {
         CinnamonTikaConfig cinnamonTikaConfig = new CinnamonTikaConfig(baseUrl, true);
-        String             bunData            = new TikaService(cinnamonTikaConfig).parseData(bun, imageFormat);
+        String             bunData            = new TikaService(cinnamonTikaConfig).parseData(bun, imageFormat, osdId);
         log.info("bunData:\n" + bunData);
         assertTrue(bunData.contains("delicious cinnamon bun"));
     }
@@ -37,7 +37,7 @@ public class TikaServiceIntegrationTest {
     @Test
     public void disabledTika() throws IOException {
         CinnamonTikaConfig cinnamonTikaConfig = new CinnamonTikaConfig(baseUrl, false);
-        String             bunData            = new TikaService(cinnamonTikaConfig).parseData(bun, imageFormat);
+        String             bunData            = new TikaService(cinnamonTikaConfig).parseData(bun, imageFormat, osdId);
         assertEquals("<tikaIsDisabled/>", bunData);
     }
 

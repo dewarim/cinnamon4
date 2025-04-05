@@ -14,6 +14,7 @@
         <typeHandler javaType="com.dewarim.cinnamon.model.index.IndexType" handler="com.dewarim.cinnamon.model.index.IndexTypeEnumHandler" jdbcType="VARCHAR"/>
         <typeHandler javaType="com.dewarim.cinnamon.model.index.IndexJobType" handler="com.dewarim.cinnamon.model.index.IndexJobTypeEnumHandler" jdbcType="VARCHAR"/>
         <typeHandler javaType="com.dewarim.cinnamon.model.index.IndexJobAction" handler="com.dewarim.cinnamon.model.index.IndexJobActionEnumHandler" jdbcType="VARCHAR"/>
+        <typeHandler javaType="com.dewarim.cinnamon.model.index.IndexEventType" handler="org.apache.ibatis.type.EnumTypeHandler" jdbcType="VARCHAR"/>
     </typeHandlers>
     <environments default="development">
         <environment id="development">
@@ -44,6 +45,7 @@
         <mapper resource="com/dewarim/cinnamon/FormatMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/IndexItemMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/IndexJobMapper.xml"/>
+        <mapper resource="com/dewarim/cinnamon/IndexEventMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/LanguageMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/LifecycleMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/LifecycleStateMapper.xml"/>

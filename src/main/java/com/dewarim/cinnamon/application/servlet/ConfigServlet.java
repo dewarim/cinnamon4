@@ -12,7 +12,6 @@ import com.dewarim.cinnamon.model.UrlMappingInfo;
 import com.dewarim.cinnamon.model.request.config.ListConfigRequest;
 import com.dewarim.cinnamon.model.response.ConfigWrapper;
 import com.dewarim.cinnamon.model.response.UrlMappingInfoWrapper;
-import com.dewarim.cinnamon.provider.ContentProviderService;
 import com.dewarim.cinnamon.provider.StateProviderService;
 import com.dewarim.cinnamon.security.LoginProviderService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -104,9 +103,6 @@ public class ConfigServlet extends HttpServlet {
 
     private List<ProviderClass> generateProviderClassList() {
         List<ProviderClass> providerClasses = new ArrayList<>();
-        providerClasses.addAll(ContentProviderService.getInstance().getProviderList().stream()
-                .map(provider -> new ProviderClass(ProviderType.CONTENT_PROVIDER, provider.getName()))
-                .toList());
         providerClasses.addAll(StateProviderService.getInstance().getProviderList().stream()
                 .map(provider -> new ProviderClass(ProviderType.STATE_PROVIDER, provider.getName()))
                 .toList());

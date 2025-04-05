@@ -88,6 +88,10 @@ public class CinnamonIntegrationTest {
         if (cinnamonServer == null) {
             log.info("Create new CinnamonServer.");
             cinnamonServer = new CinnamonServer(cinnamonTestPort);
+            // set data root:
+            Path tempDirectory = Files.createTempDirectory("cinnamon-data-root");
+            CinnamonServer.config.getServerConfig().setDataRoot(tempDirectory.toAbsolutePath().toString());
+
             CinnamonServer.config.getServerConfig().setLog4jConfigPath("src/test/resources/log4j2-test.xml");
             CinnamonServer.config.getServerConfig().setLogResponses(true);
 
@@ -111,9 +115,6 @@ public class CinnamonIntegrationTest {
             cinnamonServer.setDbSessionFactory(dbSessionFactory);
             cinnamonServer.start();
 
-            // set data root:
-            Path tempDirectory = Files.createTempDirectory("cinnamon-data-root");
-            CinnamonServer.config.getServerConfig().setDataRoot(tempDirectory.toAbsolutePath().toString());
             ticket = getAdminTicket();
             log.info("admin ticket: " + ticket);
 

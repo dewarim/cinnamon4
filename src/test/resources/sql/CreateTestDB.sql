@@ -554,7 +554,19 @@ create table change_triggers
     trigger_type        varchar(255)                       not null
 );
 
+drop table if exists index_events;
+create table index_events
+(
+    id bigint not null primary key,
+    local_time  timestamp not null default current_timestamp,
+    job_id bigint not null,
+    event_type varchar(64) not null,
+    index_result varchar(64) not null,
+    message text not null default ''::text
+);
 
+drop sequence if exists seq_index_event_id;
+create sequence seq_index_event_id;
 
 --------------------------
 --- insert test data:  ---

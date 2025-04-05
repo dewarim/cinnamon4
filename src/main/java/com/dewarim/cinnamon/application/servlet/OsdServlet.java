@@ -59,11 +59,12 @@ import static org.apache.hc.core5.http.HttpHeaders.CONTENT_DISPOSITION;
 @WebServlet(name = "Osd", urlPatterns = "/")
 public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSystemData> {
 
-    private final        ObjectMapper         xmlMapper            = XML_MAPPER;
-    private final        AuthorizationService authorizationService = new AuthorizationService();
-    private final        DeleteOsdService     deleteOsdService     = new DeleteOsdService();
-    private static final Logger               log                  = LogManager.getLogger(OsdServlet.class);
-    private              TikaService          tikaService;
+    private final        ObjectMapper           xmlMapper            = XML_MAPPER;
+    private final        AuthorizationService   authorizationService = new AuthorizationService();
+    private final        DeleteOsdService       deleteOsdService     = new DeleteOsdService();
+    private static final Logger                 log                  = LogManager.getLogger(OsdServlet.class);
+    private              TikaService            tikaService;
+    private              ContentProviderService contentProviderService;
 
     public OsdServlet() {
         super();
@@ -203,7 +204,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
     }
 
     private void copyContent(UserAccount user, OsdDao osdDao, ObjectSystemData target, ObjectSystemData source, Long formatId) throws IOException {
-        ContentProvider contentProvider = ContentProviderService.getInstance().getContentProvider(source.getContentProvider());
+        ContentProvider contentProvider = contentProviderService.getContentProvider(source.getContentProvider());
         try (InputStream contentStream = contentProvider.getContentStream(source)) {
             ContentMetadata metadata = contentProvider.writeContentStream(target, contentStream);
             target.setContentHash(metadata.getContentHash());
@@ -622,7 +623,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         Format format = formatOpt.orElseThrow(
                 () -> new ServletException(String.format("Encountered object #%d with content but non-existing formatId #%d.",
                         osd.getId(), osd.getFormatId())));
-        ContentProvider contentProvider = ContentProviderService.getInstance().getContentProvider(osd.getContentProvider());
+        ContentProvider contentProvider = contentProviderService.getContentProvider(osd.getContentProvider());
         InputStream     contentStream   = contentProvider.getContentStream(osd);
         response.setHeader(CONTENT_DISPOSITION, "attachment; filename=\"" + osd.getName().replace("\"", "%22") + "\"");
         response.setContentType(format.getContentType());
@@ -678,7 +679,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         long bytesWritten   = Files.copy(inputStream, tempFile, REPLACE_EXISTING);
 
         // get content provider and store data:
-        ContentProvider contentProvider = ContentProviderService.getInstance().getContentProvider(osd.getContentProvider());
+        ContentProvider contentProvider = contentProviderService.getContentProvider(osd.getContentProvider());
         ContentMetadata metadata        = contentProvider.writeContentStream(osd, new FileInputStream(tempOutputFile));
         osd.setContentHash(metadata.getContentHash());
         osd.setContentPath(metadata.getContentPath());
@@ -983,7 +984,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
 
         // saveFileUpload
         boolean shouldUpdateTikaMetaset = false;
-        Part file = request.getPart("file");
+        Part    file                    = request.getPart("file");
         if (file != null) {
             storeFileUpload(file.getInputStream(), osd, versionRequest.getFormatId());
             shouldUpdateTikaMetaset = true;
@@ -1035,6 +1036,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
 
     @Override
     public void init() {
-        tikaService = ((TikaService) getServletContext().getAttribute(TIKA_SERVICE));
+        tikaService            = ((TikaService) getServletContext().getAttribute(TIKA_SERVICE));
+        contentProviderService = (ContentProviderService) getServletContext().getAttribute(CONTENT_PROVIDER_SERVICE);
     }
 }
