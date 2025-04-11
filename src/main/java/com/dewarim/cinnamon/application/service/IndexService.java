@@ -10,6 +10,8 @@ import com.dewarim.cinnamon.model.*;
 import com.dewarim.cinnamon.model.index.*;
 import com.dewarim.cinnamon.model.relations.Relation;
 import com.dewarim.cinnamon.provider.ContentProviderService;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.TransactionIsolationLevel;
@@ -447,6 +449,7 @@ public class IndexService implements Runnable {
                                 log.debug("ignore format with tika flag");
                             }
                         }
+                        case JSON -> content = convertJsonToXml(contentStream);
                         case PLAIN_TEXT -> content = ("<plainText>" + new String(contentStream.readAllBytes(), StandardCharsets.UTF_8) + "</plainText>").getBytes();
                     }
                 } catch (IOException e) {
@@ -459,7 +462,13 @@ public class IndexService implements Runnable {
             return new IndexEvent(job.getIndexJob().getId(), IndexEventType.GENERIC, IndexResult.FAILED, e.getMessage());
         }
         return SUCCESS_EVENT;
+    }
 
+    private byte[] convertJsonToXml(InputStream jsonStream) throws IOException {
+        JsonNode     jsonNode     = new ObjectMapper().readTree(jsonStream);
+        byte[]       xml          = new XmlMapper().writeValueAsBytes(jsonNode);
+        log.debug("converted json to xml: {}", new String(xml));
+        return xml;
     }
 
     private void applyIndexItems(Document luceneDoc, List<IndexItem> indexItems,

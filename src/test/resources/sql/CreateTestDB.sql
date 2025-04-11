@@ -676,6 +676,9 @@ VALUES (nextval('seq_format_id'),'image/png','png', 'image.png', 1, 'TIKA');
 -- #4 format: image/jpeg
 insert into formats(id, contenttype, extension, name, default_object_type_id, index_mode)
 VALUES (nextval('seq_format_id'),'image/jpeg','jpg', 'image.jpg', 1, 'TIKA');
+-- #5 format: application/json
+insert into formats(id, contenttype, extension, name, default_object_type_id, index_mode)
+VALUES (nextval('seq_format_id'),'application/json','json', 'json', 1, 'JSON');
 
 -- #1 relation_type: protect all & clone always
 insert into relation_types (id, left_object_protected, name, right_object_protected,

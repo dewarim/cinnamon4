@@ -46,6 +46,7 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
         Long             relatedOsdId = relatedOsd.getId();
         osdWithContentId = relatedOsdId;
 
+        // with XML content:
         toh.createOsd("search-me-osd")
                 .createMetaSetType(true)
                 .createRelationType()
@@ -55,11 +56,15 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
                 .createFolderMeta("<xml><folder-meta-data archived='no'/></xml>");
         osdId    = toh.osd.getId();
         folderId = toh.folder.getId();
-        log.info("created search-me objects: osd: " + osdId + " folder: " + folderId);
+        log.info("created search-me objects: osd: {} folder: {}", osdId, folderId);
 
         // set xml-content:
         client.lockOsd(osdId);
         client.setContentOnLockedOsd(osdId, 1L, new File("pom.xml"));
+
+        // with JSON content:
+        toh.selectFormat("json")
+                .createOsdWithContent(new File("src/test/resources/test.json"));
 
         Thread.sleep(CinnamonServer.config.getLuceneConfig().getMillisToWaitBetweenRuns() + 5000L);
         ThreadLocalSqlSession.refreshSession();
@@ -92,8 +97,6 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
         assertEquals(1, allResponse.getOsdIds().size());
         assertEquals(osdId, allResponse.getOsdIds().get(0));
         assertEquals(folderId, allResponse.getFolderIds().get(0));
-
-
     }
 
     @Test
@@ -115,6 +118,24 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
         verifyOsdSearchResult(client.search(createWildcardQuery("osd_created",
                 localDate.toString().replace("-", "") + "*"), SearchType.OSD));
         // TODO: fix problem with indexing file content and running this search test in the same JVM.
+        // ElementNameIndexer verified manually :/
+        // verifyOsdSearchResult(client.search(createTermQuery("element_names", "dependency"), SearchType.OSD));
+
+    }
+
+    @Test
+    public void searchForJsonContent() throws IOException {
+        SearchIdsResponse response = client.search("<BooleanQuery><Clause occurs='must'><TermQuery fieldName='xml_content'>bob</TermQuery></Clause></BooleanQuery>", SearchType.OSD);
+        log.info("response: {}", mapper.writeValueAsString(response));
+        assertTrue(response.getOsdIds().size() > 0);
+        long exampleId = response.getOsdIds().get(0);
+
+        verifyOsdSearchResult(client.search(createTermQuery("is_latest_branch", "true"), SearchType.OSD));
+        verifyOsdSearchResult(client.search(createTermQuery("osd_name", "related image"), SearchType.OSD));
+        verifyOsdSearchResult(client.search(createPointQuery("osd_id", exampleId), SearchType.OSD));
+        LocalDate localDate = LocalDate.now();
+        verifyOsdSearchResult(client.search(createWildcardQuery("osd_created",
+                localDate.toString().replace("-", "") + "*"), SearchType.OSD));
         // ElementNameIndexer verified manually :/
         // verifyOsdSearchResult(client.search(createTermQuery("element_names", "dependency"), SearchType.OSD));
 
@@ -180,10 +201,10 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
         toh.createOsdMeta("<xml>issue389</xml>");
         Thread.sleep(4000);
 
-        String termQuery = createTermQuery("meta_content", "issue389");
-        SearchIdsResponse response = client.search(termQuery, SearchType.OSD);
+        String            termQuery = createTermQuery("meta_content", "issue389");
+        SearchIdsResponse response  = client.search(termQuery, SearchType.OSD);
         assertTrue(response.getOsdIds().size() > 0);
-        assertEquals(toh.osd.getId(),response.getOsdIds().get(0));
+        assertEquals(toh.osd.getId(), response.getOsdIds().get(0));
     }
 
 }

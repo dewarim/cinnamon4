@@ -167,6 +167,10 @@ public class TestObjectHolder {
         return this;
     }
 
+    public TestObjectHolder createOsdWithContent(File content) throws IOException {
+        return createOsdWithContent(createRandomName(), format, content);
+    }
+
     public TestObjectHolder createOsdWithContent(String name, Format format, File content) throws IOException {
         CreateOsdRequest request = new CreateOsdRequest(name, folder.getId(), user.getId(), acl.getId(),
                 objectType.getId(),
@@ -334,6 +338,7 @@ public class TestObjectHolder {
         link = client.createLinkToOsd(folder.getId(), acl.getId(), user.getId(), osd.getId(), LinkResolver.FIXED);
         return this;
     }
+
     public TestObjectHolder createLinkToOsd(ObjectSystemData osd, LinkResolver resolver) throws IOException {
         link = client.createLinkToOsd(folder.getId(), acl.getId(), user.getId(), osd.getId(), resolver);
         return this;
@@ -343,6 +348,7 @@ public class TestObjectHolder {
         link = client.createLinkToOsd(folder.getId(), acl.getId(), user.getId(), osd.getId(), LinkResolver.FIXED);
         return this;
     }
+
     public TestObjectHolder createLinkToOsd(LinkResolver resolver) throws IOException {
         link = client.createLinkToOsd(folder.getId(), acl.getId(), user.getId(), osd.getId(), resolver);
         return this;
@@ -489,6 +495,11 @@ public class TestObjectHolder {
 
     public TestObjectHolder deleteAclGroup() throws IOException {
         client.deleteAclGroups(Collections.singletonList(this.aclGroup.getId()));
+        return this;
+    }
+
+    public TestObjectHolder selectFormat(String name) {
+        this.format = formats.stream().filter(format -> format.getName().equals(name)).findFirst().orElseThrow();
         return this;
     }
 }
