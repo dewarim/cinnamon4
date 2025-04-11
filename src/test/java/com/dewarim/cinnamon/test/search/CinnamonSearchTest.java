@@ -101,7 +101,7 @@ public class CinnamonSearchTest {
             String objectAsString = new XmlMapper().writeValueAsString(osd);
             ContentContainer contentContainer = new ContentContainer(objectAsString, new byte[0], "/root/home/sys", "OSD#0");
             org.dom4j.Document xmlDoc = contentContainer.getCombinedDocument();
-            log.info("xmlDoc:\n"+xmlDoc.asXML());
+            log.info("xmlDoc:\n{}", xmlDoc.asXML());
             indexer.indexObject(xmlDoc, contentContainer.asNode(), doc, "content", "/objectSystemData/metasets/metaset[typeId='1']/content/html/body", true);
             indexWriter.addDocument(doc);
         }
@@ -115,7 +115,7 @@ public class CinnamonSearchTest {
         CoreParser  coreParser     = new CoreParser("p", new StandardAnalyzer());
         coreParser.addQueryBuilder("WildcardQuery", new WildcardQueryBuilder());
         Query query = coreParser.parse(xmlInputStream);
-        log.info("query: "+query);
+        log.info("query: {}", query);
         TopDocs topDocs = indexSearcher.search(query, 100);
         assertEquals(1, topDocs.totalHits.value);
     }
@@ -125,7 +125,7 @@ public class CinnamonSearchTest {
         CoreParser  coreParser     = new CoreParser("p", new StandardAnalyzer());
         coreParser.addQueryBuilder("PointRangeQuery", new PointRangeQueryBuilder());
         Query query = coreParser.parse(xmlInputStream);
-        log.info("query: "+query);
+        log.info("query: {}", query);
         TopDocs topDocs = searcher.search(query, 100);
         assertEquals(1, topDocs.totalHits.value);
     }
@@ -134,7 +134,7 @@ public class CinnamonSearchTest {
         CoreParser  coreParser     = new CoreParser("p", new StandardAnalyzer());
         coreParser.addQueryBuilder("ExactPointQuery", new ExactPointQueryBuilder());
         Query query = coreParser.parse(xmlInputStream);
-        log.info("query: "+query);
+        log.info("query: {}", query);
         TopDocs topDocs = searcher.search(query, 100);
         assertEquals(1, topDocs.totalHits.value);
     }

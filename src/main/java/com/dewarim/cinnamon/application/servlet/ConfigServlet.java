@@ -35,7 +35,7 @@ import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
 
 @WebServlet(name = "Config", urlPatterns = "/")
 public class ConfigServlet extends HttpServlet {
-    private static final Logger log = LogManager.getLogger(CinnamonServlet.class);
+    private static final Logger log = LogManager.getLogger(ConfigServlet.class);
 
     private final ObjectMapper xmlMapper = XML_MAPPER;
 
@@ -66,7 +66,7 @@ public class ConfigServlet extends HttpServlet {
                     NEED_EXTERNAL_LOGGING_CONFIG.getDescription(), logResponses);
         }
         else {
-            log.info("reconfigure logging to use: " + log4jConfigPath);
+            log.info("reconfigure logging to use: {}", log4jConfigPath);
             Configurator.reconfigure(URI.create(log4jConfigPath));
             cinnamonResponse.responseIsGenericOkay();
         }

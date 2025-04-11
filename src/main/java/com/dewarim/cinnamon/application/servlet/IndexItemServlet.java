@@ -40,7 +40,7 @@ public class IndexItemServlet extends HttpServlet implements CruddyServlet<Index
         switch (mapping) {
             case INDEX_ITEM__LIST -> {
                 list(convertListRequest(request, ListIndexItemRequest.class), indexItemDao, cinnamonResponse);
-                log.info("Sending list index item response: "+xmlMapper.writeValueAsString(cinnamonResponse.getWrapper()));
+                log.info("Sending list index item response: {}", xmlMapper.writeValueAsString(cinnamonResponse.getWrapper()));
             }
             case INDEX_ITEM__CREATE -> {
                 superuserCheck();

@@ -208,7 +208,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         for (int i = 0; i < 11; i++) {
             ObjectSystemData newBranchVersion = client.version(new CreateNewVersionRequest(loopId));
             loopId = newBranchVersion.getId();
-            log.debug("newBranchVersion: " + newBranchVersion.getCmnVersion());
+            log.debug("newBranchVersion: {}", newBranchVersion.getCmnVersion());
             assertTrue(newBranchVersion.getCmnVersion().matches("1.1-\\d+"));
         }
         String cmnVersion = client.getOsdsById(List.of(loopId), false, false).get(0).getCmnVersion();
@@ -227,7 +227,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         for (int i = 0; i < 12; i++) {
             ObjectSystemData newMainVersion = client.version(new CreateNewVersionRequest(newVersionId));
             newVersionId = newMainVersion.getId();
-            log.debug("newMainVersion: " + newMainVersion.getCmnVersion());
+            log.debug("newMainVersion: {}", newMainVersion.getCmnVersion());
         }
         String cmnVersion = client.getOsdsById(List.of(newVersionId), false, false).get(0).getCmnVersion();
         assertEquals("14", cmnVersion);
@@ -247,7 +247,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         for (int i = 0; i < 12; i++) {
             ObjectSystemData newVersionOnSecondBranch = client.version(new CreateNewVersionRequest(id));
             id = newVersionOnSecondBranch.getId();
-            log.debug("newVersionOnSecondBranch: " + newVersionOnSecondBranch.getCmnVersion());
+            log.debug("newVersionOnSecondBranch: {}", newVersionOnSecondBranch.getCmnVersion());
         }
         String cmnVersion = client.getOsdsById(List.of(id), false, false).get(0).getCmnVersion();
         assertEquals("1.2-13", cmnVersion);
@@ -287,11 +287,11 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         // and that's the reason we want to migrate to LocalDate/Time (#228): Java will happily parse the date in
         // the _current_ timezone (so created vs osd.getCreated is off by 2 hours for CEST)
         assertEquals(created.getTime(), osd.getCreated().getTime());
-        log.debug("createdTimestamp: " + createdTimestamp);
+        log.debug("createdTimestamp: {}", createdTimestamp);
         String modifiedTimestamp = osdResponse.split("</?modified>")[1];
         Date   modified          = df.parse(modifiedTimestamp);
         assertEquals(modified.getTime(), osd.getModified().getTime());
-        log.debug("modifiedTimestamp: " + modifiedTimestamp);
+        log.debug("modifiedTimestamp: {}", modifiedTimestamp);
     }
 
     @Test
@@ -356,7 +356,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         client.setSummary(osdId, "<sum>sum</sum>");
         List<Summary> summaries = client.getOsdSummaries(List.of(osdId));
         assertFalse(summaries.isEmpty());
-        assertEquals(summaries.get(0).getContent(), "<sum>sum</sum>");
+        assertEquals("<sum>sum</sum>", summaries.get(0).getContent());
     }
 
     @Test

@@ -47,7 +47,7 @@ public class ContentContainer {
         Element folderPathNode = new DefaultElement("folderPath");
         folderPathNode.addText(folderPath);
         combinedDoc.getRootElement().add(folderPathNode);
-        log.debug("combinedDocument:\n{}", combinedDoc.asXML());
+        log.trace("combinedDocument:\n{}", combinedDoc.asXML());
         return combinedDoc;
     }
 

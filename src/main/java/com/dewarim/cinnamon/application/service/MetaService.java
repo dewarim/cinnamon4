@@ -62,7 +62,7 @@ public class MetaService<T extends CrudDao<Meta> & MetaDao, O extends CrudDao<? 
                 indexJob = new IndexJob(IndexJobType.FOLDER, meta.getObjectId(), IndexJobAction.UPDATE, false);
             }
             indexJobDao.insertIndexJob(indexJob);
-            log.debug("insert index job: " + indexJob);
+            log.debug("insert index job: {}", indexJob);
         });
     }
 

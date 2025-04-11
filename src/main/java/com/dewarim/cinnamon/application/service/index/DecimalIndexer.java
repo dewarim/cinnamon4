@@ -54,7 +54,7 @@ public class DecimalIndexer extends DefaultIndexer{
 				myDouble= null;
 			}
 
-			log.debug("fieldName: " + fieldName + " value:" + myDouble);
+            log.trace("fieldName: {} value:{}", fieldName, myDouble);
 			luceneDoc.add(new DoublePoint(fieldName, myDouble));
 		}
 

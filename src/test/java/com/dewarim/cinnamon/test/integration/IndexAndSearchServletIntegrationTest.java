@@ -102,7 +102,7 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
     @Test
     public void searchForContent() throws IOException {
         SearchIdsResponse response = client.search("<BooleanQuery><Clause occurs='must'><TermQuery fieldName='xml_content'>cinnamon</TermQuery></Clause></BooleanQuery>", SearchType.OSD);
-        log.info("response: " + mapper.writeValueAsString(response));
+        log.info("response: {}", mapper.writeValueAsString(response));
         assertTrue(response.getOsdIds().size() > 0);
         long exampleId = response.getOsdIds().get(0);
 
@@ -148,19 +148,19 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
 
     private String createPointQuery(String fieldName, long query) {
         String pointQuery = "<BooleanQuery><Clause occurs='must'><ExactPointQuery fieldName='" + fieldName + "' value='" + query + "' type='long'/></Clause></BooleanQuery>";
-        log.debug("pointQuery: " + pointQuery);
+        log.debug("pointQuery: {}", pointQuery);
         return pointQuery;
     }
 
     private String createTermQuery(String fieldName, String query) {
         String booleanQuery = "<BooleanQuery><Clause occurs='must'><TermQuery fieldName='" + fieldName + "'>" + query + "</TermQuery></Clause></BooleanQuery>";
-        log.debug("createTermQuery: " + booleanQuery);
+        log.debug("createTermQuery: {}", booleanQuery);
         return booleanQuery;
     }
 
     private String createWildcardQuery(String fieldName, String query) {
         String wildQuery = "<BooleanQuery><Clause occurs='must'><WildcardQuery fieldName='" + fieldName + "'>" + query + "</WildcardQuery></Clause></BooleanQuery>";
-        log.debug("wildcardQuery: " + wildQuery);
+        log.debug("wildcardQuery: {}", wildQuery);
         return wildQuery;
     }
 

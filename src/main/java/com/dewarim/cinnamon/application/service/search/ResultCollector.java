@@ -54,7 +54,7 @@ public class ResultCollector implements Collector {
             }
 
             public void collect(int doc) throws IOException {
-                log.debug("adding leaf hit for doc id " + doc);
+                log.debug("adding leaf hit for doc id {}", doc);
                 hits.add(doc + docBase);
                 Document d = searcher.doc(doc + docBase);
                 documents.add(d);

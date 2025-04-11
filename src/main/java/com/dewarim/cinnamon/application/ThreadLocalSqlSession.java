@@ -34,7 +34,7 @@ public class ThreadLocalSqlSession {
      * After the current request is finished, create a new session for this thread.
      */
     public static SqlSession refreshSession(){
-        log.debug("Refresh session for thread "+ Thread.currentThread().getName());
+        log.debug("Refresh session for thread {}", Thread.currentThread().getName());
 
         if(localSqlSession.get() != null){
             try{

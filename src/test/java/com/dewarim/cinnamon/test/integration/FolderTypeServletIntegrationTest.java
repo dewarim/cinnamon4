@@ -31,7 +31,7 @@ public class FolderTypeServletIntegrationTest extends CinnamonIntegrationTest {
         try {
             client.createFolderTypes(Collections.singletonList("new-folder-type"));
         } catch (CinnamonClientException e) {
-            assertEquals(e.getErrorCode(), REQUIRES_SUPERUSER_STATUS);
+            assertEquals(REQUIRES_SUPERUSER_STATUS, e.getErrorCode());
         }
     }
 
@@ -65,8 +65,8 @@ public class FolderTypeServletIntegrationTest extends CinnamonIntegrationTest {
         types.get(1).setName("2");
         List<FolderType> updatedTypes = adminClient.updateFolderTypes(types);
         assertEquals(types.size(), updatedTypes.size());
-        assertEquals(updatedTypes.get(0).getName(), "1");
-        assertEquals(updatedTypes.get(1).getName(), "2");
+        assertEquals("1", updatedTypes.get(0).getName());
+        assertEquals("2", updatedTypes.get(1).getName());
     }
 
     @Test
@@ -76,7 +76,7 @@ public class FolderTypeServletIntegrationTest extends CinnamonIntegrationTest {
             types.get(0).setName("forbidden-update");
             client.updateFolderTypes(types);
         } catch (CinnamonClientException e) {
-            assertEquals(e.getErrorCode(), REQUIRES_SUPERUSER_STATUS);
+            assertEquals(REQUIRES_SUPERUSER_STATUS, e.getErrorCode());
         }
     }
 

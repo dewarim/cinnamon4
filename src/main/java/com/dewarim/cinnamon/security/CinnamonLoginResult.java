@@ -11,7 +11,7 @@ public class CinnamonLoginResult implements LoginResult {
 
     private boolean validUser;
     private boolean newUserCreated;
-    private String  errorMessage = "";
+    private String  errorMessage;
 
     private CinnamonLoginResult(boolean validUser, boolean newUserCreated) {
         if (validUser) {

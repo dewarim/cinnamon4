@@ -20,7 +20,7 @@ public class TimeIndexer extends DefaultIndexer {
      */
     public String convertNodeToString(Node node) {
         String val = node.getStringValue();
-        log.debug("Trying to index: " + val);
+        log.trace("Trying to index: {}", val);
 
         String result = null;
         try {
@@ -30,7 +30,7 @@ public class TimeIndexer extends DefaultIndexer {
         } catch (Exception e) {
             log.debug("failed to split Timestamp:", e);
         }
-        log.debug("Result of Timestamp conversion: " + result);
+        log.trace("Result of Timestamp conversion: {}", result);
         return result;
     }
 

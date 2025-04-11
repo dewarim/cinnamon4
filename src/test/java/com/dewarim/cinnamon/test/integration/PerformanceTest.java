@@ -38,10 +38,14 @@ public class PerformanceTest extends CinnamonIntegrationTest {
         Format           jpeg      = TestObjectHolder.formats.stream().filter(format -> format.getExtension().equals("jpg")).findFirst().orElseThrow();
         List<File>       pngImages = new ArrayList<>(Arrays.stream(images).filter(img -> img.getName().endsWith("jpg")).toList());
         ArrayList<File>  files     = new ArrayList<>(pngImages);
-        for (int x = 0; x < 100; x++) {
+        while (pngImages.size() < 100_000) {
             pngImages.addAll(files);
         }
+        int count = 0;
         for (File image : pngImages) {
+            if(count++ % 1000 == 0) {
+                System.out.println(count);
+            }
             CreateOsdRequest request = new CreateOsdRequest();
             request.setAclId(defaultCreationAcl.getId());
             request.setName("new osd");
@@ -71,7 +75,7 @@ public class PerformanceTest extends CinnamonIntegrationTest {
         for(int count = 100; count > 1; count = adminClient.getIndexInfo(false,false).getJobCount()){
             System.out.println("******* "+count);
             try {
-                Thread.sleep(2000L);
+                Thread.sleep(500L);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }

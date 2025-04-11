@@ -117,7 +117,7 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject, Ownabl
         log.debug("create next version from {} with lastDescendantVersion {}", this.getCmnVersion(), lastDescendantVersion);
         CmnVersion version          = new CmnVersion(this.getCmnVersion(), lastDescendantVersion);
         String     nextVersionLabel = version.getMyVersionString();
-        log.debug("nextVersionLabel: " + version);
+        log.debug("nextVersionLabel: {}", version);
         nextVersion.setCmnVersion(nextVersionLabel);
         return nextVersion;
     }

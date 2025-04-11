@@ -92,7 +92,7 @@ public class SearchService {
                 searcherManager.maybeRefreshBlocking();
             }
             searcher = searcherManager.acquire();
-            log.debug("xmlQuery: " + xmlQuery);
+            log.debug("xmlQuery: {}", xmlQuery);
             InputStream xmlInputStream = new ByteArrayInputStream(xmlQuery.getBytes(StandardCharsets.UTF_8));
             CoreParser coreParser = new CoreParser("content", limitTokenCountAnalyzer);
             coreParser.addQueryBuilder("WildcardQuery", new WildcardQueryBuilder());
@@ -101,10 +101,10 @@ public class SearchService {
             coreParser.addQueryBuilder("RangeQuery", new RangeQueryBuilder());
             coreParser.addQueryBuilder("ExactPointQuery", new ExactPointQueryBuilder());
             Query query = coreParser.parse(xmlInputStream);
-            log.debug("parsed query: " + query);
+            log.debug("parsed query: {}", query);
             ResultCollector collector = new ResultCollector(searcher);
             searcher.search(query, collector);
-            log.debug("Found " + collector.getDocuments().size() + " documents.");
+            log.debug("Found {} documents.", collector.getDocuments().size());
 
             BrowsableAcls browsableAcls = new AuthorizationService().getBrowsableAcls(user);
             List<Long> osdIds = List.of();

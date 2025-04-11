@@ -50,6 +50,9 @@ public class ParamParser {
             reader.setIncludeExternalDTDDeclarations(false);
             // do not validate - we are only interested in receiving a doc.
             reader.setValidation(false);
+//            reader.setMergeAdjacentText(true);
+//            reader.setStripWhitespaceText(true);
+//            reader.setStringInternEnabled(true);
             return reader.read(new StringReader(xml));
         } catch (DocumentException e) {
             log.debug("ParamParser::DocumentException::for content {}", e, xml);

@@ -39,7 +39,7 @@ public class IndexItemServletIntegrationTest extends CinnamonIntegrationTest {
         assertThat(item.getSearchCondition(), equalTo("true()"));
         assertTrue(item.isStoreField());
         assertEquals(DEFAULT_INDEXER,item.getIndexType());
-        log.info("Found IndexItem: " + mapper.configure(SerializationFeature.INDENT_OUTPUT, true).writeValueAsString(item));
+        log.info("Found IndexItem: {}", mapper.configure(SerializationFeature.INDENT_OUTPUT, true).writeValueAsString(item));
     }
 
     @Test

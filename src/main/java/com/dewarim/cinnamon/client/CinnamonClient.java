@@ -1379,14 +1379,14 @@ public class CinnamonClient {
     static void checkResponseForErrors(StandardResponse response, XmlMapper mapper) throws IOException {
         if (response.containsHeader(HEADER_FIELD_CINNAMON_ERROR)) {
             CinnamonErrorWrapper wrapper = mapper.readValue(response.getEntity().getContent(), CinnamonErrorWrapper.class);
-            log.warn("Found errors: " + wrapper.getErrors().stream().map(CinnamonError::toString).collect(Collectors.joining(",")));
+            log.warn("Found errors: {}", wrapper.getErrors().stream().map(CinnamonError::toString).collect(Collectors.joining(",")));
             CinnamonClient.changeTriggerResponseLocal.get().addAll(wrapper.getChangeTriggerResponses());
             throw new CinnamonClientException(wrapper);
         }
         if (response.getCode() != SC_OK) {
             String message = String.valueOf(response.getCode());
-            log.warn("Failed to unwrap non-okay response with status: " + message);
-            log.info("Response: " + new String(response.getEntity().getContent().readAllBytes()));
+            log.warn("Failed to unwrap non-okay response with status: {}", message);
+            log.info("Response: {}", new String(response.getEntity().getContent().readAllBytes()));
             throw new CinnamonClientException(message);
         }
     }

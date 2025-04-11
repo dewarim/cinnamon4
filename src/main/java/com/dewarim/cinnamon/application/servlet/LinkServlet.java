@@ -239,7 +239,7 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
     }
 
     private void getLinksById(HttpServletRequest request, LinkDao linkDao, CinnamonResponse response) throws IOException {
-        var linkRequest = (GetLinksRequest) xmlMapper.readValue(request.getInputStream(), GetLinksRequest.class)
+        var linkRequest = xmlMapper.readValue(request.getInputStream(), GetLinksRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
         int        idCount = linkRequest.getIds().size();

@@ -665,7 +665,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
     private void deleteTempFile(File tempFile) {
         boolean deleteResult = tempFile.delete();
         if (!deleteResult) {
-            log.warn("Could not delete temporary upload file " + tempFile.getAbsolutePath());
+            log.warn("Could not delete temporary upload file {}", tempFile.getAbsolutePath());
         }
     }
 

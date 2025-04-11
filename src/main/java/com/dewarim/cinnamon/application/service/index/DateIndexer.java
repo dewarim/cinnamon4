@@ -21,7 +21,7 @@ public class DateIndexer extends DefaultIndexer {
      */
     public String convertNodeToString(Node node) {
         String val = node.getStringValue();
-        log.debug("Trying to index: " + val);
+        log.trace("Trying to index: {}", val);
 
         String result = null;
         try {
@@ -32,7 +32,7 @@ public class DateIndexer extends DefaultIndexer {
         } catch (Exception e) {
             log.debug("failed to split date:", e);
         }
-        log.debug("Result of date conversion: " + result);
+        log.trace("Result of date conversion: {}", result);
         return result;
     }
 

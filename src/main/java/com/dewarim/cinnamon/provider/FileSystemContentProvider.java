@@ -77,7 +77,7 @@ public class FileSystemContentProvider implements ContentProvider {
         String sha256Hex = DigestUtils.sha256Hex(new FileInputStream(contentFile.toFile()));
         lightMeta.setContentHash(sha256Hex);
 
-        log.info("Stored new content @ {}", contentFile.toAbsolutePath());
+        log.debug("Stored new content @ {}", contentFile.toAbsolutePath());
 
         return lightMeta;
     }

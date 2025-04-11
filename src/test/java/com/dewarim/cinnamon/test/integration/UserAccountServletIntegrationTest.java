@@ -147,7 +147,7 @@ public class UserAccountServletIntegrationTest extends CinnamonIntegrationTest {
                 username, password);
         testClient.connect();
         assertEquals(userAccount.getId(), testClient.getUser(userAccount.getId()).getId());
-        assertEquals(userAccount.getGroupIds().get(0), 1L);
+        assertEquals(1L, userAccount.getGroupIds().get(0));
     }
 
     @Test

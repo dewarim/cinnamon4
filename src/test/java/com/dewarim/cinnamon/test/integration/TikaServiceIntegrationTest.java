@@ -30,7 +30,7 @@ public class TikaServiceIntegrationTest {
     public void tikaHappyTest() throws IOException {
         CinnamonTikaConfig cinnamonTikaConfig = new CinnamonTikaConfig(baseUrl, true);
         String             bunData            = new TikaService(cinnamonTikaConfig).parseData(bun, imageFormat, osdId);
-        log.info("bunData:\n" + bunData);
+        log.info("bunData:\n{}", bunData);
         assertTrue(bunData.contains("delicious cinnamon bun"));
     }
 

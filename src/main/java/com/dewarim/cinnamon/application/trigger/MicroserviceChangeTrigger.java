@@ -99,8 +99,7 @@ public class MicroserviceChangeTrigger implements Trigger {
         try {
             String url = findRemoteUrl(changeTrigger.getConfig());
             if (url == null) {
-                log.warn("Found microserviceChangeTrigger without valid remoteServer url. Config is: " +
-                        changeTrigger.getConfig());
+                log.warn("Found microserviceChangeTrigger without valid remoteServer url. Config is: {}", changeTrigger.getConfig());
                 return TriggerResult.CONTINUE;
             }
 
@@ -143,8 +142,7 @@ public class MicroserviceChangeTrigger implements Trigger {
         try {
             String url = findRemoteUrl(changeTrigger.getConfig());
             if (url == null) {
-                log.warn("Found microserviceChangeTrigger without valid remoteServer url. Config is: " +
-                        changeTrigger.getConfig());
+                log.warn("Found microserviceChangeTrigger without valid remoteServer url. Config is: {}", changeTrigger.getConfig());
                 return TriggerResult.CONTINUE;
             }
 
@@ -182,7 +180,7 @@ public class MicroserviceChangeTrigger implements Trigger {
         return httpClient.execute(requestBuilder.build(), response -> {
             addChangeTriggerResponseToCinnamonResponse(response, cinnamonResponse, url);
             if (response.getCode() != HttpStatus.SC_OK) {
-                log.warn("response from microservice call " + url + " was not OK but " + response.getCode());
+                log.warn("response from microservice call {} was not OK but {}", url, response.getCode());
                 return TriggerResult.STOP;
             }
             else {
@@ -210,7 +208,7 @@ public class MicroserviceChangeTrigger implements Trigger {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         remoteResponse.getEntity().writeTo(os);
         String remoteContent = os.toString();
-        log.debug("remoteResponse from  " + url + " is:\n" + remoteContent);
+        log.debug("remoteResponse from  {} is:\n{}", url, remoteContent);
 
         if (remoteContent.length() > 0) {
             cinnamonResponse.getChangeTriggerResponses().add(

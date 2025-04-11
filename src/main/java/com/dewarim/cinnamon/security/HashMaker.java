@@ -23,7 +23,7 @@ public class HashMaker {
 	public static String createDigest(String text){
 		int    rounds = CinnamonServer.config.getSecurityConfig().getPasswordRounds();
 		String digest = BCrypt.hashpw(text, BCrypt.gensalt(rounds));
-		log.debug("digest:"+digest);
+        log.debug("digest:{}", digest);
 		return digest;
 	}
 

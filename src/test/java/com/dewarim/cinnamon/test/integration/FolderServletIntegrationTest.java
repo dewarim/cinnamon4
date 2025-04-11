@@ -218,7 +218,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         try {
             client.createFolderMeta(request);
         } catch (CinnamonClientException e) {
-            assertEquals(e.getErrorCode(), ErrorCode.INVALID_REQUEST);
+            assertEquals(ErrorCode.INVALID_REQUEST, e.getErrorCode());
         }
     }
 
@@ -228,7 +228,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         try {
             client.createFolderMeta(request);
         } catch (CinnamonClientException e) {
-            assertEquals(e.getErrorCode(), OBJECT_NOT_FOUND);
+            assertEquals(OBJECT_NOT_FOUND, e.getErrorCode());
         }
     }
 
@@ -321,7 +321,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         try {
             client.updateFolder(request);
         } catch (CinnamonClientException e) {
-            assertEquals(e.getErrorCode(), ErrorCode.INVALID_REQUEST);
+            assertEquals(ErrorCode.INVALID_REQUEST, e.getErrorCode());
         }
     }
 
@@ -332,7 +332,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         try {
             client.updateFolder(request);
         } catch (CinnamonClientException e) {
-            assertEquals(e.getErrorCode(), ErrorCode.FOLDER_NOT_FOUND);
+            assertEquals(ErrorCode.FOLDER_NOT_FOUND, e.getErrorCode());
         }
     }
 

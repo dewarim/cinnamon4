@@ -14,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 import static jakarta.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class StaticServletIntegrationTest extends CinnamonIntegrationTest {
 
@@ -24,6 +25,7 @@ public class StaticServletIntegrationTest extends CinnamonIntegrationTest {
         String indexHtml = getStaticTextContent(localPart, "text/html");
 
         InputStream inputStream         = getClass().getResourceAsStream("/static/doc/index.html");
+        assertNotNull(inputStream);
         byte[]      originalFileContent = inputStream.readAllBytes();
         String      sourceFile          = new String(originalFileContent);
 
