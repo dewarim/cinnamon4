@@ -48,7 +48,12 @@ public class IndexService implements Runnable {
 
     public static final byte[] NO_CONTENT = new byte[0];
 
-    public static boolean isInitialized = false;
+    public static boolean isInitialized        = false;
+    /**
+     * Flag used to signal the IndexService that a full re-index is currently on the way, and it should not
+     * call IndexWriter.commit() every chance it gets as that would be too expensive.
+     */
+    public static boolean fullReindexIsRunning = false;
 
     private       boolean                stopped = false;
     private       IndexWriter            indexWriter;
@@ -83,6 +88,7 @@ public class IndexService implements Runnable {
         try (Analyzer standardAnalyzer = new StandardAnalyzer();
              Directory indexDir = FSDirectory.open(indexPath, new SingleInstanceLockFactory())) {
             if (!isInitialized) {
+                // signals SearchService it's okay to open the (potentially new) index for reading
                 initializeLuceneIndex(indexDir, standardAnalyzer);
             }
             while (!stopped) {
@@ -131,6 +137,7 @@ public class IndexService implements Runnable {
                                         indexResult = IndexResult.ERROR;
                                     }
                                 }
+                                // should never happen, all enum fields are covered:
                                 default -> indexResult = IndexResult.IGNORE;
                             }
 
@@ -148,7 +155,7 @@ public class IndexService implements Runnable {
                                     job.setFailed(job.getFailed() + 1);
                                     jobsToUpdate.add(job);
                                 }
-                                case IGNORE, NO_OBJECT -> {
+                                case IGNORE -> {
                                 }
                             }
                         };
@@ -176,16 +183,13 @@ public class IndexService implements Runnable {
                             log.error("Also trying to mark jobs as failed after index error");
                             List<IndexJob> allJobs = new ArrayList<>(jobsToUpdate);
                             allJobs.addAll(jobsToDelete);
-                            allJobs.forEach(job -> {
-                                job.setFailed(job.getFailed() + 1);
-                                jobDao.updateStatus(job);
-                            });
+                            allJobs.forEach(jobDao::updateStatus);
                             jobDao.commit();
                             log.error("... trying to continue with indexing.");
                             continue;
                         }
 
-                        if (changeCounter.get() > 0) {
+                        if (changeCounter.get() > 0 && !fullReindexIsRunning) {
                             long sequenceNr = indexWriter.commit();
                             log.debug("sequenceNr: {}", sequenceNr);
                         }
@@ -203,7 +207,6 @@ public class IndexService implements Runnable {
                         }
                         jobDao.commit();
                     }
-
                 } catch (Exception e) {
                     log.warn("Failed to index: ", e);
                     IndexEvent    indexEvent    = new IndexEvent(0L, IndexEventType.ERROR, IndexResult.FAILED, "Indexing failed with an exception: " + e.getMessage());
@@ -214,8 +217,8 @@ public class IndexService implements Runnable {
                     if (indexWriter.isOpen()) {
                         indexWriter.close();
                     }
-                    // signals SearchService it's okay to open the (potentially new) index for reading
-                    isInitialized = true;
+                    // after we have indexed everything, set full re-index flag to false.
+                    fullReindexIsRunning = false;
 
                     // sleep after database was updated & index was committed & closed
                     try {
@@ -253,6 +256,9 @@ public class IndexService implements Runnable {
     private static List<IndexJobWithDependencies> findJobs(SqlSession sqlSession, List<IndexJob> jobs,
                                                            ConcurrentLinkedQueue<IndexJob> jobsToDelete,
                                                            ConcurrentLinkedQueue<IndexJob> jobsToUpdate) {
+        if(jobs.isEmpty()) {
+            return Collections.emptyList();
+        }
         Set<IndexKey> seen = new HashSet<>();
 
         List<IndexJobWithDependencies> jobsToDo = new ArrayList<>();
@@ -465,8 +471,8 @@ public class IndexService implements Runnable {
     }
 
     private byte[] convertJsonToXml(InputStream jsonStream) throws IOException {
-        JsonNode     jsonNode     = new ObjectMapper().readTree(jsonStream);
-        byte[]       xml          = new XmlMapper().writeValueAsBytes(jsonNode);
+        JsonNode jsonNode = new ObjectMapper().readTree(jsonStream);
+        byte[]   xml      = new XmlMapper().writeValueAsBytes(jsonNode);
         log.debug("converted json to xml: {}", new String(xml));
         return xml;
     }

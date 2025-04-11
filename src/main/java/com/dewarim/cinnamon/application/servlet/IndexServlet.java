@@ -3,6 +3,7 @@ package com.dewarim.cinnamon.application.servlet;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonResponse;
+import com.dewarim.cinnamon.application.service.IndexService;
 import com.dewarim.cinnamon.application.service.SearchService;
 import com.dewarim.cinnamon.dao.IndexJobDao;
 import com.dewarim.cinnamon.model.request.index.IndexInfoRequest;
@@ -51,6 +52,7 @@ public class IndexServlet extends BaseServlet {
         ReindexResponse reindexResponse = new ReindexResponse();
         boolean updateTikaMetaset = reindexRequest.getUpdateTikaMetaset();
         if (reindexRequest.doFullReindex()) {
+            IndexService.fullReindexIsRunning = true;
             IndexJobDao.IndexRows rowCounts = indexJobDao.fullReindex(updateTikaMetaset);
             reindexResponse.setDocumentsToIndex(rowCounts.getOsdRowCount());
             reindexResponse.setFoldersToIndex(rowCounts.getFolderRowCount());
