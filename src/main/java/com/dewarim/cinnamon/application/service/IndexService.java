@@ -91,7 +91,7 @@ public class IndexService implements Runnable {
                     IndexJobDao jobDao = new IndexJobDao(sqlSession);
 
                     while (jobDao.countJobs() > 0) {
-                        List<IndexJob> jobs = jobDao.getIndexJobsByFailedCountWithLimit(config.getMaxIndexAttempts(), 100);
+                        List<IndexJob> jobs = jobDao.getIndexJobsByFailedCountWithLimit(config.getMaxIndexAttempts(), 1000);
                         if (jobs.isEmpty()) {
                             log.trace("Found 0 IndexJobs.");
                             break;

@@ -421,7 +421,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         osd.setOwnerId(ownerId);
 
         // check type exists
-        Long typeId = new ObjectTypeDao().getObjectTypeById(createRequest.getTypeId())
+        Long typeId = new ObjectTypeDao().getObjectById(createRequest.getTypeId())
                 .orElseThrow(ErrorCode.OBJECT_TYPE_NOT_FOUND.getException()).getId();
         osd.setTypeId(typeId);
 
@@ -436,7 +436,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         // check language if given
         final Long languageId;
         if (createRequest.getLanguageId() != null) {
-            languageId = new LanguageDao().getLanguageById(createRequest.getLanguageId())
+            languageId = new LanguageDao().getObjectById(createRequest.getLanguageId())
                     .orElseThrow(ErrorCode.LANGUAGE_NOT_FOUND.getException()).getId();
         }
         else {
@@ -767,7 +767,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                 if (!accessFilter.hasPermissionOnOwnable(osd, DefaultPermission.SET_TYPE, osd)) {
                     throw NO_TYPE_WRITE_PERMISSION.exception();
                 }
-                ObjectType type = new ObjectTypeDao().getObjectTypeById(typeId)
+                ObjectType type = new ObjectTypeDao().getObjectById(typeId)
                         .orElseThrow(ErrorCode.OBJECT_TYPE_NOT_FOUND.getException());
                 osd.setTypeId(type.getId());
                 changed = true;
@@ -803,7 +803,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                 if (!accessFilter.hasPermissionOnOwnable(osd, DefaultPermission.SET_LANGUAGE, osd)) {
                     NO_UPDATE_LANGUAGE_PERMISSION.throwUp();
                 }
-                Language language = new LanguageDao().getLanguageById(languageId)
+                Language language = new LanguageDao().getObjectById(languageId)
                         .orElseThrow(ErrorCode.LANGUAGE_NOT_FOUND.getException());
                 osd.setLanguageId(language.getId());
                 changed = true;

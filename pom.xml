@@ -231,6 +231,19 @@
             <artifactId>jaxen</artifactId>
         </dependency>
 
+        <!-- Failsafe for retrying outbound connections like to Apache Tika server -->
+        <dependency>
+            <groupId>dev.failsafe</groupId>
+            <artifactId>failsafe</artifactId>
+            <version>3.3.2</version>
+        </dependency>
+
+        <!-- caching -->
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+            <version>3.2.0</version>
+        </dependency>
 
         <!--logging  -->
         <!-- cannot migrate to logback due to mybatis->log4j dependency -->

@@ -14,12 +14,6 @@
         SELECT *
         FROM languages
     </select>
-    
-    <select id="getLanguageById" parameterType="Long" resultMap="languageMap">
-        SELECT *
-        FROM languages
-        WHERE id = #{id}
-    </select>
 
     <select id="getLanguageByIsoCode" parameterType="String" resultMap="languageMap">
         SELECT *

@@ -84,13 +84,23 @@ public interface CrudDao<T extends Identifiable> {
         if (id == null) {
             return Optional.empty();
         }
+        if(useCache()){
+            T cachedVersion = getCachedVersion(id);
+            if(cachedVersion != null){
+                return Optional.of(cachedVersion);
+            }
+        }
         List<T> items = getObjectsById(List.of(id));
         if (items.size() == 0) {
             return Optional.empty();
         }
         else {
+            T item = items.get(0);
+            if(useCache()){
+                addToCache(item);
+            }
             // since ids are unique primary keys, we do not have to check for size() > 1.
-            return Optional.of(items.get(0));
+            return Optional.of(item);
         }
     }
 
@@ -207,5 +217,17 @@ public interface CrudDao<T extends Identifiable> {
         if (CinnamonServer.config.getDebugConfig().isDebugEnabled()) {
             DebugLogService.log(message, object);
         }
+    }
+
+    default boolean useCache(){
+        return false;
+    }
+
+    default void addToCache(T item){
+
+    }
+
+    default T getCachedVersion(Long id){
+        return null;
     }
 }
