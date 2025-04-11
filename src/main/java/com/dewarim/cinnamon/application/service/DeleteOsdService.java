@@ -107,7 +107,7 @@ public class DeleteOsdService {
             throw new FailedRequestException(ErrorCode.CANNOT_DELETE_DUE_TO_ERRORS, errors);
         }
         List<Long> osdIdsToToDelete = new ArrayList<>(osdIds).stream().sorted(Comparator.reverseOrder()).collect(Collectors.toList());
-        log.debug("delete " + Strings.join(",", osdIdsToToDelete.stream().map(String::valueOf).collect(Collectors.toList())));
+        log.debug("delete {}", Strings.join(",", osdIdsToToDelete.stream().map(String::valueOf).collect(Collectors.toList())));
         var relationDao = new RelationDao();
         relationDao.deleteAllUnprotectedRelationsOfObjects(osdIdsToToDelete);
         relationDao.delete(protectedRelations.stream().map(Relation::getId).collect(Collectors.toList()));

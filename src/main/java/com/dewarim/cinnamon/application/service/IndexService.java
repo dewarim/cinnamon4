@@ -80,12 +80,14 @@ public class IndexService implements Runnable {
         log.info("IndexService thread is running");
         try (Analyzer standardAnalyzer = new StandardAnalyzer();
              Directory indexDir = FSDirectory.open(indexPath, new SingleInstanceLockFactory())) {
-
+            if (!isInitialized) {
+                initializeLuceneIndex(indexDir, standardAnalyzer);
+            }
             while (!stopped) {
                 try (SqlSession sqlSession = ThreadLocalSqlSession.getNewSession(TransactionIsolationLevel.READ_COMMITTED)) {
                     IndexWriterConfig writerConfig = new IndexWriterConfig(standardAnalyzer);
                     writerConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
-                    writerConfig.setCommitOnClose(true);
+                    writerConfig.setCommitOnClose(false);
                     indexWriter = new IndexWriter(indexDir, writerConfig);
 
                     IndexJobDao jobDao = new IndexJobDao(sqlSession);
@@ -99,8 +101,8 @@ public class IndexService implements Runnable {
                         log.debug("Found {} IndexJobs with not more than {} failed attempts.", jobs.size(), config.getMaxIndexAttempts());
                         ConcurrentLinkedQueue<IndexJob> jobsToDelete  = new ConcurrentLinkedQueue<>();
                         ConcurrentLinkedQueue<IndexJob> jobsToUpdate  = new ConcurrentLinkedQueue<>();
-                        AtomicInteger  changeCounter = new AtomicInteger();
-                        AtomicBoolean  error         = new AtomicBoolean(false);
+                        AtomicInteger                   changeCounter = new AtomicInteger();
+                        AtomicBoolean                   error         = new AtomicBoolean(false);
 
                         List<IndexJobWithDependencies>    jobsToDo    = findJobs(sqlSession, jobs, jobsToDelete, jobsToUpdate);
                         ConcurrentLinkedQueue<IndexEvent> indexEvents = new ConcurrentLinkedQueue<>();
@@ -133,8 +135,8 @@ public class IndexService implements Runnable {
                             switch (indexResult) {
                                 case ERROR -> {
                                     error.set(true);
-                                    // TODO add to list of jobs to update
                                     job.setFailed(job.getFailed() + 1);
+                                    jobsToUpdate.add(job);
                                 }
                                 case SUCCESS -> {
                                     jobsToDelete.add(job);
@@ -142,7 +144,6 @@ public class IndexService implements Runnable {
                                 }
                                 case FAILED -> {
                                     job.setFailed(job.getFailed() + 1);
-                                    // TODO add to list of jobs to update
                                     jobsToUpdate.add(job);
                                 }
                                 case IGNORE, NO_OBJECT -> {
@@ -155,14 +156,13 @@ public class IndexService implements Runnable {
                         jobsToDo.stream().filter(todo -> todo.getIndexJob().getAction().equals(IndexJobAction.UPDATE)).toList().parallelStream().forEach(consumer);
                         jobsToDo.stream().filter(todo -> todo.getIndexJob().getAction().equals(IndexJobAction.DELETE)).toList().parallelStream().forEach(consumer);
 
-                        if(!indexEvents.isEmpty()) {
+                        if (!indexEvents.isEmpty()) {
                             log.info("Failed index events count: {}", indexEvents.size());
                             IndexEventDao indexEventDao = new IndexEventDao();
                             try {
                                 indexEventDao.create(indexEvents.stream().toList());
                                 indexEventDao.commit();
-                            }
-                            catch (Exception e) {
+                            } catch (Exception e) {
                                 log.error("Failed to save index events: {}", indexEvents, e);
                                 throw e;
                             }
@@ -180,7 +180,6 @@ public class IndexService implements Runnable {
                             });
                             jobDao.commit();
                             log.error("... trying to continue with indexing.");
-                            // TODO: add status message
                             continue;
                         }
 
@@ -202,20 +201,28 @@ public class IndexService implements Runnable {
                         }
                         jobDao.commit();
                     }
-                    indexWriter.close();
-                    // TODO: avoid busy waiting -> use blocking queue or semaphore?
-                    Thread.sleep(config.getMillisToWaitBetweenRuns());
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    log.warn("Index thread was interrupted.");
+
                 } catch (Exception e) {
                     log.warn("Failed to index: ", e);
+                    IndexEvent    indexEvent    = new IndexEvent(0L, IndexEventType.ERROR, IndexResult.FAILED, "Indexing failed with an exception: " + e.getMessage());
+                    IndexEventDao indexEventDao = new IndexEventDao();
+                    indexEventDao.create(List.of(indexEvent));
+                    indexEventDao.commit();
                 } finally {
                     if (indexWriter.isOpen()) {
                         indexWriter.close();
                     }
                     // signals SearchService it's okay to open the (potentially new) index for reading
                     isInitialized = true;
+
+                    // sleep after database was updated & index was committed & closed
+                    try {
+                        // TODO: avoid busy waiting -> use blocking queue or semaphore?
+                        Thread.sleep(config.getMillisToWaitBetweenRuns());
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        log.warn("Index thread was interrupted.");
+                    }
                 }
             }
         } catch (Exception e) {
@@ -223,6 +230,16 @@ public class IndexService implements Runnable {
         }
 
 
+    }
+
+    private void initializeLuceneIndex(Directory indexDir, Analyzer standardAnalyzer) throws IOException {
+        IndexWriterConfig writerConfig = new IndexWriterConfig(standardAnalyzer);
+        writerConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
+        writerConfig.setCommitOnClose(true);
+        IndexWriter writer = new IndexWriter(indexDir, writerConfig);
+        writer.commit();
+        writer.close();
+        isInitialized = true;
     }
 
     private void logEvent(ConcurrentLinkedQueue<IndexEvent> indexEvents, IndexEvent event) {
@@ -334,7 +351,7 @@ public class IndexService implements Runnable {
             //// index sysMeta
             // folderpath
             String folderPath = job.getFolderPath();
-            log.debug("folderpath: " + folderPath);
+            log.debug("folderpath: {}", folderPath);
             doc.add(new StringField("folderpath", folderPath.toLowerCase(), Field.Store.NO));
 
             doc.add(new StoredField("acl", folder.getAclId()));

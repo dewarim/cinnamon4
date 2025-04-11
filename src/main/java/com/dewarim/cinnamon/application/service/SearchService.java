@@ -52,7 +52,7 @@ public class SearchService {
 
         while (!IndexService.isInitialized) {
             log.debug("Waiting for IndexService to finish initialization.");
-            Thread.sleep(400);
+            Thread.sleep(1000);
         }
         IndexSearcher.setMaxClauseCount(10000);
         directory = FSDirectory.open(Path.of(config.getIndexPath()));
