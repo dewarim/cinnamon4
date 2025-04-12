@@ -99,7 +99,7 @@ public class IndexService implements Runnable {
                     indexWriter = new IndexWriter(indexDir, writerConfig);
 
                     IndexJobDao jobDao = new IndexJobDao(sqlSession);
-
+                    int uncommittedChanges = 0;
                     while (jobDao.countJobs() > 0) {
                         List<IndexJob> jobs = jobDao.getIndexJobsByFailedCountWithLimit(config.getMaxIndexAttempts(), 1000);
                         if (jobs.isEmpty()) {
@@ -189,9 +189,11 @@ public class IndexService implements Runnable {
                             continue;
                         }
 
-                        if (changeCounter.get() > 0 && !fullReindexIsRunning) {
+                        uncommittedChanges += jobsToDo.size();
+                        if (changeCounter.get() > 0 && (!fullReindexIsRunning || uncommittedChanges > config.getUncommittedLimit()) ) {
                             long sequenceNr = indexWriter.commit();
-                            log.debug("sequenceNr: {}", sequenceNr);
+                            log.info("Committed {} changes to Lucene index, sequenceNr: {}", uncommittedChanges, sequenceNr);
+                            uncommittedChanges = 0;
                         }
                         else {
                             log.debug("no change to index");
@@ -481,7 +483,7 @@ public class IndexService implements Runnable {
                                  String objectAsString, byte[] content, String folderPath, IndexJobWithDependencies job) {
         ContentContainer   contentContainer = new ContentContainer(objectAsString, content, folderPath, job.getIndexKey().toString());
         org.dom4j.Document xmlDoc           = contentContainer.getCombinedDocument();
-
+//        log.debug("xml doc: {}", xmlDoc.asXML());
         for (IndexItem indexItem : indexItems) {
             String fieldName    = indexItem.getFieldName();
             String searchString = indexItem.getSearchString();

@@ -7,11 +7,25 @@ public class LuceneConfig {
      */
     private String  indexPath               = "/opt/cinnamon4/cinnamon-data/index";
     private Long    millisToWaitBetweenRuns = 1000L;
-    private int     maxIndexAttempts      = 1;
+    private int     maxIndexAttempts        = 1;
+    /**
+     * When re-indexing, commit every n changes.
+     * This prevents the server from doing a commit every 1000 objects, which slows down
+     * re-indexing over large datasets.
+     */
+    private int     uncommittedLimit        = 10000;
     /**
      * If true, store failed index jobs in index_events table.
      */
-    private boolean logFailedAttemptsToDb = true;
+    private boolean logFailedAttemptsToDb   = true;
+
+    public int getUncommittedLimit() {
+        return uncommittedLimit;
+    }
+
+    public void setUncommittedLimit(int uncommittedLimit) {
+        this.uncommittedLimit = uncommittedLimit;
+    }
 
     public int getMaxIndexAttempts() {
         return maxIndexAttempts;
@@ -51,7 +65,8 @@ public class LuceneConfig {
                 "indexPath='" + indexPath + '\'' +
                 ", millisToWaitBetweenRuns=" + millisToWaitBetweenRuns +
                 ", maxIndexAttempts=" + maxIndexAttempts +
-                ", storedFailedAttempts=" + logFailedAttemptsToDb +
+                ", uncommittedLimit=" + uncommittedLimit +
+                ", logFailedAttemptsToDb=" + logFailedAttemptsToDb +
                 '}';
     }
 }

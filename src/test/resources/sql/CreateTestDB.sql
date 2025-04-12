@@ -730,6 +730,11 @@ insert into index_items(id, fieldname, multiple_results,
 values (nextval('seq_index_item_id'), 'osd_name', false,'name item',
   '/objectSystemData/name', 'true()',false, 'COMPLETE_STRING_INDEXER'
 );
+insert into index_items(id, fieldname, multiple_results,
+   name, search_string, search_condition, store_field, index_type)
+values (nextval('seq_index_item_id'), 'json_name', false,'name item json',
+  '/objectSystemData/content/ObjectNode/name', 'true()',false, 'COMPLETE_STRING_INDEXER'
+);
 
 insert into index_items(id, fieldname, multiple_results,
    name, search_string, search_condition, store_field, index_type)

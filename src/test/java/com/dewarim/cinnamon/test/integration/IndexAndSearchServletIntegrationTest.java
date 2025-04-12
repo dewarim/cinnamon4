@@ -97,7 +97,9 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
         assertEquals(1, allResponse.getOsdIds().size());
         assertEquals(osdId, allResponse.getOsdIds().get(0));
         assertEquals(folderId, allResponse.getFolderIds().get(0));
+
     }
+
 
     @Test
     public void searchForContent() throws IOException {
@@ -138,7 +140,8 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
                 localDate.toString().replace("-", "") + "*"), SearchType.OSD));
         // ElementNameIndexer verified manually :/
         // verifyOsdSearchResult(client.search(createTermQuery("element_names", "dependency"), SearchType.OSD));
-
+        SearchIdsResponse jsonName = client.search("<BooleanQuery><Clause occurs='must'><TermQuery fieldName='json_name'>bob</TermQuery></Clause></BooleanQuery>", SearchType.OSD);
+        assertEquals(1, jsonName.getOsdIds().size());
     }
 
     private void verifyOsdSearchResult(SearchIdsResponse response) {
