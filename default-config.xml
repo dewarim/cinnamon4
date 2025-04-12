@@ -62,6 +62,8 @@
     <indexPath>/opt/cinnamon4/cinnamon-data/index</indexPath>
     <millisToWaitBetweenRuns>1000</millisToWaitBetweenRuns>
     <maxIndexAttempts>1</maxIndexAttempts>
+    <uncommittedLimit>10000</uncommittedLimit>
+    <logFailedAttemptsToDb>true</logFailedAttemptsToDb>
   </luceneConfig>
   <cinnamonTikaConfig>
     <baseUrl>http://localhost:9998</baseUrl>
@@ -81,6 +83,6 @@
   </changeTriggerConfig>
   <debugConfig>
     <debugFolderPath>/tmp/cinnamon-debug</debugFolderPath>
-    <debugEnabled>true</debugEnabled>
+    <debugEnabled>false</debugEnabled>
   </debugConfig>
 </CinnamonConfig>
