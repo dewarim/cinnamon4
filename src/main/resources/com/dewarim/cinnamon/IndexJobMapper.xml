@@ -12,6 +12,7 @@
         <result property="jobType" column="job_type"/>
         <result property="action" column="action"/>
         <result property="failed" column="failed"/>
+        <result property="updateTikaMetaset" column="update_tika_metaset"/>
     </resultMap>
 
     <!-- order by item_id to get the newest index_job first -->
@@ -37,8 +38,8 @@
         <selectKey keyProperty="id" resultType="long" order="BEFORE">
             select nextval('seq_index_job_id')
         </selectKey>
-        INSERT INTO index_jobs(id, item_id, job_type, action, failed)
-        VALUES (#{id}, #{itemId}, #{jobType}, #{action}, 0)
+        INSERT INTO index_jobs(id, item_id, job_type, action, failed, update_tika_metaset)
+        VALUES (#{id}, #{itemId}, #{jobType}, #{action}, 0,#{updateTikaMetaset})
     </insert>
 
     <delete id="delete" parameterType="long">
