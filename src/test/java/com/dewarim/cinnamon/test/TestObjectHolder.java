@@ -502,4 +502,11 @@ public class TestObjectHolder {
         this.format = formats.stream().filter(format -> format.getName().equals(name)).findFirst().orElseThrow();
         return this;
     }
+
+    public String getOsdSummary() throws IOException {
+        return client.getOsdSummaries(List.of(osd.getId())).get(0).getContent();
+    }
+    public String getOsdSummary(Long id) throws IOException {
+        return client.getOsdSummaries(List.of(id)).get(0).getContent();
+    }
 }

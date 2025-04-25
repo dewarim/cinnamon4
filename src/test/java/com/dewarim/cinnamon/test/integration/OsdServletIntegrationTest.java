@@ -358,6 +358,22 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         assertFalse(summaries.isEmpty());
         assertEquals("<sum>sum</sum>", summaries.get(0).getContent());
     }
+    @Test
+    public void setEmptySummaryOnVersionedOsd() throws IOException {
+        // bug #416: delete version will remove summary of predecessor
+        var toh  = prepareAclGroupWithPermissions(List.of(
+                BROWSE, SET_SUMMARY
+        )).createOsd();
+        var osdId = toh.osd.getId();
+        client.setSummary(osdId, "<sum>sum</sum>");
+        List<Summary> summaries = client.getOsdSummaries(List.of(osdId));
+        assertFalse(summaries.isEmpty());
+        assertEquals("<sum>sum</sum>", summaries.get(0).getContent());
+        toh.version();
+        toh.deleteOsd();
+        String v1Summary = toh.getOsdSummary(osdId);
+        assertEquals("<sum>sum</sum>", v1Summary);
+    }
 
     @Test
     public void setSummaryMissingPermission() throws IOException {
