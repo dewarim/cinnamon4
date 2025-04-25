@@ -101,7 +101,7 @@ public class IndexService implements Runnable {
                     IndexJobDao jobDao = new IndexJobDao(sqlSession);
                     int uncommittedChanges = 0;
                     while (jobDao.countJobs() > 0) {
-                        List<IndexJob> jobs = jobDao.getIndexJobsByFailedCountWithLimit(config.getMaxIndexAttempts(), 1000);
+                        List<IndexJob> jobs = jobDao.getIndexJobsByFailedCountWithLimit(config.getMaxIndexAttempts(), 200);
                         if (jobs.isEmpty()) {
                             log.trace("Found 0 IndexJobs.");
                             break;
@@ -167,7 +167,7 @@ public class IndexService implements Runnable {
 
                         if (!indexEvents.isEmpty()) {
                             log.info("Failed index events count: {}", indexEvents.size());
-                            IndexEventDao indexEventDao = new IndexEventDao();
+                            IndexEventDao indexEventDao = new IndexEventDao(sqlSession);
                             try {
                                 indexEventDao.create(indexEvents.stream().toList());
                                 indexEventDao.commit();
@@ -211,10 +211,12 @@ public class IndexService implements Runnable {
                     }
                 } catch (Exception e) {
                     log.warn("Failed to index: ", e);
-                    IndexEvent    indexEvent    = new IndexEvent(0L, IndexEventType.ERROR, IndexResult.FAILED, "Indexing failed with an exception: " + e.getMessage());
-                    IndexEventDao indexEventDao = new IndexEventDao();
-                    indexEventDao.create(List.of(indexEvent));
-                    indexEventDao.commit();
+                    try(SqlSession sqlSession = ThreadLocalSqlSession.getNewSession(TransactionIsolationLevel.READ_COMMITTED)) {
+                        IndexEvent    indexEvent    = new IndexEvent(0L, IndexEventType.ERROR, IndexResult.FAILED, "Indexing failed with an exception: " + e.getMessage());
+                        IndexEventDao indexEventDao = new IndexEventDao(sqlSession);
+                        indexEventDao.create(List.of(indexEvent));
+                        indexEventDao.commit();
+                    }
                 } finally {
                     if (indexWriter.isOpen()) {
                         indexWriter.close();
@@ -294,13 +296,17 @@ public class IndexService implements Runnable {
                         relation.setParent(relation.getLeftId().equals(osd.getId()));
                     }
                     osd.setRelations(relations);
-                    Optional<Format> formatOpt = formatDao.getObjectById(osd.getFormatId());
-                    formatOpt.ifPresent(indexJobWithDependencies::setFormat);
-                    if (formatOpt.isEmpty()) {
-                        log.error("Format {} not found for IndexJob {}!", osd.getFormatId(), indexJob.getId());
-                        indexJob.setFailed(indexJob.getFailed() + 1);
-                        jobsToUpdate.add(indexJob);
-                        continue;
+                    Long formatId = osd.getFormatId();
+                    if(formatId != null) {
+                        Optional<Format> formatOpt = formatDao.getObjectById(formatId);
+                        formatOpt.ifPresent(indexJobWithDependencies::setFormat);
+                        if (formatOpt.isEmpty()) {
+                            log.error("Format {} not found for IndexJob {}!", osd.getFormatId(), indexJob.getId());
+                            indexJob.setFailed(indexJob.getFailed() + 1);
+                            jobsToUpdate.add(indexJob);
+                            continue;
+                        }
+                        indexJobWithDependencies.setFormat(formatOpt.get());
                     }
                     List<Meta> metas = osdMetaDao.listByOsd(osd.getId());
                     osd.setMetas(metas);
@@ -454,7 +460,8 @@ public class IndexService implements Runnable {
                                 tikaService.convertContentToTikaMetaset(osd, contentStream, format);
                             }
                             else {
-                                log.debug("ignore format with tika flag");
+                                log.debug("ignore format #{} '{}' with tika flag (updateTikaMetaset: {}, tikaEnabled: {})",
+                                        format.getId(), format.getName(), updateTikaMetaset, tikaService.isEnabled());
                             }
                         }
                         case JSON -> content = convertJsonToXml(contentStream);
