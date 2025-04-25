@@ -19,7 +19,7 @@ import java.util.regex.Pattern;
 
 // copied from Cinnamon 3
 public class ParamParser {
-    private static final Logger log = LogManager.getLogger();
+    private static final Logger log = LogManager.getLogger(ParamParser.class);
 
 
     private static final Pattern DOCTYPE_OR_ENTITY_PATTERN = Pattern.compile(ElementNameIndexer.DOCTYPE_ENTITY);
