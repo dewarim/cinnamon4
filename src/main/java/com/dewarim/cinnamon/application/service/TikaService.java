@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.application.service;
 
+import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.application.exception.CinnamonException;
 import com.dewarim.cinnamon.configuration.CinnamonTikaConfig;
 import com.dewarim.cinnamon.dao.MetasetTypeDao;
@@ -13,6 +14,8 @@ import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.io.entity.FileEntity;
+import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.TransactionIsolationLevel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -90,23 +93,28 @@ public class TikaService {
     }
 
     public void convertContentToTikaMetaset(ObjectSystemData osd, InputStream contentStream, Format format) throws IOException {
-        OsdMetaDao osdMetaDao = new OsdMetaDao();
         if (isEnabled() && tikaMetasetTypeId != null && format.getIndexMode() == IndexMode.TIKA) {
+            log.debug("Parse OSD #{} with Tika", osd.getId());
             String tikaMetadata = parseWithTika(contentStream, format, osd.getId());
-            log.debug("Tika returned: {}", tikaMetadata);
-            Optional<Meta> tikaMetaset = osdMetaDao.listByOsd(osd.getId()).stream().filter(meta -> meta.getTypeId().equals(tikaMetasetTypeId)).findFirst();
-            if (tikaMetaset.isPresent()) {
-                Meta tikaMeta = tikaMetaset.get();
-                tikaMeta.setContent(tikaMetadata);
-                try {
-                    osdMetaDao.update(List.of(tikaMeta));
-                } catch (SQLException e) {
-                    throw new CinnamonException("Failed to update tika metaset:", e);
+            log.trace("Tika returned: {}", tikaMetadata);
+            try(SqlSession sqlSession = ThreadLocalSqlSession.getNewSession(TransactionIsolationLevel.READ_COMMITTED)) {
+                OsdMetaDao osdMetaDao = new OsdMetaDao(sqlSession);
+                Optional<Meta> tikaMetaset = osdMetaDao.listByOsd(osd.getId()).stream().filter(meta -> meta.getTypeId().equals(tikaMetasetTypeId)).findFirst();
+                if (tikaMetaset.isPresent()) {
+                    Meta tikaMeta = tikaMetaset.get();
+                    tikaMeta.setContent(tikaMetadata);
+                    try {
+                        osdMetaDao.update(List.of(tikaMeta));
+                    } catch (SQLException e) {
+                        throw new CinnamonException("Failed to update tika metaset:", e);
+                    }
                 }
-            } else {
-                Meta tikaMeta = new Meta(osd.getId(),tikaMetasetTypeId, tikaMetadata);
-                List<Meta> metas = osdMetaDao.create(List.of(tikaMeta));
-                log.debug("tikaMeta: {}", metas.get(0));
+                else {
+                    Meta       tikaMeta = new Meta(osd.getId(), tikaMetasetTypeId, tikaMetadata);
+                    List<Meta> metas    = osdMetaDao.create(List.of(tikaMeta));
+                    log.trace("tikaMeta: {}", metas.get(0));
+                }
+                sqlSession.commit();
             }
         }
     }
