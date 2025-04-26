@@ -341,6 +341,7 @@ public class IndexService implements Runnable {
         doc.add(new Field(LUCENE_FIELD_CINNAMON_CLASS, key.type().toString(), StringField.TYPE_STORED));
         IndexJob   job = jobWithDependencies.getIndexJob();
         IndexEvent indexEvent;
+        log.debug("handle IndexJob: {} ", job);
         switch (job.getJobType()) {
             case OSD -> indexEvent = indexOsd(jobWithDependencies, doc, indexItems, job.isUpdateTikaMetaset());
             case FOLDER -> indexEvent = indexFolder(jobWithDependencies, doc, indexItems);
@@ -454,7 +455,6 @@ public class IndexService implements Runnable {
                     switch (format.getIndexMode()) {
                         case XML -> content = contentStream.readAllBytes();
                         case TIKA -> {
-                            // TODO: add test for this
                             if (updateTikaMetaset && tikaService.isEnabled()) {
                                 log.debug("update tika metaset");
                                 tikaService.convertContentToTikaMetaset(osd, contentStream, format);
@@ -494,7 +494,7 @@ public class IndexService implements Runnable {
         for (IndexItem indexItem : indexItems) {
             String fieldName    = indexItem.getFieldName();
             String searchString = indexItem.getSearchString();
-            log.debug("indexing for field: {} with {}", fieldName, searchString);
+            log.trace("indexing for field: {} with {}", fieldName, searchString);
             // TODO: check search condition, probably with xmlDoc
             if (xmlDoc.valueOf(indexItem.getSearchCondition()).equals("true")) {
                 indexItem.getIndexType().getIndexer()
