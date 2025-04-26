@@ -34,6 +34,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -98,8 +100,8 @@ public class IndexService implements Runnable {
                     writerConfig.setCommitOnClose(false);
                     indexWriter = new IndexWriter(indexDir, writerConfig);
 
-                    IndexJobDao jobDao = new IndexJobDao(sqlSession);
-                    int uncommittedChanges = 0;
+                    IndexJobDao jobDao             = new IndexJobDao(sqlSession);
+                    int         uncommittedChanges = 0;
                     while (jobDao.countJobs() > 0) {
                         List<IndexJob> jobs = jobDao.getIndexJobsByFailedCountWithLimit(config.getMaxIndexAttempts(), 200);
                         if (jobs.isEmpty()) {
@@ -161,9 +163,21 @@ public class IndexService implements Runnable {
                         };
 
                         // prevent a CREATE index job to run after a delete or update index job due to concurrency
-                        jobsToDo.stream().filter(todo -> todo.getIndexJob().getAction().equals(IndexJobAction.CREATE)).toList().parallelStream().forEach(consumer);
-                        jobsToDo.stream().filter(todo -> todo.getIndexJob().getAction().equals(IndexJobAction.UPDATE)).toList().parallelStream().forEach(consumer);
-                        jobsToDo.stream().filter(todo -> todo.getIndexJob().getAction().equals(IndexJobAction.DELETE)).toList().parallelStream().forEach(consumer);
+                        List<Runnable> createJobs = new ArrayList<>();
+                        List<Runnable> updateJobs = new ArrayList<>();
+                        List<Runnable> deleteJobs = new ArrayList<>();
+                        for (IndexJobWithDependencies job : jobsToDo) {
+                            Runnable runnable = () -> consumer.accept(job);
+                            switch (job.getIndexJob().getAction()) {
+                                case CREATE -> createJobs.add(runnable);
+                                case UPDATE -> updateJobs.add(runnable);
+                                case DELETE -> deleteJobs.add(runnable);
+                            }
+                        }
+                        executeJobs(createJobs);
+                        executeJobs(updateJobs);
+                        executeJobs(deleteJobs);
+
 
                         if (!indexEvents.isEmpty()) {
                             log.info("Failed index events count: {}", indexEvents.size());
@@ -190,7 +204,7 @@ public class IndexService implements Runnable {
                         }
 
                         uncommittedChanges += jobsToDo.size();
-                        if (changeCounter.get() > 0 && (!fullReindexIsRunning || uncommittedChanges > config.getUncommittedLimit()) ) {
+                        if (changeCounter.get() > 0 && (!fullReindexIsRunning || uncommittedChanges > config.getUncommittedLimit())) {
                             long sequenceNr = indexWriter.commit();
                             log.info("Committed {} changes to Lucene index, sequenceNr: {}", uncommittedChanges, sequenceNr);
                             uncommittedChanges = 0;
@@ -211,7 +225,7 @@ public class IndexService implements Runnable {
                     }
                 } catch (Exception e) {
                     log.warn("Failed to index: ", e);
-                    try(SqlSession sqlSession = ThreadLocalSqlSession.getNewSession(TransactionIsolationLevel.READ_COMMITTED)) {
+                    try (SqlSession sqlSession = ThreadLocalSqlSession.getNewSession(TransactionIsolationLevel.READ_COMMITTED)) {
                         IndexEvent    indexEvent    = new IndexEvent(0L, IndexEventType.ERROR, IndexResult.FAILED, "Indexing failed with an exception: " + e.getMessage());
                         IndexEventDao indexEventDao = new IndexEventDao(sqlSession);
                         indexEventDao.create(List.of(indexEvent));
@@ -241,6 +255,16 @@ public class IndexService implements Runnable {
 
     }
 
+    private void executeJobs(List<Runnable> jobs) {
+        if (jobs.isEmpty()) {
+            return;
+        }
+        int             poolSize        = jobs.size();
+        ExecutorService executorService = Executors.newFixedThreadPool(Math.min(poolSize, 8));
+        jobs.forEach(executorService::submit);
+        executorService.shutdown();
+    }
+
     private void initializeLuceneIndex(Directory indexDir, Analyzer standardAnalyzer) throws IOException {
         IndexWriterConfig writerConfig = new IndexWriterConfig(standardAnalyzer);
         writerConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
@@ -260,7 +284,7 @@ public class IndexService implements Runnable {
     private static List<IndexJobWithDependencies> findJobs(SqlSession sqlSession, List<IndexJob> jobs,
                                                            ConcurrentLinkedQueue<IndexJob> jobsToDelete,
                                                            ConcurrentLinkedQueue<IndexJob> jobsToUpdate) {
-        if(jobs.isEmpty()) {
+        if (jobs.isEmpty()) {
             return Collections.emptyList();
         }
         Set<IndexKey> seen = new HashSet<>();
@@ -297,7 +321,7 @@ public class IndexService implements Runnable {
                     }
                     osd.setRelations(relations);
                     Long formatId = osd.getFormatId();
-                    if(formatId != null) {
+                    if (formatId != null) {
                         Optional<Format> formatOpt = formatDao.getObjectById(formatId);
                         formatOpt.ifPresent(indexJobWithDependencies::setFormat);
                         if (formatOpt.isEmpty()) {
