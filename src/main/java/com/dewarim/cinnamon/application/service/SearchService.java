@@ -34,6 +34,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.dewarim.cinnamon.api.Constants.*;
 
@@ -136,6 +137,8 @@ public class SearchService {
                         doc.getField(LUCENE_FIELD_ACL_ID).numericValue().longValue(),
                         doc.getField(LUCENE_FIELD_OWNER_ID).numericValue().longValue()))
                 .map(doc -> doc.getField("id").numericValue().longValue())
+                .collect(Collectors.toSet())
+                .stream()
                 .toList();
     }
 
