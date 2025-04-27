@@ -18,7 +18,7 @@ public class FieldDecoder {
             }
             Element element     = (Element) node;
             String  textContent = node.getText();
-            node.setText("");
+            element.clearContent();
             Node xml = ParamParser.parseXml(textContent, "Failed to parse XML: " + textContent);
             xml.detach();
             element.add(xml);
