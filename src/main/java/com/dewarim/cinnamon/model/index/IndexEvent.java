@@ -11,7 +11,7 @@ public class IndexEvent implements Identifiable {
     private Long           jobId;
     private IndexEventType eventType = IndexEventType.GENERIC;
     private IndexResult    indexResult;
-    private String         message;
+    private String         message = "-";
 
     public IndexEvent() {
     }
