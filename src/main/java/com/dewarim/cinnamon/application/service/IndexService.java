@@ -371,9 +371,6 @@ public class IndexService implements Runnable {
                             indexJobWithDependencies.setFormat(formatOpt.get());
                         }
                         List<Meta> metas = osdMetas.getOrDefault(osd.getId(), List.of());
-                        if(!metas.isEmpty()){
-                            log.info("IndexJob: OSD {} has {} metas", osd.getId(), metas.size());
-                        }
                         osd.setMetas(metas);
                     }
                     else {
