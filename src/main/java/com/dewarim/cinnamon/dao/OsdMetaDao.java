@@ -7,6 +7,7 @@ import com.dewarim.cinnamon.model.Meta;
 import org.apache.ibatis.exceptions.PersistenceException;
 import org.apache.ibatis.session.SqlSession;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -34,6 +35,9 @@ public class OsdMetaDao implements CrudDao<Meta>, MetaDao {
 
     @Override
     public List<Meta> listMetaByObjectIds(List<Long> ids) {
+        if(ids.isEmpty()) {
+            return new ArrayList<>();
+        }
         SqlSession sqlSession = getSqlSession();
         return sqlSession.selectList("com.dewarim.cinnamon.model.OsdMeta.listByOsds", ids);
     }

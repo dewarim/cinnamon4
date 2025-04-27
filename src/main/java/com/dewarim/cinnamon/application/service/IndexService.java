@@ -329,6 +329,12 @@ public class IndexService implements Runnable {
             }).collect(Collectors.toSet());
             folderIds.addAll(osds.values().stream().map(ObjectSystemData::getParentId).toList());
             Map<Long, String> folderPaths = folderDao.getFolderPaths(folderIds.stream().toList());
+            Map<Long, List<Meta>> osdMetas = new HashMap<>();
+            for (Meta meta : osdMetaDao.listMetaByObjectIds(osds.keySet().stream().toList())) {
+                List<Meta> metas = osdMetas.getOrDefault(meta.getObjectId(), new ArrayList<>());
+                metas.add(meta);
+                osdMetas.put(meta.getObjectId(), metas);
+            }
 
             for (IndexJob indexJob : jobs) {
                 IndexKey indexKey = new IndexKey(indexJob.getJobType(), indexJob.getItemId(), indexJob.getAction(), indexJob.isUpdateTikaMetaset());
@@ -364,7 +370,10 @@ public class IndexService implements Runnable {
                             }
                             indexJobWithDependencies.setFormat(formatOpt.get());
                         }
-                        List<Meta> metas = osdMetaDao.listByOsd(osd.getId());
+                        List<Meta> metas = osdMetas.getOrDefault(osd.getId(), List.of());
+                        if(!metas.isEmpty()){
+                            log.info("IndexJob: OSD {} has {} metas", osd.getId(), metas.size());
+                        }
                         osd.setMetas(metas);
                     }
                     else {
