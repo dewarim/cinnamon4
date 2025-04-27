@@ -9,7 +9,7 @@ import java.util.concurrent.TimeUnit;
 public class ObjectTypeDao implements CrudDao<ObjectType>{
 
     private static final Cache<Long, ObjectType> CACHE = Caffeine.newBuilder()
-            .expireAfterWrite(5, TimeUnit.MINUTES)
+            .expireAfterWrite(10, TimeUnit.MINUTES)
             .maximumSize(1000)
             .build();
 

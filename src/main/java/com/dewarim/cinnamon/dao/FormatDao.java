@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit;
 public class FormatDao implements CrudDao<Format> {
 
     private static final Cache<Long, Format> CACHE = Caffeine.newBuilder()
-            .expireAfterWrite(5, TimeUnit.MINUTES)
+            .expireAfterWrite(10, TimeUnit.MINUTES)
             .maximumSize(1000)
             .build();
 

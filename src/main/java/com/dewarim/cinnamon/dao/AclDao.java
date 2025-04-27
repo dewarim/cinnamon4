@@ -17,7 +17,7 @@ public class AclDao implements CrudDao<Acl> {
 
     // TODO: maybe make cache configurable -> could use singleton CacheService to return cache of class X
     private static final Cache<Long, Acl> CACHE = Caffeine.newBuilder()
-            .expireAfterWrite(5, TimeUnit.MINUTES)
+            .expireAfterWrite(10, TimeUnit.MINUTES)
             .maximumSize(1000)
             .build();
 
