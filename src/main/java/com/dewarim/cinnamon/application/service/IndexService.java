@@ -36,6 +36,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -50,15 +51,8 @@ public class IndexService implements Runnable {
 
     public static final byte[] NO_CONTENT = new byte[0];
 
-    public static boolean isInitialized        = false;
-    /**
-     * Flag used to signal the IndexService that a full re-index is currently on the way, and it should not
-     * call IndexWriter.commit() every chance it gets as that would be too expensive.
-     */
-    public static boolean fullReindexIsRunning = false;
-
-    private       boolean                stopped = false;
-    private       IndexWriter            indexWriter;
+    public static boolean                isInitialized = false;
+    private       boolean                stopped       = false;
     private final LuceneConfig           config;
     private final Path                   indexPath;
     private final XmlMapper              xmlMapper;
@@ -94,42 +88,44 @@ public class IndexService implements Runnable {
                 initializeLuceneIndex(indexDir, standardAnalyzer);
             }
             while (!stopped) {
-                try (SqlSession sqlSession = ThreadLocalSqlSession.getNewSession(TransactionIsolationLevel.READ_COMMITTED)) {
-                    IndexWriterConfig writerConfig = new IndexWriterConfig(standardAnalyzer);
-                    writerConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
-                    writerConfig.setCommitOnClose(false);
-                    indexWriter = new IndexWriter(indexDir, writerConfig);
-
-                    IndexJobDao jobDao             = new IndexJobDao(sqlSession);
-                    int         uncommittedChanges = 0;
-                    while (jobDao.countJobs() > 0) {
-                        List<IndexJob> jobs = jobDao.getIndexJobsByFailedCountWithLimit(config.getMaxIndexAttempts(), 200);
-                        if (jobs.isEmpty()) {
-                            log.trace("Found 0 IndexJobs.");
-                            break;
-                        }
+                int         maxJobSize         = 500;
+                IndexWriterConfig writerConfig = new IndexWriterConfig(standardAnalyzer);
+                writerConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
+                writerConfig.setCommitOnClose(false);
+                try(IndexWriter   indexWriter = new IndexWriter(indexDir, writerConfig)) {
+                    List<IndexJob> jobs;
+                    try (SqlSession sqlSession = ThreadLocalSqlSession.getNewSession(TransactionIsolationLevel.READ_COMMITTED)) {
+                        IndexJobDao jobDao = new IndexJobDao(sqlSession);
+                        jobs = jobDao.getIndexJobsByFailedCountWithLimit(config.getMaxIndexAttempts(), maxJobSize);
+                    }
+                    if (jobs.isEmpty()) {
+                        log.trace("Found 0 IndexJobs.");
+                    }
+                    else {
                         log.debug("Found {} IndexJobs with not more than {} failed attempts.", jobs.size(), config.getMaxIndexAttempts());
                         ConcurrentLinkedQueue<IndexJob> jobsToDelete  = new ConcurrentLinkedQueue<>();
                         ConcurrentLinkedQueue<IndexJob> jobsToUpdate  = new ConcurrentLinkedQueue<>();
                         AtomicInteger                   changeCounter = new AtomicInteger();
                         AtomicBoolean                   error         = new AtomicBoolean(false);
 
-                        List<IndexJobWithDependencies>    jobsToDo    = findJobs(sqlSession, jobs, jobsToDelete, jobsToUpdate);
-                        ConcurrentLinkedQueue<IndexEvent> indexEvents = new ConcurrentLinkedQueue<>();
+                        log.debug("Loading data for index jobs");
+                        List<IndexJobWithDependencies>    jobsToDo    = findJobs(jobs, jobsToDelete, jobsToUpdate);
+                        log.debug("Finished loading data for index jobs");
 
+                        ConcurrentLinkedQueue<IndexEvent> indexEvents = new ConcurrentLinkedQueue<>();
                         Consumer<IndexJobWithDependencies> consumer = jobWithDeps -> {
                             IndexKey    indexKey = jobWithDeps.getIndexKey();
                             IndexJob    job      = jobWithDeps.getIndexJob();
                             IndexResult indexResult;
                             switch (job.getAction()) {
                                 case DELETE -> {
-                                    IndexEvent event = IndexService.this.deleteFromIndex(indexKey, job);
+                                    IndexEvent event = IndexService.this.deleteFromIndex(indexKey, job, indexWriter);
                                     logEvent(indexEvents, event);
                                     indexResult = event.getIndexResult();
                                 }
                                 case CREATE, UPDATE -> {
                                     try {
-                                        IndexEvent indexEvent = IndexService.this.handleIndexItem(jobWithDeps, indexKey, indexItems);
+                                        IndexEvent indexEvent = IndexService.this.handleIndexItem(jobWithDeps, indexKey, indexItems, indexWriter);
                                         logEvent(indexEvents, indexEvent);
                                         indexResult = indexEvent.getIndexResult();
                                     } catch (Exception e) {
@@ -178,16 +174,18 @@ public class IndexService implements Runnable {
                         executeJobs(updateJobs);
                         executeJobs(deleteJobs);
 
-
                         if (!indexEvents.isEmpty()) {
                             log.info("Failed index events count: {}", indexEvents.size());
-                            IndexEventDao indexEventDao = new IndexEventDao(sqlSession);
-                            try {
-                                indexEventDao.create(indexEvents.stream().toList());
-                                indexEventDao.commit();
-                            } catch (Exception e) {
-                                log.error("Failed to save index events: {}", indexEvents, e);
-                                throw e;
+                            try (SqlSession sqlSession = ThreadLocalSqlSession.getNewSession(TransactionIsolationLevel.READ_COMMITTED)) {
+                                IndexEventDao indexEventDao = new IndexEventDao(sqlSession);
+                                try {
+                                    indexEventDao.create(indexEvents.stream().toList());
+                                    indexEventDao.commit();
+                                } catch (Exception e) {
+                                    log.error("Failed to save index events: {}", indexEvents, e);
+                                    throw e;
+
+                                }
                             }
                         }
 
@@ -197,17 +195,20 @@ public class IndexService implements Runnable {
                             log.error("Also trying to mark jobs as failed after index error");
                             List<IndexJob> allJobs = new ArrayList<>(jobsToUpdate);
                             allJobs.addAll(jobsToDelete);
-                            allJobs.forEach(jobDao::updateStatus);
-                            jobDao.commit();
+                            try (SqlSession sqlSession = ThreadLocalSqlSession.getNewSession(TransactionIsolationLevel.READ_COMMITTED)) {
+                                IndexJobDao jobDao = new IndexJobDao(sqlSession);
+                                allJobs.forEach(jobDao::updateStatus);
+                                jobDao.commit();
+                            }
                             log.error("... trying to continue with indexing.");
                             continue;
                         }
 
-                        uncommittedChanges += jobsToDo.size();
-                        if (changeCounter.get() > 0 && (!fullReindexIsRunning || uncommittedChanges > config.getUncommittedLimit())) {
+                        if (changeCounter.get() > 0) {
+                            log.debug("Commit changes to Lucene Index");
                             long sequenceNr = indexWriter.commit();
-                            log.info("Committed {} changes to Lucene index, sequenceNr: {}", uncommittedChanges, sequenceNr);
-                            uncommittedChanges = 0;
+                            log.info("Committed changes to Lucene index, sequenceNr: {} changeCounter: {}",  sequenceNr, changeCounter.get());
+                            changeCounter.set(0);
                         }
                         else {
                             log.debug("no change to index");
@@ -215,13 +216,20 @@ public class IndexService implements Runnable {
 
                         if (!jobsToDelete.isEmpty()) {
                             log.debug("deleting {} index jobs", jobsToDelete.size());
-                            jobsToDelete.forEach(jobDao::delete);
+                            try (SqlSession sqlSession = ThreadLocalSqlSession.getNewSession(TransactionIsolationLevel.READ_COMMITTED)) {
+                                IndexJobDao jobDao = new IndexJobDao(sqlSession);
+                                jobsToDelete.forEach(jobDao::delete);
+                                jobDao.commit();
+                            }
                         }
                         if (!jobsToUpdate.isEmpty()) {
                             log.debug("updating {} index jobs", jobsToUpdate.size());
-                            jobsToUpdate.forEach(jobDao::updateStatus);
+                            try (SqlSession sqlSession = ThreadLocalSqlSession.getNewSession(TransactionIsolationLevel.READ_COMMITTED)) {
+                                IndexJobDao jobDao = new IndexJobDao(sqlSession);
+                                jobsToUpdate.forEach(jobDao::updateStatus);
+                                jobDao.commit();
+                            }
                         }
-                        jobDao.commit();
                     }
                 } catch (Exception e) {
                     log.warn("Failed to index: ", e);
@@ -232,15 +240,10 @@ public class IndexService implements Runnable {
                         indexEventDao.commit();
                     }
                 } finally {
-                    if (indexWriter.isOpen()) {
-                        indexWriter.close();
-                    }
-                    // after we have indexed everything, set full re-index flag to false.
-                    fullReindexIsRunning = false;
-
                     // sleep after database was updated & index was committed & closed
                     try {
                         // TODO: avoid busy waiting -> use blocking queue or semaphore?
+                        log.info("IndexService will sleep for {} ms", config.getMillisToWaitBetweenRuns());
                         Thread.sleep(config.getMillisToWaitBetweenRuns());
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
@@ -263,6 +266,15 @@ public class IndexService implements Runnable {
         ExecutorService executorService = Executors.newFixedThreadPool(Math.min(poolSize, 8));
         jobs.forEach(executorService::submit);
         executorService.shutdown();
+        // await termination; 10 minutes due to potentially longer running Tika jobs.
+        try {
+            boolean terminatedOkay = executorService.awaitTermination(10, TimeUnit.MINUTES);
+            if(!terminatedOkay) {
+                log.error("IndexJobs timed out after 10 minutes of waiting.");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     private void initializeLuceneIndex(Directory indexDir, Analyzer standardAnalyzer) throws IOException {
@@ -281,7 +293,7 @@ public class IndexService implements Runnable {
         }
     }
 
-    private static List<IndexJobWithDependencies> findJobs(SqlSession sqlSession, List<IndexJob> jobs,
+    private static List<IndexJobWithDependencies> findJobs(List<IndexJob> jobs,
                                                            ConcurrentLinkedQueue<IndexJob> jobsToDelete,
                                                            ConcurrentLinkedQueue<IndexJob> jobsToUpdate) {
         if (jobs.isEmpty()) {
@@ -290,76 +302,79 @@ public class IndexService implements Runnable {
         Set<IndexKey> seen = new HashSet<>();
 
         List<IndexJobWithDependencies> jobsToDo = new ArrayList<>();
+        try (SqlSession sqlSession = ThreadLocalSqlSession.getNewSession(TransactionIsolationLevel.READ_COMMITTED)) {
+            OsdDao        osdDao        = new OsdDao(sqlSession);
+            FolderDao     folderDao     = new FolderDao(sqlSession);
+            RelationDao   relationDao   = new RelationDao(sqlSession);
+            FormatDao     formatDao     = new FormatDao(sqlSession);
+            OsdMetaDao    osdMetaDao    = new OsdMetaDao(sqlSession);
+            FolderMetaDao folderMetaDao = new FolderMetaDao(sqlSession);
 
-        OsdDao        osdDao        = new OsdDao(sqlSession);
-        FolderDao     folderDao     = new FolderDao(sqlSession);
-        RelationDao   relationDao   = new RelationDao(sqlSession);
-        FormatDao     formatDao     = new FormatDao(sqlSession);
-        OsdMetaDao    osdMetaDao    = new OsdMetaDao(sqlSession);
-        FolderMetaDao folderMetaDao = new FolderMetaDao(sqlSession);
-
-        for (IndexJob indexJob : jobs) {
-            IndexKey indexKey = new IndexKey(indexJob.getJobType(), indexJob.getItemId(), indexJob.getAction(), indexJob.isUpdateTikaMetaset());
-            if (seen.add(indexKey)) {
-                IndexJobWithDependencies indexJobWithDependencies = new IndexJobWithDependencies(indexJob, indexKey);
-                if (indexJob.getJobType().equals(IndexJobType.OSD)) {
-                    // OSD:
-                    Optional<ObjectSystemData> osdOpt = osdDao.getObjectById(indexJob.getItemId());
-                    if (osdOpt.isEmpty()) {
-                        log.warn("IndexJob: OSD {} not found, skipping.", indexJob.getItemId());
-                        jobsToDelete.add(indexJob);
-                        continue;
-                    }
-                    ObjectSystemData osd = osdOpt.get();
-                    indexJobWithDependencies.setOsd(osd);
-                    String folderPath = folderDao.getFolderPath(osd.getParentId());
-                    indexJobWithDependencies.setFolderPath(folderPath);
-                    List<Long>     relationCriteria = List.of(osd.getId());
-                    List<Relation> relations        = relationDao.getRelationsOrMode(relationCriteria, relationCriteria, Collections.emptyList(), true);
-                    for (Relation relation : relations) {
-                        relation.setParent(relation.getLeftId().equals(osd.getId()));
-                    }
-                    osd.setRelations(relations);
-                    Long formatId = osd.getFormatId();
-                    if (formatId != null) {
-                        Optional<Format> formatOpt = formatDao.getObjectById(formatId);
-                        formatOpt.ifPresent(indexJobWithDependencies::setFormat);
-                        if (formatOpt.isEmpty()) {
-                            log.error("Format {} not found for IndexJob {}!", osd.getFormatId(), indexJob.getId());
-                            indexJob.setFailed(indexJob.getFailed() + 1);
-                            jobsToUpdate.add(indexJob);
+            for (IndexJob indexJob : jobs) {
+                IndexKey indexKey = new IndexKey(indexJob.getJobType(), indexJob.getItemId(), indexJob.getAction(), indexJob.isUpdateTikaMetaset());
+                if (seen.add(indexKey)) {
+                    IndexJobWithDependencies indexJobWithDependencies = new IndexJobWithDependencies(indexJob, indexKey);
+                    if (indexJob.getJobType().equals(IndexJobType.OSD)) {
+                        // OSD:
+                        Optional<ObjectSystemData> osdOpt = osdDao.getObjectById(indexJob.getItemId());
+                        if (osdOpt.isEmpty()) {
+                            log.warn("IndexJob: OSD {} not found, skipping.", indexJob.getItemId());
+                            jobsToDelete.add(indexJob);
                             continue;
                         }
-                        indexJobWithDependencies.setFormat(formatOpt.get());
+                        ObjectSystemData osd = osdOpt.get();
+                        indexJobWithDependencies.setOsd(osd);
+                        String folderPath = folderDao.getFolderPath(osd.getParentId());
+                        String newPath = folderDao.getFolderPaths(List.of(osd.getParentId())).get(osd.getParentId());
+                        log.info("folderPath: {}, newPath: {}", folderPath, newPath);
+                        indexJobWithDependencies.setFolderPath(folderPath);
+                        List<Long>     relationCriteria = List.of(osd.getId());
+                        List<Relation> relations        = relationDao.getRelationsOrMode(relationCriteria, relationCriteria, Collections.emptyList(), true);
+                        for (Relation relation : relations) {
+                            relation.setParent(relation.getLeftId().equals(osd.getId()));
+                        }
+                        osd.setRelations(relations);
+                        Long formatId = osd.getFormatId();
+                        if (formatId != null) {
+                            Optional<Format> formatOpt = formatDao.getObjectById(formatId);
+                            formatOpt.ifPresent(indexJobWithDependencies::setFormat);
+                            if (formatOpt.isEmpty()) {
+                                log.error("Format {} not found for IndexJob {}!", osd.getFormatId(), indexJob.getId());
+                                indexJob.setFailed(indexJob.getFailed() + 1);
+                                jobsToUpdate.add(indexJob);
+                                continue;
+                            }
+                            indexJobWithDependencies.setFormat(formatOpt.get());
+                        }
+                        List<Meta> metas = osdMetaDao.listByOsd(osd.getId());
+                        osd.setMetas(metas);
                     }
-                    List<Meta> metas = osdMetaDao.listByOsd(osd.getId());
-                    osd.setMetas(metas);
+                    else {
+                        // Folder:
+                        Optional<Folder> folderOpt = folderDao.getObjectById(indexJob.getItemId());
+                        if (folderOpt.isEmpty()) {
+                            log.warn("IndexJob: Folder {} not found, skipping.", indexJob.getItemId());
+                            jobsToDelete.add(indexJob);
+                            continue;
+                        }
+                        Folder     folder     = folderOpt.get();
+                        String     folderPath = folderDao.getFolderPath(folder.getParentId());
+                        List<Meta> metas      = folderMetaDao.listByFolderId(folder.getId());
+                        indexJobWithDependencies.setFolderPath(folderPath);
+                        indexJobWithDependencies.setFolder(folder);
+                        folder.setMetas(metas);
+                    }
+                    jobsToDo.add(indexJobWithDependencies);
                 }
                 else {
-                    // Folder:
-                    Optional<Folder> folderOpt = folderDao.getObjectById(indexJob.getItemId());
-                    if (folderOpt.isEmpty()) {
-                        log.warn("IndexJob: Folder {} not found, skipping.", indexJob.getItemId());
-                        jobsToDelete.add(indexJob);
-                        continue;
-                    }
-                    Folder     folder     = folderOpt.get();
-                    String     folderPath = folderDao.getFolderPath(folder.getParentId());
-                    List<Meta> metas      = folderMetaDao.listByFolderId(folder.getId());
-                    indexJobWithDependencies.setFolderPath(folderPath);
-                    indexJobWithDependencies.setFolder(folder);
-                    folder.setMetas(metas);
+                    jobsToDelete.add(indexJob);
                 }
-                jobsToDo.add(indexJobWithDependencies);
-            }
-            else {
-                jobsToDelete.add(indexJob);
             }
         }
         return jobsToDo;
     }
 
-    private IndexEvent handleIndexItem(IndexJobWithDependencies jobWithDependencies, IndexKey key, List<IndexItem> indexItems) throws IOException {
+    private IndexEvent handleIndexItem(IndexJobWithDependencies jobWithDependencies, IndexKey key, List<IndexItem> indexItems, IndexWriter indexWriter) throws IOException {
         Document doc = new Document();
         doc.add(new StringField(LUCENE_FIELD_UNIQUE_ID, key.toString(), Field.Store.NO));
         doc.add(new Field(LUCENE_FIELD_CINNAMON_CLASS, key.type().toString(), StringField.TYPE_STORED));
@@ -371,7 +386,9 @@ public class IndexService implements Runnable {
             case FOLDER -> indexEvent = indexFolder(jobWithDependencies, doc, indexItems);
             default -> indexEvent = IGNORE_EVENT;
         }
-
+        if(!indexWriter.isOpen()){
+            log.warn("IndexWriter is closed!");
+        }
         switch (indexEvent.getIndexResult()) {
             case FAILED -> log.info("Failed to index {}", job);
             case SUCCESS -> {
@@ -530,7 +547,7 @@ public class IndexService implements Runnable {
         }
     }
 
-    private IndexEvent deleteFromIndex(IndexKey key, IndexJob job) {
+    private IndexEvent deleteFromIndex(IndexKey key, IndexJob job, IndexWriter indexWriter) {
         try {
             indexWriter.deleteDocuments(new Term(LUCENE_FIELD_UNIQUE_ID, key.toString()));
             return SUCCESS_EVENT;
