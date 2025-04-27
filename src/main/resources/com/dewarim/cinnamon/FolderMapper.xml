@@ -18,6 +18,11 @@
         <result property="hasSubfolders" column="has_subfolders"/>
     </resultMap>
 
+    <resultMap id="folderPathMap" type="com.dewarim.cinnamon.model.FolderPath">
+        <id property="id" column="id"/>
+        <result property="path" column="full_path"/>
+    </resultMap>
+
     <resultMap id="tinyOwnableMap" type="com.dewarim.cinnamon.api.TinyOwnable">
         <result column="id" property="id"/>
         <result column="owner_id" property="ownerId"/>
@@ -59,6 +64,40 @@
         FROM folders f
         WHERE parent_id = #{parentId}
           AND name = #{name}
+    </select>
+
+    <select id="getFolderPaths" parameterType="list" resultMap="folderPathMap">
+        select id, '/' || full_path as full_path from (
+        WITH RECURSIVE fp (id, parent_id, name, path_names, path_ids) AS (SELECT id,
+        parent_id,
+        name,
+        ARRAY [name]::varchar[] AS path_names,
+        ARRAY [id] AS path_ids
+        FROM folders
+        WHERE parent_id IS NULL
+
+        UNION ALL
+
+        SELECT child.id,
+        child.parent_id,
+        child.name,
+        parent.path_names || child.name,
+        parent.path_ids || child.id
+        FROM folders child
+        JOIN fp parent ON child.parent_id = parent.id)
+        SELECT id,
+        parent_id,
+        name,
+        path_names,
+        path_ids,
+        array_to_string(path_names, '/') AS full_path
+        FROM fp
+        where id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        )
     </select>
 
     <select id="getFolderPath" parameterType="long" resultType="String">

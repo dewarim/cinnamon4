@@ -21,6 +21,9 @@
         <Logger name="com.dewarim.cinnamon.model.index.IndexJob.countJobs" level="info">
             <AppenderRef ref="Console"/>
         </Logger>
+        <Logger name="com.dewarim.cinnamon.application.service.SearchService" level="info">
+            <AppenderRef ref="Console"/>
+        </Logger>
         <Logger name="com.dewarim.cinnamon.model.index.IndexJob.getIndexJobsByFailedCount" level="info">
             <AppenderRef ref="Console"/>
         </Logger>

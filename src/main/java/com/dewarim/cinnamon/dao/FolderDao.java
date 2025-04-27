@@ -5,12 +5,14 @@ import com.dewarim.cinnamon.api.Ownable;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.application.exception.BadArgumentException;
 import com.dewarim.cinnamon.model.Folder;
+import com.dewarim.cinnamon.model.FolderPath;
 import com.dewarim.cinnamon.model.index.IndexJob;
 import com.dewarim.cinnamon.model.index.IndexJobAction;
 import com.dewarim.cinnamon.model.index.IndexJobType;
 import org.apache.ibatis.session.SqlSession;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.dewarim.cinnamon.api.Constants.ROOT_FOLDER_NAME;
 
@@ -72,6 +74,16 @@ public class FolderDao implements CrudDao<Folder> {
         SqlSession   sqlSession = getSqlSession();
         List<String> paths      = sqlSession.selectList("com.dewarim.cinnamon.model.Folder.getFolderPath", id);
         return "/" + String.join("/", paths);
+    }
+
+    public Map<Long,String> getFolderPaths(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            // root has no parent, so looking up it's ancestors would otherwise fail.
+            return Collections.emptyMap();
+        }
+        SqlSession       sqlSession = getSqlSession();
+        List<FolderPath> paths      = sqlSession.selectList("com.dewarim.cinnamon.model.Folder.getFolderPaths", ids);
+        return paths.stream().collect(Collectors.toMap(FolderPath::getId, FolderPath::getPath));
     }
 
     public Folder getRootFolder(boolean includeSummary) {

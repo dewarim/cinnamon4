@@ -29,6 +29,8 @@ import org.apache.lucene.store.SingleInstanceLockFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -88,11 +90,11 @@ public class IndexService implements Runnable {
                 initializeLuceneIndex(indexDir, standardAnalyzer);
             }
             while (!stopped) {
-                int         maxJobSize         = 500;
+                int               maxJobSize   = 500;
                 IndexWriterConfig writerConfig = new IndexWriterConfig(standardAnalyzer);
                 writerConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
                 writerConfig.setCommitOnClose(false);
-                try(IndexWriter   indexWriter = new IndexWriter(indexDir, writerConfig)) {
+                try (IndexWriter indexWriter = new IndexWriter(indexDir, writerConfig)) {
                     List<IndexJob> jobs;
                     try (SqlSession sqlSession = ThreadLocalSqlSession.getNewSession(TransactionIsolationLevel.READ_COMMITTED)) {
                         IndexJobDao jobDao = new IndexJobDao(sqlSession);
@@ -109,7 +111,7 @@ public class IndexService implements Runnable {
                         AtomicBoolean                   error         = new AtomicBoolean(false);
 
                         log.debug("Loading data for index jobs");
-                        List<IndexJobWithDependencies>    jobsToDo    = findJobs(jobs, jobsToDelete, jobsToUpdate);
+                        List<IndexJobWithDependencies> jobsToDo = findJobs(jobs, jobsToDelete, jobsToUpdate);
                         log.debug("Finished loading data for index jobs");
 
                         ConcurrentLinkedQueue<IndexEvent> indexEvents = new ConcurrentLinkedQueue<>();
@@ -207,7 +209,7 @@ public class IndexService implements Runnable {
                         if (changeCounter.get() > 0) {
                             log.debug("Commit changes to Lucene Index");
                             long sequenceNr = indexWriter.commit();
-                            log.info("Committed changes to Lucene index, sequenceNr: {} changeCounter: {}",  sequenceNr, changeCounter.get());
+                            log.info("Committed changes to Lucene index, sequenceNr: {} changeCounter: {}", sequenceNr, changeCounter.get());
                             changeCounter.set(0);
                         }
                         else {
@@ -234,7 +236,10 @@ public class IndexService implements Runnable {
                 } catch (Exception e) {
                     log.warn("Failed to index: ", e);
                     try (SqlSession sqlSession = ThreadLocalSqlSession.getNewSession(TransactionIsolationLevel.READ_COMMITTED)) {
-                        IndexEvent    indexEvent    = new IndexEvent(0L, IndexEventType.ERROR, IndexResult.FAILED, "Indexing failed with an exception: " + e.getMessage());
+                        StringWriter stringWriter = new StringWriter();
+                        PrintWriter  printWriter  = new PrintWriter(stringWriter);
+                        e.printStackTrace(printWriter);
+                        IndexEvent    indexEvent    = new IndexEvent(0L, IndexEventType.ERROR, IndexResult.FAILED, "Indexing failed with an exception: " + printWriter);
                         IndexEventDao indexEventDao = new IndexEventDao(sqlSession);
                         indexEventDao.create(List.of(indexEvent));
                         indexEventDao.commit();
@@ -269,7 +274,7 @@ public class IndexService implements Runnable {
         // await termination; 10 minutes due to potentially longer running Tika jobs.
         try {
             boolean terminatedOkay = executorService.awaitTermination(10, TimeUnit.MINUTES);
-            if(!terminatedOkay) {
+            if (!terminatedOkay) {
                 log.error("IndexJobs timed out after 10 minutes of waiting.");
             }
         } catch (InterruptedException e) {
@@ -310,23 +315,36 @@ public class IndexService implements Runnable {
             OsdMetaDao    osdMetaDao    = new OsdMetaDao(sqlSession);
             FolderMetaDao folderMetaDao = new FolderMetaDao(sqlSession);
 
+            Map<Long, ObjectSystemData> osds = osdDao.getObjectsById(jobs.stream().filter(job -> job.getJobType().equals(IndexJobType.OSD)).map(IndexJob::getItemId).toList(), false)
+                    .stream().collect(Collectors.toMap(ObjectSystemData::getId, Function.identity()));
+            Map<Long, Folder> folders = folderDao.getObjectsById(jobs.stream().filter(job -> job.getJobType().equals(IndexJobType.FOLDER)).map(IndexJob::getItemId).toList())
+                    .stream().collect(Collectors.toMap(Folder::getId, Function.identity()));
+            Set<Long> folderIds = folders.values().stream().map(folder -> {
+                if (folder.getParentId() == null) {
+                    return folder.getId();
+                }
+                else {
+                    return folder.getParentId();
+                }
+            }).collect(Collectors.toSet());
+            folderIds.addAll(osds.values().stream().map(ObjectSystemData::getParentId).toList());
+            Map<Long, String> folderPaths = folderDao.getFolderPaths(folderIds.stream().toList());
+
             for (IndexJob indexJob : jobs) {
                 IndexKey indexKey = new IndexKey(indexJob.getJobType(), indexJob.getItemId(), indexJob.getAction(), indexJob.isUpdateTikaMetaset());
                 if (seen.add(indexKey)) {
                     IndexJobWithDependencies indexJobWithDependencies = new IndexJobWithDependencies(indexJob, indexKey);
                     if (indexJob.getJobType().equals(IndexJobType.OSD)) {
                         // OSD:
-                        Optional<ObjectSystemData> osdOpt = osdDao.getObjectById(indexJob.getItemId());
-                        if (osdOpt.isEmpty()) {
+                        ObjectSystemData osd = osds.get(indexJob.getItemId());
+                        if (osd == null) {
                             log.warn("IndexJob: OSD {} not found, skipping.", indexJob.getItemId());
                             jobsToDelete.add(indexJob);
                             continue;
                         }
-                        ObjectSystemData osd = osdOpt.get();
                         indexJobWithDependencies.setOsd(osd);
-                        String folderPath = folderDao.getFolderPath(osd.getParentId());
-                        String newPath = folderDao.getFolderPaths(List.of(osd.getParentId())).get(osd.getParentId());
-                        log.info("folderPath: {}, newPath: {}", folderPath, newPath);
+                        String folderPath = folderPaths.get(osd.getParentId());
+                        log.trace("folderPath: {}", folderPath);
                         indexJobWithDependencies.setFolderPath(folderPath);
                         List<Long>     relationCriteria = List.of(osd.getId());
                         List<Relation> relations        = relationDao.getRelationsOrMode(relationCriteria, relationCriteria, Collections.emptyList(), true);
@@ -351,15 +369,17 @@ public class IndexService implements Runnable {
                     }
                     else {
                         // Folder:
-                        Optional<Folder> folderOpt = folderDao.getObjectById(indexJob.getItemId());
-                        if (folderOpt.isEmpty()) {
+                        Folder folder = folders.get(indexJob.getItemId());
+                        if (folder == null) {
                             log.warn("IndexJob: Folder {} not found, skipping.", indexJob.getItemId());
                             jobsToDelete.add(indexJob);
                             continue;
                         }
-                        Folder     folder     = folderOpt.get();
-                        String     folderPath = folderDao.getFolderPath(folder.getParentId());
-                        List<Meta> metas      = folderMetaDao.listByFolderId(folder.getId());
+                        String folderPath = folderPaths.get(folder.getParentId());
+                        if (folderPath == null) {
+                            folderPath = "/";
+                        }
+                        List<Meta> metas = folderMetaDao.listByFolderId(folder.getId());
                         indexJobWithDependencies.setFolderPath(folderPath);
                         indexJobWithDependencies.setFolder(folder);
                         folder.setMetas(metas);
@@ -386,7 +406,7 @@ public class IndexService implements Runnable {
             case FOLDER -> indexEvent = indexFolder(jobWithDependencies, doc, indexItems);
             default -> indexEvent = IGNORE_EVENT;
         }
-        if(!indexWriter.isOpen()){
+        if (!indexWriter.isOpen()) {
             log.warn("IndexWriter is closed!");
         }
         switch (indexEvent.getIndexResult()) {
