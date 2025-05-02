@@ -268,14 +268,14 @@ public class IndexService implements Runnable {
             return;
         }
         int             poolSize        = jobs.size();
-        ExecutorService executorService = Executors.newFixedThreadPool(Math.min(poolSize, 8));
+        ExecutorService executorService = Executors.newFixedThreadPool(Math.min(poolSize, config.getThreadPoolSize()));
         jobs.forEach(executorService::submit);
         executorService.shutdown();
         // await termination; 10 minutes due to potentially longer running Tika jobs.
         try {
-            boolean terminatedOkay = executorService.awaitTermination(10, TimeUnit.MINUTES);
+            boolean terminatedOkay = executorService.awaitTermination(config.getThreadPoolWaitInMinutes(), TimeUnit.MINUTES);
             if (!terminatedOkay) {
-                log.error("IndexJobs timed out after 10 minutes of waiting.");
+                log.error("IndexJobs timed out after {} minutes of waiting.", config.getThreadPoolWaitInMinutes());
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -298,7 +298,7 @@ public class IndexService implements Runnable {
         }
     }
 
-    private static List<IndexJobWithDependencies> findJobs(List<IndexJob> jobs,
+    private List<IndexJobWithDependencies> findJobs(List<IndexJob> jobs,
                                                            ConcurrentLinkedQueue<IndexJob> jobsToDelete,
                                                            ConcurrentLinkedQueue<IndexJob> jobsToUpdate) {
         if (jobs.isEmpty()) {
@@ -306,7 +306,8 @@ public class IndexService implements Runnable {
         }
         Set<IndexKey> seen = new HashSet<>();
 
-        List<IndexJobWithDependencies> jobsToDo = new ArrayList<>();
+        List<IndexJobWithDependencies> jobsToDo    = new ArrayList<>();
+        Long                           metaSizeSum = 0L;
         try (SqlSession sqlSession = ThreadLocalSqlSession.getNewSession(TransactionIsolationLevel.READ_COMMITTED)) {
             OsdDao        osdDao        = new OsdDao(sqlSession);
             FolderDao     folderDao     = new FolderDao(sqlSession);
@@ -333,8 +334,8 @@ public class IndexService implements Runnable {
             }).collect(Collectors.toSet());
             folderIds.addAll(osds.values().stream().map(ObjectSystemData::getParentId).toList());
             log.debug("Determine folderPaths of {} folders", folderIds.size());
-            Map<Long, String> folderPaths = folderDao.getFolderPaths(folderIds.stream().toList());
-            Map<Long, List<Meta>> osdMetas = new HashMap<>();
+            Map<Long, String>     folderPaths = folderDao.getFolderPaths(folderIds.stream().toList());
+            Map<Long, List<Meta>> osdMetas    = new HashMap<>();
             for (Meta meta : osdMetaDao.listMetaByObjectIds(osds.keySet().stream().toList())) {
                 List<Meta> metas = osdMetas.getOrDefault(meta.getObjectId(), new ArrayList<>());
                 metas.add(meta);
@@ -376,7 +377,14 @@ public class IndexService implements Runnable {
                             indexJobWithDependencies.setFormat(formatOpt.get());
                         }
                         List<Meta> metas = osdMetas.getOrDefault(osd.getId(), List.of());
+                        for (Meta meta : metas) {
+                            metaSizeSum += meta.getContent().length();
+                        }
                         osd.setMetas(metas);
+                        if(metaSizeSum > config.getMaxCombinedMetasetSize()){
+                            log.info("Reached maxCombinedMetasetSize of {}, will skip some elements and take them on next time.", config.getMaxCombinedMetasetSize());
+                            break;
+                        }
                     }
                     else {
                         // Folder:
@@ -390,10 +398,17 @@ public class IndexService implements Runnable {
                         if (folderPath == null) {
                             folderPath = "/";
                         }
-                        List<Meta> metas = folderMetaDao.listByFolderId(folder.getId());
                         indexJobWithDependencies.setFolderPath(folderPath);
                         indexJobWithDependencies.setFolder(folder);
+                        List<Meta> metas = folderMetaDao.listByFolderId(folder.getId());
+                        for (Meta meta : metas) {
+                            metaSizeSum += meta.getContent().length();
+                        }
                         folder.setMetas(metas);
+                        if(metaSizeSum > config.getMaxCombinedMetasetSize()){
+                            log.info("Reached maxCombinedMetasetSize of {}, will skip some elements and take them on next time.", config.getMaxCombinedMetasetSize());
+                            break;
+                        }
                     }
                     jobsToDo.add(indexJobWithDependencies);
                 }
