@@ -90,7 +90,7 @@ public class IndexService implements Runnable {
                 initializeLuceneIndex(indexDir, standardAnalyzer);
             }
             while (!stopped) {
-                int               maxJobSize   = 500;
+                int               maxJobSize   = config.getMaxBatchSize();
                 IndexWriterConfig writerConfig = new IndexWriterConfig(standardAnalyzer);
                 writerConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
                 writerConfig.setCommitOnClose(false);
@@ -315,9 +315,13 @@ public class IndexService implements Runnable {
             OsdMetaDao    osdMetaDao    = new OsdMetaDao(sqlSession);
             FolderMetaDao folderMetaDao = new FolderMetaDao(sqlSession);
 
-            Map<Long, ObjectSystemData> osds = osdDao.getObjectsById(jobs.stream().filter(job -> job.getJobType().equals(IndexJobType.OSD)).map(IndexJob::getItemId).toList(), false)
+            List<Long> osdsToLoad = jobs.stream().filter(job -> job.getJobType().equals(IndexJobType.OSD)).map(IndexJob::getItemId).toList();
+            log.info("Will load {} osds to index.", osdsToLoad.size());
+            Map<Long, ObjectSystemData> osds = osdDao.getObjectsById(osdsToLoad, false)
                     .stream().collect(Collectors.toMap(ObjectSystemData::getId, Function.identity()));
-            Map<Long, Folder> folders = folderDao.getObjectsById(jobs.stream().filter(job -> job.getJobType().equals(IndexJobType.FOLDER)).map(IndexJob::getItemId).toList())
+            List<Long> foldersToLoad = jobs.stream().filter(job -> job.getJobType().equals(IndexJobType.FOLDER)).map(IndexJob::getItemId).toList();
+            log.info("Will load {} folders to index.", foldersToLoad.size());
+            Map<Long, Folder> folders = folderDao.getObjectsById(foldersToLoad)
                     .stream().collect(Collectors.toMap(Folder::getId, Function.identity()));
             Set<Long> folderIds = folders.values().stream().map(folder -> {
                 if (folder.getParentId() == null) {
@@ -328,6 +332,7 @@ public class IndexService implements Runnable {
                 }
             }).collect(Collectors.toSet());
             folderIds.addAll(osds.values().stream().map(ObjectSystemData::getParentId).toList());
+            log.debug("Determine folderPaths of {} folders", folderIds.size());
             Map<Long, String> folderPaths = folderDao.getFolderPaths(folderIds.stream().toList());
             Map<Long, List<Meta>> osdMetas = new HashMap<>();
             for (Meta meta : osdMetaDao.listMetaByObjectIds(osds.keySet().stream().toList())) {

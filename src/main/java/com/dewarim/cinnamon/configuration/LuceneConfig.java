@@ -18,6 +18,10 @@ public class LuceneConfig {
      * If true, store failed index jobs in index_events table.
      */
     private boolean logFailedAttemptsToDb   = true;
+    /**
+     * Do not index more than maxBatchSize items (folders & osds) in one go.
+     */
+    private int     maxBatchSize            = 500;
 
     public int getUncommittedLimit() {
         return uncommittedLimit;
@@ -67,6 +71,15 @@ public class LuceneConfig {
                 ", maxIndexAttempts=" + maxIndexAttempts +
                 ", uncommittedLimit=" + uncommittedLimit +
                 ", logFailedAttemptsToDb=" + logFailedAttemptsToDb +
+                ", maxBatchSize=" + maxBatchSize +
                 '}';
+    }
+
+    public void setMaxBatchSize(int maxBatchSize) {
+        this.maxBatchSize = maxBatchSize;
+    }
+
+    public int getMaxBatchSize() {
+        return maxBatchSize;
     }
 }
