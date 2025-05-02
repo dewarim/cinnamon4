@@ -22,6 +22,14 @@ public class LuceneConfig {
      * Do not index more than maxBatchSize items (folders & osds) in one go.
      */
     private int     maxBatchSize            = 500;
+    private int     threadPoolSize          = 8;
+    private long    threadPoolWaitInMinutes = 20L;
+    /**
+     * Maximum size of all metasets (in Unicode characters) to handle in one batch.
+     * Metasets are parsed to XML and if too many are added,
+     * the server may run out of memory.
+     */
+    private Long    maxCombinedMetasetSize  = 100_000_000L;
 
     public int getUncommittedLimit() {
         return uncommittedLimit;
@@ -63,6 +71,30 @@ public class LuceneConfig {
         this.logFailedAttemptsToDb = logFailedAttemptsToDb;
     }
 
+    public void setMaxBatchSize(int maxBatchSize) {
+        this.maxBatchSize = maxBatchSize;
+    }
+
+    public int getMaxBatchSize() {
+        return maxBatchSize;
+    }
+
+    public int getThreadPoolSize() {
+        return threadPoolSize;
+    }
+
+    public void setThreadPoolSize(int threadPoolSize) {
+        this.threadPoolSize = threadPoolSize;
+    }
+
+    public long getThreadPoolWaitInMinutes() {
+        return threadPoolWaitInMinutes;
+    }
+
+    public void setThreadPoolWaitInMinutes(long threadPoolWaitInMinutes) {
+        this.threadPoolWaitInMinutes = threadPoolWaitInMinutes;
+    }
+
     @Override
     public String toString() {
         return "LuceneConfig{" +
@@ -72,14 +104,17 @@ public class LuceneConfig {
                 ", uncommittedLimit=" + uncommittedLimit +
                 ", logFailedAttemptsToDb=" + logFailedAttemptsToDb +
                 ", maxBatchSize=" + maxBatchSize +
+                ", threadPoolSize=" + threadPoolSize +
+                ", threadPoolWaitInMinutes=" + threadPoolWaitInMinutes +
+                ", maxCombinedMetasetSize=" + maxCombinedMetasetSize +
                 '}';
     }
 
-    public void setMaxBatchSize(int maxBatchSize) {
-        this.maxBatchSize = maxBatchSize;
+    public void setMaxCombinedMetasetSize(Long maxCombinedMetasetSize) {
+        this.maxCombinedMetasetSize = maxCombinedMetasetSize;
     }
 
-    public int getMaxBatchSize() {
-        return maxBatchSize;
+    public Long getMaxCombinedMetasetSize() {
+        return maxCombinedMetasetSize;
     }
 }
