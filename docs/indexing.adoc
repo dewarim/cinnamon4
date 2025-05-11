@@ -184,12 +184,12 @@ A folder document as seen by the index service:
     <hasSubfolders>false</hasSubfolders>
     <created>2023-02-26T18:00:29+0000</created>
     <metasets>
-        <meta>
+        <metaset>
             <id>1</id>
             <objectId>5</objectId>
             <typeId>3</typeId>
             <content><xml><folder-meta-data archived='no'/></xml></content>
-        </meta>
+        </metaset>
     </metasets>
     <content>
         <empty/>
