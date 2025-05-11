@@ -47,15 +47,16 @@ public class ContentContainer {
         Element folderPathNode = new DefaultElement("folderPath");
         folderPathNode.addText(folderPath);
         combinedDoc.getRootElement().add(folderPathNode);
-        log.trace("combinedDocument:\n{}", combinedDoc.asXML());
+        log.info("combinedDocument:\n{}", combinedDoc.asXML());
         return combinedDoc;
     }
 
     private void convertEncodedFieldsIntoXmlNodes(Document combinedDoc) {
         FieldDecoder fieldDecoder = new FieldDecoder();
-        fieldDecoder.decodeField(combinedDoc, "//relation/metadata");
-        fieldDecoder.decodeField(combinedDoc, "//metaset/content");
-        fieldDecoder.decodeField(combinedDoc, "//summary");
+        fieldDecoder.decodeField(combinedDoc, "//relations/relation/metadata");
+        fieldDecoder.decodeField(combinedDoc, "//metasets/metaset/content");
+        fieldDecoder.decodeField(combinedDoc, "/objectSystemData/summary");
+        fieldDecoder.decodeField(combinedDoc, "/folder/summary");
     }
 
     /**

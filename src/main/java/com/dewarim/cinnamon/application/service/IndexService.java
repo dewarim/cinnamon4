@@ -307,7 +307,7 @@ public class IndexService implements Runnable {
         Set<IndexKey> seen = new HashSet<>();
 
         List<IndexJobWithDependencies> jobsToDo    = new ArrayList<>();
-        Long                           metaSizeSum = 0L;
+        long                           metaSizeSum = 0L;
         try (SqlSession sqlSession = ThreadLocalSqlSession.getNewSession(TransactionIsolationLevel.READ_COMMITTED)) {
             OsdDao        osdDao        = new OsdDao(sqlSession);
             FolderDao     folderDao     = new FolderDao(sqlSession);
@@ -318,7 +318,7 @@ public class IndexService implements Runnable {
 
             List<Long> osdsToLoad = jobs.stream().filter(job -> job.getJobType().equals(IndexJobType.OSD)).map(IndexJob::getItemId).toList();
             log.info("Will load {} osds to index.", osdsToLoad.size());
-            Map<Long, ObjectSystemData> osds = osdDao.getObjectsById(osdsToLoad, false)
+            Map<Long, ObjectSystemData> osds = osdDao.getObjectsById(osdsToLoad, true)
                     .stream().collect(Collectors.toMap(ObjectSystemData::getId, Function.identity()));
             List<Long> foldersToLoad = jobs.stream().filter(job -> job.getJobType().equals(IndexJobType.FOLDER)).map(IndexJob::getItemId).toList();
             log.info("Will load {} folders to index.", foldersToLoad.size());

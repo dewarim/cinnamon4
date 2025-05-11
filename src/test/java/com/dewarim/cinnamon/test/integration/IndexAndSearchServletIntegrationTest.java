@@ -50,6 +50,7 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
         toh.createOsd("search-me-osd")
                 .createMetaSetType(true)
                 .createRelationType()
+                .setSummaryOnOsd("<summary><p>test-summary</p></summary>")
                 .createOsdMeta("<xml><copyright>ACME Inc., 2023</copyright></xml>")
                 .createRelation(relatedOsdId, "<xml><imageSize x='100' y='200'/></xml>")
                 .createFolder("search-me-folder", createFolderId)
