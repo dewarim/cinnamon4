@@ -62,7 +62,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         List<Summary> summaries = client.getFolderSummaries(List.of(toh.folder.getId()));
         assertNotNull(summaries);
         assertFalse(summaries.isEmpty());
-        assertThat(summaries.get(0).getContent(), equalTo("foo-folder"));
+        assertThat(summaries.get(0).getContent(), equalTo("<p>foo-folder</p>"));
     }
 
     @Test
