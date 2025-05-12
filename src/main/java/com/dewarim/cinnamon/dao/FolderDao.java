@@ -111,7 +111,7 @@ public class FolderDao implements CrudDao<Folder> {
         if (resultRows != 1) {
             ErrorCode.DB_INSERT_FAILED.throwUp();
         }
-        new IndexJobDao(getSqlSession()).insertIndexJob(new IndexJob(IndexJobType.FOLDER, folder.getId(), IndexJobAction.CREATE, false));
+        new IndexJobDao(getSqlSession()).insertIndexJob(new IndexJob(IndexJobType.FOLDER, folder.getId(), IndexJobAction.CREATE));
         return folder;
     }
 
@@ -188,7 +188,7 @@ public class FolderDao implements CrudDao<Folder> {
     public void updateFolder(Folder folder) {
         SqlSession sqlSession = getSqlSession();
         sqlSession.update("com.dewarim.cinnamon.model.Folder.updateFolder", folder);
-        new IndexJobDao(getSqlSession()).insertIndexJob(new IndexJob(IndexJobType.FOLDER, folder.getId(), IndexJobAction.UPDATE, false));
+        new IndexJobDao(getSqlSession()).insertIndexJob(new IndexJob(IndexJobType.FOLDER, folder.getId(), IndexJobAction.UPDATE));
     }
 
     public boolean hasContent(List<Long> ids) {
@@ -240,7 +240,7 @@ public class FolderDao implements CrudDao<Folder> {
     @Override
     public int delete(List<Long> ids) {
         IndexJobDao jobDao = new IndexJobDao(getSqlSession());
-        ids.forEach(id -> jobDao.insertIndexJob(new IndexJob(IndexJobType.FOLDER, id, IndexJobAction.DELETE, false)));
+        ids.forEach(id -> jobDao.insertIndexJob(new IndexJob(IndexJobType.FOLDER, id, IndexJobAction.DELETE)));
         return CrudDao.super.delete(ids);
     }
 

@@ -372,7 +372,7 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
                     if (!subFolderIds.isEmpty()) {
                         indexJobDao.reindexFolders(subFolderIds);
                         for (Long subFolderId : subFolderIds) {
-                            indexJobDao.insertIndexJob(new IndexJob(IndexJobType.FOLDER, subFolderId, IndexJobAction.UPDATE, false));
+                            indexJobDao.insertIndexJob(new IndexJob(IndexJobType.FOLDER, subFolderId, IndexJobAction.UPDATE));
                             indexJobDao.reIndexFolderContent(subFolderId);
                         }
                     }

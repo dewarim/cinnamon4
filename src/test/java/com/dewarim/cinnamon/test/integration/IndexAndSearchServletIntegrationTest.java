@@ -110,7 +110,7 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
         long exampleId = response.getOsdIds().get(0);
 
         if (CinnamonServer.getConfig().getCinnamonTikaConfig().isUseTika()) {
-            SearchIdsResponse imageSearchResponse = client.search("<BooleanQuery><Clause occurs='must'><TermQuery fieldName='xml_content'>delicious</TermQuery></Clause></BooleanQuery>", SearchType.ALL);
+            SearchIdsResponse imageSearchResponse = client.search("<BooleanQuery><Clause occurs='must'><TermQuery fieldName='tika_meta'>delicious</TermQuery></Clause></BooleanQuery>", SearchType.ALL);
             assertEquals(1, imageSearchResponse.getOsdIds().size());
             assertEquals(osdWithContentId, imageSearchResponse.getOsdIds().get(0));
         }

@@ -44,6 +44,7 @@ public class DefaultIndexer implements Indexer {
 
         if (multipleResults) {
             hits = xml.selectNodes(searchString);
+
         } else {
             Node node = xml.selectSingleNode(searchString);
             if (node != null) {

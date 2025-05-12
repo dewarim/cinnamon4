@@ -124,7 +124,7 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
             }
         }
         sqlSession.update("com.dewarim.cinnamon.model.ObjectSystemData.updateOsd", osd);
-        new IndexJobDao(sqlSession).insertIndexJob(new IndexJob(IndexJobType.OSD, osd.getId(), IndexJobAction.UPDATE, false));
+        new IndexJobDao(sqlSession).insertIndexJob(new IndexJob(IndexJobType.OSD, osd.getId(), IndexJobAction.UPDATE));
         DebugLogService.log("update:", osd);
     }
 
@@ -142,7 +142,7 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
             osd.setRootId(osd.getId());
             updateOsd(osd, false);
         }
-        IndexJob indexJob = new IndexJob(IndexJobType.OSD, osd.getId(), IndexJobAction.CREATE, false);
+        IndexJob indexJob = new IndexJob(IndexJobType.OSD, osd.getId(), IndexJobAction.CREATE);
         new IndexJobDao(sqlSession).insertIndexJob(indexJob);
         DebugLogService.log("save:", osd);
         return osd;
@@ -166,7 +166,7 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
         sqlSession.delete("com.dewarim.cinnamon.model.ObjectSystemData.deleteOsds", osdIdsToToDelete);
         IndexJobDao jobDao = new IndexJobDao(getSqlSession());
         osdIdsToToDelete.forEach(id -> {
-            IndexJob indexJob = new IndexJob(IndexJobType.OSD, id, IndexJobAction.DELETE, false);
+            IndexJob indexJob = new IndexJob(IndexJobType.OSD, id, IndexJobAction.DELETE);
             jobDao.insertIndexJob(indexJob);
         });
         DebugLogService.log("osds to delete:", osdIdsToToDelete);
@@ -231,5 +231,11 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
     public List<ObjectSystemData> getRootOsdsWithLatestHeadLinks(List<Long> osdIdsToToDelete) {
         SqlSession session = getSqlSession();
         return session.selectList("com.dewarim.cinnamon.model.ObjectSystemData.rootIdForLatestHeadLinks", osdIdsToToDelete);
+    }
+
+    public List<ObjectSystemData> getOsdsMissingTikaMetaset(Long tikaMetasetTypeId, int limit) {
+        SqlSession session = getSqlSession();
+        Map<String,Object> params = Map.of("tikaMetasetTypeId", tikaMetasetTypeId, "limit", limit);
+        return session.selectList("com.dewarim.cinnamon.model.ObjectSystemData.getOsdsMissingTikaMetaset", params);
     }
 }

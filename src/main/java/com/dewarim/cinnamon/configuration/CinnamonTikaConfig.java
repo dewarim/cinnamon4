@@ -6,6 +6,8 @@ public class CinnamonTikaConfig {
     private boolean useTika                = false;
     private int     retryDelayInSeconds    = 1;
     private int     maxRetryDelayInSeconds = 10;
+    private int     tikaBatchSize          = 8;
+    private long    tikaPauseInMillis      = 3000;
 
     public CinnamonTikaConfig() {
     }
@@ -54,6 +56,19 @@ public class CinnamonTikaConfig {
                 ", useTika=" + useTika +
                 ", retryDelayInSeconds=" + retryDelayInSeconds +
                 ", maxRetryDelayInSeconds=" + maxRetryDelayInSeconds +
+                ", tikaBatchSize=" + tikaBatchSize +
                 '}';
+    }
+
+    public void setTikaBatchSize(int tikaBatchSize) {
+        this.tikaBatchSize = tikaBatchSize;
+    }
+
+    public int getTikaBatchSize() {
+        return tikaBatchSize;
+    }
+
+    public long getTikaPauseInMillis() {
+        return tikaPauseInMillis;
     }
 }

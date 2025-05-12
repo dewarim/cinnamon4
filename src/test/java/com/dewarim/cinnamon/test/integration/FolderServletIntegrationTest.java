@@ -58,7 +58,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getSummaryHappyPath() throws IOException {
-        var           toh       = new TestObjectHolder(client, userId).createFolder().setSummaryOnFolder("foo-folder");
+        var           toh       = new TestObjectHolder(client, userId).createFolder().setSummaryOnFolder("<p>foo-folder</p>");
         List<Summary> summaries = client.getFolderSummaries(List.of(toh.folder.getId()));
         assertNotNull(summaries);
         assertFalse(summaries.isEmpty());

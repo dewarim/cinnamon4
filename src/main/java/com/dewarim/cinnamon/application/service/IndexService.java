@@ -58,14 +58,13 @@ public class IndexService implements Runnable {
     private final LuceneConfig           config;
     private final Path                   indexPath;
     private final XmlMapper              xmlMapper;
-    private final TikaService            tikaService;
     private final List<IndexItem>        indexItems;
     private final ContentProviderService contentProviderService;
 
     private static final IndexEvent SUCCESS_EVENT = new IndexEvent().setIndexResult(IndexResult.SUCCESS);
     private static final IndexEvent IGNORE_EVENT  = new IndexEvent().setIndexResult(IndexResult.IGNORE);
 
-    public IndexService(LuceneConfig config, TikaService tikaService, ContentProviderService contentProviderService) {
+    public IndexService(LuceneConfig config, ContentProviderService contentProviderService) {
         this.config = config;
         indexPath   = Paths.get(config.getIndexPath());
         if (!indexPath.toFile().exists()) {
@@ -76,7 +75,6 @@ public class IndexService implements Runnable {
         }
         indexItems                  = new IndexItemDao().list();
         xmlMapper                   = new XmlMapper();
-        this.tikaService            = tikaService;
         this.contentProviderService = contentProviderService;
     }
 
@@ -271,7 +269,6 @@ public class IndexService implements Runnable {
         ExecutorService executorService = Executors.newFixedThreadPool(Math.min(poolSize, config.getThreadPoolSize()));
         jobs.forEach(executorService::submit);
         executorService.shutdown();
-        // await termination; 10 minutes due to potentially longer running Tika jobs.
         try {
             boolean terminatedOkay = executorService.awaitTermination(config.getThreadPoolWaitInMinutes(), TimeUnit.MINUTES);
             if (!terminatedOkay) {
@@ -299,8 +296,8 @@ public class IndexService implements Runnable {
     }
 
     private List<IndexJobWithDependencies> findJobs(List<IndexJob> jobs,
-                                                           ConcurrentLinkedQueue<IndexJob> jobsToDelete,
-                                                           ConcurrentLinkedQueue<IndexJob> jobsToUpdate) {
+                                                    ConcurrentLinkedQueue<IndexJob> jobsToDelete,
+                                                    ConcurrentLinkedQueue<IndexJob> jobsToUpdate) {
         if (jobs.isEmpty()) {
             return Collections.emptyList();
         }
@@ -343,7 +340,7 @@ public class IndexService implements Runnable {
             }
 
             for (IndexJob indexJob : jobs) {
-                IndexKey indexKey = new IndexKey(indexJob.getJobType(), indexJob.getItemId(), indexJob.getAction(), indexJob.isUpdateTikaMetaset());
+                IndexKey indexKey = new IndexKey(indexJob.getJobType(), indexJob.getItemId(), indexJob.getAction());
                 if (seen.add(indexKey)) {
                     IndexJobWithDependencies indexJobWithDependencies = new IndexJobWithDependencies(indexJob, indexKey);
                     if (indexJob.getJobType().equals(IndexJobType.OSD)) {
@@ -381,7 +378,7 @@ public class IndexService implements Runnable {
                             metaSizeSum += meta.getContent().length();
                         }
                         osd.setMetas(metas);
-                        if(metaSizeSum > config.getMaxCombinedMetasetSize()){
+                        if (metaSizeSum > config.getMaxCombinedMetasetSize()) {
                             log.info("Reached maxCombinedMetasetSize of {}, will skip some elements and take them on next time.", config.getMaxCombinedMetasetSize());
                             break;
                         }
@@ -405,7 +402,7 @@ public class IndexService implements Runnable {
                             metaSizeSum += meta.getContent().length();
                         }
                         folder.setMetas(metas);
-                        if(metaSizeSum > config.getMaxCombinedMetasetSize()){
+                        if (metaSizeSum > config.getMaxCombinedMetasetSize()) {
                             log.info("Reached maxCombinedMetasetSize of {}, will skip some elements and take them on next time.", config.getMaxCombinedMetasetSize());
                             break;
                         }
@@ -428,7 +425,7 @@ public class IndexService implements Runnable {
         IndexEvent indexEvent;
         log.debug("handle IndexJob: {} ", job);
         switch (job.getJobType()) {
-            case OSD -> indexEvent = indexOsd(jobWithDependencies, doc, indexItems, job.isUpdateTikaMetaset());
+            case OSD -> indexEvent = indexOsd(jobWithDependencies, doc, indexItems);
             case FOLDER -> indexEvent = indexFolder(jobWithDependencies, doc, indexItems);
             default -> indexEvent = IGNORE_EVENT;
         }
@@ -481,7 +478,7 @@ public class IndexService implements Runnable {
         return SUCCESS_EVENT;
     }
 
-    private IndexEvent indexOsd(IndexJobWithDependencies job, Document doc, List<IndexItem> indexItems, boolean updateTikaMetaset) {
+    private IndexEvent indexOsd(IndexJobWithDependencies job, Document doc, List<IndexItem> indexItems) {
         ObjectSystemData osd = job.getOsd();
         try {
             // index sysMeta
@@ -541,16 +538,6 @@ public class IndexService implements Runnable {
                     Format format = job.getFormat();
                     switch (format.getIndexMode()) {
                         case XML -> content = contentStream.readAllBytes();
-                        case TIKA -> {
-                            if (updateTikaMetaset && tikaService.isEnabled()) {
-                                log.debug("update tika metaset");
-                                tikaService.convertContentToTikaMetaset(osd, contentStream, format);
-                            }
-                            else {
-                                log.debug("ignore format #{} '{}' with tika flag (updateTikaMetaset: {}, tikaEnabled: {})",
-                                        format.getId(), format.getName(), updateTikaMetaset, tikaService.isEnabled());
-                            }
-                        }
                         case JSON -> content = convertJsonToXml(contentStream);
                         case PLAIN_TEXT -> content = ("<plainText>" + new String(contentStream.readAllBytes(), StandardCharsets.UTF_8) + "</plainText>").getBytes();
                     }

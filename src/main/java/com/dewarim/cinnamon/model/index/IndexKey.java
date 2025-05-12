@@ -1,8 +1,6 @@
 package com.dewarim.cinnamon.model.index;
 
-import java.util.Objects;
-
-public record IndexKey(IndexJobType type, Long itemId, IndexJobAction action, boolean updateTika) {
+public record IndexKey(IndexJobType type, Long itemId, IndexJobAction action) {
 
     @Override
     public boolean equals(Object o) {
@@ -14,7 +12,7 @@ public record IndexKey(IndexJobType type, Long itemId, IndexJobAction action, bo
         }
         IndexKey indexKey = (IndexKey) o;
         return type == indexKey.type && itemId.equals(indexKey.itemId)
-                && action == indexKey.action && Objects.equals(updateTika, indexKey.updateTika);
+                && action == indexKey.action;
     }
 
     @Override

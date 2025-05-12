@@ -62,7 +62,7 @@ public class CinnamonServer {
 
     private static final Logger log = LogManager.getLogger(CinnamonServer.class);
 
-    public static final String           VERSION       = "1.6.7";
+    public static final String           VERSION       = "1.6.8";
     private             Server           server;
     private             DbSessionFactory dbSessionFactory;
     private final       WebAppContext    webAppContext = new WebAppContext();
@@ -73,6 +73,7 @@ public class CinnamonServer {
     private             SearchService    searchService;
     private             TikaService      tikaService;
     private static      Thread           indexServiceThread;
+    private static      Thread           tikaServiceThread;
 
     public CinnamonServer(int port) {
         // the CinnamonIntegrationTests overrides the configured port,
@@ -213,9 +214,20 @@ public class CinnamonServer {
         return new ServerConnector(server, acceptors, selectors, tls, http11);
     }
 
+    public void startTikaService(ContentProviderService contentProviderService){
+        if(config.getCinnamonTikaConfig().isUseTika()){
+            tikaService = new TikaService(config.getCinnamonTikaConfig(), contentProviderService);
+            tikaServiceThread = new Thread(tikaService);
+            tikaServiceThread.setName("Tika-Service");
+            tikaServiceThread.start();
+        }
+        else{
+            log.warn("Tika functionality is disabled -> do not start tika service.");
+        }
+    }
 
     public void startIndexService(ContentProviderService contentProviderService) {
-        indexService       = new IndexService(config.getLuceneConfig(), tikaService, contentProviderService);
+        indexService       = new IndexService(config.getLuceneConfig(), contentProviderService);
         indexServiceThread = new Thread(indexService);
         indexServiceThread.setName("Index-Service");
         indexServiceThread.start();
@@ -238,10 +250,10 @@ public class CinnamonServer {
         // TODO: unused?
         server.setAttribute(DEFAULT_DATABASE_SESSION_FACTORY, dbSessionFactory);
 
-        tikaService = new TikaService(config.getCinnamonTikaConfig());
         ContentProviderService contentProviderService = new ContentProviderService();
         // order is important here: searchService waits for indexService to finish initialization
         startIndexService(contentProviderService);
+        startTikaService(contentProviderService);
         searchService = new SearchService(config.getLuceneConfig());
 
         webAppContext.setAttribute(TIKA_SERVICE, tikaService);

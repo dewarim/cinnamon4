@@ -69,10 +69,10 @@ public class IndexJobDao {
         return sqlSession;
     }
 
-    public IndexRows fullReindex(boolean updateTikaMetaset) {
+    public IndexRows fullReindex() {
         SqlSession session = getSqlSession();
         int        folders = session.insert("com.dewarim.cinnamon.model.index.IndexJob.reindexAllFolders");
-        int        osds    = session.insert("com.dewarim.cinnamon.model.index.IndexJob.reindexAllOsds", updateTikaMetaset);
+        int        osds    = session.insert("com.dewarim.cinnamon.model.index.IndexJob.reindexAllOsds");
         return new IndexRows(folders, osds);
     }
 
@@ -81,9 +81,9 @@ public class IndexJobDao {
         return session.insert("com.dewarim.cinnamon.model.index.IndexJob.reindexFolders", folderIds);
     }
 
-    public int reindexOsds(List<Long> osdIds, boolean updateTikaMetaset) {
+    public int reindexOsds(List<Long> osdIds) {
         SqlSession session = getSqlSession();
-        Map<String,Object> params = Map.of("ids", osdIds, "updateTikaMetaset",updateTikaMetaset);
+        Map<String,Object> params = Map.of("ids", osdIds);
         return session.insert("com.dewarim.cinnamon.model.index.IndexJob.reindexOsds", params);
     }
 
@@ -98,7 +98,7 @@ public class IndexJobDao {
         if(ids.isEmpty()){
             return;
         }
-        reindexOsds(ids,false);
+        reindexOsds(ids);
     }
 
     public List<IndexJob> listFailedIndexJobs() {

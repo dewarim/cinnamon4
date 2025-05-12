@@ -23,7 +23,7 @@ public class LuceneConfig {
      */
     private int     maxBatchSize            = 500;
     private int     threadPoolSize          = 8;
-    private long    threadPoolWaitInMinutes = 20L;
+    private long    threadPoolWaitInMinutes = 5L;
     /**
      * Maximum size of all metasets (in Unicode characters) to handle in one batch.
      * Metasets are parsed to XML and if too many are added,

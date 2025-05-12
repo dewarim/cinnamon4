@@ -290,5 +290,15 @@
         FROM objects
     </select>
 
+    <select id="getOsdsMissingTikaMetaset" resultMap="osdMap">
+        SELECT * FROM objects
+        WHERE
+            content_size > 0 and
+            format_id is not null and
+            format_id in (select id from formats f where f.index_mode='TIKA')
+            and
+            id not in (select osd_id from osd_meta om where om.type_id = #{tikaMetasetTypeId})
+        LIMIT #{limit}
+    </select>
 
 </mapper>

@@ -37,13 +37,13 @@ To really make use of the metadata, consider adding index-items so the data is s
 insert into index_items(id, fieldname, multiple_results,
    name, search_string, search_condition, store_field, index_type)
 values (nextval('seq_index_item_id'), 'tika', false,'tika metadata',
-  '/objectSystemData/metasets/meta/content/descendant::*', 'true()',true, 'DESCENDING_STRING_INDEXER'
+  '/objectSystemData/metasets/metaset/content/descendant::*', 'true()',true, 'DESCENDING_STRING_INDEXER'
 );
 ----
 
 Note: this configuration will index all metasets, you should probably fine tune the search_condition to only include the tika metaset:
 
-  boolean(string-length(/objectSystemData/metasets/meta/typeId[text()])='_tika__metaset_type_id_')
+  boolean(string-length(/objectSystemData/metasets/metaset/typeId[text()])='_tika__metaset_type_id_')
 
 === Installing Docker with Tika image
 

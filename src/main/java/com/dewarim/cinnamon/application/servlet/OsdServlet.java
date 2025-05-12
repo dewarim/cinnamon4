@@ -10,7 +10,9 @@ import com.dewarim.cinnamon.api.lifecycle.State;
 import com.dewarim.cinnamon.api.lifecycle.StateChangeResult;
 import com.dewarim.cinnamon.application.CinnamonRequest;
 import com.dewarim.cinnamon.application.CinnamonResponse;
+import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
+import com.dewarim.cinnamon.application.exception.CinnamonException;
 import com.dewarim.cinnamon.application.service.DeleteOsdService;
 import com.dewarim.cinnamon.application.service.MetaService;
 import com.dewarim.cinnamon.application.service.TikaService;
@@ -65,6 +67,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
     private static final Logger                 log                  = LogManager.getLogger(OsdServlet.class);
     private              TikaService            tikaService;
     private              ContentProviderService contentProviderService;
+    private              Long                   tikaMetasetTypeId;
 
     public OsdServlet() {
         super();
@@ -104,6 +107,23 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         }
     }
 
+    private Long getTikaMetasetTypeId() {
+        if (tikaMetasetTypeId == null) {
+            Optional<MetasetType> tikaMetasetType = new MetasetTypeDao().list().stream().filter(metasetType -> metasetType.getName().equals(TIKA_METASET_NAME)).findFirst();
+            if (tikaMetasetType.isPresent()) {
+                tikaMetasetTypeId = tikaMetasetType.get().getId();
+            }
+            else {
+                if (CinnamonServer.config.getCinnamonTikaConfig().isUseTika()) {
+                    String msg = "Could not find tika metaset type - this is a configuration error, contact your administrator.";
+                    log.error(msg);
+                    throw new CinnamonException(msg);
+                }
+            }
+        }
+        return tikaMetasetTypeId;
+    }
+
     private void copyToExistingOsd(CinnamonRequest request, CinnamonResponse cinnamonResponse, UserAccount user, OsdDao osdDao) throws IOException {
         CopyToExistingOsdRequest copyToExistingOsdRequest = xmlMapper.readValue(request.getInputStream(), CopyToExistingOsdRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
@@ -136,8 +156,9 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                     deletions.add(new Deletion(targetId, contentPath, false));
                 }
                 copyContent(user, osdDao, target, source, source.getFormatId());
+                deleteTikaMetasetOnTarget(target, metasetDao);
             }
-            if (copyTask.getMetasetTypeIds() != null && !copyTasks.isEmpty()) {
+            if (copyTask.getMetasetTypeIds() != null) {
                 // delete _ALL_ metasets on target: (cinnamon3 behavior)
                 metasetDao.delete(metasetDao.listByOsd(targetId).stream().map(Meta::getId).toList());
                 List<Meta> metas = metasetDao.listByOsd(sourceId);
@@ -155,6 +176,15 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
             new DeletionDao().create(deletions);
         }
         cinnamonResponse.setResponse(new GenericResponse(true));
+    }
+
+    private void deleteTikaMetasetOnTarget(ObjectSystemData target, OsdMetaDao metasetDao) {
+        if (CinnamonServer.config.getCinnamonTikaConfig().isUseTika()) {
+            // delete tika metaset on target:
+            Optional<Meta> tikaMeta = metasetDao.listByOsd(target.getId()).stream()
+                    .filter(meta -> meta.getTypeId().equals(getTikaMetasetTypeId())).findFirst();
+            tikaMeta.ifPresent(meta -> metasetDao.delete(List.of(meta.getId())));
+        }
     }
 
     private void preventOverlapOfSourceAndTargetOsds(List<Long> sourceIds, List<Long> targetIds) {
@@ -212,8 +242,6 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
             target.setContentSize(metadata.getContentSize());
             target.setContentProvider(contentProvider.getName());
             target.setFormatId(formatId);
-            Format format = new FormatDao().getObjectById(source.getFormatId()).orElseThrow();
-            tikaService.convertContentToTikaMetaset(target, contentProvider.getContentStream(metadata), format);
             if (user.isChangeTracking()) {
                 target.setContentChanged(true);
             }
@@ -347,11 +375,18 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
             }
 
             // copy metasets
+            var metasetDao = new OsdMetaDao();
             if (copyOsdRequest.getMetasetTypeIds().size() > 0) {
-                var        metasetDao = new OsdMetaDao();
-                List<Meta> metas      = metasetDao.listByOsd(osd.getId());
+                List<Meta> metas = metasetDao.listByOsd(osd.getId());
                 var metaCopies = metas.stream()
                         .filter(meta -> copyOsdRequest.getMetasetTypeIds().contains(meta.getTypeId()))
+                        .filter(meta -> {
+                            if (CinnamonServer.config.getCinnamonTikaConfig().isUseTika()) {
+                                // do not copy tika metaset -> we will create a new one.
+                                return !meta.getTypeId().equals(getTikaMetasetTypeId());
+                            }
+                            return true;
+                        })
                         .map(meta -> new Meta(copy.getId(), meta.getTypeId(), meta.getContent()))
                         .collect(Collectors.toList());
                 new MetaService<>().createMeta(metasetDao, metaCopies, osdDao, user);
@@ -685,7 +720,6 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         osd.setContentPath(metadata.getContentPath());
         osd.setContentSize(metadata.getContentSize());
         osd.setFormatId(format.getId());
-        tikaService.convertContentToTikaMetaset(osd, new FileInputStream(tempOutputFile), format);
         deleteTempFile(tempOutputFile);
     }
 
