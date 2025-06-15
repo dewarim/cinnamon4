@@ -97,7 +97,7 @@
                  open="(" separator="," close=")">
             #{item}
         </foreach>
-        )
+        ) as getFolderPaths
     </select>
 
     <select id="getFolderPath" parameterType="long" resultType="String">
@@ -353,5 +353,10 @@
         WHERE id in <foreach item="item" index="index" collection="list" open="(" separator="," close=")">#{item}</foreach>
     </select>
 
+    <select id="findKnownIds" parameterType="java.util.List" resultType="long">
+        SELECT id FROM folders
+        WHERE id in
+        <foreach item="item" index="index" collection="list" open="(" separator="," close=")">#{item}</foreach>
+    </select>
 
 </mapper>
