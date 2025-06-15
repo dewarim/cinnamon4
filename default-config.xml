@@ -64,6 +64,7 @@
     <maxIndexAttempts>1</maxIndexAttempts>
     <uncommittedLimit>10000</uncommittedLimit>
     <logFailedAttemptsToDb>true</logFailedAttemptsToDb>
+    <verifySearchResults>false</verifySearchResults>
   </luceneConfig>
   <cinnamonTikaConfig>
     <baseUrl>http://localhost:9998</baseUrl>

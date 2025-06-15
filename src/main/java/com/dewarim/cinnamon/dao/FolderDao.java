@@ -251,4 +251,21 @@ public class FolderDao implements CrudDao<Folder> {
         }
         return sqlSession.selectList("com.dewarim.cinnamon.model.Folder.getFoldersAsOwnables", folderIds.stream().toList());
     }
+
+    public Set<Long> findKnownIds(List<Long> ids) {
+        if(ids == null || ids.isEmpty()) {
+            return Set.of();
+        }
+
+        List<List<Long>> partitions = CrudDao.partitionLongList(ids.stream().toList());
+        SqlSession       sqlSession = getSqlSession();
+        HashSet<Long>          results    = new HashSet<>(ids.size());
+        partitions.forEach(partition -> {
+            if (!partition.isEmpty()) {
+                results.addAll(sqlSession.selectList("com.dewarim.cinnamon.model.Folder.findKnownIds", partition));
+            }
+        });
+
+        return results;
+    }
 }

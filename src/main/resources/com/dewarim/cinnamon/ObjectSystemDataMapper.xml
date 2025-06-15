@@ -301,4 +301,10 @@
         LIMIT #{limit}
     </select>
 
+    <select id="findKnownIds" parameterType="java.util.List" resultType="long">
+        SELECT id FROM objects
+        WHERE id in
+        <foreach item="item" index="index" collection="list" open="(" separator="," close=")">#{item}</foreach>
+    </select>
+
 </mapper>

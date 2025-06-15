@@ -164,7 +164,7 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
     public void deleteOsds(List<Long> osdIdsToToDelete) {
         SqlSession sqlSession = getSqlSession();
         sqlSession.delete("com.dewarim.cinnamon.model.ObjectSystemData.deleteOsds", osdIdsToToDelete);
-        IndexJobDao jobDao = new IndexJobDao(getSqlSession());
+        IndexJobDao jobDao = new IndexJobDao(sqlSession);
         osdIdsToToDelete.forEach(id -> {
             IndexJob indexJob = new IndexJob(IndexJobType.OSD, id, IndexJobAction.DELETE);
             jobDao.insertIndexJob(indexJob);
@@ -237,5 +237,22 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
         SqlSession session = getSqlSession();
         Map<String,Object> params = Map.of("tikaMetasetTypeId", tikaMetasetTypeId, "limit", limit);
         return session.selectList("com.dewarim.cinnamon.model.ObjectSystemData.getOsdsMissingTikaMetaset", params);
+    }
+
+    public Set<Long> findKnownIds(List<Long> ids) {
+        if(ids == null || ids.isEmpty()) {
+            return Set.of();
+        }
+
+        List<List<Long>> partitions = CrudDao.partitionLongList(ids.stream().toList());
+        SqlSession       sqlSession = getSqlSession();
+        HashSet<Long>          results    = new HashSet<>(ids.size());
+        partitions.forEach(partition -> {
+            if (!partition.isEmpty()) {
+                results.addAll(sqlSession.selectList("com.dewarim.cinnamon.model.ObjectSystemData.findKnownIds", partition));
+            }
+        });
+
+        return results;
     }
 }
