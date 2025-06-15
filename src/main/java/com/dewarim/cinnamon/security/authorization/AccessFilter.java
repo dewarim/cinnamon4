@@ -144,7 +144,6 @@ public class AccessFilter {
             permissions.forEach(permission -> nameToPermissionMapping.put(permission.getName(), permission));
             initialized = true;
         }
-
     }
 
     private static Set<Long> getUserAclsWithBrowsePermissions(UserAccount user) {
