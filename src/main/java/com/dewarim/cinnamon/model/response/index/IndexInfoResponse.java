@@ -82,7 +82,7 @@ public class IndexInfoResponse extends BaseResponse implements ApiResponse {
     @Override
     public List<Object> examples() {
         IndexInfoResponse response = new IndexInfoResponse(100, 20, 2, 41);
-        response.setFailedIndexJobs(List.of(new IndexJob(IndexJobType.OSD, 143L, IndexJobAction.CREATE, true)));
+        response.setFailedIndexJobs(List.of(new IndexJob(IndexJobType.OSD, 143L, IndexJobAction.CREATE)));
         return List.of(response);
     }
 }

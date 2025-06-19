@@ -1,6 +1,9 @@
 package com.dewarim.cinnamon.dao;
 
 import com.dewarim.cinnamon.ErrorCode;
+import com.dewarim.cinnamon.api.IdAndRootId;
+import com.dewarim.cinnamon.api.Ownable;
+import com.dewarim.cinnamon.api.RootAndLatestHead;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.application.service.debug.DebugLogService;
 import com.dewarim.cinnamon.model.ObjectSystemData;
@@ -12,6 +15,7 @@ import com.dewarim.cinnamon.model.request.osd.VersionPredicate;
 import org.apache.ibatis.session.SqlSession;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /*
  * note: calling default update() implementation on OSD will not update changeTracking.
@@ -24,6 +28,13 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
     private static final int BATCH_SIZE = 10000;
 
     private SqlSession sqlSession;
+
+    public OsdDao() {
+    }
+
+    public OsdDao(SqlSession sqlSession) {
+        this.sqlSession = sqlSession;
+    }
 
     public List<ObjectSystemData> getObjectsById(List<Long> ids, boolean includeSummary) {
         if (ids == null || ids.isEmpty()) {
@@ -49,9 +60,33 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
         return results;
     }
 
-    public ObjectSystemData getLatestHead(long id) {
-        SqlSession sqlSession = getSqlSession();
-        return sqlSession.selectOne("com.dewarim.cinnamon.model.ObjectSystemData.getLatestHead", id);
+    public Set<IdAndRootId> getIdAndRootsById(List<Long> ids) {
+        SqlSession        sqlSession = getSqlSession();
+        List<IdAndRootId> idAndRoots = sqlSession.selectList("com.dewarim.cinnamon.model.ObjectSystemData.getIdAndRoot", ids);
+        return new HashSet<>(idAndRoots);
+    }
+
+    public Map<Long, ObjectSystemData> getLatestHeads(List<ObjectSystemData> osds) {
+        if (osds == null || osds.isEmpty()) {
+            return Map.of();
+        }
+        SqlSession                  sqlSession         = getSqlSession();
+        Set<Long>                   rootIds            = osds.stream().map(ObjectSystemData::getRootId).collect(Collectors.toSet());
+        List<RootAndLatestHead>     rootAndLatestHeads = sqlSession.selectList("com.dewarim.cinnamon.model.ObjectSystemData.getLatestHeads", rootIds.stream().toList());
+        Set<Long>                   headIds            = rootAndLatestHeads.stream().map(RootAndLatestHead::getHeadId).collect(Collectors.toSet());
+        List<ObjectSystemData>      heads              = getObjectsById(headIds.stream().toList(), false);
+        Map<Long, ObjectSystemData> latestHeadMappings = new HashMap<>();
+        for (ObjectSystemData osd : osds) {
+            Long rootId = osd.getRootId();
+            rootAndLatestHeads.stream()
+                    .filter(rootHead -> rootHead.getRootId().equals(rootId))
+                    .findFirst()
+                    .ifPresent(rootHead -> {
+                        Optional<ObjectSystemData> headOsd = heads.stream().filter(head -> head.getId().equals(rootHead.getHeadId())).findFirst();
+                        headOsd.ifPresent(objectSystemData -> latestHeadMappings.put(osd.getId(), objectSystemData));
+                    });
+        }
+        return latestHeadMappings;
     }
 
     public List<ObjectSystemData> getObjectsByFolderId(long folderId, boolean includeSummary, VersionPredicate versionPredicate) {
@@ -79,7 +114,7 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
         return Optional.of(objectsById.get(0));
     }
 
-    public void updateOsd(ObjectSystemData osd, boolean updateModifier) {
+    public void updateOsd(ObjectSystemData osd, boolean updateModifier, boolean updateTikaMetaset) {
         SqlSession sqlSession = getSqlSession();
         if (updateModifier) {
             UserAccount currentUser = ThreadLocalSqlSession.getCurrentUser();
@@ -89,22 +124,26 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
             }
         }
         sqlSession.update("com.dewarim.cinnamon.model.ObjectSystemData.updateOsd", osd);
-        new IndexJobDao().insertIndexJob(new IndexJob(IndexJobType.OSD, osd.getId(), IndexJobAction.UPDATE, false));
+        new IndexJobDao(sqlSession).insertIndexJob(new IndexJob(IndexJobType.OSD, osd.getId(), IndexJobAction.UPDATE));
         DebugLogService.log("update:", osd);
+    }
+
+    public void updateOsd(ObjectSystemData osd, boolean updateModifier) {
+        updateOsd(osd, updateModifier, false);
     }
 
     public ObjectSystemData saveOsd(ObjectSystemData osd) {
         SqlSession sqlSession = getSqlSession();
         int        resultRows = sqlSession.insert("com.dewarim.cinnamon.model.ObjectSystemData.insertOsd", osd);
         if (resultRows != 1) {
-            ErrorCode.DB_INSERT_FAILED.throwUp();
+            throw ErrorCode.DB_INSERT_FAILED.exception();
         }
         if (osd.getRootId() == null) {
             osd.setRootId(osd.getId());
             updateOsd(osd, false);
         }
-        IndexJob indexJob = new IndexJob(IndexJobType.OSD, osd.getId(), IndexJobAction.CREATE, false);
-        new IndexJobDao().insertIndexJob(indexJob);
+        IndexJob indexJob = new IndexJob(IndexJobType.OSD, osd.getId(), IndexJobAction.CREATE);
+        new IndexJobDao(sqlSession).insertIndexJob(indexJob);
         DebugLogService.log("save:", osd);
         return osd;
     }
@@ -125,9 +164,9 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
     public void deleteOsds(List<Long> osdIdsToToDelete) {
         SqlSession sqlSession = getSqlSession();
         sqlSession.delete("com.dewarim.cinnamon.model.ObjectSystemData.deleteOsds", osdIdsToToDelete);
-        IndexJobDao jobDao = new IndexJobDao();
+        IndexJobDao jobDao = new IndexJobDao(sqlSession);
         osdIdsToToDelete.forEach(id -> {
-            IndexJob indexJob = new IndexJob(IndexJobType.OSD, id, IndexJobAction.DELETE, false);
+            IndexJob indexJob = new IndexJob(IndexJobType.OSD, id, IndexJobAction.DELETE);
             jobDao.insertIndexJob(indexJob);
         });
         DebugLogService.log("osds to delete:", osdIdsToToDelete);
@@ -148,11 +187,12 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
         return this;
     }
 
+    @Override
     public SqlSession getSqlSession() {
-        if (sqlSession != null) {
-            return sqlSession;
+        if (sqlSession == null) {
+            sqlSession = ThreadLocalSqlSession.getSqlSession();
         }
-        return ThreadLocalSqlSession.getSqlSession();
+        return sqlSession;
     }
 
     public void updateOwnershipAndModifierAndCreatorAndLocker(Long userId, Long assetReceiverId, Long adminUserId) {
@@ -178,5 +218,41 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
         SqlSession sqlSession = getSqlSession();
         return sqlSession.selectList("com.dewarim.cinnamon.model.ObjectSystemData.getOsdByModifierOrCreatorOrOwnerOrLocker", userId);
 
+    }
+
+    public List<Ownable> getOsdsAsOwnables(Set<Long> osdIds) {
+        SqlSession sqlSession = getSqlSession();
+        if (osdIds == null || osdIds.isEmpty()) {
+            return List.of();
+        }
+        return sqlSession.selectList("com.dewarim.cinnamon.model.ObjectSystemData.getOsdsAsOwnables", osdIds.stream().toList());
+    }
+
+    public List<ObjectSystemData> getRootOsdsWithLatestHeadLinks(List<Long> osdIdsToToDelete) {
+        SqlSession session = getSqlSession();
+        return session.selectList("com.dewarim.cinnamon.model.ObjectSystemData.rootIdForLatestHeadLinks", osdIdsToToDelete);
+    }
+
+    public List<ObjectSystemData> getOsdsMissingTikaMetaset(Long tikaMetasetTypeId, int limit) {
+        SqlSession session = getSqlSession();
+        Map<String,Object> params = Map.of("tikaMetasetTypeId", tikaMetasetTypeId, "limit", limit);
+        return session.selectList("com.dewarim.cinnamon.model.ObjectSystemData.getOsdsMissingTikaMetaset", params);
+    }
+
+    public Set<Long> findKnownIds(List<Long> ids) {
+        if(ids == null || ids.isEmpty()) {
+            return Set.of();
+        }
+
+        List<List<Long>> partitions = CrudDao.partitionLongList(ids.stream().toList());
+        SqlSession       sqlSession = getSqlSession();
+        HashSet<Long>          results    = new HashSet<>(ids.size());
+        partitions.forEach(partition -> {
+            if (!partition.isEmpty()) {
+                results.addAll(sqlSession.selectList("com.dewarim.cinnamon.model.ObjectSystemData.findKnownIds", partition));
+            }
+        });
+
+        return results;
     }
 }

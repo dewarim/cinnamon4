@@ -6,15 +6,19 @@ import com.dewarim.cinnamon.model.AclGroupPermission;
 import com.dewarim.cinnamon.model.Permission;
 import org.apache.ibatis.session.SqlSession;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class AclGroupPermissionDao {
+
+    private SqlSession sqlSession;
+
+    public AclGroupPermissionDao(SqlSession sqlSession) {
+        this.sqlSession = sqlSession;
+    }
+
+    public AclGroupPermissionDao() {
+    }
 
     public boolean checkIfAnyAclGroupHasThisPermission(List<AclGroup> aclGroups, Permission permission) {
         if (aclGroups.isEmpty()) {
@@ -33,13 +37,13 @@ public class AclGroupPermissionDao {
     }
 
     private List<AclGroupPermission> fetchAepCombinationOfAclGroupsAndThisPermission(List<AclGroup> aclGroups, Permission permission) {
-        SqlSession          sqlSession = ThreadLocalSqlSession.getSqlSession();
+        SqlSession          sqlSession = getSqlSession();
         Map<String, Object> params     = Map.of("aclGroups", aclGroups, "permissionId", permission.getId());
         return sqlSession.selectList("com.dewarim.cinnamon.model.AclGroupPermission.getAclGroupPermissionForAclGroupsAndPermission", params);
     }
 
     public void addPermissions(AclGroup aclGroup, List<Long> permissionIdsToAdd) {
-        SqlSession               sqlSession           = ThreadLocalSqlSession.getSqlSession();
+        SqlSession               sqlSession           = getSqlSession();
         List<AclGroupPermission> aclGroupPermissions  = sqlSession.selectList("com.dewarim.cinnamon.model.AclGroupPermission.listByAclGroupIds", List.of(aclGroup.getId()));
         Set<Long>                currentPermissionIds = aclGroupPermissions.stream().map(AclGroupPermission::getPermissionId).collect(Collectors.toSet());
         List<Long>               newPermissions       = permissionIdsToAdd.stream().filter(id -> !currentPermissionIds.contains(id)).toList();
@@ -50,7 +54,7 @@ public class AclGroupPermissionDao {
     }
 
     public void removePermissions(AclGroup aclGroup, List<Long> permissionIdsToRemove) {
-        SqlSession               sqlSession          = ThreadLocalSqlSession.getSqlSession();
+        SqlSession               sqlSession          = getSqlSession();
         List<AclGroupPermission> aclGroupPermissions = sqlSession.selectList("com.dewarim.cinnamon.model.AclGroupPermission.listByAclGroupIds", List.of(aclGroup.getId()));
         aclGroupPermissions.stream().filter(agp -> permissionIdsToRemove.contains(agp.getPermissionId()))
                 .forEach(agp -> sqlSession.delete("com.dewarim.cinnamon.model.AclGroupPermission.delete", agp.getId()));
@@ -60,7 +64,7 @@ public class AclGroupPermissionDao {
         if(aclGroupIds.isEmpty()){
             return Collections.emptyMap();
         }
-        SqlSession               sqlSession                = ThreadLocalSqlSession.getSqlSession();
+        SqlSession               sqlSession                = getSqlSession();
         Map<Long, List<Long>>    aclGroupIdToPermissionIds = new HashMap<>();
         List<AclGroupPermission> agpList                   = sqlSession.selectList("com.dewarim.cinnamon.model.AclGroupPermission.listByAclGroupIds", aclGroupIds);
         agpList.forEach(agp -> {
@@ -69,5 +73,12 @@ public class AclGroupPermissionDao {
             aclGroupIdToPermissionIds.put(agp.getAclGroupId(), permissionIds);
         });
         return aclGroupIdToPermissionIds;
+    }
+
+    public SqlSession getSqlSession() {
+        if (sqlSession == null) {
+            sqlSession = ThreadLocalSqlSession.getSqlSession();
+        }
+        return sqlSession;
     }
 }

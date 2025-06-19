@@ -282,7 +282,7 @@ create table links
   osd_id bigint
     constraint links_osd_id_fk
     references objects,
-  version bigint default 0 not null
+  resolver varchar(32) default 'FIXED'
 );
 
 create index fki_links_folder_id_fk
@@ -554,7 +554,19 @@ create table change_triggers
     trigger_type        varchar(255)                       not null
 );
 
+drop table if exists index_events;
+create table index_events
+(
+    id bigint not null primary key,
+    local_time  timestamp not null default current_timestamp,
+    job_id bigint not null,
+    event_type varchar(64) not null,
+    index_result varchar(64) not null,
+    message text not null default ''::text
+);
 
+drop sequence if exists seq_index_event_id;
+create sequence seq_index_event_id;
 
 --------------------------
 --- insert test data:  ---
@@ -661,6 +673,12 @@ VALUES (nextval('seq_format_id'),'text/plain','txt', 'plaintext', 1, 'PLAIN_TEXT
 -- #3 format: image/png
 insert into formats(id, contenttype, extension, name, default_object_type_id, index_mode)
 VALUES (nextval('seq_format_id'),'image/png','png', 'image.png', 1, 'TIKA');
+-- #4 format: image/jpeg
+insert into formats(id, contenttype, extension, name, default_object_type_id, index_mode)
+VALUES (nextval('seq_format_id'),'image/jpeg','jpg', 'image.jpg', 1, 'TIKA');
+-- #5 format: application/json
+insert into formats(id, contenttype, extension, name, default_object_type_id, index_mode)
+VALUES (nextval('seq_format_id'),'application/json','json', 'json', 1, 'JSON');
 
 -- #1 relation_type: protect all & clone always
 insert into relation_types (id, left_object_protected, name, right_object_protected,
@@ -699,7 +717,7 @@ values (nextval('seq_index_item_id'), 'meta_content', true,'meta content',
 insert into index_items(id, fieldname, multiple_results,
    name, search_string, search_condition, store_field, index_type)
 values (nextval('seq_index_item_id'), 'xml_content', false,'xml content:tika',
-  '/objectSystemData/metasets/meta/content/descendant::*', 'true()',true, 'DESCENDING_STRING_INDEXER'
+  '/objectSystemData/metasets/metaset/content/descendant::*', 'true()',true, 'DESCENDING_STRING_INDEXER'
 );
 insert into index_items(id, fieldname, multiple_results,
                         name, search_string, search_condition, store_field, index_type)
@@ -711,6 +729,11 @@ insert into index_items(id, fieldname, multiple_results,
    name, search_string, search_condition, store_field, index_type)
 values (nextval('seq_index_item_id'), 'osd_name', false,'name item',
   '/objectSystemData/name', 'true()',false, 'COMPLETE_STRING_INDEXER'
+);
+insert into index_items(id, fieldname, multiple_results,
+   name, search_string, search_condition, store_field, index_type)
+values (nextval('seq_index_item_id'), 'json_name', false,'name item json',
+  '/objectSystemData/content/ObjectNode/name', 'true()',false, 'COMPLETE_STRING_INDEXER'
 );
 
 insert into index_items(id, fieldname, multiple_results,
@@ -734,6 +757,13 @@ insert into index_items(id, fieldname, multiple_results,
 values (nextval('seq_index_item_id'), 'osd_id', false,'created id item',
   '/objectSystemData/id', 'true()',false, 'INTEGER_INDEXER'
 );
+
+insert into index_items(id, fieldname, multiple_results,
+                        name, search_string, search_condition, store_field, index_type)
+values (nextval('seq_index_item_id'), 'tika_meta', true,'tika meta',
+        '/objectSystemData/metasets/metaset/content/html/head/meta', 'true()',false, 'ATTRIBUTE_STRING_INDEXER'
+       );
+-- //*[local-name()='meta']
 
 -- #1 lifecycle review.lc (lifecycle_state #1 will be configured as default state, see below).
 insert into lifecycles(id, name, default_state_id) VALUES (nextval('seq_lifecycle_id'), 'review.lc',null);
@@ -800,5 +830,5 @@ values (nextval('seq_change_trigger_id'), 'nop-test', true, 1,'nop',true,true,tr
 -- values (nextval('seq_change_trigger_id'), 'lock-test', true, 1,'lock',true,true,true,'<config><remoteServer>http://localhost:19999/api/test/echo</remoteServer></config>','osd','MICROSERVICE');
 
 -- add a failed index job:
-insert into index_jobs (id, job_type, item_id, failed, action, update_tika_metaset)
-values (nextval('seq_index_job_id'), 'OSD',1,10 , 'DELETE', true);
+insert into index_jobs (id, job_type, item_id, failed, action)
+values (nextval('seq_index_job_id'), 'OSD',1,10 , 'DELETE');

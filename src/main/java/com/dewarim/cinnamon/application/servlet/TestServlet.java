@@ -49,7 +49,7 @@ public class TestServlet extends HttpServlet {
 
     private void echo(HttpServletRequest request, CinnamonResponse cinnamonResponse) {
         try {
-            request.getHeaderNames().asIterator().forEachRemaining(n -> log.debug("header: "+n+":" +request.getHeader(n)));
+            request.getHeaderNames().asIterator().forEachRemaining(n -> log.debug("header: {}:{}", n, request.getHeader(n)));
             String input = new String(request.getInputStream().readAllBytes());
             ParamParser.parseXml(input, "Input is not well-formed XML.");
             cinnamonResponse.setStatusCode(HttpServletResponse.SC_OK);

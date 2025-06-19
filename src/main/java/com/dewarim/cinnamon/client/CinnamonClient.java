@@ -4,6 +4,7 @@ import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.model.*;
 import com.dewarim.cinnamon.model.links.Link;
+import com.dewarim.cinnamon.model.links.LinkResolver;
 import com.dewarim.cinnamon.model.links.LinkType;
 import com.dewarim.cinnamon.model.relations.Relation;
 import com.dewarim.cinnamon.model.relations.RelationType;
@@ -257,6 +258,24 @@ public class CinnamonClient {
     public List<ChangeTriggerResponse> changeTriggerNop(boolean ignoreError) throws IOException {
         var response = sendStandardRequest(CHANGE_TRIGGER__NOP, "");
         return changeTriggerResponseUnwrapper.unwrap(response, EXPECTED_SIZE_ANY, ignoreError);
+    }
+
+    public List<ObjectSystemData> getOsdReferences(Long folderId, boolean includeSummary) throws IOException {
+        OsdByFolderRequest osdRequest = new OsdByFolderRequest(folderId, includeSummary, true, false, VersionPredicate.HEAD);
+        StandardResponse   response   = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_FOLDER_ID, osdRequest);
+        verifyResponseIsOkay(response);
+        String     content = new String(response.getEntity().getContent().readAllBytes());
+        OsdWrapper wrapper = mapper.readValue(content, OsdWrapper.class);
+        return wrapper.getReferences();
+    }
+
+    public List<Link> getOsdLinksInFolder(Long folderId, boolean includeSummary) throws IOException {
+        OsdByFolderRequest osdRequest = new OsdByFolderRequest(folderId, includeSummary, true, false, VersionPredicate.HEAD);
+        StandardResponse   response   = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_FOLDER_ID, osdRequest);
+        verifyResponseIsOkay(response);
+        String      content = new String(response.getEntity().getContent().readAllBytes());
+        LinkWrapper wrapper = mapper.readValue(content, LinkWrapper.class);
+        return wrapper.getLinks();
     }
 
     public class WrappedRequest<T, W extends Wrapper<T>> {
@@ -724,14 +743,14 @@ public class CinnamonClient {
     }
 
     public Link createLinkToFolder(Long parentId, Long aclId, Long ownerId, Long folderId) throws IOException {
-        var link              = new Link(LinkType.FOLDER, ownerId, aclId, parentId, folderId, null);
+        var link              = new Link(null, LinkType.FOLDER, ownerId, aclId, parentId, folderId, null, LinkResolver.FIXED);
         var createLinkRequest = new CreateLinkRequest(List.of(link));
         var response          = sendStandardRequest(UrlMapping.LINK__CREATE, createLinkRequest);
         return linkUnwrapper.unwrap(response, 1).get(0);
     }
 
-    public Link createLinkToOsd(Long parentId, Long aclId, Long ownerId, Long objectId) throws IOException {
-        var link              = new Link(LinkType.OBJECT, ownerId, aclId, parentId, null, objectId);
+    public Link createLinkToOsd(Long parentId, Long aclId, Long ownerId, Long objectId, LinkResolver resolver) throws IOException {
+        var link              = new Link(null, LinkType.OBJECT, ownerId, aclId, parentId, null, objectId, resolver);
         var createLinkRequest = new CreateLinkRequest(List.of(link));
         var response          = sendStandardRequest(UrlMapping.LINK__CREATE, createLinkRequest);
         return linkUnwrapper.unwrap(response, 1).get(0);
@@ -1360,14 +1379,14 @@ public class CinnamonClient {
     static void checkResponseForErrors(StandardResponse response, XmlMapper mapper) throws IOException {
         if (response.containsHeader(HEADER_FIELD_CINNAMON_ERROR)) {
             CinnamonErrorWrapper wrapper = mapper.readValue(response.getEntity().getContent(), CinnamonErrorWrapper.class);
-            log.warn("Found errors: " + wrapper.getErrors().stream().map(CinnamonError::toString).collect(Collectors.joining(",")));
+            log.warn("Found errors: {}", wrapper.getErrors().stream().map(CinnamonError::toString).collect(Collectors.joining(",")));
             CinnamonClient.changeTriggerResponseLocal.get().addAll(wrapper.getChangeTriggerResponses());
             throw new CinnamonClientException(wrapper);
         }
         if (response.getCode() != SC_OK) {
             String message = String.valueOf(response.getCode());
-            log.warn("Failed to unwrap non-okay response with status: " + message);
-            log.info("Response: " + new String(response.getEntity().getContent().readAllBytes()));
+            log.warn("Failed to unwrap non-okay response with status: {}", message);
+            log.info("Response: {}", new String(response.getEntity().getContent().readAllBytes()));
             throw new CinnamonClientException(message);
         }
     }

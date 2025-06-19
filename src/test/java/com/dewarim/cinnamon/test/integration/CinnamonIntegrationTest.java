@@ -88,6 +88,10 @@ public class CinnamonIntegrationTest {
         if (cinnamonServer == null) {
             log.info("Create new CinnamonServer.");
             cinnamonServer = new CinnamonServer(cinnamonTestPort);
+            // set data root:
+            Path tempDirectory = Files.createTempDirectory("cinnamon-data-root");
+            CinnamonServer.config.getServerConfig().setDataRoot(tempDirectory.toAbsolutePath().toString());
+
             CinnamonServer.config.getServerConfig().setLog4jConfigPath("src/test/resources/log4j2-test.xml");
             CinnamonServer.config.getServerConfig().setLogResponses(true);
 
@@ -106,16 +110,12 @@ public class CinnamonIntegrationTest {
             Path tempIndexDir = Files.createTempDirectory("cinnamon-index-root");
             CinnamonServer.config.getLuceneConfig().setIndexPath(tempIndexDir.toAbsolutePath().toString());
 
-//            cinnamonServer.startIndexService();
             ThreadLocalSqlSession.setDbSessionFactory(dbSessionFactory);
             cinnamonServer.setDbSessionFactory(dbSessionFactory);
             cinnamonServer.start();
 
-            // set data root:
-            Path tempDirectory = Files.createTempDirectory("cinnamon-data-root");
-            CinnamonServer.config.getServerConfig().setDataRoot(tempDirectory.toAbsolutePath().toString());
             ticket = getAdminTicket();
-            log.info("admin ticket: " + ticket);
+            log.info("admin ticket: {}", ticket);
 
             client      = new CinnamonClient(cinnamonTestPort, "localhost", "http", "doe", "admin");
             adminClient = new CinnamonClient(cinnamonTestPort, "localhost", "http", "admin", "admin");
@@ -196,7 +196,7 @@ public class CinnamonIntegrationTest {
         boolean allErrorsFound = Arrays.stream(errorCode).allMatch(code -> {
                     boolean found = errors.stream().anyMatch(error -> error.getCode().equals(code.getCode()));
                     if (!found) {
-                        log.error("missing expected error: " + code + "; got: " + errors.stream().map(CinnamonError::getCode).collect(Collectors.joining(",")));
+                        log.error("missing expected error: {}; got: {}", code, errors.stream().map(CinnamonError::getCode).collect(Collectors.joining(",")));
                     }
                     return found;
                 }
@@ -328,7 +328,7 @@ public class CinnamonIntegrationTest {
             if (ids.size() == expected) {
                 return true;
             }
-            log.debug("response: " + response);
+            log.debug("response: {}", response);
             return false;
         } catch (
                 IOException e) {

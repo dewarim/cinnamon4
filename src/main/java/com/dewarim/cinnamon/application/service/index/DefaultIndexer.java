@@ -44,6 +44,7 @@ public class DefaultIndexer implements Indexer {
 
         if (multipleResults) {
             hits = xml.selectNodes(searchString);
+
         } else {
             Node node = xml.selectSingleNode(searchString);
             if (node != null) {
@@ -54,10 +55,10 @@ public class DefaultIndexer implements Indexer {
         for (Node node : hits) {
             String nodeValue = convertNodeToString(node);
             if (nodeValue != null && !nodeValue.isBlank()) {
-                log.debug("fieldName: " + fieldName + " value: " + nodeValue + " stored:" + fieldType.stored());
+                log.trace("fieldName: {} value: {} stored:{}", fieldName, nodeValue, fieldType.stored());
                 addToDoc(luceneDoc, fieldName, nodeValue, fieldType);
             } else {
-                log.debug("nodeValue for '" + searchString + "' is null");
+                log.trace("nodeValue for '{}' is null", searchString);
             }
         }
     }

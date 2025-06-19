@@ -2,6 +2,7 @@ package com.dewarim.cinnamon.model.request.link;
 
 import com.dewarim.cinnamon.api.ApiRequest;
 import com.dewarim.cinnamon.model.links.Link;
+import com.dewarim.cinnamon.model.links.LinkResolver;
 import com.dewarim.cinnamon.model.links.LinkType;
 import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.response.LinkWrapper;
@@ -23,8 +24,8 @@ public class CreateLinkRequest implements CreateRequest<Link>, ApiRequest<Create
     public CreateLinkRequest() {
     }
 
-    public CreateLinkRequest(long parentId, LinkType linkType, long aclId, long ownerId, Long folderId, Long objectId) {
-        Link link = new Link(linkType, ownerId, aclId, parentId, folderId, objectId);
+    public CreateLinkRequest(long parentId, LinkType linkType, long aclId, long ownerId, Long folderId, Long objectId, LinkResolver resolver) {
+        Link link = new Link(null, linkType, ownerId, aclId, parentId, folderId, objectId, resolver);
         links.add(link);
     }
 
@@ -57,8 +58,8 @@ public class CreateLinkRequest implements CreateRequest<Link>, ApiRequest<Create
     @Override
     public List<ApiRequest<CreateLinkRequest>> examples() {
         return List.of(
-                new CreateLinkRequest(5L, LinkType.OBJECT, 1L, 1L, 2L, 3L),
-                new CreateLinkRequest(5L, LinkType.FOLDER, 1L, 1L, 2L, 3L)
+                new CreateLinkRequest(5L, LinkType.OBJECT, 1L, 1L, 2L, 3L, LinkResolver.FIXED),
+                new CreateLinkRequest(5L, LinkType.FOLDER, 1L, 1L, 2L, 3L, LinkResolver.LATEST_HEAD)
         );
     }
 }

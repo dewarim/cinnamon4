@@ -44,7 +44,7 @@ public class UnboundIdLdapConnector {
 
     public LdapLoginResult connect(String username, String password) {
         String escapedUsername = escapeUsername(username);
-        log.info("LDAP username has been escaped to: " + escapedUsername);
+        log.info("LDAP username has been escaped to: {}", escapedUsername);
         String actualPassword = password;
         if (ldapConfig.useStaticBindPassword()) {
             actualPassword = ldapConfig.getStaticBindPassword();

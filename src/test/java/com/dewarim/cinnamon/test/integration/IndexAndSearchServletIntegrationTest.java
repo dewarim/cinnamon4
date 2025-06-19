@@ -46,20 +46,26 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
         Long             relatedOsdId = relatedOsd.getId();
         osdWithContentId = relatedOsdId;
 
+        // with XML content:
         toh.createOsd("search-me-osd")
                 .createMetaSetType(true)
                 .createRelationType()
+                .setSummaryOnOsd("<summary><p>test-summary</p></summary>")
                 .createOsdMeta("<xml><copyright>ACME Inc., 2023</copyright></xml>")
                 .createRelation(relatedOsdId, "<xml><imageSize x='100' y='200'/></xml>")
                 .createFolder("search-me-folder", createFolderId)
                 .createFolderMeta("<xml><folder-meta-data archived='no'/></xml>");
         osdId    = toh.osd.getId();
         folderId = toh.folder.getId();
-        log.info("created search-me objects: osd: " + osdId + " folder: " + folderId);
+        log.info("created search-me objects: osd: {} folder: {}", osdId, folderId);
 
         // set xml-content:
         client.lockOsd(osdId);
         client.setContentOnLockedOsd(osdId, 1L, new File("pom.xml"));
+
+        // with JSON content:
+        toh.selectFormat("json")
+                .createOsdWithContent(new File("src/test/resources/test.json"));
 
         Thread.sleep(CinnamonServer.config.getLuceneConfig().getMillisToWaitBetweenRuns() + 5000L);
         ThreadLocalSqlSession.refreshSession();
@@ -81,10 +87,10 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
         // TODO: filter system indexItems before indexing with XML-Indexers
         // TODO: test filtering for unbrowsable items
         SearchIdsResponse response = client.search("<BooleanQuery><Clause occurs='must'><TermQuery fieldName='name'>search-me-osd</TermQuery></Clause></BooleanQuery>", SearchType.OSD);
-        log.info("searchIdsResponse for OSD search: " + response);
+        log.info("searchIdsResponse for OSD search: {}", response);
         assertEquals(1, response.getOsdIds().size());
         SearchIdsResponse folderResponse = client.search("<BooleanQuery><Clause occurs='must'><TermQuery fieldName='name'>search-me-folder</TermQuery></Clause></BooleanQuery>", SearchType.FOLDER);
-        log.info("searchIdsResponse for FOLDER search: " + response);
+        log.info("searchIdsResponse for FOLDER search: {}", response);
         assertEquals(1, folderResponse.getFolderIds().size());
 
         SearchIdsResponse allResponse = client.search("<BooleanQuery><Clause occurs='must'><WildcardQuery fieldName='name'>search-me-*</WildcardQuery></Clause></BooleanQuery>", SearchType.ALL);
@@ -93,18 +99,18 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
         assertEquals(osdId, allResponse.getOsdIds().get(0));
         assertEquals(folderId, allResponse.getFolderIds().get(0));
 
-
     }
+
 
     @Test
     public void searchForContent() throws IOException {
         SearchIdsResponse response = client.search("<BooleanQuery><Clause occurs='must'><TermQuery fieldName='xml_content'>cinnamon</TermQuery></Clause></BooleanQuery>", SearchType.OSD);
-        log.info("response: " + mapper.writeValueAsString(response));
+        log.info("response: {}", mapper.writeValueAsString(response));
         assertTrue(response.getOsdIds().size() > 0);
         long exampleId = response.getOsdIds().get(0);
 
         if (CinnamonServer.getConfig().getCinnamonTikaConfig().isUseTika()) {
-            SearchIdsResponse imageSearchResponse = client.search("<BooleanQuery><Clause occurs='must'><TermQuery fieldName='xml_content'>delicious</TermQuery></Clause></BooleanQuery>", SearchType.ALL);
+            SearchIdsResponse imageSearchResponse = client.search("<BooleanQuery><Clause occurs='must'><TermQuery fieldName='tika_meta'>delicious</TermQuery></Clause></BooleanQuery>", SearchType.ALL);
             assertEquals(1, imageSearchResponse.getOsdIds().size());
             assertEquals(osdWithContentId, imageSearchResponse.getOsdIds().get(0));
         }
@@ -120,6 +126,25 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
 
     }
 
+    @Test
+    public void searchForJsonContent() throws IOException {
+        SearchIdsResponse response = client.search("<BooleanQuery><Clause occurs='must'><TermQuery fieldName='xml_content'>bob</TermQuery></Clause></BooleanQuery>", SearchType.OSD);
+        log.info("response: {}", mapper.writeValueAsString(response));
+        assertTrue(response.getOsdIds().size() > 0);
+        long exampleId = response.getOsdIds().get(0);
+
+        verifyOsdSearchResult(client.search(createTermQuery("is_latest_branch", "true"), SearchType.OSD));
+        verifyOsdSearchResult(client.search(createTermQuery("osd_name", "related image"), SearchType.OSD));
+        verifyOsdSearchResult(client.search(createPointQuery("osd_id", exampleId), SearchType.OSD));
+        LocalDate localDate = LocalDate.now();
+        verifyOsdSearchResult(client.search(createWildcardQuery("osd_created",
+                localDate.toString().replace("-", "") + "*"), SearchType.OSD));
+        // ElementNameIndexer verified manually :/
+        // verifyOsdSearchResult(client.search(createTermQuery("element_names", "dependency"), SearchType.OSD));
+        SearchIdsResponse jsonName = client.search("<BooleanQuery><Clause occurs='must'><TermQuery fieldName='json_name'>bob</TermQuery></Clause></BooleanQuery>", SearchType.OSD);
+        assertEquals(1, jsonName.getOsdIds().size());
+    }
+
     private void verifyOsdSearchResult(SearchIdsResponse response) {
         assertNotNull(response.getOsdIds());
         assertFalse(response.getOsdIds().isEmpty());
@@ -127,19 +152,19 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
 
     private String createPointQuery(String fieldName, long query) {
         String pointQuery = "<BooleanQuery><Clause occurs='must'><ExactPointQuery fieldName='" + fieldName + "' value='" + query + "' type='long'/></Clause></BooleanQuery>";
-        log.debug("pointQuery: " + pointQuery);
+        log.debug("pointQuery: {}", pointQuery);
         return pointQuery;
     }
 
     private String createTermQuery(String fieldName, String query) {
         String booleanQuery = "<BooleanQuery><Clause occurs='must'><TermQuery fieldName='" + fieldName + "'>" + query + "</TermQuery></Clause></BooleanQuery>";
-        log.debug("createTermQuery: " + booleanQuery);
+        log.debug("createTermQuery: {}", booleanQuery);
         return booleanQuery;
     }
 
     private String createWildcardQuery(String fieldName, String query) {
         String wildQuery = "<BooleanQuery><Clause occurs='must'><WildcardQuery fieldName='" + fieldName + "'>" + query + "</WildcardQuery></Clause></BooleanQuery>";
-        log.debug("wildcardQuery: " + wildQuery);
+        log.debug("wildcardQuery: {}", wildQuery);
         return wildQuery;
     }
 
@@ -180,10 +205,10 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
         toh.createOsdMeta("<xml>issue389</xml>");
         Thread.sleep(4000);
 
-        String termQuery = createTermQuery("meta_content", "issue389");
-        SearchIdsResponse response = client.search(termQuery, SearchType.OSD);
+        String            termQuery = createTermQuery("meta_content", "issue389");
+        SearchIdsResponse response  = client.search(termQuery, SearchType.OSD);
         assertTrue(response.getOsdIds().size() > 0);
-        assertEquals(toh.osd.getId(),response.getOsdIds().get(0));
+        assertEquals(toh.osd.getId(), response.getOsdIds().get(0));
     }
 
 }

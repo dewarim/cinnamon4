@@ -1,6 +1,5 @@
 package com.dewarim.cinnamon.dao;
 
-import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.model.FolderType;
 import org.apache.ibatis.session.SqlSession;
 
@@ -14,13 +13,13 @@ public class FolderTypeDao implements CrudDao<FolderType>{
     }
 
     public Optional<FolderType> getFolderTypeById(long id) {
-        SqlSession   sqlSession   = ThreadLocalSqlSession.getSqlSession();
+        SqlSession   sqlSession   = getSqlSession();
         FolderType folderType = sqlSession.selectOne("com.dewarim.cinnamon.model.FolderType.getFolderTypeById", id);
         return Optional.ofNullable(folderType);
     }
 
     public Optional<FolderType> getFolderTypeByName(String name) {
-        SqlSession   sqlSession   = ThreadLocalSqlSession.getSqlSession();
+        SqlSession   sqlSession   = getSqlSession();
         FolderType folderType = sqlSession.selectOne("com.dewarim.cinnamon.model.FolderType.getFolderTypeByName", name);
         return Optional.ofNullable(folderType);
     }

@@ -1,6 +1,5 @@
 package com.dewarim.cinnamon.dao;
 
-import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.application.exception.CinnamonException;
 import com.dewarim.cinnamon.model.AclGroup;
 import com.dewarim.cinnamon.model.Group;
@@ -26,12 +25,12 @@ public class PermissionDao implements CrudDao<Permission> {
             // if the user has no connection to the given acl, he won't have any permissions.
             return Collections.emptyList();
         }
-        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        SqlSession sqlSession = getSqlSession();
         return sqlSession.selectList("com.dewarim.cinnamon.model.Permission.getUserPermissionsForAclGroups", aclGroups);
     }
 
     public Permission getPermissionByName(String name) {
-        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        SqlSession sqlSession = getSqlSession();
         return sqlSession.selectOne("com.dewarim.cinnamon.model.Permission.getPermissionByName", name);
     }
 

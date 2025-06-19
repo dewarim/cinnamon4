@@ -19,10 +19,10 @@ public class IndexItemDao implements CrudDao<IndexItem>{
     }
 
     @Override
-    public SqlSession getSqlSession(){
-        if(sqlSession != null){
-            return sqlSession;
+    public SqlSession getSqlSession() {
+        if (sqlSession == null) {
+            sqlSession = ThreadLocalSqlSession.getSqlSession();
         }
-        return ThreadLocalSqlSession.getSqlSession();
+        return sqlSession;
     }
 }

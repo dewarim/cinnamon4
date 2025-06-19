@@ -4,10 +4,8 @@ import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.application.*;
 import com.dewarim.cinnamon.dao.DeletionDao;
 import com.dewarim.cinnamon.model.Deletion;
-import jakarta.servlet.Filter;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.ServletResponse;
+import com.dewarim.cinnamon.provider.ContentProviderService;
+import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.logging.log4j.LogManager;
@@ -17,6 +15,7 @@ import java.io.IOException;
 import java.util.List;
 
 import static com.dewarim.cinnamon.ErrorCode.INTERNAL_SERVER_ERROR_TRY_AGAIN_LATER;
+import static com.dewarim.cinnamon.api.Constants.CONTENT_PROVIDER_SERVICE;
 
 /**
  *
@@ -26,6 +25,7 @@ public class DbSessionFilter implements Filter {
     private static final Logger log = LogManager.getLogger(DbSessionFilter.class);
 
     private final DeletionDao  deletionDao = new DeletionDao();
+    private ContentProviderService contentProviderService;
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException {
@@ -47,7 +47,7 @@ public class DbSessionFilter implements Filter {
                 // TODO: maybe check if an idling background thread uses less resources
                 List<Deletion> deletions = deletionDao.listPendingDeletions();
                 if (deletions.size() > 0) {
-                    CinnamonServer.executorService.submit(new DeletionTask(deletions));
+                    CinnamonServer.executorService.submit(new DeletionTask(deletions, contentProviderService));
                 }
             }
             else{
@@ -65,4 +65,8 @@ public class DbSessionFilter implements Filter {
         }
     }
 
+    @Override
+    public void init(FilterConfig filterConfig) throws ServletException {
+        contentProviderService = (ContentProviderService) filterConfig.getServletContext().getAttribute(CONTENT_PROVIDER_SERVICE);
+    }
 }

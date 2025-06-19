@@ -1,13 +1,6 @@
 package com.dewarim.cinnamon.model.index;
 
-import com.dewarim.cinnamon.application.service.index.BooleanIndexer;
-import com.dewarim.cinnamon.application.service.index.CompleteStringIndexer;
-import com.dewarim.cinnamon.application.service.index.DateIndexer;
-import com.dewarim.cinnamon.application.service.index.DateTimeIndexer;
-import com.dewarim.cinnamon.application.service.index.DefaultIndexer;
-import com.dewarim.cinnamon.application.service.index.DescendingStringIndexer;
-import com.dewarim.cinnamon.application.service.index.ElementNameIndexer;
-import com.dewarim.cinnamon.application.service.index.IntegerIndexer;
+import com.dewarim.cinnamon.application.service.index.*;
 
 import static com.dewarim.cinnamon.model.index.DataType.*;
 
@@ -20,7 +13,8 @@ public enum IndexType {
     ELEMENT_NAME_INDEXER(new ElementNameIndexer(), STRING),
     DATE_INDEXER(new DateIndexer(), DATE),
     DATE_TIME_INDEXER(new DateTimeIndexer(), DATE_TIME),
-    INTEGER_INDEXER(new IntegerIndexer(), INTEGER)
+    INTEGER_INDEXER(new IntegerIndexer(), INTEGER),
+    ATTRIBUTE_STRING_INDEXER(new AttributeStringIndexer(), STRING)
     ;
 
     final Indexer  indexer;

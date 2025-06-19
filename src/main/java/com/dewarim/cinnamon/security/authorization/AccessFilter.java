@@ -135,7 +135,6 @@ public class AccessFilter {
     private static void initialize() {
         synchronized (INITIALIZING) {
             PermissionDao permissionDao = new PermissionDao();
-            // TODO: unify browse permission
             browsePermission = permissionDao.getPermissionByName(DefaultPermission.BROWSE.getName());
             AclDao aclDao = new AclDao();
             acls = aclDao.list();
@@ -145,17 +144,16 @@ public class AccessFilter {
             permissions.forEach(permission -> nameToPermissionMapping.put(permission.getName(), permission));
             initialized = true;
         }
-
     }
 
     private static Set<Long> getUserAclsWithBrowsePermissions(UserAccount user) {
         Long userId = user.getId();
         if (!userAclsWithBrowsePermissionCache.containsKey(userId)) {
             long startTime = System.currentTimeMillis();
-            log.info("Generating object acls list with browse permissions for user " + user);
+            log.info("Generating object acls list with browse permissions for user {}", user);
             userAclsWithBrowsePermissionCache.put(userId, generateObjectAclSet(browsePermission, user));
             long endTime = System.currentTimeMillis();
-            log.info("object acl list generated in " + (endTime - startTime) + " ms");
+            log.info("object acl list generated in {} ms", endTime - startTime);
         }
         return userAclsWithBrowsePermissionCache.get(userId);
     }
@@ -166,10 +164,10 @@ public class AccessFilter {
         Long userId = user.getId();
         if (!ownerAclsWithBrowsePermissionCache.containsKey(userId)) {
             long startTime = System.currentTimeMillis();
-            log.info("Generating owner acls list with browse permissions for user " + user);
+            log.info("Generating owner acls list with browse permissions for user {}", user);
             ownerAclsWithBrowsePermissionCache.put(userId, generateOwnerAclIdSet(browsePermission, user));
             long endTime = System.currentTimeMillis();
-            log.info("owner acl list generated in " + (endTime - startTime) + " ms");
+            log.info("owner acl list generated in {} ms", endTime - startTime);
         }
         return ownerAclsWithBrowsePermissionCache.get(userId);
     }

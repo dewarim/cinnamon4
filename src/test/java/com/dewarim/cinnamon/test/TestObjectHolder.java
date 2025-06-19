@@ -7,6 +7,7 @@ import com.dewarim.cinnamon.client.CinnamonClient;
 import com.dewarim.cinnamon.client.CinnamonClientException;
 import com.dewarim.cinnamon.model.*;
 import com.dewarim.cinnamon.model.links.Link;
+import com.dewarim.cinnamon.model.links.LinkResolver;
 import com.dewarim.cinnamon.model.relations.Relation;
 import com.dewarim.cinnamon.model.relations.RelationType;
 import com.dewarim.cinnamon.model.request.folder.UpdateFolderRequest;
@@ -164,6 +165,10 @@ public class TestObjectHolder {
         }
         osd = client.createOsd(request);
         return this;
+    }
+
+    public TestObjectHolder createOsdWithContent(File content) throws IOException {
+        return createOsdWithContent(createRandomName(), format, content);
     }
 
     public TestObjectHolder createOsdWithContent(String name, Format format, File content) throws IOException {
@@ -330,12 +335,22 @@ public class TestObjectHolder {
      * New link object is stored in TOH.link field.
      */
     public TestObjectHolder createLinkToOsd(ObjectSystemData osd) throws IOException {
-        link = client.createLinkToOsd(folder.getId(), acl.getId(), user.getId(), osd.getId());
+        link = client.createLinkToOsd(folder.getId(), acl.getId(), user.getId(), osd.getId(), LinkResolver.FIXED);
+        return this;
+    }
+
+    public TestObjectHolder createLinkToOsd(ObjectSystemData osd, LinkResolver resolver) throws IOException {
+        link = client.createLinkToOsd(folder.getId(), acl.getId(), user.getId(), osd.getId(), resolver);
         return this;
     }
 
     public TestObjectHolder createLinkToOsd() throws IOException {
-        link = client.createLinkToOsd(folder.getId(), acl.getId(), user.getId(), osd.getId());
+        link = client.createLinkToOsd(folder.getId(), acl.getId(), user.getId(), osd.getId(), LinkResolver.FIXED);
+        return this;
+    }
+
+    public TestObjectHolder createLinkToOsd(LinkResolver resolver) throws IOException {
+        link = client.createLinkToOsd(folder.getId(), acl.getId(), user.getId(), osd.getId(), resolver);
         return this;
     }
 
@@ -481,5 +496,17 @@ public class TestObjectHolder {
     public TestObjectHolder deleteAclGroup() throws IOException {
         client.deleteAclGroups(Collections.singletonList(this.aclGroup.getId()));
         return this;
+    }
+
+    public TestObjectHolder selectFormat(String name) {
+        this.format = formats.stream().filter(format -> format.getName().equals(name)).findFirst().orElseThrow();
+        return this;
+    }
+
+    public String getOsdSummary() throws IOException {
+        return client.getOsdSummaries(List.of(osd.getId())).get(0).getContent();
+    }
+    public String getOsdSummary(Long id) throws IOException {
+        return client.getOsdSummaries(List.of(id)).get(0).getContent();
     }
 }

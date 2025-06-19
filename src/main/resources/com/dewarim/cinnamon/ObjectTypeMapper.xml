@@ -15,12 +15,6 @@
         FROM object_types
     </select>
 
-    <select id="getObjectTypeById" parameterType="long" resultMap="objectTypeMap">
-        SELECT *
-        FROM object_types
-        WHERE id = #{id}
-    </select>
-    
     <update id="update" parameterType="com.dewarim.cinnamon.model.ObjectType">
         UPDATE object_types
         SET name = #{name}

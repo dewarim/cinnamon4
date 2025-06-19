@@ -1234,8 +1234,8 @@ Delete all metasets linked to the given Folder ids. Parameter ignoreNotFound is 
 <deleteAllMetasRequest>
   <ignoreNotFound>false</ignoreNotFound>
   <ids>
-    <id>15</id>
     <id>14</id>
+    <id>15</id>
   </ids>
 </deleteAllMetasRequest>
 
@@ -1336,6 +1336,34 @@ Fetch a single folder
       <metasets/>
     </folder>
   </folders>
+  <links>
+    <link>
+      <id>1</id>
+      <type>FOLDER</type>
+      <ownerId>3</ownerId>
+      <aclId>2</aclId>
+      <parentId>1</parentId>
+      <folderId>20</folderId>
+      <objectId/>
+      <resolvedId/>
+      <resolver>FIXED</resolver>
+    </link>
+  </links>
+  <references>
+    <reference>
+      <id>203</id>
+      <name>linked folder</name>
+      <aclId>1</aclId>
+      <ownerId>2</ownerId>
+      <parentId>3</parentId>
+      <typeId>23</typeId>
+      <metadataChanged>false</metadataChanged>
+      <summary>&lt;summary/></summary>
+      <hasSubfolders>false</hasSubfolders>
+      <created>2025-01-25T13:12:45+0000</created>
+      <metasets/>
+    </reference>
+  </references>
 </cinnamon>
 
 ```
@@ -1381,6 +1409,34 @@ Fetch a single folder
       <metasets/>
     </folder>
   </folders>
+  <links>
+    <link>
+      <id>1</id>
+      <type>FOLDER</type>
+      <ownerId>3</ownerId>
+      <aclId>2</aclId>
+      <parentId>1</parentId>
+      <folderId>20</folderId>
+      <objectId/>
+      <resolvedId/>
+      <resolver>FIXED</resolver>
+    </link>
+  </links>
+  <references>
+    <reference>
+      <id>203</id>
+      <name>linked folder</name>
+      <aclId>1</aclId>
+      <ownerId>2</ownerId>
+      <parentId>3</parentId>
+      <typeId>23</typeId>
+      <metadataChanged>false</metadataChanged>
+      <summary>&lt;summary/></summary>
+      <hasSubfolders>false</hasSubfolders>
+      <created>2025-01-25T13:12:45+0000</created>
+      <metasets/>
+    </reference>
+  </references>
 </cinnamon>
 
 ```
@@ -1422,6 +1478,34 @@ Fetch a single folder
       <metasets/>
     </folder>
   </folders>
+  <links>
+    <link>
+      <id>1</id>
+      <type>FOLDER</type>
+      <ownerId>3</ownerId>
+      <aclId>2</aclId>
+      <parentId>1</parentId>
+      <folderId>20</folderId>
+      <objectId/>
+      <resolvedId/>
+      <resolver>FIXED</resolver>
+    </link>
+  </links>
+  <references>
+    <reference>
+      <id>203</id>
+      <name>linked folder</name>
+      <aclId>1</aclId>
+      <ownerId>2</ownerId>
+      <parentId>3</parentId>
+      <typeId>23</typeId>
+      <metadataChanged>false</metadataChanged>
+      <summary>&lt;summary/></summary>
+      <hasSubfolders>false</hasSubfolders>
+      <created>2025-01-25T13:12:45+0000</created>
+      <metasets/>
+    </reference>
+  </references>
 </cinnamon>
 
 ```
@@ -1519,6 +1603,34 @@ Fetch a single folder
       <metasets/>
     </folder>
   </folders>
+  <links>
+    <link>
+      <id>1</id>
+      <type>FOLDER</type>
+      <ownerId>3</ownerId>
+      <aclId>2</aclId>
+      <parentId>1</parentId>
+      <folderId>20</folderId>
+      <objectId/>
+      <resolvedId/>
+      <resolver>FIXED</resolver>
+    </link>
+  </links>
+  <references>
+    <reference>
+      <id>203</id>
+      <name>linked folder</name>
+      <aclId>1</aclId>
+      <ownerId>2</ownerId>
+      <parentId>3</parentId>
+      <typeId>23</typeId>
+      <metadataChanged>false</metadataChanged>
+      <summary>&lt;summary/></summary>
+      <hasSubfolders>false</hasSubfolders>
+      <created>2025-01-25T13:12:45+0000</created>
+      <metasets/>
+    </reference>
+  </references>
 </cinnamon>
 
 ```
@@ -2993,6 +3105,8 @@ Update lifecycles. Note: does not update lifecycle states
       <parentId>5</parentId>
       <folderId>2</folderId>
       <objectId>3</objectId>
+      <resolvedId/>
+      <resolver>FIXED</resolver>
     </link>
   </links>
 </createLinkRequest>
@@ -3009,6 +3123,8 @@ Update lifecycles. Note: does not update lifecycle states
       <parentId>5</parentId>
       <folderId>2</folderId>
       <objectId>3</objectId>
+      <resolvedId/>
+      <resolver>LATEST_HEAD</resolver>
     </link>
   </links>
 </createLinkRequest>
@@ -3030,6 +3146,8 @@ Update lifecycles. Note: does not update lifecycle states
       <parentId>4</parentId>
       <folderId/>
       <objectId>123</objectId>
+      <resolvedId/>
+      <resolver>LATEST_HEAD</resolver>
     </link>
     <link>
       <id>1</id>
@@ -3039,6 +3157,8 @@ Update lifecycles. Note: does not update lifecycle states
       <parentId>4</parentId>
       <folderId>321</folderId>
       <objectId/>
+      <resolvedId/>
+      <resolver>FIXED</resolver>
     </link>
   </links>
 </cinnamon>
@@ -3107,6 +3227,8 @@ Update lifecycles. Note: does not update lifecycle states
       <parentId/>
       <folderId/>
       <objectId/>
+      <resolvedId/>
+      <resolver>FIXED</resolver>
       <osd>
         <id>1</id>
         <name>my osd</name>
@@ -3146,6 +3268,8 @@ Update lifecycles. Note: does not update lifecycle states
       <parentId/>
       <folderId/>
       <objectId/>
+      <resolvedId/>
+      <resolver>FIXED</resolver>
       <osd/>
       <folder>
         <id>2</id>
@@ -3185,6 +3309,8 @@ Update lifecycles. Note: does not update lifecycle states
       <parentId>4</parentId>
       <folderId>5</folderId>
       <objectId>6</objectId>
+      <resolvedId/>
+      <resolver>FIXED</resolver>
     </link>
   </links>
 </updateLinkRequest>
@@ -3206,6 +3332,8 @@ Update lifecycles. Note: does not update lifecycle states
       <parentId>4</parentId>
       <folderId/>
       <objectId>123</objectId>
+      <resolvedId/>
+      <resolver>LATEST_HEAD</resolver>
     </link>
     <link>
       <id>1</id>
@@ -3215,6 +3343,8 @@ Update lifecycles. Note: does not update lifecycle states
       <parentId>4</parentId>
       <folderId>321</folderId>
       <objectId/>
+      <resolvedId/>
+      <resolver>FIXED</resolver>
     </link>
   </links>
 </cinnamon>
@@ -3779,8 +3909,8 @@ should contain data.
 <deleteAllMetasRequest>
   <ignoreNotFound>false</ignoreNotFound>
   <ids>
-    <id>15</id>
     <id>14</id>
+    <id>15</id>
   </ids>
 </deleteAllMetasRequest>
 

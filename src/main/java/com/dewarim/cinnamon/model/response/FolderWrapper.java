@@ -4,6 +4,8 @@ package com.dewarim.cinnamon.model.response;
 import com.dewarim.cinnamon.api.ApiResponse;
 import com.dewarim.cinnamon.model.Folder;
 import com.dewarim.cinnamon.model.links.Link;
+import com.dewarim.cinnamon.model.links.LinkResolver;
+import com.dewarim.cinnamon.model.links.LinkType;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
@@ -24,11 +26,26 @@ public class FolderWrapper extends BaseResponse implements Wrapper<Folder>, ApiR
     @JacksonXmlProperty(localName = "link")
     private List<Link> links = new ArrayList<>();
 
+    /**
+     * Links resolved to Folders
+     */
+    @JacksonXmlElementWrapper(localName = "references")
+    @JacksonXmlProperty(localName = "reference")
+    private List<Folder> references = new ArrayList<>();
+
     public FolderWrapper() {
     }
 
     public FolderWrapper(List<Folder> folders) {
         this.folders = folders;
+    }
+
+    public List<Folder> getReferences() {
+        return references;
+    }
+
+    public void setReferences(List<Folder> references) {
+        this.references = references;
     }
 
     public List<Folder> getFolders() {
@@ -60,6 +77,20 @@ public class FolderWrapper extends BaseResponse implements Wrapper<Folder>, ApiR
 
     @Override
     public List<Object> examples() {
-        return List.of(new FolderWrapper(List.of(FOLDER_EXAMPLE)));
+        FolderWrapper folderWrapper = new FolderWrapper(List.of(FOLDER_EXAMPLE));
+        folderWrapper.setLinks(List.of(new Link(1L, LinkType.FOLDER, 3L, 2L, 1L, 20L, null, LinkResolver.FIXED)));
+        Folder linkedFolder = new Folder("linked folder", 1L, 2L, 3L, 23L, "<summary/>");
+        linkedFolder.setId(203L);
+        folderWrapper.setReferences(List.of(linkedFolder));
+        return List.of(folderWrapper);
+    }
+
+    @Override
+    public String toString() {
+        return "FolderWrapper{" +
+                "folders=" + folders +
+                ", links=" + links +
+                ", references=" + references +
+                '}';
     }
 }

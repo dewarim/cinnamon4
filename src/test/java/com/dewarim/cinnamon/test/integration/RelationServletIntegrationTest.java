@@ -107,7 +107,7 @@ public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
         assertNotNull(rightId);
         assertEquals(rightOsd.getId(), rightId);
         String meta = relation.getMetadata();
-        assertEquals(meta, "<none/>");
+        assertEquals("<none/>", meta);
     }
 
     @Test
@@ -161,7 +161,7 @@ public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
         assertNotNull(rightId);
         assertEquals(rightOsd.getId(), (long) rightId);
         String meta = relation.getMetadata();
-        assertEquals(meta, "<meta>m</meta>");
+        assertEquals("<meta>m</meta>", meta);
 
         // delete
         client.deleteRelation(relation.getId());

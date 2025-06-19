@@ -65,21 +65,21 @@
     </select>
 
     <insert id="reindexAllOsds" parameterType="boolean">
-        INSERT INTO index_jobs(id, item_id, job_type, action, failed, update_tika_metaset)
-        SELECT nextval('seq_index_job_id'), id, 'OSD', 'UPDATE', 0, #{updateTikaMetaset}
+        INSERT INTO index_jobs(id, item_id, job_type, action, failed)
+        SELECT nextval('seq_index_job_id'), id, 'OSD', 'UPDATE', 0
         FROM objects
     </insert>
 
     <insert id="reindexAllFolders">
-        INSERT INTO index_jobs(id, item_id, job_type, action, failed, update_tika_metaset)
-        SELECT nextval('seq_index_job_id'), id, 'FOLDER', 'UPDATE', 0, false
+        INSERT INTO index_jobs(id, item_id, job_type, action, failed)
+        SELECT nextval('seq_index_job_id'), id, 'FOLDER', 'UPDATE', 0
         FROM folders
     </insert>
 
     <insert id="reindexOsds" parameterType="map">
-        INSERT INTO index_jobs(id,item_id,job_type,action,failed,update_tika_metaset )
+        INSERT INTO index_jobs(id,item_id,job_type,action,failed)
         SELECT nextval('seq_index_job_id'), id,
-        'OSD','UPDATE',0,#{updateTikaMetasets} FROM objects
+        'OSD','UPDATE',0 FROM objects
         WHERE objects.id in
         <foreach item="item" index="index" collection="ids"
                  open="(" separator="," close=")">
@@ -88,9 +88,9 @@
     </insert>
 
     <insert id="reindexFolders" parameterType="list">
-        INSERT INTO index_jobs(id,item_id,job_type,action,failed, update_tika_metaset)
+        INSERT INTO index_jobs(id,item_id,job_type,action,failed)
         SELECT nextval('seq_index_job_id'), id,
-        'FOLDER','UPDATE',0, false FROM folders
+        'FOLDER','UPDATE',0 FROM folders
         WHERE folders.id in
         <foreach item="item" index="index" collection="list"
                  open="(" separator="," close=")">

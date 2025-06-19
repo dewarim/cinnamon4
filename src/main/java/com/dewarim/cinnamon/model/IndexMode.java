@@ -5,5 +5,6 @@ public enum IndexMode {
     XML,
     PLAIN_TEXT,
     TIKA,
+    JSON,
     NONE
 }

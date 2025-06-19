@@ -32,7 +32,7 @@ public class CountIndexer implements Indexer {
                 hits.add(node);
             }
         }
-        log.debug("fieldName: " + fieldName + " count:" + hits.size());
+        log.trace("fieldName: {} count:{}", fieldName, hits.size());
         luceneDoc.add(new LongPoint(fieldName, hits.size()));
     }
 

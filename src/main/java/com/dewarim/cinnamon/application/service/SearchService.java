@@ -7,7 +7,9 @@ import com.dewarim.cinnamon.application.service.search.RegexQueryBuilder;
 import com.dewarim.cinnamon.application.service.search.ResultCollector;
 import com.dewarim.cinnamon.application.service.search.WildcardQueryBuilder;
 import com.dewarim.cinnamon.configuration.LuceneConfig;
+import com.dewarim.cinnamon.dao.FolderDao;
 import com.dewarim.cinnamon.dao.IndexJobDao;
+import com.dewarim.cinnamon.dao.OsdDao;
 import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.index.IndexJobType;
 import com.dewarim.cinnamon.model.index.SearchResult;
@@ -33,7 +35,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.dewarim.cinnamon.api.Constants.*;
 
@@ -41,10 +47,10 @@ public class SearchService {
 
     private static final Logger log = LogManager.getLogger(SearchService.class);
 
-    private final LuceneConfig config;
-    private final Directory directory;
-    private DirectoryReader indexReader;
-    private final SearcherManager searcherManager;
+    private final LuceneConfig            config;
+    private final Directory               directory;
+    private       DirectoryReader         indexReader;
+    private final SearcherManager         searcherManager;
     private final LimitTokenCountAnalyzer limitTokenCountAnalyzer;
 
     public SearchService(LuceneConfig luceneConfig) throws IOException, InterruptedException {
@@ -52,7 +58,7 @@ public class SearchService {
 
         while (!IndexService.isInitialized) {
             log.debug("Waiting for IndexService to finish initialization.");
-            Thread.sleep(400);
+            Thread.sleep(1000);
         }
         IndexSearcher.setMaxClauseCount(10000);
         directory = FSDirectory.open(Path.of(config.getIndexPath()));
@@ -73,7 +79,7 @@ public class SearchService {
             }
             searcher = searcherManager.acquire();
             int documents = searcher.count(new TermQuery(new Term(LUCENE_FIELD_CINNAMON_CLASS, "OSD")));
-            int folders = searcher.count(new TermQuery(new Term(LUCENE_FIELD_CINNAMON_CLASS, "FOLDER")));
+            int folders   = searcher.count(new TermQuery(new Term(LUCENE_FIELD_CINNAMON_CLASS, "FOLDER")));
             return new IndexJobDao.IndexRows(documents, folders);
         } catch (Exception e) {
             log.warn("countDocs failed: ", e);
@@ -92,23 +98,23 @@ public class SearchService {
                 searcherManager.maybeRefreshBlocking();
             }
             searcher = searcherManager.acquire();
-            log.debug("xmlQuery: " + xmlQuery);
+            log.debug("xmlQuery: {}", xmlQuery);
             InputStream xmlInputStream = new ByteArrayInputStream(xmlQuery.getBytes(StandardCharsets.UTF_8));
-            CoreParser coreParser = new CoreParser("content", limitTokenCountAnalyzer);
+            CoreParser  coreParser     = new CoreParser("content", limitTokenCountAnalyzer);
             coreParser.addQueryBuilder("WildcardQuery", new WildcardQueryBuilder());
             coreParser.addQueryBuilder("RegexQuery", new RegexQueryBuilder());
             coreParser.addQueryBuilder("PointRangeQuery", new PointRangeQueryBuilder());
             coreParser.addQueryBuilder("RangeQuery", new RangeQueryBuilder());
             coreParser.addQueryBuilder("ExactPointQuery", new ExactPointQueryBuilder());
             Query query = coreParser.parse(xmlInputStream);
-            log.debug("parsed query: " + query);
+            log.debug("parsed query: {}", query);
             ResultCollector collector = new ResultCollector(searcher);
             searcher.search(query, collector);
-            log.debug("Found " + collector.getDocuments().size() + " documents.");
+            log.debug("Found {} documents.", collector.getDocuments().size());
 
             BrowsableAcls browsableAcls = new AuthorizationService().getBrowsableAcls(user);
-            List<Long> osdIds = List.of();
-            List<Long> folderIds = List.of();
+            List<Long>    osdIds        = List.of();
+            List<Long>    folderIds     = List.of();
             switch (searchType) {
                 case OSD -> osdIds = filterForType(collector, IndexJobType.OSD, browsableAcls);
                 case FOLDER -> folderIds = filterForType(collector, IndexJobType.FOLDER, browsableAcls);
@@ -116,6 +122,30 @@ public class SearchService {
                     osdIds = filterForType(collector, IndexJobType.OSD, browsableAcls);
                     folderIds = filterForType(collector, IndexJobType.FOLDER, browsableAcls);
                 }
+            }
+
+            // see #414 - search finds objects that have been deleted
+            // not sure why - though the indexing process is asynchronous and can take a couple of seconds to catch up,
+            // so maybe it's a case of "delete - re-index in progress - search before Lucene is finished"
+            // added logging to help debug this further & to detect inconsistencies in the results.
+            if (config.isVerifySearchResults()) {
+                OsdDao    osdDao       = new OsdDao();
+                Set<Long> luceneOsdIds = new HashSet<>(osdIds);
+                Set<Long> knownOsdIds  = new HashSet<>(osdDao.findKnownIds(osdIds));
+                if (knownOsdIds.size() != luceneOsdIds.size()) {
+                    log.warn("Lucene result list contains {} unknown OSD ids", luceneOsdIds.size() - knownOsdIds.size());
+                    luceneOsdIds.removeAll(knownOsdIds);
+                    log.warn("Unknown OSD ids: {}", luceneOsdIds);
+                }
+                FolderDao folderDao       = new FolderDao();
+                Set<Long> luceneFolderIds = new HashSet<>(folderIds);
+                Set<Long> knownFolderIds  = new HashSet<>(folderDao.findKnownIds(folderIds));
+                if (knownFolderIds.size() != folderIds.size()) {
+                    log.warn("Lucene result list contains {} unknown Folder ids", luceneFolderIds.size() - knownFolderIds.size());
+                    luceneFolderIds.removeAll(knownFolderIds);
+                    log.warn("Unknown Folder ids: {}", luceneFolderIds);
+                }
+                return new SearchResult(new ArrayList<>(knownOsdIds), new ArrayList<>(knownFolderIds));
             }
 
             return new SearchResult(osdIds, folderIds);
@@ -136,6 +166,8 @@ public class SearchService {
                         doc.getField(LUCENE_FIELD_ACL_ID).numericValue().longValue(),
                         doc.getField(LUCENE_FIELD_OWNER_ID).numericValue().longValue()))
                 .map(doc -> doc.getField("id").numericValue().longValue())
+                .collect(Collectors.toSet())
+                .stream()
                 .toList();
     }
 

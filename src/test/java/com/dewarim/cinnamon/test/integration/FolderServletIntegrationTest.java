@@ -5,6 +5,8 @@ import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.client.CinnamonClientException;
 import com.dewarim.cinnamon.model.*;
+import com.dewarim.cinnamon.model.links.Link;
+import com.dewarim.cinnamon.model.links.LinkResolver;
 import com.dewarim.cinnamon.model.relations.Relation;
 import com.dewarim.cinnamon.model.relations.RelationType;
 import com.dewarim.cinnamon.model.request.folder.*;
@@ -56,11 +58,11 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getSummaryHappyPath() throws IOException {
-        var           toh       = new TestObjectHolder(client, userId).createFolder().setSummaryOnFolder("foo-folder");
+        var           toh       = new TestObjectHolder(client, userId).createFolder().setSummaryOnFolder("<p>foo-folder</p>");
         List<Summary> summaries = client.getFolderSummaries(List.of(toh.folder.getId()));
         assertNotNull(summaries);
         assertFalse(summaries.isEmpty());
-        assertThat(summaries.get(0).getContent(), equalTo("foo-folder"));
+        assertThat(summaries.get(0).getContent(), equalTo("<p>foo-folder</p>"));
     }
 
     @Test
@@ -105,10 +107,14 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
                 .createLinkToOsd(linkOsdTarget);
         FolderWrapper subFolders = client.getSubFolderWrapper(parentFolderId, false);
         assertEquals(1, subFolders.getFolders().size());
-        assertEquals(toh.folder.getId(),subFolders.getFolders().getFirst().getId());
+        assertEquals(toh.folder.getId(), subFolders.getFolders().get(0).getId());
         assertNotNull(subFolders.getLinks());
         assertEquals(1, subFolders.getLinks().size());
-        assertEquals(linkFolderTarget.getId(), subFolders.getLinks().getFirst().getFolderId());
+        assertEquals(linkFolderTarget.getId(), subFolders.getLinks().get(0).getFolderId());
+        List<Folder> references = subFolders.getReferences();
+        assertEquals(1, references.size());
+        assertEquals(linkFolderTarget.getId(), references.get(0).getId());
+        assertEquals(linkFolderTarget.getName(), references.get(0).getName());
     }
 
     @Test
@@ -212,7 +218,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         try {
             client.createFolderMeta(request);
         } catch (CinnamonClientException e) {
-            assertEquals(e.getErrorCode(), ErrorCode.INVALID_REQUEST);
+            assertEquals(ErrorCode.INVALID_REQUEST, e.getErrorCode());
         }
     }
 
@@ -222,7 +228,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         try {
             client.createFolderMeta(request);
         } catch (CinnamonClientException e) {
-            assertEquals(e.getErrorCode(), OBJECT_NOT_FOUND);
+            assertEquals(OBJECT_NOT_FOUND, e.getErrorCode());
         }
     }
 
@@ -315,7 +321,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         try {
             client.updateFolder(request);
         } catch (CinnamonClientException e) {
-            assertEquals(e.getErrorCode(), ErrorCode.INVALID_REQUEST);
+            assertEquals(ErrorCode.INVALID_REQUEST, e.getErrorCode());
         }
     }
 
@@ -326,7 +332,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         try {
             client.updateFolder(request);
         } catch (CinnamonClientException e) {
-            assertEquals(e.getErrorCode(), ErrorCode.FOLDER_NOT_FOUND);
+            assertEquals(ErrorCode.FOLDER_NOT_FOUND, e.getErrorCode());
         }
     }
 
@@ -834,4 +840,61 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         assertTrue(verifySearchFindsPointField("id", folderId, 0, SearchType.FOLDER));
     }
 
+
+    @Test
+    public void getLinkedOsdsHappyPath() throws IOException {
+        TestObjectHolder toh = prepareAclGroupWithPermissions(
+                List.of(BROWSE, CREATE_OBJECT))
+                .createOsd()
+                .createFolder(createFolderId)
+                .createLinkToOsd();
+        List<ObjectSystemData> osdReferences = client.getOsdReferences(toh.folder.getId(), false);
+        assertEquals(1, osdReferences.size());
+        assertEquals(toh.osd.getId(), osdReferences.get(0).getId());
+    }
+
+    @Test
+    public void getLinkedOsdsWithLatestHeadResolverHappyPath() throws IOException {
+        TestObjectHolder toh = prepareAclGroupWithPermissions(
+                List.of(BROWSE, CREATE_OBJECT))
+                .createOsd()
+                .createFolder(createFolderId)
+                .createLinkToOsd(LinkResolver.LATEST_HEAD);
+        toh.version();
+        List<ObjectSystemData> osdReferences = client.getOsdReferences(toh.folder.getId(), false);
+        assertEquals(1, osdReferences.size());
+        assertEquals(toh.osd.getId(), osdReferences.get(0).getId());
+
+        List<Link> links = client.getOsdLinksInFolder(toh.folder.getId(), false);
+        assertEquals(1, links.size());
+        assertEquals(toh.osd.getId(), links.get(0).getResolvedId());
+    }
+
+    @Test
+    public void getLinkedOsdsNoTargetBrowsePermission() throws IOException {
+        TestObjectHolder toh1 = prepareAclGroupWithPermissions(
+                List.of())
+                .createOsd();
+        TestObjectHolder toh = prepareAclGroupWithPermissions(
+                List.of(BROWSE, CREATE_OBJECT))
+                .createFolder(createFolderId);
+        toh.osd = toh1.osd;
+        toh.createLinkToOsd();
+        List<ObjectSystemData> osdReferences = client.getOsdReferences(toh.folder.getId(), false);
+        assertEquals(0, osdReferences.size());
+    }
+
+    @Test
+    public void getLinkedOsdsNoLinkBrowsePermission() throws IOException {
+        TestObjectHolder toh1 = prepareAclGroupWithPermissions(
+                List.of());
+        TestObjectHolder toh2 = prepareAclGroupWithPermissions(
+                List.of(BROWSE, CREATE_OBJECT))
+                .createOsd()
+                .createFolder(createFolderId);
+        toh1.osd = toh2.osd;
+        toh1.createLinkToOsd();
+        List<ObjectSystemData> osdReferences = client.getOsdReferences(toh2.folder.getId(), false);
+        assertEquals(0, osdReferences.size());
+    }
 }

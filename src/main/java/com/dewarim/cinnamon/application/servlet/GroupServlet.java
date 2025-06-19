@@ -32,7 +32,7 @@ import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
 
 @WebServlet(name = "Group", urlPatterns = "/")
 public class GroupServlet extends HttpServlet implements CruddyServlet<Group> {
-    private static final Logger log = LogManager.getLogger(AclServlet.class);
+    private static final Logger log = LogManager.getLogger(GroupServlet.class);
 
     private final ObjectMapper xmlMapper = XML_MAPPER;
 
@@ -64,7 +64,7 @@ public class GroupServlet extends HttpServlet implements CruddyServlet<Group> {
                 List<Long> groupIds = deleteRequest.list();
                 for (Long groupId : groupIds) {
                     if (groupDao.hasChildren(groupId) && !deleteRequest.isRecursive()) {
-                        log.debug("Group with id " + groupId + " still has child groups.");
+                        log.debug("Group with id {} still has child groups.", groupId);
                         throw ErrorCode.GROUP_HAS_CHILDREN.exception();
                     }
                 }

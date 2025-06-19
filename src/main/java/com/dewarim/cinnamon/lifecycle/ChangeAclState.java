@@ -28,14 +28,14 @@ public class ChangeAclState implements State {
 
     @Override
     public StateChangeResult enter(CinnamonObject osd, LifecycleStateConfig config) {
-        log.debug("osd " + osd.getId() + " entered ChangeAclState.");
+        log.debug("osd {} entered ChangeAclState.", osd.getId());
         List<String> aclNames = config.getPropertyValues("aclName");
         if(aclNames.size() != 1){
             return new StateChangeResult(false, Collections.singletonList("ChangeAclState: failed to enter state - need single acl name param in config."));
         }
         String aclName = aclNames.get(0);
         AclDao aclDao = new AclDao();
-        log.debug("looking up acl by name: "+aclName);
+        log.debug("looking up acl by name: {}", aclName);
         Acl acl = aclDao.getAclByName(aclName).orElse(null);
         if (acl == null) {
             return new StateChangeResult(false, Arrays.asList(ErrorCode.ACL_NOT_FOUND.getCode(), aclName));

@@ -5,7 +5,6 @@ import com.dewarim.cinnamon.dao.GroupUserDao;
 import com.dewarim.cinnamon.dao.UiLanguageDao;
 import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.model.*;
-import com.dewarim.cinnamon.security.LdapLoginProvider;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -17,7 +16,7 @@ import static com.dewarim.cinnamon.ErrorCode.UI_LANGUAGE_NOT_FOUND;
 
 public class UserService {
 
-    private static final Logger log = LogManager.getLogger(LdapLoginProvider.class);
+    private static final Logger log = LogManager.getLogger(UserService.class);
 
     public UserAccount createOrUpdateUserAccount(String username, List<String> cinnamonGroups, LoginType loginType, String language) {
         UiLanguageDao uiLanguageDao = new UiLanguageDao();

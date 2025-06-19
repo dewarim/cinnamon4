@@ -2,7 +2,7 @@
 
 A new implementation of the Cinnamon 3 CMS server in Java.
 
-Current status: alpha.
+Status: stable, in productive use
 
 == Goal
 

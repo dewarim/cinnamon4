@@ -16,14 +16,14 @@ import java.util.Optional;
 public class UserAccountDao implements CrudDao<UserAccount> {
 
     public Optional<UserAccount> getUserAccountByName(String username) {
-        SqlSession            sqlSession  = ThreadLocalSqlSession.getSqlSession();
+        SqlSession            sqlSession  = getSqlSession();
         Optional<UserAccount> userAccount = Optional.ofNullable(sqlSession.selectOne("com.dewarim.cinnamon.model.UserAccount.getUserAccountByName", username));
         userAccount.ifPresent(this::addGroupInfo);
         return userAccount;
     }
 
     public Optional<UserAccount> getUserAccountById(Long id) {
-        SqlSession            sqlSession  = ThreadLocalSqlSession.getSqlSession();
+        SqlSession            sqlSession  = getSqlSession();
         Optional<UserAccount> userAccount = Optional.ofNullable(sqlSession.selectOne("com.dewarim.cinnamon.model.UserAccount.getUserAccountById", id));
         userAccount.ifPresent(this::addGroupInfo);
         return userAccount;
@@ -36,12 +36,12 @@ public class UserAccountDao implements CrudDao<UserAccount> {
     }
 
     public void changeUserActivationStatus(UserAccount user) {
-        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        SqlSession sqlSession = getSqlSession();
         sqlSession.update("com.dewarim.cinnamon.model.UserAccount.changeUserActivationStatus", user);
     }
 
     public boolean isSuperuser(UserAccount user) {
-        SqlSession          sqlSession = ThreadLocalSqlSession.getSqlSession();
+        SqlSession          sqlSession = getSqlSession();
         Map<String, Object> params     = Map.of("superuserGroupName", Constants.GROUP_SUPERUSERS, "userId", user.getId());
         return sqlSession.selectOne("com.dewarim.cinnamon.model.UserAccount.getSuperuserStatus",
                 params) != null;
@@ -53,17 +53,17 @@ public class UserAccountDao implements CrudDao<UserAccount> {
     }
 
     public List<UserAccount> listActiveUserAccounts() {
-        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        SqlSession sqlSession = getSqlSession();
         return sqlSession.selectList("com.dewarim.cinnamon.model.UserAccount.listActiveUserAccounts");
     }
 
     public List<UserAccount> listUserAccounts() {
-        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        SqlSession sqlSession = getSqlSession();
         return sqlSession.selectList("com.dewarim.cinnamon.model.UserAccount.list");
     }
 
     public void updateUser(UserAccount user) {
-        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        SqlSession sqlSession = getSqlSession();
         sqlSession.update("com.dewarim.cinnamon.model.UserAccount.update", user);
     }
 

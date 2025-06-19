@@ -1,10 +1,13 @@
 package com.dewarim.cinnamon.application.service.index;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.dom4j.Document;
 import org.dom4j.Element;
 import org.dom4j.Node;
 
 public class FieldDecoder {
+    private static final Logger log = LogManager.getLogger(FieldDecoder.class);
 
     /*
      * Replace the text content of all nodes found via the XPath expression with their decoded XML elements.
@@ -18,10 +21,15 @@ public class FieldDecoder {
             }
             Element element     = (Element) node;
             String  textContent = node.getText();
-            node.setText("");
-            Node xml = ParamParser.parseXml(textContent, "Failed to parse " + textContent);
+            element.clearContent();
+            Node xml = ParamParser.parseXml(textContent, "Failed to parse XML: " + textContent);
             xml.detach();
             element.add(xml);
+            log.trace("element: {} ", element.asXML());
+        }
+        if(log.isTraceEnabled()) {
+            String x = doc.asXML();
+            log.trace("decoded: {}", x);
         }
     }
 

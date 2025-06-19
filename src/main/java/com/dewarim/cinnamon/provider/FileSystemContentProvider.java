@@ -42,14 +42,14 @@ public class FileSystemContentProvider implements ContentProvider {
         if(file.exists()){
             boolean deleteSuccess = file.delete();
             if(!deleteSuccess){
-                log.warn("Failed to delete "+file.getAbsolutePath());
+                log.warn("Failed to delete {}", file.getAbsolutePath());
                 return false;
             }
             String[] otherFiles = file.getParentFile().list();
             if(otherFiles != null && otherFiles.length == 0){
                 boolean deleteParentFolderSuccess = file.getParentFile().delete();
                 if(!deleteParentFolderSuccess){
-                    log.warn("Failed to delete parent folder "+file.getParentFile().getAbsolutePath());
+                    log.warn("Failed to delete parent folder {}", file.getParentFile().getAbsolutePath());
                 }
             }
         }
@@ -65,7 +65,6 @@ public class FileSystemContentProvider implements ContentProvider {
 
         boolean result = subfolder.mkdirs();
         log.debug("created subfolder {}: {}", subfolderPath, result);
-        String contentPath  = subfolderPath + SEP + targetName;
         Path   contentFile  = Paths.get(subfolderPath, targetName);
         long   bytesWritten = Files.copy(inputStream, contentFile);
 
@@ -78,7 +77,7 @@ public class FileSystemContentProvider implements ContentProvider {
         String sha256Hex = DigestUtils.sha256Hex(new FileInputStream(contentFile.toFile()));
         lightMeta.setContentHash(sha256Hex);
 
-        log.info("Stored new content @ {}", contentFile.toAbsolutePath());
+        log.debug("Stored new content @ {}", contentFile.toAbsolutePath());
 
         return lightMeta;
     }
@@ -90,5 +89,12 @@ public class FileSystemContentProvider implements ContentProvider {
     @Override
     public String getName() {
         return DefaultContentProvider.FILE_SYSTEM.name();
+    }
+
+    @Override
+    public String toString() {
+        return "FileSystemContentProvider{" +
+                "dataRootPath='" + dataRootPath + '\'' +
+                '}';
     }
 }

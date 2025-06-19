@@ -10,44 +10,65 @@ import java.util.Objects;
 @JacksonXmlRootElement(localName = "link")
 public class Link implements Ownable, Identifiable {
 
-    private Long     id;
-    private LinkType type;
-    private Long     ownerId;
-    private Long     aclId;
-    private Long     parentId;
-    private Long     folderId;
-    private Long     objectId;
+    private Long         id;
+    private LinkType     type;
+    private Long         ownerId;
+    private Long         aclId;
+    private Long         parentId;
+    private Long         folderId;
+    private Long         objectId;
+    private Long         resolvedId;
+    private LinkResolver resolver = LinkResolver.FIXED;
 
     public Link() {
     }
 
-    public Link(Long id, LinkType type, Long ownerId, Long aclId, Long parentId, Long folderId, Long objectId) {
-        this.id = id;
-        this.type = type;
-        this.ownerId = ownerId;
-        this.aclId = aclId;
+    public Link(Long id, LinkType type, Long ownerId, Long aclId, Long parentId, Long folderId, Long objectId, LinkResolver resolver) {
+        this.id       = id;
+        this.type     = type;
+        this.ownerId  = ownerId;
+        this.aclId    = aclId;
         this.parentId = parentId;
         this.folderId = folderId;
         this.objectId = objectId;
+        this.resolver = resolver;
     }
 
-    public Link(LinkType type, Long ownerId, Long aclId, Long parentId, Long folderId, Long objectId) {
-        this.type = type;
-        this.ownerId = ownerId;
-        this.aclId = aclId;
-        this.parentId = parentId;
-        this.folderId = folderId;
-        this.objectId = objectId;
-    }
-
-    public Link(LinkResponse linkResponse){
-        this.id = linkResponse.getId();
-        this.type = linkResponse.getType();
-        this.ownerId = linkResponse.getOwnerId();
-        this.aclId = linkResponse.getAclId();
+    public Link(LinkResponse linkResponse) {
+        this.id       = linkResponse.getId();
+        this.type     = linkResponse.getType();
+        this.ownerId  = linkResponse.getOwnerId();
+        this.aclId    = linkResponse.getAclId();
         this.parentId = linkResponse.getParentId();
         this.folderId = linkResponse.getFolderId();
         this.objectId = linkResponse.getObjectId();
+        this.resolver = linkResponse.getResolver();
+        this.resolvedId = linkResponse.getResolvedId();
+    }
+
+    public Long resolveLink(){
+        if(getResolver()== LinkResolver.FIXED){
+            return getObjectId();
+        }
+        else{
+            return getResolvedId();
+        }
+    }
+
+    public Long getResolvedId() {
+        return resolvedId;
+    }
+
+    public void setResolvedId(Long resolvedId) {
+        this.resolvedId = resolvedId;
+    }
+
+    public LinkResolver getResolver() {
+        return resolver;
+    }
+
+    public void setResolver(LinkResolver resolver) {
+        this.resolver = resolver;
     }
 
     public Long getId() {
@@ -120,7 +141,8 @@ public class Link implements Ownable, Identifiable {
                 Objects.equals(aclId, link.aclId) &&
                 Objects.equals(parentId, link.parentId) &&
                 Objects.equals(folderId, link.folderId) &&
-                Objects.equals(objectId, link.objectId);
+                Objects.equals(objectId, link.objectId) &&
+                resolver == link.resolver;
     }
 
     @Override
@@ -139,12 +161,15 @@ public class Link implements Ownable, Identifiable {
                 ", parentId=" + parentId +
                 ", folderId=" + folderId +
                 ", objectId=" + objectId +
+                ", resolvedId=" + resolvedId +
+                ", resolver=" + resolver +
                 '}';
     }
 
     /**
      * Check if base values look okay - missing id is allowed.
      * Use this to links supplied from external sources (update/create requests)
+     *
      * @return true if all values pass basic validity check.
      */
     public boolean validated() {

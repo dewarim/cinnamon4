@@ -13,6 +13,7 @@
         <result property="parentId" column="parent_id"/>
         <result property="folderId" column="folder_id"/>
         <result property="objectId" column="osd_id"/>
+        <result property="resolver" column="resolver"/>
     </resultMap>
 
     <select id="getLinkById" parameterType="long" resultMap="linkMap">
@@ -47,13 +48,14 @@
         </foreach>
     </delete>
 
-    <delete id="deleteAllLinksToObjects" parameterType="list">
+    <delete id="deleteAllFixedLinksToObjects" parameterType="list">
         DELETE FROM links
         WHERE osd_id IN
         <foreach item="item" index="index" collection="list"
                  open="(" separator="," close=")">
             #{item}
         </foreach>
+        and resolver='FIXED'
     </delete>
 
     <delete id="deleteAllLinksToFolders" parameterType="list">
@@ -69,8 +71,8 @@
         <selectKey keyProperty="id" resultType="long" order="BEFORE">
             select nextval('seq_link_id')
         </selectKey>
-        INSERT INTO links (id,type,owner_id,acl_id,parent_id,folder_id,osd_id,version) VALUES
-        (#{id},#{type}, #{ownerId}, #{aclId},#{parentId},#{folderId},#{objectId},0)
+        INSERT INTO links (id,type,owner_id,acl_id,parent_id,folder_id,osd_id,resolver) VALUES
+        (#{id},#{type}, #{ownerId}, #{aclId},#{parentId},#{folderId},#{objectId},#{resolver})
     </insert>
 
     <update id="updateLink" parameterType="com.dewarim.cinnamon.model.links.Link">
@@ -80,7 +82,8 @@
             parent_id = #{parentId},
             osd_id    = #{objectId},
             folder_id = #{folderId},
-            type      = #{type}
+            type      = #{type},
+            resolver  = #{resolver}
         WHERE id = #{id}
     </update>
 
@@ -88,6 +91,16 @@
         SELECT *
         FROM links
         WHERE id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="getLinksByObjectsId" parameterType="list" resultMap="linkMap">
+        SELECT *
+        FROM links
+        WHERE osd_id in
         <foreach item="item" index="index" collection="list"
                  open="(" separator="," close=")">
             #{item}
@@ -106,6 +119,25 @@
 
     <select id="list" resultMap="linkMap">
         select * from links
+    </select>
+
+    <select id="getLinksWeMayWantToDelete" parameterType="java.util.List" resultMap="linkMap">
+        select * from links where (resolver='LATEST_HEAD' and
+        osd_id is not null
+        and osd_id in (select id from objects where root_id in
+        (select root_id from objects where latest_head=true and id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        )
+        ))
+        or (resolver='FIXED' and osd_id is not null and osd_id in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        )
     </select>
 
 </mapper>

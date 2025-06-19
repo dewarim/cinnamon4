@@ -9,6 +9,7 @@ import com.dewarim.cinnamon.client.StandardResponse;
 import com.dewarim.cinnamon.lifecycle.NopState;
 import com.dewarim.cinnamon.model.*;
 import com.dewarim.cinnamon.model.links.Link;
+import com.dewarim.cinnamon.model.links.LinkResolver;
 import com.dewarim.cinnamon.model.relations.Relation;
 import com.dewarim.cinnamon.model.relations.RelationType;
 import com.dewarim.cinnamon.model.request.IdRequest;
@@ -207,7 +208,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         for (int i = 0; i < 11; i++) {
             ObjectSystemData newBranchVersion = client.version(new CreateNewVersionRequest(loopId));
             loopId = newBranchVersion.getId();
-            log.debug("newBranchVersion: " + newBranchVersion.getCmnVersion());
+            log.debug("newBranchVersion: {}", newBranchVersion.getCmnVersion());
             assertTrue(newBranchVersion.getCmnVersion().matches("1.1-\\d+"));
         }
         String cmnVersion = client.getOsdsById(List.of(loopId), false, false).get(0).getCmnVersion();
@@ -226,7 +227,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         for (int i = 0; i < 12; i++) {
             ObjectSystemData newMainVersion = client.version(new CreateNewVersionRequest(newVersionId));
             newVersionId = newMainVersion.getId();
-            log.debug("newMainVersion: " + newMainVersion.getCmnVersion());
+            log.debug("newMainVersion: {}", newMainVersion.getCmnVersion());
         }
         String cmnVersion = client.getOsdsById(List.of(newVersionId), false, false).get(0).getCmnVersion();
         assertEquals("14", cmnVersion);
@@ -246,7 +247,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         for (int i = 0; i < 12; i++) {
             ObjectSystemData newVersionOnSecondBranch = client.version(new CreateNewVersionRequest(id));
             id = newVersionOnSecondBranch.getId();
-            log.debug("newVersionOnSecondBranch: " + newVersionOnSecondBranch.getCmnVersion());
+            log.debug("newVersionOnSecondBranch: {}", newVersionOnSecondBranch.getCmnVersion());
         }
         String cmnVersion = client.getOsdsById(List.of(id), false, false).get(0).getCmnVersion();
         assertEquals("1.2-13", cmnVersion);
@@ -286,11 +287,11 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         // and that's the reason we want to migrate to LocalDate/Time (#228): Java will happily parse the date in
         // the _current_ timezone (so created vs osd.getCreated is off by 2 hours for CEST)
         assertEquals(created.getTime(), osd.getCreated().getTime());
-        log.debug("createdTimestamp: " + createdTimestamp);
+        log.debug("createdTimestamp: {}", createdTimestamp);
         String modifiedTimestamp = osdResponse.split("</?modified>")[1];
         Date   modified          = df.parse(modifiedTimestamp);
         assertEquals(modified.getTime(), osd.getModified().getTime());
-        log.debug("modifiedTimestamp: " + modifiedTimestamp);
+        log.debug("modifiedTimestamp: {}", modifiedTimestamp);
     }
 
     @Test
@@ -355,7 +356,23 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         client.setSummary(osdId, "<sum>sum</sum>");
         List<Summary> summaries = client.getOsdSummaries(List.of(osdId));
         assertFalse(summaries.isEmpty());
-        assertEquals(summaries.get(0).getContent(), "<sum>sum</sum>");
+        assertEquals("<sum>sum</sum>", summaries.get(0).getContent());
+    }
+    @Test
+    public void setEmptySummaryOnVersionedOsd() throws IOException {
+        // bug #416: delete version will remove summary of predecessor
+        var toh  = prepareAclGroupWithPermissions(List.of(
+                BROWSE, SET_SUMMARY
+        )).createOsd();
+        var osdId = toh.osd.getId();
+        client.setSummary(osdId, "<sum>sum</sum>");
+        List<Summary> summaries = client.getOsdSummaries(List.of(osdId));
+        assertFalse(summaries.isEmpty());
+        assertEquals("<sum>sum</sum>", summaries.get(0).getContent());
+        toh.version();
+        toh.deleteOsd();
+        String v1Summary = toh.getOsdSummary(osdId);
+        assertEquals("<sum>sum</sum>", v1Summary);
     }
 
     @Test
@@ -459,8 +476,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void setContentWithDefaultContentProviderHappyPath() throws IOException {
-        long osdId = new TestObjectHolder(client, userId)
-                .createOsd("setContentWithDefaultContentProviderHappyPath").osd.getId();
+        long osdId = new TestObjectHolder(client, userId).createOsd().osd.getId();
         createTestContentOnOsd(osdId, false);
 
         // check data is in content store:
@@ -2247,7 +2263,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         File bun = new File("data/cinnamon-bun.png");
         var toh = new TestObjectHolder(client, userId)
                 .createOsdWithContent("bunny-to-reproduce", imagePng, bun)
-                .createOsdMeta("<xml>my metaset</xml");
+                .createOsdMeta("<xml>my metaset</xml>");
         var sourceOsd = toh.osd;
 
         // set up target:
@@ -2270,7 +2286,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         File bun = new File("data/cinnamon-bun.png");
         var toh = prepareAclGroupWithPermissions(List.of())
                 .createOsdWithContent("bunny-to-reproduce", imagePng, bun)
-                .createOsdMeta("<xml>my metaset</xml");
+                .createOsdMeta("<xml>my metaset</xml>");
         var sourceOsd = toh.osd;
 
         // set up target (not locked, so we get the OBJECT_MUST_BE_LOCKED error message):
@@ -2371,5 +2387,47 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         toh.version();
         toh.deleteOsd();
         assertFalse(toh.loadOsd(v1ofBranch1.getId()).osd.isLatestBranch());
+    }
+
+    @Test
+    public void linkWithLatestHeadResolverWillBeDeleted() throws IOException {
+        var toh = new TestObjectHolder(client, userId).createOsd()
+                .createFolder()
+                .createLinkToOsd(LinkResolver.LATEST_HEAD)
+                .deleteOsd();
+        assertClientError(() -> client.getLinkById(toh.link.getId(), false), OBJECT_NOT_FOUND);
+    }
+
+    @Test
+    public void linkWithLatestHeadResolverWillBeUpdatedIfTargetIsDeletedButRootRemains() throws IOException {
+        var toh = new TestObjectHolder(client, userId).createOsd();
+        var osd = toh.osd;
+        // create v2
+        toh.version()
+                .createFolder()
+                // link to v2
+                .createLinkToOsd(LinkResolver.LATEST_HEAD)
+                // when we delete v2, the link should remain, but should be updated to point to v1
+                .deleteOsd();
+        var targetId = client.getLinkById(toh.link.getId(), false).getOsd().getId();
+        assertEquals(osd.getId(), targetId);
+    }
+
+    @Test
+    public void linkWithLatestHeadResolverWillBeUntouchedIfNonHeadNonRootTargetIsDeleted() throws IOException {
+        // this is a variant of linkWithLatestHeadResolverWillBeDeleted:
+        var toh = new TestObjectHolder(client, userId).createOsd();
+        // create v2
+        toh.version();
+        var osd = toh.osd;
+        toh.createFolder()
+                // link to v2
+                .createLinkToOsd(LinkResolver.LATEST_HEAD)
+                .version()
+                // when we delete v3, the link to v2 should remain and be left untouched
+                // no need to update it to point to root id
+                .deleteOsd();
+        var targetId = client.getLinkById(toh.link.getId(), false).getOsd().getId();
+        assertEquals(osd.getId(), targetId);
     }
 }

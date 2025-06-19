@@ -10,7 +10,9 @@ import com.dewarim.cinnamon.api.lifecycle.State;
 import com.dewarim.cinnamon.api.lifecycle.StateChangeResult;
 import com.dewarim.cinnamon.application.CinnamonRequest;
 import com.dewarim.cinnamon.application.CinnamonResponse;
+import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
+import com.dewarim.cinnamon.application.exception.CinnamonException;
 import com.dewarim.cinnamon.application.service.DeleteOsdService;
 import com.dewarim.cinnamon.application.service.MetaService;
 import com.dewarim.cinnamon.application.service.TikaService;
@@ -59,11 +61,13 @@ import static org.apache.hc.core5.http.HttpHeaders.CONTENT_DISPOSITION;
 @WebServlet(name = "Osd", urlPatterns = "/")
 public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSystemData> {
 
-    private final        ObjectMapper         xmlMapper            = XML_MAPPER;
-    private final        AuthorizationService authorizationService = new AuthorizationService();
-    private final        DeleteOsdService     deleteOsdService     = new DeleteOsdService();
-    private static final Logger               log                  = LogManager.getLogger(OsdServlet.class);
-    private              TikaService          tikaService;
+    private final        ObjectMapper           xmlMapper            = XML_MAPPER;
+    private final        AuthorizationService   authorizationService = new AuthorizationService();
+    private final        DeleteOsdService       deleteOsdService     = new DeleteOsdService();
+    private static final Logger                 log                  = LogManager.getLogger(OsdServlet.class);
+    private              TikaService            tikaService;
+    private              ContentProviderService contentProviderService;
+    private              Long                   tikaMetasetTypeId;
 
     public OsdServlet() {
         super();
@@ -103,6 +107,23 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         }
     }
 
+    private Long getTikaMetasetTypeId() {
+        if (tikaMetasetTypeId == null) {
+            Optional<MetasetType> tikaMetasetType = new MetasetTypeDao().list().stream().filter(metasetType -> metasetType.getName().equals(TIKA_METASET_NAME)).findFirst();
+            if (tikaMetasetType.isPresent()) {
+                tikaMetasetTypeId = tikaMetasetType.get().getId();
+            }
+            else {
+                if (CinnamonServer.config.getCinnamonTikaConfig().isUseTika()) {
+                    String msg = "Could not find tika metaset type - this is a configuration error, contact your administrator.";
+                    log.error(msg);
+                    throw new CinnamonException(msg);
+                }
+            }
+        }
+        return tikaMetasetTypeId;
+    }
+
     private void copyToExistingOsd(CinnamonRequest request, CinnamonResponse cinnamonResponse, UserAccount user, OsdDao osdDao) throws IOException {
         CopyToExistingOsdRequest copyToExistingOsdRequest = xmlMapper.readValue(request.getInputStream(), CopyToExistingOsdRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
@@ -135,8 +156,9 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                     deletions.add(new Deletion(targetId, contentPath, false));
                 }
                 copyContent(user, osdDao, target, source, source.getFormatId());
+                deleteTikaMetasetOnTarget(target, metasetDao);
             }
-            if (copyTask.getMetasetTypeIds() != null && !copyTasks.isEmpty()) {
+            if (copyTask.getMetasetTypeIds() != null) {
                 // delete _ALL_ metasets on target: (cinnamon3 behavior)
                 metasetDao.delete(metasetDao.listByOsd(targetId).stream().map(Meta::getId).toList());
                 List<Meta> metas = metasetDao.listByOsd(sourceId);
@@ -145,7 +167,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                         .map(meta -> new Meta(targetId, meta.getTypeId(), meta.getContent()))
                         .collect(Collectors.toList());
                 metasetDao.create(metaCopies);
-                if(user.isChangeTracking()){
+                if (user.isChangeTracking()) {
                     target.setMetadataChanged(true);
                 }
             }
@@ -154,6 +176,15 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
             new DeletionDao().create(deletions);
         }
         cinnamonResponse.setResponse(new GenericResponse(true));
+    }
+
+    private void deleteTikaMetasetOnTarget(ObjectSystemData target, OsdMetaDao metasetDao) {
+        if (CinnamonServer.config.getCinnamonTikaConfig().isUseTika()) {
+            // delete tika metaset on target:
+            Optional<Meta> tikaMeta = metasetDao.listByOsd(target.getId()).stream()
+                    .filter(meta -> meta.getTypeId().equals(getTikaMetasetTypeId())).findFirst();
+            tikaMeta.ifPresent(meta -> metasetDao.delete(List.of(meta.getId())));
+        }
     }
 
     private void preventOverlapOfSourceAndTargetOsds(List<Long> sourceIds, List<Long> targetIds) {
@@ -203,7 +234,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
     }
 
     private void copyContent(UserAccount user, OsdDao osdDao, ObjectSystemData target, ObjectSystemData source, Long formatId) throws IOException {
-        ContentProvider contentProvider = ContentProviderService.getInstance().getContentProvider(source.getContentProvider());
+        ContentProvider contentProvider = contentProviderService.getContentProvider(source.getContentProvider());
         try (InputStream contentStream = contentProvider.getContentStream(source)) {
             ContentMetadata metadata = contentProvider.writeContentStream(target, contentStream);
             target.setContentHash(metadata.getContentHash());
@@ -211,9 +242,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
             target.setContentSize(metadata.getContentSize());
             target.setContentProvider(contentProvider.getName());
             target.setFormatId(formatId);
-            Format format = new FormatDao().getObjectById(source.getFormatId()).orElseThrow();
-            tikaService.convertContentToTikaMetaset(target, contentProvider.getContentStream(metadata), format);
-            if(user.isChangeTracking()){
+            if (user.isChangeTracking()) {
                 target.setContentChanged(true);
             }
             osdDao.updateOsd(target, false);
@@ -346,11 +375,18 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
             }
 
             // copy metasets
+            var metasetDao = new OsdMetaDao();
             if (copyOsdRequest.getMetasetTypeIds().size() > 0) {
-                var        metasetDao = new OsdMetaDao();
-                List<Meta> metas      = metasetDao.listByOsd(osd.getId());
+                List<Meta> metas = metasetDao.listByOsd(osd.getId());
                 var metaCopies = metas.stream()
                         .filter(meta -> copyOsdRequest.getMetasetTypeIds().contains(meta.getTypeId()))
+                        .filter(meta -> {
+                            if (CinnamonServer.config.getCinnamonTikaConfig().isUseTika()) {
+                                // do not copy tika metaset -> we will create a new one.
+                                return !meta.getTypeId().equals(getTikaMetasetTypeId());
+                            }
+                            return true;
+                        })
                         .map(meta -> new Meta(copy.getId(), meta.getTypeId(), meta.getContent()))
                         .collect(Collectors.toList());
                 new MetaService<>().createMeta(metasetDao, metaCopies, osdDao, user);
@@ -420,7 +456,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         osd.setOwnerId(ownerId);
 
         // check type exists
-        Long typeId = new ObjectTypeDao().getObjectTypeById(createRequest.getTypeId())
+        Long typeId = new ObjectTypeDao().getObjectById(createRequest.getTypeId())
                 .orElseThrow(ErrorCode.OBJECT_TYPE_NOT_FOUND.getException()).getId();
         osd.setTypeId(typeId);
 
@@ -435,7 +471,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         // check language if given
         final Long languageId;
         if (createRequest.getLanguageId() != null) {
-            languageId = new LanguageDao().getLanguageById(createRequest.getLanguageId())
+            languageId = new LanguageDao().getObjectById(createRequest.getLanguageId())
                     .orElseThrow(ErrorCode.LANGUAGE_NOT_FOUND.getException()).getId();
         }
         else {
@@ -447,7 +483,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         osd.setCreatorId(user.getId());
         osd.setModifierId(user.getId());
         osd.setSummary(Objects.requireNonNullElse(createRequest.getSummary(), DEFAULT_SUMMARY));
-        if(user.isChangeTracking()){
+        if (user.isChangeTracking()) {
             osd.setMetadataChanged(true);
         }
         osd = osdDao.saveOsd(osd);
@@ -461,7 +497,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         Part file = request.getPart("file");
         if (file != null) {
             storeFileUpload(file.getInputStream(), osd, createRequest.getFormatId());
-            if(user.isChangeTracking()){
+            if (user.isChangeTracking()) {
                 osd.setContentChanged(true);
             }
             osdDao.updateOsd(osd, false);
@@ -622,7 +658,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         Format format = formatOpt.orElseThrow(
                 () -> new ServletException(String.format("Encountered object #%d with content but non-existing formatId #%d.",
                         osd.getId(), osd.getFormatId())));
-        ContentProvider contentProvider = ContentProviderService.getInstance().getContentProvider(osd.getContentProvider());
+        ContentProvider contentProvider = contentProviderService.getContentProvider(osd.getContentProvider());
         InputStream     contentStream   = contentProvider.getContentStream(osd);
         response.setHeader(CONTENT_DISPOSITION, "attachment; filename=\"" + osd.getName().replace("\"", "%22") + "\"");
         response.setContentType(format.getContentType());
@@ -654,7 +690,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         }
 
         storeFileUpload(file.getInputStream(), osd, setContentRequest.getFormatId());
-        if(user.isChangeTracking()) {
+        if (user.isChangeTracking()) {
             osd.setContentChanged(true);
         }
         osdDao.updateOsd(osd, true);
@@ -664,7 +700,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
     private void deleteTempFile(File tempFile) {
         boolean deleteResult = tempFile.delete();
         if (!deleteResult) {
-            log.warn("Could not delete temporary upload file " + tempFile.getAbsolutePath());
+            log.warn("Could not delete temporary upload file {}", tempFile.getAbsolutePath());
         }
     }
 
@@ -678,13 +714,12 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         long bytesWritten   = Files.copy(inputStream, tempFile, REPLACE_EXISTING);
 
         // get content provider and store data:
-        ContentProvider contentProvider = ContentProviderService.getInstance().getContentProvider(osd.getContentProvider());
+        ContentProvider contentProvider = contentProviderService.getContentProvider(osd.getContentProvider());
         ContentMetadata metadata        = contentProvider.writeContentStream(osd, new FileInputStream(tempOutputFile));
         osd.setContentHash(metadata.getContentHash());
         osd.setContentPath(metadata.getContentPath());
         osd.setContentSize(metadata.getContentSize());
         osd.setFormatId(format.getId());
-        tikaService.convertContentToTikaMetaset(osd, new FileInputStream(tempOutputFile), format);
         deleteTempFile(tempOutputFile);
     }
 
@@ -766,7 +801,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                 if (!accessFilter.hasPermissionOnOwnable(osd, DefaultPermission.SET_TYPE, osd)) {
                     throw NO_TYPE_WRITE_PERMISSION.exception();
                 }
-                ObjectType type = new ObjectTypeDao().getObjectTypeById(typeId)
+                ObjectType type = new ObjectTypeDao().getObjectById(typeId)
                         .orElseThrow(ErrorCode.OBJECT_TYPE_NOT_FOUND.getException());
                 osd.setTypeId(type.getId());
                 changed = true;
@@ -802,7 +837,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                 if (!accessFilter.hasPermissionOnOwnable(osd, DefaultPermission.SET_LANGUAGE, osd)) {
                     NO_UPDATE_LANGUAGE_PERMISSION.throwUp();
                 }
-                Language language = new LanguageDao().getLanguageById(languageId)
+                Language language = new LanguageDao().getObjectById(languageId)
                         .orElseThrow(ErrorCode.LANGUAGE_NOT_FOUND.getException());
                 osd.setLanguageId(language.getId());
                 changed = true;
@@ -824,8 +859,8 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                 osd.setMetadataChanged(update.isMetadataChanged());
                 changed = true;
             }
-            else{
-                if(user.isChangeTracking()){
+            else {
+                if (user.isChangeTracking()) {
                     osd.setMetadataChanged(true);
                 }
             }
@@ -886,13 +921,14 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         }
         LinkDao    linkDao       = new LinkDao();
         List<Link> links         = linkDao.getLinksByFolderIdAndLinkType(List.of(folderId), LinkType.OBJECT);
-        List<Link> filteredLinks = authorizationService.filterLinksByBrowsePermission(links, user);
+        List<Link> filteredLinks = authorizationService.filterOsdLinksAndTargetsByBrowsePermission(links, user);
 
         OsdWrapper wrapper = new OsdWrapper();
         wrapper.setOsds(filteredOsds);
         wrapper.setLinks(filteredLinks);
         if (osdRequest.isLinksAsOsd()) {
-            List<ObjectSystemData> references = osdDao.getObjectsById(filteredLinks.stream().map(Link::getObjectId).filter(Objects::nonNull).collect(Collectors.toList()), includeSummary);
+            List<Long>             resolvedIds = filteredLinks.stream().map(Link::resolveLink).filter(Objects::nonNull).toList();
+            List<ObjectSystemData> references  = osdDao.getObjectsById(resolvedIds, includeSummary);
             if (includeMeta) {
                 references.forEach(osd -> osd.setMetas(metaDao.listByOsd(osd.getId())));
             }
@@ -931,7 +967,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         if (osd.getCmnVersion().matches("^\\d+$")) {
             osd.setLatestHead(true);
         }
-        // save here to generate Id so metasets can be created and linked to the OSD.
+        // save here to generate id so metasets can be created and linked to the OSD.
         ObjectSystemData savedOsd = osdDao.saveOsd(osd);
 
         // copy relations
@@ -975,16 +1011,18 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                 // for now, just throw the first error.
                 throw errorCodes.get(0).exception();
             }
-            if(user.isChangeTracking()){
+            if (user.isChangeTracking()) {
                 osd.setMetadataChanged(true);
             }
         }
 
         // saveFileUpload
-        Part file = request.getPart("file");
+        boolean shouldUpdateTikaMetaset = false;
+        Part    file                    = request.getPart("file");
         if (file != null) {
             storeFileUpload(file.getInputStream(), osd, versionRequest.getFormatId());
-            if(user.isChangeTracking()) {
+            shouldUpdateTikaMetaset = true;
+            if (user.isChangeTracking()) {
                 osd.setContentChanged(true);
             }
         }
@@ -1011,7 +1049,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                 osd.setLifecycleStateId(stateForCopy.getId());
             }
         }
-        osdDao.updateOsd(osd, false);
+        osdDao.updateOsd(osd, false, shouldUpdateTikaMetaset);
         OsdWrapper wrapper = new OsdWrapper();
         wrapper.setOsds(Collections.singletonList(savedOsd));
         response.setWrapper(wrapper);
@@ -1032,6 +1070,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
 
     @Override
     public void init() {
-        tikaService = ((TikaService) getServletContext().getAttribute(TIKA_SERVICE));
+        tikaService            = ((TikaService) getServletContext().getAttribute(TIKA_SERVICE));
+        contentProviderService = (ContentProviderService) getServletContext().getAttribute(CONTENT_PROVIDER_SERVICE);
     }
 }

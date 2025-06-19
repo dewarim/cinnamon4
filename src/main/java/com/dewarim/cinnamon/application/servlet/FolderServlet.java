@@ -247,10 +247,14 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
         parentAndSubFolders.add(folder);
         parentAndSubFolders.addAll(browsableSubFolders);
         List<Long> folderIdsForLinkQuery = parentAndSubFolders.stream().map(Folder::getId).toList();
+
+        FolderWrapper folderWrapper = new FolderWrapper(browsableSubFolders);
         List<Link> folderLinks = linkDao.getLinksByFolderIdAndLinkType(folderIdsForLinkQuery, LinkType.FOLDER)
                 .stream().filter(accessFilter::hasBrowsePermissionForOwnable).collect(Collectors.toList());
-        FolderWrapper folderWrapper = new FolderWrapper(browsableSubFolders);
         folderWrapper.setLinks(folderLinks);
+        List<Long> linkedFolderIds = folderLinks.stream().map(Link::getFolderId).collect(Collectors.toSet()).stream().toList();
+        List<Folder>  references   = folderDao.getFoldersById(linkedFolderIds, folderRequest.isIncludeSummary());
+        folderWrapper.setReferences(references);
         response.setWrapper(folderWrapper);
     }
 
@@ -368,7 +372,7 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
                     if (!subFolderIds.isEmpty()) {
                         indexJobDao.reindexFolders(subFolderIds);
                         for (Long subFolderId : subFolderIds) {
-                            indexJobDao.insertIndexJob(new IndexJob(IndexJobType.FOLDER, subFolderId, IndexJobAction.UPDATE, false));
+                            indexJobDao.insertIndexJob(new IndexJob(IndexJobType.FOLDER, subFolderId, IndexJobAction.UPDATE));
                             indexJobDao.reIndexFolderContent(subFolderId);
                         }
                     }

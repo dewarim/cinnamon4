@@ -2,16 +2,20 @@ package com.dewarim.cinnamon.security.authorization;
 
 import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.ErrorCode;
+import com.dewarim.cinnamon.api.Identifiable;
 import com.dewarim.cinnamon.api.Ownable;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.application.service.search.BrowsableAcls;
+import com.dewarim.cinnamon.dao.FolderDao;
+import com.dewarim.cinnamon.dao.OsdDao;
 import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.model.Folder;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.links.Link;
+import com.dewarim.cinnamon.model.links.LinkResolver;
 
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class AuthorizationService {
@@ -24,11 +28,66 @@ public class AuthorizationService {
         return osds.stream().filter(osd -> hasUserOrOwnerPermission(osd, DefaultPermission.BROWSE, user)).collect(Collectors.toList());
     }
 
-    // TODO: refactor to filterOwnableByBrowsePermission
     public List<Link> filterLinksByBrowsePermission(List<Link> links, UserAccount user) {
         return links.stream()
                 .filter(link -> hasUserOrOwnerPermission(link, DefaultPermission.BROWSE, user))
                 .collect(Collectors.toList());
+    }
+
+    public List<Link> filterFolderLinksAndTargetsByBrowsePermission(List<Link> links, UserAccount user) {
+        // first, filter links if they themselves are browsable:
+        List<Link> filteredLinks = links.stream().filter(ownable -> hasUserOrOwnerPermission(ownable, DefaultPermission.BROWSE, user))
+                .toList();
+
+        // only return links if the target Folder is also browsable:
+        List<Link>         results   = new ArrayList<>();
+        Set<Long>          folderIds = filteredLinks.stream().map(Link::getFolderId).collect(Collectors.toSet());
+        Map<Long, Ownable> ownables  = new FolderDao().getFoldersAsOwnables(folderIds).stream().collect(Collectors.toMap(Identifiable::getId, ownable -> ownable));
+        for (Link link : filteredLinks) {
+            Long ownableId = link.getFolderId();
+            if (ownables.containsKey(ownableId)) {
+                Ownable ownable = ownables.get(ownableId);
+                if (hasUserOrOwnerPermission(ownable, DefaultPermission.BROWSE, user)) {
+                    results.add(link);
+                }
+            }
+        }
+        return results;
+    }
+
+    public List<Link> filterOsdLinksAndTargetsByBrowsePermission(List<Link> links, UserAccount user) {
+        // first, filter links if they themselves are browsable:
+        List<Link> filteredLinks = links.stream().filter(ownable -> hasUserOrOwnerPermission(ownable, DefaultPermission.BROWSE, user))
+                .toList();
+
+        // resolve links pointing to latest head:
+        List<Link>                  latestHeadLinks = filteredLinks.stream().filter(link -> link.getResolver() == LinkResolver.LATEST_HEAD).toList();
+        OsdDao                      osdDao          = new OsdDao();
+        Map<Long, ObjectSystemData> latestHeads     = osdDao.getLatestHeads(osdDao.getObjectsById(latestHeadLinks.stream().map(Link::getObjectId).toList()));
+        for (Link latestHeadLink : latestHeadLinks) {
+            latestHeadLink.setResolvedId(latestHeads.get(latestHeadLink.getObjectId()).getId());
+        }
+        Set<Long> fixedIds            = filteredLinks.stream().filter(link -> link.getResolver() == LinkResolver.FIXED).map(Link::getObjectId).collect(Collectors.toSet());
+        Set<Long> latestHeadIds       = latestHeads.values().stream().map(ObjectSystemData::getId).collect(Collectors.toSet());
+        Set<Long> fixedAndResolvedIds = new HashSet<>(fixedIds);
+        fixedAndResolvedIds.addAll(latestHeadIds);
+
+        // only return links if the target OSD is also browsable:
+        List<Link>         results  = new ArrayList<>();
+        Map<Long, Ownable> ownables = osdDao.getOsdsAsOwnables(fixedAndResolvedIds).stream().collect(Collectors.toMap(Identifiable::getId, ownable -> ownable));
+        for (Link link : filteredLinks) {
+            Long ownableId = link.getObjectId();
+            if (link.getResolver() == LinkResolver.LATEST_HEAD) {
+                ownableId = link.getResolvedId();
+            }
+            if (ownables.containsKey(ownableId)) {
+                Ownable ownable = ownables.get(ownableId);
+                if (hasUserOrOwnerPermission(ownable, DefaultPermission.BROWSE, user)) {
+                    results.add(link);
+                }
+            }
+        }
+        return results;
     }
 
     public boolean userHasPermission(Long aclId, DefaultPermission permission, UserAccount user) {

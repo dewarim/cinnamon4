@@ -9,6 +9,7 @@ import org.dom4j.Node;
 import org.dom4j.io.OutputFormat;
 import org.dom4j.io.SAXReader;
 import org.dom4j.io.XMLWriter;
+import org.xml.sax.SAXException;
 
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -18,7 +19,7 @@ import java.util.regex.Pattern;
 
 // copied from Cinnamon 3
 public class ParamParser {
-    private static Logger log = LogManager.getLogger(ParamParser.class);
+    private static final Logger log = LogManager.getLogger(ParamParser.class);
 
 
     private static final Pattern DOCTYPE_OR_ENTITY_PATTERN = Pattern.compile(ElementNameIndexer.DOCTYPE_ENTITY);
@@ -46,12 +47,18 @@ public class ParamParser {
             Matcher tikaMatcher = tikaBadEntityReplacer.matcher(xml);
             xml = tikaMatcher.replaceAll(" ");
             SAXReader reader = new SAXReader();
-            // ignore dtd-declarations
+            // ignore dtd-declarations, do not load external entities
+            reader.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+            reader.setFeature("http://xml.org/sax/features/external-general-entities", false);
+            reader.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
             reader.setIncludeExternalDTDDeclarations(false);
             // do not validate - we are only interested in receiving a doc.
             reader.setValidation(false);
+//            reader.setMergeAdjacentText(true);
+//            reader.setStripWhitespaceText(true);
+//            reader.setStringInternEnabled(true);
             return reader.read(new StringReader(xml));
-        } catch (DocumentException e) {
+        } catch (DocumentException | SAXException e) {
             log.debug("ParamParser::DocumentException::for content {}", e, xml);
             throw new RuntimeException(message);
         }

@@ -9,6 +9,8 @@ import com.dewarim.cinnamon.application.service.debug.DebugLogService;
 import com.dewarim.cinnamon.model.response.CinnamonError;
 import org.apache.ibatis.exceptions.PersistenceException;
 import org.apache.ibatis.session.SqlSession;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -20,7 +22,8 @@ import static com.dewarim.cinnamon.dao.SqlAction.*;
 
 public interface CrudDao<T extends Identifiable> {
 
-    int BATCH_SIZE = 1000;
+    Logger logger = LogManager.getLogger(CrudDao.class);
+    int    BATCH_SIZE = 1000;
 
     default List<T> create(List<T> items) {
         List<T>    createdItems = new ArrayList<>();
@@ -31,6 +34,7 @@ public interface CrudDao<T extends Identifiable> {
             try {
                 sqlSession.insert(sqlAction, item);
             } catch (PersistenceException e) {
+                logger.warn("Failed to save item: {}", item, e);
                 CinnamonError error = new CinnamonError(ErrorCode.DB_INSERT_FAILED.getCode(), "insert failed with:\n" + convertStackTrace(e) + "\n while trying to insert: " + item);
                 throw new FailedRequestException(ErrorCode.DB_INSERT_FAILED, List.of(error));
             }
@@ -52,6 +56,7 @@ public interface CrudDao<T extends Identifiable> {
             try {
                 deleteCount.getAndAdd(sqlSession.delete(getMapperNamespace(DELETE), partition));
             } catch (PersistenceException e) {
+                logger.warn("Failed to delete items:", e);
                 CinnamonError error = new CinnamonError(ErrorCode.DB_DELETE_FAILED.getCode(), "delete failed with:\n" + convertStackTrace(e) + "\n while trying to delete items #" + partition);
                 throw new FailedRequestException(ErrorCode.DB_DELETE_FAILED, List.of(error));
             }
@@ -84,13 +89,23 @@ public interface CrudDao<T extends Identifiable> {
         if (id == null) {
             return Optional.empty();
         }
+        if(useCache()){
+            T cachedVersion = getCachedVersion(id);
+            if(cachedVersion != null){
+                return Optional.of(cachedVersion);
+            }
+        }
         List<T> items = getObjectsById(List.of(id));
         if (items.size() == 0) {
             return Optional.empty();
         }
         else {
+            T item = items.get(0);
+            if(useCache()){
+                addToCache(item);
+            }
             // since ids are unique primary keys, we do not have to check for size() > 1.
-            return Optional.of(items.get(0));
+            return Optional.of(item);
         }
     }
 
@@ -207,5 +222,17 @@ public interface CrudDao<T extends Identifiable> {
         if (CinnamonServer.config.getDebugConfig().isDebugEnabled()) {
             DebugLogService.log(message, object);
         }
+    }
+
+    default boolean useCache(){
+        return false;
+    }
+
+    default void addToCache(T item){
+
+    }
+
+    default T getCachedVersion(Long id){
+        return null;
     }
 }

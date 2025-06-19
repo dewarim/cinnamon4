@@ -57,12 +57,12 @@ public class ElementNameIndexer extends DefaultIndexer {
             saxParser.parse(new ByteArrayInputStream(withoutDoctype.getBytes(StandardCharsets.UTF_8)), nameHandler);
             Set<String> elementNames = nameHandler.getNames();
             elementNames.forEach(name -> {
-                log.debug("fieldName: " + fieldName + " value: " + name + " stored:" + fieldType.stored());
+                log.trace("fieldName: {} value: {} stored:{}", fieldName, name, fieldType.stored());
                 luceneDoc.add(new Field(fieldName, name, fieldType));
             });
             List<String> comments = lexHandler.getComments();
             comments.forEach(comment -> {
-                log.debug("fieldName: " + "xml.comment" + " value: " + comment + " stored:" + fieldType.stored());
+                log.trace("fieldName: xml.comment value: {} stored:{}", comment, fieldType.stored());
                 luceneDoc.add(new Field("xml.comment", comment, fieldType));
             });
         } catch (Exception e) {
@@ -108,7 +108,7 @@ public class ElementNameIndexer extends DefaultIndexer {
         @Override
         public void comment(char[] ch, int start, int length) throws SAXException {
             String comment = new String(ch, start, length).trim();
-            log.debug("comment: " + comment);
+            log.trace("comment: {}", comment);
             comments.add(comment);
         }
 

@@ -447,7 +447,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
             xmlResponse = new String(response.getEntity().getContent().readAllBytes(), StandardCharsets.UTF_8);
         }
         Document document = ParamParser.parseXmlToDocument(xmlResponse);
-        log.info("xmlResponse: " + xmlResponse);
+        log.info("xmlResponse: {}", xmlResponse);
         List<Node> nodes = document.selectNodes("//lifecycleStates/lifecycleState");
         assertTrue(nodes.size() > 0);
     }

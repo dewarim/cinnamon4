@@ -139,6 +139,33 @@ An OSD document as seen by the index service:
 </objectSystemData>
 ----
 
+==== IndexModes
+
+An OSD with file content needs a format, which has an IndexMode field that defines if and how content will be treated before handing it over to the Indexer as a content node.
+
+* XML: will be parsed and added directly in the <content> node
+* PLAIN_TEXT: also added directly to <content> node
+* TIKA: file will be parsed by Apache Tika server if enabled. The XML output from Tika will be added as a metaset
+* JSON: will be converted to XML and added to the <content> node wrapped in an <ObjectNode>
+
+JSON file content:
+
+[source,json]
+----
+    {"name": "Bob"}
+----
+
+will be seen by the indexer as:
+
+[source,xml]
+----
+    <content>
+      <ObjectNode><name>Bob</name></ObjectNode>
+    </content>
+----
+
+And an DescendingStringIndexer can then add "Bob" as text content for indexing - or a different index item can add a Lucene field "name" with content "Bob".
+
 === Folder XML
 
 A folder document as seen by the index service:
@@ -157,12 +184,12 @@ A folder document as seen by the index service:
     <hasSubfolders>false</hasSubfolders>
     <created>2023-02-26T18:00:29+0000</created>
     <metasets>
-        <meta>
+        <metaset>
             <id>1</id>
             <objectId>5</objectId>
             <typeId>3</typeId>
             <content><xml><folder-meta-data archived='no'/></xml></content>
-        </meta>
+        </metaset>
     </metasets>
     <content>
         <empty/>
@@ -203,7 +230,7 @@ Example of a search condition:
 insert into index_items(id, fieldname, multiple_results,
    name, search_string, search_condition, store_field, index_type)
 values (nextval('seq_index_item_id'), 'xml_content', false,'xml content:tika',
-  '/objectSystemData/metasets/meta/content/descendant::*', 'true()',true, 'DESCENDING_STRING_INDEXER'
+  '/objectSystemData/metasets/metaset/content/descendant::*', 'true()',true, 'DESCENDING_STRING_INDEXER'
 );
 insert into index_items(id, fieldname, multiple_results,
                         name, search_string, search_condition, store_field, index_type)

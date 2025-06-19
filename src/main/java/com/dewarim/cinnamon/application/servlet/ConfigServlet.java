@@ -12,7 +12,6 @@ import com.dewarim.cinnamon.model.UrlMappingInfo;
 import com.dewarim.cinnamon.model.request.config.ListConfigRequest;
 import com.dewarim.cinnamon.model.response.ConfigWrapper;
 import com.dewarim.cinnamon.model.response.UrlMappingInfoWrapper;
-import com.dewarim.cinnamon.provider.ContentProviderService;
 import com.dewarim.cinnamon.provider.StateProviderService;
 import com.dewarim.cinnamon.security.LoginProviderService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -36,7 +35,7 @@ import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
 
 @WebServlet(name = "Config", urlPatterns = "/")
 public class ConfigServlet extends HttpServlet {
-    private static final Logger log = LogManager.getLogger(CinnamonServlet.class);
+    private static final Logger log = LogManager.getLogger(ConfigServlet.class);
 
     private final ObjectMapper xmlMapper = XML_MAPPER;
 
@@ -67,7 +66,7 @@ public class ConfigServlet extends HttpServlet {
                     NEED_EXTERNAL_LOGGING_CONFIG.getDescription(), logResponses);
         }
         else {
-            log.info("reconfigure logging to use: " + log4jConfigPath);
+            log.info("reconfigure logging to use: {}", log4jConfigPath);
             Configurator.reconfigure(URI.create(log4jConfigPath));
             cinnamonResponse.responseIsGenericOkay();
         }
@@ -104,9 +103,6 @@ public class ConfigServlet extends HttpServlet {
 
     private List<ProviderClass> generateProviderClassList() {
         List<ProviderClass> providerClasses = new ArrayList<>();
-        providerClasses.addAll(ContentProviderService.getInstance().getProviderList().stream()
-                .map(provider -> new ProviderClass(ProviderType.CONTENT_PROVIDER, provider.getName()))
-                .toList());
         providerClasses.addAll(StateProviderService.getInstance().getProviderList().stream()
                 .map(provider -> new ProviderClass(ProviderType.STATE_PROVIDER, provider.getName()))
                 .toList());

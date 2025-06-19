@@ -19,6 +19,7 @@ public class FieldDecoderUnitTest {
         Document doc = DocumentHelper.parseText(encoded);
         new FieldDecoder().decodeField(doc, "//foo/config");
         assertEquals(decoded, doc.asXML());
+        System.out.println(doc.asXML());
     }
 
 }

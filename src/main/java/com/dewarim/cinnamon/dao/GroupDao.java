@@ -1,7 +1,6 @@
 package com.dewarim.cinnamon.dao;
 
 import com.dewarim.cinnamon.api.Constants;
-import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.model.Group;
 import org.apache.ibatis.session.SqlSession;
 
@@ -19,7 +18,7 @@ public class GroupDao implements CrudDao<Group> {
 
     // TODO: cache results
     public Set<Group> getGroupsWithAncestorsOfUserById(Long userId){
-        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        SqlSession sqlSession = getSqlSession();
         return new HashSet<>(sqlSession.selectList("com.dewarim.cinnamon.model.Group.getGroupsWithAncestorsOfUserById", userId));
     }
     
@@ -32,24 +31,24 @@ public class GroupDao implements CrudDao<Group> {
     }
     
     public Optional<Group> getGroupByName(String name){
-        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        SqlSession sqlSession = getSqlSession();
         return Optional.ofNullable(sqlSession.selectOne("com.dewarim.cinnamon.model.Group.getGroupByName",name));
     }
     public List<Group> getGroupsByName(List<String> names){
         if(names == null || names.isEmpty()){
             return List.of();
         }
-        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        SqlSession sqlSession = getSqlSession();
         return sqlSession.selectList("com.dewarim.cinnamon.model.Group.getGroupsByName",names);
     }
 
     public boolean hasChildren(Long id) {
-        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        SqlSession sqlSession = getSqlSession();
         return sqlSession.selectOne("com.dewarim.cinnamon.model.Group.hasChildren",id);
     }
 
     public List<Long> getChildGroupIds(List<Long> ids) {
-        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        SqlSession sqlSession = getSqlSession();
         return sqlSession.selectList("com.dewarim.cinnamon.model.Group.getChildGroupIds",ids);
     }
 }

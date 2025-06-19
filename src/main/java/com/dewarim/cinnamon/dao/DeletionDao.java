@@ -1,6 +1,5 @@
 package com.dewarim.cinnamon.dao;
 
-import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.model.Deletion;
 import org.apache.ibatis.session.SqlSession;
 
@@ -14,7 +13,7 @@ public class DeletionDao implements CrudDao<Deletion>{
     }
 
     public List<Deletion> listPendingDeletions(){
-        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        SqlSession sqlSession = getSqlSession();
         return sqlSession.selectList("listPendingDeletions");
     }
 }
