@@ -58,7 +58,13 @@ test and create a lot of basic objects in the cinnamon_test database. If this su
 
 == Run
 
+    # with slim jar:
+    mvn dependency:copy-dependencies -DoutputDirectory=target/lib
+
     java -jar target/cinnamon-server.jar
+
+    # java 21:
+    java --add-modules jdk.incubator.vector --enable-native-access=ALL-UNNAMED -jar target/cinnamon-server.jar
 
 will start the server with default settings.
 
