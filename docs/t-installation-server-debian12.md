@@ -54,12 +54,12 @@
     ```
   * Answer the questions as follows:
 
-  | Question  | Answer |
-  | ------------- | ------------- |
-  | Enter the name of the role to add:  | `cinnamon`  |
-  | Shall the new role be a superuser?  | `n`  |
-  | Shall the new role be allowed to create databases?  | `n`  |
-  | Shall the new role be allowed to create more new roles?  | `n`  |
+    | Question  | Answer |
+    | ------------- | ------------- |
+    | Enter the name of the role to add:  | `cinnamon`  |
+    | Shall the new role be a superuser?  | `n`  |
+    | Shall the new role be allowed to create databases?  | `n`  |
+    | Shall the new role be allowed to create more new roles?  | `n`  |
 
 * Set the password for user `cinnamon`:
 > [!IMPORTANT]
@@ -77,4 +77,27 @@
   GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO cinnamon;
   GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO cinnamon;
   \q
+  ```
+
+
+## Download and configure Cinnamon 4 server
+* Find the latest Cinnamon 4 server version:
+  * Open the [releases](https://github.com/dewarim/cinnamon4/releases).
+  * Find the latest version and copy the URL of `cinnamon.tar.gz`.
+
+* Download and unpack Cinnamon 4 server:
+  ```
+  cd /opt/cinnamon
+  wget <Cinnamon 4 server URL>
+  tar -xvzf cinnamon.tar.gz
+  rm cinnamon.tar.gz
+  ```
+
+* Create the data folder structure:
+  ```
+  mkdir /opt/cinnamon/data
+  mkdir /opt/cinnamon/data/config
+  mkdir /opt/cinnamon/data/index
+  mkdir /opt/cinnamon/data/content
+  chown -R cinnamon:cinnamon /opt/cinnamon
   ```
