@@ -99,7 +99,6 @@
   mkdir /opt/cinnamon/data/config
   mkdir /opt/cinnamon/data/index
   mkdir /opt/cinnamon/data/content
-  chown -R cinnamon:cinnamon /opt/cinnamon
   ```
 
 * Download a default configuration file:
@@ -127,3 +126,7 @@
 > [!NOTE]
 > How exactly you do this depends on the compression format that was used for the source folder structure (`zip`, `tar.gz`, ...). Unpack the content of the folder named `content` into `/opt/cinnamon/content/`, so that the folders under `/opt/cinnamon/content/` have two-digit hexadecimal numbers as names.
   
+* Change ownership of the folder structure to user `cinnamon`:
+  ```
+  chown -R cinnamon:cinnamon /opt/cinnamon
+  ```
