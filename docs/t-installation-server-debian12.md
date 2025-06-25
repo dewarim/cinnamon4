@@ -124,5 +124,6 @@
   rm CreateTestDB.sql      # you can delete the file after you have verified successful import
   ```
 * Restore the content folders (if applicable):
-> [!NOTE] How exactly you do this depends on the compression format that was used for the source folder structure (`zip`, `tar.gz`, ...). Unpack the content of the folder named `content` into `/opt/cinnamon/content/`, so that the folders under `/opt/cinnamon/content/` have two-digit hexadecimal numbers as names.
+> [!NOTE]
+> How exactly you do this depends on the compression format that was used for the source folder structure (`zip`, `tar.gz`, ...). Unpack the content of the folder named `content` into `/opt/cinnamon/content/`, so that the folders under `/opt/cinnamon/content/` have two-digit hexadecimal numbers as names.
   
