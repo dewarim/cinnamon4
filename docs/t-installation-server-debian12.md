@@ -1,11 +1,12 @@
 # Installing Cinnamon 4 server on Debian 12 Linux
 
->**NOTE:** These instructions are based on a minimal Debian 12 installation, typically with only `sshd` installed.
+> [!NOTE]
+> These instructions are based on a minimal Debian 12 installation, typically with only `sshd` installed.
 
 ## Install dependencies and other software
 * Log on and switch to root privileges.
-  > [!NOTE]
-  > Alternatively use `sudo`.
+> [!NOTE]
+> Alternatively use `sudo`.
 
 * Install some required or useful software
   ```
@@ -27,8 +28,8 @@
 
 ## Configure PostgreSQL and create the database
 * Set the password for user `postgres`:
-  > [!NOTE]
-  > This is required for backup and restore.
+> [!NOTE]
+> This is required for backup and restore.
   ```
   cd /home/install
   sudo -u postgres psql template1
@@ -37,8 +38,8 @@
   ```
 
 * Create new Linux group and user `cinnamon`:
-  > [!IMPORTANT]
-  > Choose a safe password on production systems.
+> [!IMPORTANT]
+> Choose a safe password on production systems.
   ```
   groupadd cinnamon
   useradd -s /bin/false -g cinnamon -d /opt/cinnamon cinnamon
@@ -52,4 +53,9 @@
     sudo -u postgres createuser --interactive
     ```
   * Answer the questions as follows:
-    
+| Question  | Answer |
+| ------------- | ------------- |
+| Enter the name of the role to add:  | `cinnamon`  |
+| Shall the new role be a superuser?  | `n`  |
+| Shall the new role be allowed to create databases?  | `n`  |
+| Shall the new role be allowed to create more new roles?  | `n`  |
