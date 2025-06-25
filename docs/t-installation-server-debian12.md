@@ -130,3 +130,84 @@
   ```
   chown -R cinnamon:cinnamon /opt/cinnamon
   ```
+
+
+## Run and configure tika
+* Change the value of {{{/CinnamonConfig/cinnamonTikaConfig/useTika}}} to {{{true}}}.
+
+* Download and install the tika docker image:
+```
+apt install docker.io
+docker pull apache/tika:latest-full
+docker create --name tika --restart always -p 127.0.0.1:9998:9998 apache/tika:latest-full
+docker start tika
+```
+* If the network uses a proxy for updates, and docker must use the proxy, follow these steps:
+ * Create a directory and service configuration file:
+```
+mkdir -p /etc/systemd/system/docker.service.d
+nano /etc/systemd/system/docker.service.d/http-proxy.conf
+```
+ * Edit the file and add the following lines:
+  > **NOTE:** Replace {{{proxyserver:port}}} with the correct IP and port of the proxy.
+```
+[Service]
+Environment="HTTP_PROXY=http://proxyserver:port/" "HTTPS_PROXY=http://proxyserver:port/"
+```
+ * Reload the changed settings and restart docker:
+```
+systemctl daemon-reload
+systemctl restart docker
+```
+* Add the following line to {{{crontab -e}}}:
+```
+@reboot docker start tika
+```
+
+
+## Create and test startup script
+* Create Cinnamon 4 startup script:
+ * Create a file {{{/opt/cinnamon/runc4.sh}}} with the following content:
+```
+#!/bin/bash
+export JAVA_HOME=/opt/jdk-17.0.2
+export PATH=$PATH:$JAVA_HOME/bin
+cd /opt/cinnamon
+java -jar cinnamon-server.jar --config cinnamon-config.xml
+```
+ * Set the file to be executable by the owner.
+* Execute {{{/opt/cinnamon/runc4.sh}}}.
+* Use a browser or curl to access {{{http://localhost:8080/cinnamon}}}.
+> **NOTE:** You should see a response like this: {{{Cinnamon 4 Server}}}
+
+
+
+== Set up Cinnamon service
+* Create a file {{{/etc/systemd/system/cinnamon.service}}}.
+* Copy the following content into the file:
+```
+[Unit]
+Description=Cinnamon Server
+;After=network.target
+
+[Service]
+User=cinnamon
+;Group=groupname
+WorkingDirectory=/opt/cinnamon
+ExecStart=/opt/cinnamon/runc4.sh
+
+[Install]
+WantedBy=multi-user.target
+```
+* Load the service unit and enable and start the service:
+```
+systemctl daemon-reload
+systemctl enable cinnamon
+systemctl start cinnamon
+```
+
+
+
+## Finalize installation
+* Follow the further migration steps explained [wiki:Operations/MigrateC3C4 here].
+* Edit the formats and index items according to: https://github.com/dewarim/cinnamon4/blob/master/docs/tika.adoc
