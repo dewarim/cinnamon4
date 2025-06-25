@@ -60,3 +60,21 @@
   | Shall the new role be a superuser?  | `n`  |
   | Shall the new role be allowed to create databases?  | `n`  |
   | Shall the new role be allowed to create more new roles?  | `n`  |
+
+* Set the password for user `cinnamon`:
+> [!IMPORTANT]
+> Choose a safe password on production systems.
+> [!NOTE]
+> Replace `new_password` with the safe password you chose.
+
+  ```
+  sudo -u postgres psql
+  ALTER USER "cinnamon" WITH ENCRYPTED PASSWORD 'new_password';
+  ALTER USER cinnamon WITH LOGIN;
+  CREATE DATABASE cinnamon WITH OWNER cinnamon;
+  GRANT CONNECT ON DATABASE cinnamon TO cinnamon; 
+  GRANT ALL PRIVILEGES ON DATABASE cinnamon TO cinnamon;
+  GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO cinnamon;
+  GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO cinnamon;
+  \q
+  ```
