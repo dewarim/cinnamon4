@@ -101,3 +101,28 @@
   mkdir /opt/cinnamon/data/content
   chown -R cinnamon:cinnamon /opt/cinnamon
   ```
+
+* Download a default configuration file:
+  ```
+  wget https://github.com/dewarim/cinnamon4/tree/master/docs/cinnamon-config.xml
+  ```
+
+* Edit the file:
+  ```
+  nano cinnamon-config.xml
+  ```
+
+* Find `/CinnamonConfig/databaseConfig/password` and replace the value with the `cinnamon` database user password you've chosen.
+
+## Import data into the server:
+* Obtain database and content you want to install:
+  * **Option 1:** Download the [default database](https://github.com/dewarim/cinnamon4/blob/master/src/test/resources/sql/CreateTestDB.sql). You don't need content.
+  * **Option 2:** Obtain SQL and content from the backup of an existing server.
+* Install the database (assuming the SQL file is named `CreateTestDB.sql`):
+  ```
+  sudo -u postgres psql -f CreateTestDB.sql cinnamon
+  rm CreateTestDB.sql      # you can delete the file after you have verified successful import
+  ```
+* Restore the content folders (if applicable):
+> [!NOTE] How exactly you do this depends on the compression format that was used for the source folder structure (`zip`, `tar.gz`, ...). Unpack the content of the folder named `content` into `/opt/cinnamon/content/`, so that the folders under `/opt/cinnamon/content/` have two-digit hexadecimal numbers as names.
+  
