@@ -12,6 +12,15 @@ One issue in Cinnamon 3, the complex dependency chain was resolved by the redeve
 
 The redesign was done using modern language features and consequent implementation of unit tests to enhance stability.
 
+1. Overview
+1. Use cases and applications
+1. Installation from binaries
+  1. [Installation of Cinnamon 4 Server](https://github.com/dewarim/cinnamon4/blob/master/docs/c-installation-server.md)
+  1. [Installation of Cinnamon 4 Client components](https://github.com/boris-horner/cinnamon4-clients)
+1. Build from source
+1. Contribute
+1. Service, support and contact
+
 
 == Dependencies
 
