@@ -53,9 +53,10 @@
     sudo -u postgres createuser --interactive
     ```
   * Answer the questions as follows:
-| Question  | Answer |
-| ------------- | ------------- |
-| Enter the name of the role to add:  | `cinnamon`  |
-| Shall the new role be a superuser?  | `n`  |
-| Shall the new role be allowed to create databases?  | `n`  |
-| Shall the new role be allowed to create more new roles?  | `n`  |
+
+  | Question  | Answer |
+  | ------------- | ------------- |
+  | Enter the name of the role to add:  | `cinnamon`  |
+  | Shall the new role be a superuser?  | `n`  |
+  | Shall the new role be allowed to create databases?  | `n`  |
+  | Shall the new role be allowed to create more new roles?  | `n`  |
