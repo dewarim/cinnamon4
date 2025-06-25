@@ -212,3 +212,4 @@
 
 ## Finalize installation
 * Edit the formats and index items according to: https://github.com/dewarim/cinnamon4/blob/master/docs/tika.adoc
+* If required, install the CAE and Change Trigger applications on the server and the Client on Windows machines. Find the instructions [here](https://github.com/boris-horner/cinnamon4-clients/blob/main/docs/c-installation-clients.md).
