@@ -174,7 +174,7 @@
   export JAVA_HOME=/opt/jdk-21.0.0      # make sure to use the correct path to JDK
   export PATH=$PATH:$JAVA_HOME/bin
   cd /opt/cinnamon
-  java --add-modules jdk.incubator.vector --enable-native-access=ALL-UNNAMED -jar target/cinnamon-server.jar
+  java --add-modules jdk.incubator.vector --enable-native-access=ALL-UNNAMED -jar cinnamon-server.jar
   ```
   * Set the file to be executable by the owner.
 * Execute `/opt/cinnamon/runc4.sh`.
