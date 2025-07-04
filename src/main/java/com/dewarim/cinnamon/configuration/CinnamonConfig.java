@@ -16,6 +16,7 @@ public class CinnamonConfig {
     private List<LoginProviderConfig> loginProviders      = new ArrayList<>();
     private ChangeTriggerConfig       changeTriggerConfig = new ChangeTriggerConfig();
     private DebugConfig               debugConfig         = new DebugConfig();
+    private boolean showConfig;
 
     public DebugConfig getDebugConfig() {
         return debugConfig;
@@ -110,5 +111,13 @@ public class CinnamonConfig {
                 ", loginProviders=" + loginProviders +
                 ", changeTriggerConfig=" + changeTriggerConfig +
                 '}';
+    }
+
+    public void setShowConfig(boolean showConfig) {
+        this.showConfig = showConfig;
+    }
+
+    public boolean isShowConfig() {
+        return showConfig;
     }
 }

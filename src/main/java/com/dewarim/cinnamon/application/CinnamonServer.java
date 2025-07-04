@@ -62,7 +62,7 @@ public class CinnamonServer {
 
     private static final Logger log = LogManager.getLogger(CinnamonServer.class);
 
-    public static final String           VERSION       = "1.7.0";
+    public static final String           VERSION       = "1.7.1";
     private             Server           server;
     private             DbSessionFactory dbSessionFactory;
     private final       WebAppContext    webAppContext = new WebAppContext();
@@ -321,6 +321,9 @@ public class CinnamonServer {
     }
 
     public static void main(String[] args) throws Exception {
+        log.info("Cinnamon Server version {}", CinnamonServer.VERSION);
+
+
         Args       cliArguments = new Args();
         JCommander commander    = JCommander.newBuilder().addObject(cliArguments).build();
         commander.parse(args);
@@ -348,6 +351,13 @@ public class CinnamonServer {
 
         if (cliArguments.port != null) {
             config.getServerConfig().getHttpConnectorConfig().setPort(cliArguments.port);
+        }
+
+        if(cliArguments.showConfig){
+            log.info("Current directory: {} ", new File(".").getCanonicalPath());
+            DatabaseConfig dbConfig = config.getDatabaseConfig();
+            log.info("DB connection: {}",dbConfig);
+            config.setShowConfig(true);
         }
 
         CinnamonServer server = new CinnamonServer(config.getServerConfig().getHttpConnectorConfig().getPort());
@@ -485,6 +495,9 @@ public class CinnamonServer {
 
         @Parameter(names = {"--api"}, description = "Print API documentation")
         boolean api;
+
+        @Parameter(names = {"--show-config"}, description = "Show config details on startup like DB connection used etc. May include passwords!")
+        boolean showConfig;
     }
 
 }
