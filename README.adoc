@@ -1,20 +1,26 @@
 = Cinnamon 4
 
-A new implementation of the Cinnamon 3 CMS server in Java.
+> **STATUS:** stable, in production use.
 
-Status: stable, in productive use
+Cinnamon 4 replaces Cinnamon 3 and incorporates a variety of improvements.
 
-== Goal
+In fact, Cinnamon 4 is not an evolved version of Cinnamon 3, but was redeveloped from scratch.
+To minimize effort porting legacy customization, the previously existing API functionality was maintained by providing replacement for all relevant API methods that existed in Cinnamon 3.
+The API was, however, significantly extended, and existing methods became more powerful.
 
-Implement the core features of the Cinnamon CMS in Java,
+One issue in Cinnamon 3, the complex dependency chain was resolved by the redevelopment. Cinnamon 4 is implemented in Java without using frameworks like Hibernate or Groovy / Grails.
 
-* using modern language features,
-* with unit tests,
-* with integration tests,
-* with documentation,
-* improved API,
-* removing obsolete code,
-* minimizing dependencies on huge frameworks which are hard to understand and difficult to update.
+The redesign was done using modern language features and consequent implementation of unit tests to enhance stability.
+
+1. Overview
+1. Use cases and applications
+1. Installation from binaries
+   * https://github.com/dewarim/cinnamon4/blob/master/docs/c-installation-server.md[Installation of Cinnamon 4 Server]
+   * https://github.com/boris-horner/cinnamon4-clients[Installation of Cinnamon 4 Client components]
+1. Build from source
+1. Contribute
+1. Service, support and contact
+
 
 == Dependencies
 
