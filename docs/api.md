@@ -1360,7 +1360,7 @@ Fetch a single folder
       <metadataChanged>false</metadataChanged>
       <summary>&lt;summary/></summary>
       <hasSubfolders>false</hasSubfolders>
-      <created>2025-07-12T15:39:33+0000</created>
+      <created>2025-07-12T15:48:58+0000</created>
       <metasets/>
     </reference>
   </references>
@@ -1433,7 +1433,7 @@ Fetch a single folder
       <metadataChanged>false</metadataChanged>
       <summary>&lt;summary/></summary>
       <hasSubfolders>false</hasSubfolders>
-      <created>2025-07-12T15:39:33+0000</created>
+      <created>2025-07-12T15:48:58+0000</created>
       <metasets/>
     </reference>
   </references>
@@ -1502,7 +1502,7 @@ Fetch a folder specified by its complete path. The path parameter must not end w
       <metadataChanged>false</metadataChanged>
       <summary>&lt;summary/></summary>
       <hasSubfolders>false</hasSubfolders>
-      <created>2025-07-12T15:39:33+0000</created>
+      <created>2025-07-12T15:48:58+0000</created>
       <metasets/>
     </reference>
   </references>
@@ -1519,10 +1519,11 @@ Fetch a folder specified by its relative path. The relative path must not start 
 ## Request
 
 ```xml
-<folderPathRequest>
-  <path>/home/creation/some-sub-folder</path>
+<folderByRelativePathRequest>
+  <relativePath>creation/some-sub-folder</relativePath>
+  <parentId>213</parentId>
   <includeSummary>true</includeSummary>
-</folderPathRequest>
+</folderByRelativePathRequest>
 
 ```
 
@@ -1571,7 +1572,7 @@ Fetch a folder specified by its relative path. The relative path must not start 
       <metadataChanged>false</metadataChanged>
       <summary>&lt;summary/></summary>
       <hasSubfolders>false</hasSubfolders>
-      <created>2025-07-12T15:39:33+0000</created>
+      <created>2025-07-12T15:48:58+0000</created>
       <metasets/>
     </reference>
   </references>
@@ -1696,7 +1697,7 @@ Fetch a folder specified by its relative path. The relative path must not start 
       <metadataChanged>false</metadataChanged>
       <summary>&lt;summary/></summary>
       <hasSubfolders>false</hasSubfolders>
-      <created>2025-07-12T15:39:33+0000</created>
+      <created>2025-07-12T15:48:58+0000</created>
       <metasets/>
     </reference>
   </references>
