@@ -1234,8 +1234,8 @@ Delete all metasets linked to the given Folder ids. Parameter ignoreNotFound is 
 <deleteAllMetasRequest>
   <ignoreNotFound>false</ignoreNotFound>
   <ids>
-    <id>14</id>
     <id>15</id>
+    <id>14</id>
   </ids>
 </deleteAllMetasRequest>
 
@@ -1360,7 +1360,7 @@ Fetch a single folder
       <metadataChanged>false</metadataChanged>
       <summary>&lt;summary/></summary>
       <hasSubfolders>false</hasSubfolders>
-      <created>2025-01-25T13:12:45+0000</created>
+      <created>2025-07-12T15:39:33+0000</created>
       <metasets/>
     </reference>
   </references>
@@ -1433,7 +1433,7 @@ Fetch a single folder
       <metadataChanged>false</metadataChanged>
       <summary>&lt;summary/></summary>
       <hasSubfolders>false</hasSubfolders>
-      <created>2025-01-25T13:12:45+0000</created>
+      <created>2025-07-12T15:39:33+0000</created>
       <metasets/>
     </reference>
   </references>
@@ -1445,7 +1445,7 @@ Fetch a single folder
 ---
 
 # /api/folder/getFolderByPath
-
+Fetch a folder specified by its complete path. The path parameter must not end with a forward slash '/'.
 
 ## Request
 
@@ -1502,7 +1502,76 @@ Fetch a single folder
       <metadataChanged>false</metadataChanged>
       <summary>&lt;summary/></summary>
       <hasSubfolders>false</hasSubfolders>
-      <created>2025-01-25T13:12:45+0000</created>
+      <created>2025-07-12T15:39:33+0000</created>
+      <metasets/>
+    </reference>
+  </references>
+</cinnamon>
+
+```
+
+
+---
+
+# /api/folder/getFolderByRelativePath
+Fetch a folder specified by its relative path. The relative path must not start or end with a forward slash: '/'.
+
+## Request
+
+```xml
+<folderPathRequest>
+  <path>/home/creation/some-sub-folder</path>
+  <includeSummary>true</includeSummary>
+</folderPathRequest>
+
+```
+
+
+## Response
+
+```xml
+<cinnamon>
+  <changeTriggerResponses/>
+  <folders>
+    <folder>
+      <id>2</id>
+      <name>images</name>
+      <aclId>1</aclId>
+      <ownerId>33</ownerId>
+      <parentId>3</parentId>
+      <typeId>5</typeId>
+      <metadataChanged>false</metadataChanged>
+      <summary>&lt;summary></summary>
+      <hasSubfolders>false</hasSubfolders>
+      <created>2022-08-10T01:21:00+0000</created>
+      <metasets/>
+    </folder>
+  </folders>
+  <links>
+    <link>
+      <id>1</id>
+      <type>FOLDER</type>
+      <ownerId>3</ownerId>
+      <aclId>2</aclId>
+      <parentId>1</parentId>
+      <folderId>20</folderId>
+      <objectId/>
+      <resolvedId/>
+      <resolver>FIXED</resolver>
+    </link>
+  </links>
+  <references>
+    <reference>
+      <id>203</id>
+      <name>linked folder</name>
+      <aclId>1</aclId>
+      <ownerId>2</ownerId>
+      <parentId>3</parentId>
+      <typeId>23</typeId>
+      <metadataChanged>false</metadataChanged>
+      <summary>&lt;summary/></summary>
+      <hasSubfolders>false</hasSubfolders>
+      <created>2025-07-12T15:39:33+0000</created>
       <metasets/>
     </reference>
   </references>
@@ -1627,7 +1696,7 @@ Fetch a single folder
       <metadataChanged>false</metadataChanged>
       <summary>&lt;summary/></summary>
       <hasSubfolders>false</hasSubfolders>
-      <created>2025-01-25T13:12:45+0000</created>
+      <created>2025-07-12T15:39:33+0000</created>
       <metasets/>
     </reference>
   </references>
@@ -2355,7 +2424,6 @@ Provides information on the status of the Lucene search index
       <jobType>OSD</jobType>
       <itemId>143</itemId>
       <failed>0</failed>
-      <updateTikaMetaset>true</updateTikaMetaset>
       <action>CREATE</action>
     </failedIndexJobs>
   </failedIndexJobs>
@@ -3909,8 +3977,8 @@ should contain data.
 <deleteAllMetasRequest>
   <ignoreNotFound>false</ignoreNotFound>
   <ids>
-    <id>14</id>
     <id>15</id>
+    <id>14</id>
   </ids>
 </deleteAllMetasRequest>
 

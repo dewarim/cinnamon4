@@ -75,7 +75,7 @@ public class FolderDao implements CrudDao<Folder> {
         return "/" + String.join("/", paths);
     }
 
-    public Map<Long,String> getFolderPaths(List<Long> ids) {
+    public Map<Long, String> getFolderPaths(List<Long> ids) {
         if (ids == null || ids.isEmpty()) {
             // root has no parent, so looking up it's ancestors would otherwise fail.
             return Collections.emptyMap();
@@ -144,9 +144,8 @@ public class FolderDao implements CrudDao<Folder> {
             if (firstIteration) {
                 Map<String, Object> params = Map.of("id", rootFolder.getId(), "name", name);
                 firstIteration = false;
-                targetFolders  = sqlSession.selectList("com.dewarim.cinnamon.model.Folder.getChildFolderOfRootByName", params);
-            }
-            else {
+                targetFolders = sqlSession.selectList("com.dewarim.cinnamon.model.Folder.getChildFolderOfRootByName", params);
+            } else {
                 Map<String, Object> params = Map.of("parentId", currentFolder.getId(), "childName", name);
                 targetFolders = sqlSession.selectList("com.dewarim.cinnamon.model.Folder.getFolderByParentIdAndChildName", params);
             }
@@ -155,7 +154,7 @@ public class FolderDao implements CrudDao<Folder> {
                 // complete path was not found: return empty list
                 return Collections.emptyList();
             }
-            targetFolder  = targetFolders.getFirst();
+            targetFolder = targetFolders.getFirst();
             currentFolder = targetFolder;
         }
 
@@ -252,13 +251,13 @@ public class FolderDao implements CrudDao<Folder> {
     }
 
     public Set<Long> findKnownIds(List<Long> ids) {
-        if(ids == null || ids.isEmpty()) {
+        if (ids == null || ids.isEmpty()) {
             return Set.of();
         }
 
         List<List<Long>> partitions = CrudDao.partitionLongList(ids.stream().toList());
         SqlSession       sqlSession = getSqlSession();
-        HashSet<Long>          results    = new HashSet<>(ids.size());
+        HashSet<Long>    results    = new HashSet<>(ids.size());
         partitions.forEach(partition -> {
             if (!partition.isEmpty()) {
                 results.addAll(sqlSession.selectList("com.dewarim.cinnamon.model.Folder.findKnownIds", partition));

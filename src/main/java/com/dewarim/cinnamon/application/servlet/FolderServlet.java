@@ -67,6 +67,8 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
             case FOLDER__DELETE_ALL_METAS -> deleteAllMetas(request, cinnamonResponse, user, folderDao);
             case FOLDER__GET_FOLDER -> getFolder(request, cinnamonResponse, user, folderDao);
             case FOLDER__GET_FOLDER_BY_PATH -> getFolderByPath(request, cinnamonResponse, user, folderDao);
+            case FOLDER__GET_FOLDER_BY_RELATIVE_PATH ->
+                    getFolderByRelativePath(request, cinnamonResponse, user, folderDao);
             case FOLDER__GET_FOLDERS -> getFolders(request, cinnamonResponse, user, folderDao);
             case FOLDER__GET_META -> getMeta(request, cinnamonResponse, folderDao);
             case FOLDER__GET_SUBFOLDERS -> getSubFolders(request, cinnamonResponse, user, folderDao);
@@ -424,8 +426,27 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
     private void getFolderByPath(HttpServletRequest request, CinnamonResponse response, UserAccount user, FolderDao folderDao) throws IOException {
         FolderPathRequest pathRequest = xmlMapper.readValue(request.getInputStream(), FolderPathRequest.class);
         if (pathRequest.validated()) {
-
             List<Folder> rawFolders = folderDao.getFolderByPathWithAncestors(pathRequest.getPath(), pathRequest.isIncludeSummary());
+            List<Folder> folders    = new AuthorizationService().filterFoldersByBrowsePermission(rawFolders, user);
+            if (folders.isEmpty()) {
+                throw ErrorCode.OBJECT_NOT_FOUND.exception();
+            }
+            response.setWrapper(new FolderWrapper(folders));
+        } else {
+            throw ErrorCode.INVALID_REQUEST.exception();
+        }
+    }
+
+    private void getFolderByRelativePath(HttpServletRequest request, CinnamonResponse response, UserAccount user, FolderDao folderDao) throws IOException {
+        FolderByRelativePathRequest pathRequest = xmlMapper.readValue(request.getInputStream(), FolderByRelativePathRequest.class);
+        if (pathRequest.validated()) {
+            Folder parentFolder     = folderDao.getFolderById(pathRequest.getParentId()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
+            String parentFolderPath = folderDao.getFolderPath(parentFolder.getId())
+                    // root is added by folderDao below.
+                    .replace("/root", "");
+            String fullPath         = parentFolderPath + "/" + pathRequest.getRelativePath();
+
+            List<Folder> rawFolders = folderDao.getFolderByPathWithAncestors(fullPath, pathRequest.isIncludeSummary());
             List<Folder> folders    = new AuthorizationService().filterFoldersByBrowsePermission(rawFolders, user);
             if (folders.isEmpty()) {
                 throw ErrorCode.OBJECT_NOT_FOUND.exception();

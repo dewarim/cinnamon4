@@ -183,6 +183,48 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         assertTrue(folderNames.contains(folderName));
     }
 
+
+    @Test
+    public void getFolderByRelativePathInvalidRequest() throws IOException {
+        FolderByRelativePathRequest request = new FolderByRelativePathRequest("", -1L, true);
+        sendStandardRequestAndAssertError(UrlMapping.FOLDER__GET_FOLDER_BY_RELATIVE_PATH, request, INVALID_REQUEST);
+    }
+
+    @Test
+    public void getFolderByRelativePathBadParameter() throws IOException {
+        // leading "/" is not allowed for relative path:
+        FolderByRelativePathRequest request = new FolderByRelativePathRequest("/home", 1L, true);
+        sendStandardRequestAndAssertError(UrlMapping.FOLDER__GET_FOLDER_BY_RELATIVE_PATH, request, INVALID_REQUEST);
+
+        // trailing "/" is not allowed for relative path
+        FolderByRelativePathRequest trailingRequest = new FolderByRelativePathRequest("home/", 1L, true);
+        sendStandardRequestAndAssertError(UrlMapping.FOLDER__GET_FOLDER_BY_RELATIVE_PATH, trailingRequest, INVALID_REQUEST);
+    }
+
+    @Test
+    public void getFolderByPathSubFolderNotFound() throws IOException {
+        FolderByRelativePathRequest request = new FolderByRelativePathRequest("foo/bar", 1L, true);
+        sendStandardRequestAndAssertError(UrlMapping.FOLDER__GET_FOLDER_BY_RELATIVE_PATH, request, OBJECT_NOT_FOUND);
+    }
+
+    @Test
+    public void getFolderByRelativePathParentFolderNotFound() throws IOException {
+        TestObjectHolder            holder  = new TestObjectHolder(client, userId).createFolder();
+        Folder                      folder  = holder.createFolder().folder;
+        FolderByRelativePathRequest request = new FolderByRelativePathRequest(folder.getName(), Long.MAX_VALUE, false);
+        sendStandardRequestAndAssertError(UrlMapping.FOLDER__GET_FOLDER_BY_RELATIVE_PATH, request, OBJECT_NOT_FOUND);
+    }
+
+    @Test
+    public void getFolderByRelativePathHappyPath() throws IOException {
+        String       folderName  = new TestObjectHolder(client, userId).createFolder().folder.getName();
+        List<Folder> folders     = client.getFoldersByRelativePath(folderName, createFolderId, true);
+        List<String> folderNames = folders.stream().map(Folder::getName).toList();
+        assertTrue(folderNames.contains("root"));
+        assertTrue(folderNames.contains("creation"));
+        assertTrue(folderNames.contains(folderName));
+    }
+
     /*
      * Note: other Meta requests are tested in OsdServletIntegrationTest.
      */

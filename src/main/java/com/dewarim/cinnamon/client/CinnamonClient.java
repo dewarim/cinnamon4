@@ -1289,6 +1289,12 @@ public class CinnamonClient {
         return folderUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
+    public List<Folder> getFoldersByRelativePath(String path, Long parentId, boolean includeSummary) throws IOException {
+        var              request  = new FolderByRelativePathRequest(path, parentId, includeSummary);
+        StandardResponse response = sendStandardRequest(FOLDER__GET_FOLDER_BY_RELATIVE_PATH, request);
+        return folderUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
+    }
+
     /**
      * Fetch folders by path without summary.
      */
