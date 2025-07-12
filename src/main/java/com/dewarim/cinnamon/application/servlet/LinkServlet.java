@@ -85,7 +85,7 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
         if (link.getResolver() == null) {
             link.setResolver(LinkResolver.FIXED);
         }
-        Folder       parentFolder     = parentFolders.get(0);
+        Folder       parentFolder     = parentFolders.getFirst();
         AccessFilter accessFilter     = AccessFilter.getInstance(user);
         boolean      browsePermission = accessFilter.hasPermissionOnOwnable(parentFolder, DefaultPermission.BROWSE, parentFolder);
         boolean      writePermission  = accessFilter.hasPermissionOnOwnable(parentFolder, DefaultPermission.CREATE_OBJECT, parentFolder);
@@ -128,7 +128,7 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
             default -> throw new IllegalStateException("invalid link type: " + link.getType());
         }
 
-        return linkDao.create(Collections.singletonList(link)).get(0);
+        return linkDao.create(Collections.singletonList(link)).getFirst();
     }
 
     private void update(HttpServletRequest request, LinkDao linkDao, CinnamonResponse response) throws IOException {
@@ -281,7 +281,7 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
         FolderDao    folderDao = new FolderDao();
         List<Folder> folders   = folderDao.getFoldersById(Collections.singletonList(link.getFolderId()), includeSummary);
         // existence of folder should be guaranteed by foreign key constraint in DB.
-        Folder folder = folders.get(0);
+        Folder folder = folders.getFirst();
 
         if (authorizationService.hasUserOrOwnerPermission(folder, DefaultPermission.BROWSE, user)) {
             LinkResponse linkResponse = new LinkResponse();
@@ -307,7 +307,7 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
             link.setResolvedId(osdId);
         }
         List<ObjectSystemData> osds = osdDao.getObjectsById(List.of(osdId), includeSummary);
-        ObjectSystemData       osd  = osds.get(0);
+        ObjectSystemData       osd  = osds.getFirst();
 
         if (authorizationService.hasUserOrOwnerPermission(link, DefaultPermission.BROWSE, user)) {
             return getLinkResponse(link, osd);

@@ -114,12 +114,7 @@ public class CinnamonClient {
     private final XmlMapper  mapper     = XML_MAPPER;
     private final HttpClient httpClient = HttpClients.createDefault();
 
-    public static final ThreadLocal<List<ChangeTriggerResponse>> changeTriggerResponseLocal = new ThreadLocal<>() {
-        @Override
-        protected List<ChangeTriggerResponse> initialValue() {
-            return new ArrayList<>();
-        }
-    };
+    public static final ThreadLocal<List<ChangeTriggerResponse>> changeTriggerResponseLocal = ThreadLocal.withInitial(ArrayList::new);
 
     private final Unwrapper<ChangeTrigger, ChangeTriggerWrapper>                 changeTriggerUnwrapper         = new Unwrapper<>(ChangeTriggerWrapper.class);
     private final Unwrapper<ChangeTriggerResponse, ChangeTriggerResponseWrapper> changeTriggerResponseUnwrapper = new Unwrapper<>(ChangeTriggerResponseWrapper.class);
@@ -296,19 +291,19 @@ public class CinnamonClient {
 
     public UserAccount getUser(String name) throws IOException {
         GetUserAccountRequest request = new GetUserAccountRequest(null, name);
-        return new WrappedRequest<UserAccount, UserAccountWrapper>().send(USER__GET, request, userUnwrapper, 1).get(0);
+        return new WrappedRequest<UserAccount, UserAccountWrapper>().send(USER__GET, request, userUnwrapper, 1).getFirst();
     }
 
     public UserAccount getUser(Long id) throws IOException {
         GetUserAccountRequest request = new GetUserAccountRequest(id, null);
-        return new WrappedRequest<UserAccount, UserAccountWrapper>().send(USER__GET, request, userUnwrapper, 1).get(0);
+        return new WrappedRequest<UserAccount, UserAccountWrapper>().send(USER__GET, request, userUnwrapper, 1).getFirst();
     }
 
     protected String getTicket(boolean newTicket) throws IOException {
         if ((ticket == null && generateTicketIfNull) || newTicket) {
             var request            = new ConnectionRequest(username, password, null);
             var response           = sendConnectionRequest(request);
-            var cinnamonConnection = connectUnwrapper.unwrap(response, 1).get(0);
+            var cinnamonConnection = connectUnwrapper.unwrap(response, 1).getFirst();
             ticket = cinnamonConnection.getTicket();
         }
         return ticket;
@@ -317,7 +312,7 @@ public class CinnamonClient {
     public ObjectSystemData getOsdById(long id, boolean includeSummary, boolean includeCustomMetadata) throws IOException {
         OsdRequest       osdRequest = new OsdRequest(Collections.singletonList(id), includeSummary, includeCustomMetadata);
         StandardResponse response   = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
-        return unwrapOsds(response, 1).get(0);
+        return unwrapOsds(response, 1).getFirst();
     }
 
     /**
@@ -418,7 +413,7 @@ public class CinnamonClient {
     }
 
     private boolean verifyDeleteResponse(StandardResponse response) throws IOException {
-        return deleteResponseWrapper.unwrap(response, EXPECTED_SIZE_ANY).get(0).isSuccess();
+        return deleteResponseWrapper.unwrap(response, EXPECTED_SIZE_ANY).getFirst().isSuccess();
     }
 
     public void setTicket(String ticket) {
@@ -428,7 +423,7 @@ public class CinnamonClient {
     // OSDs
     public ObjectSystemData version(CreateNewVersionRequest versionRequest) throws IOException {
         HttpEntity request = createSimpleMultipartEntity(CINNAMON_REQUEST_PART, versionRequest);
-        return unwrapOsds(sendStandardMultipartRequest(UrlMapping.OSD__VERSION, request), 1).get(0);
+        return unwrapOsds(sendStandardMultipartRequest(UrlMapping.OSD__VERSION, request), 1).getFirst();
     }
 
     public ObjectSystemData versionWithContent(CreateNewVersionRequest versionRequest, File content) throws IOException {
@@ -437,7 +432,7 @@ public class CinnamonClient {
                 .addPart("file", fileBody)
                 .addTextBody(CINNAMON_REQUEST_PART, mapper.writeValueAsString(versionRequest),
                         APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
-        return unwrapOsds(sendStandardMultipartRequest(UrlMapping.OSD__VERSION, entityBuilder.build()), 1).get(0);
+        return unwrapOsds(sendStandardMultipartRequest(UrlMapping.OSD__VERSION, entityBuilder.build()), 1).getFirst();
     }
 
     public boolean deleteOsd(Long id) throws IOException {
@@ -463,7 +458,7 @@ public class CinnamonClient {
     public ObjectSystemData createOsd(CreateOsdRequest createOsdRequest) throws IOException {
         HttpEntity request  = createSimpleMultipartEntity(CINNAMON_REQUEST_PART, createOsdRequest);
         var        response = sendStandardMultipartRequest(OSD__CREATE_OSD, request);
-        return osdUnwrapper.unwrap(response, 1).get(0);
+        return osdUnwrapper.unwrap(response, 1).getFirst();
     }
 
     public ObjectSystemData createOsdWithContent(CreateOsdRequest createOsdRequest, File content) throws IOException {
@@ -473,7 +468,7 @@ public class CinnamonClient {
                 .addTextBody(CINNAMON_REQUEST_PART, mapper.writeValueAsString(createOsdRequest),
                         APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
         var response = sendStandardMultipartRequest(OSD__CREATE_OSD, entityBuilder.build());
-        return osdUnwrapper.unwrap(response, 1).get(0);
+        return osdUnwrapper.unwrap(response, 1).getFirst();
     }
 
     public boolean setContentOnLockedOsd(Long osdId, Long formatId, File content) throws IOException {
@@ -530,7 +525,7 @@ public class CinnamonClient {
 
     // Folders
     public Folder getFolderById(Long id, boolean includeSummary) throws IOException {
-        return getFolders(Collections.singletonList(id), includeSummary).get(0);
+        return getFolders(Collections.singletonList(id), includeSummary).getFirst();
     }
 
     public List<Folder> getFolderByIdWithAncestors(Long id, boolean includeSummary) throws IOException {
@@ -542,7 +537,7 @@ public class CinnamonClient {
     public Folder createFolder(Long parentId, String name, Long ownerId, Long aclId, Long typeId) throws IOException {
         var request  = new CreateFolderRequest(name, parentId, null, ownerId, aclId, typeId);
         var response = sendStandardRequest(UrlMapping.FOLDER__CREATE, request);
-        return folderUnwrapper.unwrap(response, 1).get(0);
+        return folderUnwrapper.unwrap(response, 1).getFirst();
     }
 
     public List<Folder> getFolders(List<Long> ids, boolean includeSummary) throws IOException {
@@ -568,7 +563,7 @@ public class CinnamonClient {
     }
 
     public Meta createOsdMeta(Long osdId, String content, Long metaTypeId) throws IOException {
-        return createOsdMeta(new CreateMetaRequest(osdId, content, metaTypeId)).get(0);
+        return createOsdMeta(new CreateMetaRequest(osdId, content, metaTypeId)).getFirst();
     }
 
     public void updateFolder(UpdateFolderRequest updateFolderRequest) throws IOException {
@@ -610,7 +605,7 @@ public class CinnamonClient {
     public Acl createAcl(String name) throws IOException {
         CreateAclRequest aclRequest = new CreateAclRequest(List.of(new Acl(name)));
         StandardResponse response   = sendStandardRequest(UrlMapping.ACL__CREATE, aclRequest);
-        return aclUnwrapper.unwrap(response, 1).get(0);
+        return aclUnwrapper.unwrap(response, 1).getFirst();
     }
 
     public boolean deleteAcl(List<Long> ids) throws IOException {
@@ -689,7 +684,7 @@ public class CinnamonClient {
     public Group createGroup(Group group) throws IOException {
         var request  = new CreateGroupRequest(List.of(group));
         var response = sendStandardRequest(UrlMapping.GROUP__CREATE, request);
-        return groupUnwrapper.unwrap(response, 1).get(0);
+        return groupUnwrapper.unwrap(response, 1).getFirst();
     }
 
     public List<Group> listGroups() throws IOException {
@@ -746,20 +741,20 @@ public class CinnamonClient {
         var link              = new Link(null, LinkType.FOLDER, ownerId, aclId, parentId, folderId, null, LinkResolver.FIXED);
         var createLinkRequest = new CreateLinkRequest(List.of(link));
         var response          = sendStandardRequest(UrlMapping.LINK__CREATE, createLinkRequest);
-        return linkUnwrapper.unwrap(response, 1).get(0);
+        return linkUnwrapper.unwrap(response, 1).getFirst();
     }
 
     public Link createLinkToOsd(Long parentId, Long aclId, Long ownerId, Long objectId, LinkResolver resolver) throws IOException {
         var link              = new Link(null, LinkType.OBJECT, ownerId, aclId, parentId, null, objectId, resolver);
         var createLinkRequest = new CreateLinkRequest(List.of(link));
         var response          = sendStandardRequest(UrlMapping.LINK__CREATE, createLinkRequest);
-        return linkUnwrapper.unwrap(response, 1).get(0);
+        return linkUnwrapper.unwrap(response, 1).getFirst();
     }
 
     public Link updateLink(Link link) throws IOException {
         var updateLinkRequest = new UpdateLinkRequest(List.of(link));
         var response          = sendStandardRequest(UrlMapping.LINK__UPDATE, updateLinkRequest);
-        return linkUnwrapper.unwrap(response, 1).get(0);
+        return linkUnwrapper.unwrap(response, 1).getFirst();
     }
 
     public boolean deleteLinks(List<Long> ids) throws IOException {
@@ -777,7 +772,7 @@ public class CinnamonClient {
     public LinkResponse getLinkById(Long id, boolean includeSummary) throws IOException {
         var request  = new GetLinksRequest(List.of(id), includeSummary);
         var response = sendStandardRequest(UrlMapping.LINK__GET_LINKS_BY_ID, request);
-        return linkResponseUnwrapper.unwrap(response, 1).get(0);
+        return linkResponseUnwrapper.unwrap(response, 1).getFirst();
     }
 
     // ObjectTypes
@@ -810,7 +805,7 @@ public class CinnamonClient {
         // create
         var createRequest = new CreateRelationRequest(leftId, rightId, typeId, metadata);
         var response      = sendStandardRequest(UrlMapping.RELATION__CREATE, createRequest);
-        return relationUnwrapper.unwrap(response, 1).get(0);
+        return relationUnwrapper.unwrap(response, 1).getFirst();
     }
 
     public boolean deleteRelationTypes(List<Long> ids) throws IOException {
@@ -827,7 +822,7 @@ public class CinnamonClient {
     }
 
     public RelationType createRelationType(RelationType relationType) throws IOException {
-        return createRelationTypes(List.of(relationType)).get(0);
+        return createRelationTypes(List.of(relationType)).getFirst();
     }
 
     private HttpEntity createSimpleMultipartEntity(String fieldname, Object contentRequest) throws IOException {
@@ -854,7 +849,7 @@ public class CinnamonClient {
 
     public boolean disconnect() throws IOException {
         StandardResponse response = sendStandardRequest(UrlMapping.CINNAMON__DISCONNECT, null);
-        return disconnectUnwrapper.unwrap(response, 1).get(0).isDisconnectSuccessful();
+        return disconnectUnwrapper.unwrap(response, 1).getFirst().isDisconnectSuccessful();
     }
 
     /**
@@ -897,7 +892,7 @@ public class CinnamonClient {
     public Format createFormat(String contentType, String extension, String name, Long defaultObjectTypeId, IndexMode indexMode) throws IOException {
         var request  = new CreateFormatRequest(List.of(new Format(contentType, extension, name, defaultObjectTypeId, indexMode)));
         var response = sendStandardRequest(UrlMapping.FORMAT__CREATE, request);
-        return formatUnwrapper.unwrap(response, 1).get(0);
+        return formatUnwrapper.unwrap(response, 1).getFirst();
     }
 
     public void updateFormat(Format format) throws IOException {
@@ -915,7 +910,7 @@ public class CinnamonClient {
     public Language createLanguage(String isoCode) throws IOException {
         var request  = new CreateLanguageRequest(List.of(new Language(isoCode)));
         var response = sendStandardRequest(UrlMapping.LANGUAGE__CREATE, request);
-        return languageUnwrapper.unwrap(response, 1).get(0);
+        return languageUnwrapper.unwrap(response, 1).getFirst();
     }
 
     public List<Language> createLanguages(List<String> isoCodes) throws IOException {
@@ -939,7 +934,7 @@ public class CinnamonClient {
     public UiLanguage createUiLanguage(String isoCode) throws IOException {
         var request  = new CreateUiLanguageRequest(List.of(new UiLanguage(isoCode)));
         var response = sendStandardRequest(UrlMapping.UI_LANGUAGE__CREATE, request);
-        return uiLanguageUnwrapper.unwrap(response, 1).get(0);
+        return uiLanguageUnwrapper.unwrap(response, 1).getFirst();
     }
 
     public void updateUiLanguage(UiLanguage language) throws IOException {
@@ -963,7 +958,7 @@ public class CinnamonClient {
     public MetasetType createMetasetType(String name, boolean unique) throws IOException {
         var request  = new CreateMetasetTypeRequest(name, unique);
         var response = sendStandardRequest(UrlMapping.METASET_TYPE__CREATE, request);
-        return metasetTypeUnwrapper.unwrap(response, 1).get(0);
+        return metasetTypeUnwrapper.unwrap(response, 1).getFirst();
     }
 
     public void updateMetasetType(MetasetType metasetType) throws IOException {
@@ -981,7 +976,7 @@ public class CinnamonClient {
     public ConfigEntry createConfigEntry(ConfigEntry configEntry) throws IOException {
         var request  = new CreateConfigEntryRequest(configEntry.getName(), configEntry.getConfig(), configEntry.isPublicVisibility());
         var response = sendStandardRequest(UrlMapping.CONFIG_ENTRY__CREATE, request);
-        return configEntryUnwrapper.unwrap(response, 1).get(0);
+        return configEntryUnwrapper.unwrap(response, 1).getFirst();
     }
 
     public List<ConfigEntry> listConfigEntries() throws IOException {
@@ -993,7 +988,7 @@ public class CinnamonClient {
     public ConfigEntry updateConfigEntry(ConfigEntry entry) throws IOException {
         var request  = new UpdateConfigEntryRequest(List.of(entry));
         var response = sendStandardRequest(UrlMapping.CONFIG_ENTRY__UPDATE, request);
-        return configEntryUnwrapper.unwrap(response, 1).get(0);
+        return configEntryUnwrapper.unwrap(response, 1).getFirst();
     }
 
     public void deleteConfigEntry(Long id) throws IOException {
@@ -1012,7 +1007,7 @@ public class CinnamonClient {
     public ConfigEntry getConfigEntry(Long id) throws IOException {
         var request  = new ConfigEntryRequest(id);
         var response = sendStandardRequest(UrlMapping.CONFIG_ENTRY__GET, request);
-        return configEntryUnwrapper.unwrap(response, 1).get(0);
+        return configEntryUnwrapper.unwrap(response, 1).getFirst();
     }
 
     public List<UserAccount> listUsers() throws IOException {
@@ -1025,7 +1020,7 @@ public class CinnamonClient {
         var request = new CreateUserAccountRequest();
         request.list().add(user);
         var response = sendStandardRequest(UrlMapping.USER__CREATE, request);
-        return userUnwrapper.unwrap(response, 1).get(0);
+        return userUnwrapper.unwrap(response, 1).getFirst();
     }
 
     public List<Meta> getOsdMetas(Long id) throws IOException {
@@ -1073,7 +1068,7 @@ public class CinnamonClient {
     public UserAccount updateUser(UserAccount user) throws IOException {
         var request  = new UpdateUserAccountRequest(List.of(user));
         var response = sendStandardRequest(UrlMapping.USER__UPDATE, request);
-        return userUnwrapper.unwrap(response, 1).get(0);
+        return userUnwrapper.unwrap(response, 1).getFirst();
     }
 
     public List<ObjectSystemData> copyOsds(long targetFolderId, List<Long> ids) throws IOException {
@@ -1103,13 +1098,13 @@ public class CinnamonClient {
     public Lifecycle createLifecycle(String name) throws IOException {
         var request  = new CreateLifecycleRequest(List.of(new Lifecycle(name, null)));
         var response = sendStandardRequest(UrlMapping.LIFECYCLE__CREATE, request);
-        return lifecycleUnwrapper.unwrap(response, 1).get(0);
+        return lifecycleUnwrapper.unwrap(response, 1).getFirst();
     }
 
     public LifecycleState createLifecycleState(LifecycleState lifecycleState) throws IOException {
         var request  = new CreateLifecycleStateRequest(List.of(lifecycleState));
         var response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__CREATE, request);
-        return lifecycleStateUnwrapper.unwrap(response, 1).get(0);
+        return lifecycleStateUnwrapper.unwrap(response, 1).getFirst();
     }
 
     public void changeLifecycleState(Long osdId, Long stateId) throws IOException {
@@ -1156,7 +1151,7 @@ public class CinnamonClient {
     public Lifecycle updateLifecycle(Lifecycle lifecycle) throws IOException {
         var request  = new UpdateLifecycleRequest(List.of(lifecycle));
         var response = sendStandardRequest(UrlMapping.LIFECYCLE__UPDATE, request);
-        return lifecycleUnwrapper.unwrap(response, 1).get(0);
+        return lifecycleUnwrapper.unwrap(response, 1).getFirst();
     }
 
     public void deleteLifecycle(Long lifecycleId) throws IOException {
@@ -1174,13 +1169,13 @@ public class CinnamonClient {
     public LifecycleState getLifecycleState(long lifecycleStateId) throws IOException {
         var request  = new IdRequest(lifecycleStateId);
         var response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__GET, request);
-        return lifecycleStateUnwrapper.unwrap(response, 1).get(0);
+        return lifecycleStateUnwrapper.unwrap(response, 1).getFirst();
     }
 
     public LifecycleState updateLifecycleState(LifecycleState lcs) throws IOException {
         var request  = new UpdateLifecycleStateRequest(List.of(lcs));
         var response = sendStandardRequest(UrlMapping.LIFECYCLE_STATE__UPDATE, request);
-        return lifecycleStateUnwrapper.unwrap(response, 1).get(0);
+        return lifecycleStateUnwrapper.unwrap(response, 1).getFirst();
     }
 
     public void deleteLifecycleState(Long lifecycleStateId) throws IOException {
@@ -1244,7 +1239,7 @@ public class CinnamonClient {
     public IndexItem createIndexItem(IndexItem indexItem) throws IOException {
         var request  = new CreateIndexItemRequest(List.of(indexItem));
         var response = sendStandardRequest(UrlMapping.INDEX_ITEM__CREATE, request);
-        return indexItemUnwrapper.unwrap(response, 1).get(0);
+        return indexItemUnwrapper.unwrap(response, 1).getFirst();
     }
 
     public void deleteIndexItem(Long id) throws IOException {
@@ -1256,7 +1251,7 @@ public class CinnamonClient {
     public IndexItem updateIndexItem(IndexItem indexItem) throws IOException {
         var request  = new UpdateIndexItemRequest(List.of(indexItem));
         var response = sendStandardRequest(UrlMapping.INDEX_ITEM__UPDATE, request);
-        return indexItemUnwrapper.unwrap(response, 1).get(0);
+        return indexItemUnwrapper.unwrap(response, 1).getFirst();
     }
 
     public void deleteRelation(Long id) throws IOException {
@@ -1352,7 +1347,7 @@ public class CinnamonClient {
     public ChangeTrigger createChangeTrigger(ChangeTrigger changeTrigger) throws IOException {
         CreateChangeTriggerRequest request  = new CreateChangeTriggerRequest(List.of(changeTrigger));
         StandardResponse           response = sendStandardRequest(CHANGE_TRIGGER__CREATE, request);
-        return changeTriggerUnwrapper.unwrap(response, 1).get(0);
+        return changeTriggerUnwrapper.unwrap(response, 1).getFirst();
     }
 
     public List<RelationType> getRelationTypes() throws IOException {

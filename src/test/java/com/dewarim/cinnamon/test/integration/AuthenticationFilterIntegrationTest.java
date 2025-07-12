@@ -64,7 +64,7 @@ public class AuthenticationFilterIntegrationTest extends CinnamonIntegrationTest
         GetUserAccountRequest userInfoRequest = new GetUserAccountRequest(null, "admin");
         ClassicHttpResponse   response        = sendAdminRequest(UrlMapping.USER__GET, userInfoRequest);
         assertThat(response.getCode(), equalTo(HttpServletResponse.SC_FORBIDDEN));
-        CinnamonError error = mapper.readValue(response.getEntity().getContent(), CinnamonErrorWrapper.class).getErrors().get(0);
+        CinnamonError error = mapper.readValue(response.getEntity().getContent(), CinnamonErrorWrapper.class).getErrors().getFirst();
         assertThat(error.getCode(), equalTo(ErrorCode.AUTHENTICATION_FAIL_SESSION_EXPIRED.getCode()));
 
         // create new, not expired ticket for other tests
@@ -81,7 +81,7 @@ public class AuthenticationFilterIntegrationTest extends CinnamonIntegrationTest
                 .setEntity(userInfoRequest, APPLICATION_XML)
                 .build(), StandardResponse::new)) {
             assertThat(response.getCode(), equalTo(HttpServletResponse.SC_FORBIDDEN));
-            CinnamonError error = mapper.readValue(response.getEntity().getContent(), CinnamonErrorWrapper.class).getErrors().get(0);
+            CinnamonError error = mapper.readValue(response.getEntity().getContent(), CinnamonErrorWrapper.class).getErrors().getFirst();
             assertThat(error.getCode(), equalTo(ErrorCode.AUTHENTICATION_FAIL_NO_TICKET_GIVEN.getCode()));
         }
     }
@@ -100,7 +100,7 @@ public class AuthenticationFilterIntegrationTest extends CinnamonIntegrationTest
         CinnamonError         error;
         try (ClassicHttpResponse response = sendAdminRequest(UrlMapping.USER__GET, userInfoRequest)) {
             assertThat(response.getCode(), equalTo(HttpServletResponse.SC_FORBIDDEN));
-            error = mapper.readValue(response.getEntity().getContent(), CinnamonErrorWrapper.class).getErrors().get(0);
+            error = mapper.readValue(response.getEntity().getContent(), CinnamonErrorWrapper.class).getErrors().getFirst();
         }
         assertThat(error.getCode(), equalTo(ErrorCode.AUTHENTICATION_FAIL_USER_NOT_FOUND.getCode()));
 

@@ -42,7 +42,7 @@ public class RelationTypeServletIntegrationTest extends CinnamonIntegrationTest 
         var rt = new RelationType("left-rt-create",
                 true, false,
                 false, false, false, false);
-        var newRt = adminClient.createRelationTypes(List.of(rt)).get(0);
+        var newRt = adminClient.createRelationTypes(List.of(rt)).getFirst();
         assertEquals(rt,newRt);
     }
 
@@ -55,7 +55,7 @@ public class RelationTypeServletIntegrationTest extends CinnamonIntegrationTest 
         var rt = new RelationType("left-rt-delete",
                 true, false,
                 false, false, false, false);
-        var rtToDelete = adminClient.createRelationTypes(List.of(rt)).get(0);
+        var rtToDelete = adminClient.createRelationTypes(List.of(rt)).getFirst();
         adminClient.deleteRelationTypes(List.of(rtToDelete.getId()));
     }
 

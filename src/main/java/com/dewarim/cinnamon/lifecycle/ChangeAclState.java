@@ -33,7 +33,7 @@ public class ChangeAclState implements State {
         if(aclNames.size() != 1){
             return new StateChangeResult(false, Collections.singletonList("ChangeAclState: failed to enter state - need single acl name param in config."));
         }
-        String aclName = aclNames.get(0);
+        String aclName = aclNames.getFirst();
         AclDao aclDao = new AclDao();
         log.debug("looking up acl by name: {}", aclName);
         Acl acl = aclDao.getAclByName(aclName).orElse(null);

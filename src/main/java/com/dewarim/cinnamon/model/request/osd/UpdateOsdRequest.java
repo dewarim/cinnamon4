@@ -106,10 +106,10 @@ public class UpdateOsdRequest implements ApiRequest<UpdateOsdRequest> {
         Date             date     = DATE_EXAMPLE;
         UpdateOsdRequest request  = new UpdateOsdRequest(1L, 2L, "new name", 45L, 56L, 1L, 1L, false, true);
         UpdateOsdRequest request2 = new UpdateOsdRequest(1L, 2L, "new name", 45L, 56L, 1L, 1L, false, true);
-        request.getOsds().get(0).setCreated(date);
-        request2.getOsds().get(0).setCreated(date);
-        request.getOsds().get(0).setModified(date);
-        request2.getOsds().get(0).setModified(date);
+        request.getOsds().getFirst().setCreated(date);
+        request2.getOsds().getFirst().setCreated(date);
+        request.getOsds().getFirst().setModified(date);
+        request2.getOsds().getFirst().setModified(date);
         request2.setUpdateMetadataChanged(true);
         request2.setUpdateContentChanged(true);
 

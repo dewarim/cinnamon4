@@ -150,7 +150,7 @@ public class CinnamonIntegrationTest {
                 throw new IllegalStateException("Failed to get admin ticket: response code is " + response.getCode());
             }
             CinnamonConnectionWrapper cinnamonConnection = XML_MAPPER.readValue(response.getEntity().getContent(), CinnamonConnectionWrapper.class);
-            return cinnamonConnection.list().get(0).getTicket();
+            return cinnamonConnection.list().getFirst().getTicket();
         }
     }
 
@@ -165,7 +165,7 @@ public class CinnamonIntegrationTest {
                     .setEntity(mapper.writeValueAsString(request))
                     .build(), StandardResponse::new)) {
                 CinnamonConnectionWrapper cinnamonConnection = XML_MAPPER.readValue(response.getEntity().getContent(), CinnamonConnectionWrapper.class);
-                ticketForDoe = cinnamonConnection.list().get(0).getTicket();
+                ticketForDoe = cinnamonConnection.list().getFirst().getTicket();
             }
         }
         return ticketForDoe;
@@ -185,7 +185,7 @@ public class CinnamonIntegrationTest {
         String responseText = new String(response.getEntity().getContent().readAllBytes());
         assertTrue(responseText.contains(errorCode.getCode()), "response should contain errorCode " + errorCode + " but was " + responseText);
         assertThat(errorCode.getHttpResponseCode(), equalTo(response.getCode()));
-        CinnamonError cinnamonError = mapper.readValue(response.getEntity().getContent(), CinnamonErrorWrapper.class).getErrors().get(0);
+        CinnamonError cinnamonError = mapper.readValue(response.getEntity().getContent(), CinnamonErrorWrapper.class).getErrors().getFirst();
         assertEquals(errorCode.getCode(), cinnamonError.getCode());
         return cinnamonError;
     }
@@ -298,7 +298,7 @@ public class CinnamonIntegrationTest {
     }
 
     protected Acl getReviewerAcl() {
-        return new TestObjectHolder(client).getAcls().stream().filter(a -> a.getName().equals("reviewers.acl")).toList().get(0);
+        return new TestObjectHolder(client).getAcls().stream().filter(a -> a.getName().equals("reviewers.acl")).toList().getFirst();
     }
 
     /**

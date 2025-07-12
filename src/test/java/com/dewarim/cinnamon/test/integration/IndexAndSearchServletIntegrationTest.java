@@ -96,8 +96,8 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
         SearchIdsResponse allResponse = client.search("<BooleanQuery><Clause occurs='must'><WildcardQuery fieldName='name'>search-me-*</WildcardQuery></Clause></BooleanQuery>", SearchType.ALL);
         assertEquals(1, allResponse.getFolderIds().size());
         assertEquals(1, allResponse.getOsdIds().size());
-        assertEquals(osdId, allResponse.getOsdIds().get(0));
-        assertEquals(folderId, allResponse.getFolderIds().get(0));
+        assertEquals(osdId, allResponse.getOsdIds().getFirst());
+        assertEquals(folderId, allResponse.getFolderIds().getFirst());
 
     }
 
@@ -107,12 +107,12 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
         SearchIdsResponse response = client.search("<BooleanQuery><Clause occurs='must'><TermQuery fieldName='xml_content'>cinnamon</TermQuery></Clause></BooleanQuery>", SearchType.OSD);
         log.info("response: {}", mapper.writeValueAsString(response));
         assertTrue(response.getOsdIds().size() > 0);
-        long exampleId = response.getOsdIds().get(0);
+        long exampleId = response.getOsdIds().getFirst();
 
         if (CinnamonServer.getConfig().getCinnamonTikaConfig().isUseTika()) {
             SearchIdsResponse imageSearchResponse = client.search("<BooleanQuery><Clause occurs='must'><TermQuery fieldName='tika_meta'>delicious</TermQuery></Clause></BooleanQuery>", SearchType.ALL);
             assertEquals(1, imageSearchResponse.getOsdIds().size());
-            assertEquals(osdWithContentId, imageSearchResponse.getOsdIds().get(0));
+            assertEquals(osdWithContentId, imageSearchResponse.getOsdIds().getFirst());
         }
         verifyOsdSearchResult(client.search(createTermQuery("is_latest_branch", "true"), SearchType.OSD));
         verifyOsdSearchResult(client.search(createTermQuery("osd_name", "related image"), SearchType.OSD));
@@ -131,7 +131,7 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
         SearchIdsResponse response = client.search("<BooleanQuery><Clause occurs='must'><TermQuery fieldName='xml_content'>bob</TermQuery></Clause></BooleanQuery>", SearchType.OSD);
         log.info("response: {}", mapper.writeValueAsString(response));
         assertTrue(response.getOsdIds().size() > 0);
-        long exampleId = response.getOsdIds().get(0);
+        long exampleId = response.getOsdIds().getFirst();
 
         verifyOsdSearchResult(client.search(createTermQuery("is_latest_branch", "true"), SearchType.OSD));
         verifyOsdSearchResult(client.search(createTermQuery("osd_name", "related image"), SearchType.OSD));
@@ -208,7 +208,7 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
         String            termQuery = createTermQuery("meta_content", "issue389");
         SearchIdsResponse response  = client.search(termQuery, SearchType.OSD);
         assertTrue(response.getOsdIds().size() > 0);
-        assertEquals(toh.osd.getId(), response.getOsdIds().get(0));
+        assertEquals(toh.osd.getId(), response.getOsdIds().getFirst());
     }
 
 }

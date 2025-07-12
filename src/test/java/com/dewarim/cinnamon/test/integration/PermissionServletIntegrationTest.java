@@ -67,24 +67,24 @@ public class PermissionServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void addAndRemovePermissions() throws IOException {
-        Acl              acl         = adminClient.createAcls(List.of("add-and-remove-permission-acl")).get(0);
-        Group            group       = adminClient.createGroupsByName(List.of("add-and-remove-permission-group")).get(0);
-        AclGroup         aclGroup    = adminClient.createAclGroups(List.of(new AclGroup(acl.getId(), group.getId()))).get(0);
+        Acl              acl         = adminClient.createAcls(List.of("add-and-remove-permission-acl")).getFirst();
+        Group            group       = adminClient.createGroupsByName(List.of("add-and-remove-permission-group")).getFirst();
+        AclGroup         aclGroup    = adminClient.createAclGroups(List.of(new AclGroup(acl.getId(), group.getId()))).getFirst();
         Long             aclGroupId  = aclGroup.getId();
         List<Permission> permissions = client.listPermissions();
         assertTrue(aclGroup.getPermissionIds().isEmpty(), "new AclGroup should have no permissions");
 
         // add permission
-        adminClient.addAndRemovePermissions(aclGroup.getId(), List.of(permissions.get(0).getId()), List.of());
+        adminClient.addAndRemovePermissions(aclGroup.getId(), List.of(permissions.getFirst().getId()), List.of());
         List<AclGroup>     aclGroups          = client.listAclGroups();
         Optional<AclGroup> updatedAclGroupOpt = aclGroups.stream().filter(aGroup -> aGroup.getId().equals(aclGroupId)).findFirst();
         assertTrue(updatedAclGroupOpt.isPresent());
         AclGroup updatedGroup = updatedAclGroupOpt.get();
         assertEquals(1, updatedGroup.getPermissionIds().size());
-        assertEquals(1, updatedGroup.getPermissionIds().get(0));
+        assertEquals(1, updatedGroup.getPermissionIds().getFirst());
 
         // remove permission:
-        adminClient.addAndRemovePermissions(aclGroup.getId(), List.of(), List.of(permissions.get(0).getId()));
+        adminClient.addAndRemovePermissions(aclGroup.getId(), List.of(), List.of(permissions.getFirst().getId()));
         updatedAclGroupOpt = client.listAclGroups().stream().filter(aGroup -> aGroup.getId().equals(aclGroupId)).findFirst();
         assertTrue(updatedAclGroupOpt.isPresent());
         assertEquals(0, updatedAclGroupOpt.get().getPermissionIds().size());

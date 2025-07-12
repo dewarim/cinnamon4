@@ -133,8 +133,7 @@ public class MetaService<T extends CrudDao<Meta> & MetaDao, O extends CrudDao<? 
             updateMetadataChanged(user, ownables, ownableDao);
             updateIndex(metas, ownableDao);
         } catch (SQLException e) {
-            log.warn(String.format("DB update failed: %s with status %s and error code %d",
-                    e.getMessage(), e.getSQLState(), e.getErrorCode()), e);
+            log.warn("DB update failed: {} with status {} and error code {}", e.getMessage(), e.getSQLState(), e.getErrorCode(), e);
             throw new FailedRequestException(ErrorCode.DB_UPDATE_FAILED, e);
         }
     }

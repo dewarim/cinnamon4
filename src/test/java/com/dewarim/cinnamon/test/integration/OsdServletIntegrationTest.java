@@ -143,7 +143,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         assertTrue(osdsInFolder.stream().anyMatch(osd -> osd.getSummary().equals("<summary>child@archive</summary>")));
         assertTrue(osdsInFolder.stream().map(ObjectSystemData::getId).anyMatch(o -> o.equals(osd1.getId())));
         assertTrue(osdsInFolder.stream().map(ObjectSystemData::getId).anyMatch(o -> o.equals(osd2.getId())));
-        assertEquals(link.getId(), osdWrapper.getLinks().get(0).getId());
+        assertEquals(link.getId(), osdWrapper.getLinks().getFirst().getId());
         assertEquals(link.getObjectId(), osdAsLinkTarget.getId());
     }
 
@@ -158,7 +158,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         List<ObjectSystemData> osdsInFolder = osdWrapper.getOsds();
 
         assertEquals(1, osdsInFolder.size());
-        assertEquals(metaXml, osdsInFolder.get(0).getMetas().get(0).getContent());
+        assertEquals(metaXml, osdsInFolder.getFirst().getMetas().getFirst().getContent());
     }
 
     @Test
@@ -181,7 +181,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         ObjectSystemData       branch       = client.version(new CreateNewVersionRequest(toh.osd.getId()));
         List<ObjectSystemData> osdsInFolder = client.getOsdsInFolder(toh.folder.getId(), false, false, false, HEAD).getOsds();
         assertEquals(1, osdsInFolder.size());
-        assertEquals(head, osdsInFolder.get(0));
+        assertEquals(head, osdsInFolder.getFirst());
     }
 
     @Test
@@ -192,7 +192,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
             ObjectSystemData newVersion = client.version(new CreateNewVersionRequest(id));
             id = newVersion.getId();
         }
-        String cmnVersion = client.getOsdsById(List.of(id), false, false).get(0).getCmnVersion();
+        String cmnVersion = client.getOsdsById(List.of(id), false, false).getFirst().getCmnVersion();
         assertEquals("12", cmnVersion);
     }
 
@@ -211,7 +211,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
             log.debug("newBranchVersion: {}", newBranchVersion.getCmnVersion());
             assertTrue(newBranchVersion.getCmnVersion().matches("1.1-\\d+"));
         }
-        String cmnVersion = client.getOsdsById(List.of(loopId), false, false).get(0).getCmnVersion();
+        String cmnVersion = client.getOsdsById(List.of(loopId), false, false).getFirst().getCmnVersion();
         assertEquals("1.1-12", cmnVersion);
     }
 
@@ -229,7 +229,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
             newVersionId = newMainVersion.getId();
             log.debug("newMainVersion: {}", newMainVersion.getCmnVersion());
         }
-        String cmnVersion = client.getOsdsById(List.of(newVersionId), false, false).get(0).getCmnVersion();
+        String cmnVersion = client.getOsdsById(List.of(newVersionId), false, false).getFirst().getCmnVersion();
         assertEquals("14", cmnVersion);
     }
 
@@ -249,7 +249,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
             id = newVersionOnSecondBranch.getId();
             log.debug("newVersionOnSecondBranch: {}", newVersionOnSecondBranch.getCmnVersion());
         }
-        String cmnVersion = client.getOsdsById(List.of(id), false, false).get(0).getCmnVersion();
+        String cmnVersion = client.getOsdsById(List.of(id), false, false).getFirst().getCmnVersion();
         assertEquals("1.2-13", cmnVersion);
     }
 
@@ -307,7 +307,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         List<ObjectSystemData> linkedOsds = osdWrapper.getReferences();
         assertEquals(1, links.size());
         assertEquals(1, linkedOsds.size());
-        assertEquals(toh.link.getObjectId(), linkedOsds.get(0).getId());
+        assertEquals(toh.link.getObjectId(), linkedOsds.getFirst().getId());
     }
 
     @Test
@@ -317,10 +317,10 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var metasetType = TestObjectHolder.getMetasetType("comment");
         var metas       = List.of(new Meta(null, metasetType.getId(), "<meta>some data</meta>"));
         var osd         = toh.setMetas(metas).createOsd("object#1 with custom meta").osd;
-        assertEquals(osd.getMetas().get(0).getContent(), toh.metas.get(0).getContent());
+        assertEquals(osd.getMetas().getFirst().getContent(), toh.metas.getFirst().getContent());
         var osdWithMeta = client.getOsdById(osd.getId(), false, true);
         assertEquals(1, osdWithMeta.getMetas().size());
-        assertEquals(osd.getMetas().get(0), osdWithMeta.getMetas().get(0));
+        assertEquals(osd.getMetas().getFirst(), osdWithMeta.getMetas().getFirst());
     }
 
     @Test
@@ -331,7 +331,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var metas = List.of(new Meta(null, metasetType.getId(), "<meta><comment>first post</comment></meta>"),
                 new Meta(null, metasetType.getId(), "<meta><comment>second post</comment></meta>"));
         var osd = toh.setMetas(metas).createOsd("object#2 with custom meta").osd;
-        assertEquals(osd.getMetas().get(0).getContent(), toh.metas.get(0).getContent());
+        assertEquals(osd.getMetas().getFirst().getContent(), toh.metas.getFirst().getContent());
         var osdWithMeta = client.getOsdById(osd.getId(), false, true);
         assertEquals(2, osdWithMeta.getMetas().size());
         assertEquals(osd.getMetas().get(0), osdWithMeta.getMetas().get(0));
@@ -356,7 +356,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         client.setSummary(osdId, "<sum>sum</sum>");
         List<Summary> summaries = client.getOsdSummaries(List.of(osdId));
         assertFalse(summaries.isEmpty());
-        assertEquals("<sum>sum</sum>", summaries.get(0).getContent());
+        assertEquals("<sum>sum</sum>", summaries.getFirst().getContent());
     }
     @Test
     public void setEmptySummaryOnVersionedOsd() throws IOException {
@@ -368,7 +368,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         client.setSummary(osdId, "<sum>sum</sum>");
         List<Summary> summaries = client.getOsdSummaries(List.of(osdId));
         assertFalse(summaries.isEmpty());
-        assertEquals("<sum>sum</sum>", summaries.get(0).getContent());
+        assertEquals("<sum>sum</sum>", summaries.getFirst().getContent());
         toh.version();
         toh.deleteOsd();
         String v1Summary = toh.getOsdSummary(osdId);
@@ -397,7 +397,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         List<Summary> summaries = client.getOsdSummaries(List.of(osdId));
         assertNotNull(summaries);
         assertFalse(summaries.isEmpty());
-        assertThat(summaries.get(0).getContent(), equalTo("<my-sum/>"));
+        assertThat(summaries.getFirst().getContent(), equalTo("<my-sum/>"));
     }
 
     @Test
@@ -1012,7 +1012,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
             assertResponseOkay(response);
             objectSystemData = unwrapOsds(response, 1);
         }
-        ObjectSystemData osd = objectSystemData.get(0);
+        ObjectSystemData osd = objectSystemData.getFirst();
         assertEquals("new osd", osd.getName());
         assertEquals(STANDARD_USER_ID, osd.getOwnerId());
         assertEquals(STANDARD_USER_ID, osd.getModifierId());
@@ -1064,7 +1064,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
             assertResponseOkay(response);
             objectSystemData = unwrapOsds(response, 1);
         }
-        ObjectSystemData osd = objectSystemData.get(0);
+        ObjectSystemData osd = objectSystemData.getFirst();
         assertEquals(Long.valueOf(getPomXml().length()), osd.getContentSize());
         assertEquals(PLAINTEXT_FORMAT_ID, osd.getFormatId());
     }
@@ -1173,7 +1173,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         HttpEntity       entity = createSimpleMultipartEntity(CINNAMON_REQUEST_PART, versionRequest);
         ObjectSystemData version2;
         try (var versionResponse = sendStandardMultipartRequest(UrlMapping.OSD__VERSION, entity)) {
-            version2 = unwrapOsds(versionResponse, 1).get(0);
+            version2 = unwrapOsds(versionResponse, 1).getFirst();
         }
         assertEquals("2", version2.getCmnVersion());
     }
@@ -1287,7 +1287,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var leftVersion     = client.version(new CreateNewVersionRequest(leftOsd.getId()));
         var copiedRelations = client.getRelations(List.of(leftVersion.getId()));
         assertEquals(1, copiedRelations.size());
-        var relationCopy = copiedRelations.get(0);
+        var relationCopy = copiedRelations.getFirst();
         assertEquals(relation.getTypeId(), relationCopy.getTypeId());
         assertEquals(relation.getRightId(), relationCopy.getRightId());
         assertEquals(leftVersion.getId(), relationCopy.getLeftId());
@@ -1306,7 +1306,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var rightVersion    = client.version(new CreateNewVersionRequest(rightOsd.getId()));
         var copiedRelations = client.getRelations(List.of(rightVersion.getId()));
         assertEquals(1, copiedRelations.size());
-        var relationCopy = copiedRelations.get(0);
+        var relationCopy = copiedRelations.getFirst();
         assertEquals(relation.getTypeId(), relationCopy.getTypeId());
         assertEquals(relation.getLeftId(), relationCopy.getLeftId());
         assertEquals(rightVersion.getId(), relationCopy.getRightId());
@@ -1443,7 +1443,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         client.lockOsd(id);
 
         // try and set metadataChanged
-        var osd = request.getOsds().get(0);
+        var osd = request.getOsds().getFirst();
         osd.setMetadataChanged(true);
         request.setUpdateMetadataChanged(true);
         assertClientError(() -> client.updateOsd(request), CHANGED_FLAG_ONLY_USABLE_BY_UNTRACKED_USERS);
@@ -1702,7 +1702,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         ObjectSystemData rightOsd = toh.osd;
 
         RelationType rt = new RelationType("left-rt-protected", true, false, false, false, false, false);
-        rt = adminClient.createRelationTypes(List.of(rt)).get(0);
+        rt = adminClient.createRelationTypes(List.of(rt)).getFirst();
         client.createRelation(leftOsd.getId(), rightOsd.getId(), rt.getId(), "<meta/>");
         client.deleteOsd(rightOsd.getId(), false);
     }
@@ -1721,7 +1721,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         ObjectSystemData rightOsd = toh.osd;
 
         RelationType rt = new RelationType("all-protected-delete", true, true, false, false, false, false);
-        rt = adminClient.createRelationTypes(List.of(rt)).get(0);
+        rt = adminClient.createRelationTypes(List.of(rt)).getFirst();
         client.createRelation(leftOsd.getId(), rightOsd.getId(), rt.getId(), "<meta/>");
         client.deleteOsds(List.of(rightOsd.getId(), leftOsd.getId()), false);
     }
@@ -1740,7 +1740,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         ObjectSystemData rightOsd = toh.osd;
 
         RelationType rt = new RelationType("left-protected-delete", true, false, false, false, false, false);
-        rt = adminClient.createRelationTypes(List.of(rt)).get(0);
+        rt = adminClient.createRelationTypes(List.of(rt)).getFirst();
         client.createRelation(leftOsd.getId(), rightOsd.getId(), rt.getId(), "<meta/>");
         client.deleteOsds(List.of(rightOsd.getId(), leftOsd.getId()), false);
     }
@@ -1759,7 +1759,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         ObjectSystemData rightOsd = toh.osd;
 
         RelationType rt = new RelationType("right-protected-delete", false, true, false, false, false, false);
-        rt = adminClient.createRelationTypes(List.of(rt)).get(0);
+        rt = adminClient.createRelationTypes(List.of(rt)).getFirst();
         client.createRelation(leftOsd.getId(), rightOsd.getId(), rt.getId(), "<meta/>");
         client.deleteOsds(List.of(rightOsd.getId(), leftOsd.getId()), false);
     }
@@ -1778,7 +1778,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         ObjectSystemData rightOsd = toh.osd;
 
         RelationType rt = new RelationType("un-protected-delete", false, false, false, false, false, false);
-        rt = adminClient.createRelationTypes(List.of(rt)).get(0);
+        rt = adminClient.createRelationTypes(List.of(rt)).getFirst();
         client.createRelation(leftOsd.getId(), rightOsd.getId(), rt.getId(), "<meta/>");
         client.deleteOsds(List.of(rightOsd.getId(), leftOsd.getId()), false);
     }
@@ -1797,7 +1797,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         ObjectSystemData rightOsd = toh.osd;
 
         RelationType rt = new RelationType("right-only-protected-delete", false, true, false, false, false, false);
-        rt = adminClient.createRelationTypes(List.of(rt)).get(0);
+        rt = adminClient.createRelationTypes(List.of(rt)).getFirst();
         client.createRelation(leftOsd.getId(), rightOsd.getId(), rt.getId(), "<meta/>");
         assertClientError(() -> client.deleteOsds(List.of(rightOsd.getId()), false),
                 CANNOT_DELETE_DUE_TO_ERRORS, OBJECT_HAS_PROTECTED_RELATIONS);
@@ -1818,7 +1818,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         ObjectSystemData rightOsd = toh.osd;
 
         RelationType rt = new RelationType("right-only-protected-delete2", true, false, false, false, false, false);
-        rt = adminClient.createRelationTypes(List.of(rt)).get(0);
+        rt = adminClient.createRelationTypes(List.of(rt)).getFirst();
         client.createRelation(leftOsd.getId(), rightOsd.getId(), rt.getId(), "<meta/>");
         client.deleteOsds(List.of(rightOsd.getId()), false);
     }
@@ -1837,7 +1837,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         ObjectSystemData rightOsd = toh.osd;
 
         RelationType rt = new RelationType("left-only-protected-delete2", false, true, false, false, false, false);
-        rt = adminClient.createRelationTypes(List.of(rt)).get(0);
+        rt = adminClient.createRelationTypes(List.of(rt)).getFirst();
         client.createRelation(leftOsd.getId(), rightOsd.getId(), rt.getId(), "<meta/>");
         client.deleteOsds(List.of(leftOsd.getId()), false);
     }
@@ -1856,7 +1856,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         ObjectSystemData rightOsd = toh.osd;
 
         RelationType rt = new RelationType("left-only-protected-delete", true, false, false, false, false, false);
-        rt = adminClient.createRelationTypes(List.of(rt)).get(0);
+        rt = adminClient.createRelationTypes(List.of(rt)).getFirst();
         client.createRelation(leftOsd.getId(), rightOsd.getId(), rt.getId(), "<meta/>");
         assertClientError(() -> client.deleteOsds(List.of(leftOsd.getId()), false),
                 CANNOT_DELETE_DUE_TO_ERRORS, OBJECT_HAS_PROTECTED_RELATIONS);
@@ -1902,7 +1902,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var content = "<xml>test</xml>";
         toh.createOsd("with-custom-meta").createOsdMeta(content);
         ObjectSystemData osd = client.getOsdById(toh.osd.getId(), false, true);
-        assertEquals(content, osd.getMetas().get(0).getContent());
+        assertEquals(content, osd.getMetas().getFirst().getContent());
     }
 
     @Test
@@ -1922,8 +1922,8 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
                 .createFolder("custom-metadata-test", createFolderId)
                 .createOsd("with-custom-meta")
                 .createOsdMeta(content);
-        ObjectSystemData osd = client.getOsdsInFolder(toh.osd.getParentId(), false, false, true).get(0);
-        assertEquals(content, osd.getMetas().get(0).getContent());
+        ObjectSystemData osd = client.getOsdsInFolder(toh.osd.getParentId(), false, false, true).getFirst();
+        assertEquals(content, osd.getMetas().getFirst().getContent());
     }
 
     @Test
@@ -1983,13 +1983,13 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var relatedOsd = adminClient.createOsd(new CreateOsdRequest("copyWithLeftRelationOnCopy",
                 toh.folder.getId(), userId, acl.getId(), toh.objectType.getId(), null, toh.language.getId(), null, null));
         var relationType = adminClient.createRelationTypes(List.of(
-                new RelationType("copyWithLeftRelationOnCopy", false, false, false, true, false, false))).get(0);
+                new RelationType("copyWithLeftRelationOnCopy", false, false, false, true, false, false))).getFirst();
         var originalRelation = adminClient.createRelation(toh.osd.getId(), relatedOsd.getId(), relationType.getId(), "<meta/>");
-        var copy             = adminClient.copyOsds(createFolderId, List.of(toh.osd.getId())).get(0);
+        var copy             = adminClient.copyOsds(createFolderId, List.of(toh.osd.getId())).getFirst();
         adminClient.lockOsd(copy.getId());
         List<Relation> relations = adminClient.getRelations(List.of(copy.getId()));
         assertEquals(1, relations.size());
-        var copiedRelation = relations.get(0);
+        var copiedRelation = relations.getFirst();
         assertEquals(originalRelation.getTypeId(), copiedRelation.getTypeId());
         assertEquals(originalRelation.getMetadata(), copiedRelation.getMetadata());
         assertEquals(relatedOsd.getId(), copiedRelation.getRightId());
@@ -2002,9 +2002,9 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var relatedOsd = adminClient.createOsd(new CreateOsdRequest("copyWithLeftRelationNonCopy",
                 toh.folder.getId(), userId, acl.getId(), toh.objectType.getId(), null, toh.language.getId(), null, null));
         var relationType = adminClient.createRelationTypes(List.of(
-                new RelationType("copyWithLeftRelationNonCopy", false, false, true, false, true, true))).get(0);
+                new RelationType("copyWithLeftRelationNonCopy", false, false, true, false, true, true))).getFirst();
         var            originalRelation = adminClient.createRelation(toh.osd.getId(), relatedOsd.getId(), relationType.getId(), "<meta/>");
-        var            copy             = adminClient.copyOsds(createFolderId, List.of(toh.osd.getId())).get(0);
+        var            copy             = adminClient.copyOsds(createFolderId, List.of(toh.osd.getId())).getFirst();
         List<Relation> relations        = adminClient.getRelations(List.of(copy.getId()));
         assertEquals(0, relations.size());
     }
@@ -2016,12 +2016,12 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var relatedOsd = adminClient.createOsd(new CreateOsdRequest("copyWithRightRelationOnCopy",
                 toh.folder.getId(), userId, acl.getId(), toh.objectType.getId(), null, toh.language.getId(), null, null));
         var relationType = adminClient.createRelationTypes(List.of(
-                new RelationType("copyWithRightRelationOnCopy", false, false, true, true, true, true))).get(0);
+                new RelationType("copyWithRightRelationOnCopy", false, false, true, true, true, true))).getFirst();
         var            originalRelation = adminClient.createRelation(relatedOsd.getId(), toh.osd.getId(), relationType.getId(), "<meta/>");
-        var            copy             = adminClient.copyOsds(createFolderId, List.of(toh.osd.getId())).get(0);
+        var            copy             = adminClient.copyOsds(createFolderId, List.of(toh.osd.getId())).getFirst();
         List<Relation> relations        = adminClient.getRelations(List.of(copy.getId()));
         assertEquals(1, relations.size());
-        var copiedRelation = relations.get(0);
+        var copiedRelation = relations.getFirst();
         assertEquals(originalRelation.getTypeId(), copiedRelation.getTypeId());
         assertEquals(originalRelation.getMetadata(), copiedRelation.getMetadata());
         assertEquals(relatedOsd.getId(), copiedRelation.getLeftId());
@@ -2034,9 +2034,9 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var relatedOsd = adminClient.createOsd(new CreateOsdRequest("copyWithRightRelationNonCopy",
                 toh.folder.getId(), userId, acl.getId(), toh.objectType.getId(), null, toh.language.getId(), null, null));
         var relationType = adminClient.createRelationTypes(List.of(
-                new RelationType("copyWithRightRelationNonCopy", false, false, false, false, true, true))).get(0);
+                new RelationType("copyWithRightRelationNonCopy", false, false, false, false, true, true))).getFirst();
         var            originalRelation = adminClient.createRelation(toh.osd.getId(), relatedOsd.getId(), relationType.getId(), "<meta/>");
-        var            copy             = adminClient.copyOsds(createFolderId, List.of(toh.osd.getId())).get(0);
+        var            copy             = adminClient.copyOsds(createFolderId, List.of(toh.osd.getId())).getFirst();
         List<Relation> relations        = adminClient.getRelations(List.of(copy.getId()));
         assertEquals(0, relations.size());
     }
@@ -2051,7 +2051,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var                    unusedMT  = toh.createMetaSetType(false).metasetType;
         long                   osdId     = toh.osd.getId();
         List<ObjectSystemData> copies    = adminClient.copyOsds(createFolderId, List.of(osdId), List.of(mt1.getId(), mt2.getId(), unusedMT.getId()));
-        ObjectSystemData       copy      = copies.get(0);
+        ObjectSystemData       copy      = copies.getFirst();
         var                    copyMetas = adminClient.getOsdMetas(copy.getId());
         assertEquals(2, copyMetas.size());
     }
@@ -2064,7 +2064,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var xmlFormat = TestObjectHolder.formats.stream().filter(format -> format.getName().equals("xml")).findFirst().orElseThrow();
         var result    = adminClient.setContentOnLockedOsd(id, xmlFormat.getId(), new File("pom.xml"));
         assertTrue(result);
-        ObjectSystemData copy          = adminClient.copyOsds(createFolderId, List.of(id), List.of()).get(0);
+        ObjectSystemData copy          = adminClient.copyOsds(createFolderId, List.of(id), List.of()).getFirst();
         String           sha256HexOrig = DigestUtils.sha256Hex(new FileInputStream("pom.xml"));
         String           sha256HexCopy = DigestUtils.sha256Hex(adminClient.getContent(copy.getId()).readAllBytes());
         assertEquals(sha256HexOrig, sha256HexCopy);
@@ -2086,7 +2086,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         // lifecycle.setDefaultStateId(startState.getId());
         var id = toh.osd.getId();
         adminClient.attachLifecycle(id, lifecycle.getId(), startState.getId(), false);
-        ObjectSystemData copy = adminClient.copyOsds(createFolderId, List.of(id), List.of()).get(0);
+        ObjectSystemData copy = adminClient.copyOsds(createFolderId, List.of(id), List.of()).getFirst();
         assertEquals(copyState.getId(), copy.getLifecycleStateId());
     }
 
@@ -2181,7 +2181,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         OsdRequest       osdRequest  = new OsdRequest(Collections.singletonList(id), true, false);
         StandardResponse osdResponse = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
         assertResponseOkay(osdResponse);
-        return unwrapOsds(osdResponse, 1).get(0);
+        return unwrapOsds(osdResponse, 1).getFirst();
     }
 
     @Test
@@ -2206,7 +2206,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         Meta meta = toh.meta;
         meta.setContent("<xml>updated meta<xml>");
         client.updateOsdMeta(meta);
-        Meta updatedMeta = client.getOsdMetas(toh.osd.getId()).get(0);
+        Meta updatedMeta = client.getOsdMetas(toh.osd.getId()).getFirst();
         assertEquals(meta, updatedMeta);
     }
 
@@ -2269,13 +2269,13 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         // set up target:
         var targetOsd = toh.createOsd().lockOsd().osd;
 
-        client.copyToExistingOsd(sourceOsd, targetOsd, List.of(TestObjectHolder.metasetTypes.get(0).getId()), true);
+        client.copyToExistingOsd(sourceOsd, targetOsd, List.of(TestObjectHolder.metasetTypes.getFirst().getId()), true);
 
         ObjectSystemData target = client.getOsdById(targetOsd.getId(), false, true);
         ObjectSystemData source = client.getOsdById(sourceOsd.getId(), false, true);
         assertEquals(source.getFormatId(), target.getFormatId());
         assertEquals(source.getContentSize(), target.getContentSize());
-        assertEquals(source.getMetas().get(0).getContent(), target.getMetas().get(0).getContent());
+        assertEquals(source.getMetas().getFirst().getContent(), target.getMetas().getFirst().getContent());
     }
 
     @Test
@@ -2293,7 +2293,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var targetOsd = toh.createOsd().osd;
 
         try {
-            client.copyToExistingOsd(sourceOsd, targetOsd, List.of(TestObjectHolder.metasetTypes.get(0).getId()), true);
+            client.copyToExistingOsd(sourceOsd, targetOsd, List.of(TestObjectHolder.metasetTypes.getFirst().getId()), true);
             fail();
         } catch (CinnamonClientException e) {
             assertEquals(8, e.getErrorWrapper().getErrors().size());

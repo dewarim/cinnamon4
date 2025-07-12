@@ -25,7 +25,7 @@ public class DeleteResponse extends BaseResponse implements Wrapper<DeleteRespon
         if(deleteResponses.size() != 1){
             throw new IllegalArgumentException("Invalid number of deleteResponses");
         }
-        this.success = deleteResponses.get(0).success;
+        this.success = deleteResponses.getFirst().success;
         return this;
     }
 

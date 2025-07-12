@@ -61,7 +61,7 @@ public class PermissionServlet extends HttpServlet implements CruddyServlet<Perm
         if (aclGroups.isEmpty()) {
             ErrorCode.ACL_GROUP_NOT_FOUND.throwUp();
         }
-        var aclGroup              = aclGroups.get(0);
+        var aclGroup              = aclGroups.getFirst();
         var aclGroupPermissionDao = new AclGroupPermissionDao();
         aclGroupPermissionDao.addPermissions(aclGroup, changeRequest.getAdd());
         aclGroupPermissionDao.removePermissions(aclGroup, changeRequest.getRemove());

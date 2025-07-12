@@ -148,7 +148,7 @@ public class MicroserviceChangeTriggerIntegrationTest extends CinnamonIntegratio
 
         List<ChangeTriggerResponse> changeTriggerResponses = CinnamonClient.changeTriggerResponseLocal.get();
         assertEquals(2, changeTriggerResponses.size());
-        ChangeTriggerResponse changeTriggerResponse = changeTriggerResponses.get(0);
+        ChangeTriggerResponse changeTriggerResponse = changeTriggerResponses.getFirst();
         assertEquals("Hello Test", changeTriggerResponse.getResponse());
         assertEquals(SC_OK, changeTriggerResponse.getHttpCode());
         assertEquals("http://localhost:" + MOCK_PORT + "/echo", changeTriggerResponse.getUrl());

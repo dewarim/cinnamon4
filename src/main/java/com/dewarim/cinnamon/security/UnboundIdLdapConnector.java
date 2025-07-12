@@ -124,7 +124,7 @@ public class UnboundIdLdapConnector {
                 }
             };
         } catch (LDAPSearchException e) {
-            log.warn(String.format("Failed to search for DN %s for user %s", ldapGroupName, username), e);
+            log.warn("Failed to search for DN {} for user {}", ldapGroupName, username, e);
             return Optional.empty();
         }
     }
@@ -153,7 +153,7 @@ public class UnboundIdLdapConnector {
                 return member.startsWith("CN=" + ldapGroupName + ",");
             });
         } catch (LDAPSearchException e) {
-            log.warn(String.format("Failed to search for group %s for user %s", ldapGroupName, username), e);
+            log.warn("Failed to search for group {} for user {}", ldapGroupName, username, e);
             return false;
         }
     }

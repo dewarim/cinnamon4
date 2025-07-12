@@ -186,7 +186,7 @@ public class TikaService implements Runnable {
                 else {
                     Meta       tikaMeta = new Meta(osd.getId(), tikaMetasetTypeId, tikaMetadata);
                     List<Meta> metas    = osdMetaDao.create(List.of(tikaMeta));
-                    log.info("tikaMeta: {}", metas.get(0));
+                    log.info("tikaMeta: {}", metas.getFirst());
                 }
                 IndexJobDao  indexJobDao = new IndexJobDao(sqlSession);
                 indexJobDao.insertIndexJob(new IndexJob(IndexJobType.OSD, osd.getId(), IndexJobAction.UPDATE));

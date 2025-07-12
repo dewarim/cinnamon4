@@ -23,8 +23,8 @@ public class CinnamonClientException extends RuntimeException {
     }
 
     public CinnamonClientException(CinnamonErrorWrapper wrapper) {
-        super(wrapper.getErrors().get(0).getCode());
-        this.errorCode = ErrorCode.getErrorCode(wrapper.getErrors().get(0).getCode());
+        super(wrapper.getErrors().getFirst().getCode());
+        this.errorCode = ErrorCode.getErrorCode(wrapper.getErrors().getFirst().getCode());
         this.errorWrapper = wrapper;
     }
 

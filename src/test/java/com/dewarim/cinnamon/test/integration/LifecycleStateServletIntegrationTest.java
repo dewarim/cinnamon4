@@ -58,7 +58,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
         assertEquals("<config><properties><property><name>render.server.host</name><value>localhost</value></property></properties><nextStates/></config>", state.getConfig());
         LifecycleStateConfig lifecycleStateConfig = state.getLifecycleStateConfig();
         assertNotNull(lifecycleStateConfig);
-        assertEquals("localhost", lifecycleStateConfig.getPropertyValues("render.server.host").get(0));
+        assertEquals("localhost", lifecycleStateConfig.getPropertyValues("render.server.host").getFirst());
     }
 
     @Test
@@ -357,7 +357,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
         adminClient.attachLifecycle(osdId, 3L, 2L, true);
         List<LifecycleState> lifecycleStates = client.getNextLifecycleStates(osdId);
         assertTrue(lifecycleStates.size() > 0);
-        LifecycleState state = lifecycleStates.get(0);
+        LifecycleState state = lifecycleStates.getFirst();
         assertEquals("published", state.getName());
     }
 

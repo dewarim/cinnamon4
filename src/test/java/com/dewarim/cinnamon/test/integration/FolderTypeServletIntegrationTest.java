@@ -73,7 +73,7 @@ public class FolderTypeServletIntegrationTest extends CinnamonIntegrationTest {
     public void updateWithoutPermission() throws IOException {
         List<FolderType> types = adminClient.createFolderTypes(Collections.singletonList("update-me-not-folder-type"));
         try {
-            types.get(0).setName("forbidden-update");
+            types.getFirst().setName("forbidden-update");
             client.updateFolderTypes(types);
         } catch (CinnamonClientException e) {
             assertEquals(REQUIRES_SUPERUSER_STATUS, e.getErrorCode());
@@ -82,7 +82,7 @@ public class FolderTypeServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void deleteFolderTypeWhichIsInUse() throws IOException {
-        var folderType = adminClient.createFolderTypes(List.of("in-use-folder-type")).get(0);
+        var folderType = adminClient.createFolderTypes(List.of("in-use-folder-type")).getFirst();
         var toh = new TestObjectHolder(client, userId)
                 .createFolder();
         var folder = toh.folder;

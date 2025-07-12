@@ -1009,7 +1009,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
             );
             if (errorCodes.size() > 0) {
                 // for now, just throw the first error.
-                throw errorCodes.get(0).exception();
+                throw errorCodes.getFirst().exception();
             }
             if (user.isChangeTracking()) {
                 osd.setMetadataChanged(true);

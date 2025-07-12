@@ -156,7 +156,7 @@ public class FolderDao implements CrudDao<Folder> {
                 // complete path was not found: return empty list
                 return Collections.emptyList();
             }
-            targetFolder  = targetFolders.get(0);
+            targetFolder  = targetFolders.getFirst();
             currentFolder = targetFolder;
         }
 
@@ -174,7 +174,7 @@ public class FolderDao implements CrudDao<Folder> {
         if (folders.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(folders.get(0));
+        return Optional.of(folders.getFirst());
     }
 
     public Optional<Folder> getFolderById(long id) {
@@ -182,7 +182,7 @@ public class FolderDao implements CrudDao<Folder> {
         if (folders.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(folders.get(0));
+        return Optional.of(folders.getFirst());
     }
 
     public void updateFolder(Folder folder) {

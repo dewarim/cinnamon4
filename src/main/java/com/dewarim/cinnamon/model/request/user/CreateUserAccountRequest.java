@@ -68,7 +68,7 @@ public class CreateUserAccountRequest implements CreateRequest<UserAccount>, Api
     public List<ApiRequest<CreateUserAccountRequest>> examples() {
         CreateUserAccountRequest request = new CreateUserAccountRequest("jane", "super-secret", "Jane Doe", "jane@example.com", 1L,
                 LoginType.CINNAMON.name(), false, true, true);
-        request.userAccounts.get(0).getGroupIds().add(12L);
+        request.userAccounts.getFirst().getGroupIds().add(12L);
         return List.of(request);
     }
 }

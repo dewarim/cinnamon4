@@ -26,7 +26,7 @@ public class GroupServletIntegrationTest extends CinnamonIntegrationTest {
         assertFalse(groups.isEmpty());
         assertTrue(groups.size() >= 7);
 
-        List<String> actualGroupNames = groups.stream().map(Group::getName).collect(Collectors.toList());
+        List<String> actualGroupNames = groups.stream().map(Group::getName).toList();
         String[] groupNames = {"_superusers", "_everyone", "_owner"};
         Arrays.stream(groupNames).forEach(name ->
                 assertTrue(actualGroupNames.contains(name))
@@ -49,8 +49,8 @@ public class GroupServletIntegrationTest extends CinnamonIntegrationTest {
     @Order(100)
     public void createGroups() throws IOException {
         groups = adminClient.createGroupsByName(List.of("test1", "test2", "test3"));
-        var allGroupNames = client.listGroups().stream().map(Group::getName).collect(Collectors.toList());
-        var newGroupNames = groups.stream().map(Group::getName).collect(Collectors.toList());
+        var allGroupNames = client.listGroups().stream().map(Group::getName).toList();
+        var newGroupNames = groups.stream().map(Group::getName).toList();
         assertTrue(allGroupNames.containsAll(newGroupNames));
     }
 
@@ -77,9 +77,9 @@ public class GroupServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void upgradeGroup() throws IOException {
         List<Group> groups = adminClient.createGroupsByName(List.of("update-my-name"));
-        groups.get(0).setName("is-updated-group");
+        groups.getFirst().setName("is-updated-group");
         List<Group> updatedGroups = adminClient.updateGroups(groups);
-        assertEquals(groups.get(0).getName(), updatedGroups.get(0).getName());
+        assertEquals(groups.getFirst().getName(), updatedGroups.getFirst().getName());
     }
 
     @Test
@@ -118,7 +118,7 @@ public class GroupServletIntegrationTest extends CinnamonIntegrationTest {
         var stepParent = adminClient.createGroup(new Group("step-parent-group", null));
         var child = adminClient.createGroup(new Group("another-child", parent.getId()));
         child.setParentId(stepParent.getId());
-        Group adoptedChild = adminClient.updateGroups(List.of(child)).get(0);
+        Group adoptedChild = adminClient.updateGroups(List.of(child)).getFirst();
         assertEquals(stepParent.getId(), adoptedChild.getParentId());
     }
 
@@ -127,7 +127,7 @@ public class GroupServletIntegrationTest extends CinnamonIntegrationTest {
         var parent = adminClient.createGroup(new Group("parent-group2", null));
         var child = adminClient.createGroup(new Group("a-child2", null));
         child.setParentId(parent.getId());
-        Group adoptedChild = adminClient.updateGroups(List.of(child)).get(0);
+        Group adoptedChild = adminClient.updateGroups(List.of(child)).getFirst();
         long count = client.listGroups().stream().filter(group -> group.equals(new Group(child.getId(), child.getName(), adoptedChild.getParentId()))).count();
         assertEquals(1L, count);
     }
@@ -165,7 +165,7 @@ public class GroupServletIntegrationTest extends CinnamonIntegrationTest {
         var user = adminClient.createUser(new UserAccount("user-for-a-group", "passwehde", "-", "-", 1L, LoginType.CINNAMON.name(), true, true, true));
         adminClient.addUserToGroups(user.getId(), List.of(userGroup.getId()));
         UserAccount userWithGroup = client.getUser(user.getId());
-        assertEquals(userGroup.getId(), userWithGroup.getGroupIds().get(0));
+        assertEquals(userGroup.getId(), userWithGroup.getGroupIds().getFirst());
 
         adminClient.removeUserFromGroups(user.getId(), List.of(userGroup.getId()));
         var userWithoutGroups = client.getUser(user.getId());

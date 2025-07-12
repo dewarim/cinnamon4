@@ -111,7 +111,7 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
         if (objectsById.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(objectsById.get(0));
+        return Optional.of(objectsById.getFirst());
     }
 
     public void updateOsd(ObjectSystemData osd, boolean updateModifier, boolean updateTikaMetaset) {
@@ -153,7 +153,7 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
         if (objects.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(objects.get(0).getCmnVersion());
+        return Optional.of(objects.getFirst().getCmnVersion());
     }
 
     public List<ObjectSystemData> findObjectsWithSamePredecessor(long predecessorId) {

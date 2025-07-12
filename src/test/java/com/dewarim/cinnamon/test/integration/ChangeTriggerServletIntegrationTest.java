@@ -28,7 +28,7 @@ public class ChangeTriggerServletIntegrationTest extends CinnamonIntegrationTest
         List<ChangeTrigger> triggers = client.listChangeTriggers();
         assertNotNull(triggers);
         assertFalse(triggers.isEmpty());
-        ChangeTrigger testTrigger = triggers.get(0);
+        ChangeTrigger testTrigger = triggers.getFirst();
         assertEquals(MICROSERVICE, testTrigger.getTriggerType());
 
     }

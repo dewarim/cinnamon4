@@ -47,7 +47,7 @@ public class LifecycleServletIntegrationTest extends CinnamonIntegrationTest {
         assertEquals(Long.valueOf(2), lifecycle.getId());
         List<LifecycleState> lifecycleStates = lifecycle.getLifecycleStates();
         assertEquals(1, lifecycleStates.size());
-        LifecycleState newRenderTaskState = lifecycleStates.get(0);
+        LifecycleState newRenderTaskState = lifecycleStates.getFirst();
         assertEquals("newRenderTask", newRenderTaskState.getName());
         assertEquals("com.dewarim.cinnamon.lifecycle.NopState", newRenderTaskState.getStateClass());
     }
@@ -81,7 +81,7 @@ public class LifecycleServletIntegrationTest extends CinnamonIntegrationTest {
         lifecycle.setDefaultStateId(lifecycleState.getId());
         Lifecycle updatedCycle = adminClient.updateLifecycle(lifecycle);
         assertEquals(1, updatedCycle.getLifecycleStates().size());
-        assertEquals(lifecycleState, updatedCycle.getLifecycleStates().get(0));
+        assertEquals(lifecycleState, updatedCycle.getLifecycleStates().getFirst());
         updatedCycle.getLifecycleStates().clear();
         assertEquals(lifecycle, updatedCycle);
     }

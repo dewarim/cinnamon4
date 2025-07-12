@@ -100,7 +100,7 @@ public interface CrudDao<T extends Identifiable> {
             return Optional.empty();
         }
         else {
-            T item = items.get(0);
+            T item = items.getFirst();
             if(useCache()){
                 addToCache(item);
             }

@@ -266,16 +266,17 @@ public class IndexService implements Runnable {
             return;
         }
         int             poolSize        = jobs.size();
-        ExecutorService executorService = Executors.newFixedThreadPool(Math.min(poolSize, config.getThreadPoolSize()));
-        jobs.forEach(executorService::submit);
-        executorService.shutdown();
-        try {
-            boolean terminatedOkay = executorService.awaitTermination(config.getThreadPoolWaitInMinutes(), TimeUnit.MINUTES);
-            if (!terminatedOkay) {
-                log.error("IndexJobs timed out after {} minutes of waiting.", config.getThreadPoolWaitInMinutes());
+        try (ExecutorService executorService = Executors.newFixedThreadPool(Math.min(poolSize, config.getThreadPoolSize()))) {
+            jobs.forEach(executorService::submit);
+            executorService.shutdown();
+            try {
+                boolean terminatedOkay = executorService.awaitTermination(config.getThreadPoolWaitInMinutes(), TimeUnit.MINUTES);
+                if (!terminatedOkay) {
+                    log.error("IndexJobs timed out after {} minutes of waiting.", config.getThreadPoolWaitInMinutes());
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
         }
     }
 

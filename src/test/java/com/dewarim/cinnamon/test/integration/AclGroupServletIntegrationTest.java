@@ -90,7 +90,7 @@ public class AclGroupServletIntegrationTest extends CinnamonIntegrationTest {
     @Order(150)
     public void createAclGroupWithoutPermission() {
         List<AclGroup> entries = new ArrayList<>();
-        entries.add(new AclGroup(acls.get(0).getId(), groups.get(0).getId()));
+        entries.add(new AclGroup(acls.getFirst().getId(), groups.getFirst().getId()));
         assertClientError(() -> client.createAclGroups(entries), REQUIRES_SUPERUSER_STATUS);
     }
 
@@ -104,13 +104,13 @@ public class AclGroupServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     @Order(200)
     public void updateAclGroup() throws IOException {
-        Acl   a1           = acls.get(0);
+        Acl   a1           = acls.getFirst();
         Group g2           = groups.get(1);
-        var   idOfFirstAcl = aclGroups.get(0).getId();
+        var   idOfFirstAcl = aclGroups.getFirst().getId();
         // replace g1 in aclGroup (a1,g1) with g2
         UpdateAclGroupRequest updateRequest  = new UpdateAclGroupRequest(idOfFirstAcl, a1.getId(), g2.getId());
         var                   updatedEntries = adminClient.updateAclGroups(updateRequest);
-        var                   aclGroup       = updatedEntries.get(0);
+        var                   aclGroup       = updatedEntries.getFirst();
         assertEquals(idOfFirstAcl, aclGroup.getId());
         assertEquals(g2.getId(), aclGroup.getGroupId());
         assertEquals(a1.getId(), aclGroup.getAclId());
@@ -151,7 +151,7 @@ public class AclGroupServletIntegrationTest extends CinnamonIntegrationTest {
         List<AclGroup> refreshedAclGroups = adminClient.listAclGroups().stream().filter(aclGroup -> aclGroup.getId().equals(toh.aclGroup.getId())).toList();
 
         assertEquals(1, refreshedAclGroups.size());
-        assertEquals(2, refreshedAclGroups.get(0).getPermissionIds().size());
+        assertEquals(2, refreshedAclGroups.getFirst().getPermissionIds().size());
     }
 
     @Test
@@ -182,7 +182,7 @@ public class AclGroupServletIntegrationTest extends CinnamonIntegrationTest {
         adminClient.updateAclGroups(new UpdateAclGroupRequest(updateMel));
         List<Permission> userPermissions = client.getUserPermissions(userId, toh.acl.getId());
         assertEquals(1, userPermissions.size());
-        assertEquals(deletePerm, userPermissions.get(0));
+        assertEquals(deletePerm, userPermissions.getFirst());
     }
 
     @Test

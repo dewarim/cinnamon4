@@ -27,7 +27,7 @@ public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void getRelationsByTypeId() throws IOException {
-        Relation relation = client.searchRelations(List.of(), List.of(), List.of(1L), false, false).get(0);
+        Relation relation = client.searchRelations(List.of(), List.of(), List.of(1L), false, false).getFirst();
         assertNotNull(relation.getTypeId());
         assertEquals(1L, (long) relation.getTypeId());
 
@@ -46,7 +46,7 @@ public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
         List<Relation> relations = client.searchRelations(List.of(leftOsd.getId()), null, null, false, false);
         assertEquals(1, relations.size());
 
-        Relation relation = relations.get(0);
+        Relation relation = relations.getFirst();
         Long typeId = relation.getTypeId();
         assertNotNull(typeId);
         assertEquals(1L, (long) typeId);
@@ -69,7 +69,7 @@ public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
         List<Relation> relations = client.searchRelations(null, List.of(rightOsd.getId()), null, false, false);
         assertEquals(1, relations.size());
 
-        Relation relation = relations.get(0);
+        Relation relation = relations.getFirst();
         Long typeId = relation.getTypeId();
         assertNotNull(typeId);
         assertEquals(1L, (long) typeId);
@@ -96,7 +96,7 @@ public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
         List<Relation> relations = client.searchRelations(List.of(leftOsd.getId()), List.of(rightOsd.getId()), List.of(1L), true, false);
         assertEquals(1, relations.size());
 
-        Relation relation = relations.get(0);
+        Relation relation = relations.getFirst();
         Long typeId = relation.getTypeId();
         assertNotNull(typeId);
         assertEquals(1L, (long) typeId);
@@ -150,7 +150,7 @@ public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
         // verify relation exists:
 
         List<Relation> relations = client.searchRelations(List.of(leftOsd.getId()), List.of(rightOsd.getId()), List.of(1L), true, false);
-        Relation relation = relations.get(0);
+        Relation relation = relations.getFirst();
         Long typeId = relation.getTypeId();
         assertNotNull(typeId);
         assertEquals(1L, (long) typeId);

@@ -41,7 +41,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         var folderId = new TestObjectHolder(client, userId).createFolder().folder.getId();
         client.setFolderSummary(folderId, XML_SUMMARY);
         List<Summary> folderSummaries = client.getFolderSummaries(List.of(folderId));
-        assertEquals(XML_SUMMARY, folderSummaries.get(0).getContent());
+        assertEquals(XML_SUMMARY, folderSummaries.getFirst().getContent());
     }
 
     @Test
@@ -62,7 +62,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         List<Summary> summaries = client.getFolderSummaries(List.of(toh.folder.getId()));
         assertNotNull(summaries);
         assertFalse(summaries.isEmpty());
-        assertThat(summaries.get(0).getContent(), equalTo("<p>foo-folder</p>"));
+        assertThat(summaries.getFirst().getContent(), equalTo("<p>foo-folder</p>"));
     }
 
     @Test
@@ -107,14 +107,14 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
                 .createLinkToOsd(linkOsdTarget);
         FolderWrapper subFolders = client.getSubFolderWrapper(parentFolderId, false);
         assertEquals(1, subFolders.getFolders().size());
-        assertEquals(toh.folder.getId(), subFolders.getFolders().get(0).getId());
+        assertEquals(toh.folder.getId(), subFolders.getFolders().getFirst().getId());
         assertNotNull(subFolders.getLinks());
         assertEquals(1, subFolders.getLinks().size());
-        assertEquals(linkFolderTarget.getId(), subFolders.getLinks().get(0).getFolderId());
+        assertEquals(linkFolderTarget.getId(), subFolders.getLinks().getFirst().getFolderId());
         List<Folder> references = subFolders.getReferences();
         assertEquals(1, references.size());
-        assertEquals(linkFolderTarget.getId(), references.get(0).getId());
-        assertEquals(linkFolderTarget.getName(), references.get(0).getName());
+        assertEquals(linkFolderTarget.getId(), references.getFirst().getId());
+        assertEquals(linkFolderTarget.getName(), references.getFirst().getName());
     }
 
     @Test
@@ -134,7 +134,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         var          folder  = new TestObjectHolder(client, userId).createFolder().folder;
         List<Folder> folders = client.getFolders(List.of(folder.getId()), false);
         assertEquals(1, folders.size());
-        assertEquals(folder, folders.get(0));
+        assertEquals(folder, folders.getFirst());
     }
 
     @Test
@@ -208,7 +208,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     public void getMetaHappyPath() throws IOException {
         var folder = prepareAclGroupWithPermissions(List.of(READ_OBJECT_CUSTOM_METADATA))
                 .createFolder().createFolderMeta("<xml>my meta</xml>").folder;
-        Meta folderMeta = client.getFolderMetas(folder.getId()).get(0);
+        Meta folderMeta = client.getFolderMetas(folder.getId()).getFirst();
         assertEquals("<xml>my meta</xml>", folderMeta.getContent());
     }
 
@@ -458,7 +458,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
                 adminToh.folderType.getId(), adminToh.acl.getId()
         );
         client.updateFolder(request);
-        Folder updatedFolder = client.getFolderById(request.getFolders().get(0).getId(), false);
+        Folder updatedFolder = client.getFolderById(request.getFolders().getFirst().getId(), false);
         assertEquals(targetFolderId, updatedFolder.getParentId());
     }
 
@@ -475,7 +475,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         );
         request.setUpdateMetadataChanged(true);
         adminClient.updateFolder(request);
-        Folder updatedFolder = client.getFolderById(request.getFolders().get(0).getId(), false);
+        Folder updatedFolder = client.getFolderById(request.getFolders().getFirst().getId(), false);
         assertEquals(targetFolderId, updatedFolder.getParentId());
         assertTrue(updatedFolder.isMetadataChanged());
     }
@@ -573,7 +573,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createFolderHappyPath() throws IOException {
-        FolderType myArchiveType = adminClient.createFolderTypes(List.of("my_archive_type")).get(0);
+        FolderType myArchiveType = adminClient.createFolderTypes(List.of("my_archive_type")).getFirst();
         Folder folder = client.createFolder(createFolderId, "create happy folder", userId, getReviewerAcl().getId(),
                 myArchiveType.getId());
         assertEquals("create happy folder", folder.getName());
@@ -779,7 +779,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         Meta meta = toh.meta;
         meta.setContent("<xml>updated meta</xml>");
         client.updateFolderMeta(meta);
-        Meta updatedMeta = client.getFolderMetas(toh.folder.getId()).get(0);
+        Meta updatedMeta = client.getFolderMetas(toh.folder.getId()).getFirst();
         assertEquals(meta, updatedMeta);
     }
 
@@ -850,7 +850,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
                 .createLinkToOsd();
         List<ObjectSystemData> osdReferences = client.getOsdReferences(toh.folder.getId(), false);
         assertEquals(1, osdReferences.size());
-        assertEquals(toh.osd.getId(), osdReferences.get(0).getId());
+        assertEquals(toh.osd.getId(), osdReferences.getFirst().getId());
     }
 
     @Test
@@ -863,11 +863,11 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         toh.version();
         List<ObjectSystemData> osdReferences = client.getOsdReferences(toh.folder.getId(), false);
         assertEquals(1, osdReferences.size());
-        assertEquals(toh.osd.getId(), osdReferences.get(0).getId());
+        assertEquals(toh.osd.getId(), osdReferences.getFirst().getId());
 
         List<Link> links = client.getOsdLinksInFolder(toh.folder.getId(), false);
         assertEquals(1, links.size());
-        assertEquals(toh.osd.getId(), links.get(0).getResolvedId());
+        assertEquals(toh.osd.getId(), links.getFirst().getResolvedId());
     }
 
     @Test

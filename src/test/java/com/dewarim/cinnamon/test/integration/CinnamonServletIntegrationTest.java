@@ -89,7 +89,7 @@ public class CinnamonServletIntegrationTest extends CinnamonIntegrationTest {
         String rawResponse = client.connect("admin", "admin", null);
         assertNotNull(rawResponse);
         CinnamonConnectionWrapper connection = mapper.readValue(rawResponse, CinnamonConnectionWrapper.class);
-        assertTrue(connection.list().get(0).getTicket().matches(UUID_PATTERN));
+        assertTrue(connection.list().getFirst().getTicket().matches(UUID_PATTERN));
     }
 
     @Test

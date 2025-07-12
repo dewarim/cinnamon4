@@ -127,7 +127,7 @@ public class TestObjectHolder {
                 initialized = true;
             }
         }
-        language = languages.get(0);
+        language = languages.getFirst();
     }
 
     public TestObjectHolder setAcl(Acl acl) {
@@ -195,7 +195,7 @@ public class TestObjectHolder {
     }
 
     public TestObjectHolder createFolderType() throws IOException {
-        folderType = client.createFolderTypes(List.of(createRandomName())).get(0);
+        folderType = client.createFolderTypes(List.of(createRandomName())).getFirst();
         return this;
     }
 
@@ -206,7 +206,7 @@ public class TestObjectHolder {
     }
 
     public TestObjectHolder createAcl(String name) throws IOException {
-        acl = client.createAcls(List.of(name)).get(0);
+        acl = client.createAcls(List.of(name)).getFirst();
         return this;
     }
 
@@ -215,7 +215,7 @@ public class TestObjectHolder {
     }
 
     public TestObjectHolder createGroup(String name) throws IOException {
-        group = client.createGroupsByName(List.of(name)).get(0);
+        group = client.createGroupsByName(List.of(name)).getFirst();
         return this;
     }
 
@@ -229,14 +229,14 @@ public class TestObjectHolder {
     }
 
     public TestObjectHolder createAclGroup() throws IOException {
-        aclGroup = client.createAclGroups(List.of(new AclGroup(acl.getId(), group.getId()))).get(0);
+        aclGroup = client.createAclGroups(List.of(new AclGroup(acl.getId(), group.getId()))).getFirst();
         return this;
     }
 
     public TestObjectHolder createAclGroupWithPermissionIds(List<Long> permissionIds) throws IOException {
         AclGroup group1 = new AclGroup(acl.getId(), group.getId());
         group1.getPermissionIds().addAll(permissionIds);
-        aclGroup = client.createAclGroups(List.of(group1)).get(0);
+        aclGroup = client.createAclGroups(List.of(group1)).getFirst();
         return this;
     }
 
@@ -273,7 +273,7 @@ public class TestObjectHolder {
 
     public TestObjectHolder setFolder(Long id) throws IOException {
         if (id != null) {
-            folder = client.getFolders(List.of(id), true).get(0);
+            folder = client.getFolders(List.of(id), true).getFirst();
         }
         return this;
     }
@@ -312,7 +312,7 @@ public class TestObjectHolder {
     }
 
     public TestObjectHolder createObjectType(String name) throws IOException {
-        objectType = client.createObjectTypes(List.of(name)).get(0);
+        objectType = client.createObjectTypes(List.of(name)).getFirst();
         return this;
     }
 
@@ -321,12 +321,12 @@ public class TestObjectHolder {
     }
 
     public TestObjectHolder createOsdMeta(String content) throws IOException {
-        meta = client.createOsdMeta(osd.getId(), content, Objects.requireNonNullElse(metasetType, metasetTypes.get(0)).getId());
+        meta = client.createOsdMeta(osd.getId(), content, Objects.requireNonNullElse(metasetType, metasetTypes.getFirst()).getId());
         return this;
     }
 
     public TestObjectHolder createFolderMeta(String content) throws IOException {
-        meta = client.createFolderMeta(folder.getId(), content, Objects.requireNonNullElse(metasetType, metasetTypes.get(0)).getId()).get(0);
+        meta = client.createFolderMeta(folder.getId(), content, Objects.requireNonNullElse(metasetType, metasetTypes.getFirst()).getId()).getFirst();
         return this;
     }
 
@@ -504,9 +504,9 @@ public class TestObjectHolder {
     }
 
     public String getOsdSummary() throws IOException {
-        return client.getOsdSummaries(List.of(osd.getId())).get(0).getContent();
+        return client.getOsdSummaries(List.of(osd.getId())).getFirst().getContent();
     }
     public String getOsdSummary(Long id) throws IOException {
-        return client.getOsdSummaries(List.of(id)).get(0).getContent();
+        return client.getOsdSummaries(List.of(id)).getFirst().getContent();
     }
 }

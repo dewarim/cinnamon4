@@ -36,7 +36,7 @@ public class DisconnectResponse extends BaseResponse implements Wrapper<Disconne
         if (disconnectResponses == null || disconnectResponses.size() != 1) {
             throw new IllegalStateException("Only lists containing a single DisconnectResponse are allowed.");
         }
-        this.disconnectSuccessful = disconnectResponses.get(0).disconnectSuccessful;
+        this.disconnectSuccessful = disconnectResponses.getFirst().disconnectSuccessful;
         return this;
     }
 

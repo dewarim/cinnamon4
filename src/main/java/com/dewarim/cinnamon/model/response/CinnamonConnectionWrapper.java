@@ -26,7 +26,7 @@ public class CinnamonConnectionWrapper extends BaseResponse implements Wrapper<C
 
     @Override
     public Wrapper<CinnamonConnection> setList(List<CinnamonConnection> cinnamonConnections) {
-        this.cinnamonConnection = cinnamonConnections.get(0);
+        this.cinnamonConnection = cinnamonConnections.getFirst();
         return this;
     }
 
