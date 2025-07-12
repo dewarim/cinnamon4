@@ -6,7 +6,6 @@ import com.dewarim.cinnamon.api.Constants;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
-import com.dewarim.cinnamon.application.exception.BadArgumentException;
 import com.dewarim.cinnamon.application.service.DeleteLinkService;
 import com.dewarim.cinnamon.application.service.DeleteOsdService;
 import com.dewarim.cinnamon.application.service.MetaService;
@@ -117,8 +116,7 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
                 List<ObjectSystemData> osds = osdDao.getObjectsByFolderId(folder.getId(), false, VersionPredicate.ALL);
                 deleteOsdService.verifyAndDelete(osds, true, true, user);
             }
-        }
-        else if (folderDao.hasContent(folderIds)) {
+        } else if (folderDao.hasContent(folderIds)) {
             throw ErrorCode.FOLDER_IS_NOT_EMPTY.exception();
         }
 
@@ -193,8 +191,7 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
             if (typeId == null) {
                 typeId = typeDao.getFolderTypeByName(Constants.FOLDER_TYPE_DEFAULT)
                         .orElseThrow(ErrorCode.FOLDER_TYPE_NOT_FOUND.getException()).getId();
-            }
-            else {
+            } else {
                 typeId = typeDao.getFolderTypeById(typeId)
                         .orElseThrow(ErrorCode.FOLDER_TYPE_NOT_FOUND.getException()).getId();
             }
@@ -202,8 +199,7 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
             Long ownerId = folder.getOwnerId();
             if (ownerId == null) {
                 ownerId = parentFolder.getOwnerId();
-            }
-            else {
+            } else {
                 ownerId = new UserAccountDao().getUserAccountById(ownerId)
                         .orElseThrow(ErrorCode.USER_ACCOUNT_NOT_FOUND.getException()).getId();
             }
@@ -211,14 +207,13 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
             Long aclId = folder.getAclId();
             if (aclId == null) {
                 aclId = parentFolder.getAclId();
-            }
-            else {
+            } else {
                 aclId = new AclDao().getObjectById(aclId)
                         .orElseThrow(ErrorCode.ACL_NOT_FOUND.getException()).getId();
             }
 
             Folder newFolder = new Folder(name, aclId, ownerId, parentId, typeId, folder.getSummary());
-            if(user.isChangeTracking()){
+            if (user.isChangeTracking()) {
                 newFolder.setMetadataChanged(true);
             }
             folders.add(folderDao.saveFolder(newFolder));
@@ -243,7 +238,7 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
         final AccessFilter accessFilter        = AccessFilter.getInstance(user);
         List<Folder>       browsableSubFolders = subFolders.stream().filter(accessFilter::hasBrowsePermissionForOwnable).collect(Collectors.toList());
         LinkDao            linkDao             = new LinkDao();
-        List<Folder> parentAndSubFolders = new ArrayList<>();
+        List<Folder>       parentAndSubFolders = new ArrayList<>();
         parentAndSubFolders.add(folder);
         parentAndSubFolders.addAll(browsableSubFolders);
         List<Long> folderIdsForLinkQuery = parentAndSubFolders.stream().map(Folder::getId).toList();
@@ -252,8 +247,8 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
         List<Link> folderLinks = linkDao.getLinksByFolderIdAndLinkType(folderIdsForLinkQuery, LinkType.FOLDER)
                 .stream().filter(accessFilter::hasBrowsePermissionForOwnable).collect(Collectors.toList());
         folderWrapper.setLinks(folderLinks);
-        List<Long> linkedFolderIds = folderLinks.stream().map(Link::getFolderId).collect(Collectors.toSet()).stream().toList();
-        List<Folder>  references   = folderDao.getFoldersById(linkedFolderIds, folderRequest.isIncludeSummary());
+        List<Long>   linkedFolderIds = folderLinks.stream().map(Link::getFolderId).collect(Collectors.toSet()).stream().toList();
+        List<Folder> references      = folderDao.getFoldersById(linkedFolderIds, folderRequest.isIncludeSummary());
         folderWrapper.setReferences(references);
         response.setWrapper(folderWrapper);
     }
@@ -286,7 +281,7 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
 
                 folder.setParentId(parentFolder.getId());
                 reIndexSubfolders = true;
-                changed           = true;
+                changed = true;
             }
 
             // change name
@@ -298,8 +293,7 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
                 Folder parentFolder;
                 if (folder.getParentId() == null) {
                     parentFolder = folderDao.getRootFolder(false);
-                }
-                else {
+                } else {
                     parentFolder = folderDao.getFolderById(folder.getParentId())
                             .orElseThrow(ErrorCode.PARENT_FOLDER_NOT_FOUND.getException());
                 }
@@ -307,7 +301,7 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
                 folderDao.getFolderByParentAndName(parentFolder.getId(), name, false)
                         .ifPresent(f -> ErrorCode.DUPLICATE_FOLDER_NAME_FORBIDDEN.throwUp());
                 folder.setName(name);
-                changed           = true;
+                changed = true;
                 reIndexSubfolders = true;
             }
 
@@ -354,9 +348,8 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
                 }
                 folder.setMetadataChanged(updateFolder.isMetadataChanged());
                 changed = true;
-            }
-            else{
-                if(user.isChangeTracking()){
+            } else {
+                if (user.isChangeTracking()) {
                     folder.setMetadataChanged(true);
                 }
             }
@@ -413,8 +406,7 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
         List<Meta> metaList;
         if (metaRequest.getTypeIds() != null) {
             metaList = new FolderMetaDao().getMetaByTypeIdsAndOsd(metaRequest.getTypeIds(), folderId);
-        }
-        else {
+        } else {
             metaList = new FolderMetaDao().listByFolderId(folderId);
         }
 
@@ -433,19 +425,13 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
         FolderPathRequest pathRequest = xmlMapper.readValue(request.getInputStream(), FolderPathRequest.class);
         if (pathRequest.validated()) {
 
-            List<Folder> rawFolders;
-            try {
-                rawFolders = folderDao.getFolderByPathWithAncestors(pathRequest.getPath(), pathRequest.isIncludeSummary());
-            } catch (BadArgumentException e) {
-                throw e.getErrorCode().exception();
-            }
-            List<Folder> folders = new AuthorizationService().filterFoldersByBrowsePermission(rawFolders, user);
+            List<Folder> rawFolders = folderDao.getFolderByPathWithAncestors(pathRequest.getPath(), pathRequest.isIncludeSummary());
+            List<Folder> folders    = new AuthorizationService().filterFoldersByBrowsePermission(rawFolders, user);
             if (folders.isEmpty()) {
                 throw ErrorCode.OBJECT_NOT_FOUND.exception();
             }
             response.setWrapper(new FolderWrapper(folders));
-        }
-        else {
+        } else {
             throw ErrorCode.INVALID_REQUEST.exception();
         }
     }
@@ -492,8 +478,7 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
                 folderDao.updateFolder(folder);
                 response.responseIsGenericOkay();
                 return;
-            }
-            else {
+            } else {
                 throw ErrorCode.NO_SET_SUMMARY_PERMISSION.exception();
             }
         }
@@ -507,8 +492,7 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
         folders.forEach(folder -> {
             if (authorizationService.hasUserOrOwnerPermission(folder, DefaultPermission.BROWSE, user)) {
                 wrapper.getSummaries().add(new Summary(folder.getId(), folder.getSummary()));
-            }
-            else {
+            } else {
                 throw ErrorCode.NO_BROWSE_PERMISSION.exception();
             }
         });

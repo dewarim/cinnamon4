@@ -3,7 +3,6 @@ package com.dewarim.cinnamon.dao;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.Ownable;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
-import com.dewarim.cinnamon.application.exception.BadArgumentException;
 import com.dewarim.cinnamon.model.Folder;
 import com.dewarim.cinnamon.model.FolderPath;
 import com.dewarim.cinnamon.model.index.IndexJob;
@@ -117,7 +116,7 @@ public class FolderDao implements CrudDao<Folder> {
 
 
     /**
-     * @param path           a slash '/'-separated list of folder names, starting with /, not including
+     * @param path           a slash "/"-separated list of folder names, starting with /, not including
      *                       the root folder.
      *                       Example:
      *                       "/home/admin/documents", not: "/root/home/admin/documents".
@@ -126,7 +125,7 @@ public class FolderDao implements CrudDao<Folder> {
      */
     public List<Folder> getFolderByPathWithAncestors(String path, boolean includeSummary) {
         if (path.contains("//") || path.lastIndexOf('/') == path.length() - 1) {
-            throw new BadArgumentException(ErrorCode.INVALID_FOLDER_PATH_STRUCTURE);
+            throw ErrorCode.INVALID_FOLDER_PATH_STRUCTURE.exception();
         }
         SqlSession   sqlSession   = getSqlSession();
         List<String> pathElements = new ArrayList<>(Arrays.asList(path.substring(1).split("/")));
