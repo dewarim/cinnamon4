@@ -66,15 +66,15 @@ public class IndexService implements Runnable {
 
     public IndexService(LuceneConfig config, ContentProviderService contentProviderService) {
         this.config = config;
-        indexPath   = Paths.get(config.getIndexPath());
+        indexPath = Paths.get(config.getIndexPath());
         if (!indexPath.toFile().exists()) {
             boolean madeDirs = indexPath.toFile().mkdirs();
             if (madeDirs) {
                 throw new IllegalStateException("Could not create path to index: " + indexPath.toAbsolutePath());
             }
         }
-        indexItems                  = new IndexItemDao().list();
-        xmlMapper                   = new XmlMapper();
+        indexItems = new IndexItemDao().list();
+        xmlMapper = new XmlMapper();
         this.contentProviderService = contentProviderService;
     }
 
@@ -100,8 +100,7 @@ public class IndexService implements Runnable {
                     }
                     if (jobs.isEmpty()) {
                         log.trace("Found 0 IndexJobs.");
-                    }
-                    else {
+                    } else {
                         log.debug("Found {} IndexJobs with not more than {} failed attempts.", jobs.size(), config.getMaxIndexAttempts());
                         ConcurrentLinkedQueue<IndexJob> jobsToDelete  = new ConcurrentLinkedQueue<>();
                         ConcurrentLinkedQueue<IndexJob> jobsToUpdate  = new ConcurrentLinkedQueue<>();
@@ -209,8 +208,7 @@ public class IndexService implements Runnable {
                             long sequenceNr = indexWriter.commit();
                             log.info("Committed changes to Lucene index, sequenceNr: {} changeCounter: {}", sequenceNr, changeCounter.get());
                             changeCounter.set(0);
-                        }
-                        else {
+                        } else {
                             log.debug("no change to index");
                         }
 
@@ -265,7 +263,7 @@ public class IndexService implements Runnable {
         if (jobs.isEmpty()) {
             return;
         }
-        int             poolSize        = jobs.size();
+        int poolSize = jobs.size();
         try (ExecutorService executorService = Executors.newFixedThreadPool(Math.min(poolSize, config.getThreadPoolSize()))) {
             jobs.forEach(executorService::submit);
             executorService.shutdown();
@@ -304,8 +302,7 @@ public class IndexService implements Runnable {
         }
         Set<IndexKey> seen = new HashSet<>();
 
-        List<IndexJobWithDependencies> jobsToDo    = new ArrayList<>();
-        long                           metaSizeSum = 0L;
+        List<IndexJobWithDependencies> jobsToDo = new ArrayList<>();
         try (SqlSession sqlSession = ThreadLocalSqlSession.getNewSession(TransactionIsolationLevel.READ_COMMITTED)) {
             OsdDao        osdDao        = new OsdDao(sqlSession);
             FolderDao     folderDao     = new FolderDao(sqlSession);
@@ -315,18 +312,17 @@ public class IndexService implements Runnable {
             FolderMetaDao folderMetaDao = new FolderMetaDao(sqlSession);
 
             List<Long> osdsToLoad = jobs.stream().filter(job -> job.getJobType().equals(IndexJobType.OSD)).map(IndexJob::getItemId).toList();
-            log.info("Will load {} osds to index.", osdsToLoad.size());
+            log.info("Will load {} osds to index: {}", osdsToLoad.size(), osdsToLoad);
             Map<Long, ObjectSystemData> osds = osdDao.getObjectsById(osdsToLoad, true)
                     .stream().collect(Collectors.toMap(ObjectSystemData::getId, Function.identity()));
             List<Long> foldersToLoad = jobs.stream().filter(job -> job.getJobType().equals(IndexJobType.FOLDER)).map(IndexJob::getItemId).toList();
-            log.info("Will load {} folders to index.", foldersToLoad.size());
+            log.info("Will load {} folders to index: {}", foldersToLoad.size(), foldersToLoad);
             Map<Long, Folder> folders = folderDao.getObjectsById(foldersToLoad)
                     .stream().collect(Collectors.toMap(Folder::getId, Function.identity()));
             Set<Long> folderIds = folders.values().stream().map(folder -> {
                 if (folder.getParentId() == null) {
                     return folder.getId();
-                }
-                else {
+                } else {
                     return folder.getParentId();
                 }
             }).collect(Collectors.toSet());
@@ -340,6 +336,7 @@ public class IndexService implements Runnable {
                 osdMetas.put(meta.getObjectId(), metas);
             }
 
+            long metaSizeSum = 0L;
             for (IndexJob indexJob : jobs) {
                 IndexKey indexKey = new IndexKey(indexJob.getJobType(), indexJob.getItemId(), indexJob.getAction());
                 if (seen.add(indexKey)) {
@@ -378,13 +375,9 @@ public class IndexService implements Runnable {
                         for (Meta meta : metas) {
                             metaSizeSum += meta.getContent().length();
                         }
+                        warnIfMetasetSizeTooLarge(metaSizeSum, config.getMaxCombinedMetasetSize());
                         osd.setMetas(metas);
-                        if (metaSizeSum > config.getMaxCombinedMetasetSize()) {
-                            log.info("Reached maxCombinedMetasetSize of {}, will skip some elements and take them on next time.", config.getMaxCombinedMetasetSize());
-                            break;
-                        }
-                    }
-                    else {
+                    } else {
                         // Folder:
                         Folder folder = folders.get(indexJob.getItemId());
                         if (folder == null) {
@@ -402,20 +395,27 @@ public class IndexService implements Runnable {
                         for (Meta meta : metas) {
                             metaSizeSum += meta.getContent().length();
                         }
+                        warnIfMetasetSizeTooLarge(metaSizeSum, config.getMaxCombinedMetasetSize());
                         folder.setMetas(metas);
-                        if (metaSizeSum > config.getMaxCombinedMetasetSize()) {
-                            log.info("Reached maxCombinedMetasetSize of {}, will skip some elements and take them on next time.", config.getMaxCombinedMetasetSize());
-                            break;
-                        }
                     }
                     jobsToDo.add(indexJobWithDependencies);
-                }
-                else {
+                    if (metaSizeSum > config.getMaxCombinedMetasetSize()) {
+                        log.info("Reached maxCombinedMetasetSize of {}, will skip some elements and take them on next time.", config.getMaxCombinedMetasetSize());
+                        break;
+                    }
+                } else {
                     jobsToDelete.add(indexJob);
                 }
             }
         }
+        log.info("Found jobs: {} ", jobsToDo.stream().map(job -> job.getIndexKey().toString()).toList());
         return jobsToDo;
+    }
+
+    private void warnIfMetasetSizeTooLarge(long metaSizeSum, Long maxSize) {
+        if(metaSizeSum > maxSize) {
+            log.warn("Went over combined metaset max size. Trying to index total of {} characters.", metaSizeSum);
+        }
     }
 
     private IndexEvent handleIndexItem(IndexJobWithDependencies jobWithDependencies, IndexKey key, List<IndexItem> indexItems, IndexWriter indexWriter) throws IOException {
@@ -540,7 +540,8 @@ public class IndexService implements Runnable {
                     switch (format.getIndexMode()) {
                         case XML -> content = contentStream.readAllBytes();
                         case JSON -> content = convertJsonToXml(contentStream);
-                        case PLAIN_TEXT -> content = ("<plainText>" + new String(contentStream.readAllBytes(), StandardCharsets.UTF_8) + "</plainText>").getBytes();
+                        case PLAIN_TEXT ->
+                                content = ("<plainText>" + new String(contentStream.readAllBytes(), StandardCharsets.UTF_8) + "</plainText>").getBytes();
                     }
                 } catch (IOException e) {
                     throw new CinnamonException("Failed to load content for OSD " + osd.getId() + " at " + osd.getContentPath(), e);
@@ -574,8 +575,7 @@ public class IndexService implements Runnable {
             if (xmlDoc.valueOf(indexItem.getSearchCondition()).equals("true")) {
                 indexItem.getIndexType().getIndexer()
                         .indexObject(xmlDoc, contentContainer.asNode(), luceneDoc, fieldName, searchString, indexItem.isMultipleResults());
-            }
-            else {
+            } else {
                 log.debug("searchCondition failed: {}", indexItem.getSearchCondition());
             }
         }
