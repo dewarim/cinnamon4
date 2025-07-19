@@ -28,6 +28,14 @@ public class OsdMetaDao implements CrudDao<Meta>, MetaDao {
         return sqlSession.selectList("com.dewarim.cinnamon.model.OsdMeta.listByOsd", id);
     }
 
+    /**
+     * When we want to update the content anyway, we do not need to load the potentially 100+ MByte of content.
+     */
+    public List<Meta> listWithoutContentByOsd(long id) {
+        SqlSession sqlSession = getSqlSession();
+        return sqlSession.selectList("com.dewarim.cinnamon.model.OsdMeta.listWithoutContentByOsd", id);
+    }
+
     public Optional<Meta> getMetaById(Long metaId) {
         SqlSession sqlSession = getSqlSession();
         return Optional.ofNullable(sqlSession.selectOne("com.dewarim.cinnamon.model.OsdMeta.getMetasetById", metaId));

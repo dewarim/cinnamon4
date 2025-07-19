@@ -12,21 +12,20 @@ import com.dewarim.cinnamon.model.index.IndexJobType;
 import com.dewarim.cinnamon.provider.ContentProviderService;
 import dev.failsafe.Failsafe;
 import dev.failsafe.RetryPolicy;
-import org.apache.commons.io.FileUtils;
 import org.apache.hc.client5.http.classic.methods.HttpPut;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.core5.http.ContentType;
-import org.apache.hc.core5.http.io.entity.FileEntity;
+import org.apache.hc.core5.http.io.entity.InputStreamEntity;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.TransactionIsolationLevel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.File;
-import java.io.FileOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.util.HashMap;
@@ -46,9 +45,9 @@ public class TikaService implements Runnable {
     private final ContentProviderService contentProviderService;
 
     public TikaService(CinnamonTikaConfig config, ContentProviderService contentProviderService) {
-        this.config                 = config;
+        this.config = config;
         this.contentProviderService = contentProviderService;
-        retryPolicy                 = RetryPolicy.<String>builder()
+        retryPolicy = RetryPolicy.<String>builder()
                 .handle(IOException.class)
                 .withBackoff(Duration.ofSeconds(1L), Duration.ofSeconds(10L))
                 .build();
@@ -61,8 +60,8 @@ public class TikaService implements Runnable {
                 Optional<MetasetType> tikaMetasetType = new MetasetTypeDao(sqlSession).list().stream().filter(metasetType -> metasetType.getName().equals(TIKA_METASET_NAME)).findFirst();
                 if (tikaMetasetType.isPresent()) {
                     tikaMetasetTypeId = tikaMetasetType.get().getId();
-                }
-                else {
+                    log.info("Found tika metaset: {}", tikaMetasetTypeId);
+                } else {
                     String msg = "Could not find tika metaset type - this is a configuration error, contact your administrator.";
                     log.error(msg);
                     throw new CinnamonException(msg);
@@ -90,7 +89,10 @@ public class TikaService implements Runnable {
                     formats.put(formatId, format);
                 }
             }
-            if(osds.size() == config.getTikaBatchSize()) {
+            if (!osds.isEmpty()) {
+                log.info("TikaService found {} OSDs that need Tika metaset: {}", osds.size(), osds.stream().map(ObjectSystemData::getId).toList());
+            }
+            if (osds.size() == config.getTikaBatchSize()) {
                 // if we got a full batch, do another without waiting.
                 tikaPauseInMillis = 0L;
             }
@@ -108,72 +110,73 @@ public class TikaService implements Runnable {
                 log.error("Failed to parse tika data", e);
             }
 
-            try{
-                if(tikaPauseInMillis > 0) {
+            try {
+                if (tikaPauseInMillis > 0) {
                     Thread.sleep(tikaPauseInMillis);
                 }
-            }
-            catch (InterruptedException e) {
+            } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
         }
 
     }
 
-    public String parseData(File input, Format format, Long osdId) throws IOException {
-        if (input.length() == 0) {
-            log.debug("Tika was given a file without content.");
-            return "<empty/>";
-        }
+    public String parseData(InputStream input, Long contentLength, Format format, Long osdId) throws IOException {
         if (!config.isUseTika()) {
             return "<tikaIsDisabled/>";
         }
         try (final CloseableHttpClient httpclient = HttpClients.createDefault()) {
             final HttpPut httpPut = new HttpPut(config.getBaseUrl() + "/tika");
-            httpPut.setEntity(new FileEntity(input, ContentType.parseLenient(format.getContentType())));
+            httpPut.setEntity(new InputStreamEntity(input, contentLength, ContentType.parseLenient(format.getContentType())));
             return httpclient.execute(httpPut, response -> {
                 if (response.getCode() != HTTP_OK) {
                     log.info("Failed to parse tika file of OSD {}: {}", osdId, response.getCode());
                     // TODO: improve error handling & reporting of tikaService.
                     return "<tikaFailedToParse/>";
                 }
-                return new String(response.getEntity().getContent().readAllBytes());
+
+                // looking for extremely large responses that lead to OOM:
+                // (goal is to have logging for those objects so we can see how much RAM to add...)
+                InputStream responseStream = response.getEntity().getContent();
+                byte[] buffer = new byte[10*1024*1024];  // 10 MByte buffer
+                int                   bytesRead;
+                long totalBytes = 0;
+                ByteArrayOutputStream output = new ByteArrayOutputStream();
+                while ((bytesRead = responseStream.read(buffer)) != -1) {
+                    output.write(buffer, 0, bytesRead);
+                    totalBytes += bytesRead;
+                    log.debug("Read {} bytes tika response for OSD {}", totalBytes, osdId);
+                }
+                return output.toString(StandardCharsets.UTF_8);
             });
         } catch (IOException e) {
             log.error("Failed to parse tika file of OSD {}: {}; re-try with backoff policy", osdId, e.getMessage());
             throw e;
         }
-
     }
 
     public boolean isEnabled() {
         return config.isUseTika();
     }
 
-    public String parseWithTika(InputStream contentStream, Format format, Long osdId) throws IOException {
+    public String parseWithTika(InputStream contentStream, Long contentLength, Format format, Long osdId) {
         // if the content comes from the file system anyway, this is some overhead.
         // if (some day) it comes from an API, the retry mechanism is easier when using a file
         // instead of an inputStream that may have been closed / cannot be reset().
-        File tempData = File.createTempFile("tika-indexing-", ".data");
-        try (FileOutputStream tempFos = new FileOutputStream(tempData)) {
-            tempFos.write(contentStream.readAllBytes());
-            tempFos.flush();
-            return Failsafe.with(retryPolicy).get(() ->  parseData(tempData, format, osdId));
-        } finally {
-            FileUtils.delete(tempData);
-        }
+        return Failsafe.with(retryPolicy).get(() -> parseData(contentStream, contentLength, format, osdId));
     }
 
     public void convertContentToTikaMetaset(ObjectSystemData osd, InputStream contentStream, Format format) throws
             IOException {
-        if (isEnabled() && tikaMetasetTypeId != null && format.getIndexMode() == IndexMode.TIKA) {
+        if (isEnabled() && tikaMetasetTypeId != null && format.getIndexMode() == IndexMode.TIKA && osd.getContentSize() > 0) {
             log.debug("Parse OSD #{} with Tika", osd.getId());
-            String tikaMetadata = parseWithTika(contentStream, format, osd.getId());
-            tikaMetadata = tikaMetadata.replace(" xmlns=\"http://www.w3.org/1999/xhtml\"","");
+            String tikaMetadata = parseWithTika(contentStream, osd.getContentSize(), format, osd.getId());
+            tikaMetadata = tikaMetadata.replace(" xmlns=\"http://www.w3.org/1999/xhtml\"", "");
             log.trace("Tika returned: {}", tikaMetadata);
             try (SqlSession sqlSession = ThreadLocalSqlSession.getNewSession(TransactionIsolationLevel.READ_COMMITTED)) {
+                // TODO: do not load existing tikaMetaset (memory consumption)
                 OsdMetaDao     osdMetaDao  = new OsdMetaDao(sqlSession);
-                Optional<Meta> tikaMetaset = osdMetaDao.listByOsd(osd.getId()).stream().filter(meta -> meta.getTypeId().equals(tikaMetasetTypeId)).findFirst();
+                Optional<Meta> tikaMetaset = osdMetaDao.listWithoutContentByOsd(osd.getId()).stream().filter(meta -> meta.getTypeId().equals(tikaMetasetTypeId)).findFirst();
                 if (tikaMetaset.isPresent()) {
                     Meta tikaMeta = tikaMetaset.get();
                     tikaMeta.setContent(tikaMetadata);
@@ -182,13 +185,11 @@ public class TikaService implements Runnable {
                     } catch (SQLException e) {
                         throw new CinnamonException("Failed to update tika metaset:", e);
                     }
-                }
-                else {
+                } else {
                     Meta       tikaMeta = new Meta(osd.getId(), tikaMetasetTypeId, tikaMetadata);
-                    List<Meta> metas    = osdMetaDao.create(List.of(tikaMeta));
-                    log.info("tikaMeta: {}", metas.getFirst());
+                    osdMetaDao.create(List.of(tikaMeta));
                 }
-                IndexJobDao  indexJobDao = new IndexJobDao(sqlSession);
+                IndexJobDao indexJobDao = new IndexJobDao(sqlSession);
                 indexJobDao.insertIndexJob(new IndexJob(IndexJobType.OSD, osd.getId(), IndexJobAction.UPDATE));
                 sqlSession.commit();
             }

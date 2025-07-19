@@ -19,6 +19,13 @@
         ORDER BY id
     </select>
 
+    <select id="listWithoutContentByOsd" parameterType="long" resultMap="osdMetaMap">
+        SELECT id, osd_id, type_id,null as content
+        FROM osd_meta
+        WHERE osd_id = #{id}
+        ORDER BY id
+    </select>
+
     <select id="listByOsds" parameterType="list" resultMap="osdMetaMap">
         SELECT *
         FROM osd_meta

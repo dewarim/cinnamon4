@@ -116,26 +116,32 @@ public class IndexService implements Runnable {
                             IndexKey    indexKey = jobWithDeps.getIndexKey();
                             IndexJob    job      = jobWithDeps.getIndexJob();
                             IndexResult indexResult;
-                            switch (job.getAction()) {
-                                case DELETE -> {
-                                    IndexEvent event = IndexService.this.deleteFromIndex(indexKey, job, indexWriter);
-                                    logEvent(indexEvents, event);
-                                    indexResult = event.getIndexResult();
-                                }
-                                case CREATE, UPDATE -> {
-                                    try {
-                                        IndexEvent indexEvent = IndexService.this.handleIndexItem(jobWithDeps, indexKey, indexItems, indexWriter);
-                                        logEvent(indexEvents, indexEvent);
-                                        indexResult = indexEvent.getIndexResult();
-                                    } catch (Exception e) {
-                                        log.error("Failed to handle IndexItem: {}", indexKey, e);
-                                        IndexEvent indexEvent = new IndexEvent(job.getId(), IndexEventType.LUCENE, IndexResult.ERROR, e.getMessage());
-                                        logEvent(indexEvents, indexEvent);
-                                        indexResult = IndexResult.ERROR;
+                            try {
+                                switch (job.getAction()) {
+                                    case DELETE -> {
+                                        IndexEvent event = IndexService.this.deleteFromIndex(indexKey, job, indexWriter);
+                                        logEvent(indexEvents, event);
+                                        indexResult = event.getIndexResult();
                                     }
+                                    case CREATE, UPDATE -> {
+                                        try {
+                                            IndexEvent indexEvent = IndexService.this.handleIndexItem(jobWithDeps, indexKey, indexItems, indexWriter);
+                                            logEvent(indexEvents, indexEvent);
+                                            indexResult = indexEvent.getIndexResult();
+                                        } catch (Exception e) {
+                                            log.error("Failed to handle IndexItem: {}", indexKey, e);
+                                            IndexEvent indexEvent = new IndexEvent(job.getId(), IndexEventType.LUCENE, IndexResult.ERROR, e.getMessage());
+                                            logEvent(indexEvents, indexEvent);
+                                            indexResult = IndexResult.ERROR;
+                                        }
+                                    }
+                                    // should never happen, all enum fields are covered:
+                                    default -> indexResult = IndexResult.IGNORE;
                                 }
-                                // should never happen, all enum fields are covered:
-                                default -> indexResult = IndexResult.IGNORE;
+                            }
+                            catch (Exception e){
+                                log.error("Failed to handle IndexItem: {}", indexKey, e);
+                                throw new CinnamonException("Failed during indexing",e);
                             }
 
                             switch (indexResult) {
