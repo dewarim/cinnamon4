@@ -11,16 +11,16 @@ import org.dom4j.io.SAXReader;
 import org.dom4j.io.XMLWriter;
 import org.xml.sax.SAXException;
 
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 // copied from Cinnamon 3
 public class ParamParser {
     private static final Logger log = LogManager.getLogger(ParamParser.class);
-
 
     private static final Pattern DOCTYPE_OR_ENTITY_PATTERN = Pattern.compile(ElementNameIndexer.DOCTYPE_ENTITY);
 
@@ -32,8 +32,8 @@ public class ParamParser {
         return parseXmlToDocument(DOCTYPE_OR_ENTITY_PATTERN.matcher(xml).replaceAll(""), null);
     }
 
-    public static final Pattern bomReplacer           = Pattern.compile("^(?:\\xEF\\xBB\\xBF|\uFEFF)");
-    public static final Pattern tikaBadEntityReplacer = Pattern.compile("&#0;");
+    public static final Pattern bomReplacer  = Pattern.compile("^(?:\\xEF\\xBB\\xBF|\uFEFF)");
+    public static final String  UNICODE_ZERO = "&#0;";
 
     public static Document parseXmlToDocument(String xmlDocument, String message) {
         String xml = xmlDocument;
@@ -43,9 +43,17 @@ public class ParamParser {
         try {
             // remove BOM on UTF-8 Strings.
             Matcher matcher = bomReplacer.matcher(xml);
-            xml = matcher.replaceAll("");
-            Matcher tikaMatcher = tikaBadEntityReplacer.matcher(xml);
-            xml = tikaMatcher.replaceAll(" ");
+            xml = matcher.replaceFirst("");
+
+            // very large document handling:
+            if(xml.length() > 10_000_000){
+                xml = stripWhitespace(xml);
+            }
+
+            // TikaService now replaces bad entity, keep it for now :
+            if (xml.contains(UNICODE_ZERO)) {
+                xml = xml.replace(UNICODE_ZERO, "");
+            }
             SAXReader reader = new SAXReader();
             // ignore dtd-declarations, do not load external entities
             reader.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
@@ -54,18 +62,31 @@ public class ParamParser {
             reader.setIncludeExternalDTDDeclarations(false);
             // do not validate - we are only interested in receiving a doc.
             reader.setValidation(false);
-//            reader.setMergeAdjacentText(true);
-//            reader.setStripWhitespaceText(true);
-//            reader.setStringInternEnabled(true);
             return reader.read(new StringReader(xml));
-        } catch (DocumentException | SAXException e) {
-            log.debug("ParamParser::DocumentException::for content {}", e, xml);
+        } catch (IOException|DocumentException | SAXException e) {
+            log.debug("ParamParser::DocumentException::", e);
             throw new RuntimeException(message);
         }
     }
 
-    public static String dateToIsoString(Date date) {
-        return String.format("%1$tFT%1$tT", date);
+    private static String stripWhitespace(String xml) throws IOException {
+        BufferedReader bis = new BufferedReader(new StringReader(xml));
+        StringBuilder builder = new StringBuilder();
+        String line;
+        int whitespaceCount = 0;
+        while((line = bis.readLine()) != null){
+            String trimmedLine = line.trim();
+            if(trimmedLine.length() < line.length()){
+                whitespaceCount += line.length() - trimmedLine.length();
+                builder.append(trimmedLine);
+            }
+            else{
+                builder.append(trimmedLine);
+            }
+            builder.append("\n");
+        }
+        log.debug("removed {} whitespace characters, {} remain", whitespaceCount, builder.length());
+        return builder.toString();
     }
 
     // Could be placed in a more specific XML class.

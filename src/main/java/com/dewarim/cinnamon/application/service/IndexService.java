@@ -558,6 +558,10 @@ public class IndexService implements Runnable {
             log.warn("Indexing failed for OSD #{}", job.getOsd().getId(), e);
             return new IndexEvent(job.getIndexJob().getId(), IndexEventType.GENERIC, IndexResult.FAILED, e.getMessage());
         }
+        catch (Throwable e) {
+            log.error("Critical Error with {}", job.getIndexKey(),e);
+            return new IndexEvent(job.getIndexJob().getId(), IndexEventType.GENERIC, IndexResult.FAILED, e.getMessage());
+        }
         return SUCCESS_EVENT;
     }
 

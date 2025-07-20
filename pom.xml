@@ -7,7 +7,7 @@
     <groupId>com.dewarim.cinnamon</groupId>
     <artifactId>cinnamon-cms</artifactId>
     <packaging>jar</packaging>
-    <version>1.8.2</version>
+    <version>1.8.3</version>
     <name>Cinnamon CMS</name>
 
     <properties>
@@ -475,6 +475,30 @@
                     </items>
                 </configuration>
             </plugin>
+<!--            <plugin>-->
+<!--                <artifactId>maven-resources-plugin</artifactId>-->
+<!--                <version>3.3.1</version>-->
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        <id>copy-custom-jars</id>-->
+<!--                        <phase>process-resources</phase>-->
+<!--                        <goals>-->
+<!--                            <goal>copy-resources</goal>-->
+<!--                        </goals>-->
+<!--                        <configuration>-->
+<!--                            <outputDirectory>${project.build.directory}/lib</outputDirectory>-->
+<!--                            <resources>-->
+<!--                                <resource>-->
+<!--                                    <directory>${basedir}/lib</directory>-->
+<!--                                    <includes>-->
+<!--                                        <include>*.jar</include>-->
+<!--                                    </includes>-->
+<!--                                </resource>-->
+<!--                            </resources>-->
+<!--                        </configuration>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+<!--            </plugin>-->
         </plugins>
     </build>
     <repositories>

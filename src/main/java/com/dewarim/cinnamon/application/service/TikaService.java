@@ -22,10 +22,10 @@ import org.apache.ibatis.session.TransactionIsolationLevel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.ByteArrayOutputStream;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
+import java.io.InputStreamReader;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.util.HashMap;
@@ -138,22 +138,43 @@ public class TikaService implements Runnable {
                 // looking for extremely large responses that lead to OOM:
                 // (goal is to have logging for those objects so we can see how much RAM to add...)
                 InputStream responseStream = response.getEntity().getContent();
-                byte[] buffer = new byte[10*1024*1024];  // 10 MByte buffer
-                int                   bytesRead;
-                long totalBytes = 0;
-                ByteArrayOutputStream output = new ByteArrayOutputStream();
-                while ((bytesRead = responseStream.read(buffer)) != -1) {
-                    output.write(buffer, 0, bytesRead);
-                    totalBytes += bytesRead;
-                    log.debug("Read {} bytes tika response for OSD {}", totalBytes, osdId);
+                try(BufferedReader bis = new BufferedReader(new InputStreamReader(responseStream),65536)){
+                    return stripWhitespace(bis);
                 }
-                return output.toString(StandardCharsets.UTF_8);
+                catch (Throwable e) {
+                    log.error("Failed to parse tika response for OSD {}", osdId, e);
+                    return "<tikaFailedToParse>" + e.getMessage() + "</tikaFailedToParse>";
+                }
             });
         } catch (IOException e) {
             log.error("Failed to parse tika file of OSD {}: {}; re-try with backoff policy", osdId, e.getMessage());
             throw e;
         }
     }
+
+    private static String stripWhitespace(BufferedReader bis) throws IOException {
+        StringBuilder builder = new StringBuilder();
+        String line;
+        int whitespaceCount = 0;
+        while((line = bis.readLine()) != null){
+            // Tika likes to add an illegal character:
+            if(line.contains("&#0;")){
+                line = line.replace("&#0;", "");
+            }
+            String trimmedLine = line.trim();
+            if(trimmedLine.length() < line.length()){
+                whitespaceCount += line.length() - trimmedLine.length();
+                builder.append(trimmedLine);
+            }
+            else{
+                builder.append(trimmedLine);
+            }
+            builder.append("\n");
+        }
+        log.debug("removed {} whitespace characters, {} remain", whitespaceCount, builder.length());
+        return builder.toString();
+    }
+
 
     public boolean isEnabled() {
         return config.isUseTika();
@@ -186,7 +207,7 @@ public class TikaService implements Runnable {
                         throw new CinnamonException("Failed to update tika metaset:", e);
                     }
                 } else {
-                    Meta       tikaMeta = new Meta(osd.getId(), tikaMetasetTypeId, tikaMetadata);
+                    Meta tikaMeta = new Meta(osd.getId(), tikaMetasetTypeId, tikaMetadata);
                     osdMetaDao.create(List.of(tikaMeta));
                 }
                 IndexJobDao indexJobDao = new IndexJobDao(sqlSession);
