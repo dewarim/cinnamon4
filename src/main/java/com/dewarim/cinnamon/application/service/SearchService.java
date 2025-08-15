@@ -11,6 +11,8 @@ import com.dewarim.cinnamon.dao.FolderDao;
 import com.dewarim.cinnamon.dao.IndexJobDao;
 import com.dewarim.cinnamon.dao.OsdDao;
 import com.dewarim.cinnamon.model.UserAccount;
+import com.dewarim.cinnamon.model.index.IndexJob;
+import com.dewarim.cinnamon.model.index.IndexJobAction;
 import com.dewarim.cinnamon.model.index.IndexJobType;
 import com.dewarim.cinnamon.model.index.SearchResult;
 import com.dewarim.cinnamon.model.request.search.SearchType;
@@ -48,7 +50,6 @@ public class SearchService {
     private static final Logger log = LogManager.getLogger(SearchService.class);
 
     private final LuceneConfig            config;
-    private final Directory               directory;
     private       DirectoryReader         indexReader;
     private final SearcherManager         searcherManager;
     private final LimitTokenCountAnalyzer limitTokenCountAnalyzer;
@@ -61,7 +62,7 @@ public class SearchService {
             Thread.sleep(1000);
         }
         IndexSearcher.setMaxClauseCount(10000);
-        directory = FSDirectory.open(Path.of(config.getIndexPath()));
+        Directory directory = FSDirectory.open(Path.of(config.getIndexPath()));
         indexReader = DirectoryReader.open(directory);
         searcherManager = new SearcherManager(indexReader, new SearcherFactory());
         searcherManager.maybeRefresh();
@@ -135,7 +136,13 @@ public class SearchService {
                 if (knownOsdIds.size() != luceneOsdIds.size()) {
                     log.warn("Lucene result list contains {} unknown OSD ids", luceneOsdIds.size() - knownOsdIds.size());
                     luceneOsdIds.removeAll(knownOsdIds);
-                    log.warn("Unknown OSD ids: {}", luceneOsdIds);
+                    log.warn("Unknown OSD ids: {} - will enqueue them for removal from index.", luceneOsdIds);
+                    // enqueue delete-index jobs for unknown OSD ids found in Lucene
+                    IndexJobDao indexJobDao = new IndexJobDao();
+                    for (Long unknownOsdId : luceneOsdIds) {
+                        IndexJob deleteJob = new IndexJob(IndexJobType.OSD, unknownOsdId, IndexJobAction.DELETE);
+                        indexJobDao.insertIndexJob(deleteJob);
+                    }
                 }
                 FolderDao folderDao       = new FolderDao();
                 Set<Long> luceneFolderIds = new HashSet<>(folderIds);
@@ -143,7 +150,12 @@ public class SearchService {
                 if (knownFolderIds.size() != folderIds.size()) {
                     log.warn("Lucene result list contains {} unknown Folder ids", luceneFolderIds.size() - knownFolderIds.size());
                     luceneFolderIds.removeAll(knownFolderIds);
-                    log.warn("Unknown Folder ids: {}", luceneFolderIds);
+                    log.warn("Unknown Folder ids: {} - will enqueue them for removal from index.", luceneFolderIds);
+                    IndexJobDao indexJobDao = new IndexJobDao();
+                    for (Long unknownOsdId : luceneOsdIds) {
+                        IndexJob deleteJob = new IndexJob(IndexJobType.FOLDER, unknownOsdId, IndexJobAction.DELETE);
+                        indexJobDao.insertIndexJob(deleteJob);
+                    }
                 }
                 return new SearchResult(new ArrayList<>(knownOsdIds), new ArrayList<>(knownFolderIds));
             }
