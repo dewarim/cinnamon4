@@ -227,6 +227,7 @@ public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
         var right1 = toh.createOsd("right or 1").osd;
         var right2 = toh.createOsd("right or 2").osd;
 
+
         var relationType1 = adminClient.createRelationType(new RelationType("or-mode-test-1", false, false, false, false, false, false));
         var relationType2 = adminClient.createRelationType(new RelationType("or-mode-test-2", false, false, false, false, false, false));
         var relation1 = client.createRelation(left1.getId(), right1.getId(), relationType1.getId(), "<meta/>");
@@ -238,11 +239,12 @@ public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
         assertTrue(searchResult.contains(relation1));
         assertTrue(searchResult.contains(relation2));
 
-        // should find relation1 based on leftId + relation2 based on typeId
+        // should not find anything: left1 has no relationType2
         List<Relation> searchResult2 = client.searchRelations(List.of(left1.getId()), null, List.of(relationType2.getId()), true, true);
-        assertEquals(2, searchResult2.size());
-        assertTrue(searchResult2.contains(relation1));
-        assertTrue(searchResult2.contains(relation2));
+        assertEquals(0, searchResult2.size());
+        List<Relation> searchResult3 = client.searchRelations(null, null, List.of(relationType2.getId()), true, true);
+        assertEquals(1, searchResult3.size());
+        assertTrue(searchResult3.contains(relation2));
     }
 
     @Test
