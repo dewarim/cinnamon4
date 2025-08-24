@@ -1105,6 +1105,7 @@ Create a new folder.
       <typeId>4</typeId>
       <metadataChanged>false</metadataChanged>
       <summary>&lt;summary>&lt;description>contains images&lt;/description>&lt;/summary></summary>
+      <folderPath/>
       <hasSubfolders>false</hasSubfolders>
       <created>2022-08-10T01:21:00+0000</created>
       <metasets/>
@@ -1118,6 +1119,7 @@ Create a new folder.
       <typeId>2</typeId>
       <metadataChanged>false</metadataChanged>
       <summary>&lt;summary/></summary>
+      <folderPath/>
       <hasSubfolders>false</hasSubfolders>
       <created>2022-08-10T01:21:00+0000</created>
       <metasets/>
@@ -1331,6 +1333,7 @@ Fetch a single folder
       <typeId>5</typeId>
       <metadataChanged>false</metadataChanged>
       <summary>&lt;summary></summary>
+      <folderPath/>
       <hasSubfolders>false</hasSubfolders>
       <created>2022-08-10T01:21:00+0000</created>
       <metasets/>
@@ -1359,8 +1362,9 @@ Fetch a single folder
       <typeId>23</typeId>
       <metadataChanged>false</metadataChanged>
       <summary>&lt;summary/></summary>
+      <folderPath/>
       <hasSubfolders>false</hasSubfolders>
-      <created>2025-07-12T15:48:58+0000</created>
+      <created>2025-08-24T13:01:56+0000</created>
       <metasets/>
     </reference>
   </references>
@@ -1379,6 +1383,7 @@ Fetch a single folder
 ```xml
 <folderRequest>
   <includeSummary>true</includeSummary>
+  <addFolderPath>true</addFolderPath>
   <ids>
     <id>1</id>
     <id>2</id>
@@ -1404,6 +1409,7 @@ Fetch a single folder
       <typeId>5</typeId>
       <metadataChanged>false</metadataChanged>
       <summary>&lt;summary></summary>
+      <folderPath/>
       <hasSubfolders>false</hasSubfolders>
       <created>2022-08-10T01:21:00+0000</created>
       <metasets/>
@@ -1432,8 +1438,9 @@ Fetch a single folder
       <typeId>23</typeId>
       <metadataChanged>false</metadataChanged>
       <summary>&lt;summary/></summary>
+      <folderPath/>
       <hasSubfolders>false</hasSubfolders>
-      <created>2025-07-12T15:48:58+0000</created>
+      <created>2025-08-24T13:01:56+0000</created>
       <metasets/>
     </reference>
   </references>
@@ -1473,6 +1480,7 @@ Fetch a folder specified by its complete path. The path parameter must not end w
       <typeId>5</typeId>
       <metadataChanged>false</metadataChanged>
       <summary>&lt;summary></summary>
+      <folderPath/>
       <hasSubfolders>false</hasSubfolders>
       <created>2022-08-10T01:21:00+0000</created>
       <metasets/>
@@ -1501,8 +1509,9 @@ Fetch a folder specified by its complete path. The path parameter must not end w
       <typeId>23</typeId>
       <metadataChanged>false</metadataChanged>
       <summary>&lt;summary/></summary>
+      <folderPath/>
       <hasSubfolders>false</hasSubfolders>
-      <created>2025-07-12T15:48:58+0000</created>
+      <created>2025-08-24T13:01:56+0000</created>
       <metasets/>
     </reference>
   </references>
@@ -1543,6 +1552,7 @@ Fetch a folder specified by its relative path. The relative path must not start 
       <typeId>5</typeId>
       <metadataChanged>false</metadataChanged>
       <summary>&lt;summary></summary>
+      <folderPath/>
       <hasSubfolders>false</hasSubfolders>
       <created>2022-08-10T01:21:00+0000</created>
       <metasets/>
@@ -1571,8 +1581,9 @@ Fetch a folder specified by its relative path. The relative path must not start 
       <typeId>23</typeId>
       <metadataChanged>false</metadataChanged>
       <summary>&lt;summary/></summary>
+      <folderPath/>
       <hasSubfolders>false</hasSubfolders>
-      <created>2025-07-12T15:48:58+0000</created>
+      <created>2025-08-24T13:01:56+0000</created>
       <metasets/>
     </reference>
   </references>
@@ -1668,6 +1679,7 @@ Fetch a folder specified by its relative path. The relative path must not start 
       <typeId>5</typeId>
       <metadataChanged>false</metadataChanged>
       <summary>&lt;summary></summary>
+      <folderPath/>
       <hasSubfolders>false</hasSubfolders>
       <created>2022-08-10T01:21:00+0000</created>
       <metasets/>
@@ -1696,8 +1708,9 @@ Fetch a folder specified by its relative path. The relative path must not start 
       <typeId>23</typeId>
       <metadataChanged>false</metadataChanged>
       <summary>&lt;summary/></summary>
+      <folderPath/>
       <hasSubfolders>false</hasSubfolders>
-      <created>2025-07-12T15:48:58+0000</created>
+      <created>2025-08-24T13:01:56+0000</created>
       <metasets/>
     </reference>
   </references>
@@ -1796,6 +1809,7 @@ Add a summary to an object, for example a short description of this folder's con
       <typeId>4</typeId>
       <metadataChanged>false</metadataChanged>
       <summary>&lt;summary>update this&lt;/summary></summary>
+      <folderPath/>
       <hasSubfolders>false</hasSubfolders>
       <created>2022-08-10T01:21:00+0000</created>
       <metasets/>
@@ -3316,6 +3330,7 @@ Update lifecycles. Note: does not update lifecycle states
         <parentId>5</parentId>
         <formatId>23</formatId>
         <typeId>1</typeId>
+        <folderPath/>
         <latestHead>false</latestHead>
         <latestBranch>true</latestBranch>
         <contentChanged>false</contentChanged>
@@ -3349,6 +3364,7 @@ Update lifecycles. Note: does not update lifecycle states
         <typeId>5</typeId>
         <metadataChanged>false</metadataChanged>
         <summary>&lt;summary></summary>
+        <folderPath/>
         <hasSubfolders>false</hasSubfolders>
         <created>2022-08-10T01:21:00+0000</created>
         <metasets/>
@@ -3749,6 +3765,7 @@ Update lifecycles. Note: does not update lifecycle states
       <parentId>5</parentId>
       <formatId>23</formatId>
       <typeId>1</typeId>
+      <folderPath/>
       <latestHead>false</latestHead>
       <latestBranch>true</latestBranch>
       <contentChanged>false</contentChanged>
@@ -3915,6 +3932,7 @@ should contain data.
       <parentId>5</parentId>
       <formatId>23</formatId>
       <typeId>1</typeId>
+      <folderPath/>
       <latestHead>false</latestHead>
       <latestBranch>true</latestBranch>
       <contentChanged>false</contentChanged>
@@ -4148,6 +4166,7 @@ Returns an OSD's content according to it's format's content type.
       <parentId>5</parentId>
       <formatId>23</formatId>
       <typeId>1</typeId>
+      <folderPath/>
       <latestHead>false</latestHead>
       <latestBranch>true</latestBranch>
       <contentChanged>false</contentChanged>
@@ -4179,6 +4198,7 @@ Returns an OSD's content according to it's format's content type.
 <osdRequest>
   <includeSummary>true</includeSummary>
   <includeCustomMetadata>true</includeCustomMetadata>
+  <addFolderPath>true</addFolderPath>
   <ids>
     <id>45</id>
     <id>23</id>
@@ -4213,6 +4233,7 @@ Returns an OSD's content according to it's format's content type.
       <parentId>5</parentId>
       <formatId>23</formatId>
       <typeId>1</typeId>
+      <folderPath/>
       <latestHead>false</latestHead>
       <latestBranch>true</latestBranch>
       <contentChanged>false</contentChanged>
@@ -4461,6 +4482,7 @@ Add a summary to an object, for example a short description of the content.
       <parentId>2</parentId>
       <formatId/>
       <typeId>1</typeId>
+      <folderPath/>
       <latestHead>false</latestHead>
       <latestBranch>true</latestBranch>
       <contentChanged>false</contentChanged>
@@ -4499,6 +4521,7 @@ Add a summary to an object, for example a short description of the content.
       <parentId>2</parentId>
       <formatId/>
       <typeId>1</typeId>
+      <folderPath/>
       <latestHead>false</latestHead>
       <latestBranch>true</latestBranch>
       <contentChanged>false</contentChanged>
@@ -4618,6 +4641,7 @@ part "file", if the new version should contain data.
       <parentId>5</parentId>
       <formatId>23</formatId>
       <typeId>1</typeId>
+      <folderPath/>
       <latestHead>false</latestHead>
       <latestBranch>true</latestBranch>
       <contentChanged>false</contentChanged>

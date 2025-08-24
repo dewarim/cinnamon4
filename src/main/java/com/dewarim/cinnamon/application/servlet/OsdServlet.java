@@ -15,7 +15,6 @@ import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.application.exception.CinnamonException;
 import com.dewarim.cinnamon.application.service.DeleteOsdService;
 import com.dewarim.cinnamon.application.service.MetaService;
-import com.dewarim.cinnamon.application.service.TikaService;
 import com.dewarim.cinnamon.dao.*;
 import com.dewarim.cinnamon.model.*;
 import com.dewarim.cinnamon.model.links.Link;
@@ -65,7 +64,6 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
     private final        AuthorizationService   authorizationService = new AuthorizationService();
     private final        DeleteOsdService       deleteOsdService     = new DeleteOsdService();
     private static final Logger                 log                  = LogManager.getLogger(OsdServlet.class);
-    private              TikaService            tikaService;
     private              ContentProviderService contentProviderService;
     private              Long                   tikaMetasetTypeId;
 
@@ -112,8 +110,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
             Optional<MetasetType> tikaMetasetType = new MetasetTypeDao().list().stream().filter(metasetType -> metasetType.getName().equals(TIKA_METASET_NAME)).findFirst();
             if (tikaMetasetType.isPresent()) {
                 tikaMetasetTypeId = tikaMetasetType.get().getId();
-            }
-            else {
+            } else {
                 if (CinnamonServer.config.getCinnamonTikaConfig().isUseTika()) {
                     String msg = "Could not find tika metaset type - this is a configuration error, contact your administrator.";
                     log.error(msg);
@@ -165,7 +162,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                 var metaCopies = metas.stream()
                         .filter(meta -> copyTask.getMetasetTypeIds().contains(meta.getTypeId()))
                         .map(meta -> new Meta(targetId, meta.getTypeId(), meta.getContent()))
-                        .collect(Collectors.toList());
+                        .toList();
                 metasetDao.create(metaCopies);
                 if (user.isChangeTracking()) {
                     target.setMetadataChanged(true);
@@ -473,8 +470,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         if (createRequest.getLanguageId() != null) {
             languageId = new LanguageDao().getObjectById(createRequest.getLanguageId())
                     .orElseThrow(ErrorCode.LANGUAGE_NOT_FOUND.getException()).getId();
-        }
-        else {
+        } else {
             languageId = new LanguageDao().getLanguageByIsoCode(LANGUAGE_UNDETERMINED_ISO_CODE)
                     .orElseThrow(ErrorCode.DB_IS_MISSING_LANGUAGE_CODE.getException()).getId();
         }
@@ -547,8 +543,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         List<Meta> metaList;
         if (metaRequest.getTypeIds() != null) {
             metaList = new OsdMetaDao().getMetaByTypeIdsAndOsd(metaRequest.getTypeIds(), osdId);
-        }
-        else {
+        } else {
             metaList = new OsdMetaDao().listByOsd(osdId);
         }
 
@@ -586,8 +581,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                 if (lockHolder.equals(user.getId()) || isSuperuser) {
                     // trying to lock your own object: NOP
                     continue;
-                }
-                else {
+                } else {
                     errors.add(new CinnamonError(ErrorCode.OBJECT_LOCKED_BY_OTHER_USER.getCode(), osd.getId()));
                 }
             }
@@ -598,8 +592,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                 osdDao.updateOsd(osd, false);
             });
             response.responseIsGenericOkay();
-        }
-        else {
+        } else {
             throw new FailedRequestException(ErrorCode.LOCK_FAILED, errors);
         }
     }
@@ -635,8 +628,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                 osdDao.updateOsd(osd, false);
             });
             response.responseIsGenericOkay();
-        }
-        else {
+        } else {
             throw new FailedRequestException(UNLOCK_FAILED, errors);
         }
         response.responseIsGenericOkay();
@@ -858,8 +850,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                 }
                 osd.setMetadataChanged(update.isMetadataChanged());
                 changed = true;
-            }
-            else {
+            } else {
                 if (user.isChangeTracking()) {
                     osd.setMetadataChanged(true);
                 }
@@ -883,7 +874,6 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
             return;
         }
         osds.forEach(osd -> osd.setMetas(metaDao.listByOsd(osd.getId())));
-
     }
 
     private void getObjectsById(CinnamonRequest request, CinnamonResponse response, UserAccount user, OsdDao
@@ -900,10 +890,19 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         if (osdRequest.isIncludeCustomMetadata()) {
             checkPermissionAndAddCustomMetadata(filteredOsds, user);
         }
-
+        if (osdRequest.isAddFolderPath()) {
+            addFolderPaths(filteredOsds);
+        }
         OsdWrapper wrapper = new OsdWrapper();
         wrapper.setOsds(filteredOsds);
         response.setWrapper(wrapper);
+    }
+
+    private void addFolderPaths(List<ObjectSystemData> filteredOsds) {
+        FolderDao         folderDao   = new FolderDao();
+        Set<Long>         folderIds   = filteredOsds.stream().map(ObjectSystemData::getParentId).collect(Collectors.toSet());
+        Map<Long, String> folderPaths = folderDao.getFolderPaths(folderIds.stream().toList());
+        filteredOsds.forEach(osd -> osd.setFolderPath(folderPaths.get(osd.getParentId())));
     }
 
     private void getObjectsByFolderId(CinnamonRequest request, CinnamonResponse response, UserAccount
@@ -1037,8 +1036,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
             if (copyId == null) {
                 log.debug("lifecycleStateForCopy is not set on OSD {}", osd.getId());
                 osd.setLifecycleStateId(null);
-            }
-            else {
+            } else {
                 LifecycleState stateForCopy = stateDao.getLifecycleStateById(copyId)
                         .orElseThrow(LIFECYCLE_STATE_NOT_FOUND.getException());
                 State             stateImpl         = StateProviderService.getInstance().getStateProvider(stateForCopy.getStateClass()).getState();
@@ -1070,7 +1068,6 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
 
     @Override
     public void init() {
-        tikaService            = ((TikaService) getServletContext().getAttribute(TIKA_SERVICE));
         contentProviderService = (ContentProviderService) getServletContext().getAttribute(CONTENT_PROVIDER_SERVICE);
     }
 }

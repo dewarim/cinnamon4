@@ -40,12 +40,13 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject, Ownabl
     private Date created = new Date();
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssZ")
-    private Date modified = new Date();
-    private Long languageId;
-    private Long aclId;
-    private Long parentId;
-    private Long formatId;
-    private Long typeId;
+    private Date   modified = new Date();
+    private Long   languageId;
+    private Long   aclId;
+    private Long   parentId;
+    private Long   formatId;
+    private Long   typeId;
+    private String folderPath;
 
     @JacksonXmlElementWrapper(localName = "metasets")
     @JacksonXmlProperty(localName = "metaset")
@@ -81,13 +82,13 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject, Ownabl
     }
 
     public ObjectSystemData(Long id, String name, Long ownerId, Long languageId, Long aclId, Long parentId, Long typeId) {
-        this.id         = id;
-        this.name       = name;
-        this.ownerId    = ownerId;
+        this.id = id;
+        this.name = name;
+        this.ownerId = ownerId;
         this.languageId = languageId;
-        this.aclId      = aclId;
-        this.parentId   = parentId;
-        this.typeId     = typeId;
+        this.aclId = aclId;
+        this.parentId = parentId;
+        this.typeId = typeId;
     }
 
     /**
@@ -175,7 +176,7 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject, Ownabl
 
         public CmnVersion(String parentVersion, String lastSiblingOrDescendantVersion) {
             myPredecessorVersion = parentVersion;
-            descendantVersion    = Objects.requireNonNullElse(lastSiblingOrDescendantVersion, "");
+            descendantVersion = Objects.requireNonNullElse(lastSiblingOrDescendantVersion, "");
         }
 
         public void version() {
@@ -184,35 +185,31 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject, Ownabl
                 if (descendantVersion.isEmpty()) {
                     // case 1.a: no descendant, just grow the trunk:
                     myVersion = Long.parseLong(myPredecessorVersion) + 1;
-                    myBranch  = "";
-                }
-                else if (MAIN_BRANCH.matcher(descendantVersion).matches()) {
+                    myBranch = "";
+                } else if (MAIN_BRANCH.matcher(descendantVersion).matches()) {
                     // case 1.b: we have a descendant on trunk, so we create a new branch
                     /*
                      * Example:
                      * v1, v2, new branch based on v1 should be 1.1-1 (trunk . first branch - first version)
                      */
                     myVersion = 1;
-                    myBranch  = myPredecessorVersion + ".1";
-                }
-                else {
+                    myBranch = myPredecessorVersion + ".1";
+                } else {
                     // case 1c: we have at least 1 sibling branch
                     // -> create a new branch
                     myVersion = 1;
-                    myBranch  = increaseBranchNumber(descendantVersion);
+                    myBranch = increaseBranchNumber(descendantVersion);
                 }
-            }
-            else {
+            } else {
                 // case 2: we are on a branch
                 if (descendantVersion.isEmpty()) {
                     // case 2.a: we are on a branch but have no siblings: just increase version number
                     myVersion = increaseVersionNumber(myPredecessorVersion);
-                    myBranch  = extractBranch(myPredecessorVersion);
-                }
-                else {
+                    myBranch = extractBranch(myPredecessorVersion);
+                } else {
                     // case 2.b: we are on a branch and have a sibling: create a new branch
                     myVersion = 1;
-                    myBranch  = myPredecessorVersion + ".1";
+                    myBranch = myPredecessorVersion + ".1";
                 }
             }
         }
@@ -550,6 +547,9 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject, Ownabl
                 ", parentId=" + parentId +
                 ", formatId=" + formatId +
                 ", typeId=" + typeId +
+                ", folderPath='" + folderPath + '\'' +
+                ", metas=" + metas +
+                ", relations=" + relations +
                 ", latestHead=" + latestHead +
                 ", latestBranch=" + latestBranch +
                 ", contentChanged=" + contentChanged +
@@ -582,5 +582,13 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject, Ownabl
     @Override
     public void setMetadataChanged(boolean metadataChanged) {
         this.metadataChanged = metadataChanged;
+    }
+
+    public String getFolderPath() {
+        return folderPath;
+    }
+
+    public void setFolderPath(String folderPath) {
+        this.folderPath = folderPath;
     }
 }

@@ -29,14 +29,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.dewarim.cinnamon.DefaultPermission.SET_TYPE;
@@ -45,7 +40,6 @@ import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
 
 @WebServlet(name = "Folder", urlPatterns = "/")
 public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> {
-    private static final Logger log = LogManager.getLogger(FolderServlet.class);
 
     private final ObjectMapper         xmlMapper            = XML_MAPPER;
     private final AuthorizationService authorizationService = new AuthorizationService();
@@ -484,6 +478,13 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
         List<Folder> folders    = new AuthorizationService().filterFoldersByBrowsePermission(rawFolders, user);
         if (folders.isEmpty()) {
             throw ErrorCode.FOLDER_NOT_FOUND.exception();
+        }
+        if(folderRequest.isAddFolderPath()) {
+            List<Long> folderIds = folders.stream().map(Folder::getId).toList();
+            Map<Long, String> folderPaths = folderDao.getFolderPaths(folderIds);
+            for (Folder folder : folders) {
+                folder.setFolderPath(folderPaths.get(folder.getId()));
+            }
         }
         response.setWrapper(new FolderWrapper(folders));
     }

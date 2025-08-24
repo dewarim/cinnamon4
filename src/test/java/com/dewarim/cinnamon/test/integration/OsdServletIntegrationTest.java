@@ -113,9 +113,23 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         OsdRequest osdRequest = new OsdRequest();
         osdRequest.setIds(List.of(osdId));
         osdRequest.setIncludeSummary(false);
-        var                    response = sendAdminRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
+        var                    response = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
         List<ObjectSystemData> dataList = unwrapOsds(response, 1);
         assertTrue(dataList.stream().anyMatch(osd -> osd.getSummary().equals(new ObjectSystemData().getSummary())));
+    }
+
+    @Test
+    public void getObjectsByIdWithFolderPath() throws IOException {
+        TestObjectHolder toh = new TestObjectHolder(client, userId);
+        var        osdId      = toh.createOsd().osd.getId();
+        OsdRequest osdRequest = new OsdRequest();
+        osdRequest.setIds(List.of(osdId));
+        osdRequest.setAddFolderPath(true);
+        var                    response = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
+        List<ObjectSystemData> dataList = unwrapOsds(response, 1);
+        ObjectSystemData       osd    = dataList.getFirst();
+        Folder                 folder = client.getFolders(List.of(osd.getParentId()), false, true).getFirst();
+        assertEquals(osd.getFolderPath(), folder.getFolderPath());
     }
 
     @Test

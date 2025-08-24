@@ -17,6 +17,7 @@ public class OsdRequest implements ApiRequest<OsdRequest> {
 
     private boolean includeSummary;
     private boolean includeCustomMetadata;
+    private boolean addFolderPath;
 
     public OsdRequest() {
     }
@@ -55,6 +56,14 @@ public class OsdRequest implements ApiRequest<OsdRequest> {
         this.includeCustomMetadata = includeCustomMetadata;
     }
 
+    public boolean isAddFolderPath() {
+        return addFolderPath;
+    }
+
+    public void setAddFolderPath(boolean addFolderPath) {
+        this.addFolderPath = addFolderPath;
+    }
+
     @Override
     public String toString() {
         return "OsdRequest{" +
@@ -68,6 +77,8 @@ public class OsdRequest implements ApiRequest<OsdRequest> {
 
     @Override
     public List<ApiRequest<OsdRequest>> examples() {
-        return List.of(new OsdRequest(List.of(45L,23L,2L),true,true));
+        OsdRequest osdRequest = new OsdRequest(List.of(45L, 23L, 2L), true, true);
+        osdRequest.setAddFolderPath(true);
+        return List.of(osdRequest);
     }
 }
