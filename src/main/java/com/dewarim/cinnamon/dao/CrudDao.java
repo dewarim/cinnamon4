@@ -193,10 +193,23 @@ public interface CrudDao<T extends Identifiable> {
 
     /**
      * Check if all objects from a list of ids actually exist.
+     * Return a list of ids that do not exist.
      */
-    default boolean verifyAllObjectsFromSetExist(List<Long> ids) {
+    default List<Long> verifyAllObjectsFromSetExist(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return List.of();
+        }
         Set<Long> idSet = new HashSet<>(ids);
-        return getObjectsById(ids).size() == idSet.size();
+        List<T> foundObjects = getObjectsById(idSet);
+        Set<Long> foundIds = new HashSet<>();
+        for (T obj : foundObjects) {
+            if (obj != null && obj.getId() != null) {
+                foundIds.add(obj.getId());
+            }
+        }
+        return idSet.stream()
+                .filter(id -> !foundIds.contains(id))
+                .toList();
     }
 
     default boolean verifyExistence() {

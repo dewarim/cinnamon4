@@ -2,6 +2,7 @@ package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
+import com.dewarim.cinnamon.client.CinnamonClientException;
 import com.dewarim.cinnamon.model.relations.Relation;
 import com.dewarim.cinnamon.model.relations.RelationType;
 import com.dewarim.cinnamon.model.request.relation.CreateRelationRequest;
@@ -119,6 +120,13 @@ public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void createRelationWithUnknownRelationType() throws IOException {
         CreateRelationRequest createRequest = new CreateRelationRequest(1L, 1L, Long.MAX_VALUE, "<meta/>");
+        try {
+            client.createRelation(1L, 1L, Long.MAX_VALUE, "<meta/>");
+        }
+        catch (CinnamonClientException e) {
+            assertEquals(RELATION_TYPE_NOT_FOUND, e.getErrorCode());
+            assertEquals("Could not find the following relation types: " + Long.MAX_VALUE, e.getErrorWrapper().getErrors().getFirst().getMessage());
+        }
         sendStandardRequestAndAssertError(UrlMapping.RELATION__CREATE, createRequest, ErrorCode.RELATION_TYPE_NOT_FOUND);
     }
 
