@@ -5,15 +5,12 @@ import com.dewarim.cinnamon.model.AclGroup;
 import com.dewarim.cinnamon.model.Group;
 import org.apache.ibatis.session.SqlSession;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class AclGroupDao implements CrudDao<AclGroup> {
 
-    public List<AclGroup> getAclGroupsByGroupIdsAndAcl(List<Long> groupIds, long aclId) {
+    public List<AclGroup> getAclGroupsByGroupIdsAndAcl(Set<Long> groupIds, long aclId) {
         SqlSession sqlSession = getSqlSession();
         Map<String, Object> params = Map.of("groupIds", groupIds, "aclId", aclId);
         return sqlSession.selectList("com.dewarim.cinnamon.model.AclGroup.getAclGroupsByGroupIdsAndAcl", params);

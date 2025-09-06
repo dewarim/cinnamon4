@@ -109,4 +109,19 @@
         from groups_of_user;
     </select>
 
+    <select id="getGroupIdsWithAncestorsOfUserById" resultType="long">
+        with recursive groups_of_user(id, name, parent_id)
+                           as (select g.id, name, parent_id
+                               from groups g
+                               where g.id in (select gu.group_id from group_users gu where gu.user_id = #{userId})
+                               union all
+                               select child.id,
+                                      child.name,
+                                      child.parent_id
+                               from groups child
+                                        join groups_of_user gou on gou.parent_id = child.id)
+        select id
+        from groups_of_user;
+    </select>
+
 </mapper>

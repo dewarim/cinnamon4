@@ -39,8 +39,8 @@ public class GroupServlet extends HttpServlet implements CruddyServlet<Group> {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
         CinnamonResponse cinnamonResponse = (CinnamonResponse) response;
-        GroupDao groupDao = new GroupDao();
-        UserAccount user = ThreadLocalSqlSession.getCurrentUser();
+        GroupDao         groupDao         = new GroupDao();
+        UserAccount      user             = ThreadLocalSqlSession.getCurrentUser();
 
         UrlMapping mapping = UrlMapping.getByPath(request.getRequestURI());
         switch (mapping) {
@@ -49,7 +49,7 @@ public class GroupServlet extends HttpServlet implements CruddyServlet<Group> {
                 addUserToGroups(request, cinnamonResponse);
             }
             case GROUP__REMOVE_USER_FROM_GROUPS -> {
-                removeUserFromGroups(request, user, cinnamonResponse);
+                removeUserFromGroups(request, cinnamonResponse);
                 superuserCheck();
             }
             case GROUP__CREATE -> {
@@ -91,7 +91,7 @@ public class GroupServlet extends HttpServlet implements CruddyServlet<Group> {
         deleteByIds(ids, groupDao, ignoreNotFound);
     }
 
-    private void removeUserFromGroups(HttpServletRequest request, UserAccount user, CinnamonResponse cinnamonResponse) throws IOException {
+    private void removeUserFromGroups(HttpServletRequest request,CinnamonResponse cinnamonResponse) throws IOException {
         RemoveUserFromGroupsRequest removeRequest = getMapper().readValue(request.getInputStream(), RemoveUserFromGroupsRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         GroupUserDao groupUserDao = new GroupUserDao();

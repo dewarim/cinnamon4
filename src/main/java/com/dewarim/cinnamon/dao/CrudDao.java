@@ -54,7 +54,8 @@ public interface CrudDao<T extends Identifiable> {
         AtomicInteger    deleteCount = new AtomicInteger(0);
         partitions.forEach(partition -> {
             try {
-                deleteCount.getAndAdd(sqlSession.delete(getMapperNamespace(DELETE), partition));
+                deleteCount.getAndAdd( sqlSession.delete(getMapperNamespace(DELETE), partition));
+                partition.forEach(this::removeFromCache);
             } catch (PersistenceException e) {
                 logger.warn("Failed to delete items:", e);
                 CinnamonError error = new CinnamonError(ErrorCode.DB_DELETE_FAILED.getCode(), "delete failed with:\n" + convertStackTrace(e) + "\n while trying to delete items #" + partition);
@@ -185,6 +186,7 @@ public interface CrudDao<T extends Identifiable> {
                 CinnamonError error = new CinnamonError(ErrorCode.DB_UPDATE_FAILED.getCode(), "delete failed with:\n" + convertStackTrace(e) + "\n while trying to update existing item " + existing + "\n with" + item);
                 throw new FailedRequestException(ErrorCode.DB_UPDATE_FAILED, List.of(error));
             }
+            removeFromCache(item.getId());
             updatedItems.add(item);
         });
         debugLog("updated: ", updatedItems);
@@ -247,5 +249,9 @@ public interface CrudDao<T extends Identifiable> {
 
     default T getCachedVersion(Long id){
         return null;
+    }
+
+    default void removeFromCache(Long id){
+
     }
 }

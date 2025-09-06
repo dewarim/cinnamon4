@@ -17,38 +17,44 @@ public class GroupDao implements CrudDao<Group> {
     }
 
     // TODO: cache results
-    public Set<Group> getGroupsWithAncestorsOfUserById(Long userId){
+    public Set<Group> getGroupsWithAncestorsOfUserById(Long userId) {
         SqlSession sqlSession = getSqlSession();
         return new HashSet<>(sqlSession.selectList("com.dewarim.cinnamon.model.Group.getGroupsWithAncestorsOfUserById", userId));
     }
-    
-    public Group getOwnerGroup(){
+
+    public Set<Long> getGroupIdsWithAncestorsOfUserById(Long userId) {
+        SqlSession sqlSession = getSqlSession();
+        return new HashSet<>(sqlSession.selectList("com.dewarim.cinnamon.model.Group.getGroupIdsWithAncestorsOfUserById", userId));
+    }
+
+    public Group getOwnerGroup() {
         Optional<Group> ownerGroup = getGroupByName(Constants.ALIAS_OWNER);
-        if(ownerGroup.isPresent()){
+        if (ownerGroup.isPresent()) {
             return ownerGroup.get();
         }
-        throw new IllegalStateException("Could not find essential system group '_owner' in database."); 
+        throw new IllegalStateException("Could not find essential system group '_owner' in database.");
     }
-    
-    public Optional<Group> getGroupByName(String name){
+
+    public Optional<Group> getGroupByName(String name) {
         SqlSession sqlSession = getSqlSession();
-        return Optional.ofNullable(sqlSession.selectOne("com.dewarim.cinnamon.model.Group.getGroupByName",name));
+        return Optional.ofNullable(sqlSession.selectOne("com.dewarim.cinnamon.model.Group.getGroupByName", name));
     }
-    public List<Group> getGroupsByName(List<String> names){
-        if(names == null || names.isEmpty()){
+
+    public List<Group> getGroupsByName(List<String> names) {
+        if (names == null || names.isEmpty()) {
             return List.of();
         }
         SqlSession sqlSession = getSqlSession();
-        return sqlSession.selectList("com.dewarim.cinnamon.model.Group.getGroupsByName",names);
+        return sqlSession.selectList("com.dewarim.cinnamon.model.Group.getGroupsByName", names);
     }
 
     public boolean hasChildren(Long id) {
         SqlSession sqlSession = getSqlSession();
-        return sqlSession.selectOne("com.dewarim.cinnamon.model.Group.hasChildren",id);
+        return sqlSession.selectOne("com.dewarim.cinnamon.model.Group.hasChildren", id);
     }
 
     public List<Long> getChildGroupIds(List<Long> ids) {
         SqlSession sqlSession = getSqlSession();
-        return sqlSession.selectList("com.dewarim.cinnamon.model.Group.getChildGroupIds",ids);
+        return sqlSession.selectList("com.dewarim.cinnamon.model.Group.getChildGroupIds", ids);
     }
 }

@@ -32,4 +32,9 @@ public class ObjectTypeDao implements CrudDao<ObjectType>{
     public ObjectType getCachedVersion(Long id) {
         return CACHE.getIfPresent(id);
     }
+
+    @Override
+    public void removeFromCache(Long id){
+        CACHE.invalidate(id);
+    }
 }

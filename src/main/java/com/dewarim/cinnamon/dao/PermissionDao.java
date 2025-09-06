@@ -2,7 +2,6 @@ package com.dewarim.cinnamon.dao;
 
 import com.dewarim.cinnamon.application.exception.CinnamonException;
 import com.dewarim.cinnamon.model.AclGroup;
-import com.dewarim.cinnamon.model.Group;
 import com.dewarim.cinnamon.model.Permission;
 import org.apache.ibatis.session.SqlSession;
 
@@ -10,14 +9,12 @@ import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class PermissionDao implements CrudDao<Permission> {
 
     public List<Permission> getUserPermissionForAcl(long userId, long aclId) {
         GroupDao   groupDao = new GroupDao();
-        Set<Group> groups   = groupDao.getGroupsWithAncestorsOfUserById(userId);
-        List<Long> groupIds = groups.stream().map(Group::getId).collect(Collectors.toList());
+        Set<Long> groupIds   = groupDao.getGroupIdsWithAncestorsOfUserById(userId);
 
         AclGroupDao    aclGroupDao = new AclGroupDao();
         List<AclGroup> aclGroups   = aclGroupDao.getAclGroupsByGroupIdsAndAcl(groupIds, aclId);

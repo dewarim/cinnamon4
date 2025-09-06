@@ -27,13 +27,13 @@ public class AccessFilter {
 
     private final        Set<Long>                   objectAclsWithBrowsePermissions;
     private final        Set<Long>                   ownerAclsWithBrowsePermissions;
-    private final        Map<AclPermission, Boolean> checkedPermissions                      = new ConcurrentHashMap<>();
+    private final        Map<AclPermission, Boolean> checkedPermissions                 = new ConcurrentHashMap<>();
     private final        UserAccount                 user;
     private final        boolean                     superuser;
-    private static final Map<Long, Set<Long>>        userAclsWithBrowsePermissionCache       = new ConcurrentHashMap<>();
-    private static final Map<Long, Set<Long>>        ownerAclsWithBrowsePermissionCache      = new ConcurrentHashMap<>();
-    private static final Map<String, Permission>     nameToPermissionMapping                 = new ConcurrentHashMap<>();
-    private static final Map<Long, Acl>              idToAclMapping                          = new ConcurrentHashMap<>();
+    private static final Map<Long, Set<Long>>        userAclsWithBrowsePermissionCache  = new ConcurrentHashMap<>();
+    private static final Map<Long, Set<Long>>        ownerAclsWithBrowsePermissionCache = new ConcurrentHashMap<>();
+    private static final Map<String, Permission>     nameToPermissionMapping            = new ConcurrentHashMap<>();
+    private static final Map<Long, Acl>              idToAclMapping                     = new ConcurrentHashMap<>();
 
     private static final Object  INITIALIZING = new Object();
     private static       Boolean initialized  = false;
@@ -123,11 +123,13 @@ public class AccessFilter {
 
     public static void reload() {
         synchronized (INITIALIZING) {
+            log.info("reloading AccessFilter");
             initialized = false;
         }
     }
 
     public static void reloadUser(Long userId) {
+        log.info("invalidate AccessFilter cache for user {}", userId);
         userAclsWithBrowsePermissionCache.remove(userId);
         ownerAclsWithBrowsePermissionCache.remove(userId);
     }
@@ -136,8 +138,7 @@ public class AccessFilter {
         synchronized (INITIALIZING) {
             PermissionDao permissionDao = new PermissionDao();
             browsePermission = permissionDao.getPermissionByName(DefaultPermission.BROWSE.getName());
-            AclDao aclDao = new AclDao();
-            acls = aclDao.list();
+            acls = new AclDao().list();
             acls.forEach(acl -> idToAclMapping.put(acl.getId(), acl));
             ownerGroup = new GroupDao().getOwnerGroup();
             List<Permission> permissions = permissionDao.list();
@@ -149,25 +150,16 @@ public class AccessFilter {
     private static Set<Long> getUserAclsWithBrowsePermissions(UserAccount user) {
         Long userId = user.getId();
         if (!userAclsWithBrowsePermissionCache.containsKey(userId)) {
-            long startTime = System.currentTimeMillis();
-            log.info("Generating object acls list with browse permissions for user {}", user);
             userAclsWithBrowsePermissionCache.put(userId, generateObjectAclSet(browsePermission, user));
-            long endTime = System.currentTimeMillis();
-            log.info("object acl list generated in {} ms", endTime - startTime);
         }
         return userAclsWithBrowsePermissionCache.get(userId);
     }
 
 
-
     private static Set<Long> getOwnerAclsWithBrowsePermissions(UserAccount user) {
         Long userId = user.getId();
         if (!ownerAclsWithBrowsePermissionCache.containsKey(userId)) {
-            long startTime = System.currentTimeMillis();
-            log.info("Generating owner acls list with browse permissions for user {}", user);
             ownerAclsWithBrowsePermissionCache.put(userId, generateOwnerAclIdSet(browsePermission, user));
-            long endTime = System.currentTimeMillis();
-            log.info("owner acl list generated in {} ms", endTime - startTime);
         }
         return ownerAclsWithBrowsePermissionCache.get(userId);
     }
@@ -194,8 +186,7 @@ public class AccessFilter {
     private static boolean checkAclGroups(Acl acl, Permission permission, UserAccount user) {
         // create Union of Sets: user.groups and acl.groups => iterate over each group for permitlevel.
 
-        Set<Group>     userGroups  = new GroupDao().getGroupsWithAncestorsOfUserById(user.getId());
-        List<Long>     groupIds    = userGroups.stream().map(Group::getId).collect(Collectors.toList());
+        Set<Long>      groupIds    = new GroupDao().getGroupIdsWithAncestorsOfUserById(user.getId());
         AclGroupDao    aclGroupDao = new AclGroupDao();
         List<AclGroup> aclGroups   = aclGroupDao.getAclGroupsByGroupIdsAndAcl(groupIds, acl.getId());
 
@@ -231,10 +222,11 @@ public class AccessFilter {
      * Verify if user has permission to change / access an object.
      * Check both permissions of the owner (if the user is the owner)
      * and the generic acl permission.
+     *
      * @param accessible an object that gives us the ACL to use
      * @param permission the permission we want to check
-     * @param ownable the ownable, which may be different from the accessible (for
-     *                example, a link may have an ACL but point to an ownable OSD)
+     * @param ownable    the ownable, which may be different from the accessible (for
+     *                   example, a link may have an ACL but point to an ownable OSD)
      * @return true if the user has permission
      * <p>
      * TODO: refactor, the use case of ownable != accessible seems no longer to be checked with this method,

@@ -60,9 +60,9 @@
         FROM acls
     </select>
 
-    <select id="getUserAcls" resultMap="aclMap" parameterType="list">
+    <select id="getUserAcls" resultMap="aclMap" parameterType="collection">
         SELECT a.* FROM acls a join acl_groups ae on a.id = ae.acl_id WHERE ae.group_id IN
-        <foreach item="item" index="index" collection="list"
+        <foreach item="item" index="index" collection="collection"
                  open="(" separator="," close=")">
             #{item}
         </foreach>
