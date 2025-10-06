@@ -10,7 +10,7 @@
 
 * Install some required or useful software
   ```
-  apt install curl less sudo daemontools rsync htop zip unzip sshpass gnupg wget
+  apt install curl less sudo rsync htop zip unzip sshpass gnupg wget
   ```
 
 * Install JDK 21:
