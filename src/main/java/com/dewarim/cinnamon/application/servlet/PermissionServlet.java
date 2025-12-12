@@ -2,6 +2,7 @@ package com.dewarim.cinnamon.application.servlet;
 
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
+import com.dewarim.cinnamon.application.CinnamonRequest;
 import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.application.ErrorResponseGenerator;
 import com.dewarim.cinnamon.dao.AclDao;
@@ -16,7 +17,6 @@ import com.dewarim.cinnamon.model.request.permission.ListPermissionRequest;
 import com.dewarim.cinnamon.model.request.user.UserPermissionRequest;
 import com.dewarim.cinnamon.model.response.PermissionWrapper;
 import com.dewarim.cinnamon.security.authorization.AccessFilter;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
-import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
 
 /**
  *
@@ -34,27 +33,26 @@ import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
 @WebServlet(name = "Permission", urlPatterns = "/")
 public class PermissionServlet extends HttpServlet implements CruddyServlet<Permission> {
 
-    private final ObjectMapper xmlMapper = XML_MAPPER;
-
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        CinnamonRequest cinnamonRequest = (CinnamonRequest) request;
 
         CinnamonResponse cinnamonResponse = (CinnamonResponse) response;
         PermissionDao    permissionDao    = new PermissionDao();
 
         UrlMapping mapping = UrlMapping.getByPath(request.getRequestURI());
         switch (mapping) {
-            case PERMISSION__LIST -> list(convertListRequest(request, ListPermissionRequest.class), permissionDao, cinnamonResponse);
-            case PERMISSION__GET_USER_PERMISSIONS -> getUserPermissions(request, cinnamonResponse);
+            case PERMISSION__LIST -> list(convertListRequest(cinnamonRequest, ListPermissionRequest.class), permissionDao, cinnamonResponse);
+            case PERMISSION__GET_USER_PERMISSIONS -> getUserPermissions(cinnamonRequest, cinnamonResponse);
             case PERMISSION__CHANGE_PERMISSIONS -> {
                 superuserCheck();
-                changePermissions(request, cinnamonResponse);
+                changePermissions(cinnamonRequest, cinnamonResponse);
             }
             default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
     }
 
-    private void changePermissions(HttpServletRequest request, CinnamonResponse cinnamonResponse) throws IOException {
-        ChangePermissionsRequest changeRequest = getMapper().readValue(request.getInputStream(), ChangePermissionsRequest.class)
+    private void changePermissions(CinnamonRequest request, CinnamonResponse cinnamonResponse) throws IOException {
+        ChangePermissionsRequest changeRequest = request.getMapper().readValue(request.getInputStream(), ChangePermissionsRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         var            aclGroupDao = new AclGroupDao();
         List<AclGroup> aclGroups   = aclGroupDao.getObjectsById(List.of(changeRequest.getAclGroupId()));
@@ -69,8 +67,8 @@ public class PermissionServlet extends HttpServlet implements CruddyServlet<Perm
         cinnamonResponse.responseIsGenericOkay();
     }
 
-    private void getUserPermissions(HttpServletRequest request, CinnamonResponse response) throws IOException {
-        UserPermissionRequest permissionRequest = getMapper().readValue(request.getInputStream(), UserPermissionRequest.class).validateRequest()
+    private void getUserPermissions(CinnamonRequest request, CinnamonResponse response) throws IOException {
+        UserPermissionRequest permissionRequest = request.getMapper().readValue(request.getInputStream(), UserPermissionRequest.class).validateRequest()
                 .orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
         long      userId   = permissionRequest.getUserId();
@@ -91,8 +89,5 @@ public class PermissionServlet extends HttpServlet implements CruddyServlet<Perm
         response.setWrapper(wrapper);
     }
 
-    @Override
-    public ObjectMapper getMapper() {
-        return xmlMapper;
-    }
+
 }

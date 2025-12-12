@@ -80,7 +80,7 @@ public enum ErrorCode {
     NAME_PARAM_IS_INVALID("name param is invalid", SC_BAD_REQUEST),
     NOT_MULTIPART_UPLOAD("the request must have the contentType multipart/form-data", SC_BAD_REQUEST),
     NO_BROWSE_PERMISSION("missing browse permission", SC_UNAUTHORIZED),
-    NO_CONTENT_TYPE_IN_HEADER("missing content-type field in header", SC_BAD_REQUEST),
+    NO_CONTENT_TYPE_IN_HEADER("missing Content-Type field in header", SC_BAD_REQUEST),
     NO_CREATE_PERMISSION("missing permission to create an object inside a folder", SC_UNAUTHORIZED),
     NO_DELETE_LINK_PERMISSION("missing permission to delete this link", SC_UNAUTHORIZED),
     NO_DELETE_PERMISSION("missing permission to delete this item", SC_UNAUTHORIZED),

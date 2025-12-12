@@ -56,7 +56,7 @@ public class PerformanceTest extends CinnamonIntegrationTest {
             FileBody fileBody = new FileBody(image);
             MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
                     .addPart("file", fileBody)
-                    .addTextBody(CINNAMON_REQUEST_PART, mapper.writeValueAsString(request),
+                    .addTextBody(CINNAMON_REQUEST_PART, client.getCinnamonContentType().getObjectMapper().writeValueAsString(request),
                             APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
             try (StandardResponse response = sendStandardMultipartRequest(UrlMapping.OSD__CREATE_OSD, entityBuilder.build())) {
                 assertResponseOkay(response);

@@ -31,7 +31,6 @@ import com.dewarim.cinnamon.provider.ContentProviderService;
 import com.dewarim.cinnamon.provider.StateProviderService;
 import com.dewarim.cinnamon.security.authorization.AccessFilter;
 import com.dewarim.cinnamon.security.authorization.AuthorizationService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
@@ -61,7 +60,6 @@ import static org.apache.hc.core5.http.HttpHeaders.CONTENT_DISPOSITION;
 @WebServlet(name = "Osd", urlPatterns = "/")
 public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSystemData> {
 
-    private final        ObjectMapper           xmlMapper            = XML_MAPPER;
     private final        AuthorizationService   authorizationService = new AuthorizationService();
     private final        DeleteOsdService       deleteOsdService     = new DeleteOsdService();
     private static final Logger                 log                  = LogManager.getLogger(OsdServlet.class);
@@ -125,7 +123,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
     }
 
     private void copyToExistingOsd(CinnamonRequest request, CinnamonResponse cinnamonResponse, UserAccount user, OsdDao osdDao) throws IOException {
-        CopyToExistingOsdRequest copyToExistingOsdRequest = xmlMapper.readValue(request.getInputStream(), CopyToExistingOsdRequest.class)
+        CopyToExistingOsdRequest copyToExistingOsdRequest = request.getMapper().readValue(request.getInputStream(), CopyToExistingOsdRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
         // get OSDs
@@ -250,7 +248,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
     }
 
     private void updateMetaContent(CinnamonRequest request, CinnamonResponse cinnamonResponse, UserAccount user, OsdDao osdDao) throws IOException {
-        UpdateMetaRequest metaRequest = (UpdateMetaRequest) getMapper().readValue(request.getInputStream(), UpdateMetaRequest.class)
+        UpdateMetaRequest metaRequest = (UpdateMetaRequest) request.getMapper().readValue(request.getInputStream(), UpdateMetaRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         OsdMetaDao osdMetaDao = new OsdMetaDao();
         new MetaService<>().updateMeta(osdMetaDao, metaRequest.getMetas(), osdDao, user);
@@ -258,7 +256,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
     }
 
     private void deleteAllMetas(CinnamonRequest request, CinnamonResponse cinnamonResponse, UserAccount user, OsdDao osdDao) throws IOException {
-        DeleteAllMetasRequest metaRequest = (DeleteAllMetasRequest) getMapper().readValue(request.getInputStream(), DeleteAllMetasRequest.class)
+        DeleteAllMetasRequest metaRequest = (DeleteAllMetasRequest) request.getMapper().readValue(request.getInputStream(), DeleteAllMetasRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
         OsdMetaDao metaDao = new OsdMetaDao();
@@ -268,7 +266,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
     }
 
     private void getRelations(CinnamonRequest request, CinnamonResponse cinnamonResponse, UserAccount user, OsdDao osdDao) throws IOException {
-        GetRelationsRequest relationRequest = xmlMapper.readValue(request.getInputStream(), GetRelationsRequest.class)
+        GetRelationsRequest relationRequest = request.getMapper().readValue(request.getInputStream(), GetRelationsRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
         var                    accessFilter = AccessFilter.getInstance(user);
@@ -286,7 +284,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
     }
 
     private void copyOsd(CinnamonRequest request, CinnamonResponse cinnamonResponse, UserAccount user, OsdDao osdDao) throws IOException {
-        CopyOsdRequest copyOsdRequest = xmlMapper.readValue(request.getInputStream(), CopyOsdRequest.class)
+        CopyOsdRequest copyOsdRequest = request.getMapper().readValue(request.getInputStream(), CopyOsdRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         AccessFilter accessFilter = AccessFilter.getInstance(user);
 
@@ -404,7 +402,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
 
 
     private void deleteOsds(CinnamonRequest request, CinnamonResponse cinnamonResponse, UserAccount user, OsdDao osdDao) throws IOException {
-        DeleteOsdRequest deleteRequest = xmlMapper.readValue(request.getInputStream(), DeleteOsdRequest.class)
+        DeleteOsdRequest deleteRequest = request.getMapper().readValue(request.getInputStream(), DeleteOsdRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         List<ObjectSystemData> osds = osdDao.getObjectsById(deleteRequest.getIds(), false);
         // reverse sort by id, so we try to delete descendants first.
@@ -427,7 +425,8 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         if (contentRequest == null) {
             throw ErrorCode.MISSING_REQUEST_PAYLOAD.exception();
         }
-        CreateOsdRequest createRequest = xmlMapper.readValue(contentRequest.getInputStream(), CreateOsdRequest.class)
+        CinnamonContentType cinnamonContentType = CinnamonContentType.getByHttpContentType(contentRequest.getContentType());
+        CreateOsdRequest createRequest = cinnamonContentType.getObjectMapper().readValue(contentRequest.getInputStream(), CreateOsdRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
         // check parent folder exists
@@ -516,7 +515,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
 
     private void deleteMeta(CinnamonRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws
             IOException {
-        DeleteMetaRequest metaRequest = (DeleteMetaRequest) getMapper().readValue(request.getInputStream(), DeleteMetaRequest.class)
+        DeleteMetaRequest metaRequest = (DeleteMetaRequest) request.getMapper().readValue(request.getInputStream(), DeleteMetaRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
         OsdMetaDao osdMetaDao = new OsdMetaDao();
@@ -537,7 +536,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
      */
     private void getMeta(CinnamonRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws
             IOException {
-        MetaRequest metaRequest = xmlMapper.readValue(request.getInputStream(), MetaRequest.class)
+        MetaRequest metaRequest = request.getMapper().readValue(request.getInputStream(), MetaRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
         Long             osdId = metaRequest.getId();
@@ -557,7 +556,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
 
     private void createMeta(CinnamonRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws
             IOException {
-        CreateMetaRequest metaRequest = xmlMapper.readValue(request.getInputStream(), CreateMetaRequest.class)
+        CreateMetaRequest metaRequest = request.getMapper().readValue(request.getInputStream(), CreateMetaRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
         List<Meta> metas = new MetaService<>().createMeta(new OsdMetaDao(), metaRequest.getMetas(), osdDao, user);
@@ -566,7 +565,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
 
     private void lock(CinnamonRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws
             IOException {
-        IdListRequest idRequest = xmlMapper.readValue(request.getInputStream(), IdListRequest.class)
+        IdListRequest idRequest = request.getMapper().readValue(request.getInputStream(), IdListRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         List<ObjectSystemData> osds = osdDao.getObjectsById(idRequest.getIds());
         if (osds.size() != idRequest.getIds().size()) {
@@ -606,7 +605,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
 
     private void unlock(CinnamonRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws
             IOException {
-        IdListRequest idRequest = xmlMapper.readValue(request.getInputStream(), IdListRequest.class)
+        IdListRequest idRequest = request.getMapper().readValue(request.getInputStream(), IdListRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         List<ObjectSystemData> osds = osdDao.getObjectsById(idRequest.getIds());
         if (osds.size() != idRequest.getIds().size()) {
@@ -645,7 +644,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
 
     private void getContent(CinnamonRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws
             ServletException, IOException {
-        IdRequest idRequest = xmlMapper.readValue(request.getInputStream(), IdRequest.class)
+        IdRequest idRequest = request.getMapper().readValue(request.getInputStream(), IdRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         ObjectSystemData osd = osdDao.getObjectById(idRequest.getId()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
         new AuthorizationService().throwUpUnlessUserOrOwnerHasPermission(osd, DefaultPermission.READ_OBJECT_CONTENT, user,
@@ -677,7 +676,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         if (file == null) {
             throw ErrorCode.MISSING_FILE_PARAMETER.exception();
         }
-        SetContentRequest setContentRequest = xmlMapper.readValue(contentRequest.getInputStream(), SetContentRequest.class)
+        SetContentRequest setContentRequest = request.getMapper().readValue(contentRequest.getInputStream(), SetContentRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         ObjectSystemData osd          = osdDao.getObjectById(setContentRequest.getId()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
         boolean          writeAllowed = new AuthorizationService().hasUserOrOwnerPermission(osd, DefaultPermission.WRITE_OBJECT_CONTENT, user);
@@ -725,7 +724,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
 
     private void setSummary(CinnamonRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws
             IOException {
-        SetSummaryRequest summaryRequest = xmlMapper.readValue(request.getInputStream(), SetSummaryRequest.class);
+        SetSummaryRequest summaryRequest = request.getMapper().readValue(request.getInputStream(), SetSummaryRequest.class);
         ObjectSystemData  osd            = osdDao.getObjectById(summaryRequest.getId()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
         authorizationService.throwUpUnlessUserOrOwnerHasPermission(osd, DefaultPermission.SET_SUMMARY, user,
                 ErrorCode.NO_SET_SUMMARY_PERMISSION);
@@ -736,7 +735,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
 
     private void getSummaries(CinnamonRequest request, CinnamonResponse response, UserAccount user, OsdDao
             osdDao) throws IOException {
-        IdListRequest          idListRequest = xmlMapper.readValue(request.getInputStream(), IdListRequest.class);
+        IdListRequest          idListRequest = request.getMapper().readValue(request.getInputStream(), IdListRequest.class);
         SummaryWrapper         wrapper       = new SummaryWrapper();
         List<ObjectSystemData> osds          = osdDao.getObjectsById(idListRequest.getIds().stream().toList(), true);
         osds.forEach(osd -> {
@@ -749,7 +748,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
 
     private void update(CinnamonRequest request, CinnamonResponse response, UserAccount user, OsdDao
             osdDao) throws IOException {
-        UpdateOsdRequest updateRequest = xmlMapper.readValue(request.getInputStream(), UpdateOsdRequest.class)
+        UpdateOsdRequest updateRequest = request.getMapper().readValue(request.getInputStream(), UpdateOsdRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         List<ObjectSystemData> osds = osdDao.getObjectsById(updateRequest.getOsds().stream().map(ObjectSystemData::getId).toList());
         if (osds.size() != updateRequest.getOsds().size()) {
@@ -888,10 +887,10 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
 
     private void getObjectsById(CinnamonRequest request, CinnamonResponse response, UserAccount user, OsdDao
             osdDao) throws IOException {
-        OsdRequest osdRequest = xmlMapper.readValue(request.getInputStream(), OsdRequest.class);
+        OsdRequest osdRequest = request.getMapper().readValue(request.getInputStream(), OsdRequest.class);
         if (!osdRequest.validated()) {
             log.debug("invalid osdRequest - check list of ids (must be non-empty list of positive integers):\n{}",
-                    getMapper().writeValueAsString(osdRequest));
+                    request.getMapper().writeValueAsString(osdRequest));
             throw ErrorCode.INVALID_REQUEST.exception();
         }
         List<ObjectSystemData> osds         = osdDao.getObjectsById(osdRequest.getIds(), osdRequest.isIncludeSummary());
@@ -908,7 +907,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
 
     private void getObjectsByFolderId(CinnamonRequest request, CinnamonResponse response, UserAccount
             user, OsdDao osdDao) throws IOException {
-        OsdByFolderRequest     osdRequest     = xmlMapper.readValue(request.getInputStream(), OsdByFolderRequest.class);
+        OsdByFolderRequest     osdRequest     = request.getMapper().readValue(request.getInputStream(), OsdByFolderRequest.class);
         long                   folderId       = osdRequest.getFolderId();
         boolean                includeSummary = osdRequest.isIncludeSummary();
         boolean                includeMeta    = osdRequest.isIncludeCustomMetadata();
@@ -942,7 +941,10 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
             ServletException, IOException {
         verifyIsMultipart(request);
         Part contentRequest = request.getPart(CINNAMON_REQUEST_PART);
-        CreateNewVersionRequest versionRequest = xmlMapper.readValue(contentRequest.getInputStream(), CreateNewVersionRequest.class)
+        CinnamonContentType cinnamonContentType = CinnamonContentType.getByHttpContentType(contentRequest.getContentType());
+
+        CreateNewVersionRequest versionRequest = cinnamonContentType.getObjectMapper()
+                .readValue(contentRequest.getInputStream(), CreateNewVersionRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         ObjectSystemData preOsd    = osdDao.getObjectById(versionRequest.getId()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
         FolderDao        folderDao = new FolderDao();
@@ -1063,10 +1065,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         }
     }
 
-    @Override
-    public ObjectMapper getMapper() {
-        return xmlMapper;
-    }
+
 
     @Override
     public void init() {

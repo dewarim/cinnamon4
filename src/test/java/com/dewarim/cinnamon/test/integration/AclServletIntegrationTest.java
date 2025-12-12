@@ -8,7 +8,6 @@ import com.dewarim.cinnamon.client.Unwrapper;
 import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.request.IdRequest;
 import com.dewarim.cinnamon.model.request.acl.DeleteAclRequest;
-import com.dewarim.cinnamon.model.request.acl.ListAclRequest;
 import com.dewarim.cinnamon.model.request.acl.UpdateAclRequest;
 import com.dewarim.cinnamon.model.response.AclWrapper;
 import com.dewarim.cinnamon.test.TestObjectHolder;
@@ -21,9 +20,8 @@ import java.util.Optional;
 
 import static com.dewarim.cinnamon.ErrorCode.INVALID_REQUEST;
 import static com.dewarim.cinnamon.api.Constants.ACL_DEFAULT;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class AclServletIntegrationTest extends CinnamonIntegrationTest {
 
@@ -31,8 +29,7 @@ public class AclServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void listAclsTest() throws IOException {
-        var aclListResponse = sendAdminRequest(UrlMapping.ACL__LIST, new ListAclRequest());
-        List<Acl> acls = unwrapAcls(aclListResponse, null);
+        var acls = client.listAcls();
         assertFalse(acls.isEmpty());
         Optional<Acl> defaultAcl = acls.stream().filter(acl -> acl.getName().equals(ACL_DEFAULT)).findFirst();
         assertTrue(defaultAcl.isPresent());
@@ -130,17 +127,6 @@ public class AclServletIntegrationTest extends CinnamonIntegrationTest {
     public void getUserAclsShouldFailWithoutValidId() throws IOException {
         var response = sendAdminRequest(UrlMapping.ACL__GET_USER_ACLS, new IdRequest(-1L));
         assertCinnamonError(response, INVALID_REQUEST);
-    }
-
-    private List<Acl> unwrapAcls(StandardResponse response, Integer expectedSize) throws IOException {
-        assertResponseOkay(response);
-        List<Acl> acls = mapper.readValue(response.getEntity().getContent(), AclWrapper.class).getAcls();
-        if (expectedSize != null) {
-            assertNotNull(acls);
-            assertFalse(acls.isEmpty());
-            assertThat(acls.size(), equalTo(expectedSize));
-        }
-        return acls;
     }
 
 }

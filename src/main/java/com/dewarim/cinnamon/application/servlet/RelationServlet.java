@@ -3,6 +3,7 @@ package com.dewarim.cinnamon.application.servlet;
 import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
+import com.dewarim.cinnamon.application.CinnamonRequest;
 import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.dao.OsdDao;
@@ -17,7 +18,6 @@ import com.dewarim.cinnamon.model.request.relation.DeleteRelationRequest;
 import com.dewarim.cinnamon.model.request.relation.SearchRelationRequest;
 import com.dewarim.cinnamon.model.response.RelationWrapper;
 import com.dewarim.cinnamon.security.authorization.AccessFilter;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -27,29 +27,27 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
-
 
 @WebServlet(name = "Relation", urlPatterns = "/")
 public class RelationServlet extends HttpServlet implements CruddyServlet<Relation> {
 
-    private final ObjectMapper xmlMapper = XML_MAPPER;
-
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        CinnamonRequest cinnamonRequest = (CinnamonRequest) request;
+
         CinnamonResponse cinnamonResponse = (CinnamonResponse) response;
         RelationDao      relationDao      = new RelationDao();
         UserAccount      user             = ThreadLocalSqlSession.getCurrentUser();
 
         UrlMapping mapping = UrlMapping.getByPath(request.getRequestURI());
         switch (mapping) {
-            case RELATION__SEARCH -> searchRelations(request, relationDao, cinnamonResponse);
-            case RELATION__CREATE -> createRelations(request, user, relationDao, cinnamonResponse);
-            case RELATION__DELETE -> deleteRelation(request, user, relationDao, cinnamonResponse);
+            case RELATION__SEARCH -> searchRelations(cinnamonRequest, relationDao, cinnamonResponse);
+            case RELATION__CREATE -> createRelations(cinnamonRequest, user, relationDao, cinnamonResponse);
+            case RELATION__DELETE -> deleteRelation(cinnamonRequest, user, relationDao, cinnamonResponse);
             default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
     }
 
-    private void createRelations(HttpServletRequest request, UserAccount user, RelationDao relationDao, CinnamonResponse cinnamonResponse) throws IOException {
+    private void createRelations(CinnamonRequest request, UserAccount user, RelationDao relationDao, CinnamonResponse cinnamonResponse) throws IOException {
         CreateRequest<Relation> createRequest = convertCreateRequest(request, CreateRelationRequest.class);
         List<Relation>          relations     = createRequest.list();
         RelationTypeDao         rtDao         = new RelationTypeDao();
@@ -77,14 +75,14 @@ public class RelationServlet extends HttpServlet implements CruddyServlet<Relati
     }
 
 
-    private void deleteRelation(HttpServletRequest request, UserAccount user, RelationDao relationDao, CinnamonResponse response) throws IOException {
+    private void deleteRelation(CinnamonRequest request, UserAccount user, RelationDao relationDao, CinnamonResponse response) throws IOException {
         DeleteRequest<Relation> deleteRequest = convertDeleteRequest(request, DeleteRelationRequest.class);
-        List<Long>     relationIds  = deleteRequest.list();
-        List<Relation> relations    = relationDao.getObjectsById(relationIds);
-        AccessFilter   accessFilter = AccessFilter.getInstance(user);
-        OsdDao         osdDao       = new OsdDao();
-        List<Long>     parentIds    = relations.stream().map(Relation::getLeftId).toList();
-        List<Long>     childIds     = relations.stream().map(Relation::getRightId).toList();
+        List<Long>              relationIds   = deleteRequest.list();
+        List<Relation>          relations     = relationDao.getObjectsById(relationIds);
+        AccessFilter            accessFilter  = AccessFilter.getInstance(user);
+        OsdDao                  osdDao        = new OsdDao();
+        List<Long>              parentIds     = relations.stream().map(Relation::getLeftId).toList();
+        List<Long>              childIds      = relations.stream().map(Relation::getRightId).toList();
 
         boolean addChildPermission = osdDao.getObjectsById(parentIds, false).stream()
                 .allMatch(osd -> accessFilter.hasPermissionOnOwnable(osd, DefaultPermission.RELATION_CHILD_REMOVE, osd));
@@ -101,8 +99,8 @@ public class RelationServlet extends HttpServlet implements CruddyServlet<Relati
         delete(deleteRequest, relationDao, response);
     }
 
-    private void searchRelations(HttpServletRequest request, RelationDao relationDao, CinnamonResponse response) throws IOException {
-        SearchRelationRequest relationRequest = xmlMapper.readValue(request.getInputStream(), SearchRelationRequest.class)
+    private void searchRelations(CinnamonRequest request, RelationDao relationDao, CinnamonResponse response) throws IOException {
+        SearchRelationRequest relationRequest = request.getMapper().readValue(request.getInputStream(), SearchRelationRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
         List<Relation> relations;
@@ -117,8 +115,4 @@ public class RelationServlet extends HttpServlet implements CruddyServlet<Relati
         response.setWrapper(wrapper);
     }
 
-    @Override
-    public ObjectMapper getMapper() {
-        return xmlMapper;
-    }
 }

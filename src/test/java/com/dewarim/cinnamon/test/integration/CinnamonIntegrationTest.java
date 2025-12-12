@@ -22,7 +22,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.core5.http.ClassicHttpRequest;
-import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.HttpStatus;
 import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
 import org.apache.ibatis.io.Resources;
@@ -46,6 +45,7 @@ import java.util.stream.Collectors;
 
 import static com.dewarim.cinnamon.DefaultPermission.BROWSE;
 import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
+import static org.apache.hc.core5.http.HttpHeaders.ACCEPT;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -117,7 +117,9 @@ public class CinnamonIntegrationTest {
             ticket = getAdminTicket();
             log.info("admin ticket: {}", ticket);
 
-            client      = new CinnamonClient(cinnamonTestPort, "localhost", "http", "doe", "admin");
+            client = new CinnamonClient(cinnamonTestPort, "localhost", "http", "doe", "admin");
+//            client.setResponseContentType(CinnamonContentType.JSON);
+//            client.setMapper(JSON_MAPPER);
             adminClient = new CinnamonClient(cinnamonTestPort, "localhost", "http", "admin", "admin");
             // TODO: rename to value of DEFAULT_ACL once CreateTestDb is cleaned up.
             // create a default ACL with browse permissions
@@ -129,11 +131,11 @@ public class CinnamonIntegrationTest {
             adminClient.updateFolder(root);
 
             var toh = prepareAclGroupWithPermissions("creation.acl", Arrays.stream(DefaultPermission.values()).toList());
-            defaultCreationAcl                       = toh.acl;
-            creationFolder                           = adminClient.createFolder(1L, "creation", adminId, defaultCreationAcl.getId(), 1L);
-            createFolderId                           = creationFolder.getId();
+            defaultCreationAcl = toh.acl;
+            creationFolder = adminClient.createFolder(1L, "creation", adminId, defaultCreationAcl.getId(), 1L);
+            createFolderId = creationFolder.getId();
             TestObjectHolder.defaultCreationFolderId = createFolderId;
-            TestObjectHolder.defaultCreationAcl      = defaultCreationAcl;
+            TestObjectHolder.defaultCreationAcl = defaultCreationAcl;
         }
     }
 
@@ -145,6 +147,8 @@ public class CinnamonIntegrationTest {
         String url     = "http://localhost:" + cinnamonTestPort + UrlMapping.CINNAMON__CONNECT.getPath();
         try (StandardResponse response = httpClient.execute(ClassicRequestBuilder.post(url)
                 .setEntity(mapper.writeValueAsString(request))
+//                .addHeader(ACCEPT, CONTENT_TYPE_XML)
+//                .addHeader(CONTENT_TYPE, CONTENT_TYPE_XML)
                 .build(), StandardResponse::new)) {
             if (response.getCode() != HttpStatus.SC_OK) {
                 throw new IllegalStateException("Failed to get admin ticket: response code is " + response.getCode());
@@ -159,8 +163,8 @@ public class CinnamonIntegrationTest {
      */
     protected static String getDoesTicket(boolean newTicket) throws IOException {
         if (ticketForDoe == null || newTicket) {
-            var request = new ConnectionRequest("doe", "admin", null);
-            String url = "http://localhost:" + cinnamonTestPort + UrlMapping.CINNAMON__CONNECT.getPath();
+            var    request = new ConnectionRequest("doe", "admin", null);
+            String url     = "http://localhost:" + cinnamonTestPort + UrlMapping.CINNAMON__CONNECT.getPath();
             try (StandardResponse response = httpClient.execute(ClassicRequestBuilder.post(url)
                     .setEntity(mapper.writeValueAsString(request))
                     .build(), StandardResponse::new)) {
@@ -219,7 +223,7 @@ public class CinnamonIntegrationTest {
         String url        = "http://localhost:" + cinnamonTestPort + urlMapping.getPath();
         return httpClient.execute(ClassicRequestBuilder.post(url)
                 .addHeader("ticket", ticket)
-                .setEntity(requestStr, ContentType.APPLICATION_XML.withCharset(StandardCharsets.UTF_8))
+                .setEntity(requestStr, adminClient.getCinnamonContentType().getContentType())
                 .build(), StandardResponse::new);
     }
 
@@ -233,20 +237,20 @@ public class CinnamonIntegrationTest {
      * @throws IOException if connection to server fails for some reason
      */
     protected StandardResponse sendStandardRequest(UrlMapping urlMapping, Object request) throws IOException {
-        String requestStr = mapper.writeValueAsString(request);
+        String requestStr = client.getCinnamonContentType().getObjectMapper().writeValueAsString(request);
         String url        = "http://localhost:" + cinnamonTestPort + urlMapping.getPath();
         return httpClient.execute(ClassicRequestBuilder.post(url)
                 .addHeader("ticket", getDoesTicket(false))
-                .setEntity(requestStr, ContentType.APPLICATION_XML)
+                .setEntity(requestStr, client.getCinnamonContentType().getContentType())
                 .build(), StandardResponse::new);
     }
 
     protected void sendStandardRequestAndAssertError(UrlMapping urlMapping, Object request, ErrorCode errorCode) throws IOException {
-        String requestStr = mapper.writeValueAsString(request);
+        String requestStr = client.getCinnamonContentType().getObjectMapper().writeValueAsString(request);
         String url        = "http://localhost:" + cinnamonTestPort + urlMapping.getPath();
         try (StandardResponse response = httpClient.execute(ClassicRequestBuilder.post(url)
                 .addHeader("ticket", getDoesTicket(false))
-                .setEntity(requestStr, ContentType.APPLICATION_XML)
+                .setEntity(requestStr, client.getCinnamonContentType().getContentType())
                 .build(), StandardResponse::new)) {
             assertCinnamonError(response, errorCode);
         }
@@ -256,6 +260,7 @@ public class CinnamonIntegrationTest {
         String url = "http://localhost:" + cinnamonTestPort + urlMapping.getPath();
         return ClassicRequestBuilder.post(url)
                 .addHeader("ticket", getDoesTicket(false))
+                .addHeader(ACCEPT, client.getCinnamonContentType().getContentType().toString())
                 .build();
     }
 

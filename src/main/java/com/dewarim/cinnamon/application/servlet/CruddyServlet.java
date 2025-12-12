@@ -3,6 +3,7 @@ package com.dewarim.cinnamon.application.servlet;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.FailedRequestException;
 import com.dewarim.cinnamon.api.Identifiable;
+import com.dewarim.cinnamon.application.CinnamonRequest;
 import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.dao.CrudDao;
 import com.dewarim.cinnamon.dao.UserAccountDao;
@@ -11,8 +12,6 @@ import com.dewarim.cinnamon.model.request.DeleteRequest;
 import com.dewarim.cinnamon.model.request.ListRequest;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.response.Wrapper;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.http.HttpServletRequest;
 import org.apache.ibatis.exceptions.PersistenceException;
 
 import java.io.IOException;
@@ -30,27 +29,25 @@ public interface CruddyServlet<T extends Identifiable> {
         return ts;
     }
 
-    default CreateRequest<T> convertCreateRequest(HttpServletRequest request, Class<? extends CreateRequest<T>> clazz) throws IOException {
-        return getMapper().readValue(request.getInputStream(), clazz)
+    default CreateRequest<T> convertCreateRequest(CinnamonRequest request, Class<? extends CreateRequest<T>> clazz) throws IOException {
+        return request.getMapper().readValue(request.getInputStream(), clazz)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
     }
 
-    default DeleteRequest<T> convertDeleteRequest(HttpServletRequest request, Class<? extends DeleteRequest<T>> clazz) throws IOException {
-        return getMapper().readValue(request.getInputStream(), clazz)
+    default DeleteRequest<T> convertDeleteRequest(CinnamonRequest request, Class<? extends DeleteRequest<T>> clazz) throws IOException {
+        return request.getMapper().readValue(request.getInputStream(), clazz)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
     }
 
-    default ListRequest<T> convertListRequest(HttpServletRequest request, Class<? extends ListRequest<T>> clazz) throws IOException {
-        return getMapper().readValue(request.getInputStream(), clazz)
+    default ListRequest<T> convertListRequest(CinnamonRequest request, Class<? extends ListRequest<T>> clazz) throws IOException {
+        return request.getMapper().readValue(request.getInputStream(), clazz)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
     }
 
-    default UpdateRequest<T> convertUpdateRequest(HttpServletRequest request, Class<? extends UpdateRequest<T>> clazz) throws IOException {
-        return getMapper().readValue(request.getInputStream(), clazz)
+    default UpdateRequest<T> convertUpdateRequest(CinnamonRequest request, Class<? extends UpdateRequest<T>> clazz) throws IOException {
+        return request.getMapper().readValue(request.getInputStream(), clazz)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
     }
-
-    ObjectMapper getMapper();
 
     default void deleteByIds(List<Long> ids, CrudDao<T> dao, boolean ignoreNotFound) {
         deleteInner(ids, dao, ignoreNotFound);

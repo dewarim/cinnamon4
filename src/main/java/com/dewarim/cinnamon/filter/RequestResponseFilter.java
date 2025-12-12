@@ -37,9 +37,9 @@ public class RequestResponseFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        CinnamonResponse cinnamonResponse = new CinnamonResponse((HttpServletResponse) response);
+        CinnamonResponse cinnamonResponse = new CinnamonResponse((HttpServletRequest) request,(HttpServletResponse) response);
         try {
-            CinnamonRequest cinnamonRequest  = new CinnamonRequest((HttpServletRequest) request);
+            CinnamonRequest cinnamonRequest  = new CinnamonRequest((HttpServletRequest) request,(HttpServletResponse) response );
             chain.doFilter(cinnamonRequest, cinnamonResponse);
             ThreadLocalSqlSession.getSqlSession().commit();
 

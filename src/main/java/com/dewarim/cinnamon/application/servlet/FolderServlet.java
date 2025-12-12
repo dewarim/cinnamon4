@@ -4,6 +4,7 @@ import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.Constants;
 import com.dewarim.cinnamon.api.UrlMapping;
+import com.dewarim.cinnamon.application.CinnamonRequest;
 import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.application.service.DeleteLinkService;
@@ -25,7 +26,6 @@ import com.dewarim.cinnamon.model.request.osd.VersionPredicate;
 import com.dewarim.cinnamon.model.response.*;
 import com.dewarim.cinnamon.security.authorization.AccessFilter;
 import com.dewarim.cinnamon.security.authorization.AuthorizationService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -41,13 +41,11 @@ import java.util.stream.Collectors;
 
 import static com.dewarim.cinnamon.DefaultPermission.SET_TYPE;
 import static com.dewarim.cinnamon.ErrorCode.NO_TYPE_WRITE_PERMISSION;
-import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
 
 @WebServlet(name = "Folder", urlPatterns = "/")
 public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> {
     private static final Logger log = LogManager.getLogger(FolderServlet.class);
 
-    private final ObjectMapper         xmlMapper            = XML_MAPPER;
     private final AuthorizationService authorizationService = new AuthorizationService();
     private final DeleteOsdService     deleteOsdService     = new DeleteOsdService();
     private final DeleteLinkService    deleteLinkService    = new DeleteLinkService();
@@ -57,31 +55,32 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
         UserAccount      user             = ThreadLocalSqlSession.getCurrentUser();
         FolderDao        folderDao        = new FolderDao();
         CinnamonResponse cinnamonResponse = (CinnamonResponse) response;
+        CinnamonRequest  cinnamonRequest = (CinnamonRequest) request; 
         UrlMapping       mapping          = UrlMapping.getByPath(request.getRequestURI());
 
         switch (mapping) {
-            case FOLDER__CREATE -> createFolder(request, cinnamonResponse, user, folderDao);
-            case FOLDER__CREATE_META -> createMeta(request, cinnamonResponse, user, folderDao);
-            case FOLDER__DELETE -> delete(request, cinnamonResponse, user, folderDao);
-            case FOLDER__DELETE_META -> deleteMeta(request, cinnamonResponse, user, folderDao);
-            case FOLDER__DELETE_ALL_METAS -> deleteAllMetas(request, cinnamonResponse, user, folderDao);
-            case FOLDER__GET_FOLDER -> getFolder(request, cinnamonResponse, user, folderDao);
-            case FOLDER__GET_FOLDER_BY_PATH -> getFolderByPath(request, cinnamonResponse, user, folderDao);
+            case FOLDER__CREATE -> createFolder(cinnamonRequest, cinnamonResponse, user, folderDao);
+            case FOLDER__CREATE_META -> createMeta(cinnamonRequest, cinnamonResponse, user, folderDao);
+            case FOLDER__DELETE -> delete(cinnamonRequest, cinnamonResponse, user, folderDao);
+            case FOLDER__DELETE_META -> deleteMeta(cinnamonRequest, cinnamonResponse, user, folderDao);
+            case FOLDER__DELETE_ALL_METAS -> deleteAllMetas(cinnamonRequest, cinnamonResponse, user, folderDao);
+            case FOLDER__GET_FOLDER -> getFolder(cinnamonRequest, cinnamonResponse, user, folderDao);
+            case FOLDER__GET_FOLDER_BY_PATH -> getFolderByPath(cinnamonRequest, cinnamonResponse, user, folderDao);
             case FOLDER__GET_FOLDER_BY_RELATIVE_PATH ->
-                    getFolderByRelativePath(request, cinnamonResponse, user, folderDao);
-            case FOLDER__GET_FOLDERS -> getFolders(request, cinnamonResponse, user, folderDao);
-            case FOLDER__GET_META -> getMeta(request, cinnamonResponse, folderDao);
-            case FOLDER__GET_SUBFOLDERS -> getSubFolders(request, cinnamonResponse, user, folderDao);
-            case FOLDER__SET_SUMMARY -> setSummary(request, cinnamonResponse, user, folderDao);
-            case FOLDER__GET_SUMMARIES -> getSummaries(request, cinnamonResponse, user, folderDao);
-            case FOLDER__UPDATE -> updateFolder(request, cinnamonResponse, user, folderDao);
-            case FOLDER__UPDATE_META_CONTENT -> updateMetaContent(request, cinnamonResponse, user, folderDao);
+                    getFolderByRelativePath(cinnamonRequest, cinnamonResponse, user, folderDao);
+            case FOLDER__GET_FOLDERS -> getFolders(cinnamonRequest, cinnamonResponse, user, folderDao);
+            case FOLDER__GET_META -> getMeta(cinnamonRequest, cinnamonResponse, folderDao);
+            case FOLDER__GET_SUBFOLDERS -> getSubFolders(cinnamonRequest, cinnamonResponse, user, folderDao);
+            case FOLDER__SET_SUMMARY -> setSummary(cinnamonRequest, cinnamonResponse, user, folderDao);
+            case FOLDER__GET_SUMMARIES -> getSummaries(cinnamonRequest, cinnamonResponse, user, folderDao);
+            case FOLDER__UPDATE -> updateFolder(cinnamonRequest, cinnamonResponse, user, folderDao);
+            case FOLDER__UPDATE_META_CONTENT -> updateMetaContent(cinnamonRequest, cinnamonResponse, user, folderDao);
             default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
     }
 
-    private void updateMetaContent(HttpServletRequest request, CinnamonResponse cinnamonResponse, UserAccount user, FolderDao folderDao) throws IOException {
-        UpdateMetaRequest metaRequest = (UpdateMetaRequest) getMapper().readValue(request.getInputStream(), UpdateMetaRequest.class)
+    private void updateMetaContent(CinnamonRequest request, CinnamonResponse cinnamonResponse, UserAccount user, FolderDao folderDao) throws IOException {
+        UpdateMetaRequest metaRequest = (UpdateMetaRequest) request.getMapper().readValue(request.getInputStream(), UpdateMetaRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         FolderMetaDao folderMetaDao = new FolderMetaDao();
         new MetaService<>().updateMeta(folderMetaDao, metaRequest.getMetas(), folderDao, user);
@@ -89,8 +88,8 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
     }
 
 
-    private void deleteAllMetas(HttpServletRequest request, CinnamonResponse cinnamonResponse, UserAccount user, FolderDao folderDao) throws IOException {
-        DeleteAllMetasRequest metaRequest = (DeleteAllMetasRequest) getMapper().readValue(request.getInputStream(), DeleteAllMetasRequest.class)
+    private void deleteAllMetas(CinnamonRequest request, CinnamonResponse cinnamonResponse, UserAccount user, FolderDao folderDao) throws IOException {
+        DeleteAllMetasRequest metaRequest = (DeleteAllMetasRequest) request.getMapper().readValue(request.getInputStream(), DeleteAllMetasRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
         FolderMetaDao metaDao = new FolderMetaDao();
@@ -99,8 +98,8 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
         cinnamonResponse.setWrapper(new DeleteResponse(true));
     }
 
-    private void delete(HttpServletRequest request, CinnamonResponse cinnamonResponse, UserAccount user, FolderDao folderDao) throws IOException {
-        DeleteFolderRequest deleteRequest = xmlMapper.readValue(request.getInputStream(), DeleteFolderRequest.class)
+    private void delete(CinnamonRequest request, CinnamonResponse cinnamonResponse, UserAccount user, FolderDao folderDao) throws IOException {
+        DeleteFolderRequest deleteRequest = request.getMapper().readValue(request.getInputStream(), DeleteFolderRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         boolean deleteRecursively = deleteRequest.isDeleteRecursively();
         boolean deleteContent     = deleteRequest.isDeleteContent();
@@ -170,8 +169,8 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
         }
     }
 
-    private void createFolder(HttpServletRequest request, CinnamonResponse response, UserAccount user, FolderDao folderDao) throws IOException {
-        CreateRequest<Folder> createRequest = xmlMapper.readValue(request.getInputStream(), CreateFolderRequest.class)
+    private void createFolder(CinnamonRequest request, CinnamonResponse response, UserAccount user, FolderDao folderDao) throws IOException {
+        CreateRequest<Folder> createRequest = request.getMapper().readValue(request.getInputStream(), CreateFolderRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         List<Folder> folders = new ArrayList<>();
 
@@ -232,8 +231,8 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
         response.setWrapper(wrapper);
     }
 
-    private void getSubFolders(HttpServletRequest request, CinnamonResponse response, UserAccount user, FolderDao folderDao) throws IOException {
-        SingleFolderRequest folderRequest = xmlMapper.readValue(request.getInputStream(), SingleFolderRequest.class)
+    private void getSubFolders(CinnamonRequest request, CinnamonResponse response, UserAccount user, FolderDao folderDao) throws IOException {
+        SingleFolderRequest folderRequest = request.getMapper().readValue(request.getInputStream(), SingleFolderRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         Folder             folder              = folderDao.getFolderById(folderRequest.getId()).orElseThrow(ErrorCode.FOLDER_NOT_FOUND.getException());
         List<Folder>       subFolders          = folderDao.getDirectSubFolders(folder.getId(), folderRequest.isIncludeSummary());
@@ -255,8 +254,8 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
         response.setWrapper(folderWrapper);
     }
 
-    private void updateFolder(HttpServletRequest request, CinnamonResponse response, UserAccount user, FolderDao folderDao) throws IOException {
-        UpdateFolderRequest updateRequest = xmlMapper.readValue(request.getInputStream(), UpdateFolderRequest.class)
+    private void updateFolder(CinnamonRequest request, CinnamonResponse response, UserAccount user, FolderDao folderDao) throws IOException {
+        UpdateFolderRequest updateRequest = request.getMapper().readValue(request.getInputStream(), UpdateFolderRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
         for (Folder updateFolder : updateRequest.getFolders()) {
@@ -377,8 +376,8 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
         response.responseIsGenericOkay();
     }
 
-    private void deleteMeta(HttpServletRequest request, CinnamonResponse response, UserAccount user, FolderDao folderDao) throws IOException {
-        DeleteMetaRequest metaRequest = (DeleteMetaRequest) getMapper().readValue(request.getInputStream(), DeleteMetaRequest.class)
+    private void deleteMeta(CinnamonRequest request, CinnamonResponse response, UserAccount user, FolderDao folderDao) throws IOException {
+        DeleteMetaRequest metaRequest = (DeleteMetaRequest) request.getMapper().readValue(request.getInputStream(), DeleteMetaRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
         FolderMetaDao folderMetaDao = new FolderMetaDao();
@@ -397,8 +396,8 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
      * This requires assembling a new DOM tree in memory for each request to getMeta, which is not something you
      * want to see with large metasets.
      */
-    private void getMeta(HttpServletRequest request, CinnamonResponse response, FolderDao folderDao) throws IOException {
-        MetaRequest metaRequest = xmlMapper.readValue(request.getInputStream(), MetaRequest.class)
+    private void getMeta(CinnamonRequest request, CinnamonResponse response, FolderDao folderDao) throws IOException {
+        MetaRequest metaRequest = request.getMapper().readValue(request.getInputStream(), MetaRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
         Long   folderId = metaRequest.getId();
@@ -415,16 +414,16 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
         createMetaResponse(response, metaList);
     }
 
-    private void createMeta(HttpServletRequest request, CinnamonResponse response, UserAccount user, FolderDao folderDao) throws IOException {
-        CreateMetaRequest metaRequest = xmlMapper.readValue(request.getInputStream(), CreateMetaRequest.class)
+    private void createMeta(CinnamonRequest request, CinnamonResponse response, UserAccount user, FolderDao folderDao) throws IOException {
+        CreateMetaRequest metaRequest = request.getMapper().readValue(request.getInputStream(), CreateMetaRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
         List<Meta> metas = new MetaService<>().createMeta(new FolderMetaDao(), metaRequest.getMetas(), folderDao, user);
         createMetaResponse(response, metas);
     }
 
-    private void getFolderByPath(HttpServletRequest request, CinnamonResponse response, UserAccount user, FolderDao folderDao) throws IOException {
-        FolderPathRequest pathRequest = xmlMapper.readValue(request.getInputStream(), FolderPathRequest.class);
+    private void getFolderByPath(CinnamonRequest request, CinnamonResponse response, UserAccount user, FolderDao folderDao) throws IOException {
+        FolderPathRequest pathRequest = request.getMapper().readValue(request.getInputStream(), FolderPathRequest.class);
         if (pathRequest.validated()) {
             List<Folder> rawFolders = folderDao.getFolderByPathWithAncestors(pathRequest.getPath(), pathRequest.isIncludeSummary());
             List<Folder> folders    = new AuthorizationService().filterFoldersByBrowsePermission(rawFolders, user);
@@ -437,8 +436,8 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
         }
     }
 
-    private void getFolderByRelativePath(HttpServletRequest request, CinnamonResponse response, UserAccount user, FolderDao folderDao) throws IOException {
-        FolderByRelativePathRequest pathRequest = xmlMapper.readValue(request.getInputStream(), FolderByRelativePathRequest.class);
+    private void getFolderByRelativePath(CinnamonRequest request, CinnamonResponse response, UserAccount user, FolderDao folderDao) throws IOException {
+        FolderByRelativePathRequest pathRequest = request.getMapper().readValue(request.getInputStream(), FolderByRelativePathRequest.class);
         if (pathRequest.validated()) {
             Folder parentFolder     = folderDao.getFolderById(pathRequest.getParentId()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
             String parentFolderPath = folderDao.getFolderPath(parentFolder.getId())
@@ -461,8 +460,8 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
     /**
      * Retrieve a single folder, including ancestors.
      */
-    private void getFolder(HttpServletRequest request, CinnamonResponse response, UserAccount user, FolderDao folderDao) throws IOException {
-        SingleFolderRequest folderRequest = xmlMapper.readValue(request.getInputStream(), SingleFolderRequest.class)
+    private void getFolder(CinnamonRequest request, CinnamonResponse response, UserAccount user, FolderDao folderDao) throws IOException {
+        SingleFolderRequest folderRequest = request.getMapper().readValue(request.getInputStream(), SingleFolderRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
         List<Folder> rawFolders = folderDao.getFolderByIdWithAncestors(folderRequest.getId(), folderRequest.isIncludeSummary());
@@ -476,8 +475,8 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
     /**
      * Retrieve a list of folders, without including their ancestors.
      */
-    private void getFolders(HttpServletRequest request, CinnamonResponse response, UserAccount user, FolderDao folderDao) throws IOException {
-        FolderRequest folderRequest = xmlMapper.readValue(request.getInputStream(), FolderRequest.class)
+    private void getFolders(CinnamonRequest request, CinnamonResponse response, UserAccount user, FolderDao folderDao) throws IOException {
+        FolderRequest folderRequest = request.getMapper().readValue(request.getInputStream(), FolderRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
         List<Folder> rawFolders = folderDao.getFoldersById(folderRequest.getIds(), folderRequest.isIncludeSummary());
@@ -488,9 +487,9 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
         response.setWrapper(new FolderWrapper(folders));
     }
 
-    private void setSummary(HttpServletRequest request, CinnamonResponse response, UserAccount user, FolderDao folderDao) throws IOException {
+    private void setSummary(CinnamonRequest request, CinnamonResponse response, UserAccount user, FolderDao folderDao) throws IOException {
         // TODO: add SetSummaryRequest.validateRequest
-        SetSummaryRequest summaryRequest = xmlMapper.readValue(request.getInputStream(), SetSummaryRequest.class);
+        SetSummaryRequest summaryRequest = request.getMapper().readValue(request.getInputStream(), SetSummaryRequest.class);
         Optional<Folder>  folderOpt      = folderDao.getFolderById(summaryRequest.getId());
         if (folderOpt.isPresent()) {
             Folder folder = folderOpt.get();
@@ -506,8 +505,8 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
         ErrorCode.OBJECT_NOT_FOUND.throwUp();
     }
 
-    private void getSummaries(HttpServletRequest request, CinnamonResponse response, UserAccount user, FolderDao folderDao) throws IOException {
-        IdListRequest  idListRequest = xmlMapper.readValue(request.getInputStream(), IdListRequest.class);
+    private void getSummaries(CinnamonRequest request, CinnamonResponse response, UserAccount user, FolderDao folderDao) throws IOException {
+        IdListRequest  idListRequest = request.getMapper().readValue(request.getInputStream(), IdListRequest.class);
         SummaryWrapper wrapper       = new SummaryWrapper();
         List<Folder>   folders       = folderDao.getFoldersById(idListRequest.getIds().stream().toList(), true);
         folders.forEach(folder -> {
@@ -518,11 +517,6 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
             }
         });
         response.setWrapper(wrapper);
-    }
-
-    @Override
-    public ObjectMapper getMapper() {
-        return xmlMapper;
     }
 
     private List<Meta> createMetas(List<Meta> metas, Long id) {

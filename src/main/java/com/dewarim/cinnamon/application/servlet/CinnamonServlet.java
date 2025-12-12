@@ -20,7 +20,6 @@ import com.dewarim.cinnamon.model.response.CinnamonConnectionWrapper;
 import com.dewarim.cinnamon.model.response.DisconnectResponse;
 import com.dewarim.cinnamon.security.LoginProviderService;
 import com.fasterxml.jackson.annotation.JsonRootName;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -43,7 +42,6 @@ public class CinnamonServlet extends HttpServlet {
 
     private static final Logger log = LogManager.getLogger(CinnamonServlet.class);
 
-    private final ObjectMapper         xmlMapper            = XML_MAPPER;
     private final UserAccountDao       userAccountDao       = new UserAccountDao();
     private final LoginProviderService loginProviderService = LoginProviderService.getInstance();
     private final CinnamonVersion      cinnamonVersion      = new CinnamonVersion();
@@ -60,10 +58,11 @@ public class CinnamonServlet extends HttpServlet {
     }
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        CinnamonRequest  cinnamonRequest  = (CinnamonRequest) request;
         CinnamonResponse cinnamonResponse = (CinnamonResponse) response;
         UrlMapping       mapping          = UrlMapping.getByPath(request.getRequestURI());
         switch (mapping) {
-            case CINNAMON__CONNECT -> connect((CinnamonRequest) request, cinnamonResponse);
+            case CINNAMON__CONNECT -> connect(cinnamonRequest, cinnamonResponse);
             case CINNAMON__DISCONNECT -> disconnect(request, cinnamonResponse);
             default -> hello(cinnamonResponse);
         }
@@ -72,7 +71,7 @@ public class CinnamonServlet extends HttpServlet {
     private void info(HttpServletResponse response) throws IOException {
         response.setContentType("application/xml");
         response.setStatus(HttpServletResponse.SC_OK);
-        response.getWriter().println(xmlMapper.writeValueAsString(cinnamonVersion));
+        response.getWriter().println(XML_MAPPER.writeValueAsString(cinnamonVersion));
     }
 
     private void hello(HttpServletResponse response) throws IOException {
@@ -82,7 +81,7 @@ public class CinnamonServlet extends HttpServlet {
     }
 
     private void connect(CinnamonRequest request, CinnamonResponse response) throws IOException {
-        ConnectionRequest conRequest = xmlMapper.readValue(request.getInputStream(), ConnectionRequest.class)
+        ConnectionRequest conRequest = request.getMapper().readValue(request.getInputStream(), ConnectionRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         String username = conRequest.getUsername();
         String password = conRequest.getPassword();
@@ -109,14 +108,12 @@ public class CinnamonServlet extends HttpServlet {
                     throw CONNECTION_FAIL_WRONG_PASSWORD.exception();
                 }
                 // LdapLoginProvider may have just created the user for us:
-                user                        = userAccountDao.getUserAccountByName(username).orElseThrow(CONNECTION_FAIL_WRONG_PASSWORD.getException());
+                user = userAccountDao.getUserAccountByName(username).orElseThrow(CONNECTION_FAIL_WRONG_PASSWORD.getException());
                 alreadyAuthenticatedViaLdap = true;
-            }
-            else {
+            } else {
                 throw ErrorCode.CONNECTION_FAIL_INVALID_USERNAME.exception();
             }
-        }
-        else {
+        } else {
             user = userOpt.get();
         }
 
@@ -152,8 +149,7 @@ public class CinnamonServlet extends HttpServlet {
             var cinnamonConnectionResponse = new CinnamonConnectionWrapper(new CinnamonConnection(session.getTicket()));
             response.setHeader("ticket", session.getTicket());
             response.setWrapper(cinnamonConnectionResponse);
-        }
-        else {
+        } else {
             CONNECTION_FAIL_WRONG_PASSWORD.throwUp();
         }
         ThreadLocalSqlSession.setCurrentUser(user);
@@ -169,8 +165,7 @@ public class CinnamonServlet extends HttpServlet {
         Session    session    = sessionDao.getSessionByTicket(ticket);
         if (session != null) {
             sessionDao.delete(session.getId());
-        }
-        else {
+        } else {
             ErrorCode.SESSION_NOT_FOUND.throwUp();
             return;
         }

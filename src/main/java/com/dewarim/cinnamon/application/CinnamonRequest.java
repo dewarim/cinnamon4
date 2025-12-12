@@ -2,10 +2,13 @@ package com.dewarim.cinnamon.application;
 
 
 import com.dewarim.cinnamon.ErrorCode;
+import com.dewarim.cinnamon.model.response.CinnamonContentType;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.Part;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,8 +17,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Optional;
 
-import static com.dewarim.cinnamon.api.Constants.CINNAMON_REQUEST_PART;
-import static com.dewarim.cinnamon.api.Constants.MULTIPART;
+import static com.dewarim.cinnamon.api.Constants.*;
 
 public class CinnamonRequest extends HttpServletRequestWrapper {
 
@@ -28,13 +30,20 @@ public class CinnamonRequest extends HttpServletRequestWrapper {
     private              FilePart                   filePart;
     private              String                     filename;
     private              boolean                    useCopiedFileContent = false;
+    private final        CinnamonContentType        cinnamonContentType;
+    private              ObjectMapper               mapper;
 
-    public CinnamonRequest(HttpServletRequest request) {
+    public CinnamonRequest(HttpServletRequest request, HttpServletResponse response) {
         super(request);
         this.request = request;
-        Optional<String> contentType = Optional.ofNullable(request.getContentType());
-        //                .orElseThrow(ErrorCode.NO_CONTENT_TYPE_IN_HEADER.getException());
-        multiPart = contentType.map(s -> s.toLowerCase().startsWith(MULTIPART)).orElse(false);
+        Optional<String> contentTypeOpt = Optional.ofNullable(request.getContentType());
+        multiPart = contentTypeOpt.map(s -> s.toLowerCase().startsWith(MULTIPART)).orElse(false);
+        if (multiPart) {
+            cinnamonContentType = CinnamonContentType.getByHttpContentType(contentTypeOpt.orElseGet(() -> CONTENT_TYPE_XML));
+        } else {
+            cinnamonContentType = CinnamonContentType.getByHttpContentType(request.getContentType());
+        }
+        mapper = cinnamonContentType.getObjectMapper();
     }
 
     public void copyInputStream(boolean copyFileContent) throws IOException, ServletException {
@@ -54,10 +63,9 @@ public class CinnamonRequest extends HttpServletRequestWrapper {
                     filePart = new FilePart(fp);
                     filename = filePart.getTempFile().getAbsolutePath();
                 }
-                useCopiedFileContent=true;
+                useCopiedFileContent = true;
             }
-        }
-        else {
+        } else {
             byteInput = new CinnamonServletInputStream(new ByteArrayInputStream(getRequest().getInputStream().readAllBytes()));
         }
         useCopy = true;
@@ -69,8 +77,7 @@ public class CinnamonRequest extends HttpServletRequestWrapper {
         if (useCopy) {
             log.debug("byteInput: '{}'", byteInput.getContent());
             return byteInput;
-        }
-        else {
+        } else {
             return request.getInputStream();
         }
     }
@@ -111,5 +118,13 @@ public class CinnamonRequest extends HttpServletRequestWrapper {
 
     public String getFilename() {
         return filename;
+    }
+
+    public ObjectMapper getMapper() {
+        return mapper;
+    }
+
+    public CinnamonContentType getCinnamonContentType() {
+        return cinnamonContentType;
     }
 }

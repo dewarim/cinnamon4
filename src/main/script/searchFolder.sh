@@ -25,7 +25,7 @@ query="<searchIdsRequest>
 echo "complete search request: ${query}"
 echo;
 
-curl -X POST --silent --show-error --header "ticket: ${TICKET}" --header "Content-type: application/xml" \
+curl -X POST --silent --show-error --header "ticket: ${TICKET}" --header "Content-Type: application/xml" \
 --data "${query}" "http://localhost:${PORT}/api/search/objectIds"
 
 echo;

@@ -49,7 +49,7 @@ public class ConfigServletIntegrationTest extends CinnamonIntegrationTest {
     private ConfigWrapper parseResponse(StandardResponse response) throws IOException {
         try(response) {
             assertResponseOkay(response);
-            ConfigWrapper wrapper = mapper.readValue(response.getEntity().getContent(), ConfigWrapper.class);
+            ConfigWrapper wrapper = client.getCinnamonContentType().getObjectMapper().readValue(response.getEntity().getContent(), ConfigWrapper.class);
             assertNotNull(wrapper);
             return wrapper;
         }

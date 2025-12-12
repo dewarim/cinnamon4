@@ -2,6 +2,7 @@ package com.dewarim.cinnamon.application.servlet;
 
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
+import com.dewarim.cinnamon.application.CinnamonRequest;
 import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.dao.ConfigEntryDao;
 import com.dewarim.cinnamon.dao.CrudDao;
@@ -11,7 +12,6 @@ import com.dewarim.cinnamon.model.request.ListRequest;
 import com.dewarim.cinnamon.model.request.configEntry.*;
 import com.dewarim.cinnamon.model.response.ConfigEntryWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,32 +21,31 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
 
 @WebServlet(name = "ConfigEntry", urlPatterns = "/")
 public class ConfigEntryServlet extends HttpServlet implements CruddyServlet<ConfigEntry> {
 
-    private final ObjectMapper xmlMapper = XML_MAPPER;
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        CinnamonRequest cinnamonRequest = (CinnamonRequest) request;
 
         CinnamonResponse cinnamonResponse = (CinnamonResponse) response;
         ConfigEntryDao   configEntryDao   = new ConfigEntryDao();
         UrlMapping       mapping          = UrlMapping.getByPath(request.getRequestURI());
         switch (mapping) {
-            case CONFIG_ENTRY__LIST -> list(convertListRequest(request, ListConfigEntryRequest.class), configEntryDao, cinnamonResponse);
-            case CONFIG_ENTRY__GET -> getConfigEntry(request, cinnamonResponse);
+            case CONFIG_ENTRY__LIST -> list(convertListRequest(cinnamonRequest, ListConfigEntryRequest.class), configEntryDao, cinnamonResponse);
+            case CONFIG_ENTRY__GET -> getConfigEntry(cinnamonRequest, cinnamonResponse);
             case CONFIG_ENTRY__CREATE -> {
                 superuserCheck();
-                create(convertCreateRequest(request, CreateConfigEntryRequest.class), configEntryDao, cinnamonResponse);
+                create(convertCreateRequest(cinnamonRequest, CreateConfigEntryRequest.class), configEntryDao, cinnamonResponse);
             }
             case CONFIG_ENTRY__UPDATE -> {
                 superuserCheck();
-                update(convertUpdateRequest(request, UpdateConfigEntryRequest.class), configEntryDao, cinnamonResponse);
+                update(convertUpdateRequest(cinnamonRequest, UpdateConfigEntryRequest.class), configEntryDao, cinnamonResponse);
             }
             case CONFIG_ENTRY__DELETE -> {
                 superuserCheck();
-                delete(convertDeleteRequest(request, DeleteConfigEntryRequest.class), configEntryDao, cinnamonResponse);
+                delete(convertDeleteRequest(cinnamonRequest, DeleteConfigEntryRequest.class), configEntryDao, cinnamonResponse);
             }
             default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
@@ -65,8 +64,8 @@ public class ConfigEntryServlet extends HttpServlet implements CruddyServlet<Con
         cinnamonResponse.setWrapper(wrapper);
     }
 
-    private void getConfigEntry(HttpServletRequest request, CinnamonResponse response) throws IOException {
-        ConfigEntryRequest configRequest = xmlMapper.readValue(request.getInputStream(), ConfigEntryRequest.class)
+    private void getConfigEntry(CinnamonRequest request, CinnamonResponse response) throws IOException {
+        ConfigEntryRequest configRequest = request.getMapper().readValue(request.getInputStream(), ConfigEntryRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         ConfigEntryDao configEntryDao = new ConfigEntryDao();
         List<ConfigEntry> entries = configEntryDao.getObjectsById(configRequest.getIds());
@@ -81,8 +80,5 @@ public class ConfigEntryServlet extends HttpServlet implements CruddyServlet<Con
         response.setWrapper(wrapper);
     }
 
-    @Override
-    public ObjectMapper getMapper() {
-        return xmlMapper;
-    }
+
 }

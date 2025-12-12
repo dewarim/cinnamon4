@@ -1,14 +1,12 @@
 package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.api.UrlMapping;
-import com.dewarim.cinnamon.client.StandardResponse;
 import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.AclGroup;
 import com.dewarim.cinnamon.model.Group;
 import com.dewarim.cinnamon.model.Permission;
 import com.dewarim.cinnamon.model.request.aclGroup.AclGroupListRequest;
 import com.dewarim.cinnamon.model.request.aclGroup.UpdateAclGroupRequest;
-import com.dewarim.cinnamon.model.response.AclGroupWrapper;
 import com.dewarim.cinnamon.test.TestObjectHolder;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
@@ -35,17 +33,13 @@ public class AclGroupServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void testListAclGroupByAclId() throws IOException {
-        AclGroupListRequest listRequest  = new AclGroupListRequest(1L, AclGroupListRequest.IdType.ACL);
-        var                 httpResponse = sendStandardRequest(UrlMapping.ACL_GROUP__LIST_BY_GROUP_OR_ACL, listRequest);
-        List<AclGroup>      aclGroups    = unwrapAclGroups(httpResponse, 1);
+        List<AclGroup>      aclGroups    = client.listAclGroupsByGroupTypeOrAclType(1L, AclGroupListRequest.IdType.ACL);
         aclGroups.forEach(entry -> assertEquals(Long.valueOf(1), entry.getAclId()));
     }
 
     @Test
     public void testListAclGroupByGroupId() throws IOException {
-        AclGroupListRequest listRequest  = new AclGroupListRequest(4L, AclGroupListRequest.IdType.GROUP);
-        var                 httpResponse = sendStandardRequest(UrlMapping.ACL_GROUP__LIST_BY_GROUP_OR_ACL, listRequest);
-        List<AclGroup>      aclGroups    = unwrapAclGroups(httpResponse, 1);
+        List<AclGroup>      aclGroups    = client.listAclGroupsByGroupTypeOrAclType(4L, AclGroupListRequest.IdType.GROUP);
         aclGroups.forEach(entry -> assertEquals(Long.valueOf(4), entry.getGroupId()));
     }
 
@@ -162,14 +156,6 @@ public class AclGroupServletIntegrationTest extends CinnamonIntegrationTest {
                 .createGroup()
                 .createAclGroupWithPermissionIds(List.of(1L, 2L))
                 .deleteAclGroup();
-    }
-
-    private List<AclGroup> unwrapAclGroups(StandardResponse httpResponse, int expectedSize) throws IOException {
-        assertResponseOkay(httpResponse);
-        AclGroupWrapper wrapper   = mapper.readValue(httpResponse.getEntity().getContent(), AclGroupWrapper.class);
-        List<AclGroup>  aclGroups = wrapper.getAclGroups();
-        assertEquals(expectedSize, aclGroups.size());
-        return aclGroups;
     }
 
     @Test

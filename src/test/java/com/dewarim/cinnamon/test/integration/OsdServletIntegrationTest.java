@@ -276,8 +276,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void osdDateFieldsAreFormattedAsIso8601() throws IOException, ParseException {
-        var osd = new TestObjectHolder(client, userId)
-                .createOsd("osdDateFieldsAreFormattedAsIso8601").osd;
+        var osd = new TestObjectHolder(client, userId).createOsd().osd;
         var response = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID,
                 new OsdRequest(List.of(osd.getId()), false, false));
         String           osdResponse      = new String(response.getEntity().getContent().readAllBytes(), Charset.defaultCharset());
@@ -358,10 +357,11 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         assertFalse(summaries.isEmpty());
         assertEquals("<sum>sum</sum>", summaries.getFirst().getContent());
     }
+
     @Test
     public void setEmptySummaryOnVersionedOsd() throws IOException {
         // bug #416: delete version will remove summary of predecessor
-        var toh  = prepareAclGroupWithPermissions(List.of(
+        var toh = prepareAclGroupWithPermissions(List.of(
                 BROWSE, SET_SUMMARY
         )).createOsd();
         var osdId = toh.osd.getId();
@@ -418,7 +418,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
                 .createOsd("getContentHappyPath").osd.getId();
         createTestContentOnOsd(osdId, false);
 
-        // do not use cinnamonClient as we want to verify content-type header.
+        // do not use cinnamonClient as we want to verify Content-Type header.
         StandardResponse response = sendStandardRequest(UrlMapping.OSD__GET_CONTENT, new IdRequest(osdId));
         assertResponseOkay(response);
         Header contentType = response.getFirstHeader(CONTENT_TYPE);
@@ -858,7 +858,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void createOsdNotMultipartRequest() throws IOException {
         ClassicHttpRequest request = createStandardRequestHeader(UrlMapping.OSD__CREATE_OSD);
-        request.addHeader("Content-Type", APPLICATION_XML.getMimeType());
+        request.addHeader(CONTENT_TYPE, APPLICATION_XML.getMimeType());
         StandardResponse response = httpClient.execute(request, StandardResponse::new);
         assertCinnamonError(response, NOT_MULTIPART_UPLOAD);
     }
@@ -1693,13 +1693,12 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         addUserToAclGroupWithPermissions("deleteOsdWithUnprotectedRelations", List.of(BROWSE,
                 RELATION_CHILD_ADD, RELATION_PARENT_ADD, DELETE));
         var toh = new TestObjectHolder(adminClient);
-        toh.setAcl(client.getAclByName("deleteOsdWithUnprotectedRelations"))
+        ObjectSystemData leftOsd = toh.setAcl(client.getAclByName("deleteOsdWithUnprotectedRelations"))
                 .setUser(userId)
                 .setFolder(createFolderId)
-                .createOsd("left-osd-unprotected");
-        ObjectSystemData leftOsd = toh.osd;
-        toh.createOsd("right-osd-protected");
-        ObjectSystemData rightOsd = toh.osd;
+                .createOsd("left-osd-unprotected")
+                .osd;
+        ObjectSystemData rightOsd = toh.createOsd("right-osd-protected").osd;
 
         RelationType rt = new RelationType("left-rt-protected", true, false, false, false, false, false);
         rt = adminClient.createRelationTypes(List.of(rt)).getFirst();
@@ -2168,8 +2167,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
             adminClient.lockOsd(osdId);
             adminClient.setContentOnLockedOsd(osdId, 1L, new File("pom.xml"));
             adminClient.unlockOsd(osdId);
-        }
-        else {
+        } else {
             client.lockOsd(osdId);
             client.setContentOnLockedOsd(osdId, 1L, new File("pom.xml"));
             client.unlockOsd(osdId);

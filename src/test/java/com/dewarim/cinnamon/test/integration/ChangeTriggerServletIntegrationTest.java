@@ -4,6 +4,7 @@ import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.model.ChangeTrigger;
 import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.response.ChangeTriggerResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -70,8 +71,8 @@ public class ChangeTriggerServletIntegrationTest extends CinnamonIntegrationTest
         au.setActivateTriggers(true);
         UserAccount pu = new UserAccount();
         pu.setActivateTriggers(false);
-        CinnamonResponse response1 = new CinnamonResponse(mock(HttpServletResponse.class));
-        CinnamonResponse response2 = new CinnamonResponse(mock(HttpServletResponse.class));
+        CinnamonResponse response1 = new CinnamonResponse(mock(HttpServletRequest.class),mock(HttpServletResponse.class));
+        CinnamonResponse response2 = new CinnamonResponse(mock(HttpServletRequest.class),mock(HttpServletResponse.class));
 
         assertTrue(activeChangeTriggerFilter(au, response1));
         assertFalse( activeChangeTriggerFilter(pu, response2));

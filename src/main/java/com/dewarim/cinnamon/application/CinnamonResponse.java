@@ -7,6 +7,7 @@ import com.dewarim.cinnamon.application.service.debug.DebugLogService;
 import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.response.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpServletResponseWrapper;
 import org.apache.hc.core5.http.HttpStatus;
@@ -20,22 +21,29 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static com.dewarim.cinnamon.api.Constants.*;
+import static com.dewarim.cinnamon.api.Constants.HEADER_FIELD_CINNAMON_ERROR;
+import static org.apache.hc.core5.http.HttpHeaders.ACCEPT;
 
 public class CinnamonResponse extends HttpServletResponseWrapper {
     private static final Logger log = LogManager.getLogger(CinnamonResponse.class);
 
-    private final ObjectMapper                xmlMapper              = XML_MAPPER;
+    private final ObjectMapper                objectMapper;
     private final HttpServletResponse         servletResponse;
+    private final HttpServletRequest          servletRequest;
     private       Wrapper<?>                  wrapper;
     private       int                         statusCode             = HttpStatus.SC_OK;
     private       ApiResponse                 response;
     private final List<ChangeTriggerResponse> changeTriggerResponses = new ArrayList<>();
     private       UserAccount                 user;
+    private final CinnamonContentType         cinnamonContentType;
 
-    public CinnamonResponse(HttpServletResponse servletResponse) {
+    public CinnamonResponse(HttpServletRequest servletRequest, HttpServletResponse servletResponse) {
         super(servletResponse);
         this.servletResponse = servletResponse;
+        this.servletRequest = servletRequest;
+        String acceptHeader = servletRequest.getHeader(ACCEPT);
+        cinnamonContentType = CinnamonContentType.getByHttpContentType(acceptHeader);
+        objectMapper = cinnamonContentType.getObjectMapper();
     }
 
     public void generateErrorMessage(int statusCode, ErrorCode errorCode, String message, boolean logResponses) {
@@ -51,16 +59,16 @@ public class CinnamonResponse extends HttpServletResponseWrapper {
         wrapper.setChangeTriggerResponses(changeTriggerResponses);
         try {
             servletResponse.setStatus(statusCode);
-            servletResponse.setContentType(CONTENT_TYPE_XML);
+            servletResponse.setContentType(cinnamonContentType.getContentType().toString());
             servletResponse.setCharacterEncoding("UTF-8");
             servletResponse.setHeader(HEADER_FIELD_CINNAMON_ERROR, errorCode.name());
             if (logResponses) {
-                log.debug("sending error response to client:\n{}", xmlMapper.writeValueAsString(wrapper));
+                log.debug("sending error response to client:\n{}", objectMapper.writeValueAsString(wrapper));
             }
             if (CinnamonServer.isDebugEnabled()) {
                 DebugLogService.log("errorResponse:", wrapper);
             }
-            xmlMapper.writeValue(servletResponse.getWriter(), wrapper);
+            objectMapper.writeValue(servletResponse.getWriter(), wrapper);
         } catch (IOException e) {
             throw new CinnamonException("Failed to generate error message:", e);
         }
@@ -91,38 +99,35 @@ public class CinnamonResponse extends HttpServletResponseWrapper {
         if (hasPendingContent()) {
             if (wrapper != null && wrapper instanceof BaseResponse) {
                 ((BaseResponse) wrapper).setChangeTriggerResponses(changeTriggerResponses);
-            }
-            else if (response != null && response instanceof BaseResponse) {
+            } else if (response != null && response instanceof BaseResponse) {
                 ((BaseResponse) response).setChangeTriggerResponses(changeTriggerResponses);
             }
 
-            ResponseUtil.responseIsXmlWithStatus(servletResponse, statusCode);
+            servletResponse.setContentType(cinnamonContentType.getContentType().toString());
+            servletResponse.setStatus(statusCode);
             if (logResponses || CinnamonServer.isDebugEnabled()) {
                 String output;
                 if (wrapper != null) {
-                    output = xmlMapper.writeValueAsString(wrapper);
-                }
-                else {
-                    output = xmlMapper.writeValueAsString(response);
+                    output = objectMapper.writeValueAsString(wrapper);
+                } else {
+                    output = objectMapper.writeValueAsString(response);
                 }
                 log.debug("sending response to client:\n{}", output);
-                if(logResponses) {
+                if (logResponses) {
                     servletResponse.getOutputStream().write(output.getBytes(StandardCharsets.UTF_8));
                 }
-                if(CinnamonServer.isDebugEnabled()) {
-                    if(!logResponses) {
+                if (CinnamonServer.isDebugEnabled()) {
+                    if (!logResponses) {
                         servletResponse.getOutputStream().write(output.getBytes(StandardCharsets.UTF_8));
                     }
                     DebugLogService.log("CinnamonResponse:", wrapper);
                     DebugLogService.stop();
                 }
-            }
-            else {
+            } else {
                 if (wrapper != null) {
-                    xmlMapper.writeValue(servletResponse.getOutputStream(), wrapper);
-                }
-                else {
-                    xmlMapper.writeValue(servletResponse.getOutputStream(), response);
+                    objectMapper.writeValue(servletResponse.getOutputStream(), wrapper);
+                } else {
+                    objectMapper.writeValue(servletResponse.getOutputStream(), response);
                 }
             }
         }
@@ -136,12 +141,12 @@ public class CinnamonResponse extends HttpServletResponseWrapper {
     public String getPendingContentAsString() throws IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         if (hasPendingContent()) {
-            ResponseUtil.responseIsXmlWithStatus(servletResponse, statusCode);
+            servletResponse.setContentType(cinnamonContentType.getContentType().toString());
+            servletResponse.setStatus(statusCode);
             if (wrapper != null) {
-                xmlMapper.writeValue(outputStream, wrapper);
-            }
-            else {
-                xmlMapper.writeValue(outputStream, response);
+                objectMapper.writeValue(outputStream, wrapper);
+            } else {
+                objectMapper.writeValue(outputStream, response);
             }
         }
         return outputStream.toString();

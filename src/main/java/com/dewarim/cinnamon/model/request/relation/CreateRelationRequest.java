@@ -39,6 +39,10 @@ public class CreateRelationRequest implements CreateRequest<Relation>, ApiReques
                 r.getLeftId() <= 0 || r.getRightId() <= 0 && r.getTypeId() <= 0);
     }
 
+    public List<Relation> getRelations() {
+        return relations;
+    }
+
     @Override
     public List<Relation> list() {
         return relations;

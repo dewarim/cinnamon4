@@ -2,20 +2,19 @@ package com.dewarim.cinnamon.client;
 
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.model.response.BaseResponse;
+import com.dewarim.cinnamon.model.response.CinnamonContentType;
 import com.dewarim.cinnamon.model.response.Wrapper;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.hc.core5.http.ContentType;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import static com.dewarim.cinnamon.api.Constants.EXPECTED_SIZE_ANY;
-import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
 import static com.dewarim.cinnamon.client.CinnamonClient.changeTriggerResponseLocal;
 
 public class Unwrapper<T, W extends Wrapper<T>> {
-
-    private final XmlMapper mapper = XML_MAPPER;
 
     private final Class<W> clazz;
 
@@ -45,7 +44,9 @@ public class Unwrapper<T, W extends Wrapper<T>> {
 
     public List<T> unwrap(StandardResponse response, Integer expectedSize, boolean ignoreError) throws IOException {
         try (response) {
-            if(!ignoreError) {
+            ContentType  contentType = ContentType.parseLenient(response.getEntity().getContentType());
+            ObjectMapper mapper      = CinnamonContentType.getByHttpContentType(contentType.getMimeType()).getObjectMapper();
+            if (!ignoreError) {
                 CinnamonClient.checkResponseForErrors(response, mapper);
             }
             String content = new String(response.getEntity().getContent().readAllBytes());

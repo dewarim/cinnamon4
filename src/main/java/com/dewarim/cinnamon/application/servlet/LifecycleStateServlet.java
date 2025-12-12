@@ -5,6 +5,7 @@ import com.dewarim.cinnamon.FailedRequestException;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.api.lifecycle.State;
 import com.dewarim.cinnamon.api.lifecycle.StateChangeResult;
+import com.dewarim.cinnamon.application.CinnamonRequest;
 import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.application.ErrorResponseGenerator;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
@@ -20,7 +21,6 @@ import com.dewarim.cinnamon.model.request.lifecycleState.*;
 import com.dewarim.cinnamon.model.response.LifecycleStateWrapper;
 import com.dewarim.cinnamon.provider.StateProviderService;
 import com.dewarim.cinnamon.security.authorization.AccessFilter;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -31,12 +31,10 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.dewarim.cinnamon.DefaultPermission.LIFECYCLE_STATE_WRITE;
-import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
 
 @WebServlet(name = "LifecycleState", urlPatterns = "/")
 public class LifecycleStateServlet extends BaseServlet implements CruddyServlet<LifecycleState> {
 
-    private final ObjectMapper xmlMapper = XML_MAPPER;
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
@@ -44,34 +42,39 @@ public class LifecycleStateServlet extends BaseServlet implements CruddyServlet<
         LifecycleDao      lifecycleDao     = new LifecycleDao();
         LifecycleStateDao stateDao         = new LifecycleStateDao();
         UrlMapping        mapping          = UrlMapping.getByPath(request.getRequestURI());
+        CinnamonRequest   cinnamonRequest  = (CinnamonRequest) request;
         CinnamonResponse  cinnamonResponse = (CinnamonResponse) response;
         UserAccount       user             = ThreadLocalSqlSession.getCurrentUser();
 
         switch (mapping) {
-            case LIFECYCLE_STATE__ATTACH_LIFECYCLE -> attachLifecycleState(request, cinnamonResponse, osdDao, lifecycleDao, stateDao, user);
-            case LIFECYCLE_STATE__CHANGE_STATE -> changeState(request, cinnamonResponse, osdDao, stateDao, user);
-            case LIFECYCLE_STATE__DETACH_LIFECYCLE -> detachLifecycleState(request, cinnamonResponse, osdDao, user);
-            case LIFECYCLE_STATE__GET -> getLifecycleState(request, cinnamonResponse);
+            case LIFECYCLE_STATE__ATTACH_LIFECYCLE ->
+                    attachLifecycleState(cinnamonRequest, cinnamonResponse, osdDao, lifecycleDao, stateDao, user);
+            case LIFECYCLE_STATE__CHANGE_STATE ->
+                    changeState(cinnamonRequest, cinnamonResponse, osdDao, stateDao, user);
+            case LIFECYCLE_STATE__DETACH_LIFECYCLE ->
+                    detachLifecycleState(cinnamonRequest, cinnamonResponse, osdDao, user);
+            case LIFECYCLE_STATE__GET -> getLifecycleState(cinnamonRequest, cinnamonResponse);
             case LIFECYCLE_STATE__CREATE -> {
                 superuserCheck();
-                create(convertCreateRequest(request, CreateLifecycleStateRequest.class), stateDao, cinnamonResponse);
+                create(convertCreateRequest(cinnamonRequest, CreateLifecycleStateRequest.class), stateDao, cinnamonResponse);
             }
             case LIFECYCLE_STATE__DELETE -> {
                 superuserCheck();
-                delete(convertDeleteRequest(request, DeleteLifecycleStateRequest.class), stateDao, cinnamonResponse);
+                delete(convertDeleteRequest(cinnamonRequest, DeleteLifecycleStateRequest.class), stateDao, cinnamonResponse);
             }
             case LIFECYCLE_STATE__UPDATE -> {
                 superuserCheck();
-                update(convertUpdateRequest(request, UpdateLifecycleStateRequest.class), stateDao, cinnamonResponse);
+                update(convertUpdateRequest(cinnamonRequest, UpdateLifecycleStateRequest.class), stateDao, cinnamonResponse);
             }
-            case LIFECYCLE_STATE__LIST -> list(convertListRequest(request, ListLifecycleStateRequest.class), stateDao, cinnamonResponse);
-            case LIFECYCLE_STATE__GET_NEXT_STATES -> getNextStates(request, cinnamonResponse, osdDao, stateDao);
+            case LIFECYCLE_STATE__LIST ->
+                    list(convertListRequest(cinnamonRequest, ListLifecycleStateRequest.class), stateDao, cinnamonResponse);
+            case LIFECYCLE_STATE__GET_NEXT_STATES -> getNextStates(cinnamonRequest, cinnamonResponse, osdDao, stateDao);
             default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
     }
 
-    private void getNextStates(HttpServletRequest request, CinnamonResponse response, OsdDao osdDao, LifecycleStateDao stateDao) throws IOException {
-        IdRequest idRequest = xmlMapper.readValue(request.getInputStream(), IdRequest.class)
+    private void getNextStates(CinnamonRequest request, CinnamonResponse response, OsdDao osdDao, LifecycleStateDao stateDao) throws IOException {
+        IdRequest idRequest = request.getMapper().readValue(request.getInputStream(), IdRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         Long             osdId = idRequest.getId();
         ObjectSystemData osd   = osdDao.getObjectById(osdId).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
@@ -83,8 +86,8 @@ public class LifecycleStateServlet extends BaseServlet implements CruddyServlet<
         response.setWrapper(wrapper);
     }
 
-    private void changeState(HttpServletRequest request, CinnamonResponse response, OsdDao osdDao, LifecycleStateDao stateDao, UserAccount user) throws IOException {
-        ChangeLifecycleStateRequest changeRequest = xmlMapper.readValue(request.getInputStream(), ChangeLifecycleStateRequest.class)
+    private void changeState(CinnamonRequest request, CinnamonResponse response, OsdDao osdDao, LifecycleStateDao stateDao, UserAccount user) throws IOException {
+        ChangeLifecycleStateRequest changeRequest = request.getMapper().readValue(request.getInputStream(), ChangeLifecycleStateRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         Long             osdId   = changeRequest.getOsdId();
         Long             stateId = changeRequest.getStateId();
@@ -117,14 +120,13 @@ public class LifecycleStateServlet extends BaseServlet implements CruddyServlet<
             osd.setLifecycleStateId(lcState.getId());
             osdDao.updateOsd(osd, true);
             response.responseIsGenericOkay();
-        }
-        else {
+        } else {
             throw new FailedRequestException(ErrorCode.LIFECYCLE_STATE_CHANGE_FAILED, stateChangeResult.getCombinedMessages());
         }
     }
 
-    private void detachLifecycleState(HttpServletRequest request, CinnamonResponse response, OsdDao osdDao, UserAccount user) throws IOException {
-        IdRequest detachReq = xmlMapper.readValue(request.getInputStream(), IdRequest.class)
+    private void detachLifecycleState(CinnamonRequest request, CinnamonResponse response, OsdDao osdDao, UserAccount user) throws IOException {
+        IdRequest detachReq = request.getMapper().readValue(request.getInputStream(), IdRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         Long             id  = detachReq.getId();
         ObjectSystemData osd = osdDao.getObjectById(id).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
@@ -141,8 +143,8 @@ public class LifecycleStateServlet extends BaseServlet implements CruddyServlet<
         }
     }
 
-    private void attachLifecycleState(HttpServletRequest request, CinnamonResponse response, OsdDao osdDao, LifecycleDao lifecycleDao, LifecycleStateDao stateDao, UserAccount user) throws IOException {
-        AttachLifecycleRequest attachReq = xmlMapper.readValue(request.getInputStream(), AttachLifecycleRequest.class);
+    private void attachLifecycleState(CinnamonRequest request, CinnamonResponse response, OsdDao osdDao, LifecycleDao lifecycleDao, LifecycleStateDao stateDao, UserAccount user) throws IOException {
+        AttachLifecycleRequest attachReq = request.getMapper().readValue(request.getInputStream(), AttachLifecycleRequest.class);
         if (attachReq.validated()) {
             ObjectSystemData osd = osdDao.getObjectById(attachReq.getOsdId()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
             // TODO: should we check for readSysMeta, i.e. if OSD is browsable?
@@ -164,14 +166,13 @@ public class LifecycleStateServlet extends BaseServlet implements CruddyServlet<
             State newState = StateProviderService.getInstance().getStateProvider(lifecycleState.getStateClass()).getState();
             changeStateAndCreateResponse(newState, osd, lifecycleState, osdDao, response, attachReq.isForceChange());
 
-        }
-        else {
+        } else {
             ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.INVALID_REQUEST);
         }
     }
 
-    private void getLifecycleState(HttpServletRequest request, CinnamonResponse response) throws IOException {
-        IdRequest         stateRequest = xmlMapper.readValue(request.getInputStream(), IdRequest.class);
+    private void getLifecycleState(CinnamonRequest request, CinnamonResponse response) throws IOException {
+        IdRequest         stateRequest = request.getMapper().readValue(request.getInputStream(), IdRequest.class);
         LifecycleStateDao stateDao     = new LifecycleStateDao();
         if (stateRequest.validated()) {
             Optional<LifecycleState> state   = stateDao.getLifecycleStateById(stateRequest.getId());
@@ -180,11 +181,7 @@ public class LifecycleStateServlet extends BaseServlet implements CruddyServlet<
             response.setWrapper(wrapper);
             return;
         }
-        ErrorCode.INVALID_REQUEST.throwUp();
+        throw ErrorCode.INVALID_REQUEST.exception();
     }
 
-    @Override
-    public ObjectMapper getMapper() {
-        return XML_MAPPER;
-    }
 }

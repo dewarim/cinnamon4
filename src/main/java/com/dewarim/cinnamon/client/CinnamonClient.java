@@ -15,10 +15,7 @@ import com.dewarim.cinnamon.model.request.ListUrlMappingInfoRequest;
 import com.dewarim.cinnamon.model.request.acl.CreateAclRequest;
 import com.dewarim.cinnamon.model.request.acl.DeleteAclRequest;
 import com.dewarim.cinnamon.model.request.acl.ListAclRequest;
-import com.dewarim.cinnamon.model.request.aclGroup.CreateAclGroupRequest;
-import com.dewarim.cinnamon.model.request.aclGroup.DeleteAclGroupRequest;
-import com.dewarim.cinnamon.model.request.aclGroup.ListAclGroupRequest;
-import com.dewarim.cinnamon.model.request.aclGroup.UpdateAclGroupRequest;
+import com.dewarim.cinnamon.model.request.aclGroup.*;
 import com.dewarim.cinnamon.model.request.changeTrigger.CreateChangeTriggerRequest;
 import com.dewarim.cinnamon.model.request.changeTrigger.DeleteChangeTriggerRequest;
 import com.dewarim.cinnamon.model.request.changeTrigger.ListChangeTriggerRequest;
@@ -78,6 +75,7 @@ import com.dewarim.cinnamon.model.request.user.*;
 import com.dewarim.cinnamon.model.response.*;
 import com.dewarim.cinnamon.model.response.index.IndexInfoResponse;
 import com.dewarim.cinnamon.model.response.index.ReindexResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.entity.mime.FileBody;
@@ -91,7 +89,6 @@ import org.apache.logging.log4j.Logger;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -99,20 +96,22 @@ import static com.dewarim.cinnamon.api.Constants.*;
 import static com.dewarim.cinnamon.api.UrlMapping.*;
 import static com.dewarim.cinnamon.model.request.osd.VersionPredicate.ALL;
 import static jakarta.servlet.http.HttpServletResponse.SC_OK;
-import static org.apache.hc.core5.http.ContentType.APPLICATION_XML;
+import static org.apache.hc.core5.http.HttpHeaders.ACCEPT;
+import static org.apache.hc.core5.http.HttpHeaders.CONTENT_TYPE;
 
 public class CinnamonClient {
 
     private static final Logger log = LogManager.getLogger(CinnamonClient.class);
 
-    private       int        port       = 9090;
-    private       String     host       = "localhost";
-    private       String     protocol   = "http";
-    private       String     username   = "admin";
-    private       String     password   = "admin";
-    private       String     ticket;
-    private final XmlMapper  mapper     = XML_MAPPER;
-    private final HttpClient httpClient = HttpClients.createDefault();
+    private       int                 port       = 9090;
+    private       String              host       = "localhost";
+    private       String              protocol   = "http";
+    private       String              username   = "admin";
+    private       String              password   = "admin";
+    private       String              ticket;
+    private       ObjectMapper        mapper;
+    private final HttpClient          httpClient = HttpClients.createDefault();
+    private       CinnamonContentType cinnamonContentType;
 
     public static final ThreadLocal<List<ChangeTriggerResponse>> changeTriggerResponseLocal = ThreadLocal.withInitial(ArrayList::new);
 
@@ -151,12 +150,14 @@ public class CinnamonClient {
     private boolean generateTicketIfNull = true;
 
     public CinnamonClient() {
+        this.cinnamonContentType = CinnamonContentType.XML;
+        this.mapper = cinnamonContentType.getObjectMapper();
     }
 
-
     public CinnamonClient(int port, String host, String protocol, String username, String password) {
-        this.port     = port;
-        this.host     = host;
+        this();
+        this.port = port;
+        this.host = host;
         this.protocol = protocol;
         this.username = username;
         this.password = password;
@@ -166,8 +167,9 @@ public class CinnamonClient {
      * Create a new Cinnamon client using the old client's connection data.
      */
     public CinnamonClient(CinnamonClient client, String username, String password) {
-        this.port     = client.getPort();
-        this.host     = client.getHost();
+        this();
+        this.port = client.getPort();
+        this.host = client.getHost();
         this.protocol = client.getProtocol();
         this.username = username;
         this.password = password;
@@ -177,6 +179,7 @@ public class CinnamonClient {
         ClassicRequestBuilder requestBuilder = ClassicRequestBuilder.create("POST")
                 .setUri((String.format("%s://%s:%s", protocol, host, port) + urlMapping.getPath()))
                 .addHeader("ticket", getTicket(false))
+                .addHeader(ACCEPT, cinnamonContentType.getContentType().toString())
                 .setEntity(multipartEntity);
         return httpClient.execute(requestBuilder.build(), StandardResponse::new);
     }
@@ -195,7 +198,8 @@ public class CinnamonClient {
         ClassicRequestBuilder requestBuilder = ClassicRequestBuilder.create("POST")
                 .setUri((String.format("%s://%s:%s", protocol, host, port) + urlMapping.getPath()))
                 .addHeader("ticket", getTicket(false))
-                .setEntity(requestStr, APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
+                .addHeader(ACCEPT, cinnamonContentType.getContentType().toString())
+                .setEntity(requestStr, cinnamonContentType.getContentType());
         return httpClient.execute(requestBuilder.build(), StandardResponse::new);
     }
 
@@ -203,7 +207,7 @@ public class CinnamonClient {
         String requestStr = mapper.writeValueAsString(request);
         ClassicRequestBuilder requestBuilder = ClassicRequestBuilder.create("POST")
                 .setUri((String.format("%s://%s:%s", protocol, host, port) + UrlMapping.CINNAMON__CONNECT.getPath()))
-                .setEntity(requestStr, APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
+                .setEntity(requestStr, cinnamonContentType.getContentType());
         return httpClient.execute(requestBuilder.build(), StandardResponse::new);
     }
 
@@ -279,7 +283,8 @@ public class CinnamonClient {
             ClassicRequestBuilder requestBuilder = ClassicRequestBuilder.create("POST")
                     .setUri((String.format("%s://%s:%s", protocol, host, port) + urlMapping.getPath()))
                     .addHeader("ticket", getTicket(false))
-                    .addHeader("Content-type", APPLICATION_XML.withCharset(StandardCharsets.UTF_8).toString())
+                    .addHeader(CONTENT_TYPE, cinnamonContentType.getContentType().toString())
+                    .addHeader(ACCEPT, cinnamonContentType.getContentType().toString())
                     .setEntity(requestStr);
             return httpClient.execute(requestBuilder.build(), response -> {
                 StandardResponse standardResponse = new StandardResponse(response);
@@ -383,7 +388,7 @@ public class CinnamonClient {
 //        request.setTypeId(DEFAULT_OBJECT_TYPE_ID);
 //        MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
 //                .addTextBody(CINNAMON_REQUEST_PART, mapper.writeValueAsString(request),
-//                        APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
+//                        cinnamonContentType.getContentType());
 //        StandardResponse response = sendStandardMultipartRequest(UrlMapping.OSD__CREATE_OSD, entityBuilder.build());
 //        assertResponseOkay(response);
 //        List<ObjectSystemData> objectSystemData = unwrapOsds(response, 1);
@@ -431,7 +436,7 @@ public class CinnamonClient {
         MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
                 .addPart("file", fileBody)
                 .addTextBody(CINNAMON_REQUEST_PART, mapper.writeValueAsString(versionRequest),
-                        APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
+                        cinnamonContentType.getContentType());
         return unwrapOsds(sendStandardMultipartRequest(UrlMapping.OSD__VERSION, entityBuilder.build()), 1).getFirst();
     }
 
@@ -466,7 +471,7 @@ public class CinnamonClient {
         MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
                 .addPart("file", fileBody)
                 .addTextBody(CINNAMON_REQUEST_PART, mapper.writeValueAsString(createOsdRequest),
-                        APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
+                        cinnamonContentType.getContentType());
         var response = sendStandardMultipartRequest(OSD__CREATE_OSD, entityBuilder.build());
         return osdUnwrapper.unwrap(response, 1).getFirst();
     }
@@ -475,7 +480,7 @@ public class CinnamonClient {
         FileBody fileBody = new FileBody(content);
         HttpEntity entity = MultipartEntityBuilder.create()
                 .addTextBody(CINNAMON_REQUEST_PART, mapper.writeValueAsString(new SetContentRequest(osdId, formatId)),
-                        APPLICATION_XML.withCharset(StandardCharsets.UTF_8))
+                        cinnamonContentType.getContentType())
                 .addPart("file", fileBody)
                 .build();
         var response = sendStandardMultipartRequest(UrlMapping.OSD__SET_CONTENT, entity);
@@ -652,6 +657,11 @@ public class CinnamonClient {
         return aclGroupUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
+    public List<AclGroup> listAclGroupsByGroupTypeOrAclType(Long id, AclGroupListRequest.IdType type) throws IOException {
+        StandardResponse response = sendStandardRequest(ACL_GROUP__LIST_BY_GROUP_OR_ACL, new AclGroupListRequest(id, type));
+        return aclGroupUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
+    }
+
     public List<AclGroup> createAclGroups(List<AclGroup> aclGroups) throws IOException {
         CreateAclGroupRequest request  = new CreateAclGroupRequest(aclGroups);
         StandardResponse      response = sendStandardRequest(UrlMapping.ACL_GROUP__CREATE, request);
@@ -802,7 +812,6 @@ public class CinnamonClient {
 
     // Relations
     public Relation createRelation(Long leftId, Long rightId, Long typeId, String metadata) throws IOException {
-        // create
         var createRequest = new CreateRelationRequest(leftId, rightId, typeId, metadata);
         var response      = sendStandardRequest(UrlMapping.RELATION__CREATE, createRequest);
         return relationUnwrapper.unwrap(response, 1).getFirst();
@@ -828,7 +837,7 @@ public class CinnamonClient {
     private HttpEntity createSimpleMultipartEntity(String fieldname, Object contentRequest) throws IOException {
         MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
                 .addTextBody(fieldname, mapper.writeValueAsString(contentRequest),
-                        APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
+                        getCinnamonContentType().getContentType());
         return entityBuilder.build();
     }
 
@@ -1331,7 +1340,8 @@ public class CinnamonClient {
     public String testEcho(String message) throws IOException {
         var response = httpClient.execute(ClassicRequestBuilder.post("http://localhost:" + port + TEST__ECHO.getPath())
                 .addHeader("ticket", getTicket(false))
-                .setEntity(message, APPLICATION_XML.withCharset(StandardCharsets.UTF_8))
+                .addHeader(ACCEPT, cinnamonContentType.getContentType().toString())
+                .setEntity(message, cinnamonContentType.getContentType())
                 .build(), StandardResponse::new);
         verifyResponseIsOkay(response);
         return new String(response.getEntity().getContent().readAllBytes());
@@ -1340,6 +1350,8 @@ public class CinnamonClient {
     public void reloadLogging() throws IOException {
         var response = httpClient.execute(ClassicRequestBuilder.post("http://localhost:" + port + CONFIG__RELOAD_LOGGING.getPath())
                 .addHeader("ticket", getTicket(false))
+                .addHeader(ACCEPT, cinnamonContentType.getContentType().toString())
+                .addHeader(CONTENT_TYPE, cinnamonContentType.getContentType().toString())
                 .build(), StandardResponse::new);
         verifyResponseIsOkay(response);
     }
@@ -1377,7 +1389,7 @@ public class CinnamonClient {
         }
     }
 
-    static void checkResponseForErrors(StandardResponse response, XmlMapper mapper) throws IOException {
+    static void checkResponseForErrors(StandardResponse response, ObjectMapper mapper) throws IOException {
         if (response.containsHeader(HEADER_FIELD_CINNAMON_ERROR)) {
             CinnamonErrorWrapper wrapper = mapper.readValue(response.getEntity().getContent(), CinnamonErrorWrapper.class);
             log.warn("Found errors: {}", wrapper.getErrors().stream().map(CinnamonError::toString).collect(Collectors.joining(",")));
@@ -1401,6 +1413,20 @@ public class CinnamonClient {
                 ", username='" + username + '\'' +
                 ", password='" + password + '\'' +
                 ", ticket='" + ticket + '\'' +
+                ", contentType='" + cinnamonContentType + '\'' +
                 '}';
+    }
+
+    public void setMapper(ObjectMapper mapper) {
+        this.mapper = mapper;
+    }
+
+    public void setResponseContentType(CinnamonContentType cinnamonContentType) {
+        Objects.requireNonNull(cinnamonContentType);
+        this.cinnamonContentType = cinnamonContentType;
+    }
+
+    public CinnamonContentType getCinnamonContentType() {
+        return cinnamonContentType;
     }
 }

@@ -3,6 +3,7 @@ package com.dewarim.cinnamon.application.servlet;
 import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
+import com.dewarim.cinnamon.application.CinnamonRequest;
 import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.application.ErrorResponseGenerator;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
@@ -25,7 +26,6 @@ import com.dewarim.cinnamon.model.response.LinkResponseWrapper;
 import com.dewarim.cinnamon.model.response.LinkWrapper;
 import com.dewarim.cinnamon.security.authorization.AccessFilter;
 import com.dewarim.cinnamon.security.authorization.AuthorizationService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -37,7 +37,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
 import static com.dewarim.cinnamon.model.links.LinkType.FOLDER;
 
 @WebServlet(name = "Link", urlPatterns = "/")
@@ -47,26 +46,26 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
     private static final int    UPDATED_ONE_ROW = 1;
 
     private final DeleteLinkService    deleteLinkService    = new DeleteLinkService();
-    private final ObjectMapper         xmlMapper            = XML_MAPPER;
     private final AuthorizationService authorizationService = new AuthorizationService();
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
+        CinnamonRequest  cinnamonRequest  = (CinnamonRequest) request;
         CinnamonResponse cinnamonResponse = (CinnamonResponse) response;
         LinkDao          linkDao          = new LinkDao();
 
         UrlMapping mapping = UrlMapping.getByPath(request.getRequestURI());
         switch (mapping) {
-            case LINK__CREATE -> create(request, linkDao, cinnamonResponse);
-            case LINK__DELETE -> delete(request, linkDao, cinnamonResponse);
-            case LINK__GET_LINKS_BY_ID -> getLinksById(request, linkDao, cinnamonResponse);
-            case LINK__UPDATE -> update(request, linkDao, cinnamonResponse);
+            case LINK__CREATE -> create(cinnamonRequest, linkDao, cinnamonResponse);
+            case LINK__DELETE -> delete(cinnamonRequest, linkDao, cinnamonResponse);
+            case LINK__GET_LINKS_BY_ID -> getLinksById(cinnamonRequest, linkDao, cinnamonResponse);
+            case LINK__UPDATE -> update(cinnamonRequest, linkDao, cinnamonResponse);
             default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
         }
     }
 
-    private void create(HttpServletRequest request, LinkDao linkDao, CinnamonResponse response) throws IOException {
-        CreateLinkRequest linkRequest = (CreateLinkRequest) getMapper().readValue(request.getInputStream(), CreateLinkRequest.class)
+    private void create(CinnamonRequest request, LinkDao linkDao, CinnamonResponse response) throws IOException {
+        CreateLinkRequest linkRequest = (CreateLinkRequest) request.getMapper().readValue(request.getInputStream(), CreateLinkRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
         List<Link>  links       = linkRequest.list().stream().map((Link link) -> createLink(link, linkDao)).collect(Collectors.toList());
@@ -115,8 +114,7 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
                 if (folderOpt.isPresent()) {
                     folder = folderOpt.get();
                     accessFilter.verifyHasPermissionOnOwnable(folder, DefaultPermission.BROWSE, folder, ErrorCode.UNAUTHORIZED);
-                }
-                else {
+                } else {
                     ErrorCode.FOLDER_NOT_FOUND.throwUp();
                 }
             }
@@ -131,8 +129,8 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
         return linkDao.create(Collections.singletonList(link)).getFirst();
     }
 
-    private void update(HttpServletRequest request, LinkDao linkDao, CinnamonResponse response) throws IOException {
-        UpdateRequest<Link> updateRequest = xmlMapper.readValue(request.getInputStream(), UpdateLinkRequest.class)
+    private void update(CinnamonRequest request, LinkDao linkDao, CinnamonResponse response) throws IOException {
+        UpdateRequest<Link> updateRequest = request.getMapper().readValue(request.getInputStream(), UpdateLinkRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         List<Link> links       = updateRequest.list().stream().map(link -> updateLink(link, linkDao)).collect(Collectors.toList());
         var        linkWrapper = new LinkWrapper(links);
@@ -158,8 +156,7 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
         }
         if (link.getType() == FOLDER && !Objects.equals(link.getFolderId(), update.getFolderId())) {
             updateFolder(update, link, linkDao, accessFilter);
-        }
-        else if (!Objects.equals(link.getObjectId(), update.getObjectId())) {
+        } else if (!Objects.equals(link.getObjectId(), update.getObjectId())) {
             updateObject(update, link, linkDao, accessFilter);
         }
         if (!Objects.equals(link.getParentId(), update.getParentId())) {
@@ -220,8 +217,8 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
         }
     }
 
-    private void delete(HttpServletRequest request, LinkDao linkDao, CinnamonResponse response) throws IOException {
-        DeleteLinkRequest deleteRequest = (DeleteLinkRequest) xmlMapper.readValue(request.getInputStream(), DeleteLinkRequest.class)
+    private void delete(CinnamonRequest request, LinkDao linkDao, CinnamonResponse response) throws IOException {
+        DeleteLinkRequest deleteRequest = (DeleteLinkRequest) request.getMapper().readValue(request.getInputStream(), DeleteLinkRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         List<Link> links = linkDao.getObjectsById(deleteRequest.list());
         if (links.isEmpty() || links.size() != deleteRequest.list().size()) {
@@ -238,8 +235,8 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
         response.setWrapper(deleteRequest.fetchResponseWrapper());
     }
 
-    private void getLinksById(HttpServletRequest request, LinkDao linkDao, CinnamonResponse response) throws IOException {
-        var linkRequest = xmlMapper.readValue(request.getInputStream(), GetLinksRequest.class)
+    private void getLinksById(CinnamonRequest request, LinkDao linkDao, CinnamonResponse response) throws IOException {
+        var linkRequest = request.getMapper().readValue(request.getInputStream(), GetLinksRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
         int        idCount = linkRequest.getIds().size();
@@ -250,11 +247,11 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
         }
 
         // check the ACLs of all links.
-        UserAccount user        = ThreadLocalSqlSession.getCurrentUser();
-        List<Link>  folderLinks = links.stream().filter(link -> link.getFolderId() != null).toList();
-        List<Link>  osdLinks    = links.stream().filter(link -> link.getObjectId() != null).toList();
-        List<Link> filteredFolderLinks = authorizationService.filterFolderLinksAndTargetsByBrowsePermission(folderLinks, user);
-        List<Link> filteredOsdLinks    = authorizationService.filterOsdLinksAndTargetsByBrowsePermission(osdLinks, user);
+        UserAccount user                = ThreadLocalSqlSession.getCurrentUser();
+        List<Link>  folderLinks         = links.stream().filter(link -> link.getFolderId() != null).toList();
+        List<Link>  osdLinks            = links.stream().filter(link -> link.getObjectId() != null).toList();
+        List<Link>  filteredFolderLinks = authorizationService.filterFolderLinksAndTargetsByBrowsePermission(folderLinks, user);
+        List<Link>  filteredOsdLinks    = authorizationService.filterOsdLinksAndTargetsByBrowsePermission(osdLinks, user);
 
         List<Link> filteredLinks = new ArrayList<>(filteredOsdLinks);
         filteredLinks.addAll(filteredFolderLinks);
@@ -329,8 +326,5 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
         return linkResponse;
     }
 
-    @Override
-    public ObjectMapper getMapper() {
-        return xmlMapper;
-    }
+
 }

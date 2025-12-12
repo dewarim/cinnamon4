@@ -2,6 +2,7 @@ package com.dewarim.cinnamon.application.servlet;
 
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
+import com.dewarim.cinnamon.application.CinnamonRequest;
 import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.configuration.ServerConfig;
@@ -14,7 +15,6 @@ import com.dewarim.cinnamon.model.response.ConfigWrapper;
 import com.dewarim.cinnamon.model.response.UrlMappingInfoWrapper;
 import com.dewarim.cinnamon.provider.StateProviderService;
 import com.dewarim.cinnamon.security.LoginProviderService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -31,21 +31,20 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.dewarim.cinnamon.ErrorCode.NEED_EXTERNAL_LOGGING_CONFIG;
-import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
 
 @WebServlet(name = "Config", urlPatterns = "/")
 public class ConfigServlet extends HttpServlet {
     private static final Logger log = LogManager.getLogger(ConfigServlet.class);
 
-    private final ObjectMapper xmlMapper = XML_MAPPER;
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        CinnamonRequest cinnamonRequest = (CinnamonRequest) request;
 
         CinnamonResponse cinnamonResponse = (CinnamonResponse) response;
 
         UrlMapping mapping = UrlMapping.getByPath(request.getRequestURI());
         switch (mapping) {
-            case CONFIG__LIST_ALL_CONFIGURATIONS -> listAllConfigurations(request, cinnamonResponse);
+            case CONFIG__LIST_ALL_CONFIGURATIONS -> listAllConfigurations(cinnamonRequest, cinnamonResponse);
             case CONFIG__URL_MAPPINGS -> listUrlMappings(cinnamonResponse);
             case CONFIG__RELOAD_LOGGING -> reloadLogging(cinnamonResponse);
             default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();
@@ -79,9 +78,9 @@ public class ConfigServlet extends HttpServlet {
         cinnamonResponse.setWrapper(new UrlMappingInfoWrapper(urlMappingInfos));
     }
 
-    private void listAllConfigurations(HttpServletRequest request, CinnamonResponse response) throws IOException {
+    private void listAllConfigurations(CinnamonRequest request, CinnamonResponse response) throws IOException {
         // ignore listRequest for now, just make sure it's valid xml:
-        xmlMapper.readValue(request.getInputStream(), ListConfigRequest.class);
+        request.getMapper().readValue(request.getInputStream(), ListConfigRequest.class);
 
         ConfigWrapper wrapper = new ConfigWrapper();
         wrapper.setAcls(new AclDao().list());
