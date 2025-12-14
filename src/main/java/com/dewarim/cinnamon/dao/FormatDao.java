@@ -51,4 +51,9 @@ public class FormatDao implements CrudDao<Format> {
     public Format getCachedVersion(Long id) {
         return CACHE.getIfPresent(id);
     }
+
+    @Override
+    public void removeFromCache(Long id){
+        CACHE.invalidate(id);
+    }
 }

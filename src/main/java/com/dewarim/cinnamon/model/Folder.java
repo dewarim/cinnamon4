@@ -25,6 +25,7 @@ public class Folder implements OwnableWithMetadata, Identifiable {
     private Long    typeId;
     private boolean metadataChanged;
     private String  summary;
+    private String  folderPath;
     /**
      * Is true if other folders have this folder as parent folder.
      * Value is read-only.
@@ -172,6 +173,14 @@ public class Folder implements OwnableWithMetadata, Identifiable {
         // ignore
     }
 
+    public String getFolderPath() {
+        return folderPath;
+    }
+
+    public void setFolderPath(String folderPath) {
+        this.folderPath = folderPath;
+    }
+
     @Override
     public int hashCode() {
         return Objects.hash(name, parentId);
@@ -188,8 +197,10 @@ public class Folder implements OwnableWithMetadata, Identifiable {
                 ", typeId=" + typeId +
                 ", metadataChanged=" + metadataChanged +
                 ", summary='" + summary + '\'' +
+                ", folderPath='" + folderPath + '\'' +
+                ", hasSubfolders=" + hasSubfolders +
+                ", metas=" + metas +
                 ", created=" + created +
-                ", subfolders=" + hasSubfolders +
                 '}';
     }
 }

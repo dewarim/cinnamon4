@@ -273,7 +273,7 @@ public class TestObjectHolder {
 
     public TestObjectHolder setFolder(Long id) throws IOException {
         if (id != null) {
-            folder = client.getFolders(List.of(id), true).getFirst();
+            folder = client.getFolders(List.of(id), true, false).getFirst();
         }
         return this;
     }

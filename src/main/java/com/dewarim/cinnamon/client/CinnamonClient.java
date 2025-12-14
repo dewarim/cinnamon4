@@ -530,7 +530,10 @@ public class CinnamonClient {
 
     // Folders
     public Folder getFolderById(Long id, boolean includeSummary) throws IOException {
-        return getFolders(Collections.singletonList(id), includeSummary).getFirst();
+        return getFolders(Collections.singletonList(id), includeSummary, false).getFirst();
+    }
+    public Folder getFolderById(Long id, boolean includeSummary, boolean addFolderPath) throws IOException {
+        return getFolders(Collections.singletonList(id), includeSummary, addFolderPath).getFirst();
     }
 
     public List<Folder> getFolderByIdWithAncestors(Long id, boolean includeSummary) throws IOException {
@@ -545,8 +548,9 @@ public class CinnamonClient {
         return folderUnwrapper.unwrap(response, 1).getFirst();
     }
 
-    public List<Folder> getFolders(List<Long> ids, boolean includeSummary) throws IOException {
+    public List<Folder> getFolders(List<Long> ids, boolean includeSummary, boolean addFolderPath) throws IOException {
         FolderRequest    folderRequest = new FolderRequest(ids, includeSummary);
+        folderRequest.setAddFolderPath(addFolderPath);
         StandardResponse response      = sendStandardRequest(UrlMapping.FOLDER__GET_FOLDERS, folderRequest);
         return folderUnwrapper.unwrap(response, ids.size());
     }

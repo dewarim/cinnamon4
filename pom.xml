@@ -7,13 +7,13 @@
     <groupId>com.dewarim.cinnamon</groupId>
     <artifactId>cinnamon-cms</artifactId>
     <packaging>jar</packaging>
-    <version>1.8.3</version>
+    <version>1.10.1</version>
     <name>Cinnamon CMS</name>
 
     <properties>
         <jetty.version>11.0.25</jetty.version>
         <jetty.annotations.version>11.0.18</jetty.annotations.version>
-        <jackson.version>2.14.3</jackson.version>
+        <jackson.version>2.20.0</jackson.version>
         <junit.version>5.13.1</junit.version>
         <lucene.version>9.12.1</lucene.version>
         <mybatis.version>3.5.19</mybatis.version>
@@ -79,46 +79,15 @@
                 <artifactId>jetty-annotations</artifactId>
                 <version>${jetty.annotations.version}</version>
             </dependency>
-
-            <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty-handler</artifactId>
-                <version>4.1.118.Final</version>
-            </dependency>
-            <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty-handler-proxy</artifactId>
-                <version>4.1.108.Final</version>
-            </dependency>
-            <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty-buffer</artifactId>
-                <version>4.1.108.Final</version>
-            </dependency>
-            <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty-codec</artifactId>
-                <version>4.1.108.Final</version>
-            </dependency>
-            <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty-codec-http</artifactId>
-                <version>4.1.108.Final</version>
-            </dependency>
-            <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty-codec-http2</artifactId>
-                <version>4.1.108.Final</version>
-            </dependency>
-            <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty-tcnative-boringssl-static</artifactId>
-                <version>2.0.65.Final</version>
-            </dependency>
             <dependency>
                 <groupId>com.jayway.jsonpath</groupId>
                 <artifactId>json-path</artifactId>
                 <version>2.9.0</version>
+            </dependency>
+            <dependency>
+                <groupId>net.minidev</groupId>
+                <artifactId>json-smart</artifactId>
+                <version>2.5.2</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

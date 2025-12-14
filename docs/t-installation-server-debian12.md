@@ -10,7 +10,7 @@
 
 * Install some required or useful software
   ```
-  apt install curl less sudo daemontools rsync htop zip unzip sshpass gnupg wget
+  apt install curl less sudo rsync htop zip unzip sshpass gnupg wget
   ```
 
 * Install JDK 21:
@@ -170,11 +170,11 @@
 * Create Cinnamon 4 startup script:
  * Create a file {{{/opt/cinnamon/runc4.sh}}} with the following content:
   ```
-  #!/bin/bash
-  export JAVA_HOME=/opt/jdk-21.0.0      # make sure to use the correct path to JDK
-  export PATH=$PATH:$JAVA_HOME/bin
-  cd /opt/cinnamon
-  java --add-modules jdk.incubator.vector --enable-native-access=ALL-UNNAMED -jar cinnamon-server.jar
+#!/bin/bash
+export JAVA_HOME=/usr/lib/jvm/jdk-21.0.8-oracle-x64   # make sure to use the correct JAVA_HOME path
+export PATH=$PATH:$JAVA_HOME/bin
+cd /opt/cinnamon
+java -cp "./lib/*:." --add-modules jdk.incubator.vector --enable-native-access=ALL-UNNAMED -jar cinnamon-server.jar --show-config  --config cinnamon-config.xml
   ```
   * Set the file to be executable by the owner.
 * Execute `/opt/cinnamon/runc4.sh`.

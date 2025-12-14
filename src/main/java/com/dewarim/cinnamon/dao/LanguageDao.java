@@ -40,4 +40,9 @@ public class LanguageDao implements CrudDao<Language> {
     public Language getCachedVersion(Long id) {
         return CACHE.getIfPresent(id);
     }
+
+    @Override
+    public void removeFromCache(Long id){
+        CACHE.invalidate(id);
+    }
 }

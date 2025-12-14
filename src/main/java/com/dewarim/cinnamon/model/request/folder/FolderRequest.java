@@ -17,6 +17,7 @@ public class FolderRequest implements ApiRequest<FolderRequest> {
     private List<Long> ids = new ArrayList<>();
 
     private boolean includeSummary;
+    private boolean addFolderPath;
 
     public FolderRequest() {
     }
@@ -45,7 +46,7 @@ public class FolderRequest implements ApiRequest<FolderRequest> {
     /**
      * @return true if list of ids is non-empty and contains only positive long integers.
      */
-    private boolean validated(){
+    private boolean validated() {
         return ids.size() > 0 && ids.stream().allMatch(id -> id != null && id > 0);
     }
 
@@ -57,8 +58,18 @@ public class FolderRequest implements ApiRequest<FolderRequest> {
         }
     }
 
+    public boolean isAddFolderPath() {
+        return addFolderPath;
+    }
+
+    public void setAddFolderPath(boolean addFolderPath) {
+        this.addFolderPath = addFolderPath;
+    }
+
     @Override
     public List<ApiRequest<FolderRequest>> examples() {
-        return List.of(new FolderRequest(List.of(1L,2L,3L),true));
+        FolderRequest folderRequest = new FolderRequest(List.of(1L, 2L, 3L), true);
+        folderRequest.setAddFolderPath(true);
+        return List.of(folderRequest);
     }
 }

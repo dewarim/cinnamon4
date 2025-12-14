@@ -2,6 +2,7 @@ package com.dewarim.cinnamon.application.servlet;
 
 import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.ErrorCode;
+import com.dewarim.cinnamon.FailedRequestException;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonRequest;
 import com.dewarim.cinnamon.application.CinnamonResponse;
@@ -51,9 +52,10 @@ public class RelationServlet extends HttpServlet implements CruddyServlet<Relati
         CreateRequest<Relation> createRequest = convertCreateRequest(request, CreateRelationRequest.class);
         List<Relation>          relations     = createRequest.list();
         RelationTypeDao         rtDao         = new RelationTypeDao();
-        var                     typesExist    = rtDao.verifyAllObjectsFromSetExist(relations.stream().map(Relation::getTypeId).collect(Collectors.toList()));
-        if (!typesExist) {
-            ErrorCode.RELATION_TYPE_NOT_FOUND.throwUp();
+        var                     missingTypes    = rtDao.verifyAllObjectsFromSetExist(relations.stream().map(Relation::getTypeId).collect(Collectors.toList()));
+        if (!missingTypes.isEmpty()) {
+            String message = "Could not find the following relation types: "+missingTypes.stream().map(Object::toString).collect(Collectors.joining(","));
+            throw new FailedRequestException(ErrorCode.RELATION_TYPE_NOT_FOUND, message);
         }
         AccessFilter accessFilter = AccessFilter.getInstance(user);
         OsdDao       osdDao       = new OsdDao();

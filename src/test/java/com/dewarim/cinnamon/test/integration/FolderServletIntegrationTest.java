@@ -132,7 +132,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void getFoldersHappyPath() throws IOException {
         var          folder  = new TestObjectHolder(client, userId).createFolder().folder;
-        List<Folder> folders = client.getFolders(List.of(folder.getId()), false);
+        List<Folder> folders = client.getFolders(List.of(folder.getId()), false, false);
         assertEquals(1, folders.size());
         assertEquals(folder, folders.getFirst());
     }
