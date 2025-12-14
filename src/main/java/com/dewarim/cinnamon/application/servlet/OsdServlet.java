@@ -676,8 +676,10 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         if (file == null) {
             throw ErrorCode.MISSING_FILE_PARAMETER.exception();
         }
-        SetContentRequest setContentRequest = request.getMapper().readValue(contentRequest.getInputStream(), SetContentRequest.class)
+        CinnamonContentType cinnamonContentType = CinnamonContentType.getByHttpContentType(contentRequest.getContentType());
+        SetContentRequest setContentRequest = cinnamonContentType.getObjectMapper().readValue(contentRequest.getInputStream(), SetContentRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
+
         ObjectSystemData osd          = osdDao.getObjectById(setContentRequest.getId()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
         boolean          writeAllowed = new AuthorizationService().hasUserOrOwnerPermission(osd, DefaultPermission.WRITE_OBJECT_CONTENT, user);
         if (!writeAllowed) {

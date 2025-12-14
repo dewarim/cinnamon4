@@ -15,6 +15,7 @@ import com.dewarim.cinnamon.model.Folder;
 import com.dewarim.cinnamon.model.request.ConnectionRequest;
 import com.dewarim.cinnamon.model.request.search.SearchType;
 import com.dewarim.cinnamon.model.response.CinnamonConnectionWrapper;
+import com.dewarim.cinnamon.model.response.CinnamonContentType;
 import com.dewarim.cinnamon.model.response.CinnamonError;
 import com.dewarim.cinnamon.model.response.CinnamonErrorWrapper;
 import com.dewarim.cinnamon.test.TestObjectHolder;
@@ -23,6 +24,7 @@ import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.HttpStatus;
+import org.apache.hc.core5.http.ProtocolException;
 import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.jdbc.ScriptRunner;
@@ -46,6 +48,7 @@ import java.util.stream.Collectors;
 import static com.dewarim.cinnamon.DefaultPermission.BROWSE;
 import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
 import static org.apache.hc.core5.http.HttpHeaders.ACCEPT;
+import static org.apache.hc.core5.http.HttpHeaders.CONTENT_TYPE;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -185,13 +188,19 @@ public class CinnamonIntegrationTest {
         }
     }
 
-    protected CinnamonError assertCinnamonError(StandardResponse response, ErrorCode errorCode) throws IOException {
-        String responseText = new String(response.getEntity().getContent().readAllBytes());
-        assertTrue(responseText.contains(errorCode.getCode()), "response should contain errorCode " + errorCode + " but was " + responseText);
-        assertThat(errorCode.getHttpResponseCode(), equalTo(response.getCode()));
-        CinnamonError cinnamonError = mapper.readValue(response.getEntity().getContent(), CinnamonErrorWrapper.class).getErrors().getFirst();
-        assertEquals(errorCode.getCode(), cinnamonError.getCode());
-        return cinnamonError;
+    protected CinnamonError assertCinnamonError(StandardResponse response, ErrorCode errorCode) {
+        try {
+            String responseText = new String(response.getEntity().getContent().readAllBytes());
+            assertTrue(responseText.contains(errorCode.getCode()), "response should contain errorCode " + errorCode + " but was " + responseText);
+            assertThat(errorCode.getHttpResponseCode(), equalTo(response.getCode()));
+            CinnamonContentType contentType   = CinnamonContentType.getByHttpContentType(response.getHeader(CONTENT_TYPE).getValue());
+            CinnamonError       cinnamonError = contentType.getObjectMapper().readValue(response.getEntity().getContent(), CinnamonErrorWrapper.class).getErrors().getFirst();
+            assertEquals(errorCode.getCode(), cinnamonError.getCode());
+            return cinnamonError;
+        } catch (IOException|ProtocolException e) {
+            log.error("Response from server is broken due to {}", e.getClass(), e);
+            throw new CinnamonClientException("Response from server is broken due to " + e.getClass());
+        }
     }
 
     protected void assertClientError(Executable executable, ErrorCode... errorCode) {
@@ -219,10 +228,11 @@ public class CinnamonIntegrationTest {
      * @throws IOException if connection to server fails for some reason
      */
     protected StandardResponse sendAdminRequest(UrlMapping urlMapping, Object request) throws IOException {
-        String requestStr = mapper.writeValueAsString(request);
+        String requestStr = adminClient.getCinnamonContentType().getObjectMapper().writeValueAsString(request);
         String url        = "http://localhost:" + cinnamonTestPort + urlMapping.getPath();
         return httpClient.execute(ClassicRequestBuilder.post(url)
                 .addHeader("ticket", ticket)
+                .addHeader(ACCEPT, adminClient.getCinnamonContentType().getContentType().toString())
                 .setEntity(requestStr, adminClient.getCinnamonContentType().getContentType())
                 .build(), StandardResponse::new);
     }
@@ -241,7 +251,17 @@ public class CinnamonIntegrationTest {
         String url        = "http://localhost:" + cinnamonTestPort + urlMapping.getPath();
         return httpClient.execute(ClassicRequestBuilder.post(url)
                 .addHeader("ticket", getDoesTicket(false))
+                .addHeader(ACCEPT, client.getCinnamonContentType().getContentType().toString())
                 .setEntity(requestStr, client.getCinnamonContentType().getContentType())
+                .build(), StandardResponse::new);
+    }
+    protected StandardResponse sendStandardRequestWithContentType(UrlMapping urlMapping, Object request, CinnamonContentType cinnamonContentType) throws IOException {
+        String requestStr = cinnamonContentType.getObjectMapper().writeValueAsString(request);
+        String url        = "http://localhost:" + cinnamonTestPort + urlMapping.getPath();
+        return httpClient.execute(ClassicRequestBuilder.post(url)
+                .addHeader("ticket", getDoesTicket(false))
+                .addHeader(ACCEPT, cinnamonContentType.getContentType().toString())
+                .setEntity(requestStr, cinnamonContentType.getContentType())
                 .build(), StandardResponse::new);
     }
 

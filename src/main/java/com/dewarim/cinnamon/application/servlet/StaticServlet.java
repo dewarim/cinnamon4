@@ -31,19 +31,20 @@ public class StaticServlet extends HttpServlet {
         if (request.getRequestURI().contains("../")) {
             ErrorCode.STATIC__NO_PATH_TRAVERSAL.throwUp();
         }
-        handleStaticContentRequest(pathInfo, response);
+        handleStaticContentRequest(pathInfo, request, response);
     }
 
-    private void handleStaticContentRequest(String pathInfo, HttpServletResponse response) throws IOException {
+    private void handleStaticContentRequest(String pathInfo, HttpServletRequest request, HttpServletResponse response) throws IOException {
         try (InputStream inputStream = getClass().getResourceAsStream("/static" + pathInfo)) {
             if (inputStream == null) {
-                ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.FILE_NOT_FOUND);
+                ErrorResponseGenerator.generateErrorMessage(request, response, ErrorCode.FILE_NOT_FOUND);
                 return;
             }
             String defaultMimeByExtension = MimeTypes.getDefaultMimeByExtension(pathInfo);
             response.setContentType(defaultMimeByExtension);
             switch (defaultMimeByExtension) {
-                case "application/xml", "text/plain", "text/css", "text/html", "text/javascript" -> response.setCharacterEncoding("UTF-8");
+                case "application/xml", "text/plain", "text/css", "text/html", "text/javascript" ->
+                        response.setCharacterEncoding("UTF-8");
                 default -> {
                 } // do not set character encoding.
             }

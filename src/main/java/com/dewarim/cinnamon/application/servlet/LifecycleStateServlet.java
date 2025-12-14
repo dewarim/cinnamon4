@@ -7,7 +7,6 @@ import com.dewarim.cinnamon.api.lifecycle.State;
 import com.dewarim.cinnamon.api.lifecycle.StateChangeResult;
 import com.dewarim.cinnamon.application.CinnamonRequest;
 import com.dewarim.cinnamon.application.CinnamonResponse;
-import com.dewarim.cinnamon.application.ErrorResponseGenerator;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.dao.LifecycleDao;
 import com.dewarim.cinnamon.dao.LifecycleStateDao;
@@ -158,8 +157,7 @@ public class LifecycleStateServlet extends BaseServlet implements CruddyServlet<
             if (stateOpt.isEmpty()) {
                 stateOpt = stateDao.getLifecycleStateById(lifecycle.getDefaultStateId());
                 if (stateOpt.isEmpty()) {
-                    ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.LIFECYCLE_STATE_NOT_FOUND);
-                    return;
+                    throw ErrorCode.LIFECYCLE_STATE_NOT_FOUND.exception();
                 }
             }
             lifecycleState = stateOpt.get();
@@ -167,7 +165,7 @@ public class LifecycleStateServlet extends BaseServlet implements CruddyServlet<
             changeStateAndCreateResponse(newState, osd, lifecycleState, osdDao, response, attachReq.isForceChange());
 
         } else {
-            ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.INVALID_REQUEST);
+            throw ErrorCode.INVALID_REQUEST.exception();
         }
     }
 

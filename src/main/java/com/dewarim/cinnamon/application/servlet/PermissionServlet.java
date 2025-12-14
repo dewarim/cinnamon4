@@ -4,7 +4,6 @@ import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonRequest;
 import com.dewarim.cinnamon.application.CinnamonResponse;
-import com.dewarim.cinnamon.application.ErrorResponseGenerator;
 import com.dewarim.cinnamon.dao.AclDao;
 import com.dewarim.cinnamon.dao.AclGroupDao;
 import com.dewarim.cinnamon.dao.AclGroupPermissionDao;
@@ -76,8 +75,7 @@ public class PermissionServlet extends HttpServlet implements CruddyServlet<Perm
         AclDao    aclDao   = new AclDao();
         List<Acl> userAcls = aclDao.getUserAcls(userId);
         if (userAcls == null) {
-            ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.PERMISSIONS_NOT_FOUND);
-            return;
+            throw ErrorCode.PERMISSIONS_NOT_FOUND.exception();
         }
         Optional<Acl>     optAcl  = userAcls.stream().filter(acl -> acl.getId().equals(aclId)).findFirst();
         PermissionWrapper wrapper = new PermissionWrapper();

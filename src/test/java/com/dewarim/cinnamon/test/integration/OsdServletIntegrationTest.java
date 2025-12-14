@@ -17,6 +17,7 @@ import com.dewarim.cinnamon.model.request.meta.CreateMetaRequest;
 import com.dewarim.cinnamon.model.request.meta.DeleteMetaRequest;
 import com.dewarim.cinnamon.model.request.meta.MetaRequest;
 import com.dewarim.cinnamon.model.request.osd.*;
+import com.dewarim.cinnamon.model.response.CinnamonContentType;
 import com.dewarim.cinnamon.model.response.CinnamonError;
 import com.dewarim.cinnamon.model.response.OsdWrapper;
 import com.dewarim.cinnamon.model.response.Summary;
@@ -25,10 +26,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.hc.client5.http.entity.mime.FileBody;
 import org.apache.hc.client5.http.entity.mime.MultipartEntityBuilder;
 import org.apache.hc.client5.http.entity.mime.StringBody;
-import org.apache.hc.core5.http.ClassicHttpRequest;
-import org.apache.hc.core5.http.ContentType;
-import org.apache.hc.core5.http.Header;
-import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.*;
 import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
 import org.apache.ibatis.parsing.ParsingException;
 import org.apache.logging.log4j.LogManager;
@@ -53,8 +51,7 @@ import static com.dewarim.cinnamon.ErrorCode.*;
 import static com.dewarim.cinnamon.api.Constants.*;
 import static com.dewarim.cinnamon.model.request.osd.VersionPredicate.*;
 import static org.apache.hc.core5.http.ContentType.APPLICATION_XML;
-import static org.apache.hc.core5.http.HttpHeaders.CONTENT_DISPOSITION;
-import static org.apache.hc.core5.http.HttpHeaders.CONTENT_TYPE;
+import static org.apache.hc.core5.http.HttpHeaders.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -277,8 +274,8 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void osdDateFieldsAreFormattedAsIso8601() throws IOException, ParseException {
         var osd = new TestObjectHolder(client, userId).createOsd().osd;
-        var response = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID,
-                new OsdRequest(List.of(osd.getId()), false, false));
+        var response = sendStandardRequestWithContentType(UrlMapping.OSD__GET_OBJECTS_BY_ID,
+                new OsdRequest(List.of(osd.getId()), false, false), CinnamonContentType.XML);
         String           osdResponse      = new String(response.getEntity().getContent().readAllBytes(), Charset.defaultCharset());
         String           createdTimestamp = osdResponse.split("</?created>")[1];
         SimpleDateFormat df               = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
@@ -2130,6 +2127,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         String url = "http://localhost:" + cinnamonTestPort + urlMapping.getPath();
         return httpClient.execute(ClassicRequestBuilder.post(url)
                 .addHeader("ticket", getDoesTicket(false))
+                .addHeader(ACCEPT, client.getCinnamonContentType().getContentType().getMimeType())
                 .setEntity(multipartEntity).build(), StandardResponse::new);
     }
 
@@ -2152,13 +2150,19 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     private List<ObjectSystemData> unwrapOsds(StandardResponse response, Integer expectedSize) throws IOException {
         assertResponseOkay(response);
-        List<ObjectSystemData> osds = mapper.readValue(response.getEntity().getContent(), OsdWrapper.class).getOsds();
-        if (expectedSize != null) {
-            assertNotNull(osds);
-            assertFalse(osds.isEmpty());
-            assertThat(osds.size(), equalTo(expectedSize));
+        try {
+            CinnamonContentType    contentType = CinnamonContentType.getByHttpContentType(response.getHeader(CONTENT_TYPE).getValue());
+            List<ObjectSystemData> osds        = contentType.getObjectMapper().readValue(response.getEntity().getContent(), OsdWrapper.class).getOsds();
+            if (expectedSize != null) {
+                assertNotNull(osds);
+                assertFalse(osds.isEmpty());
+                assertThat(osds.size(), equalTo(expectedSize));
+            }
+            return osds;
+        } catch (IOException | ProtocolException e) {
+            log.error("Failed to handle response", e);
+            throw new CinnamonClientException("Failed to handle server response: " + e.getMessage());
         }
-        return osds;
     }
 
     private void createTestContentOnOsd(Long osdId, boolean asSuperuser) throws IOException {

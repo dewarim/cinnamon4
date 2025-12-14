@@ -15,6 +15,7 @@ import com.dewarim.cinnamon.model.request.lifecycle.ListLifecycleRequest;
 import com.dewarim.cinnamon.model.request.lifecycleState.AttachLifecycleRequest;
 import com.dewarim.cinnamon.model.request.lifecycleState.ChangeLifecycleStateRequest;
 import com.dewarim.cinnamon.model.request.osd.UpdateOsdRequest;
+import com.dewarim.cinnamon.model.response.CinnamonContentType;
 import com.dewarim.cinnamon.test.TestObjectHolder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -63,9 +64,9 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
 
     @Test
     public void attachLifecycleInvalidRequest() throws IOException {
-        var toh = new TestObjectHolder(client, userId)
-                .createOsd("attachLifecycleInvalidRequest");
-        long osdId = toh.osd.getId();
+        Long osdId = new TestObjectHolder(client, userId)
+                .createOsd("attachLifecycleInvalidRequest")
+                .osd.getId();
         assertClientError(() -> client.attachLifecycle(null, 1L, 1L, false), INVALID_REQUEST);
         assertClientError(() -> client.attachLifecycle(osdId, null, 1L, false), INVALID_REQUEST);
         assertClientError(() -> client.attachLifecycle(osdId, 1L, 0L, false), INVALID_REQUEST);
@@ -144,7 +145,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
     }
 
     @Test()
-    public void attachLifecycleHappyPathWithNonDefaultState() throws IOException, InterruptedException {
+    public void attachLifecycleHappyPathWithNonDefaultState() throws IOException {
         var       toh       = new TestObjectHolder(client, userId).createOsd();
         long      osdId     = toh.osd.getId();
         Lifecycle lifecycle = adminClient.createLifecycle("attachLifecycleHappyPathWithNonDefaultState");
@@ -443,7 +444,7 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
     @Test
     public void verifySerialization() throws IOException {
         String xmlResponse;
-        try (StandardResponse response = sendStandardRequest(UrlMapping.LIFECYCLE__LIST, new ListLifecycleRequest())) {
+        try (StandardResponse response = sendStandardRequestWithContentType(UrlMapping.LIFECYCLE__LIST, new ListLifecycleRequest(), CinnamonContentType.XML)) {
             xmlResponse = new String(response.getEntity().getContent().readAllBytes(), StandardCharsets.UTF_8);
         }
         Document document = ParamParser.parseXmlToDocument(xmlResponse);

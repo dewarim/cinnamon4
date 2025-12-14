@@ -34,25 +34,25 @@ public class AuthenticationFilter implements Filter {
             HttpServletResponse servletResponse = (HttpServletResponse) response;
             String              ticket          = servletRequest.getHeader("ticket");
             if (ticket == null || ticket.trim().isEmpty()) {
-                failAuthentication(servletResponse, ErrorCode.AUTHENTICATION_FAIL_NO_TICKET_GIVEN);
+                failAuthentication(servletRequest, servletResponse, ErrorCode.AUTHENTICATION_FAIL_NO_TICKET_GIVEN);
                 return;
             }
 
             Session cinnamonSession = new SessionDao().getSessionByTicket(ticket);
             if (cinnamonSession == null) {
-                failAuthentication(servletResponse, ErrorCode.AUTHENTICATION_FAIL_NO_SESSION_FOUND);
+                failAuthentication(servletRequest, servletResponse, ErrorCode.AUTHENTICATION_FAIL_NO_SESSION_FOUND);
                 return;
             }
 
             long currentTime = new Date().getTime();
             if (cinnamonSession.getExpires().getTime() < currentTime) {
-                failAuthentication(servletResponse, ErrorCode.AUTHENTICATION_FAIL_SESSION_EXPIRED);
+                failAuthentication(servletRequest, servletResponse, ErrorCode.AUTHENTICATION_FAIL_SESSION_EXPIRED);
                 return;
             }
 
             Optional<UserAccount> userAccountOpt = new UserAccountDao().getUserAccountById(cinnamonSession.getUserId());
             if (userAccountOpt.isEmpty() || !userAccountOpt.get().isActivated()) {
-                failAuthentication(servletResponse, ErrorCode.AUTHENTICATION_FAIL_USER_NOT_FOUND);
+                failAuthentication(servletRequest, servletResponse, ErrorCode.AUTHENTICATION_FAIL_USER_NOT_FOUND);
                 return;
             }
             Date expirationDate = new Date(currentTime+ CinnamonServer.config.getSecurityConfig().getSessionLengthInMillis());
@@ -66,9 +66,9 @@ public class AuthenticationFilter implements Filter {
 
     }
 
-    private void failAuthentication(HttpServletResponse servletResponse, ErrorCode errorCode) {
+    private void failAuthentication(HttpServletRequest request, HttpServletResponse servletResponse, ErrorCode errorCode) {
         log.info("Authentication failed: {}", errorCode);
-        ErrorResponseGenerator.generateErrorMessage(servletResponse, errorCode);
+        ErrorResponseGenerator.generateErrorMessage(request, servletResponse, errorCode);
     }
 
 

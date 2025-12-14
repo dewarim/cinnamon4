@@ -6,6 +6,7 @@ import com.dewarim.cinnamon.dao.DeletionDao;
 import com.dewarim.cinnamon.model.Deletion;
 import com.dewarim.cinnamon.provider.ContentProviderService;
 import jakarta.servlet.*;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.logging.log4j.LogManager;
@@ -58,7 +59,7 @@ public class DbSessionFilter implements Filter {
         } catch (Exception e) {
             log.warn("Caught unexpected exception -> rollback:", e);
             ThreadLocalSqlSession.getSqlSession().rollback();
-            ErrorResponseGenerator.generateErrorMessage( (HttpServletResponse) response, INTERNAL_SERVER_ERROR_TRY_AGAIN_LATER, e.getMessage());
+            ErrorResponseGenerator.generateErrorMessage((HttpServletRequest) request, (HttpServletResponse) response, INTERNAL_SERVER_ERROR_TRY_AGAIN_LATER, e.getMessage());
         }
         finally {
             ThreadLocalSqlSession.setCurrentUser(null);

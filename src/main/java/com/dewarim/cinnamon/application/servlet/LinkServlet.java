@@ -5,7 +5,6 @@ import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonRequest;
 import com.dewarim.cinnamon.application.CinnamonResponse;
-import com.dewarim.cinnamon.application.ErrorResponseGenerator;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.application.service.DeleteLinkService;
 import com.dewarim.cinnamon.dao.*;
@@ -227,9 +226,7 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
         UserAccount user          = ThreadLocalSqlSession.getCurrentUser();
         List<Link>  filteredLinks = authorizationService.filterLinksByBrowsePermission(links, user);
         if (filteredLinks.isEmpty() || links.size() != filteredLinks.size()) {
-            ErrorCode.UNAUTHORIZED.throwUp();
-            ErrorResponseGenerator.generateErrorMessage(response, ErrorCode.UNAUTHORIZED);
-            return;
+            throw ErrorCode.UNAUTHORIZED.exception();
         }
         deleteLinkService.verifyAndDelete(filteredLinks, user, linkDao);
         response.setWrapper(deleteRequest.fetchResponseWrapper());

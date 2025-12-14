@@ -31,7 +31,7 @@ public class CinnamonRequest extends HttpServletRequestWrapper {
     private              String                     filename;
     private              boolean                    useCopiedFileContent = false;
     private final        CinnamonContentType        cinnamonContentType;
-    private              ObjectMapper               mapper;
+    private final        ObjectMapper               mapper;
 
     public CinnamonRequest(HttpServletRequest request, HttpServletResponse response) {
         super(request);
@@ -39,7 +39,7 @@ public class CinnamonRequest extends HttpServletRequestWrapper {
         Optional<String> contentTypeOpt = Optional.ofNullable(request.getContentType());
         multiPart = contentTypeOpt.map(s -> s.toLowerCase().startsWith(MULTIPART)).orElse(false);
         if (multiPart) {
-            cinnamonContentType = CinnamonContentType.getByHttpContentType(contentTypeOpt.orElseGet(() -> CONTENT_TYPE_XML));
+            cinnamonContentType = CinnamonContentType.getByHttpContentType(contentTypeOpt.orElse(CONTENT_TYPE_XML));
         } else {
             cinnamonContentType = CinnamonContentType.getByHttpContentType(request.getContentType());
         }
@@ -124,7 +124,4 @@ public class CinnamonRequest extends HttpServletRequestWrapper {
         return mapper;
     }
 
-    public CinnamonContentType getCinnamonContentType() {
-        return cinnamonContentType;
-    }
 }
