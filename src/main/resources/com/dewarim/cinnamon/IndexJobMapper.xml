@@ -39,6 +39,8 @@
         </selectKey>
         INSERT INTO index_jobs(id, item_id, job_type, action, failed)
         VALUES (#{id}, #{itemId}, #{jobType}, #{action}, 0)
+        <!-- We do not need a second "update this index-item" entry  -->
+        ON CONFLICT DO NOTHING
     </insert>
 
     <delete id="delete" parameterType="long">
@@ -68,12 +70,14 @@
         INSERT INTO index_jobs(id, item_id, job_type, action, failed)
         SELECT nextval('seq_index_job_id'), id, 'OSD', 'UPDATE', 0
         FROM objects
+        ON CONFLICT DO NOTHING
     </insert>
 
     <insert id="reindexAllFolders">
         INSERT INTO index_jobs(id, item_id, job_type, action, failed)
         SELECT nextval('seq_index_job_id'), id, 'FOLDER', 'UPDATE', 0
         FROM folders
+        ON CONFLICT DO NOTHING
     </insert>
 
     <insert id="reindexOsds" parameterType="map">
@@ -85,6 +89,7 @@
                  open="(" separator="," close=")">
             #{item}
         </foreach>
+        ON CONFLICT DO NOTHING
     </insert>
 
     <insert id="reindexFolders" parameterType="list">
@@ -96,6 +101,7 @@
                  open="(" separator="," close=")">
             #{item}
         </foreach>
+        ON CONFLICT DO NOTHING
     </insert>
 
 </mapper>
