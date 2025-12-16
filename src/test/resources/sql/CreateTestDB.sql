@@ -529,7 +529,8 @@ create table index_jobs(
     item_id bigint not null,
     failed int not null default 0,
     action varchar(127) not null,
-    update_tika_metaset boolean default false
+    update_tika_metaset boolean default false,
+    constraint index_jobs_type_and_id_unique unique (job_type, item_id)
 );
 
 
