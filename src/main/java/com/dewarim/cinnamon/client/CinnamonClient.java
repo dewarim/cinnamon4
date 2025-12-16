@@ -76,7 +76,6 @@ import com.dewarim.cinnamon.model.response.*;
 import com.dewarim.cinnamon.model.response.index.IndexInfoResponse;
 import com.dewarim.cinnamon.model.response.index.ReindexResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.entity.mime.FileBody;
 import org.apache.hc.client5.http.entity.mime.MultipartEntityBuilder;
@@ -89,7 +88,10 @@ import org.apache.logging.log4j.Logger;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static com.dewarim.cinnamon.api.Constants.*;
@@ -275,6 +277,11 @@ public class CinnamonClient {
         String      content = new String(response.getEntity().getContent().readAllBytes());
         LinkWrapper wrapper = mapper.readValue(content, LinkWrapper.class);
         return wrapper.getLinks();
+    }
+
+    public void setCinnamonContentType(CinnamonContentType cinnamonContentType) {
+        this.cinnamonContentType = cinnamonContentType;
+        this.mapper = cinnamonContentType.getObjectMapper();
     }
 
     public class WrappedRequest<T, W extends Wrapper<T>> {
@@ -1102,7 +1109,7 @@ public class CinnamonClient {
         return relationUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
-    public List<Relation> searchRelations(List<Long> leftIds, List<Long> rightIds, Collection<Long> relationTypeIds, boolean includeMetadata, boolean orMode) throws IOException {
+    public List<Relation> searchRelations(List<Long> leftIds, List<Long> rightIds, List<Long> relationTypeIds, boolean includeMetadata, boolean orMode) throws IOException {
         var request  = new SearchRelationRequest(leftIds, rightIds, relationTypeIds, includeMetadata, orMode);
         var response = sendStandardRequest(RELATION__SEARCH, request);
         return relationUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
@@ -1377,11 +1384,9 @@ public class CinnamonClient {
         return relationTypeUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
-    static class SingletonUnwrapper<S> {
+    class SingletonUnwrapper<S> {
 
         private final Class<? extends S> clazz;
-
-        private final static XmlMapper mapper = XML_MAPPER;
 
         SingletonUnwrapper(Class<? extends S> clazz) {
             this.clazz = clazz;

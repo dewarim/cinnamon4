@@ -60,7 +60,11 @@ public class LifecycleServletIntegrationTest extends CinnamonIntegrationTest {
         Lifecycle fooCycle = client.listLifecycles().stream()
                 .filter(lifecycle1 -> lifecycle1.getName().equals("foo-cycle"))
                 .findFirst().orElseThrow();
-        assertEquals(lifecycle, fooCycle);
+        assertEquals(lifecycle.getId(), fooCycle.getId());
+        assertEquals(lifecycle.getName(), fooCycle.getName());
+        assertEquals(lifecycle.getDefaultStateId(), fooCycle.getDefaultStateId());
+        assertTrue(lifecycle.getLifecycleStates().isEmpty());
+        assertTrue(fooCycle.getLifecycleStates().isEmpty());
     }
 
     @Test

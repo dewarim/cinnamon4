@@ -65,7 +65,7 @@ public class DeleteFolderRequest implements ApiRequest<Folder> {
     }
 
     private boolean validated() {
-        return ids != null && ids.stream().allMatch(id -> Objects.nonNull(id) && id > 0);
+        return ids != null && !ids.isEmpty() && ids.stream().allMatch(id -> Objects.nonNull(id) && id > 0);
     }
 
     public Optional<DeleteFolderRequest> validateRequest() {

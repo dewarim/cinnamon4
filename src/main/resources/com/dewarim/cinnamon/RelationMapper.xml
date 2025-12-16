@@ -45,7 +45,7 @@
         CASE WHEN #{includeMetadata} THEN metadata ELSE null END AS metadata
         FROM relations r join relation_types rt on r.type_id = rt.id
         <where>
-            <if test="leftIds != null">
+            <if test="leftIds != null and !leftIds.isEmpty()">
                 r.left_id IN
                 <foreach item="item" index="index" collection="leftIds"
                          open="(" separator="," close=")">
@@ -55,7 +55,7 @@
                     AND
                 </if>
             </if>
-            <if test="rightIds != null">
+            <if test="rightIds != null and !rightIds.isEmpty()">
                 r.right_id IN
                 <foreach item="item" index="index" collection="rightIds"
                          open="(" separator="," close=")">
@@ -65,7 +65,7 @@
                     AND
                 </if>
             </if>
-            <if test="typeIds != null">
+            <if test="typeIds != null and !typeIds.isEmpty()">
                 rt.id IN
                 <foreach item="item" index="index" collection="typeIds"
                          open="(" separator="," close=")">

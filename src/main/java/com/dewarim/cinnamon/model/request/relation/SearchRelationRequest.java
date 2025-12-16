@@ -11,16 +11,16 @@ import java.util.Optional;
 @JacksonXmlRootElement(localName = "searchRelationRequest")
 public class SearchRelationRequest implements ApiRequest<SearchRelationRequest> {
 
-    private Collection<Long> leftIds;
-    private Collection<Long> rightIds;
-    private Collection<Long> relationTypeIds;
-    private boolean          includeMetadata;
+    private List<Long>       leftIds;
+    private List<Long> rightIds;
+    private List<Long> relationTypeIds;
+    private boolean    includeMetadata;
     private boolean          orMode = false;
 
     public SearchRelationRequest() {
     }
 
-    public SearchRelationRequest(Collection<Long> leftIds, Collection<Long> rightIds, Collection<Long> relationTypeIds,
+    public SearchRelationRequest(List<Long> leftIds, List<Long> rightIds, List<Long> relationTypeIds,
                                  boolean includeMetadata, boolean orMode) {
         this.leftIds = leftIds;
         this.rightIds = rightIds;
@@ -29,19 +29,19 @@ public class SearchRelationRequest implements ApiRequest<SearchRelationRequest> 
         this.relationTypeIds=relationTypeIds;
     }
 
-    public Collection<Long> getLeftIds() {
+    public List<Long> getLeftIds() {
         return leftIds;
     }
 
-    public Collection<Long> getRightIds() {
+    public List<Long> getRightIds() {
         return rightIds;
     }
 
-    public Collection<Long> getRelationTypeIds() {
+    public List<Long> getRelationTypeIds() {
         return relationTypeIds;
     }
 
-    public void setRelationTypeIds(Collection<Long> relationTypeIds) {
+    public void setRelationTypeIds(List<Long> relationTypeIds) {
         this.relationTypeIds = relationTypeIds;
     }
 
@@ -49,11 +49,11 @@ public class SearchRelationRequest implements ApiRequest<SearchRelationRequest> 
         return includeMetadata;
     }
 
-    public void setLeftIds(Collection<Long> leftIds) {
+    public void setLeftIds(List<Long> leftIds) {
         this.leftIds = leftIds;
     }
 
-    public void setRightIds(Collection<Long> rightIds) {
+    public void setRightIds(List<Long> rightIds) {
         this.rightIds = rightIds;
     }
 

@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
-import static org.apache.hc.core5.http.ContentType.APPLICATION_XML;
+import static org.apache.hc.core5.http.HttpHeaders.ACCEPT;
 import static org.apache.hc.core5.http.HttpHeaders.CONTENT_TYPE;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -68,7 +68,7 @@ public class AuthenticationFilterIntegrationTest extends CinnamonIntegrationTest
         GetUserAccountRequest userInfoRequest = new GetUserAccountRequest(null, "admin");
         ClassicHttpResponse   response        = sendAdminRequest(UrlMapping.USER__GET, userInfoRequest);
         assertThat(response.getCode(), equalTo(HttpServletResponse.SC_FORBIDDEN));
-        CinnamonContentType cinnamonContentType = client.getCinnamonContentType();
+        CinnamonContentType cinnamonContentType = adminClient.getCinnamonContentType();
         CinnamonError error = cinnamonContentType.getObjectMapper()
                 .readValue(response.getEntity().getContent(), CinnamonErrorWrapper.class).getErrors().getFirst();
         assertThat(error.getCode(), equalTo(ErrorCode.AUTHENTICATION_FAIL_SESSION_EXPIRED.getCode()));
@@ -86,7 +86,8 @@ public class AuthenticationFilterIntegrationTest extends CinnamonIntegrationTest
         String url             = "http://localhost:" + cinnamonTestPort + UrlMapping.USER__GET.getPath();
         try (StandardResponse response = httpClient.execute(ClassicRequestBuilder.post(url)
                 .addHeader("ticket", " ")
-                .setEntity(userInfoRequest, APPLICATION_XML)
+                        .addHeader(ACCEPT, cinnamonContentType.getContentType().getMimeType())
+                .setEntity(userInfoRequest, cinnamonContentType.getContentType())
                 .build(), StandardResponse::new)) {
             assertThat(response.getCode(), equalTo(HttpServletResponse.SC_FORBIDDEN));
             CinnamonError error = mapper.readValue(response.getEntity().getContent(), CinnamonErrorWrapper.class).getErrors().getFirst();
@@ -104,7 +105,7 @@ public class AuthenticationFilterIntegrationTest extends CinnamonIntegrationTest
         SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
         sqlSession.commit();
 
-        CinnamonContentType cinnamonContentType = client.getCinnamonContentType();
+        CinnamonContentType cinnamonContentType = adminClient.getCinnamonContentType();
         GetUserAccountRequest userInfoRequest = new GetUserAccountRequest(null, "admin");
         CinnamonError         error;
         try (ClassicHttpResponse response = sendAdminRequest(UrlMapping.USER__GET, userInfoRequest)) {

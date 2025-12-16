@@ -47,7 +47,7 @@ public class FolderRequest implements ApiRequest<FolderRequest> {
      * @return true if list of ids is non-empty and contains only positive long integers.
      */
     private boolean validated() {
-        return ids.size() > 0 && ids.stream().allMatch(id -> id != null && id > 0);
+        return ids != null && !ids.isEmpty() && ids.stream().allMatch(id -> id != null && id > 0);
     }
 
     public Optional<FolderRequest> validateRequest() {

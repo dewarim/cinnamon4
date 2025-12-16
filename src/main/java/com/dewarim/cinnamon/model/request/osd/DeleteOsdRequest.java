@@ -53,7 +53,7 @@ public class DeleteOsdRequest implements ApiRequest<DeleteOsdRequest> {
     }
 
     private boolean validated() {
-        return ids != null && ids.stream().allMatch(id -> Objects.nonNull(id) && id > 0);
+        return ids != null && !ids.isEmpty() && ids.stream().allMatch(id -> Objects.nonNull(id) && id > 0);
     }
 
     public Optional<DeleteOsdRequest> validateRequest() {

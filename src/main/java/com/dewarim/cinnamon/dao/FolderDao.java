@@ -191,6 +191,9 @@ public class FolderDao implements CrudDao<Folder> {
 
     public boolean hasContent(List<Long> ids) {
         SqlSession sqlSession = getSqlSession();
+        if(ids.isEmpty()){
+            return false;
+        }
         Long       count      = sqlSession.selectOne("com.dewarim.cinnamon.model.Folder.countContent", ids);
         return count > 0;
     }
