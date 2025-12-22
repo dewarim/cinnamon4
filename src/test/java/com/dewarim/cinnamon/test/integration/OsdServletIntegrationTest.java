@@ -1117,7 +1117,6 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         TestObjectHolder toh              = new TestObjectHolder(adminClient, userId).createOsd();
         long             id               = toh.osd.getId();
         UpdateOsdRequest updateOsdRequest = new UpdateOsdRequest(id, null, toh.createRandomName(), null, null, null, null, false, false);
-        assertClientError(() -> client.updateOsd(updateOsdRequest), OBJECT_MUST_BE_LOCKED_BY_USER);
         assertTrue(adminClient.updateOsd(updateOsdRequest));
     }
 
@@ -1636,11 +1635,9 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void updateOsdWithoutLockingIt() throws IOException {
-        var toh = new TestObjectHolder(client, userId);
-        toh.createOsd("osd-update-forbidden");
-        var id      = toh.osd.getId();
-        var request = new UpdateOsdRequest(id, 1L, "-", 1L, 1L, 1L, 1L, false, false);
-        assertClientError(() -> client.updateOsd(request), OBJECT_MUST_BE_LOCKED_BY_USER);
+        var id = new TestObjectHolder(client, userId).createOsd().osd.getId();
+        var request = new UpdateOsdRequest(id, null, "-"+Math.random(), null, null, null, null, false, false);
+        assertTrue(client.updateOsd(request), "Updating an unlocked object is allowed after v1.11.0");
     }
 
     @Test

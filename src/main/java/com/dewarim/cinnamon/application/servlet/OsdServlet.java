@@ -750,15 +750,17 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         }
         boolean                     isAdmin    = authorizationService.currentUserIsSuperuser();
         Map<Long, ObjectSystemData> updateOsds = updateRequest.getOsds().stream().collect(Collectors.toMap(ObjectSystemData::getId, k -> k));
+
+        // check locked status before iterating over the objects and making changes:
         for (ObjectSystemData osd : osds) {
-            ObjectSystemData update = updateOsds.get(osd.getId());
             if (osd.lockedByOtherUser(user) && !isAdmin) {
                 throw ErrorCode.OBJECT_LOCKED_BY_OTHER_USER.getException().get();
             }
-            if (!osd.lockedByUser(user) && !isAdmin) {
-                throw ErrorCode.OBJECT_MUST_BE_LOCKED_BY_USER.getException().get();
-            }
+        }
 
+        // apply updates
+        for (ObjectSystemData osd : osds) {
+            ObjectSystemData update = updateOsds.get(osd.getId());
             AccessFilter accessFilter = AccessFilter.getInstance(user);
             FolderDao    folderDao    = new FolderDao();
 
