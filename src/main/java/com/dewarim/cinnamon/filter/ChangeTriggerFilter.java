@@ -7,7 +7,6 @@ import com.dewarim.cinnamon.application.CinnamonRequest;
 import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
-import com.dewarim.cinnamon.application.service.debug.DebugLogService;
 import com.dewarim.cinnamon.application.trigger.TriggerResult;
 import com.dewarim.cinnamon.dao.ChangeTriggerDao;
 import com.dewarim.cinnamon.model.ChangeTrigger;
@@ -65,9 +64,6 @@ public class ChangeTriggerFilter extends HttpFilter {
                 doCopyFileContent = true;
             }
             cinnamonRequest.copyInputStream(doCopyFileContent);
-            if(isDebugEnabled && cinnamonRequest.getByteInput() != null) {
-                DebugLogService.log("cinnamonRequest:", cinnamonRequest.getByteInput().getContent());
-            }
         }
 
         try {

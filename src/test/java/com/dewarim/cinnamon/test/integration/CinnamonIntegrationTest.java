@@ -98,7 +98,7 @@ public class CinnamonIntegrationTest {
             CinnamonServer.config.getServerConfig().setLog4jConfigPath("src/test/resources/log4j2-test.xml");
             CinnamonServer.config.getServerConfig().setLogResponses(true);
 
-            DbSessionFactory dbSessionFactory = new DbSessionFactory("sql/mybatis.test.properties.xml");
+            DbSessionFactory dbSessionFactory = new DbSessionFactory("sql/mybatis.test.properties.xml", "sql/mybatis-config.xml");
 
             SqlSession session = dbSessionFactory.getSqlSessionFactory().openSession(true);
             Connection conn    = session.getConnection();
@@ -115,6 +115,9 @@ public class CinnamonIntegrationTest {
 
             ThreadLocalSqlSession.setDbSessionFactory(dbSessionFactory);
             cinnamonServer.setDbSessionFactory(dbSessionFactory);
+
+            log.info("Create new logging database session factory");
+            CinnamonServer.dbLoggingSessionFactory = new DbSessionFactory("sql/mybatis.test.properties.xml", "sql/mybatis-logging-config.xml");
             cinnamonServer.start();
 
             ticket = getAdminTicket();
@@ -197,7 +200,7 @@ public class CinnamonIntegrationTest {
             CinnamonError       cinnamonError = contentType.getObjectMapper().readValue(response.getEntity().getContent(), CinnamonErrorWrapper.class).getErrors().getFirst();
             assertEquals(errorCode.getCode(), cinnamonError.getCode());
             return cinnamonError;
-        } catch (IOException|ProtocolException e) {
+        } catch (IOException | ProtocolException e) {
             log.error("Response from server is broken due to {}", e.getClass(), e);
             throw new CinnamonClientException("Response from server is broken due to " + e.getClass());
         }
@@ -255,6 +258,7 @@ public class CinnamonIntegrationTest {
                 .setEntity(requestStr, client.getCinnamonContentType().getContentType())
                 .build(), StandardResponse::new);
     }
+
     protected StandardResponse sendStandardRequestWithContentType(UrlMapping urlMapping, Object request, CinnamonContentType cinnamonContentType) throws IOException {
         String requestStr = cinnamonContentType.getObjectMapper().writeValueAsString(request);
         String url        = "http://localhost:" + cinnamonTestPort + urlMapping.getPath();

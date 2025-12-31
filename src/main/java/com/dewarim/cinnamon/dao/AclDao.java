@@ -1,6 +1,5 @@
 package com.dewarim.cinnamon.dao;
 
-import com.dewarim.cinnamon.application.service.debug.DebugLogService;
 import com.dewarim.cinnamon.model.Acl;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -23,7 +22,6 @@ public class AclDao implements CrudDao<Acl> {
     public Optional<Acl> getAclByName(String name) {
         SqlSession sqlSession = getSqlSession();
         Acl        selected   = sqlSession.selectOne("com.dewarim.cinnamon.model.Acl.getAclByName", name);
-        DebugLogService.log("aclByName:",selected);
         return Optional.ofNullable(selected);
     }
 
@@ -32,9 +30,7 @@ public class AclDao implements CrudDao<Acl> {
         GroupDao   groupDao   = new GroupDao();
         Set<Long> groupIds     = groupDao.getGroupIdsWithAncestorsOfUserById(userId);
         List<Acl>  acls       = sqlSession.selectList("com.dewarim.cinnamon.model.Acl.getUserAcls", groupIds);
-        List<Acl>  distinctAcls    = acls.stream().distinct().collect(Collectors.toList());
-        DebugLogService.log("getUserAcls:",distinctAcls);
-        return distinctAcls;
+        return acls.stream().distinct().collect(Collectors.toList());
     }
 
     @Override

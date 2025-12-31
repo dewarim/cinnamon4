@@ -5,7 +5,6 @@ import com.dewarim.cinnamon.FailedRequestException;
 import com.dewarim.cinnamon.api.Identifiable;
 import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
-import com.dewarim.cinnamon.application.service.debug.DebugLogService;
 import com.dewarim.cinnamon.model.response.CinnamonError;
 import org.apache.ibatis.exceptions.PersistenceException;
 import org.apache.ibatis.session.SqlSession;
@@ -40,7 +39,6 @@ public interface CrudDao<T extends Identifiable> {
             }
             createdItems.add(item);
         });
-        debugLog("created: ", createdItems);
         return createdItems;
     }
 
@@ -62,14 +60,12 @@ public interface CrudDao<T extends Identifiable> {
                 throw new FailedRequestException(ErrorCode.DB_DELETE_FAILED, List.of(error));
             }
         });
-        debugLog("deleted: " + getTypeClassName(), ids);
         return deleteCount.get();
     }
 
     default List<T> list() {
         SqlSession sqlSession = getSqlSession();
         List<T>    selected   = sqlSession.selectList(getMapperNamespace(LIST));
-        debugLog("list: ", selected);
         return selected;
     }
 
@@ -82,7 +78,6 @@ public interface CrudDao<T extends Identifiable> {
                 results.addAll(sqlSession.selectList(getMapperNamespace(GET_ALL_BY_ID), partition));
             }
         });
-        debugLog("load objects: ", results);
         return results;
     }
 
@@ -189,7 +184,6 @@ public interface CrudDao<T extends Identifiable> {
             removeFromCache(item.getId());
             updatedItems.add(item);
         });
-        debugLog("updated: ", updatedItems);
         return updatedItems;
     }
 
@@ -231,12 +225,6 @@ public interface CrudDao<T extends Identifiable> {
         PrintWriter  pw = new PrintWriter(sw);
         e.printStackTrace(pw);
         return sw.toString();
-    }
-
-    default void debugLog(String message, Object object) {
-        if (CinnamonServer.config.getDebugConfig().isDebugEnabled()) {
-            DebugLogService.log(message, object);
-        }
     }
 
     default boolean useCache(){

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dewarim.cinnamon.model.event.AccessLogEntry">
+
+    <resultMap id="accessLogEntryResult" type="com.dewarim.cinnamon.model.event.AccessLogEntry">
+        <id property="id" column="id"/>
+        <result property="request" column="request"/>
+        <result property="response" column="response"/>
+        <result property="userId" column="user_id"/>
+    </resultMap>
+    
+    <select id="list" resultType="com.dewarim.cinnamon.model.event.AccessLogEntry">
+        select * from access_log
+    </select>
+
+    <insert id="insert" parameterType="com.dewarim.cinnamon.model.event.AccessLogEntry">
+        <selectKey keyProperty="id" resultType="long" order="BEFORE">
+            select nextval('seq_access_log')
+        </selectKey>
+        INSERT INTO access_log(id, request, response, error_code, error_message, url, user_id)
+        values(#{id}, #{request}, #{response}, #{errorCode}, #{errorMessage}, #{url}, #{userId})
+    </insert>
+
+</mapper>

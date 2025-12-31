@@ -73,7 +73,6 @@ public class CinnamonRequest extends HttpServletRequestWrapper {
 
     @Override
     public ServletInputStream getInputStream() throws IOException {
-//        log.debug("reading input stream, useCopy: {}",useCopy);
         if (useCopy) {
             log.debug("byteInput: '{}'", byteInput.getContent());
             return byteInput;

@@ -16,10 +16,9 @@ public class DbSessionFactory {
 
     private final SqlSessionFactory sqlSessionFactory;
     
-    public DbSessionFactory(String propertiesFilename) {
-        String resource = "sql/mybatis-config.xml";
+    public DbSessionFactory(String propertiesFilename, String resourcePath) {
         try {
-            InputStream mybatisConfigStream = Resources.getResourceAsStream(resource);
+            InputStream mybatisConfigStream = Resources.getResourceAsStream(resourcePath);
             Properties properties = new Properties();
             if (propertiesFilename == null) {
                 DatabaseConfig databaseConfig = CinnamonServer.config.getDatabaseConfig();

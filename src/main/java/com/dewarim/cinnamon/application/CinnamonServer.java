@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.dataformat.xml.deser.FromXmlParser;
 import jakarta.servlet.DispatcherType;
+import org.apache.ibatis.session.SqlSession;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
@@ -62,10 +63,11 @@ public class CinnamonServer {
 
     private static final Logger log = LogManager.getLogger(CinnamonServer.class);
 
-    public static final String           VERSION       = "1.12.0";
+    public static final String           VERSION       = "1.13.0";
     private             Server           server;
-    private             DbSessionFactory dbSessionFactory;
-    private final       WebAppContext    webAppContext = new WebAppContext();
+    private       DbSessionFactory dbSessionFactory;
+    public static DbSessionFactory dbLoggingSessionFactory;
+    private final WebAppContext    webAppContext = new WebAppContext();
     public static       CinnamonConfig   config        = new CinnamonConfig();
     public static       ExecutorService  executorService;
     public static       CinnamonStats    cinnamonStats = new CinnamonStats();
@@ -79,6 +81,10 @@ public class CinnamonServer {
         // the CinnamonIntegrationTests overrides the configured port,
         // for normal startup this is a NOP.
         config.getServerConfig().getHttpConnectorConfig().setPort(port);
+    }
+
+    public static SqlSession getAccessLogSession() {
+        return dbLoggingSessionFactory.getSession();
     }
 
     public void start() throws Exception {
@@ -244,7 +250,11 @@ public class CinnamonServer {
         // initialize mybatis:
         if (dbSessionFactory == null) {
             log.info("Create new database session factory");
-            dbSessionFactory = new DbSessionFactory(null);
+            dbSessionFactory = new DbSessionFactory(null, "sql/mybatis-config.xml");
+        }
+        if(dbLoggingSessionFactory == null){
+            log.info("Create new logging database session factory");
+            dbLoggingSessionFactory = new DbSessionFactory(null, "sql/mybatis-logging-config.xml");
         }
         ThreadLocalSqlSession.dbSessionFactory = dbSessionFactory;
         // TODO: unused?

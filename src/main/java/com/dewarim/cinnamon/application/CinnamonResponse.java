@@ -3,7 +3,6 @@ package com.dewarim.cinnamon.application;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.ApiResponse;
 import com.dewarim.cinnamon.application.exception.CinnamonException;
-import com.dewarim.cinnamon.application.service.debug.DebugLogService;
 import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.response.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,7 +15,6 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -46,11 +44,11 @@ public class CinnamonResponse extends HttpServletResponseWrapper {
         objectMapper = cinnamonContentType.getObjectMapper();
     }
 
-    public void generateErrorMessage(int statusCode, ErrorCode errorCode, String message, boolean logResponses) {
-        generateErrorMessage(statusCode, errorCode, message, Collections.emptyList(), logResponses);
+    public CinnamonErrorWrapper generateErrorMessage(int statusCode, ErrorCode errorCode, String message, boolean logResponses) {
+        return generateErrorMessage(statusCode, errorCode, message, Collections.emptyList(), logResponses);
     }
 
-    public void generateErrorMessage(int statusCode, ErrorCode errorCode, String message, List<CinnamonError> errors, boolean logResponses) {
+    public CinnamonErrorWrapper generateErrorMessage(int statusCode, ErrorCode errorCode, String message, List<CinnamonError> errors, boolean logResponses) {
         this.statusCode = statusCode;
         CinnamonError        error   = new CinnamonError(errorCode.getCode(), message);
         CinnamonErrorWrapper wrapper = new CinnamonErrorWrapper();
@@ -65,13 +63,11 @@ public class CinnamonResponse extends HttpServletResponseWrapper {
             if (logResponses) {
                 log.debug("sending error response to client:\n{}", objectMapper.writeValueAsString(wrapper));
             }
-            if (CinnamonServer.isDebugEnabled()) {
-                DebugLogService.log("errorResponse:", wrapper);
-            }
             objectMapper.writeValue(servletResponse.getWriter(), wrapper);
         } catch (IOException e) {
             throw new CinnamonException("Failed to generate error message:", e);
         }
+        return wrapper;
     }
 
     public void responseIsGenericOkay() {
@@ -95,7 +91,7 @@ public class CinnamonResponse extends HttpServletResponseWrapper {
      * written directly to the underlying OutputStream, which is okay for binary responses
      * and raw data (for example: returning non-wrappable Cinnamon3-style metasets)
      */
-    public void renderResponseIfNecessary(boolean logResponses) throws IOException {
+    public void renderResponseIfNecessary() throws IOException {
         if (hasPendingContent()) {
             if (wrapper != null && wrapper instanceof BaseResponse) {
                 ((BaseResponse) wrapper).setChangeTriggerResponses(changeTriggerResponses);
@@ -105,30 +101,10 @@ public class CinnamonResponse extends HttpServletResponseWrapper {
 
             servletResponse.setContentType(cinnamonContentType.getContentType().toString());
             servletResponse.setStatus(statusCode);
-            if (logResponses || CinnamonServer.isDebugEnabled()) {
-                String output;
-                if (wrapper != null) {
-                    output = objectMapper.writeValueAsString(wrapper);
-                } else {
-                    output = objectMapper.writeValueAsString(response);
-                }
-                log.debug("sending response to client:\n{}", output);
-                if (logResponses) {
-                    servletResponse.getOutputStream().write(output.getBytes(StandardCharsets.UTF_8));
-                }
-                if (CinnamonServer.isDebugEnabled()) {
-                    if (!logResponses) {
-                        servletResponse.getOutputStream().write(output.getBytes(StandardCharsets.UTF_8));
-                    }
-                    DebugLogService.log("CinnamonResponse:", wrapper);
-                    DebugLogService.stop();
-                }
+            if (wrapper != null) {
+                objectMapper.writeValue(servletResponse.getOutputStream(), wrapper);
             } else {
-                if (wrapper != null) {
-                    objectMapper.writeValue(servletResponse.getOutputStream(), wrapper);
-                } else {
-                    objectMapper.writeValue(servletResponse.getOutputStream(), response);
-                }
+                objectMapper.writeValue(servletResponse.getOutputStream(), response);
             }
         }
     }

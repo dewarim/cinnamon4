@@ -5,7 +5,6 @@ import com.dewarim.cinnamon.api.IdAndRootId;
 import com.dewarim.cinnamon.api.Ownable;
 import com.dewarim.cinnamon.api.RootAndLatestHead;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
-import com.dewarim.cinnamon.application.service.debug.DebugLogService;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.index.IndexJob;
@@ -56,7 +55,6 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
             results.addAll(sqlSession.selectList("com.dewarim.cinnamon.model.ObjectSystemData.getOsdsById", params));
             rowCount += BATCH_SIZE;
         }
-        DebugLogService.log("getOsdsById", results);
         return results;
     }
 
@@ -100,9 +98,7 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
             case HEAD -> params.put("versionPredicate", " AND latest_head=true ");
             case BRANCH -> params.put("versionPredicate", " AND latest_branch=true ");
         }
-        List<ObjectSystemData> selected = sqlSession.selectList("com.dewarim.cinnamon.model.ObjectSystemData.getOsdsByFolderId", params);
-        DebugLogService.log("getOsdsByFolderId", selected);
-        return selected;
+        return sqlSession.selectList("com.dewarim.cinnamon.model.ObjectSystemData.getOsdsByFolderId", params);
     }
 
     public Optional<ObjectSystemData> getObjectById(long id) {
@@ -125,7 +121,6 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
         }
         sqlSession.update("com.dewarim.cinnamon.model.ObjectSystemData.updateOsd", osd);
         new IndexJobDao(sqlSession).insertIndexJob(new IndexJob(IndexJobType.OSD, osd.getId(), IndexJobAction.UPDATE));
-        DebugLogService.log("update:", osd);
     }
 
     public void updateOsd(ObjectSystemData osd, boolean updateModifier) {
@@ -144,7 +139,6 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
         }
         IndexJob indexJob = new IndexJob(IndexJobType.OSD, osd.getId(), IndexJobAction.CREATE);
         new IndexJobDao(sqlSession).insertIndexJob(indexJob);
-        DebugLogService.log("save:", osd);
         return osd;
     }
 
@@ -169,7 +163,6 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
             IndexJob indexJob = new IndexJob(IndexJobType.OSD, id, IndexJobAction.DELETE);
             jobDao.insertIndexJob(indexJob);
         });
-        DebugLogService.log("osds to delete:", osdIdsToToDelete);
     }
 
     public Set<Long> getOsdIdByIdWithDescendants(Long id) {

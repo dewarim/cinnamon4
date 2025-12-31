@@ -23,13 +23,12 @@ public class ThreadLocalSqlSession {
             return dbSessionFactory.getSqlSessionFactory().openSession();
         }
     };
-    
+
     private static final ThreadLocal<TransactionStatus> transactionStatus = ThreadLocal.withInitial(() -> TransactionStatus.OK);
     
     public static SqlSession getSqlSession(){
         return localSqlSession.get();
     }
-
     /**
      * After the current request is finished, create a new session for this thread.
      */
@@ -79,4 +78,5 @@ public class ThreadLocalSqlSession {
     public static void setDbSessionFactory(DbSessionFactory dbSessionFactory) {
         ThreadLocalSqlSession.dbSessionFactory = dbSessionFactory;
     }
+
 }
