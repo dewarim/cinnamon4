@@ -12,10 +12,16 @@
         <Logger name="org.eclipse" level="warn">
             <AppenderRef ref="Console"/>
         </Logger>
+        <Logger name="java.sql" level="info" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
         <Logger name="org.apache.ibatis.transaction" level="info">
             <AppenderRef ref="Console"/>
         </Logger>
         <Logger name="org.apache.ibatis.datasource" level="info">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="com.dewarim.cinnamon.model.event.AccessLogEntry.insert" level="info">
             <AppenderRef ref="Console"/>
         </Logger>
         <Logger name="com.dewarim.cinnamon.model.index.IndexJob.countJobs" level="info">

@@ -21,6 +21,8 @@
         <Logger name="com.dewarim.cinnamon.filter.PostCommitChangeTriggerHandler" level="debug">
             <AppenderRef ref="Console"/>
         </Logger>
+        <Logger name="com.dewarim.cinnamon.model.event.AccessLogEntry" level="debug"><AppenderRef ref="Console"/></Logger>
+        <Logger name="com.dewarim.cinnamon.model.event.AccessLogDao" level="debug"><AppenderRef ref="Console"/></Logger>
         <Logger name="com.dewarim.cinnamon.model.Group" level="warn"><AppenderRef ref="Console"/></Logger>
         <Logger name="com.dewarim.cinnamon.model.GroupUser" level="warn"><AppenderRef ref="Console"/></Logger>
         <Logger name="com.dewarim.cinnamon.model.AclGroup" level="warn"><AppenderRef ref="Console"/></Logger>
@@ -37,6 +39,16 @@
             <AppenderRef ref="Console"/>
         </Logger>
         <Logger name="com.networknt.schema.TypeValidator" level="warn">
+            <AppenderRef ref="Console"/>
+        </Logger>
+
+        <Logger name="org.apache.ibatis.transaction" level="debug">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="org.apache.ibatis.datasource" level="debug">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="com.dewarim.cinnamon.model.event.AccessLogEntry.insert" level="debug">
             <AppenderRef ref="Console"/>
         </Logger>
     </Loggers>

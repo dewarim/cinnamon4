@@ -3,10 +3,7 @@ package com.dewarim.cinnamon.filter;
 
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.FailedRequestException;
-import com.dewarim.cinnamon.application.CinnamonRequest;
-import com.dewarim.cinnamon.application.CinnamonResponse;
-import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
-import com.dewarim.cinnamon.application.TransactionStatus;
+import com.dewarim.cinnamon.application.*;
 import com.dewarim.cinnamon.application.service.AccessLogService;
 import com.dewarim.cinnamon.model.response.CinnamonErrorWrapper;
 import jakarta.servlet.*;
@@ -63,7 +60,10 @@ public class RequestResponseFilter implements Filter {
             if (ThreadLocalSqlSession.getCurrentUser() != null) {
                 userId = ThreadLocalSqlSession.getCurrentUser().getId();
             }
-            accessLogService.addEntry(cinnamonRequest, cinnamonResponse, errorWrapper, errorCode, null, userId);
+            if(CinnamonServer.isAccessLogEnabled()) {
+                accessLogService.addEntry(cinnamonRequest, cinnamonResponse, errorWrapper, errorCode, null, userId);
+                accessLogService.truncateLogIfNecessary();
+            }
         }
         finally {
             log.debug("RequestResponseFilter: after");

@@ -86,4 +86,9 @@
     <debugFolderPath>/tmp/cinnamon-debug</debugFolderPath>
     <debugEnabled>false</debugEnabled>
   </debugConfig>
+  <loggingConfig>
+      <logErrorsToDatabase>true</logErrorsToDatabase>
+      <truncateLogAfterRow>1000</truncateLogAfterRow>
+      <truncateTableBy>100</truncateTableBy>
+  </loggingConfig>
 </CinnamonConfig>

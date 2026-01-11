@@ -24,4 +24,16 @@
         values(#{id}, #{request}, #{response}, #{errorCode}, #{errorMessage}, #{url}, #{userId})
     </insert>
 
+    <select id="count" resultType="int">
+        select count(*) from access_log
+    </select>
+
+    <delete id="truncate" parameterType="int">
+        delete
+        from access_log
+        where id in (select id
+                     from access_log
+                     order by id
+                     limit #{numberOfRowsToDelete})
+    </delete>
 </mapper>

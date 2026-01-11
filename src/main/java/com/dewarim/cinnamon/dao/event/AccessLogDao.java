@@ -26,16 +26,26 @@ public class AccessLogDao {
             sqlSession.commit();
             log.debug("Inserted {} access log entries.", rows);
             return accessLogEntry;
-        } catch (Throwable e) {
-            System.out.println(e);
+        } catch (Exception e) {
             log.error("fail: ", e);
             throw new CinnamonException("Failed to save event log entry:", e);
-        } finally {
-            log.info("Closing sql session.");
         }
     }
 
     private SqlSession getSqlSession() {
         return CinnamonServer.getAccessLogSession();
+    }
+
+    public int count() {
+        try (SqlSession sqlSession = getSqlSession()) {
+            return sqlSession.selectOne("com.dewarim.cinnamon.model.event.AccessLogEntry.count");
+        }
+    }
+
+    public void truncate(int numberOfRowsToDelete) {
+        try (SqlSession sqlSession = getSqlSession()) {
+            sqlSession.delete("com.dewarim.cinnamon.model.event.AccessLogEntry.truncate", numberOfRowsToDelete);
+            sqlSession.commit();
+        }
     }
 }

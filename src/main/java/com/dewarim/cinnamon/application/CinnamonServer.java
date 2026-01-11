@@ -160,6 +160,10 @@ public class CinnamonServer {
         return config.getDebugConfig().isDebugEnabled();
     }
 
+    public static boolean isAccessLogEnabled(){
+        return config.getLoggingConfig().isLogErrorsToDatabase();
+    }
+
     private void configureDebugLog() {
         log.info("Debug log is enabled: {} ", isDebugEnabled());
         if (isDebugEnabled()) {

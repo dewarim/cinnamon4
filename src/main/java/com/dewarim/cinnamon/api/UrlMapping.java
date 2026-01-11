@@ -103,16 +103,16 @@ public enum UrlMapping {
     CHANGE_TRIGGER__NOP("changeTrigger", "nop", "/api", "", null, ChangeTriggerResponseWrapper.class),
     CINNAMON__CONNECT("cinnamon", "connect", "", """
             Connect to the cinnamon server by sending a ConnectionRequest.
-                        
+            
             Example call:
-                        
+            
                 TICKET=$(curl --silent --show-error -X POST "<connectionRequest><username>joe</username><password>1234Geheim</password><format>xml</format></connectionRequest>",)
-                       
+            
             If you choose "format=text", you will receive a plain/text response with just the session ticket.
             Otherwise, you will get:
-                        
+            
                 <cinnamon><cinnamonConnection><ticket>9d55332e-9ef3-4743-969c-28316e58e146</ticket></cinnamonConnection></cinnamon>
-                        
+            
             The ticket is a session id that must be sent with all other requests to the server,
             in the request header field "ticket".
             """, ConnectionRequest.class, CinnamonConnectionWrapper.class),
@@ -254,13 +254,13 @@ public enum UrlMapping {
     SEARCH__IDS("search", "objectIds", "/api", """
             Search the Lucene index for objects (documents and folders) matching the given query
             and return the ids of all objects found which are browsable for the current user.
-                    
+            
             Systemic fields contain metadata that will always be indexed.
-                    
+            
             ## Systemic Folder Fields
-                    
+            
             Field of objects contain the id, so acl field will index the acl.id.
-                    
+            
             * folderpath
             * acl
             * id
@@ -270,9 +270,9 @@ public enum UrlMapping {
             * parent (id of parent folder, empty if root folder)
             * summary
             * type
-                    
+            
             ## Systemic OSD Fields
-                    
+            
             * folderpath
             * acl
             * cmn_version
@@ -296,7 +296,7 @@ public enum UrlMapping {
             * lifecycle_state
             * summary
             * type
-                    
+            
             ### Fields only indexed for objects with content
             * content_size
             * format

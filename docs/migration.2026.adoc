@@ -1,0 +1,44 @@
+== Migration 2026
+
+A new migration log.
+
+This starts with Cinnamon v1.11.0
+
+* Changes marked as "--SQL" must be applied to your Cinnamon database schema.
+* Changes must be applied one after the other.
+
+=== v1.11.0
+
+    -- SQL
+    alter table index_jobs add constraint index_jobs_type_and_id_unique unique (job_type, item_id)
+
+=== v1.13.0
+
+    -- SQL
+    drop sequence if exists seq_access_log;
+    create sequence seq_access_log start with 1;
+
+    drop table if exists access_log cascade;
+    create table access_log (
+        id              BIGINT PRIMARY KEY,
+        request         text,
+        response        text,
+        error_code      varchar(255),
+        error_message   text,
+        created         timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        url             text,
+        user_id         BIGINT
+         constraint fk_access_log_user_id references users
+    );
+
+You can now configure if the logging table should be used and the size of the logging table
+
+  <loggingConfig>
+      <logErrorsToDatabase>true</logErrorsToDatabase>
+      <truncateLogAfterRow>1000</truncateLogAfterRow>
+      <truncateTableBy>100</truncateTableBy>
+  </loggingConfig>
+
+Note: this table will contain complete http requests and responses (without uploaded file data).
+Some request paths will be filtered, for example, the request to /api/user/setPassword will be replaced by "unlogged".
+

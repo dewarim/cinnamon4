@@ -1,13 +1,24 @@
 package com.dewarim.cinnamon.model.event;
 
 import com.dewarim.cinnamon.ErrorCode;
+import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonRequest;
 import com.dewarim.cinnamon.application.CinnamonResponse;
 
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.util.Set;
 
 public class AccessLogEntry {
+
+    private static Set<String> unloggedPaths;
+    {
+        unloggedPaths = Set.of(
+                UrlMapping.CINNAMON__CONNECT.getPath(),
+                UrlMapping.USER__SET_PASSWORD.getPath(),
+                UrlMapping.USER__UPDATE.getPath()
+        );
+    }
 
     private Long      id;
     private String    request;
@@ -19,8 +30,13 @@ public class AccessLogEntry {
     private Long      userId;
 
     public AccessLogEntry(CinnamonRequest cinnamonRequest, CinnamonResponse cinnamonResponse, String errorWrapper, ErrorCode errorCode, String message, Long userId) throws IOException {
-        request = cinnamonRequest.getRequest().getRequestURI();
         url = cinnamonRequest.getRequest().getRequestURI();
+        if(unloggedPaths.contains(url)){
+            request = "unlogged";
+        }
+        else {
+            request = cinnamonRequest.getRequest().getRequestURI();
+        }
         response = cinnamonResponse.getPendingContentAsString();
         errorMessage = message;
         if (errorWrapper != null) {

@@ -3,6 +3,7 @@ package com.dewarim.cinnamon.application.service;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.application.CinnamonRequest;
 import com.dewarim.cinnamon.application.CinnamonResponse;
+import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.application.exception.CinnamonException;
 import com.dewarim.cinnamon.dao.event.AccessLogDao;
 import com.dewarim.cinnamon.model.event.AccessLogEntry;
@@ -22,7 +23,7 @@ public class AccessLogService {
     private final        AccessLogDao accessLogDao = new AccessLogDao();
 
     public void addEntry(CinnamonRequest cinnamonRequest, CinnamonResponse cinnamonResponse, CinnamonErrorWrapper errorWrapper, ErrorCode errorCode, String errorMessage, Long userId) {
-        AccessLogEntry accessLogEntry = null;
+        AccessLogEntry accessLogEntry;
         try {
             accessLogEntry = new AccessLogEntry(cinnamonRequest, cinnamonResponse,
                     mapper.writeValueAsString(errorWrapper),
@@ -34,4 +35,10 @@ public class AccessLogService {
         log.debug("AccessLogEntry: {}", accessLogEntry);
     }
 
+    public void truncateLogIfNecessary() {
+        int rowCount = accessLogDao.count();
+        if(rowCount > CinnamonServer.getConfig().getLoggingConfig().getTruncateLogAfterRow()) {
+            accessLogDao.truncate(CinnamonServer.getConfig().getLoggingConfig().getTruncateTableBy());
+        }
+    }
 }

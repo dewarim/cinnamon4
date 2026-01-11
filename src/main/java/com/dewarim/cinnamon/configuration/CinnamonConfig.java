@@ -16,6 +16,7 @@ public class CinnamonConfig {
     private List<LoginProviderConfig> loginProviders      = new ArrayList<>();
     private ChangeTriggerConfig       changeTriggerConfig = new ChangeTriggerConfig();
     private DebugConfig               debugConfig         = new DebugConfig();
+    private LoggingConfig             loggingConfig       = new LoggingConfig();
     private boolean showConfig;
 
     public DebugConfig getDebugConfig() {
@@ -98,6 +99,14 @@ public class CinnamonConfig {
         this.changeTriggerConfig = changeTriggerConfig;
     }
 
+    public LoggingConfig getLoggingConfig() {
+        return loggingConfig;
+    }
+
+    public void setLoggingConfig(LoggingConfig loggingConfig) {
+        this.loggingConfig = loggingConfig;
+    }
+
     @Override
     public String toString() {
         return "CinnamonConfig{" +
@@ -110,6 +119,9 @@ public class CinnamonConfig {
                 ", cinnamonTikaConfig=" + cinnamonTikaConfig +
                 ", loginProviders=" + loginProviders +
                 ", changeTriggerConfig=" + changeTriggerConfig +
+                ", debugConfig=" + debugConfig +
+                ", loggingConfig=" + loggingConfig +
+                ", showConfig=" + showConfig +
                 '}';
     }
 
