@@ -6,3 +6,14 @@
 
     mvn dependency:copy-dependencies -DoutputDirectory=target/lib
 
+    cd target
+
+    tar cvzf cinnamon.tar.gz cinnamon-server.jar lib
+
+    ~/bin/jdk-21/bin/java --add-modules jdk.incubator.vector --enable-native-access=ALL-UNNAMED -jar cinnamon-server.jar
+
+This should result in a log line like:
+
+    [main] INFO  com.dewarim.cinnamon.application.CinnamonServer - Server is running at http @ port 8080
+
+(if there is a postgres server running with the default cinnamon database)

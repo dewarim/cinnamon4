@@ -18,7 +18,7 @@ echo "<idListRequest>
           <id>1</id>
         </ids>
       </idListRequest>" > /tmp/lockOsd.xml
-osd=$(curl --silent --show-error --header "ticket: ${TICKET}" -F "cinnamonRequest=</tmp/osd.xml" "http://localhost:${PORT}/api/osd/updateOsd")
+osd=$(curl --silent --show-error --header "ticket: ${TICKET}" -F "cinnamonRequest=</tmp/osd.xml" "http://localhost:${PORT}/api/osd/update")
 
 sleep 5;
 

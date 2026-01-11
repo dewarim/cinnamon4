@@ -4,12 +4,17 @@ import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonRequest;
 import com.dewarim.cinnamon.application.CinnamonResponse;
+import jakarta.servlet.http.Part;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.Set;
 
 public class AccessLogEntry {
+
+    private static final Logger log = LogManager.getLogger(AccessLogEntry.class);
 
     private static Set<String> unloggedPaths;
     {
@@ -35,9 +40,19 @@ public class AccessLogEntry {
             request = "unlogged";
         }
         else {
-            request = cinnamonRequest.getRequest().getRequestURI();
+            if(cinnamonRequest.isMultiPart()) {
+                Part cinnamonRequestPart = cinnamonRequest.getCinnamonRequestPart();
+                if (cinnamonRequestPart != null && cinnamonRequestPart.getSize() > 0) {
+                    request = new String(cinnamonRequest.getInputStream().readAllBytes());
+                } else {
+                    log.info("CinnamonRequestPart is null");
+                }
+            }
+            else{
+                request = new String(cinnamonRequest.getInputStream().readAllBytes());
+            }
         }
-        response = cinnamonResponse.getPendingContentAsString();
+        response = cinnamonResponse.getResponseAsString();
         errorMessage = message;
         if (errorWrapper != null) {
             errorMessage = errorWrapper;

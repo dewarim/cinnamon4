@@ -30,7 +30,6 @@ public class CinnamonRequest extends HttpServletRequestWrapper {
     private              FilePart                   filePart;
     private              String                     filename;
     private              boolean                    useCopiedFileContent = false;
-    private final        CinnamonContentType        cinnamonContentType;
     private final        ObjectMapper               mapper;
 
     public CinnamonRequest(HttpServletRequest request, HttpServletResponse response) {
@@ -38,6 +37,7 @@ public class CinnamonRequest extends HttpServletRequestWrapper {
         this.request = request;
         Optional<String> contentTypeOpt = Optional.ofNullable(request.getContentType());
         multiPart = contentTypeOpt.map(s -> s.toLowerCase().startsWith(MULTIPART)).orElse(false);
+        CinnamonContentType cinnamonContentType;
         if (multiPart) {
             cinnamonContentType = CinnamonContentType.getByHttpContentType(contentTypeOpt.orElse(CONTENT_TYPE_XML));
         } else {
@@ -75,10 +75,11 @@ public class CinnamonRequest extends HttpServletRequestWrapper {
     public ServletInputStream getInputStream() throws IOException {
         if (useCopy) {
             log.debug("byteInput: '{}'", byteInput.getContent());
-            return byteInput;
         } else {
-            return request.getInputStream();
+            byteInput = new CinnamonServletInputStream(new ByteArrayInputStream(getRequest().getInputStream().readAllBytes()));
+            useCopy = true;
         }
+        return byteInput;
     }
 
     @Override

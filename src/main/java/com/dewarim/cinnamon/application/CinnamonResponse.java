@@ -34,6 +34,7 @@ public class CinnamonResponse extends HttpServletResponseWrapper {
     private final List<ChangeTriggerResponse> changeTriggerResponses = new ArrayList<>();
     private       UserAccount                 user;
     private final CinnamonContentType         cinnamonContentType;
+    private       String                      responseAsString       = "";
 
     public CinnamonResponse(HttpServletRequest servletRequest, HttpServletResponse servletResponse) {
         super(servletResponse);
@@ -63,6 +64,7 @@ public class CinnamonResponse extends HttpServletResponseWrapper {
             if (logResponses) {
                 log.debug("sending error response to client:\n{}", objectMapper.writeValueAsString(wrapper));
             }
+            responseAsString = objectMapper.writeValueAsString(wrapper);
             objectMapper.writeValue(servletResponse.getWriter(), wrapper);
         } catch (IOException e) {
             throw new CinnamonException("Failed to generate error message:", e);
@@ -101,11 +103,9 @@ public class CinnamonResponse extends HttpServletResponseWrapper {
 
             servletResponse.setContentType(cinnamonContentType.getContentType().toString());
             servletResponse.setStatus(statusCode);
-            if (wrapper != null) {
-                objectMapper.writeValue(servletResponse.getOutputStream(), wrapper);
-            } else {
-                objectMapper.writeValue(servletResponse.getOutputStream(), response);
-            }
+
+            responseAsString = objectMapper.writeValueAsString(wrapper != null ? wrapper : response);
+            servletResponse.getOutputStream().write(responseAsString.getBytes());
         }
     }
 
@@ -125,7 +125,12 @@ public class CinnamonResponse extends HttpServletResponseWrapper {
                 objectMapper.writeValue(outputStream, response);
             }
         }
-        return outputStream.toString();
+        responseAsString = outputStream.toString();
+        return responseAsString;
+    }
+
+    public String getResponseAsString() {
+        return responseAsString;
     }
 
     public void setStatusCode(int statusCode) {
