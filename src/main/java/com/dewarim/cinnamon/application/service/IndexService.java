@@ -1,7 +1,7 @@
 package com.dewarim.cinnamon.application.service;
 
 import com.dewarim.cinnamon.api.content.ContentProvider;
-import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
+import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.application.exception.CinnamonException;
 import com.dewarim.cinnamon.application.service.index.ContentContainer;
 import com.dewarim.cinnamon.configuration.LuceneConfig;
@@ -14,7 +14,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import org.apache.ibatis.session.SqlSession;
-import org.apache.ibatis.session.TransactionIsolationLevel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
@@ -94,10 +93,11 @@ public class IndexService implements Runnable {
                 writerConfig.setCommitOnClose(false);
                 try (IndexWriter indexWriter = new IndexWriter(indexDir, writerConfig)) {
                     List<IndexJob> jobs;
-                    try (SqlSession sqlSession = ThreadLocalSqlSession.getNewSession(TransactionIsolationLevel.READ_COMMITTED)) {
+                    try (SqlSession sqlSession = CinnamonServer.getSqlSession()) {
                         IndexJobDao jobDao = new IndexJobDao(sqlSession);
                         jobs = jobDao.getIndexJobsByFailedCountWithLimit(config.getMaxIndexAttempts(), maxJobSize);
                     }
+
                     if (jobs.isEmpty()) {
                         log.trace("Found 0 IndexJobs.");
                     } else {
@@ -138,10 +138,9 @@ public class IndexService implements Runnable {
                                     // should never happen, all enum fields are covered:
                                     default -> indexResult = IndexResult.IGNORE;
                                 }
-                            }
-                            catch (Exception e){
+                            } catch (Exception e) {
                                 log.error("Failed to handle IndexItem: {}", indexKey, e);
-                                throw new CinnamonException("Failed during indexing",e);
+                                throw new CinnamonException("Failed during indexing", e);
                             }
 
                             switch (indexResult) {
@@ -181,15 +180,14 @@ public class IndexService implements Runnable {
 
                         if (!indexEvents.isEmpty()) {
                             log.info("Failed index events count: {}", indexEvents.size());
-                            try (SqlSession sqlSession = ThreadLocalSqlSession.getNewSession(TransactionIsolationLevel.READ_COMMITTED)) {
+                            try (SqlSession sqlSession = CinnamonServer.getSqlSession()) {
                                 IndexEventDao indexEventDao = new IndexEventDao(sqlSession);
                                 try {
                                     indexEventDao.create(indexEvents.stream().toList());
                                     indexEventDao.commit();
                                 } catch (Exception e) {
-                                    log.error("Failed to save index events: {}", indexEvents, e);
+                                    log.error("*** Failed to save index events: {}", indexEvents, e);
                                     throw e;
-
                                 }
                             }
                         }
@@ -200,10 +198,10 @@ public class IndexService implements Runnable {
                             log.error("Also trying to mark jobs as failed after index error");
                             List<IndexJob> allJobs = new ArrayList<>(jobsToUpdate);
                             allJobs.addAll(jobsToDelete);
-                            try (SqlSession sqlSession = ThreadLocalSqlSession.getNewSession(TransactionIsolationLevel.READ_COMMITTED)) {
+                            try (SqlSession sqlSession = CinnamonServer.getSqlSession()) {
                                 IndexJobDao jobDao = new IndexJobDao(sqlSession);
                                 allJobs.forEach(jobDao::updateStatus);
-                                jobDao.commit();
+                                sqlSession.commit();
                             }
                             log.error("... trying to continue with indexing.");
                             continue;
@@ -218,26 +216,28 @@ public class IndexService implements Runnable {
                             log.debug("no change to index");
                         }
 
-                        if (!jobsToDelete.isEmpty()) {
-                            log.debug("deleting {} index jobs", jobsToDelete.size());
-                            try (SqlSession sqlSession = ThreadLocalSqlSession.getNewSession(TransactionIsolationLevel.READ_COMMITTED)) {
-                                IndexJobDao jobDao = new IndexJobDao(sqlSession);
-                                jobsToDelete.forEach(jobDao::delete);
-                                jobDao.commit();
-                            }
-                        }
                         if (!jobsToUpdate.isEmpty()) {
                             log.debug("updating {} index jobs", jobsToUpdate.size());
-                            try (SqlSession sqlSession = ThreadLocalSqlSession.getNewSession(TransactionIsolationLevel.READ_COMMITTED)) {
+                            try (SqlSession sqlSession = CinnamonServer.getSqlSession()) {
                                 IndexJobDao jobDao = new IndexJobDao(sqlSession);
                                 jobsToUpdate.forEach(jobDao::updateStatus);
-                                jobDao.commit();
+                                sqlSession.commit();
                             }
                         }
+
+                        if (!jobsToDelete.isEmpty()) {
+                            log.debug("deleting {} index jobs", jobsToDelete.size());
+                            try (SqlSession sqlSession = CinnamonServer.getSqlSession()) {
+                                IndexJobDao jobDao = new IndexJobDao(sqlSession);
+                                jobsToDelete.forEach(jobDao::delete);
+                                sqlSession.commit();
+                            }
+                        }
+
                     }
                 } catch (Exception e) {
                     log.warn("Failed to index: ", e);
-                    try (SqlSession sqlSession = ThreadLocalSqlSession.getNewSession(TransactionIsolationLevel.READ_COMMITTED)) {
+                    try (SqlSession sqlSession = CinnamonServer.getSqlSession()) {
                         StringWriter stringWriter = new StringWriter();
                         PrintWriter  printWriter  = new PrintWriter(stringWriter);
                         e.printStackTrace(printWriter);
@@ -309,7 +309,7 @@ public class IndexService implements Runnable {
         Set<IndexKey> seen = new HashSet<>();
 
         List<IndexJobWithDependencies> jobsToDo = new ArrayList<>();
-        try (SqlSession sqlSession = ThreadLocalSqlSession.getNewSession(TransactionIsolationLevel.READ_COMMITTED)) {
+        try (SqlSession sqlSession = CinnamonServer.getSqlSession()) {
             OsdDao        osdDao        = new OsdDao(sqlSession);
             FolderDao     folderDao     = new FolderDao(sqlSession);
             RelationDao   relationDao   = new RelationDao(sqlSession);
@@ -419,7 +419,7 @@ public class IndexService implements Runnable {
     }
 
     private void warnIfMetasetSizeTooLarge(long metaSizeSum, Long maxSize) {
-        if(metaSizeSum > maxSize) {
+        if (metaSizeSum > maxSize) {
             log.warn("Went over combined metaset max size. Trying to index total of {} characters.", metaSizeSum);
         }
     }
@@ -557,9 +557,8 @@ public class IndexService implements Runnable {
         } catch (Exception e) {
             log.warn("Indexing failed for OSD #{}", job.getOsd().getId(), e);
             return new IndexEvent(job.getIndexJob().getId(), IndexEventType.GENERIC, IndexResult.FAILED, e.getMessage());
-        }
-        catch (Throwable e) {
-            log.error("Critical Error with {}", job.getIndexKey(),e);
+        } catch (Throwable e) {
+            log.error("Critical Error with {}", job.getIndexKey(), e);
             return new IndexEvent(job.getIndexJob().getId(), IndexEventType.GENERIC, IndexResult.FAILED, e.getMessage());
         }
         return SUCCESS_EVENT;

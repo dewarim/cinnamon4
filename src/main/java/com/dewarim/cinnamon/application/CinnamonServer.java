@@ -65,9 +65,9 @@ public class CinnamonServer {
 
     public static final String           VERSION       = "1.13.0";
     private             Server           server;
-    private       DbSessionFactory dbSessionFactory;
-    public static DbSessionFactory dbLoggingSessionFactory;
-    private final WebAppContext    webAppContext = new WebAppContext();
+    private static      DbSessionFactory dbSessionFactory;
+    private static      DbSessionFactory dbLoggingSessionFactory;
+    private final       WebAppContext    webAppContext = new WebAppContext();
     public static       CinnamonConfig   config        = new CinnamonConfig();
     public static       ExecutorService  executorService;
     public static       CinnamonStats    cinnamonStats = new CinnamonStats();
@@ -85,6 +85,10 @@ public class CinnamonServer {
 
     public static SqlSession getAccessLogSession() {
         return dbLoggingSessionFactory.getSession();
+    }
+
+    public static SqlSession getSqlSession() {
+        return dbSessionFactory.getSession();
     }
 
     public void start() throws Exception {
@@ -160,7 +164,7 @@ public class CinnamonServer {
         return config.getDebugConfig().isDebugEnabled();
     }
 
-    public static boolean isAccessLogEnabled(){
+    public static boolean isAccessLogEnabled() {
         return config.getLoggingConfig().isLogErrorsToDatabase();
     }
 
@@ -224,20 +228,19 @@ public class CinnamonServer {
         return new ServerConnector(server, acceptors, selectors, tls, http11);
     }
 
-    public void startTikaService(ContentProviderService contentProviderService){
-        if(config.getCinnamonTikaConfig().isUseTika()){
+    public void startTikaService(ContentProviderService contentProviderService) {
+        if (config.getCinnamonTikaConfig().isUseTika()) {
             tikaService = new TikaService(config.getCinnamonTikaConfig(), contentProviderService);
             tikaServiceThread = new Thread(tikaService);
             tikaServiceThread.setName("Tika-Service");
             tikaServiceThread.start();
-        }
-        else{
+        } else {
             log.warn("Tika functionality is disabled -> do not start tika service.");
         }
     }
 
     public void startIndexService(ContentProviderService contentProviderService) {
-        indexService       = new IndexService(config.getLuceneConfig(), contentProviderService);
+        indexService = new IndexService(config.getLuceneConfig(), contentProviderService);
         indexServiceThread = new Thread(indexService);
         indexServiceThread.setName("Index-Service");
         indexServiceThread.start();
@@ -256,7 +259,7 @@ public class CinnamonServer {
             log.info("Create new database session factory");
             dbSessionFactory = new DbSessionFactory(null, "sql/mybatis-config.xml");
         }
-        if(dbLoggingSessionFactory == null){
+        if (dbLoggingSessionFactory == null) {
             log.info("Create new logging database session factory");
             dbLoggingSessionFactory = new DbSessionFactory(null, "sql/mybatis-logging-config.xml");
         }
@@ -367,10 +370,10 @@ public class CinnamonServer {
             config.getServerConfig().getHttpConnectorConfig().setPort(cliArguments.port);
         }
 
-        if(cliArguments.showConfig){
+        if (cliArguments.showConfig) {
             log.info("Current directory: {} ", new File(".").getCanonicalPath());
             DatabaseConfig dbConfig = config.getDatabaseConfig();
-            log.info("DB connection: {}",dbConfig);
+            log.info("DB connection: {}", dbConfig);
             config.setShowConfig(true);
         }
 
@@ -417,8 +420,7 @@ public class CinnamonServer {
                         } catch (Exception e) {
                             throw new IllegalStateException("Failed to format API template.", e);
                         }
-                    }
-                    else {
+                    } else {
                         String template = """
                                 # __endpoint__
                                 __description__
@@ -512,6 +514,11 @@ public class CinnamonServer {
 
         @Parameter(names = {"--show-config"}, description = "Show config details on startup like DB connection used etc. May include passwords!")
         boolean showConfig;
+    }
+
+    // for testing purposes only
+    public static void setDbLoggingSessionFactory(DbSessionFactory sessionFactory) {
+        dbLoggingSessionFactory = sessionFactory;
     }
 
 }

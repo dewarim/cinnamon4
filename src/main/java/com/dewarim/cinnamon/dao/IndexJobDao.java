@@ -37,11 +37,6 @@ public class IndexJobDao {
         return sqlSession.insert("com.dewarim.cinnamon.model.index.IndexJob.insert", job);
     }
 
-    public void commit() {
-        SqlSession sqlSession = getSqlSession();
-        sqlSession.commit();
-    }
-
     public void delete(IndexJob job) {
         SqlSession sqlSession = getSqlSession();
         sqlSession.delete("com.dewarim.cinnamon.model.index.IndexJob.delete", job.getId());

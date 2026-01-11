@@ -1,10 +1,8 @@
 package com.dewarim.cinnamon.application;
 
 import com.dewarim.cinnamon.model.UserAccount;
-import org.apache.ibatis.session.ExecutorType;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionException;
-import org.apache.ibatis.session.TransactionIsolationLevel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -49,13 +47,6 @@ public class ThreadLocalSqlSession {
         return sqlSession;
     }
 
-    public static SqlSession getNewSession(TransactionIsolationLevel isolationLevel){
-        if(isolationLevel != null){
-            return dbSessionFactory.getSqlSessionFactory().openSession(ExecutorType.SIMPLE, isolationLevel);
-        }
-        return dbSessionFactory.getSqlSessionFactory().openSession(ExecutorType.SIMPLE);
-    }
-    
     public static TransactionStatus getTransactionStatus(){
         return transactionStatus.get();
     }

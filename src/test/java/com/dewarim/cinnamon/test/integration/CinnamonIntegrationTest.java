@@ -117,7 +117,7 @@ public class CinnamonIntegrationTest {
             cinnamonServer.setDbSessionFactory(dbSessionFactory);
 
             log.info("Create new logging database session factory");
-            CinnamonServer.dbLoggingSessionFactory = new DbSessionFactory("sql/mybatis.test.properties.xml", "sql/mybatis-logging-config.xml");
+            CinnamonServer.setDbLoggingSessionFactory(new DbSessionFactory("sql/mybatis.test.properties.xml", "sql/mybatis-logging-config.xml"));
             cinnamonServer.start();
 
             ticket = getAdminTicket();

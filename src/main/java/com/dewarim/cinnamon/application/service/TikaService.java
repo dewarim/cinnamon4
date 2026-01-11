@@ -1,7 +1,7 @@
 package com.dewarim.cinnamon.application.service;
 
 import com.dewarim.cinnamon.api.content.ContentProvider;
-import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
+import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.application.exception.CinnamonException;
 import com.dewarim.cinnamon.configuration.CinnamonTikaConfig;
 import com.dewarim.cinnamon.dao.*;
@@ -18,7 +18,6 @@ import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.io.entity.InputStreamEntity;
 import org.apache.ibatis.session.SqlSession;
-import org.apache.ibatis.session.TransactionIsolationLevel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -56,7 +55,7 @@ public class TikaService implements Runnable {
 
     private Long getTikaMetasetTypeId() {
         if (tikaMetasetTypeId == null) {
-            try (SqlSession sqlSession = ThreadLocalSqlSession.getNewSession(TransactionIsolationLevel.READ_COMMITTED)) {
+            try (SqlSession sqlSession = CinnamonServer.getSqlSession()) {
                 Optional<MetasetType> tikaMetasetType = new MetasetTypeDao(sqlSession).list().stream().filter(metasetType -> metasetType.getName().equals(TIKA_METASET_NAME)).findFirst();
                 if (tikaMetasetType.isPresent()) {
                     tikaMetasetTypeId = tikaMetasetType.get().getId();
@@ -79,7 +78,7 @@ public class TikaService implements Runnable {
 
             List<ObjectSystemData> osds;
             Map<Long, Format>      formats = new HashMap<>();
-            try (SqlSession sqlSession = ThreadLocalSqlSession.getNewSession(TransactionIsolationLevel.READ_COMMITTED)) {
+            try (SqlSession sqlSession = CinnamonServer.getSqlSession()) {
                 OsdDao    osdDao    = new OsdDao(sqlSession);
                 FormatDao formatDao = new FormatDao(sqlSession);
                 osds = osdDao.getOsdsMissingTikaMetaset(getTikaMetasetTypeId(), config.getTikaBatchSize());
@@ -194,7 +193,7 @@ public class TikaService implements Runnable {
             String tikaMetadata = parseWithTika(contentStream, osd.getContentSize(), format, osd.getId());
             tikaMetadata = tikaMetadata.replace(" xmlns=\"http://www.w3.org/1999/xhtml\"", "");
             log.trace("Tika returned: {}", tikaMetadata);
-            try (SqlSession sqlSession = ThreadLocalSqlSession.getNewSession(TransactionIsolationLevel.READ_COMMITTED)) {
+            try (SqlSession sqlSession = CinnamonServer.getSqlSession()) {
                 // TODO: do not load existing tikaMetaset (memory consumption)
                 OsdMetaDao     osdMetaDao  = new OsdMetaDao(sqlSession);
                 Optional<Meta> tikaMetaset = osdMetaDao.listWithoutContentByOsd(osd.getId()).stream().filter(meta -> meta.getTypeId().equals(tikaMetasetTypeId)).findFirst();
