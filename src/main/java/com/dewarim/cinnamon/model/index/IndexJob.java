@@ -15,9 +15,12 @@ public class IndexJob {
     }
 
     public IndexJob(IndexJobType jobType, Long itemId, IndexJobAction action) {
+        Objects.requireNonNull(jobType);
         this.jobType = jobType;
-        this.itemId = itemId;
+        Objects.requireNonNull(action);
         this.action = action;
+        Objects.requireNonNull(itemId);
+        this.itemId = itemId;
     }
 
     public Long getId() {

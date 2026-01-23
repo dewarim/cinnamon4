@@ -685,7 +685,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var toh = prepareAclGroupWithPermissions(List.of())
                 .createOsd("getMetaWithoutReadPermission")
                 .setMetasetType(metasetType)
-                .createOsdMeta("foo");
+                .createOsdMeta("<xml>foo</xml>");
         assertClientError(() -> client.getOsdMetas(toh.osd.getId()), NO_READ_CUSTOM_METADATA_PERMISSION);
     }
 
@@ -2217,7 +2217,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
                 .createOsd()
                 .createOsdMeta("<xml>some meta content</xml>");
         Meta meta = toh.meta;
-        meta.setContent("<xml>updated meta<xml>");
+        meta.setContent("<xml>updated meta</xml>");
         client.updateOsdMeta(meta);
         Meta updatedMeta = client.getOsdMetas(toh.osd.getId()).getFirst();
         assertEquals(meta, updatedMeta);
@@ -2229,7 +2229,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
                 .createOsd()
                 .createOsdMeta("<xml>some meta content</xml>");
         Meta meta = toh.meta;
-        meta.setContent("<xml>updated meta<xml>");
+        meta.setContent("<xml>updated meta</xml>");
         assertClientError(() -> client.updateOsdMeta(meta), NO_WRITE_CUSTOM_METADATA_PERMISSION);
     }
 

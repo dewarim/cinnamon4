@@ -109,6 +109,7 @@ public class IndexService implements Runnable {
 
                         log.debug("Loading data for index jobs");
                         List<IndexJobWithDependencies> jobsToDo = findJobs(jobs, jobsToDelete, jobsToUpdate);
+                        log.debug("Found {} jobs to delete", jobsToDelete.size());
                         log.debug("Finished loading data for index jobs");
 
                         ConcurrentLinkedQueue<IndexEvent> indexEvents = new ConcurrentLinkedQueue<>();
@@ -166,6 +167,22 @@ public class IndexService implements Runnable {
                         List<Runnable> createJobs = new ArrayList<>();
                         List<Runnable> updateJobs = new ArrayList<>();
                         List<Runnable> deleteJobs = new ArrayList<>();
+
+                        // also remove index jobs if their object has already been deleted - can happen with short-lived objects
+                        // note: nomenclature of indexJob and indexJobWithDependencies is a bit confusing since both are called jobs,
+                        // but only the former is in the DB and should be deleted from it.
+                        jobsToDo.removeIf(job -> {
+                            IndexKey       indexKey  = job.getIndexKey();
+                            IndexJobAction action    = job.getIndexJob().getAction();
+                            IndexKey       deleteKey = new IndexKey(indexKey.type(), indexKey.itemId(), IndexJobAction.DELETE);
+                            boolean        canRemove = (action.equals(IndexJobAction.UPDATE) || action.equals(IndexJobAction.CREATE)) && jobsToDo.stream().anyMatch(candidate -> candidate.getIndexKey().equals(deleteKey));
+                            if (canRemove) {
+                                log.debug("Removing {} because its object has already been deleted.", job.getIndexJob());
+                                jobsToDelete.add(job.getIndexJob());
+                            }
+                            return canRemove;
+                        });
+
                         for (IndexJobWithDependencies job : jobsToDo) {
                             Runnable runnable = () -> consumer.accept(job);
                             switch (job.getIndexJob().getAction()) {
@@ -353,11 +370,15 @@ public class IndexService implements Runnable {
                         if (osd == null) {
                             log.warn("IndexJob: OSD {} not found, skipping.", indexJob.getItemId());
                             jobsToDelete.add(indexJob);
+                            jobsToDo.add(new IndexJobWithDependencies(indexJob, new IndexKey(IndexJobType.OSD, indexJob.getItemId(), IndexJobAction.DELETE)));
                             continue;
                         }
                         indexJobWithDependencies.setOsd(osd);
                         String folderPath = folderPaths.get(osd.getParentId());
-                        log.trace("folderPath: {}", folderPath);
+                        if (folderPath == null) {
+                            log.warn("folderPath of indexJob {} not found.", indexJob);
+                        }
+                        log.debug("folderPath: {}", folderPath);
                         indexJobWithDependencies.setFolderPath(folderPath);
                         List<Long>     relationCriteria = List.of(osd.getId());
                         List<Relation> relations        = relationDao.getRelationsOrMode(relationCriteria, relationCriteria, Collections.emptyList(), true);
@@ -389,10 +410,12 @@ public class IndexService implements Runnable {
                         if (folder == null) {
                             log.warn("IndexJob: Folder {} not found, skipping.", indexJob.getItemId());
                             jobsToDelete.add(indexJob);
+                            jobsToDo.add(new IndexJobWithDependencies(indexJob, new IndexKey(IndexJobType.FOLDER, indexJob.getItemId(), IndexJobAction.DELETE)));
                             continue;
                         }
                         String folderPath = folderPaths.get(folder.getParentId());
                         if (folderPath == null) {
+                            log.warn("folderPath of indexJob {} not found.", indexJob);
                             folderPath = "/";
                         }
                         indexJobWithDependencies.setFolderPath(folderPath);
@@ -414,7 +437,7 @@ public class IndexService implements Runnable {
                 }
             }
         }
-        log.info("Found jobs: {} ", jobsToDo.stream().map(job -> job.getIndexKey().toString()).toList());
+        log.info("Found jobs to do: {} ", jobsToDo.stream().map(job -> job.getIndexKey().toString()).toList());
         return jobsToDo;
     }
 
@@ -479,7 +502,7 @@ public class IndexService implements Runnable {
             doc.add(new LongPoint("folder_type", folder.getTypeId()));
             applyIndexItems(doc, indexItems, xmlMapper.writeValueAsString(folder), NO_CONTENT, folderPath, job);
         } catch (Exception e) {
-            log.warn("Failed to index folder #{}", job.getFolder().getId(), e);
+            log.warn("Failed to index folder #{}", job, e);
             return new IndexEvent(job.getIndexJob().getId(), IndexEventType.GENERIC, IndexResult.FAILED, e.getMessage());
         }
         return SUCCESS_EVENT;
@@ -489,7 +512,10 @@ public class IndexService implements Runnable {
         ObjectSystemData osd = job.getOsd();
         try {
             // index sysMeta
-
+            String folderPath = job.getFolderPath();
+            if (folderPath == null) {
+                log.warn("folderPath of indexJob {} not found.", job);
+            }
             doc.add(new StringField("folderpath", job.getFolderPath().toLowerCase(), Field.Store.NO));
 
             doc.add(new StoredField("acl", osd.getAclId()));
@@ -555,7 +581,7 @@ public class IndexService implements Runnable {
             }
             applyIndexItems(doc, indexItems, xmlMapper.writeValueAsString(osd), content, job.getFolderPath(), job);
         } catch (Exception e) {
-            log.warn("Indexing failed for OSD #{}", job.getOsd().getId(), e);
+            log.warn("Indexing failed for job {}", job, e);
             return new IndexEvent(job.getIndexJob().getId(), IndexEventType.GENERIC, IndexResult.FAILED, e.getMessage());
         } catch (Throwable e) {
             log.error("Critical Error with {}", job.getIndexKey(), e);
