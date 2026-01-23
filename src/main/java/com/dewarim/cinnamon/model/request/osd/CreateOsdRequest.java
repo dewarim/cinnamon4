@@ -129,7 +129,7 @@ public class CreateOsdRequest implements ApiRequest<CreateOsdRequest> {
                 && parentId != null && parentId > 0
                 && (typeId == null || typeId > 0)
                 && (aclId == null || aclId > 0)
-                && (ownerId == null || ownerId > 0)
+                && ownerId != null && ownerId > 0
                 && (formatId == null || formatId > 0)
                 && (languageId == null || languageId > 0)
                 && metaIsValid()

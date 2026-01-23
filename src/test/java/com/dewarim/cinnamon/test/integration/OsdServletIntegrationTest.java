@@ -2443,4 +2443,10 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var targetId = client.getLinkById(toh.link.getId(), false).getOsd().getId();
         assertEquals(osd.getId(), targetId);
     }
+
+    @Test
+    public void createOsdNeedsOwnerId() throws IOException {
+        var createRequest = new CreateOsdRequest("createOsdNeedsOwnerId", createFolderId, null, 1L, 1L, null, 1L, null, "<summary/>");
+        assertClientError(() -> client.createOsd(createRequest), INVALID_REQUEST);
+    }
 }
