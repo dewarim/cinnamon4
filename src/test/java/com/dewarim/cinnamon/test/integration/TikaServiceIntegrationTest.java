@@ -44,6 +44,22 @@ public class TikaServiceIntegrationTest {
             throw new RuntimeException(e);
         }
         assertTrue(bunData.contains("delicious cinnamon bun"));
+        assertTrue(bunData.startsWith("<?xml version=\"1.0\""));
+    }
+
+    @Disabled("Requires Apache Tika server @ localhost:9998")
+    @Test
+    public void tikaVersion11PreservedTest() throws IOException {
+        CinnamonTikaConfig cinnamonTikaConfig = new CinnamonTikaConfig(baseUrl, true);
+        cinnamonTikaConfig.setRemoveNewXmlVersionHeader(false);
+        String             bunData;
+        try (FileInputStream bunnyStream = new FileInputStream(bun)) {
+            bunData = new TikaService(cinnamonTikaConfig, contentProviderService)
+                    .parseData(bunnyStream, bun.length(), imageFormat, osdId);
+            log.info("bunData:\n{}", bunData);
+        }
+        assertTrue(bunData.contains("delicious cinnamon bun"));
+        assertTrue(bunData.startsWith("<?xml version=\"1.1\""));
     }
 
     @Test

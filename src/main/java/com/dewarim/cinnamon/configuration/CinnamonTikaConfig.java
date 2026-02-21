@@ -2,12 +2,13 @@ package com.dewarim.cinnamon.configuration;
 
 public class CinnamonTikaConfig {
 
-    private String  baseUrl                = "http://localhost:9998";
-    private boolean useTika                = false;
-    private int     retryDelayInSeconds    = 1;
-    private int     maxRetryDelayInSeconds = 10;
-    private int     tikaBatchSize          = 8;
-    private long    tikaPauseInMillis      = 3000;
+    private String  baseUrl                   = "http://localhost:9998";
+    private boolean useTika                   = false;
+    private int     retryDelayInSeconds       = 1;
+    private int     maxRetryDelayInSeconds    = 10;
+    private int     tikaBatchSize             = 8;
+    private long    tikaPauseInMillis         = 3000;
+    private boolean removeNewXmlVersionHeader = false;
 
     public CinnamonTikaConfig() {
     }
@@ -57,6 +58,8 @@ public class CinnamonTikaConfig {
                 ", retryDelayInSeconds=" + retryDelayInSeconds +
                 ", maxRetryDelayInSeconds=" + maxRetryDelayInSeconds +
                 ", tikaBatchSize=" + tikaBatchSize +
+                ", tikaPauseInMillis=" + tikaPauseInMillis +
+                ", removeNewXmlVersionHeader=" + removeNewXmlVersionHeader +
                 '}';
     }
 
@@ -70,5 +73,13 @@ public class CinnamonTikaConfig {
 
     public long getTikaPauseInMillis() {
         return tikaPauseInMillis;
+    }
+
+    public boolean isRemoveNewXmlVersionHeader() {
+        return removeNewXmlVersionHeader;
+    }
+
+    public void setRemoveNewXmlVersionHeader(boolean removeNewXmlVersionHeader) {
+        this.removeNewXmlVersionHeader = removeNewXmlVersionHeader;
     }
 }

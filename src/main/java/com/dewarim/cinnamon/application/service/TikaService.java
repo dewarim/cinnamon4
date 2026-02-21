@@ -138,7 +138,11 @@ public class TikaService implements Runnable {
                 // (goal is to have logging for those objects so we can see how much RAM to add...)
                 InputStream responseStream = response.getEntity().getContent();
                 try(BufferedReader bis = new BufferedReader(new InputStreamReader(responseStream),65536)){
-                    return stripWhitespace(bis);
+                    String result = stripWhitespace(bis);
+                    if (config.isRemoveNewXmlVersionHeader() && result.startsWith("<?xml version=\"1.1\"")) {
+                        result = result.replaceFirst("version=\"1.1\"", "version=\"1.0\"");
+                    }
+                    return result;
                 }
                 catch (Throwable e) {
                     log.error("Failed to parse tika response for OSD {}", osdId, e);
@@ -192,6 +196,9 @@ public class TikaService implements Runnable {
             log.debug("Parse OSD #{} with Tika", osd.getId());
             String tikaMetadata = parseWithTika(contentStream, osd.getContentSize(), format, osd.getId());
             tikaMetadata = tikaMetadata.replace(" xmlns=\"http://www.w3.org/1999/xhtml\"", "");
+            if (config.isRemoveNewXmlVersionHeader() && tikaMetadata.startsWith("<?xml version=\"1.1\"")) {
+                tikaMetadata = tikaMetadata.replaceFirst("version=\"1.1\"", "version=\"1.0\"");
+            }
             log.trace("Tika returned: {}", tikaMetadata);
             try (SqlSession sqlSession = CinnamonServer.getSqlSession()) {
                 // TODO: do not load existing tikaMetaset (memory consumption)

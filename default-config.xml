@@ -69,6 +69,11 @@
   <cinnamonTikaConfig>
     <baseUrl>http://localhost:9998</baseUrl>
     <useTika>false</useTika>
+    <retryDelayInSeconds>1</retryDelayInSeconds>
+    <maxRetryDelayInSeconds>10</maxRetryDelayInSeconds>
+    <tikaBatchSize>8</tikaBatchSize>
+    <tikaPauseInMillis>1000</tikaPauseInMillis>
+    <removeNewXmlVersionHeader>false</removeNewXmlVersionHeader>
   </cinnamonTikaConfig>
   <loginProviders/>
   <changeTriggerConfig>
