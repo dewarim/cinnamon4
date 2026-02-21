@@ -1,6 +1,7 @@
 package com.dewarim.cinnamon.application.service;
 
 
+import com.dewarim.cinnamon.application.DbSessionFactory;
 import com.dewarim.cinnamon.application.exception.CinnamonException;
 import com.dewarim.cinnamon.application.service.search.BrowsableAcls;
 import com.dewarim.cinnamon.application.service.search.RegexQueryBuilder;
@@ -17,11 +18,15 @@ import com.dewarim.cinnamon.model.index.IndexJobType;
 import com.dewarim.cinnamon.model.index.SearchResult;
 import com.dewarim.cinnamon.model.request.search.SearchType;
 import com.dewarim.cinnamon.security.authorization.AuthorizationService;
+import dev.failsafe.Failsafe;
+import dev.failsafe.RetryPolicy;
+import org.apache.ibatis.session.SqlSession;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.miscellaneous.LimitTokenCountAnalyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.xml.CoreParser;
@@ -37,10 +42,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.time.Duration;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.dewarim.cinnamon.api.Constants.*;
@@ -53,9 +56,12 @@ public class SearchService {
     private       DirectoryReader         indexReader;
     private final SearcherManager         searcherManager;
     private final LimitTokenCountAnalyzer limitTokenCountAnalyzer;
+    private final RetryPolicy<Boolean>    retryPolicy;
+    private final DbSessionFactory        dbSessionFactory;
 
-    public SearchService(LuceneConfig luceneConfig) throws IOException, InterruptedException {
+    public SearchService(LuceneConfig luceneConfig, DbSessionFactory dbLoggingSessionFactory) throws IOException, InterruptedException {
         this.config = luceneConfig;
+        this.dbSessionFactory = dbLoggingSessionFactory;
 
         while (!IndexService.isInitialized) {
             log.debug("Waiting for IndexService to finish initialization.");
@@ -69,7 +75,75 @@ public class SearchService {
         Analyzer analyzer = new StandardAnalyzer();
         limitTokenCountAnalyzer = new LimitTokenCountAnalyzer(analyzer, Integer.MAX_VALUE);
 
+        retryPolicy = RetryPolicy.<Boolean>builder()
+                .handleResult(false)
+                .withDelay(Duration.ofMillis(config.getMillisToWaitBetweenRuns()))
+                .withMaxRetries(10)
+                .build();
+
         // TODO: refresh periodically - or if last refresh was > config.lucene.refreshTime
+    }
+
+    public void waitUntilIndexed(List<IndexJob> indexJobs) {
+        log.debug("waitUntilIndexed for {} jobs", indexJobs.size());
+        List<IndexJob> jobsToWaitFor = indexJobs.stream()
+                .filter(job -> job.getAction() == IndexJobAction.CREATE || job.getAction() == IndexJobAction.UPDATE)
+                .toList();
+        IndexJobDao indexJobDao = new IndexJobDao();
+        for (IndexJob job : jobsToWaitFor) {
+            log.debug("Waiting for job: {}", job);
+            try {
+
+                Failsafe.with(retryPolicy).run(() -> {
+                    Optional<IndexJob> indexJob;
+                    try (SqlSession sqlSession = dbSessionFactory.getSession()) {
+                        indexJobDao.setSqlSession(sqlSession);
+                        indexJob = indexJobDao.getIndexJobById(job.getId());
+                    }
+                    if (indexJob.isPresent()) {
+                        IndexJob currentJob = indexJob.get();
+                        if (currentJob.getFailed() >= config.getMaxIndexAttempts()) {
+                            log.error("IndexJob {} for item {} ({}) failed more than {} times.",
+                                    currentJob.getId(), currentJob.getItemId(), currentJob.getJobType(), config.getMaxIndexAttempts());
+                            return;
+                        }
+                        log.debug("Job {} still pending (failed: {})", currentJob.getId(), currentJob.getFailed());
+                        throw new CinnamonException("Job still pending");
+                    }
+
+                    log.debug("Job {} finished, checking Lucene", job.getId());
+                    if (!isIndexed(job.getJobType(), job.getItemId())) {
+                        log.debug("Item {} not yet in Lucene", job.getItemId());
+                        throw new CinnamonException("Job finished but item not yet searchable");
+                    }
+                    log.debug("Item {} is indexed.", job.getItemId());
+                });
+            } catch (Exception e) {
+                log.warn("Failed to wait until item {} was indexed: {}", job.getItemId(), e.getMessage(), e);
+            }
+        }
+    }
+
+    private boolean isIndexed(IndexJobType type, Long id) throws IOException {
+        IndexSearcher searcher = null;
+        try {
+            searcherManager.maybeRefreshBlocking();
+            searcher = searcherManager.acquire();
+            BooleanQuery query = new BooleanQuery.Builder()
+                    .add(new TermQuery(new Term(LUCENE_FIELD_CINNAMON_CLASS, type.name())), BooleanClause.Occur.MUST)
+                    .add(LongPoint.newExactQuery("id", id), BooleanClause.Occur.MUST)
+                    .build();
+            TopDocs topDocs = searcher.search(query, 1);
+            boolean found   = topDocs.totalHits.value > 0;
+            if (!found) {
+                log.debug("Item {} of type {} not yet indexed.", id, type);
+            }
+            return found;
+        } finally {
+            if (searcher != null) {
+                searcherManager.release(searcher);
+            }
+        }
     }
 
     public IndexJobDao.IndexRows countDocs() throws IOException {

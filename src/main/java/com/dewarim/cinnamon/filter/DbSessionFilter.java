@@ -2,6 +2,7 @@ package com.dewarim.cinnamon.filter;
 
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.application.*;
+import com.dewarim.cinnamon.application.service.SearchService;
 import com.dewarim.cinnamon.dao.DeletionDao;
 import com.dewarim.cinnamon.model.Deletion;
 import com.dewarim.cinnamon.model.index.IndexJob;
@@ -19,6 +20,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.dewarim.cinnamon.ErrorCode.INTERNAL_SERVER_ERROR_TRY_AGAIN_LATER;
 import static com.dewarim.cinnamon.api.Constants.CONTENT_PROVIDER_SERVICE;
+import static com.dewarim.cinnamon.api.Constants.SEARCH_SERVICE;
 
 /**
  *
@@ -27,12 +29,13 @@ public class DbSessionFilter implements Filter {
 
     private static final Logger log = LogManager.getLogger(DbSessionFilter.class);
 
-    private final DeletionDao  deletionDao = new DeletionDao();
-    private ContentProviderService contentProviderService;
+    private final DeletionDao            deletionDao = new DeletionDao();
+    private       ContentProviderService contentProviderService;
+    private       SearchService          searchService;
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException {
-        try(SqlSession sqlSession = ThreadLocalSqlSession.refreshSession()) {
+        try (SqlSession sqlSession = ThreadLocalSqlSession.refreshSession()) {
             log.debug("DbSessionFilter: before");
             chain.doFilter(request, response);
             log.debug("DbSessionFilter: after");
@@ -42,9 +45,8 @@ public class DbSessionFilter implements Filter {
                 try {
                     // TODO: RequestResponseFilter also commits... due to http5client being so fast.
                     sqlSession.commit();
-                }
-                catch (Exception e){
-                    log.warn("Failed to commit DB session: ",e);
+                } catch (Exception e) {
+                    log.warn("Failed to commit DB session: ", e);
                     throw ErrorCode.COMMIT_TO_DATABASE_FAILED.exception();
                 }
                 // TODO: maybe check if an idling background thread uses less resources
@@ -54,13 +56,13 @@ public class DbSessionFilter implements Filter {
                     log.debug("Submit pending deletion tasks, will wait at most {} seconds", deletionWaitPeriod);
                     CinnamonServer.executorService.submit(new DeletionTask(deletions, contentProviderService)).get(deletionWaitPeriod, TimeUnit.SECONDS);
                 }
+                sqlSession.close();
                 List<IndexJob> indexJobs = RequestScope.getIndexJobs();
-                if(indexJobs.size() > 0){
+                if (indexJobs.size() > 0 && CinnamonServer.getConfig().getLuceneConfig().isWaitUntilSearchable()) {
                     log.debug("Will wait until items from index jobs are searchable.");
-                    // TODO: implement wait and search for indexed items
+                    searchService.waitUntilIndexed(indexJobs);
                 }
-            }
-            else{
+            } else {
                 log.debug("TransactionStatus is not OK -> do not commit changes, roll back the sqlSession.");
                 sqlSession.rollback();
             }
@@ -79,5 +81,6 @@ public class DbSessionFilter implements Filter {
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
         contentProviderService = (ContentProviderService) filterConfig.getServletContext().getAttribute(CONTENT_PROVIDER_SERVICE);
+        searchService = (SearchService) filterConfig.getServletContext().getAttribute(SEARCH_SERVICE);
     }
 }

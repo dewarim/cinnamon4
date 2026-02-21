@@ -31,6 +31,18 @@ public class LuceneConfig {
      * the server may run out of memory.
      */
     private Long    maxCombinedMetasetSize  = 100_000_000L;
+    /**
+     * On OSD, Folder or Meta creation and update operations, wait until the item has been indexed and the
+     * asynchronous index returns it during a search operation.
+     * <br>
+     * The search interval is millisToWaitBetweenRuns, so if you turn this feature on,
+     * responses will probably be 1s slower. But it will help if you want to have an object to
+     * appear in the index right away without the uncertainty of whether a search can find it.
+     * <br>
+     * Use case: slow server disc or slow Lucene index, so objects are unsearchable for some time
+     * after changes.
+     */
+    private boolean waitUntilSearchable     = false;
 
     public int getUncommittedLimit() {
         return uncommittedLimit;
@@ -104,6 +116,14 @@ public class LuceneConfig {
         this.verifySearchResults = verifySearchResults;
     }
 
+    public void setMaxCombinedMetasetSize(Long maxCombinedMetasetSize) {
+        this.maxCombinedMetasetSize = maxCombinedMetasetSize;
+    }
+
+    public Long getMaxCombinedMetasetSize() {
+        return maxCombinedMetasetSize;
+    }
+
     @Override
     public String toString() {
         return "LuceneConfig{" +
@@ -117,14 +137,15 @@ public class LuceneConfig {
                 ", threadPoolWaitInMinutes=" + threadPoolWaitInMinutes +
                 ", verifySearchResults=" + verifySearchResults +
                 ", maxCombinedMetasetSize=" + maxCombinedMetasetSize +
+                ", waitUntilSearchable=" + waitUntilSearchable +
                 '}';
     }
 
-    public void setMaxCombinedMetasetSize(Long maxCombinedMetasetSize) {
-        this.maxCombinedMetasetSize = maxCombinedMetasetSize;
+    public boolean isWaitUntilSearchable() {
+        return waitUntilSearchable;
     }
 
-    public Long getMaxCombinedMetasetSize() {
-        return maxCombinedMetasetSize;
+    public void setWaitUntilSearchable(boolean waitUntilSearchable) {
+        this.waitUntilSearchable = waitUntilSearchable;
     }
 }

@@ -13,7 +13,6 @@ import com.dewarim.cinnamon.test.TestObjectHolder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -67,7 +66,9 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
         toh.selectFormat("json")
                 .createOsdWithContent(new File("src/test/resources/test.json"));
 
-        Thread.sleep(CinnamonServer.config.getLuceneConfig().getMillisToWaitBetweenRuns() + 5000L);
+        if(!CinnamonServer.getConfig().getLuceneConfig().isWaitUntilSearchable()) {
+            Thread.sleep(CinnamonServer.config.getLuceneConfig().getMillisToWaitBetweenRuns() + 5000L);
+        }
         ThreadLocalSqlSession.refreshSession();
     }
 
@@ -195,15 +196,13 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
     }
 
     // ticket 389: meta operations do not trigger reindex
-    @Disabled("manual test due to waiting")
     @Test
     public void updateMetaTest() throws IOException, InterruptedException {
         var toh = new TestObjectHolder(client, userId)
                 .createOsd();
-        Thread.sleep(4000);
-
+        Thread.sleep(1300);
         toh.createOsdMeta("<xml>issue389</xml>");
-        Thread.sleep(4000);
+        Thread.sleep(1300);
 
         String            termQuery = createTermQuery("meta_content", "issue389");
         SearchIdsResponse response  = client.search(termQuery, SearchType.OSD);

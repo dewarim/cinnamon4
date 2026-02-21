@@ -65,6 +65,7 @@
     <uncommittedLimit>10000</uncommittedLimit>
     <logFailedAttemptsToDb>true</logFailedAttemptsToDb>
     <verifySearchResults>false</verifySearchResults>
+    <waitUntilSearchable>false</waitUntilSearchable>
   </luceneConfig>
   <cinnamonTikaConfig>
     <baseUrl>http://localhost:9998</baseUrl>

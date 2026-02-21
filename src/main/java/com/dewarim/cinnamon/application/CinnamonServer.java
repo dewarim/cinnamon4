@@ -271,7 +271,7 @@ public class CinnamonServer {
         // order is important here: searchService waits for indexService to finish initialization
         startIndexService(contentProviderService);
         startTikaService(contentProviderService);
-        searchService = new SearchService(config.getLuceneConfig());
+        searchService = new SearchService(config.getLuceneConfig(), dbSessionFactory);
 
         webAppContext.setAttribute(TIKA_SERVICE, tikaService);
         webAppContext.setAttribute(SEARCH_SERVICE, searchService);

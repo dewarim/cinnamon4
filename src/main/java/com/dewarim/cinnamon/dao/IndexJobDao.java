@@ -8,12 +8,16 @@ import com.dewarim.cinnamon.model.index.IndexJobAction;
 import com.dewarim.cinnamon.model.request.osd.VersionPredicate;
 import org.apache.ibatis.session.RowBounds;
 import org.apache.ibatis.session.SqlSession;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public class IndexJobDao {
 
+    private static final Logger log = LogManager.getLogger(IndexJobDao.class);
     private SqlSession sqlSession;
 
     public IndexJobDao() {
@@ -27,6 +31,11 @@ public class IndexJobDao {
         SqlSession          sqlSession = getSqlSession();
         Map<String, Object> params     = Map.of("failed", failedCount);
         return sqlSession.selectList("com.dewarim.cinnamon.model.index.IndexJob.getIndexJobsByFailedCount", params, new RowBounds(0, limit));
+    }
+
+    public Optional<IndexJob> getIndexJobById(Long id) {
+        SqlSession sqlSession = getSqlSession();
+        return Optional.ofNullable(sqlSession.selectOne("com.dewarim.cinnamon.model.index.IndexJob.getIndexJobById", id));
     }
 
     public int countJobs() {
@@ -48,6 +57,7 @@ public class IndexJobDao {
         SqlSession sqlSession  = getSqlSession();
         int        rowsChanged = sqlSession.insert("com.dewarim.cinnamon.model.index.IndexJob.insert", job);
         if (waitUntilSearchable && job.getAction() != IndexJobAction.DELETE) {
+            log.debug("Adding index job to RequestScope: {}", job);
             RequestScope.addIndexJob(job);
         }
         return rowsChanged;

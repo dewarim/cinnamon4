@@ -55,6 +55,12 @@
         WHERE id = #{id}
     </update>
 
+    <select id="getIndexJobById" resultMap="indexJobMap">
+        SELECT *
+        FROM index_jobs
+        WHERE id = #{id}
+    </select>
+
     <select id="list" resultMap="indexJobMap">
         SELECT *
         FROM index_jobs
