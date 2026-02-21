@@ -57,8 +57,8 @@ public class RequestResponseFilter implements Filter {
             }
 
             Long userId = null;
-            if (ThreadLocalSqlSession.getCurrentUser() != null) {
-                userId = ThreadLocalSqlSession.getCurrentUser().getId();
+            if (RequestScope.getCurrentUser() != null) {
+                userId = RequestScope.getCurrentUser().getId();
             }
             if(CinnamonServer.isAccessLogEnabled()) {
                 accessLogService.addEntry(cinnamonRequest, cinnamonResponse, errorWrapper, errorCode, null, userId);

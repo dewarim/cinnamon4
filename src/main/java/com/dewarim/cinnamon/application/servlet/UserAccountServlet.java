@@ -4,7 +4,7 @@ import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonRequest;
 import com.dewarim.cinnamon.application.CinnamonResponse;
-import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
+import com.dewarim.cinnamon.application.RequestScope;
 import com.dewarim.cinnamon.configuration.CinnamonConfig;
 import com.dewarim.cinnamon.configuration.SecurityConfig;
 import com.dewarim.cinnamon.dao.FolderDao;
@@ -110,7 +110,7 @@ public class UserAccountServlet extends HttpServlet implements CruddyServlet<Use
             case USER__SET_CONFIG -> {
                 SetUserConfigRequest configRequest = cinnamonRequest.getMapper().readValue(request.getInputStream(), SetUserConfigRequest.class)
                         .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
-                UserAccount           currentUser = ThreadLocalSqlSession.getCurrentUser();
+                UserAccount           currentUser = RequestScope.getCurrentUser();
                 Optional<UserAccount> userOpt     = userAccountDao.getUserAccountById(configRequest.getUserId());
                 if (userOpt.isEmpty()) {
                     throw ErrorCode.USER_ACCOUNT_NOT_FOUND.exception();
@@ -136,7 +136,7 @@ public class UserAccountServlet extends HttpServlet implements CruddyServlet<Use
                 if (userAccountDao.isSuperuser(userAccount)) {
                     throw ErrorCode.CANNOT_DELETE_SUPERUSER.exception();
                 }
-                UserAccount currentUser = ThreadLocalSqlSession.getCurrentUser();
+                UserAccount currentUser = RequestScope.getCurrentUser();
 
                 new FolderDao().updateOwnership(userId, assetReceiverId);
                 new OsdDao().updateOwnershipAndModifierAndCreatorAndLocker(userId, assetReceiverId, currentUser.getId());
@@ -161,7 +161,7 @@ public class UserAccountServlet extends HttpServlet implements CruddyServlet<Use
     private void setPassword(CinnamonRequest request, UserAccountDao userDao, CinnamonResponse response) throws IOException {
         SetPasswordRequest passwordRequest = request.getMapper().readValue(request.getInputStream(), SetPasswordRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
-        UserAccount           currentUser = ThreadLocalSqlSession.getCurrentUser();
+        UserAccount           currentUser = RequestScope.getCurrentUser();
         Optional<UserAccount> userOpt     = userDao.getUserAccountById(passwordRequest.getUserId());
 
         if (!passwordRequest.getUserId().equals(currentUser.getId())) {

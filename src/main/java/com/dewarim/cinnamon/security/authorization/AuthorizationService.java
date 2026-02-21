@@ -4,7 +4,7 @@ import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.Identifiable;
 import com.dewarim.cinnamon.api.Ownable;
-import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
+import com.dewarim.cinnamon.application.RequestScope;
 import com.dewarim.cinnamon.application.service.search.BrowsableAcls;
 import com.dewarim.cinnamon.dao.FolderDao;
 import com.dewarim.cinnamon.dao.OsdDao;
@@ -108,7 +108,7 @@ public class AuthorizationService {
     }
 
     public boolean currentUserIsSuperuser() {
-        return AccessFilter.getInstance(ThreadLocalSqlSession.getCurrentUser()).isSuperuser();
+        return AccessFilter.getInstance(RequestScope.getCurrentUser()).isSuperuser();
     }
 
     public boolean hasUserOrOwnerPermission(Ownable ownable, DefaultPermission permission, UserAccount user) {

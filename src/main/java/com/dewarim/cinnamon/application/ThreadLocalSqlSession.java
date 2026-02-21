@@ -1,6 +1,5 @@
 package com.dewarim.cinnamon.application;
 
-import com.dewarim.cinnamon.model.UserAccount;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionException;
 import org.apache.logging.log4j.LogManager;
@@ -53,17 +52,6 @@ public class ThreadLocalSqlSession {
     
     public static void setTransactionStatus(TransactionStatus status){
         transactionStatus.set(status);
-    }
-    
-    // UserAccount of the currently connected user.
-    private static final ThreadLocal<UserAccount> currentUser = ThreadLocal.withInitial(() -> null);
-    
-    public static UserAccount getCurrentUser(){
-        return currentUser.get();
-    }
-    
-    public static void setCurrentUser(UserAccount user){
-        currentUser.set(user);
     }
 
     public static void setDbSessionFactory(DbSessionFactory dbSessionFactory) {

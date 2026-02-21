@@ -6,7 +6,7 @@ import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonRequest;
 import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.application.CinnamonServer;
-import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
+import com.dewarim.cinnamon.application.RequestScope;
 import com.dewarim.cinnamon.application.trigger.TriggerResult;
 import com.dewarim.cinnamon.dao.ChangeTriggerDao;
 import com.dewarim.cinnamon.model.ChangeTrigger;
@@ -34,7 +34,7 @@ public class ChangeTriggerFilter extends HttpFilter {
         CinnamonRequest  cinnamonRequest  = (CinnamonRequest) request;
         CinnamonResponse cinnamonResponse = (CinnamonResponse) response;
 
-        UserAccount user = ThreadLocalSqlSession.getCurrentUser();
+        UserAccount user = RequestScope.getCurrentUser();
 
         // load triggers (later: cache them)
         UrlMapping mapping = UrlMapping.getByPath(cinnamonRequest.getRequestURI());

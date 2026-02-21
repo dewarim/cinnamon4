@@ -141,7 +141,7 @@ public class SearchService {
                     IndexJobDao indexJobDao = new IndexJobDao();
                     for (Long unknownOsdId : luceneOsdIds) {
                         IndexJob deleteJob = new IndexJob(IndexJobType.OSD, unknownOsdId, IndexJobAction.DELETE);
-                        indexJobDao.insertIndexJob(deleteJob);
+                        indexJobDao.insertIndexJob(deleteJob, false);
                     }
                 }
                 FolderDao folderDao       = new FolderDao();
@@ -154,7 +154,7 @@ public class SearchService {
                     IndexJobDao indexJobDao = new IndexJobDao();
                     for (Long unknownOsdId : luceneOsdIds) {
                         IndexJob deleteJob = new IndexJob(IndexJobType.FOLDER, unknownOsdId, IndexJobAction.DELETE);
-                        indexJobDao.insertIndexJob(deleteJob);
+                        indexJobDao.insertIndexJob(deleteJob, false);
                     }
                 }
                 return new SearchResult(new ArrayList<>(knownOsdIds), new ArrayList<>(knownFolderIds));

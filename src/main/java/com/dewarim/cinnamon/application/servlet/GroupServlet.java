@@ -4,7 +4,7 @@ import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonRequest;
 import com.dewarim.cinnamon.application.CinnamonResponse;
-import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
+import com.dewarim.cinnamon.application.RequestScope;
 import com.dewarim.cinnamon.dao.AclGroupDao;
 import com.dewarim.cinnamon.dao.GroupDao;
 import com.dewarim.cinnamon.dao.GroupUserDao;
@@ -39,7 +39,7 @@ public class GroupServlet extends HttpServlet implements CruddyServlet<Group> {
         CinnamonResponse cinnamonResponse = (CinnamonResponse) response;
         CinnamonRequest cinnamonRequest = (CinnamonRequest) request;
         GroupDao groupDao = new GroupDao();
-        UserAccount user = ThreadLocalSqlSession.getCurrentUser();
+        UserAccount user = RequestScope.getCurrentUser();
 
         UrlMapping mapping = UrlMapping.getByPath(request.getRequestURI());
         switch (mapping) {

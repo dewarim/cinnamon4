@@ -5,7 +5,7 @@ import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonRequest;
 import com.dewarim.cinnamon.application.CinnamonResponse;
-import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
+import com.dewarim.cinnamon.application.RequestScope;
 import com.dewarim.cinnamon.application.service.DeleteLinkService;
 import com.dewarim.cinnamon.dao.*;
 import com.dewarim.cinnamon.model.Acl;
@@ -74,7 +74,7 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
     }
 
     private Link createLink(Link link, LinkDao linkDao) {
-        UserAccount  user          = ThreadLocalSqlSession.getCurrentUser();
+        UserAccount  user          = RequestScope.getCurrentUser();
         FolderDao    folderDao     = new FolderDao();
         List<Folder> parentFolders = folderDao.getFoldersById(Collections.singletonList(link.getParentId()), false);
         if (parentFolders.isEmpty()) {
@@ -138,7 +138,7 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
 
     private Link updateLink(Link update, LinkDao linkDao) {
         Link         link         = linkDao.getLinkById(update.getId()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
-        UserAccount  user         = ThreadLocalSqlSession.getCurrentUser();
+        UserAccount  user         = RequestScope.getCurrentUser();
         AccessFilter accessFilter = AccessFilter.getInstance(user);
 
         if (link.getType() != update.getType()) {
@@ -223,7 +223,7 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
         if (links.isEmpty() || links.size() != deleteRequest.list().size()) {
             ErrorCode.OBJECT_NOT_FOUND.throwUp();
         }
-        UserAccount user          = ThreadLocalSqlSession.getCurrentUser();
+        UserAccount user          = RequestScope.getCurrentUser();
         List<Link>  filteredLinks = authorizationService.filterLinksByBrowsePermission(links, user);
         if (filteredLinks.isEmpty() || links.size() != filteredLinks.size()) {
             throw ErrorCode.UNAUTHORIZED.exception();
@@ -244,7 +244,7 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
         }
 
         // check the ACLs of all links.
-        UserAccount user                = ThreadLocalSqlSession.getCurrentUser();
+        UserAccount user                = RequestScope.getCurrentUser();
         List<Link>  folderLinks         = links.stream().filter(link -> link.getFolderId() != null).toList();
         List<Link>  osdLinks            = links.stream().filter(link -> link.getObjectId() != null).toList();
         List<Link>  filteredFolderLinks = authorizationService.filterFolderLinksAndTargetsByBrowsePermission(folderLinks, user);

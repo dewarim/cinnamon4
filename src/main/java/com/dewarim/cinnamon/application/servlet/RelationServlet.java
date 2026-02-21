@@ -6,7 +6,7 @@ import com.dewarim.cinnamon.FailedRequestException;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonRequest;
 import com.dewarim.cinnamon.application.CinnamonResponse;
-import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
+import com.dewarim.cinnamon.application.RequestScope;
 import com.dewarim.cinnamon.dao.OsdDao;
 import com.dewarim.cinnamon.dao.RelationDao;
 import com.dewarim.cinnamon.dao.RelationTypeDao;
@@ -37,7 +37,7 @@ public class RelationServlet extends HttpServlet implements CruddyServlet<Relati
 
         CinnamonResponse cinnamonResponse = (CinnamonResponse) response;
         RelationDao      relationDao      = new RelationDao();
-        UserAccount      user             = ThreadLocalSqlSession.getCurrentUser();
+        UserAccount      user             = RequestScope.getCurrentUser();
 
         UrlMapping mapping = UrlMapping.getByPath(request.getRequestURI());
         switch (mapping) {

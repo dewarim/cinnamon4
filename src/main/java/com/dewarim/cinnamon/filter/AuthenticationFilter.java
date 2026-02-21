@@ -3,7 +3,7 @@ package com.dewarim.cinnamon.filter;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.application.ErrorResponseGenerator;
-import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
+import com.dewarim.cinnamon.application.RequestScope;
 import com.dewarim.cinnamon.dao.SessionDao;
 import com.dewarim.cinnamon.dao.UserAccountDao;
 import com.dewarim.cinnamon.model.Session;
@@ -58,7 +58,7 @@ public class AuthenticationFilter implements Filter {
             Date expirationDate = new Date(currentTime+ CinnamonServer.config.getSecurityConfig().getSessionLengthInMillis());
             cinnamonSession.setExpires(expirationDate);
             new SessionDao().update(cinnamonSession);
-            ThreadLocalSqlSession.setCurrentUser(userAccountOpt.get());
+            RequestScope.setCurrentUser(userAccountOpt.get());
             chain.doFilter(request, response);
         } finally {
             log.debug("AuthenticationFilter: after");

@@ -6,7 +6,7 @@ import com.dewarim.cinnamon.api.Constants;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonRequest;
 import com.dewarim.cinnamon.application.CinnamonResponse;
-import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
+import com.dewarim.cinnamon.application.RequestScope;
 import com.dewarim.cinnamon.application.service.DeleteLinkService;
 import com.dewarim.cinnamon.application.service.DeleteOsdService;
 import com.dewarim.cinnamon.application.service.MetaService;
@@ -46,7 +46,7 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
-        UserAccount      user             = ThreadLocalSqlSession.getCurrentUser();
+        UserAccount      user             = RequestScope.getCurrentUser();
         FolderDao        folderDao        = new FolderDao();
         CinnamonResponse cinnamonResponse = (CinnamonResponse) response;
         CinnamonRequest  cinnamonRequest = (CinnamonRequest) request; 
@@ -360,7 +360,7 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
                     if (!subFolderIds.isEmpty()) {
                         indexJobDao.reindexFolders(subFolderIds);
                         for (Long subFolderId : subFolderIds) {
-                            indexJobDao.insertIndexJob(new IndexJob(IndexJobType.FOLDER, subFolderId, IndexJobAction.UPDATE));
+                            indexJobDao.insertIndexJob(new IndexJob(IndexJobType.FOLDER, subFolderId, IndexJobAction.UPDATE), true);
                             indexJobDao.reIndexFolderContent(subFolderId);
                         }
                     }

@@ -1,8 +1,10 @@
 package com.dewarim.cinnamon.dao;
 
+import com.dewarim.cinnamon.application.RequestScope;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.index.IndexJob;
+import com.dewarim.cinnamon.model.index.IndexJobAction;
 import com.dewarim.cinnamon.model.request.osd.VersionPredicate;
 import org.apache.ibatis.session.RowBounds;
 import org.apache.ibatis.session.SqlSession;
@@ -32,9 +34,23 @@ public class IndexJobDao {
         return sqlSession.selectOne("com.dewarim.cinnamon.model.index.IndexJob.countJobs");
     }
 
-    public int insertIndexJob(IndexJob job) {
-        SqlSession sqlSession = getSqlSession();
-        return sqlSession.insert("com.dewarim.cinnamon.model.index.IndexJob.insert", job);
+    /**
+     *
+     * @param job the index job to insert
+     * @param waitUntilSearchable if true, the job will be added to the request scope and the client will have to wait
+     *                            until the item is searchable. This obviously only makes sense for synchronous actions,
+     *                            so background threads should not set it to true as it won't have any effect aside from a possible memory leak.
+     *                            <br>
+     *                            This flag is ignored if IndexJobAction is of DELETE type.
+     * @return rows changed by this action (ideally, this should return 1)
+     */
+    public int insertIndexJob(IndexJob job, boolean waitUntilSearchable) {
+        SqlSession sqlSession  = getSqlSession();
+        int        rowsChanged = sqlSession.insert("com.dewarim.cinnamon.model.index.IndexJob.insert", job);
+        if (waitUntilSearchable && job.getAction() != IndexJobAction.DELETE) {
+            RequestScope.addIndexJob(job);
+        }
+        return rowsChanged;
     }
 
     public void delete(IndexJob job) {
@@ -77,8 +93,8 @@ public class IndexJobDao {
     }
 
     public int reindexOsds(List<Long> osdIds) {
-        SqlSession session = getSqlSession();
-        Map<String,Object> params = Map.of("ids", osdIds);
+        SqlSession          session = getSqlSession();
+        Map<String, Object> params  = Map.of("ids", osdIds);
         return session.insert("com.dewarim.cinnamon.model.index.IndexJob.reindexOsds", params);
     }
 
@@ -90,7 +106,7 @@ public class IndexJobDao {
 
     public void reIndexFolderContent(Long folderId) {
         List<Long> ids = new OsdDao().getObjectsByFolderId(folderId, false, VersionPredicate.ALL).stream().map(ObjectSystemData::getId).toList();
-        if(ids.isEmpty()){
+        if (ids.isEmpty()) {
             return;
         }
         reindexOsds(ids);

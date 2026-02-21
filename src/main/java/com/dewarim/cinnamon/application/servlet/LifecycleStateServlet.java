@@ -7,7 +7,7 @@ import com.dewarim.cinnamon.api.lifecycle.State;
 import com.dewarim.cinnamon.api.lifecycle.StateChangeResult;
 import com.dewarim.cinnamon.application.CinnamonRequest;
 import com.dewarim.cinnamon.application.CinnamonResponse;
-import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
+import com.dewarim.cinnamon.application.RequestScope;
 import com.dewarim.cinnamon.dao.LifecycleDao;
 import com.dewarim.cinnamon.dao.LifecycleStateDao;
 import com.dewarim.cinnamon.dao.OsdDao;
@@ -43,7 +43,7 @@ public class LifecycleStateServlet extends BaseServlet implements CruddyServlet<
         UrlMapping        mapping          = UrlMapping.getByPath(request.getRequestURI());
         CinnamonRequest   cinnamonRequest  = (CinnamonRequest) request;
         CinnamonResponse  cinnamonResponse = (CinnamonResponse) response;
-        UserAccount       user             = ThreadLocalSqlSession.getCurrentUser();
+        UserAccount       user             = RequestScope.getCurrentUser();
 
         switch (mapping) {
             case LIFECYCLE_STATE__ATTACH_LIFECYCLE ->

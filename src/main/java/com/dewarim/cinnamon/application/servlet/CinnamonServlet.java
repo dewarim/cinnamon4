@@ -6,7 +6,7 @@ import com.dewarim.cinnamon.api.login.LoginResult;
 import com.dewarim.cinnamon.application.CinnamonRequest;
 import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.application.CinnamonServer;
-import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
+import com.dewarim.cinnamon.application.RequestScope;
 import com.dewarim.cinnamon.application.exception.CinnamonException;
 import com.dewarim.cinnamon.configuration.SecurityConfig;
 import com.dewarim.cinnamon.dao.SessionDao;
@@ -152,7 +152,7 @@ public class CinnamonServlet extends HttpServlet {
         } else {
             CONNECTION_FAIL_WRONG_PASSWORD.throwUp();
         }
-        ThreadLocalSqlSession.setCurrentUser(user);
+        RequestScope.setCurrentUser(user);
         response.setUser(user);
     }
 

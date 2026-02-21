@@ -1,7 +1,7 @@
 package com.dewarim.cinnamon.dao;
 
 import com.dewarim.cinnamon.api.Constants;
-import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
+import com.dewarim.cinnamon.application.RequestScope;
 import com.dewarim.cinnamon.model.GroupUser;
 import com.dewarim.cinnamon.model.UserAccount;
 import org.apache.ibatis.session.SqlSession;
@@ -49,7 +49,7 @@ public class UserAccountDao implements CrudDao<UserAccount> {
 
     public static boolean currentUserIsSuperuser() {
         UserAccountDao accountDao = new UserAccountDao();
-        return accountDao.isSuperuser(ThreadLocalSqlSession.getCurrentUser());
+        return accountDao.isSuperuser(RequestScope.getCurrentUser());
     }
 
     public List<UserAccount> listActiveUserAccounts() {

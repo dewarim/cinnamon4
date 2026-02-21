@@ -4,6 +4,7 @@ import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.application.*;
 import com.dewarim.cinnamon.dao.DeletionDao;
 import com.dewarim.cinnamon.model.Deletion;
+import com.dewarim.cinnamon.model.index.IndexJob;
 import com.dewarim.cinnamon.provider.ContentProviderService;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,6 +15,7 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static com.dewarim.cinnamon.ErrorCode.INTERNAL_SERVER_ERROR_TRY_AGAIN_LATER;
 import static com.dewarim.cinnamon.api.Constants.CONTENT_PROVIDER_SERVICE;
@@ -48,7 +50,14 @@ public class DbSessionFilter implements Filter {
                 // TODO: maybe check if an idling background thread uses less resources
                 List<Deletion> deletions = deletionDao.listPendingDeletions();
                 if (deletions.size() > 0) {
-                    CinnamonServer.executorService.submit(new DeletionTask(deletions, contentProviderService));
+                    int deletionWaitPeriod = deletions.size() + 60;
+                    log.debug("Submit pending deletion tasks, will wait at most {} seconds", deletionWaitPeriod);
+                    CinnamonServer.executorService.submit(new DeletionTask(deletions, contentProviderService)).get(deletionWaitPeriod, TimeUnit.SECONDS);
+                }
+                List<IndexJob> indexJobs = RequestScope.getIndexJobs();
+                if(indexJobs.size() > 0){
+                    log.debug("Will wait until items from index jobs are searchable.");
+                    // TODO: implement wait and search for indexed items
                 }
             }
             else{
@@ -59,10 +68,11 @@ public class DbSessionFilter implements Filter {
         } catch (Exception e) {
             log.warn("Caught unexpected exception -> rollback:", e);
             ThreadLocalSqlSession.getSqlSession().rollback();
+            RequestScope.removeIndexJobs();
             ErrorResponseGenerator.generateErrorMessage((HttpServletRequest) request, (HttpServletResponse) response, INTERNAL_SERVER_ERROR_TRY_AGAIN_LATER, e.getMessage());
         }
         finally {
-            ThreadLocalSqlSession.setCurrentUser(null);
+            RequestScope.clearThreadLocal();
         }
     }
 

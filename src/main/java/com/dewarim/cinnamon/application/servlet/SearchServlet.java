@@ -4,7 +4,7 @@ import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonRequest;
 import com.dewarim.cinnamon.application.CinnamonResponse;
-import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
+import com.dewarim.cinnamon.application.RequestScope;
 import com.dewarim.cinnamon.application.service.SearchService;
 import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.index.SearchResult;
@@ -30,7 +30,7 @@ public class SearchServlet extends BaseServlet {
 
         CinnamonRequest cinnamonRequest = (CinnamonRequest) request;
         CinnamonResponse cinnamonResponse = (CinnamonResponse) response;
-        UserAccount      user             = ThreadLocalSqlSession.getCurrentUser();
+        UserAccount      user             = RequestScope.getCurrentUser();
 
         UrlMapping mapping = UrlMapping.getByPath(request.getRequestURI());
         switch (mapping) {

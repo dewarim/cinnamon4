@@ -217,7 +217,7 @@ public class TikaService implements Runnable {
                     osdMetaDao.create(List.of(tikaMeta));
                 }
                 IndexJobDao indexJobDao = new IndexJobDao(sqlSession);
-                indexJobDao.insertIndexJob(new IndexJob(IndexJobType.OSD, osd.getId(), IndexJobAction.UPDATE));
+                indexJobDao.insertIndexJob(new IndexJob(IndexJobType.OSD, osd.getId(), IndexJobAction.UPDATE), false);
                 sqlSession.commit();
             }
         }

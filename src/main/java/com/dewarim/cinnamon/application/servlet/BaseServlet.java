@@ -4,7 +4,7 @@ import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.Ownable;
 import com.dewarim.cinnamon.application.CinnamonResponse;
-import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
+import com.dewarim.cinnamon.application.RequestScope;
 import com.dewarim.cinnamon.dao.MetasetTypeDao;
 import com.dewarim.cinnamon.model.Meta;
 import com.dewarim.cinnamon.model.MetasetType;
@@ -25,7 +25,7 @@ public class BaseServlet extends HttpServlet {
     static final AuthorizationService authorizationService = new AuthorizationService();
 
     static void throwUnlessSysMetadataIsReadable(Ownable ownable) {
-        UserAccount user        = ThreadLocalSqlSession.getCurrentUser();
+        UserAccount user        = RequestScope.getCurrentUser();
         boolean     readAllowed = authorizationService.hasUserOrOwnerPermission(ownable, BROWSE, user);
         if (!readAllowed) {
             throw ErrorCode.NO_BROWSE_PERMISSION.getException().get();
@@ -33,7 +33,7 @@ public class BaseServlet extends HttpServlet {
     }
 
     static void throwUnlessCustomMetaIsReadable(Ownable ownable) {
-        UserAccount user = ThreadLocalSqlSession.getCurrentUser();
+        UserAccount user = RequestScope.getCurrentUser();
         authorizationService.throwUpUnlessUserOrOwnerHasPermission(ownable,
                 DefaultPermission.READ_OBJECT_CUSTOM_METADATA, user, NO_READ_CUSTOM_METADATA_PERMISSION);
     }

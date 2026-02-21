@@ -8,10 +8,7 @@ import com.dewarim.cinnamon.api.content.ContentMetadata;
 import com.dewarim.cinnamon.api.content.ContentProvider;
 import com.dewarim.cinnamon.api.lifecycle.State;
 import com.dewarim.cinnamon.api.lifecycle.StateChangeResult;
-import com.dewarim.cinnamon.application.CinnamonRequest;
-import com.dewarim.cinnamon.application.CinnamonResponse;
-import com.dewarim.cinnamon.application.CinnamonServer;
-import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
+import com.dewarim.cinnamon.application.*;
 import com.dewarim.cinnamon.application.exception.CinnamonException;
 import com.dewarim.cinnamon.application.service.DeleteOsdService;
 import com.dewarim.cinnamon.application.service.MetaService;
@@ -72,7 +69,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
-        UserAccount user   = ThreadLocalSqlSession.getCurrentUser();
+        UserAccount user   = RequestScope.getCurrentUser();
         OsdDao      osdDao = new OsdDao();
 
         CinnamonRequest  cinnamonRequest  = (CinnamonRequest) request;

@@ -4,7 +4,7 @@ package com.dewarim.cinnamon.filter;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonRequest;
 import com.dewarim.cinnamon.application.CinnamonResponse;
-import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
+import com.dewarim.cinnamon.application.RequestScope;
 import com.dewarim.cinnamon.application.trigger.TriggerResult;
 import com.dewarim.cinnamon.dao.ChangeTriggerDao;
 import com.dewarim.cinnamon.model.ChangeTrigger;
@@ -23,7 +23,7 @@ public class PostCommitChangeTriggerHandler {
     public void executeTriggers(CinnamonRequest cinnamonRequest, CinnamonResponse cinnamonResponse) {
         log.debug("After servlet: continue with post-commit-change-triggers");
 
-        UserAccount user = ThreadLocalSqlSession.getCurrentUser();
+        UserAccount user = RequestScope.getCurrentUser();
         if (!activeChangeTriggerFilter(user, cinnamonResponse)) {
             return;
         }

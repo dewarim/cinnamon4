@@ -4,6 +4,7 @@ import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.IdAndRootId;
 import com.dewarim.cinnamon.api.Ownable;
 import com.dewarim.cinnamon.api.RootAndLatestHead;
+import com.dewarim.cinnamon.application.RequestScope;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.UserAccount;
@@ -113,14 +114,14 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
     public void updateOsd(ObjectSystemData osd, boolean updateModifier, boolean updateTikaMetaset) {
         SqlSession sqlSession = getSqlSession();
         if (updateModifier) {
-            UserAccount currentUser = ThreadLocalSqlSession.getCurrentUser();
+            UserAccount currentUser = RequestScope.getCurrentUser();
             if (currentUser.isChangeTracking()) {
                 osd.setModified(new Date());
                 osd.setModifierId(currentUser.getId());
             }
         }
         sqlSession.update("com.dewarim.cinnamon.model.ObjectSystemData.updateOsd", osd);
-        new IndexJobDao(sqlSession).insertIndexJob(new IndexJob(IndexJobType.OSD, osd.getId(), IndexJobAction.UPDATE));
+        new IndexJobDao(sqlSession).insertIndexJob(new IndexJob(IndexJobType.OSD, osd.getId(), IndexJobAction.UPDATE), true);
     }
 
     public void updateOsd(ObjectSystemData osd, boolean updateModifier) {
@@ -138,7 +139,7 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
             updateOsd(osd, false);
         }
         IndexJob indexJob = new IndexJob(IndexJobType.OSD, osd.getId(), IndexJobAction.CREATE);
-        new IndexJobDao(sqlSession).insertIndexJob(indexJob);
+        new IndexJobDao(sqlSession).insertIndexJob(indexJob, true);
         return osd;
     }
 
@@ -161,7 +162,7 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
         IndexJobDao jobDao = new IndexJobDao(sqlSession);
         osdIdsToToDelete.forEach(id -> {
             IndexJob indexJob = new IndexJob(IndexJobType.OSD, id, IndexJobAction.DELETE);
-            jobDao.insertIndexJob(indexJob);
+            jobDao.insertIndexJob(indexJob, false);
         });
     }
 
