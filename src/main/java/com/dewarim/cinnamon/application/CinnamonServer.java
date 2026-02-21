@@ -63,7 +63,7 @@ public class CinnamonServer {
 
     private static final Logger log = LogManager.getLogger(CinnamonServer.class);
 
-    public static final String           VERSION       = "1.13.1";
+    public static final String           VERSION       = "1.13.2";
     private             Server           server;
     private static      DbSessionFactory dbSessionFactory;
     private static      DbSessionFactory dbLoggingSessionFactory;
@@ -463,7 +463,7 @@ public class CinnamonServer {
     }
 
     public void setDbSessionFactory(DbSessionFactory dbSessionFactory) {
-        this.dbSessionFactory = dbSessionFactory;
+        CinnamonServer.dbSessionFactory = dbSessionFactory;
     }
 
     public Server getServer() {
