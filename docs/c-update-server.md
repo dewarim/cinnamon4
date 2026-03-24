@@ -24,7 +24,7 @@ Cinnamon Server updates generally consist of these steps:
   <build>538</build>
 </CinnamonServer>
 ```
-1. Find the version that is currently installed in the Releases page ("previous version").
+2. Find the version that is currently installed in the Releases page ("previous version").
 1. Identify all SQL statements between previous and new version.
 1. Identify all configuration changes between previous and new version.
 1. Switch to ```root``` privileges.
@@ -39,5 +39,14 @@ systemctl stop cae.timer && systemctl stop cae && systemctl stop cinnamon
 cd /opt/cinnamon
 sudo -u cinnamon bash
 ```
-1. Navigate to https://github.com/dewarim/cinnamon4/releases[Cinnamon 4 Server Releases] and obtain the URL of the ```cinnamon.tar.gz``` file of the version you want to install.
- 
+2. Navigate to https://github.com/dewarim/cinnamon4/releases[Cinnamon 4 Server Releases], copy the URL of the ```cinnamon.tar.gz``` file of the version you want to install and download it using ```wget```:
+```
+wget <copied URL>
+```
+The compressed server will be downloaded.
+3. Unpack the server and delete the downloaded file:
+```
+tar xvzf cinnamon.tar.gz
+rm cinnamon.tar.gz
+```
+
