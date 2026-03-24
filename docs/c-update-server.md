@@ -15,3 +15,11 @@ Cinnamon Server updates generally consist of these steps:
 
 ## Detailed update instructions
 ### Preparation
+1. Determine the server version currently installed.
+  * Open a web browser and open ```<server_url>/cinnamon/info```, or on the server, use ```curl localhost:8080/cinnamon/info```. ```8080``` is the default port, adapt it to your setup. This returns:
+```
+<CinnamonServer>
+  <version>1.13.1</version>
+  <build>538</build>
+</CinnamonServer>
+```
