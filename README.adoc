@@ -20,6 +20,7 @@ The redesign was done using modern language features and consequent implementati
 1. Build from source
 1. Administration
    * https://github.com/dewarim/cinnamon4/blob/master/docs/c-backup-restore-server.md[Backup and restore of Cinnamon 4 Server]
+   * https://github.com/dewarim/cinnamon4/blob/master/docs/c-update-server.md[Update Cinnamon 4 Server to a newer version]
 1. Contribute
 1. Service, support and contact
 
