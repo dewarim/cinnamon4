@@ -44,6 +44,7 @@ sudo -u cinnamon bash
 wget <copied URL>
 ```
 The compressed server will be downloaded.
+
 3. Unpack the server and delete the downloaded file:
 ```
 tar xvzf cinnamon.tar.gz
