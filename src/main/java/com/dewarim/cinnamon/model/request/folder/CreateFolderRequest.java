@@ -2,6 +2,7 @@ package com.dewarim.cinnamon.model.request.folder;
 
 import com.dewarim.cinnamon.api.ApiRequest;
 import com.dewarim.cinnamon.model.Folder;
+import com.dewarim.cinnamon.model.Meta;
 import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.response.FolderWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
@@ -66,6 +67,8 @@ public class CreateFolderRequest implements CreateRequest<Folder>, ApiRequest<Fo
         Folder f2 = new Folder("archive", 2L, 2L, 2L, 2L, null);
         f1.setCreated(DATE_EXAMPLE);
         f2.setCreated(DATE_EXAMPLE);
-        return List.of(new CreateFolderRequest(List.of(f1, f2)));
+        f1.setMetas(List.of(new Meta(1L, 2L, "<xml>some meta content</xml>")));
+        CreateFolderRequest createFolderRequest = new CreateFolderRequest(List.of(f1, f2));
+        return List.of(createFolderRequest);
     }
 }
