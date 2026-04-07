@@ -168,8 +168,10 @@ public class CreateOsdRequest implements ApiRequest<CreateOsdRequest> {
 
     @Override
     public List<ApiRequest<CreateOsdRequest>> examples() {
-        return List.of(new CreateOsdRequest("create OSD request must be sent via multipart-request",
+        CreateOsdRequest createOsdRequest = new CreateOsdRequest("create OSD request must be sent via multipart-request",
                 1L, 23L, 44L, 2L, 3L, 1L, null,
-                "<summary>Optional fields: typeId, aclId, ownerId, formatId, languageId, summary</summary>"));
+                "<summary>Optional fields: typeId, aclId, ownerId, formatId, languageId, summary, metas</summary>");
+        createOsdRequest.setMetas(List.of(new Meta(1L, 2L, "<xml>some meta content</xml>")));
+        return List.of(createOsdRequest);
     }
 }
