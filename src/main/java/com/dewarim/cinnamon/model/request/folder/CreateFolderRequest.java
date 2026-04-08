@@ -67,7 +67,7 @@ public class CreateFolderRequest implements CreateRequest<Folder>, ApiRequest<Fo
         Folder f2 = new Folder("archive", 2L, 2L, 2L, 2L, null);
         f1.setCreated(DATE_EXAMPLE);
         f2.setCreated(DATE_EXAMPLE);
-        f1.setMetas(List.of(new Meta(1L, 2L, "<xml>some meta content</xml>")));
+        f1.setMetasets(List.of(new Meta(1L, 2L, "<xml>some meta content</xml>")));
         CreateFolderRequest createFolderRequest = new CreateFolderRequest(List.of(f1, f2));
         return List.of(createFolderRequest);
     }

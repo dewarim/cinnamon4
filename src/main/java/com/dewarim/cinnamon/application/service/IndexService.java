@@ -425,7 +425,7 @@ public class IndexService implements Runnable {
                             metaSizeSum += meta.getContent().length();
                         }
                         warnIfMetasetSizeTooLarge(metaSizeSum, config.getMaxCombinedMetasetSize());
-                        folder.setMetas(metas);
+                        folder.setMetasets(metas);
                     }
                     jobsToDo.add(indexJobWithDependencies);
                     if (metaSizeSum > config.getMaxCombinedMetasetSize()) {

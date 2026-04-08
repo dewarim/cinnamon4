@@ -481,8 +481,8 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         osd = osdDao.saveOsd(osd);
 
         // handle custom metadata
-        if (!createRequest.getMetas().isEmpty()) {
-            var metas = createMetas(createRequest.getMetas(), osd.getId());
+        if (!createRequest.getMetasets().isEmpty()) {
+            var metas = createMetas(createRequest.getMetasets(), osd.getId());
             osd.setMetas(metas);
         }
 

@@ -160,7 +160,7 @@ public class TestObjectHolder {
                 lifecycleState != null ? lifecycleState.getId() : null,
                 summary);
         if (metas != null) {
-            request.setMetas(metas);
+            request.setMetasets(metas);
         }
         osd = client.createOsd(request);
         return this;
@@ -173,7 +173,7 @@ public class TestObjectHolder {
                 lifecycleState != null ? lifecycleState.getId() : null,
                 summary);
         if (metas != null) {
-            request.setMetas(metas);
+            request.setMetasets(metas);
         }
         osd = client.createOsd(request);
         return this;
@@ -191,7 +191,7 @@ public class TestObjectHolder {
                 lifecycleState != null ? lifecycleState.getId() : null,
                 summary);
         if (metas != null) {
-            request.setMetas(metas);
+            request.setMetasets(metas);
         }
         osd = client.createOsdWithContent(request, content);
         return this;

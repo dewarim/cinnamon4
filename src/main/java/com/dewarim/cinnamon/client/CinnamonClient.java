@@ -557,7 +557,7 @@ public class CinnamonClient {
 
     public Folder createFolderWithMeta(Long parentId, String name, Long ownerId, Long aclId, Long typeId, List<Meta> metas) throws IOException {
         var request  = new CreateFolderRequest(name, parentId, null, ownerId, aclId, typeId);
-        request.getFolders().getFirst().getMetas().addAll(metas);
+        request.getFolders().getFirst().getMetasets().addAll(metas);
         var response = sendStandardRequest(UrlMapping.FOLDER__CREATE, request);
         return folderUnwrapper.unwrap(response, 1).getFirst();
     }

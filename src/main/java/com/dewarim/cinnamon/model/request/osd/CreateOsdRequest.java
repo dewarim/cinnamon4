@@ -2,6 +2,8 @@ package com.dewarim.cinnamon.model.request.osd;
 
 import com.dewarim.cinnamon.api.ApiRequest;
 import com.dewarim.cinnamon.model.Meta;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
@@ -22,7 +24,9 @@ public class CreateOsdRequest implements ApiRequest<CreateOsdRequest> {
     private Long       languageId;
     private Long       lifecycleStateId;
     private String     summary = DEFAULT_SUMMARY;
-    private List<Meta> metas;
+    @JacksonXmlElementWrapper(localName = "metasets")
+    @JacksonXmlProperty(localName = "metaset")
+    private List<Meta> metasets;
 
     public CreateOsdRequest() {
     }
@@ -41,15 +45,15 @@ public class CreateOsdRequest implements ApiRequest<CreateOsdRequest> {
         this.summary = summary;
     }
 
-    public List<Meta> getMetas() {
-        if (metas == null) {
-            metas = new ArrayList<>();
+    public List<Meta> getMetasets() {
+        if (metasets == null) {
+            metasets = new ArrayList<>();
         }
-        return metas;
+        return metasets;
     }
 
-    public void setMetas(List<Meta> metas) {
-        this.metas = metas;
+    public void setMetasets(List<Meta> metasets) {
+        this.metasets = metasets;
     }
 
     public String getName() {
@@ -137,7 +141,7 @@ public class CreateOsdRequest implements ApiRequest<CreateOsdRequest> {
     }
 
     private boolean metaIsValid() {
-        return getMetas().stream().allMatch(meta ->
+        return getMetasets().stream().allMatch(meta ->
                 meta.getTypeId() != null && meta.getTypeId() > 0 && meta.getContent() != null
         );
     }
@@ -162,7 +166,7 @@ public class CreateOsdRequest implements ApiRequest<CreateOsdRequest> {
                 ", languageId=" + languageId +
                 ", lifecycleStateId=" + lifecycleStateId +
                 ", summary='" + summary + '\'' +
-                ", metas=" + getMetas() +
+                ", metas=" + getMetasets() +
                 '}';
     }
 
@@ -171,7 +175,7 @@ public class CreateOsdRequest implements ApiRequest<CreateOsdRequest> {
         CreateOsdRequest createOsdRequest = new CreateOsdRequest("create OSD request must be sent via multipart-request",
                 1L, 23L, 44L, 2L, 3L, 1L, null,
                 "<summary>Optional fields: typeId, aclId, ownerId, formatId, languageId, summary, metas</summary>");
-        createOsdRequest.setMetas(List.of(new Meta(1L, 2L, "<xml>some meta content</xml>")));
+        createOsdRequest.setMetasets(List.of(new Meta(1L, 2L, "<xml>some meta content</xml>")));
         return List.of(createOsdRequest);
     }
 }

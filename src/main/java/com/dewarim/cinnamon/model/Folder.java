@@ -34,7 +34,7 @@ public class Folder implements OwnableWithMetadata, Identifiable {
 
     @JacksonXmlElementWrapper(localName = "metasets")
     @JacksonXmlProperty(localName = "metaset")
-    private List<Meta> metas = new ArrayList<>();
+    private List<Meta> metasets = new ArrayList<>();
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssZ")
     private Date created = new Date();
@@ -126,12 +126,12 @@ public class Folder implements OwnableWithMetadata, Identifiable {
         this.hasSubfolders = hasSubfolders;
     }
 
-    public List<Meta> getMetas() {
-        return metas;
+    public List<Meta> getMetasets() {
+        return metasets;
     }
 
-    public void setMetas(List<Meta> metas) {
-        this.metas = metas;
+    public void setMetasets(List<Meta> metasets) {
+        this.metasets = metasets;
     }
 
     @Override
@@ -199,7 +199,7 @@ public class Folder implements OwnableWithMetadata, Identifiable {
                 ", summary='" + summary + '\'' +
                 ", folderPath='" + folderPath + '\'' +
                 ", hasSubfolders=" + hasSubfolders +
-                ", metas=" + metas +
+                ", metas=" + metasets +
                 ", created=" + created +
                 '}';
     }

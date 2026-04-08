@@ -3909,14 +3909,14 @@ should contain data.
   <languageId>1</languageId>
   <lifecycleStateId/>
   <summary>&lt;summary>Optional fields: typeId, aclId, ownerId, formatId, languageId, summary, metas&lt;/summary></summary>
-  <metas>
-    <metas>
+  <metasets>
+    <metaset>
       <id/>
       <objectId>1</objectId>
       <typeId>2</typeId>
       <content>&lt;xml>some meta content&lt;/xml></content>
-    </metas>
-  </metas>
+    </metaset>
+  </metasets>
 </createOsdRequest>
 
 ```

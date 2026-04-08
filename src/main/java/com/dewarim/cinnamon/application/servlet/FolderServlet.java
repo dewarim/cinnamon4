@@ -214,9 +214,9 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
             folders.add(folderDao.saveFolder(newFolder));
 
             // handle custom metadata
-            if (folder.getMetas() != null && !folder.getMetas().isEmpty()) {
-                var metas = createMetas(folder.getMetas(), newFolder.getId());
-                folder.setMetas(metas);
+            if (folder.getMetasets() != null && !folder.getMetasets().isEmpty()) {
+                var metas = createMetas(folder.getMetasets(), newFolder.getId());
+                folder.setMetasets(metas);
             }
 
         }
