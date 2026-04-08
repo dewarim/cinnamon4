@@ -105,6 +105,14 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
+    public void createOsdWithMeta() throws IOException{
+        List<Meta> metas = List.of(new Meta(null, 1L, XML_SUMMARY));
+        TestObjectHolder toh = new TestObjectHolder(client, userId).createOsdWithMetas(metas);
+        ObjectSystemData osd = client.getOsdById(toh.osd.getId(), false, true);
+        assertEquals(XML_SUMMARY, osd.getMetas().getFirst().getContent());
+    }
+
+    @Test
     public void getObjectsByIdWithDefaultSummary() throws IOException {
         var        osdId      = new TestObjectHolder(client, userId).createOsd().osd.getId();
         OsdRequest osdRequest = new OsdRequest();
@@ -2445,7 +2453,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void createOsdNeedsOwnerId() throws IOException {
+    public void createOsdNeedsOwnerId() {
         var createRequest = new CreateOsdRequest("createOsdNeedsOwnerId", createFolderId, null, 1L, 1L, null, 1L, null, "<summary/>");
         assertClientError(() -> client.createOsd(createRequest), INVALID_REQUEST);
     }

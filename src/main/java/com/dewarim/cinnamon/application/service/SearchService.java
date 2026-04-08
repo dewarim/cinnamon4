@@ -78,7 +78,7 @@ public class SearchService {
         retryPolicy = RetryPolicy.<Boolean>builder()
                 .handleResult(false)
                 .withDelay(Duration.ofMillis(config.getMillisToWaitBetweenRuns()))
-                .withMaxRetries(10)
+                .withMaxRetries(config.getWaitingRetries())
                 .build();
 
         // TODO: refresh periodically - or if last refresh was > config.lucene.refreshTime

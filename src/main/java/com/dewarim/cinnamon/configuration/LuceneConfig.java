@@ -44,6 +44,12 @@ public class LuceneConfig {
      */
     private boolean waitUntilSearchable     = false;
 
+    /**
+     * How long to retry looking for an index operation to complete.
+     * With the default settings, this would be 120s, which should be enough.
+     */
+    private int waitingRetries = 120;
+
     public int getUncommittedLimit() {
         return uncommittedLimit;
     }
@@ -147,5 +153,13 @@ public class LuceneConfig {
 
     public void setWaitUntilSearchable(boolean waitUntilSearchable) {
         this.waitUntilSearchable = waitUntilSearchable;
+    }
+
+    public int getWaitingRetries() {
+        return waitingRetries;
+    }
+
+    public void setWaitingRetries(int waitingRetries) {
+        this.waitingRetries = waitingRetries;
     }
 }

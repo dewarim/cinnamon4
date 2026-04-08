@@ -1108,7 +1108,14 @@ Create a new folder.
       <folderPath/>
       <hasSubfolders>false</hasSubfolders>
       <created>2022-08-10T01:21:00+0000</created>
-      <metasets/>
+      <metasets>
+        <metaset>
+          <id/>
+          <objectId>1</objectId>
+          <typeId>2</typeId>
+          <content>&lt;xml>some meta content&lt;/xml></content>
+        </metaset>
+      </metasets>
     </folder>
     <folder>
       <id/>
@@ -1236,8 +1243,8 @@ Delete all metasets linked to the given Folder ids. Parameter ignoreNotFound is 
 <deleteAllMetasRequest>
   <ignoreNotFound>false</ignoreNotFound>
   <ids>
-    <id>15</id>
     <id>14</id>
+    <id>15</id>
   </ids>
 </deleteAllMetasRequest>
 
@@ -1364,7 +1371,7 @@ Fetch a single folder
       <summary>&lt;summary/></summary>
       <folderPath/>
       <hasSubfolders>false</hasSubfolders>
-      <created>2025-08-24T13:01:56+0000</created>
+      <created>1970-01-01T00:00:00+0000</created>
       <metasets/>
     </reference>
   </references>
@@ -1440,7 +1447,7 @@ Fetch a single folder
       <summary>&lt;summary/></summary>
       <folderPath/>
       <hasSubfolders>false</hasSubfolders>
-      <created>2025-08-24T13:01:56+0000</created>
+      <created>1970-01-01T00:00:00+0000</created>
       <metasets/>
     </reference>
   </references>
@@ -1511,7 +1518,7 @@ Fetch a folder specified by its complete path. The path parameter must not end w
       <summary>&lt;summary/></summary>
       <folderPath/>
       <hasSubfolders>false</hasSubfolders>
-      <created>2025-08-24T13:01:56+0000</created>
+      <created>1970-01-01T00:00:00+0000</created>
       <metasets/>
     </reference>
   </references>
@@ -1583,7 +1590,7 @@ Fetch a folder specified by its relative path. The relative path must not start 
       <summary>&lt;summary/></summary>
       <folderPath/>
       <hasSubfolders>false</hasSubfolders>
-      <created>2025-08-24T13:01:56+0000</created>
+      <created>1970-01-01T00:00:00+0000</created>
       <metasets/>
     </reference>
   </references>
@@ -1710,7 +1717,7 @@ Fetch a folder specified by its relative path. The relative path must not start 
       <summary>&lt;summary/></summary>
       <folderPath/>
       <hasSubfolders>false</hasSubfolders>
-      <created>2025-08-24T13:01:56+0000</created>
+      <created>1970-01-01T00:00:00+0000</created>
       <metasets/>
     </reference>
   </references>
@@ -3901,8 +3908,15 @@ should contain data.
   <formatId>3</formatId>
   <languageId>1</languageId>
   <lifecycleStateId/>
-  <summary>&lt;summary>Optional fields: typeId, aclId, ownerId, formatId, languageId, summary&lt;/summary></summary>
-  <metas/>
+  <summary>&lt;summary>Optional fields: typeId, aclId, ownerId, formatId, languageId, summary, metas&lt;/summary></summary>
+  <metas>
+    <metas>
+      <id/>
+      <objectId>1</objectId>
+      <typeId>2</typeId>
+      <content>&lt;xml>some meta content&lt;/xml></content>
+    </metas>
+  </metas>
 </createOsdRequest>
 
 ```
@@ -3996,8 +4010,8 @@ should contain data.
 <deleteAllMetasRequest>
   <ignoreNotFound>false</ignoreNotFound>
   <ids>
-    <id>15</id>
     <id>14</id>
+    <id>15</id>
   </ids>
 </deleteAllMetasRequest>
 

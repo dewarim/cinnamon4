@@ -7,6 +7,7 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 @JacksonXmlRootElement(localName = "deleteAllMetasRequest")
 public class DeleteAllMetasRequest extends DeleteByIdRequest<Meta> implements ApiRequest<DeleteAllMetasRequest> {
@@ -24,6 +25,7 @@ public class DeleteAllMetasRequest extends DeleteByIdRequest<Meta> implements Ap
 
     @Override
     public List<ApiRequest<DeleteAllMetasRequest>> examples() {
-        return List.of(new DeleteAllMetasRequest(Set.of(14L,15L)));
+        return List.of(new DeleteAllMetasRequest(new TreeSet<>(List.of(14L, 15L)) {
+        }));
     }
 }

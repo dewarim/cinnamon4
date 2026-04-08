@@ -412,7 +412,7 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
         CreateMetaRequest metaRequest = request.getMapper().readValue(request.getInputStream(), CreateMetaRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
-        List<Meta> metas = new MetaService<>().createMeta(new FolderMetaDao(), metaRequest.getMetas(), folderDao, user);
+        List<Meta> metas = new MetaService<>().createMeta(new FolderMetaDao(), metaRequest.getMetas(), folderDao, user, false);
         createMetaResponse(response, metas);
     }
 

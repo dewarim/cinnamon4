@@ -623,6 +623,16 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
+    public void createFolderWithMetasHappyPath() throws IOException {
+        String name="" + Math.random() + System.currentTimeMillis();
+        List<Meta> metas = List.of(new Meta(null, 1L, "<xml>some meta content</xml>"));
+        Folder folder = client.createFolderWithMeta(createFolderId, name,
+                userId, getReviewerAcl().getId(), 1L, metas);
+        assertEquals(name, folder.getName());
+        assertThat("new folder must have id", folder.getId() > 0);
+    }
+
+    @Test
     public void deleteFolderInvalidRequest() {
         assertClientError(
                 () -> client.deleteFolder(Collections.emptyList(), false, false), INVALID_REQUEST);

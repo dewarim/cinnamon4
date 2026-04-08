@@ -555,6 +555,13 @@ public class CinnamonClient {
         return folderUnwrapper.unwrap(response, 1).getFirst();
     }
 
+    public Folder createFolderWithMeta(Long parentId, String name, Long ownerId, Long aclId, Long typeId, List<Meta> metas) throws IOException {
+        var request  = new CreateFolderRequest(name, parentId, null, ownerId, aclId, typeId);
+        request.getFolders().getFirst().getMetas().addAll(metas);
+        var response = sendStandardRequest(UrlMapping.FOLDER__CREATE, request);
+        return folderUnwrapper.unwrap(response, 1).getFirst();
+    }
+
     public List<Folder> getFolders(List<Long> ids, boolean includeSummary, boolean addFolderPath) throws IOException {
         FolderRequest    folderRequest = new FolderRequest(ids, includeSummary);
         folderRequest.setAddFolderPath(addFolderPath);

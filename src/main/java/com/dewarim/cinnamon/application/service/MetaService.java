@@ -66,7 +66,7 @@ public class MetaService<T extends CrudDao<Meta> & MetaDao, O extends CrudDao<? 
         });
     }
 
-    public List<Meta> createMeta(T dao, List<Meta> metas, O ownableDao, UserAccount user) {
+    public List<Meta> createMeta(T dao, List<Meta> metas, O ownableDao, UserAccount user, boolean parentIsNewSkipIndexUpdate) {
         if (metas.isEmpty()) {
             return List.of();
         }
@@ -103,7 +103,10 @@ public class MetaService<T extends CrudDao<Meta> & MetaDao, O extends CrudDao<? 
         List<Meta> metasToCreate = metas.stream().map(meta -> new Meta(meta.getObjectId(), meta.getTypeId(), meta.getContent()))
                 .collect(Collectors.toList());
         updateMetadataChanged(user, ownableMap.values().stream().toList(), ownableDao);
-        updateIndex(metas, ownableDao);
+        if(!parentIsNewSkipIndexUpdate) {
+            // If the parent object is new, we do not need to update the index since a "create" index job will be done.
+            updateIndex(metas, ownableDao);
+        }
         return dao.create(metasToCreate);
     }
 
@@ -115,7 +118,7 @@ public class MetaService<T extends CrudDao<Meta> & MetaDao, O extends CrudDao<? 
             Meta meta = dao.getMetaById(metaUpdate.getId())
                     .orElseThrow(ErrorCode.METASET_NOT_FOUND.getException());
             OwnableWithMetadata ownable = ownableDao.getObjectById(meta.getObjectId())
-                    .orElseThrow(() -> new FailedRequestException(OBJECT_NOT_FOUND, "Could not find Ownable with id:"+ String.valueOf(meta.getObjectId())));
+                    .orElseThrow(() -> new FailedRequestException(OBJECT_NOT_FOUND, "Could not find Ownable with id:"+ meta.getObjectId()));
             ownables.add(ownable);
             if (!ownable.getId().equals(metaUpdate.getObjectId()) ||
                     !meta.getTypeId().equals(metaUpdate.getTypeId())) {

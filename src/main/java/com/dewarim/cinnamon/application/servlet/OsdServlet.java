@@ -381,7 +381,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                         })
                         .map(meta -> new Meta(copy.getId(), meta.getTypeId(), meta.getContent()))
                         .collect(Collectors.toList());
-                new MetaService<>().createMeta(metasetDao, metaCopies, osdDao, user);
+                new MetaService<>().createMeta(metasetDao, metaCopies, osdDao, user, true);
             }
 
             // copy content
@@ -551,7 +551,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         CreateMetaRequest metaRequest = request.getMapper().readValue(request.getInputStream(), CreateMetaRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
-        List<Meta> metas = new MetaService<>().createMeta(new OsdMetaDao(), metaRequest.getMetas(), osdDao, user);
+        List<Meta> metas = new MetaService<>().createMeta(new OsdMetaDao(), metaRequest.getMetas(), osdDao, user, false);
         createMetaResponse(response, metas);
     }
 

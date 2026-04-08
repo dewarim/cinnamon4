@@ -152,7 +152,19 @@ public class TestObjectHolder {
         return this;
     }
 
-
+    public TestObjectHolder createOsdWithMetas(List<Meta> metas) throws IOException {
+        CreateOsdRequest request = new CreateOsdRequest(createRandomName(), folder.getId(), user.getId(), acl.getId(),
+                objectType.getId(),
+                format != null ? format.getId() : null,
+                language != null ? language.getId() : null,
+                lifecycleState != null ? lifecycleState.getId() : null,
+                summary);
+        if (metas != null) {
+            request.setMetas(metas);
+        }
+        osd = client.createOsd(request);
+        return this;
+    }
     public TestObjectHolder createOsd(String name) throws IOException {
         CreateOsdRequest request = new CreateOsdRequest(name, folder.getId(), user.getId(), acl.getId(),
                 objectType.getId(),

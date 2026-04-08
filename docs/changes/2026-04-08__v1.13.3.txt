@@ -1,0 +1,11 @@
+Changes for v1.13.3
+
+- updated API documentation: you can, in fact, create metasets at the same time as OSD or Folder creation
+- added tests for meta creation during OSD and Folder creation
+- do not insert an "update" IndexJob when an OSD is copied (the copy is new, so it only gets a "create" IndexJob)
+- add new config value: /luceneConfig/waitingRetries, default 120:
+    with "waitUntilSearchable" and "millisToWaitBetweenRuns", this defines if and how often and how long the
+    service should wait until a new object is searchable.
+
+    If waitUntilSearchable is true, the default will make the Cinnamon server wait during object creation for
+    120 * 1000 milliseconds = 120s before giving up.
