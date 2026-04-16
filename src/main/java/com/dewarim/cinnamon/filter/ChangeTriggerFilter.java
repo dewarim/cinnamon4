@@ -33,28 +33,15 @@ public class ChangeTriggerFilter extends HttpFilter {
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         CinnamonRequest  cinnamonRequest  = (CinnamonRequest) request;
         CinnamonResponse cinnamonResponse = (CinnamonResponse) response;
+        ChangeTriggerDao changeTriggerDao = new ChangeTriggerDao();
 
         UserAccount user = RequestScope.getCurrentUser();
 
-        // load triggers (later: cache them)
         UrlMapping mapping = UrlMapping.getByPath(cinnamonRequest.getRequestURI());
-        List<ChangeTrigger> triggers = new ChangeTriggerDao().list().stream()
-                .filter(changeTrigger -> {
-                            if (mapping.getServlet().equals(changeTrigger.getController()) &&
-                                    changeTrigger.getAction().equals(mapping.getAction()) &&
-                                    changeTrigger.isActive()) {
-                                log.debug("Found change trigger {} for {}", changeTrigger.getName(), mapping.getPath());
-                                return true;
-                            }
-                            else {
-                                log.debug("Change trigger {} does not apply to {}", changeTrigger.getName(), mapping.getPath());
-                                return false;
-                            }
-                        }
-                ).toList();
+        List<ChangeTrigger> triggers = changeTriggerDao.findApplicableTriggers(mapping);
         List<ChangeTrigger> preTriggers = triggers.stream().filter(ChangeTrigger::isPreTrigger)
                 .sorted(Comparator.comparingLong(ChangeTrigger::getRanking)).toList();
-        log.debug("Found {} preTriggers to execute.", preTriggers.size());
+        log.debug("Found {} preTriggers to execute for {}.", preTriggers.size(), mapping.getPath());
         boolean isDebugEnabled = CinnamonServer.isDebugEnabled();
         if (triggers.size() > 0 || isDebugEnabled) {
             boolean doCopyFileContent = triggers.stream().anyMatch(ChangeTrigger::isCopyFileContent);

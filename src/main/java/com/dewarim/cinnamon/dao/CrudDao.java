@@ -65,8 +65,7 @@ public interface CrudDao<T extends Identifiable> {
 
     default List<T> list() {
         SqlSession sqlSession = getSqlSession();
-        List<T>    selected   = sqlSession.selectList(getMapperNamespace(LIST));
-        return selected;
+        return sqlSession.selectList(getMapperNamespace(LIST));
     }
 
     default List<T> getObjectsById(Collection<Long> ids) {

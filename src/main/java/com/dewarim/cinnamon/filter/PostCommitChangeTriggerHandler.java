@@ -28,23 +28,9 @@ public class PostCommitChangeTriggerHandler {
             return;
         }
 
-        // load triggers (later: cache them)
+        ChangeTriggerDao changeTriggerDao = new ChangeTriggerDao();
         UrlMapping mapping = UrlMapping.getByPath(cinnamonRequest.getRequestURI());
-        List<ChangeTrigger> triggers = new ChangeTriggerDao().list().stream()
-                .filter(changeTrigger -> {
-                            if (mapping.getServlet().equals(changeTrigger.getController()) &&
-                                    changeTrigger.getAction().equals(mapping.getAction()) &&
-                                    changeTrigger.isPostCommitTrigger() &&
-                                    changeTrigger.isActive()) {
-                                log.debug("Found post commit change trigger {} for {}", changeTrigger.getName(), mapping.getPath());
-                                return true;
-                            }
-                            else {
-                                log.debug("Change trigger {} does not apply to {}", changeTrigger.getName(), mapping.getPath());
-                                return false;
-                            }
-                        }
-                ).toList();
+        List<ChangeTrigger> triggers = changeTriggerDao.findApplicablePostCommitTriggers(mapping);
         log.debug("Found {} postCommitChangeTriggers to execute.", triggers.size());
         // do post triggers:
         for (ChangeTrigger trigger : triggers) {
