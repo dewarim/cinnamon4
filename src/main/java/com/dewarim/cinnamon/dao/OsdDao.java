@@ -72,18 +72,19 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
         SqlSession                  sqlSession         = getSqlSession();
         Set<Long>                   rootIds            = osds.stream().map(ObjectSystemData::getRootId).collect(Collectors.toSet());
         List<RootAndLatestHead>     rootAndLatestHeads = sqlSession.selectList("com.dewarim.cinnamon.model.ObjectSystemData.getLatestHeads", rootIds.stream().toList());
-        Set<Long>                   headIds            = rootAndLatestHeads.stream().map(RootAndLatestHead::getHeadId).collect(Collectors.toSet());
+        Map<Long, Long>             rootToHeadId       = rootAndLatestHeads.stream().collect(Collectors.toMap(RootAndLatestHead::getRootId, RootAndLatestHead::getHeadId));
+        Set<Long>                   headIds            = new HashSet<>(rootToHeadId.values());
         List<ObjectSystemData>      heads              = getObjectsById(headIds.stream().toList(), false);
+        Map<Long, ObjectSystemData> idToHead           = heads.stream().collect(Collectors.toMap(ObjectSystemData::getId, h -> h));
         Map<Long, ObjectSystemData> latestHeadMappings = new HashMap<>();
         for (ObjectSystemData osd : osds) {
-            Long rootId = osd.getRootId();
-            rootAndLatestHeads.stream()
-                    .filter(rootHead -> rootHead.getRootId().equals(rootId))
-                    .findFirst()
-                    .ifPresent(rootHead -> {
-                        Optional<ObjectSystemData> headOsd = heads.stream().filter(head -> head.getId().equals(rootHead.getHeadId())).findFirst();
-                        headOsd.ifPresent(objectSystemData -> latestHeadMappings.put(osd.getId(), objectSystemData));
-                    });
+            Long headId = rootToHeadId.get(osd.getRootId());
+            if (headId != null) {
+                ObjectSystemData headOsd = idToHead.get(headId);
+                if (headOsd != null) {
+                    latestHeadMappings.put(osd.getId(), headOsd);
+                }
+            }
         }
         return latestHeadMappings;
     }
