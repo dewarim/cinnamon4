@@ -5,15 +5,26 @@ import com.dewarim.cinnamon.application.RequestScope;
 import com.dewarim.cinnamon.model.GroupUser;
 import com.dewarim.cinnamon.model.UserAccount;
 import org.apache.ibatis.session.SqlSession;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  *
  */
 public class UserAccountDao implements CrudDao<UserAccount> {
+
+    private static final Logger log = LogManager.getLogger(UserAccountDao.class);
+
+    /**
+     * Cache for superuser status. Key is user ID, value is superuser status.
+     * This cache is invalidated when a user's group membership changes.
+     */
+    private static final Map<Long, Boolean> superuserCache = new ConcurrentHashMap<>();
 
     public Optional<UserAccount> getUserAccountByName(String username) {
         SqlSession            sqlSession  = getSqlSession();
@@ -41,10 +52,43 @@ public class UserAccountDao implements CrudDao<UserAccount> {
     }
 
     public boolean isSuperuser(UserAccount user) {
-        SqlSession          sqlSession = getSqlSession();
-        Map<String, Object> params     = Map.of("superuserGroupName", Constants.GROUP_SUPERUSERS, "userId", user.getId());
-        return sqlSession.selectOne("com.dewarim.cinnamon.model.UserAccount.getSuperuserStatus",
-                params) != null;
+        Long    userId = user.getId();
+        Boolean cached = superuserCache.get(userId);
+        if (cached != null) {
+            return cached;
+        }
+
+        SqlSession          sqlSession  = getSqlSession();
+        Map<String, Object> params      = Map.of("superuserGroupName", Constants.GROUP_SUPERUSERS, "userId", userId);
+        boolean             isSuperuser = sqlSession.selectOne("com.dewarim.cinnamon.model.UserAccount.getSuperuserStatus", params) != null;
+
+        superuserCache.put(userId, isSuperuser);
+        log.debug("Cached superuser status for user {}: {}", userId, isSuperuser);
+        return isSuperuser;
+    }
+
+    /**
+     * Invalidate the superuser cache for a specific user.
+     * This should be called when a user's group membership changes.
+     *
+     * @param userId the user ID to invalidate
+     */
+    public static void invalidateSuperuserCache(Long userId) {
+        if (userId != null) {
+            Boolean removed = superuserCache.remove(userId);
+            if (removed != null) {
+                log.info("Invalidated superuser cache for user {}", userId);
+            }
+        }
+    }
+
+    /**
+     * Clear the entire superuser cache.
+     * Use this when bulk changes are made to group memberships.
+     */
+    public static void clearSuperuserCache() {
+        superuserCache.clear();
+        log.info("Cleared entire superuser cache");
     }
 
     public static boolean currentUserIsSuperuser() {
