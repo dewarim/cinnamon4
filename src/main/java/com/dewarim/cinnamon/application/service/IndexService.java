@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.application.service;
 
+import com.dewarim.cinnamon.api.Constants;
 import com.dewarim.cinnamon.api.content.ContentProvider;
 import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.application.exception.CinnamonException;
@@ -11,7 +12,6 @@ import com.dewarim.cinnamon.model.index.*;
 import com.dewarim.cinnamon.model.relations.Relation;
 import com.dewarim.cinnamon.provider.ContentProviderService;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.logging.log4j.LogManager;
@@ -33,6 +33,8 @@ import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
@@ -44,8 +46,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static com.dewarim.cinnamon.api.Constants.LUCENE_FIELD_CINNAMON_CLASS;
-import static com.dewarim.cinnamon.api.Constants.LUCENE_FIELD_UNIQUE_ID;
+import static com.dewarim.cinnamon.api.Constants.*;
 
 public class IndexService implements Runnable {
     private static final Logger log = LogManager.getLogger(IndexService.class);
@@ -73,7 +74,7 @@ public class IndexService implements Runnable {
             }
         }
         indexItems = new IndexItemDao().list();
-        xmlMapper = new XmlMapper();
+        xmlMapper = Constants.XML_MAPPER;
         this.contentProviderService = contentProviderService;
     }
 
@@ -490,8 +491,8 @@ public class IndexService implements Runnable {
             // option: add a NumericDocValueField for scoring by age
             doc.add(new LongPoint("id", folder.getId()));
             doc.add(new StoredField("id", folder.getId()));
-            doc.add(new StringField("created", DateTools.dateToString(folder.getCreated(), DateTools.Resolution.MILLISECOND), Field.Store.NO));
-            doc.add(new LongPoint("created", folder.getCreated().getTime()));
+            doc.add(new StringField("created", DateTools.timeToString(toEpochMillis(folder.getCreated()), DateTools.Resolution.MILLISECOND), Field.Store.NO));
+            doc.add(new LongPoint("created", toEpochMillis(folder.getCreated())));
             doc.add(new StringField("name", folder.getName().toLowerCase(), Field.Store.NO));
             doc.add(new LongPoint("owner", folder.getOwnerId()));
             doc.add(new StoredField("owner", folder.getOwnerId()));
@@ -526,10 +527,10 @@ public class IndexService implements Runnable {
                 doc.add(new LongPoint("content_size", osd.getContentSize()));
             }
             // option: add a NumericDocValueField for scoring by age
-            doc.add(new StringField("created", DateTools.dateToString(osd.getCreated(), DateTools.Resolution.MILLISECOND), Field.Store.NO));
-            doc.add(new LongPoint("created", osd.getCreated().getTime()));
-            doc.add(new StringField("modified", DateTools.dateToString(osd.getCreated(), DateTools.Resolution.MILLISECOND), Field.Store.NO));
-            doc.add(new LongPoint("modified", osd.getCreated().getTime()));
+            doc.add(new StringField("created", DateTools.timeToString(toEpochMillis(osd.getCreated()), DateTools.Resolution.MILLISECOND), Field.Store.NO));
+            doc.add(new LongPoint("created", toEpochMillis(osd.getCreated())));
+            doc.add(new StringField("modified", DateTools.timeToString(toEpochMillis(osd.getModified()), DateTools.Resolution.MILLISECOND), Field.Store.NO));
+            doc.add(new LongPoint("modified", toEpochMillis(osd.getModified())));
 
             doc.add(new LongPoint("creator", osd.getCreatorId()));
             doc.add(new LongPoint("modifier", osd.getModifierId()));
@@ -591,8 +592,8 @@ public class IndexService implements Runnable {
     }
 
     private byte[] convertJsonToXml(InputStream jsonStream) throws IOException {
-        JsonNode jsonNode = new ObjectMapper().readTree(jsonStream);
-        byte[]   xml      = new XmlMapper().writeValueAsBytes(jsonNode);
+        JsonNode jsonNode = JSON_MAPPER.readTree(jsonStream);
+        byte[]   xml      = XML_MAPPER.writeValueAsBytes(jsonNode);
         log.debug("converted json to xml: {}", new String(xml));
         return xml;
     }
@@ -624,6 +625,10 @@ public class IndexService implements Runnable {
             log.warn("Failed to delete document from Lucene index: {}", key, e);
             return new IndexEvent(job.getId(), IndexEventType.GENERIC, IndexResult.FAILED, e.getMessage());
         }
+    }
+
+    private long toEpochMillis(LocalDateTime localDateTime) {
+        return localDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
     }
 
     public void setStopped(boolean stopped) {

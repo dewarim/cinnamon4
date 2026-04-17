@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static com.dewarim.cinnamon.api.Constants.DATE_EXAMPLE;
+import static com.dewarim.cinnamon.api.Constants.LOCAL_DATE_TIME_EXAMPLE;
 
 @JacksonXmlRootElement(localName = "updateFolderRequest")
 public class UpdateFolderRequest implements ApiRequest<UpdateFolderRequest> {
@@ -92,7 +92,7 @@ public class UpdateFolderRequest implements ApiRequest<UpdateFolderRequest> {
     @Override
     public List<ApiRequest<UpdateFolderRequest>> examples() {
         Folder folder = new Folder("new name", 1L, 2L, 3L, 4L, "<summary>update this</summary>");
-        folder.setCreated(DATE_EXAMPLE);
+        folder.setCreated(LOCAL_DATE_TIME_EXAMPLE);
         UpdateFolderRequest request = new UpdateFolderRequest(List.of(folder));
         request.setUpdateMetadataChanged(false);
         return List.of(request);

@@ -12,7 +12,11 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.*;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 import static com.dewarim.cinnamon.api.Constants.DEFAULT_SUMMARY;
@@ -36,11 +40,10 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject, Ownabl
     private Long   ownerId;
     private Long   lockerId;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssZ")
-    private Date created = new Date();
-
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssZ")
-    private Date   modified = new Date();
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime created = LocalDateTime.now();
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime modified = LocalDateTime.now();
     private Long   languageId;
     private Long   aclId;
     private Long   parentId;
@@ -98,11 +101,11 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject, Ownabl
      */
     public ObjectSystemData createNewVersion(UserAccount user, String lastDescendantVersion) {
         ObjectSystemData nextVersion = new ObjectSystemData();
-        Calendar         calendar    = Calendar.getInstance();
+        LocalDateTime    now         = LocalDateTime.now();
         nextVersion.setAclId(aclId);
-        nextVersion.setCreated(calendar.getTime());
+        nextVersion.setCreated(now);
         nextVersion.setCreatorId(user.getId());
-        nextVersion.setModified(calendar.getTime());
+        nextVersion.setModified(now);
         nextVersion.setModifierId(user.getId());
         nextVersion.setOwnerId(user.getId());
         nextVersion.setLanguageId(languageId);
@@ -335,19 +338,19 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject, Ownabl
         this.lockerId = lockerId;
     }
 
-    public Date getCreated() {
+    public LocalDateTime getCreated() {
         return created;
     }
 
-    public void setCreated(Date created) {
+    public void setCreated(LocalDateTime created) {
         this.created = created;
     }
 
-    public Date getModified() {
+    public LocalDateTime getModified() {
         return modified;
     }
 
-    public void setModified(Date modified) {
+    public void setModified(LocalDateTime modified) {
         this.modified = modified;
     }
 
@@ -591,4 +594,5 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject, Ownabl
     public void setFolderPath(String folderPath) {
         this.folderPath = folderPath;
     }
+
 }

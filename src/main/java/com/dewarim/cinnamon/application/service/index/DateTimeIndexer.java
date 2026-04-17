@@ -5,8 +5,9 @@ import org.apache.logging.log4j.Logger;
 import org.apache.lucene.document.DateTools;
 import org.dom4j.Node;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 
 /**
  * <p>The DateTimeIndexer expects an XPath parameter as searchString and will store
@@ -16,6 +17,7 @@ import java.util.Date;
 public class DateTimeIndexer extends DefaultIndexer {
 
     private static final Logger log = LogManager.getLogger(DateTimeIndexer.class);
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 
     public DateTimeIndexer() {
         fieldType.setTokenized(false);
@@ -32,9 +34,9 @@ public class DateTimeIndexer extends DefaultIndexer {
 
         String result = null;
         try {
-            SimpleDateFormat sdf  = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-            Date             date = sdf.parse(val);
-            result = DateTools.dateToString(date, DateTools.Resolution.MILLISECOND);
+            LocalDateTime localDateTime = LocalDateTime.parse(val, DATE_TIME_FORMATTER);
+            long          millis        = localDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+            result = DateTools.timeToString(millis, DateTools.Resolution.MILLISECOND);
         } catch (Exception e) {
             log.debug("failed to parse date: {}", val, e);
         }

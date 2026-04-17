@@ -6,10 +6,9 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.dataformat.xml.deser.FromXmlParser;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Date;
 
 /**
  *
@@ -20,17 +19,17 @@ public class Constants {
     public static final String CINNAMON_REQUEST_HEADER = "cinnamon-request";
 
     /**
-     * Date object for API examples (so we do not have changes in generated file
-     * api.md on each build)
+     * Fixed datetime for API examples (so we do not have changes in generated file
+     * api.md on each build).
      */
-    public static final Date             DATE_EXAMPLE = Date.from(LocalDateTime.of(2022, 8, 10, 3, 21).atZone(ZoneId.systemDefault()).toInstant());
+    public static final LocalDateTime    LOCAL_DATE_TIME_EXAMPLE = LocalDateTime.of(2022, 8, 10, 3, 21);
     public static final ObjectSystemData OSD_EXAMPLE;
     public static final Folder           FOLDER_EXAMPLE;
 
     static {
         ObjectSystemData osd = new ObjectSystemData(1L, "my osd", 3L, 4L, 5L, 5L, 1L);
-        osd.setCreated(DATE_EXAMPLE);
-        osd.setModified(DATE_EXAMPLE);
+        osd.setCreated(LOCAL_DATE_TIME_EXAMPLE);
+        osd.setModified(LOCAL_DATE_TIME_EXAMPLE);
         osd.setModifierId(1L);
         osd.setCreatorId(1L);
         osd.setFormatId(23L);
@@ -40,16 +39,18 @@ public class Constants {
         folder.setId(2L);
         folder.setOwnerId(33L);
         folder.setHasSubfolders(false);
-        folder.setCreated(DATE_EXAMPLE);
+        folder.setCreated(LOCAL_DATE_TIME_EXAMPLE);
         FOLDER_EXAMPLE = folder;
     }
 
     public static final XmlMapper XML_MAPPER = (XmlMapper) new XmlMapper()
             .configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL, true)
-            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .registerModule(new JavaTimeModule());
 
     public static final ObjectMapper JSON_MAPPER = new ObjectMapper()
-            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .registerModule(new JavaTimeModule());
 
     public static final String DEFAULT_DATABASE_SESSION_FACTORY = "com.dewarim.cinnamon.application.DbSessionFactory";
     public static final String DATA_ROOT_PATH_PROPERTY_NAME     = "dataRootPath";

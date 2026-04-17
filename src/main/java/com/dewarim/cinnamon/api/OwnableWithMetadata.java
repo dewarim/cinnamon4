@@ -1,6 +1,6 @@
 package com.dewarim.cinnamon.api;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 public interface OwnableWithMetadata extends Accessible, Identifiable, Ownable {
 
@@ -8,7 +8,7 @@ public interface OwnableWithMetadata extends Accessible, Identifiable, Ownable {
 
     void setMetadataChanged(boolean metadataChanged);
 
-    void setModified(Date modified);
+    void setModified(LocalDateTime modified);
 
     void setModifierId(Long modifierId);
 }

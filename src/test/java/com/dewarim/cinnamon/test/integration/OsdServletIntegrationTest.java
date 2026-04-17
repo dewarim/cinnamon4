@@ -41,8 +41,8 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -294,21 +294,19 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void osdDateFieldsAreFormattedAsIso8601() throws IOException, ParseException {
+    public void osdDateFieldsAreFormattedAsIso8601() throws IOException {
         var osd = new TestObjectHolder(client, userId).createOsd().osd;
         var response = sendStandardRequestWithContentType(UrlMapping.OSD__GET_OBJECTS_BY_ID,
                 new OsdRequest(List.of(osd.getId()), false, false), CinnamonContentType.XML);
-        String           osdResponse      = new String(response.getEntity().getContent().readAllBytes(), Charset.defaultCharset());
-        String           createdTimestamp = osdResponse.split("</?created>")[1];
-        SimpleDateFormat df               = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
-        Date             created          = df.parse(createdTimestamp);
-        // and that's the reason we want to migrate to LocalDate/Time (#228): Java will happily parse the date in
-        // the _current_ timezone (so created vs osd.getCreated is off by 2 hours for CEST)
-        assertEquals(created.getTime(), osd.getCreated().getTime());
+        String            osdResponse      = new String(response.getEntity().getContent().readAllBytes(), Charset.defaultCharset());
+        String            createdTimestamp = osdResponse.split("</?created>")[1];
+        DateTimeFormatter formatter        = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+        LocalDateTime     created          = LocalDateTime.parse(createdTimestamp, formatter);
+        assertEquals(created, osd.getCreated());
         log.debug("createdTimestamp: {}", createdTimestamp);
         String modifiedTimestamp = osdResponse.split("</?modified>")[1];
-        Date   modified          = df.parse(modifiedTimestamp);
-        assertEquals(modified.getTime(), osd.getModified().getTime());
+        LocalDateTime modified   = LocalDateTime.parse(modifiedTimestamp, formatter);
+        assertEquals(modified, osd.getModified());
         log.debug("modifiedTimestamp: {}", modifiedTimestamp);
     }
 

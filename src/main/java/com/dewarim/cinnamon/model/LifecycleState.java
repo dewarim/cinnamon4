@@ -3,15 +3,14 @@ package com.dewarim.cinnamon.model;
 import com.dewarim.cinnamon.api.Identifiable;
 import com.dewarim.cinnamon.api.lifecycle.LifecycleStateConfig;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
 import java.io.IOException;
 import java.util.Objects;
 
+import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
+
 @JsonIgnoreProperties(value = { "lifecycleStateConfig" })
 public class LifecycleState implements Identifiable {
-
-    private final static XmlMapper XML_MAPPER = new XmlMapper();
 
     private Long   id;
     private String name;

@@ -14,6 +14,7 @@ import com.dewarim.cinnamon.model.index.IndexJobType;
 import com.dewarim.cinnamon.model.request.osd.VersionPredicate;
 import org.apache.ibatis.session.SqlSession;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -117,7 +118,7 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
         if (updateModifier) {
             UserAccount currentUser = RequestScope.getCurrentUser();
             if (currentUser.isChangeTracking()) {
-                osd.setModified(new Date());
+                osd.setModified(LocalDateTime.now());
                 osd.setModifierId(currentUser.getId());
             }
         }
@@ -192,13 +193,13 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
 
     public void updateOwnershipAndModifierAndCreatorAndLocker(Long userId, Long assetReceiverId, Long adminUserId) {
         List<ObjectSystemData> osds        = getOsdByModifierOrCreatorOrOwnerOrLocker(userId);
-        Date                   currentDate = new Date();
+        LocalDateTime          now         = LocalDateTime.now();
         osds.forEach(osd -> {
             if (osd.getOwnerId().equals(userId)) {
                 osd.setOwnerId(assetReceiverId);
             }
             osd.setModifierId(adminUserId);
-            osd.setModified(currentDate);
+            osd.setModified(now);
             if (osd.getCreatorId().equals(userId)) {
                 osd.setCreatorId(assetReceiverId);
             }

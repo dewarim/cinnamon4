@@ -6,7 +6,6 @@ import com.dewarim.cinnamon.application.service.search.WildcardQueryBuilder;
 import com.dewarim.cinnamon.model.Meta;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.relations.Relation;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -39,6 +38,7 @@ import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Map;
 
+import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -98,7 +98,7 @@ public class CinnamonSearchTest {
         try (IndexWriter indexWriter = createIndex()) {
 
             Document doc = new Document();
-            String objectAsString = new XmlMapper().writeValueAsString(osd);
+            String objectAsString = XML_MAPPER.writeValueAsString(osd);
             ContentContainer contentContainer = new ContentContainer(objectAsString, new byte[0], "/root/home/sys", "OSD#0");
             org.dom4j.Document xmlDoc = contentContainer.getCombinedDocument();
             log.info("xmlDoc:\n{}", xmlDoc.asXML());

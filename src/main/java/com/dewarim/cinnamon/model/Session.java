@@ -2,7 +2,7 @@ package com.dewarim.cinnamon.model;
 
 import com.dewarim.cinnamon.api.Identifiable;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -10,7 +10,7 @@ public class Session implements Identifiable {
     
     private Long id;
     private String ticket;
-    private Date expires;
+    private LocalDateTime expires;
     private Long userId;
 
     public Session() {
@@ -18,8 +18,8 @@ public class Session implements Identifiable {
 
     public Session(Long userId, long sessionLengthInMillis) {
         ticket = UUID.randomUUID().toString();
-        Date now = new Date();
-        expires = new Date(now.getTime()+sessionLengthInMillis);
+        LocalDateTime now = LocalDateTime.now();
+        expires = now.plusNanos(sessionLengthInMillis * 1_000_000L);
         this.userId = userId;
     }
 
@@ -39,11 +39,11 @@ public class Session implements Identifiable {
         this.ticket = ticket;
     }
 
-    public Date getExpires() {
+    public LocalDateTime getExpires() {
         return expires;
     }
 
-    public void setExpires(Date expires) {
+    public void setExpires(LocalDateTime expires) {
         this.expires = expires;
     }
 

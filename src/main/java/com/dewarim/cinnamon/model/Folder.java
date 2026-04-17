@@ -7,8 +7,8 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
@@ -36,8 +36,8 @@ public class Folder implements OwnableWithMetadata, Identifiable {
     @JacksonXmlProperty(localName = "metaset")
     private List<Meta> metasets = new ArrayList<>();
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ssZ")
-    private Date created = new Date();
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime created = LocalDateTime.now();
 
     public Folder() {
         summary = DEFAULT_SUMMARY;
@@ -51,7 +51,7 @@ public class Folder implements OwnableWithMetadata, Identifiable {
         this.typeId = typeId;
         this.summary = Objects.requireNonNullElse(summary, DEFAULT_SUMMARY);
         metadataChanged = false;
-        created = new Date();
+        created = LocalDateTime.now();
     }
 
     public Long getId() {
@@ -110,11 +110,11 @@ public class Folder implements OwnableWithMetadata, Identifiable {
         this.parentId = parentId;
     }
 
-    public Date getCreated() {
+    public LocalDateTime getCreated() {
         return created;
     }
 
-    public void setCreated(Date created) {
+    public void setCreated(LocalDateTime created) {
         this.created = created;
     }
 
@@ -164,7 +164,7 @@ public class Folder implements OwnableWithMetadata, Identifiable {
     }
 
     @Override
-    public void setModified(Date modified) {
+    public void setModified(LocalDateTime modified) {
         // ignore
     }
 

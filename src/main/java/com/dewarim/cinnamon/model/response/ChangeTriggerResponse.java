@@ -37,7 +37,4 @@ public class ChangeTriggerResponse {
                 '}';
     }
 
-//    public static void main(String[] args) throws JsonProcessingException {
-//        System.out.println(new XmlMapper().writeValueAsString(new ChangeTriggerResponse("http://localhost:8081/trigger", "<xml>ok</xml>", 200)));
-//    }
 }

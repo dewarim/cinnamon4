@@ -16,7 +16,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.sql.SQLException;
-import java.util.*;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -148,7 +152,7 @@ public class MetaService<T extends CrudDao<Meta> & MetaDao, O extends CrudDao<? 
         if (user.isChangeTracking()) {
             for (OwnableWithMetadata item : ownables) {
                 item.setMetadataChanged(true);
-                item.setModified(new Date());
+                item.setModified(LocalDateTime.now());
                 item.setModifierId(user.getId());
             }
             try {

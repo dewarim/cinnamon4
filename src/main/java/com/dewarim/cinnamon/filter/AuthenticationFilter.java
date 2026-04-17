@@ -15,7 +15,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 public class AuthenticationFilter implements Filter {
@@ -44,8 +44,8 @@ public class AuthenticationFilter implements Filter {
                 return;
             }
 
-            long currentTime = new Date().getTime();
-            if (cinnamonSession.getExpires().getTime() < currentTime) {
+            LocalDateTime now = LocalDateTime.now();
+            if (cinnamonSession.getExpires().isBefore(now)) {
                 failAuthentication(servletRequest, servletResponse, ErrorCode.AUTHENTICATION_FAIL_SESSION_EXPIRED);
                 return;
             }
@@ -55,7 +55,7 @@ public class AuthenticationFilter implements Filter {
                 failAuthentication(servletRequest, servletResponse, ErrorCode.AUTHENTICATION_FAIL_USER_NOT_FOUND);
                 return;
             }
-            Date expirationDate = new Date(currentTime+ CinnamonServer.config.getSecurityConfig().getSessionLengthInMillis());
+            LocalDateTime expirationDate = now.plusNanos(CinnamonServer.config.getSecurityConfig().getSessionLengthInMillis() * 1_000_000L);
             cinnamonSession.setExpires(expirationDate);
             new SessionDao().update(cinnamonSession);
             RequestScope.setCurrentUser(userAccountOpt.get());

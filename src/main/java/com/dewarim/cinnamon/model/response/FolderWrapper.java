@@ -10,8 +10,8 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import static com.dewarim.cinnamon.api.Constants.FOLDER_EXAMPLE;
@@ -82,7 +82,7 @@ public class FolderWrapper extends BaseResponse implements Wrapper<Folder>, ApiR
         folderWrapper.setLinks(List.of(new Link(1L, LinkType.FOLDER, 3L, 2L, 1L, 20L, null, LinkResolver.FIXED)));
         Folder linkedFolder = new Folder("linked folder", 1L, 2L, 3L, 23L, "<summary/>");
         linkedFolder.setId(203L);
-        linkedFolder.setCreated(new Date(0));
+        linkedFolder.setCreated(LocalDateTime.of(1970, 1, 1, 0, 0, 0));
         folderWrapper.setReferences(List.of(linkedFolder));
         return List.of(folderWrapper);
     }

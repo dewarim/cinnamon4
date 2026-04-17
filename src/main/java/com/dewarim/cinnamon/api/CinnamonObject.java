@@ -2,7 +2,7 @@ package com.dewarim.cinnamon.api;
 
 import com.dewarim.cinnamon.api.content.ContentMetadata;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 /**
  * Interface class for ObjectSystemData
@@ -11,11 +11,11 @@ public interface CinnamonObject extends ContentMetadata, Ownable {
 
     Long getCreatorId();
 
-    Date getCreated();
+    LocalDateTime getCreated();
 
     Long getModifierId();
 
-    Date getModified();
+    LocalDateTime getModified();
 
     Long getLanguageId();
 

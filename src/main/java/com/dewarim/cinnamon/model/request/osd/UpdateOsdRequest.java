@@ -7,11 +7,10 @@ import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
-import static com.dewarim.cinnamon.api.Constants.DATE_EXAMPLE;
+import static com.dewarim.cinnamon.api.Constants.LOCAL_DATE_TIME_EXAMPLE;
 
 @JacksonXmlRootElement(localName = "updateOsdRequest")
 public class UpdateOsdRequest implements ApiRequest<UpdateOsdRequest> {
@@ -103,13 +102,12 @@ public class UpdateOsdRequest implements ApiRequest<UpdateOsdRequest> {
 
     @Override
     public List<ApiRequest<UpdateOsdRequest>> examples() {
-        Date             date     = DATE_EXAMPLE;
         UpdateOsdRequest request  = new UpdateOsdRequest(1L, 2L, "new name", 45L, 56L, 1L, 1L, false, true);
         UpdateOsdRequest request2 = new UpdateOsdRequest(1L, 2L, "new name", 45L, 56L, 1L, 1L, false, true);
-        request.getOsds().getFirst().setCreated(date);
-        request2.getOsds().getFirst().setCreated(date);
-        request.getOsds().getFirst().setModified(date);
-        request2.getOsds().getFirst().setModified(date);
+        request.getOsds().getFirst().setCreated(LOCAL_DATE_TIME_EXAMPLE);
+        request2.getOsds().getFirst().setCreated(LOCAL_DATE_TIME_EXAMPLE);
+        request.getOsds().getFirst().setModified(LOCAL_DATE_TIME_EXAMPLE);
+        request2.getOsds().getFirst().setModified(LOCAL_DATE_TIME_EXAMPLE);
         request2.setUpdateMetadataChanged(true);
         request2.setUpdateContentChanged(true);
 
