@@ -11,8 +11,7 @@
     <name>Cinnamon CMS</name>
 
     <properties>
-        <jetty.version>11.0.25</jetty.version>
-        <jetty.annotations.version>11.0.18</jetty.annotations.version>
+        <jetty.version>12.1.8</jetty.version>
         <jackson.version>2.21.2</jackson.version>
         <junit.version>5.13.1</junit.version>
         <lucene.version>9.12.1</lucene.version>
@@ -60,9 +59,10 @@
                 <version>${jetty.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.eclipse.jetty</groupId>
-                <artifactId>jetty-servlet</artifactId>
+                <groupId>org.eclipse.jetty.ee10</groupId>
+                <artifactId>jetty-ee10-servlet</artifactId>
                 <version>${jetty.version}</version>
+                <scope>compile</scope>
             </dependency>
             <dependency>
                 <groupId>org.eclipse.jetty</groupId>
@@ -70,14 +70,10 @@
                 <version>${jetty.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.eclipse.jetty</groupId>
-                <artifactId>jetty-webapp</artifactId>
+                <groupId>org.eclipse.jetty.ee10</groupId>
+                <artifactId>jetty-ee10-webapp</artifactId>
                 <version>${jetty.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.eclipse.jetty</groupId>
-                <artifactId>jetty-annotations</artifactId>
-                <version>${jetty.annotations.version}</version>
+                <scope>compile</scope>
             </dependency>
             <dependency>
                 <groupId>com.jayway.jsonpath</groupId>
@@ -105,16 +101,12 @@
             <artifactId>jetty-server</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-servlet</artifactId>
+            <groupId>org.eclipse.jetty.ee10</groupId>
+            <artifactId>jetty-ee10-servlet</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-webapp</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-annotations</artifactId>
+            <groupId>org.eclipse.jetty.ee10</groupId>
+            <artifactId>jetty-ee10-webapp</artifactId>
         </dependency>
 
         <!-- jetty uses SLF4J internally which causes a warning message on startup
@@ -291,34 +283,34 @@
         <!-- riddled with security holes - good we only use it for testing and not in the server.jar -->
         <!-- currently deactivated; needs refactoring and move to another test strategy;
              kept in case we need to debug before this is achieved.-->
-<!--        <dependency>-->
-<!--            <groupId>org.mock-server</groupId>-->
-<!--            <artifactId>mockserver-core</artifactId>-->
-<!--            <version>5.15.0</version>-->
-<!--            <scope>test</scope>-->
-<!--            <exclusions>-->
-<!--                <exclusion>-->
-<!--                    <groupId>com.jayway.jsonpath</groupId>-->
-<!--                    <artifactId>json-path</artifactId>-->
-<!--                </exclusion>-->
-<!--                <exclusion>-->
-<!--                    <groupId>commons-collections</groupId>-->
-<!--                    <artifactId>commons-collections</artifactId>-->
-<!--                </exclusion>-->
-<!--            </exclusions>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>org.mock-server</groupId>-->
-<!--            <artifactId>mockserver-client-java</artifactId>-->
-<!--            <version>5.15.0</version>-->
-<!--            <scope>test</scope>-->
-<!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>org.mock-server</groupId>-->
-<!--            <artifactId>mockserver-junit-jupiter</artifactId>-->
-<!--            <version>5.15.0</version>-->
-<!--            <scope>test</scope>-->
-<!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>org.mock-server</groupId>-->
+        <!--            <artifactId>mockserver-core</artifactId>-->
+        <!--            <version>5.15.0</version>-->
+        <!--            <scope>test</scope>-->
+        <!--            <exclusions>-->
+        <!--                <exclusion>-->
+        <!--                    <groupId>com.jayway.jsonpath</groupId>-->
+        <!--                    <artifactId>json-path</artifactId>-->
+        <!--                </exclusion>-->
+        <!--                <exclusion>-->
+        <!--                    <groupId>commons-collections</groupId>-->
+        <!--                    <artifactId>commons-collections</artifactId>-->
+        <!--                </exclusion>-->
+        <!--            </exclusions>-->
+        <!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>org.mock-server</groupId>-->
+        <!--            <artifactId>mockserver-client-java</artifactId>-->
+        <!--            <version>5.15.0</version>-->
+        <!--            <scope>test</scope>-->
+        <!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>org.mock-server</groupId>-->
+        <!--            <artifactId>mockserver-junit-jupiter</artifactId>-->
+        <!--            <version>5.15.0</version>-->
+        <!--            <scope>test</scope>-->
+        <!--        </dependency>-->
 
     </dependencies>
 
@@ -374,50 +366,50 @@
                 </configuration>
             </plugin>
 
-<!--            <plugin>-->
-<!--                &lt;!&ndash; shade plugin: used to collect all dependencies into one executable jar; alternative: assembly plugin above. &ndash;&gt;-->
-<!--                &lt;!&ndash; https://maven.apache.org/plugins/maven-shade-plugin/examples/executable-jar.html &ndash;&gt;-->
-<!--                <groupId>org.apache.maven.plugins</groupId>-->
-<!--                <artifactId>maven-shade-plugin</artifactId>-->
-<!--                <version>3.5.1</version>-->
-<!--                <executions>-->
-<!--                    <execution>-->
-<!--                        <phase>package</phase>-->
-<!--                        <goals>-->
-<!--                            <goal>shade</goal>-->
-<!--                        </goals>-->
-<!--                        <configuration>-->
-<!--                            <transformers>-->
-<!--                                <transformer-->
-<!--                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">-->
-<!--                                    <manifestEntries>-->
-<!--                                        <Main-Class>com.dewarim.cinnamon.application.CinnamonServer</Main-Class>-->
-<!--                                        <Build-Number>${buildNumber}</Build-Number>-->
-<!--                                    </manifestEntries>-->
-<!--                                </transformer>-->
-<!--                            </transformers>-->
-<!--                            <filters>-->
-<!--                                <filter>-->
-<!--                                    <artifact>*:*</artifact>-->
-<!--                                    <excludes>-->
-<!--                                        <exclude>META-INF/*.SF</exclude>-->
-<!--                                        <exclude>META-INF/*.DSA</exclude>-->
-<!--                                        <exclude>META-INF/*.RSA</exclude>-->
-<!--                                    </excludes>-->
-<!--                                </filter>-->
-<!--                            </filters>-->
-<!--                            <artifactSet>-->
-<!--                                <excludes>-->
-<!--                                    <exclude>org.apache.lucene:lucene-analysis-common:jar</exclude>-->
-<!--                                    <exclude>org.apache.lucene:lucene-core:jar</exclude>-->
-<!--                                    <exclude>org.apache.lucene:lucene-queryparser:jar</exclude>-->
-<!--                                    <exclude>org.apache.lucene:lucene-*:jar</exclude>-->
-<!--                                </excludes>-->
-<!--                            </artifactSet>-->
-<!--                        </configuration>-->
-<!--                    </execution>-->
-<!--                </executions>-->
-<!--            </plugin>-->
+            <!--            <plugin>-->
+            <!--                &lt;!&ndash; shade plugin: used to collect all dependencies into one executable jar; alternative: assembly plugin above. &ndash;&gt;-->
+            <!--                &lt;!&ndash; https://maven.apache.org/plugins/maven-shade-plugin/examples/executable-jar.html &ndash;&gt;-->
+            <!--                <groupId>org.apache.maven.plugins</groupId>-->
+            <!--                <artifactId>maven-shade-plugin</artifactId>-->
+            <!--                <version>3.5.1</version>-->
+            <!--                <executions>-->
+            <!--                    <execution>-->
+            <!--                        <phase>package</phase>-->
+            <!--                        <goals>-->
+            <!--                            <goal>shade</goal>-->
+            <!--                        </goals>-->
+            <!--                        <configuration>-->
+            <!--                            <transformers>-->
+            <!--                                <transformer-->
+            <!--                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">-->
+            <!--                                    <manifestEntries>-->
+            <!--                                        <Main-Class>com.dewarim.cinnamon.application.CinnamonServer</Main-Class>-->
+            <!--                                        <Build-Number>${buildNumber}</Build-Number>-->
+            <!--                                    </manifestEntries>-->
+            <!--                                </transformer>-->
+            <!--                            </transformers>-->
+            <!--                            <filters>-->
+            <!--                                <filter>-->
+            <!--                                    <artifact>*:*</artifact>-->
+            <!--                                    <excludes>-->
+            <!--                                        <exclude>META-INF/*.SF</exclude>-->
+            <!--                                        <exclude>META-INF/*.DSA</exclude>-->
+            <!--                                        <exclude>META-INF/*.RSA</exclude>-->
+            <!--                                    </excludes>-->
+            <!--                                </filter>-->
+            <!--                            </filters>-->
+            <!--                            <artifactSet>-->
+            <!--                                <excludes>-->
+            <!--                                    <exclude>org.apache.lucene:lucene-analysis-common:jar</exclude>-->
+            <!--                                    <exclude>org.apache.lucene:lucene-core:jar</exclude>-->
+            <!--                                    <exclude>org.apache.lucene:lucene-queryparser:jar</exclude>-->
+            <!--                                    <exclude>org.apache.lucene:lucene-*:jar</exclude>-->
+            <!--                                </excludes>-->
+            <!--                            </artifactSet>-->
+            <!--                        </configuration>-->
+            <!--                    </execution>-->
+            <!--                </executions>-->
+            <!--            </plugin>-->
             <plugin>
                 <!-- update buildNumber.properties and increase build counter whenever the maven _test_ step is executed -->
                 <!-- https://www.mojohaus.org/buildnumber-maven-plugin/ -->
@@ -447,30 +439,30 @@
                     </items>
                 </configuration>
             </plugin>
-<!--            <plugin>-->
-<!--                <artifactId>maven-resources-plugin</artifactId>-->
-<!--                <version>3.3.1</version>-->
-<!--                <executions>-->
-<!--                    <execution>-->
-<!--                        <id>copy-custom-jars</id>-->
-<!--                        <phase>process-resources</phase>-->
-<!--                        <goals>-->
-<!--                            <goal>copy-resources</goal>-->
-<!--                        </goals>-->
-<!--                        <configuration>-->
-<!--                            <outputDirectory>${project.build.directory}/lib</outputDirectory>-->
-<!--                            <resources>-->
-<!--                                <resource>-->
-<!--                                    <directory>${basedir}/lib</directory>-->
-<!--                                    <includes>-->
-<!--                                        <include>*.jar</include>-->
-<!--                                    </includes>-->
-<!--                                </resource>-->
-<!--                            </resources>-->
-<!--                        </configuration>-->
-<!--                    </execution>-->
-<!--                </executions>-->
-<!--            </plugin>-->
+            <!--            <plugin>-->
+            <!--                <artifactId>maven-resources-plugin</artifactId>-->
+            <!--                <version>3.3.1</version>-->
+            <!--                <executions>-->
+            <!--                    <execution>-->
+            <!--                        <id>copy-custom-jars</id>-->
+            <!--                        <phase>process-resources</phase>-->
+            <!--                        <goals>-->
+            <!--                            <goal>copy-resources</goal>-->
+            <!--                        </goals>-->
+            <!--                        <configuration>-->
+            <!--                            <outputDirectory>${project.build.directory}/lib</outputDirectory>-->
+            <!--                            <resources>-->
+            <!--                                <resource>-->
+            <!--                                    <directory>${basedir}/lib</directory>-->
+            <!--                                    <includes>-->
+            <!--                                        <include>*.jar</include>-->
+            <!--                                    </includes>-->
+            <!--                                </resource>-->
+            <!--                            </resources>-->
+            <!--                        </configuration>-->
+            <!--                    </execution>-->
+            <!--                </executions>-->
+            <!--            </plugin>-->
         </plugins>
     </build>
     <repositories>

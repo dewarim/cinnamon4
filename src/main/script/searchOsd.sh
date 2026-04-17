@@ -9,21 +9,10 @@ osd=$(curl --silent --show-error --header "ticket: ${TICKET}" -F "cinnamonReques
 echo;
 echo "created osd:"
 echo "${osd}"
-echo "sleep for 5"
-echo;
-sleep 5;
+echo "sleep for 3"
+sleep 3;
 
-echo "<idListRequest>
-        <ids>
-          <id>1</id>
-        </ids>
-      </idListRequest>" > /tmp/lockOsd.xml
-osd=$(curl --silent --show-error --header "ticket: ${TICKET}" -F "cinnamonRequest=</tmp/osd.xml" "http://localhost:${PORT}/api/osd/update")
-
-sleep 5;
-
-
-echo " <BooleanQuery><Clause occurs='must'><PointRangeQuery fieldName='id' lowerTerm='4' upperTerm='6' type='long'/></Clause></BooleanQuery>" > /tmp/booleanQuery.xml
+echo " <BooleanQuery><Clause occurs='must'><PointRangeQuery fieldName='id' lowerTerm='554' upperTerm='600' type='long'/></Clause></BooleanQuery>" > /tmp/booleanQuery.xml
 #echo " <BooleanQuery><Clause occurs='must'><ExactPointQuery fieldName='id' value='26' type='long'/></Clause></BooleanQuery>" > /tmp/booleanQuery.xml
 #echo " <BooleanQuery><Clause occurs='must'><TermQuery fieldName='name'>test</TermQuery></Clause></BooleanQuery>" > /tmp/booleanQuery.xml
 #echo " <BooleanQuery><Clause occurs='must'><TermQuery fieldName='name'>bar</TermQuery></Clause></BooleanQuery>" > /tmp/booleanQuery.xml

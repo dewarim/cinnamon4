@@ -6,7 +6,6 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.eclipse.jetty.http.MimeTypes;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,7 +39,10 @@ public class StaticServlet extends HttpServlet {
                 ErrorResponseGenerator.generateErrorMessage(request, response, ErrorCode.FILE_NOT_FOUND);
                 return;
             }
-            String defaultMimeByExtension = MimeTypes.getDefaultMimeByExtension(pathInfo);
+            String defaultMimeByExtension = request.getServletContext().getMimeType(pathInfo);
+            if (defaultMimeByExtension == null) {
+                defaultMimeByExtension = "application/octet-stream";
+            }
             response.setContentType(defaultMimeByExtension);
             switch (defaultMimeByExtension) {
                 case "application/xml", "text/plain", "text/css", "text/html", "text/javascript" ->

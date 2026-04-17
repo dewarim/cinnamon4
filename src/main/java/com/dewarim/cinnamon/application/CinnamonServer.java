@@ -25,16 +25,20 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.dataformat.xml.deser.FromXmlParser;
 import jakarta.servlet.DispatcherType;
+import jakarta.servlet.MultipartConfigElement;
+import jakarta.servlet.annotation.MultipartConfig;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
-import org.eclipse.jetty.annotations.AnnotationDecorator;
+import org.eclipse.jetty.ee10.servlet.FilterHolder;
+import org.eclipse.jetty.ee10.servlet.ServletHolder;
+import org.eclipse.jetty.ee10.webapp.WebAppContext;
 import org.eclipse.jetty.server.*;
-import org.eclipse.jetty.servlet.FilterHolder;
+import org.eclipse.jetty.util.resource.Resource;
+import org.eclipse.jetty.util.resource.ResourceFactory;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
-import org.eclipse.jetty.webapp.WebAppContext;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -109,8 +113,9 @@ public class CinnamonServer {
         // any files or risk remote users accessing the file system.
         Set<PosixFilePermission> readPermissions = Set.of(PosixFilePermission.OWNER_READ, PosixFilePermission.GROUP_READ);
         String                   tempDir         = Files.createTempDirectory("cinnamon-temp-dir", PosixFilePermissions.asFileAttribute(readPermissions)).toString();
-        webAppContext.setResourceBase(tempDir);
-        webAppContext.getObjectFactory().addDecorator(new AnnotationDecorator(webAppContext));
+        // Use an isolated temp dir as web base resource so Jetty cannot expose the process working directory.
+        Resource baseResource = ResourceFactory.root().newResource(tempDir);
+        webAppContext.setBaseResource(baseResource);
 
         addFilters(webAppContext);
         addServlets(webAppContext);
@@ -325,7 +330,7 @@ public class CinnamonServer {
         handler.addServlet(LifecycleStateServlet.class, "/api/lifecycleState/*");
         handler.addServlet(LinkServlet.class, "/api/link/*");
         handler.addServlet(MetasetTypeServlet.class, "/api/metasetType/*");
-        handler.addServlet(OsdServlet.class, "/api/osd/*");
+        addServletWithMultipartConfig(handler, OsdServlet.class, "/api/osd/*");
         handler.addServlet(ObjectTypeServlet.class, "/api/objectType/*");
         handler.addServlet(PermissionServlet.class, "/api/permission/*");
         handler.addServlet(RelationServlet.class, "/api/relation/*");
@@ -335,6 +340,21 @@ public class CinnamonServer {
         handler.addServlet(TestServlet.class, "/api/test/*");
         handler.addServlet(UiLanguageServlet.class, "/api/uiLanguage/*");
         handler.addServlet(UserAccountServlet.class, "/api/user/*");
+    }
+
+    private <T extends jakarta.servlet.Servlet> void addServletWithMultipartConfig(
+            WebAppContext handler,
+            Class<T> servletClass,
+            String pathSpec) {
+        ServletHolder servletHolder = handler.addServlet(servletClass, pathSpec);
+        MultipartConfig multipartConfig = servletClass.getAnnotation(MultipartConfig.class);
+        if (multipartConfig != null) {
+            servletHolder.getRegistration().setMultipartConfig(new MultipartConfigElement(
+                    multipartConfig.location(),
+                    multipartConfig.maxFileSize(),
+                    multipartConfig.maxRequestSize(),
+                    multipartConfig.fileSizeThreshold()));
+        }
     }
 
     public static void main(String[] args) throws Exception {
