@@ -1,6 +1,6 @@
 Changes v1.14.0:
 
-- updated dependencies: jackson-dataformat-xml and jetty
+- updated dependencies: jackson-dataformat-xml and jetty, log4j
 - refactored java.util.Date to JavaDateTime; created/modified timestamps now are rendered without trailing "Z", just as
   yyyy-MM-dd'T'HH:mm:ss
 - optimizations: cache superuser status: (do not load superuser status from DB on requests)
