@@ -51,3 +51,26 @@ tar xvzf cinnamon.tar.gz
 rm cinnamon.tar.gz
 ```
 
+### Database and configuration changes
+If the documentation of the releases from the starting to the target release contains changes to the database and / or the configuration, follow them carefully.
+#### Database changes (if applicable)
+1. Log in to the Postgres client:
+```
+sudo -u postgres psql cinnamon
+```
+2. The documentation contains changes to be performed as SQL. Copy the SQL code into the Postgres client and press Enter.
+
+#### Configuration changes (if applicable)
+1. Edit the file ```/opt/cinnamon/cinnamon-config.xml``` with the editor of your choice.
+2. Apply the changes as explained in the documentation.
+3. Save and exit the file.
+
+### Starting services
+1. Make sure you're logged in as user ```cinnamon```.
+2. Execute ```/opt/cinnamon/runc4.sh```.
+3. Observe the console output for error messages.
+4. Stop execution (```ctrl-C```).
+5. Run the following commands as root (or prepend ```sudo```):
+```
+systemctl start cinnamon && systemctl start cae.timer && systemctl start cae
+```
