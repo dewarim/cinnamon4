@@ -39,7 +39,7 @@ systemctl stop cae.timer && systemctl stop cae && systemctl stop cinnamon
 cd /opt/cinnamon
 sudo -u cinnamon bash
 ```
-2. Navigate to https://github.com/dewarim/cinnamon4/releases[Cinnamon 4 Server Releases], copy the URL of the ```cinnamon.tar.gz``` file of the version you want to install and download it using ```wget```:
+2. Navigate to https://github.com/dewarim/cinnamon4/releases, copy the URL of the ```cinnamon.tar.gz``` file of the version you want to install and download it using ```wget```:
 ```
 wget <copied URL>
 ```
