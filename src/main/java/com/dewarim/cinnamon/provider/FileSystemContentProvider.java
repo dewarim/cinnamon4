@@ -39,16 +39,16 @@ public class FileSystemContentProvider implements ContentProvider {
     @Override
     public boolean deleteContent(ContentMetadata metadata) throws IOException {
         File file = new File(dataRootPath + SEP + metadata.getContentPath());
-        if(file.exists()){
+        if (file.exists()) {
             boolean deleteSuccess = file.delete();
-            if(!deleteSuccess){
+            if (!deleteSuccess) {
                 log.warn("Failed to delete {}", file.getAbsolutePath());
                 return false;
             }
             String[] otherFiles = file.getParentFile().list();
-            if(otherFiles != null && otherFiles.length == 0){
+            if (otherFiles != null && otherFiles.length == 0) {
                 boolean deleteParentFolderSuccess = file.getParentFile().delete();
-                if(!deleteParentFolderSuccess){
+                if (!deleteParentFolderSuccess) {
                     log.warn("Failed to delete parent folder {}", file.getParentFile().getAbsolutePath());
                 }
             }
@@ -65,8 +65,8 @@ public class FileSystemContentProvider implements ContentProvider {
 
         boolean result = subfolder.mkdirs();
         log.debug("created subfolder {}: {}", subfolderPath, result);
-        Path   contentFile  = Paths.get(subfolderPath, targetName);
-        long   bytesWritten = Files.copy(inputStream, contentFile);
+        Path contentFile  = Paths.get(subfolderPath, targetName);
+        long bytesWritten = Files.copy(inputStream, contentFile);
 
         // we could just update the existing metadata, but that's bad style.
         ContentMetadata lightMeta = new ContentMetadataLight();
@@ -96,5 +96,20 @@ public class FileSystemContentProvider implements ContentProvider {
         return "FileSystemContentProvider{" +
                 "dataRootPath='" + dataRootPath + '\'' +
                 '}';
+    }
+
+    @Override
+    public boolean contentUnavailable(ContentMetadata metadata) {
+        String path = dataRootPath + SEP + metadata.getContentPath();
+        File   file = new File(path);
+        if(!file.exists()){
+            log.error("File {} for OSD {} does not exist", path, metadata.getId());
+            return false;
+        }
+        if(!file.canRead()){
+            log.error("File content {} for OSD {} exists, but is not readable", path, metadata.getId());
+            return false;
+        }
+        return true;
     }
 }

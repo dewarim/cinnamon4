@@ -99,6 +99,10 @@ public class TikaService implements Runnable {
                 for (ObjectSystemData osd : osds) {
                     Format          format          = formats.get(osd.getFormatId());
                     ContentProvider contentProvider = contentProviderService.getContentProvider(osd.getContentProvider());
+                    if (contentProvider.contentUnavailable(osd)) {
+                        log.error("File {} of OSD {} is unavailable - cannot create TikaMetaset", osd.getContentPath(), osd.getId());
+                        continue;
+                    }
                     try (InputStream contentStream = contentProvider.getContentStream(osd)) {
                         convertContentToTikaMetaset(osd, contentStream, format);
                     } catch (IOException e) {
@@ -137,14 +141,13 @@ public class TikaService implements Runnable {
                 // looking for extremely large responses that lead to OOM:
                 // (goal is to have logging for those objects so we can see how much RAM to add...)
                 InputStream responseStream = response.getEntity().getContent();
-                try(BufferedReader bis = new BufferedReader(new InputStreamReader(responseStream),65536)){
+                try (BufferedReader bis = new BufferedReader(new InputStreamReader(responseStream), 65536)) {
                     String result = stripWhitespace(bis);
                     if (config.isRemoveNewXmlVersionHeader() && result.startsWith("<?xml version=\"1.1\"")) {
                         result = result.replaceFirst("version=\"1.1\"", "version=\"1.0\"");
                     }
                     return result;
-                }
-                catch (Throwable e) {
+                } catch (Throwable e) {
                     log.error("Failed to parse tika response for OSD {}", osdId, e);
                     return "<tikaFailedToParse>" + e.getMessage() + "</tikaFailedToParse>";
                 }
@@ -156,20 +159,19 @@ public class TikaService implements Runnable {
     }
 
     private static String stripWhitespace(BufferedReader bis) throws IOException {
-        StringBuilder builder = new StringBuilder();
-        String line;
-        int whitespaceCount = 0;
-        while((line = bis.readLine()) != null){
+        StringBuilder builder         = new StringBuilder();
+        String        line;
+        int           whitespaceCount = 0;
+        while ((line = bis.readLine()) != null) {
             // Tika likes to add an illegal character:
-            if(line.contains("&#0;")){
+            if (line.contains("&#0;")) {
                 line = line.replace("&#0;", "");
             }
             String trimmedLine = line.trim();
-            if(trimmedLine.length() < line.length()){
+            if (trimmedLine.length() < line.length()) {
                 whitespaceCount += line.length() - trimmedLine.length();
                 builder.append(trimmedLine);
-            }
-            else{
+            } else {
                 builder.append(trimmedLine);
             }
             builder.append("\n");

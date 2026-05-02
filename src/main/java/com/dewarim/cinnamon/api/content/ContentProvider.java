@@ -18,4 +18,6 @@ public interface ContentProvider {
     ContentMetadata writeContentStream(ContentMetadata metadata, InputStream inputStream) throws IOException;
 
     boolean deleteContent(ContentMetadata metadata) throws IOException;
+
+    boolean contentUnavailable(ContentMetadata osd);
 }
