@@ -290,14 +290,14 @@ public class CinnamonIntegrationTest {
 
     // TODO: use this in FolderServletIntegrationTests, too
 
-    protected static Long addUserToAclGroupWithPermissions(String aclName, List<DefaultPermission> permissions) throws IOException {
+    protected static Acl addUserToAclGroupWithPermissions(List<DefaultPermission> permissions) throws IOException {
         TestObjectHolder toh = new TestObjectHolder(adminClient, userId);
-        return toh.createAcl(aclName)
-                .createGroup(aclName)
+        return toh.createAcl()
+                .createGroup()
                 .createAclGroup()
                 .addPermissions(permissions)
                 .addUserToGroup(userId)
-                .acl.getId();
+                .acl;
     }
 
     protected static TestObjectHolder prepareAclGroupWithPermissions(List<DefaultPermission> permissions) throws IOException {

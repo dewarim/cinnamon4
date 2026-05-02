@@ -640,12 +640,12 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void lockAndUnlockShouldFailWithoutPermission() throws IOException {
         var toh = new TestObjectHolder(adminClient, adminId)
-                .createAcl("lockAndUnlockShouldFailWithoutPermission")
-                .createGroup("lockAndUnlockShouldFailWithoutPermission")
+                .createAcl()
+                .createGroup()
                 .createAclGroup()
                 .addUserToGroup(userId)
                 .addPermissions(List.of(DefaultPermission.BROWSE))
-                .createOsd("lockAndUnlockShouldFailWithoutPermission");
+                .createOsd();
         long osdId = toh.osd.getId();
 
         assertClientError(() -> client.lockOsd(osdId), NO_LOCK_PERMISSION);
@@ -1704,10 +1704,10 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void deleteOsdWithUnprotectedRelations() throws IOException {
-        addUserToAclGroupWithPermissions("deleteOsdWithUnprotectedRelations", List.of(BROWSE,
+        Acl acl = addUserToAclGroupWithPermissions( List.of(BROWSE,
                 RELATION_CHILD_ADD, RELATION_PARENT_ADD, DELETE));
         var toh = new TestObjectHolder(adminClient);
-        ObjectSystemData leftOsd = toh.setAcl(client.getAclByName("deleteOsdWithUnprotectedRelations"))
+        ObjectSystemData leftOsd = toh.setAcl(acl)
                 .setUser(userId)
                 .setFolder(createFolderId)
                 .createOsd("left-osd-unprotected")
@@ -1722,10 +1722,10 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void deleteTwoOsdsWhoseRelationsProtectEachOther() throws IOException {
-        addUserToAclGroupWithPermissions("deleteTwoOsdsWhoseRelationsProtectEachOther", List.of(BROWSE,
+        Acl acl = addUserToAclGroupWithPermissions( List.of(BROWSE,
                 RELATION_CHILD_ADD, RELATION_PARENT_ADD, DELETE));
         var toh = new TestObjectHolder(adminClient);
-        toh.setAcl(client.getAclByName("deleteTwoOsdsWhoseRelationsProtectEachOther"))
+        toh.setAcl(acl)
                 .setUser(userId)
                 .setFolder(createFolderId)
                 .createOsd("has-only-protected-relations");
@@ -1741,10 +1741,10 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void deleteTwoOsdsThatAreProtectedByLeftObject() throws IOException {
-        addUserToAclGroupWithPermissions("deleteTwoOsdsThatAreProtectedByLeftObject", List.of(BROWSE,
+        Acl acl = addUserToAclGroupWithPermissions( List.of(BROWSE,
                 RELATION_CHILD_ADD, RELATION_PARENT_ADD, DELETE));
         var toh = new TestObjectHolder(adminClient);
-        toh.setAcl(client.getAclByName("deleteTwoOsdsThatAreProtectedByLeftObject"))
+        toh.setAcl(acl)
                 .setUser(userId)
                 .setFolder(createFolderId)
                 .createOsd("has-left-protected-relations");
@@ -1760,10 +1760,10 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void deleteTwoOsdsThatAreProtectedByRightObject() throws IOException {
-        var aclId = addUserToAclGroupWithPermissions("deleteTwoOsdsThatAreProtectedByRightObject", List.of(BROWSE,
+        var acl = addUserToAclGroupWithPermissions( List.of(BROWSE,
                 RELATION_CHILD_ADD, RELATION_PARENT_ADD, DELETE));
         var toh = new TestObjectHolder(adminClient);
-        toh.setAcl(client.getAclById(aclId))
+        toh.setAcl(acl)
                 .setUser(userId)
                 .setFolder(createFolderId)
                 .createOsd("has-right-protected-relations");
@@ -1779,13 +1779,13 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void deleteTwoOsdsWithUnprotectedRelation() throws IOException {
-        var aclId = addUserToAclGroupWithPermissions("deleteTwoOsdsWithUnprotectedRelation", List.of(BROWSE,
+        var acl = addUserToAclGroupWithPermissions(List.of(BROWSE,
                 RELATION_CHILD_ADD, RELATION_PARENT_ADD, DELETE));
         var toh = new TestObjectHolder(adminClient);
-        toh.setAcl(client.getAclById(aclId))
+        toh.setAcl(acl)
                 .setUser(userId)
                 .setFolder(createFolderId)
-                .createOsd("has-right-unprotected-relations");
+                .createOsd();
         ObjectSystemData leftOsd = toh.osd;
         toh.createOsd("right-osd");
         ObjectSystemData rightOsd = toh.osd;
@@ -1798,10 +1798,10 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void deleteOsdThatIsProtectedByRightObject() throws IOException {
-        addUserToAclGroupWithPermissions("deleteOsdThatIsProtectedByRightObject", List.of(BROWSE,
+        var acl = addUserToAclGroupWithPermissions(List.of(BROWSE,
                 RELATION_CHILD_ADD, RELATION_PARENT_ADD, DELETE));
         var toh = new TestObjectHolder(adminClient);
-        toh.setAcl(client.getAclByName("deleteOsdThatIsProtectedByRightObject"))
+        toh.setAcl(acl)
                 .setUser(userId)
                 .setFolder(createFolderId)
                 .createOsd("protects-right");
@@ -1819,10 +1819,10 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void deleteOsdThatIsNotProtectedByRightObject() throws IOException {
-        addUserToAclGroupWithPermissions("deleteOsdThatIsNotProtectedByRightObject", List.of(BROWSE,
+        var acl = addUserToAclGroupWithPermissions( List.of(BROWSE,
                 RELATION_CHILD_ADD, RELATION_PARENT_ADD, DELETE));
         var toh = new TestObjectHolder(adminClient);
-        toh.setAcl(client.getAclByName("deleteOsdThatIsNotProtectedByRightObject"))
+        toh.setAcl(acl)
                 .setUser(userId)
                 .setFolder(createFolderId)
                 .createOsd("protects-right");
@@ -1838,10 +1838,10 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void deleteOsdThatIsNotProtectedByLeftObject() throws IOException {
-        addUserToAclGroupWithPermissions("deleteOsdThatIsNotProtectedByLeftObject", List.of(BROWSE,
+        var acl = addUserToAclGroupWithPermissions( List.of(BROWSE,
                 RELATION_CHILD_ADD, RELATION_PARENT_ADD, DELETE));
         var toh = new TestObjectHolder(adminClient);
-        toh.setAcl(client.getAclByName("deleteOsdThatIsNotProtectedByLeftObject"))
+        toh.setAcl(acl)
                 .setUser(userId)
                 .setFolder(createFolderId)
                 .createOsd("protects-right");
@@ -1857,10 +1857,10 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void deleteLeftOsdThatIsProtectedByLeftObject() throws IOException {
-        addUserToAclGroupWithPermissions("deleteLeftOsdThatIsProtectedByLeftObject", List.of(BROWSE,
+        Acl acl = addUserToAclGroupWithPermissions( List.of(BROWSE,
                 RELATION_CHILD_ADD, RELATION_PARENT_ADD, DELETE));
         var toh = new TestObjectHolder(adminClient);
-        toh.setAcl(client.getAclByName("deleteLeftOsdThatIsProtectedByLeftObject"))
+        toh.setAcl(acl)
                 .setUser(userId)
                 .setFolder(createFolderId)
                 .createOsd("protects-right");
