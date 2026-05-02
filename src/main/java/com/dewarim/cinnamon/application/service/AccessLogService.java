@@ -21,6 +21,7 @@ public class AccessLogService {
 
     private static final ObjectMapper mapper       = new XmlMapper().enable(SerializationFeature.INDENT_OUTPUT);
     private final        AccessLogDao accessLogDao = new AccessLogDao();
+    private static final Object TRUNCATING_LOCK = new Object();
 
     public void addEntry(CinnamonRequest cinnamonRequest, CinnamonResponse cinnamonResponse, CinnamonErrorWrapper errorWrapper, ErrorCode errorCode, String errorMessage, Long userId) {
         AccessLogEntry accessLogEntry;
@@ -36,9 +37,11 @@ public class AccessLogService {
     }
 
     public void truncateLogIfNecessary() {
-        int rowCount = accessLogDao.count();
-        if(rowCount > CinnamonServer.getConfig().getLoggingConfig().getTruncateLogAfterRow()) {
-            accessLogDao.truncate(CinnamonServer.getConfig().getLoggingConfig().getTruncateTableBy());
+        synchronized (TRUNCATING_LOCK) {
+            int rowCount = accessLogDao.count();
+            if (rowCount > CinnamonServer.getConfig().getLoggingConfig().getTruncateLogAfterRow()) {
+                accessLogDao.truncate(CinnamonServer.getConfig().getLoggingConfig().getTruncateTableBy());
+            }
         }
     }
 }
