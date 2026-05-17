@@ -420,6 +420,7 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
         FolderPathRequest pathRequest = request.getMapper().readValue(request.getInputStream(), FolderPathRequest.class);
         if (pathRequest.validated()) {
             List<Folder> rawFolders = folderDao.getFolderByPathWithAncestors(pathRequest.getPath(), pathRequest.isIncludeSummary());
+            // TODO: if rawFolders is empty, and create flag is set, iteratively create path and children starting at root.
             List<Folder> folders    = new AuthorizationService().filterFoldersByBrowsePermission(rawFolders, user);
             if (folders.isEmpty()) {
                 throw ErrorCode.OBJECT_NOT_FOUND.exception();
