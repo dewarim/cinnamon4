@@ -19,5 +19,8 @@ public interface ContentProvider {
 
     boolean deleteContent(ContentMetadata metadata) throws IOException;
 
+    /**
+     * @return true, if content is not available, like file missing or no read permission
+     */
     boolean contentUnavailable(ContentMetadata osd);
 }

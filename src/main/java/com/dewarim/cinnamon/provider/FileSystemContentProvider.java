@@ -102,14 +102,9 @@ public class FileSystemContentProvider implements ContentProvider {
     public boolean contentUnavailable(ContentMetadata metadata) {
         String path = dataRootPath + SEP + metadata.getContentPath();
         File   file = new File(path);
-        if(!file.exists()){
-            log.error("File {} for OSD {} does not exist", path, metadata.getId());
-            return false;
+        if (!file.exists()) {
+            return true;
         }
-        if(!file.canRead()){
-            log.error("File content {} for OSD {} exists, but is not readable", path, metadata.getId());
-            return false;
-        }
-        return true;
+        return !file.canRead();
     }
 }

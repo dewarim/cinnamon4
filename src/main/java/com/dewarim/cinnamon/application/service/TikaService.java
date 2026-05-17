@@ -97,16 +97,22 @@ public class TikaService implements Runnable {
             }
             try {
                 for (ObjectSystemData osd : osds) {
-                    Format          format          = formats.get(osd.getFormatId());
-                    ContentProvider contentProvider = contentProviderService.getContentProvider(osd.getContentProvider());
-                    if (contentProvider.contentUnavailable(osd)) {
-                        log.error("File {} of OSD {} is unavailable - cannot create TikaMetaset", osd.getContentPath(), osd.getId());
-                        continue;
-                    }
-                    try (InputStream contentStream = contentProvider.getContentStream(osd)) {
-                        convertContentToTikaMetaset(osd, contentStream, format);
-                    } catch (IOException e) {
-                        throw new CinnamonException("Failed to load content for OSD " + osd.getId() + " at " + osd.getContentPath(), e);
+                    try {
+                        Format          format          = formats.get(osd.getFormatId());
+                        ContentProvider contentProvider = contentProviderService.getContentProvider(osd.getContentProvider());
+                        if (contentProvider.contentUnavailable(osd)) {
+                            log.error("File {} of OSD {} is unavailable - cannot create TikaMetaset",
+                                    osd.getContentPath(), osd.getId());
+                            continue;
+                        }
+                        try (InputStream contentStream = contentProvider.getContentStream(osd)) {
+                            convertContentToTikaMetaset(osd, contentStream, format);
+                        } catch (IOException e) {
+                            log.error("Failed to load content for OSD {} at {}",
+                                    osd.getId(), osd.getContentPath(), e);
+                        }
+                    } catch (Exception e) {
+                        log.error("Failed to create TikaMetaset for OSD {} (path: {})", osd.getId(), osd.getContentPath(), e);
                     }
                 }
             } catch (Exception e) {
@@ -224,4 +230,5 @@ public class TikaService implements Runnable {
             }
         }
     }
+
 }
