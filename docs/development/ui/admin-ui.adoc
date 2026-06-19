@@ -1,0 +1,34 @@
+== Cinnamon Admin UI
+
+Plan for CRUD administration pages accessible to superusers.
+
+=== Scope
+
+Each of the following entities needs its own administration page with list, create, update, and delete operations:
+
+* UserAccount
+* Acl
+* AclGroup
+* AclGroupPermission (unified with Acl & Group management)
+* ChangeTrigger
+* ConfigEntry
+* FolderType
+* Format
+* Group (system groups must not be renamed)
+* GroupUser (manage group memberships)
+* IndexItem
+* Language
+* Lifecycle
+* LifecycleState
+* MetasetType
+* ObjectType
+* UiLanguage
+* RelationType
+* AccessLogEntry (read-only view)
+
+=== Notes
+
+* Deletion actions must check object dependencies to avoid FK constraint violations.
+** Example: deleting a UserAccount requires transferring asset ownership via `assetReceiverId` parameter.
+* Only users in the `_superusers` group should be able to access these pages.
+* Pages live under `/ui/admin/<resource>`.

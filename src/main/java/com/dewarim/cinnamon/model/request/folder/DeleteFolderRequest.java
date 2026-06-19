@@ -15,7 +15,7 @@ public class DeleteFolderRequest implements ApiRequest<Folder> {
     @JacksonXmlProperty(localName = "id")
     private Set<Long> ids               = new HashSet<>();
     private boolean   deleteRecursively = false;
-    private boolean    deleteContent     = false;
+    private boolean   deleteContent     = false;
 
     public DeleteFolderRequest() {
     }
@@ -61,7 +61,7 @@ public class DeleteFolderRequest implements ApiRequest<Folder> {
 
     @Override
     public List<ApiRequest<Folder>> examples() {
-        return List.of(new DeleteFolderRequest(List.of(1L,2L,3L),true,false));
+        return List.of(new DeleteFolderRequest(List.of(1L, 2L, 3L), true, false));
     }
 
     private boolean validated() {

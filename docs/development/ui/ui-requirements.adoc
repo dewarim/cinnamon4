@@ -1,0 +1,133 @@
+== UI requirements
+
+Following the user journey.
+
+=== Login Page
+
+* GET / returns
+** if no Authentication header is present or the session token is invalid/expired: the Login page with a login form for username/password.
+** otherwise, if we can identify the user by their valid session token, the user's home folder view
+
+=== Home Folder View
+
+==== Layout
+
+* Menu bar at the top
+* 3 columns for main content:
+** left column: folder tree view
+** middle column: folder content
+*** above content area: toolbar for filtering/sorting
+** right column: folder/document metadata
+
+==== Menu bar at the top
+
+* Home
+* Text search field for simple search
+* Administration
+* Profile (show current user's user account + link to /ui/user/edit)
+* Logout
+
+==== Content Area
+
+* Folder tree view ("Explorer style") on the left
+** if a folder has sub folders, add a [+] sign aside its name to expand the tree to show the sub folders
+** if the folder is expanded, add a [-] sign aside its name to collapse the sub folder part of the tree
+** click on folder name shows the folders and documents (OSD / ObjectSystemData objects) in the middle
+** the URL should be /ui/folder/view?folderPath=folderPath
+*** when folderPath is omitted, start at /home/$username, otherwise at the folder's location
+*** when folderPath is given, expand the folder tree view down to the selected folder
+
+* Main middle column
+** at the top of the area is a second menu bar that allows the user to change how the content is shown (ordering by name,size,created_at,modified_at)
+** the main area lists the documents and folders.
+** click on one of the listed objects / folders shows its metadata in the right column.
+** each document has a "view" button to change the page to the document view
+** each folder has an [e] edit button that changes the page to the Folder Edit View
+
+* Right column for metadata
+** metadata: name, size, created_at, modified_at, owner (username), modifier(username), format, content-size (if it has content), relations (for documents), ACL (name), version
+
+=== Document Display View
+
+* show the selected document's content (if any)
+** images and text content should be shown
+** if possible, PDF and other "heavy" formats (videos) are rendered with in-browser features.
+***  if the content is large, ask for confirmation (do not auto-render a 100 MByte PDF in the browser)
+* add buttons:
+** edit -> switch to /ui/document/$id/edit
+** delete -> confirm deletion, if yes try to delete document and return to document's parent folder view
+** copy -> invoke Cinnamon Server OSD__COPY method and switch to edit mode for the copy
+** version -> create a new version and switch to edit page for this version on success
+** download the content (if any)
+
+==== Document Edit View
+
+* add menu bar for all the features:
+** edit
+** update system metadata
+** edit custom metadata (metasets)
+** version
+** delete
+** relation CRUD
+** content CRUD
+** download
+* allow editing of content in this view page if possible (text area)
+** later custom editors for HTML, XML etc can be added.
+
+=== Folder Edit View
+
+A page for:
+
+* CRUD operations
+** delete folder: needs a "delete recursive" and "delete content" checkbox
+** only allow deletion of objects in non-empty folders if delete content is selected
+** only allow deletion of subfolders if recursive deletion is selected
+* system metadata changes
+* custom metadata changes
+
+=== Administration
+
+Objects that need their own CRUD Administration pages (only superusers are allowed to edit those)
+
+* UserAccount
+* Acl
+* AclGroup
+* AclGroupPermission (this should be later unified with Acl & Group management into a more general permission management page)
+* ChangeTrigger
+* ConfigEntry
+* FolderType
+* Format
+* Group
+** System groups must not be edited (no name change)
+* GroupUser -> edit membership in groups
+* IndexItem
+* Language
+* Lifecycle
+* LifecycleState
+* MetasetType
+* ObjectType
+* UiLanguage
+* Read-Only: AccessLogEntry
+* RelationType
+
+Actions that delete objects should always check their dependencies to avoid database foreign key constraint exceptions. For example: we cannot completely delete user accounts as long as they are owners of folders and documents and exist in groups and elsewhere. And we can not simply delete with cascade, since this would orphan objects (if owner is deleted). The XML API from CinnamonServer handles this via DeleteUserAccountRequest with flag assetReceiverId for another user to take over the assets of the deleted user.
+
+=== Servlet Refactoring
+
+Currently, the CinnamonServer uses XML/JSON endpoints in the servlets as defined by the UrlMapping enum. The servlets contain lots of logic that would be better placed in a service layer. That way we could reuse the functionality from UI endpoints.
+
+Example: FolderServlet has /api/folder/deleteMeta endpoint.
+
+* it unwraps the DeleteMetaRequest object
+* checks that the Meta objects that should be deleted exist
+* calls MetaService to actually delete the Meta objects
+* return an XML or JSON response
+
+I want this feature to be available in the UI (user should be able to delete a Folder's Meta objects from the Folder Edit View page). For this we need to extract the business logic from the Servlet's private deleteMeta endpoint:
+
+Two operations need to move into a FolderService#deleteMeta method:
+
+* checking if the Meta objects about to be deleted exist
+* call MetaService.deleteMetas
+
+Then we require an endpoint DELETE /ui/folder/deleteMeta that returns an updated list of the folder's Meta objects as an HTML fragment, so htmx can integrate it into the view.

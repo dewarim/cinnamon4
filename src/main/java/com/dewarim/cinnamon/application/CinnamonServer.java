@@ -12,10 +12,7 @@ import com.dewarim.cinnamon.application.service.TikaService;
 import com.dewarim.cinnamon.application.servlet.*;
 import com.dewarim.cinnamon.configuration.*;
 import com.dewarim.cinnamon.dao.UserAccountDao;
-import com.dewarim.cinnamon.filter.AuthenticationFilter;
-import com.dewarim.cinnamon.filter.ChangeTriggerFilter;
-import com.dewarim.cinnamon.filter.DbSessionFilter;
-import com.dewarim.cinnamon.filter.RequestResponseFilter;
+import com.dewarim.cinnamon.filter.*;
 import com.dewarim.cinnamon.model.ChangeTriggerType;
 import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.provider.ContentProviderService;
@@ -67,7 +64,7 @@ public class CinnamonServer {
 
     private static final Logger log = LogManager.getLogger(CinnamonServer.class);
 
-    public static final String           VERSION       = "1.14.2";
+    public static final String           VERSION       = "1.15.0";
     private             Server           server;
     private static      DbSessionFactory dbSessionFactory;
     private static      DbSessionFactory dbLoggingSessionFactory;
@@ -310,6 +307,9 @@ public class CinnamonServer {
         handler.addFilter(RequestResponseFilter.class, "/cinnamon/*", EnumSet.of(DispatcherType.REQUEST));
         handler.addFilter(ChangeTriggerFilter.class, "/cinnamon/connect", EnumSet.of(DispatcherType.REQUEST));
         handler.addFilter(requestResponseFilterHolder, "/test/*", EnumSet.of(DispatcherType.REQUEST));
+
+        // UI authentication: cookie-based, applied to /ui/* (login and logout bypass auth internally)
+        handler.addFilter(UiAuthFilter.class, "/ui/*", EnumSet.of(DispatcherType.REQUEST));
     }
 
     private void addServlets(WebAppContext handler) {
@@ -340,6 +340,10 @@ public class CinnamonServer {
         handler.addServlet(TestServlet.class, "/api/test/*");
         handler.addServlet(UiLanguageServlet.class, "/api/uiLanguage/*");
         handler.addServlet(UserAccountServlet.class, "/api/user/*");
+
+        // Browser UI servlets
+        handler.addServlet(UiLoginServlet.class, "/ui/login");
+        handler.addServlet(UiServlet.class, "/ui/*");
     }
 
     private <T extends jakarta.servlet.Servlet> void addServletWithMultipartConfig(

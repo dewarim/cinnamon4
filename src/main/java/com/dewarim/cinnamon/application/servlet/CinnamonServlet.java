@@ -75,9 +75,7 @@ public class CinnamonServlet extends HttpServlet {
     }
 
     private void hello(HttpServletResponse response) throws IOException {
-        response.setContentType("text/html");
-        response.setStatus(HttpServletResponse.SC_OK);
-        response.getWriter().println("<h1>Cinnamon 4 Server</h1>");
+        response.sendRedirect("/ui/login");
     }
 
     private void connect(CinnamonRequest request, CinnamonResponse response) throws IOException {

@@ -7,7 +7,7 @@
     <groupId>com.dewarim.cinnamon</groupId>
     <artifactId>cinnamon-cms</artifactId>
     <packaging>jar</packaging>
-    <version>1.14.2</version>
+    <version>1.15.0</version>
     <name>Cinnamon CMS</name>
 
     <properties>
@@ -18,7 +18,7 @@
         <mybatis.version>3.5.19</mybatis.version>
         <postgresql.version>42.7.11</postgresql.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.plugin.version>3.13.0</maven.compiler.plugin.version>
+        <maven.compiler.plugin.version>3.15.0</maven.compiler.plugin.version>
         <log4j.version>2.25.4</log4j.version>
         <httpcomponents.version>4.5.14</httpcomponents.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -279,38 +279,12 @@
             <version>${unbound.ldap.version}</version>
         </dependency>
 
-        <!-- mock server for MicroserviceChangeTrigger tests -->
-        <!-- riddled with security holes - good we only use it for testing and not in the server.jar -->
-        <!-- currently deactivated; needs refactoring and move to another test strategy;
-             kept in case we need to debug before this is achieved.-->
-        <!--        <dependency>-->
-        <!--            <groupId>org.mock-server</groupId>-->
-        <!--            <artifactId>mockserver-core</artifactId>-->
-        <!--            <version>5.15.0</version>-->
-        <!--            <scope>test</scope>-->
-        <!--            <exclusions>-->
-        <!--                <exclusion>-->
-        <!--                    <groupId>com.jayway.jsonpath</groupId>-->
-        <!--                    <artifactId>json-path</artifactId>-->
-        <!--                </exclusion>-->
-        <!--                <exclusion>-->
-        <!--                    <groupId>commons-collections</groupId>-->
-        <!--                    <artifactId>commons-collections</artifactId>-->
-        <!--                </exclusion>-->
-        <!--            </exclusions>-->
-        <!--        </dependency>-->
-        <!--        <dependency>-->
-        <!--            <groupId>org.mock-server</groupId>-->
-        <!--            <artifactId>mockserver-client-java</artifactId>-->
-        <!--            <version>5.15.0</version>-->
-        <!--            <scope>test</scope>-->
-        <!--        </dependency>-->
-        <!--        <dependency>-->
-        <!--            <groupId>org.mock-server</groupId>-->
-        <!--            <artifactId>mockserver-junit-jupiter</artifactId>-->
-        <!--            <version>5.15.0</version>-->
-        <!--            <scope>test</scope>-->
-        <!--        </dependency>-->
+        <!-- JTE template engine for browser UI -->
+        <dependency>
+            <groupId>gg.jte</groupId>
+            <artifactId>jte</artifactId>
+            <version>3.2.4</version>
+        </dependency>
 
     </dependencies>
 
@@ -366,50 +340,6 @@
                 </configuration>
             </plugin>
 
-            <!--            <plugin>-->
-            <!--                &lt;!&ndash; shade plugin: used to collect all dependencies into one executable jar; alternative: assembly plugin above. &ndash;&gt;-->
-            <!--                &lt;!&ndash; https://maven.apache.org/plugins/maven-shade-plugin/examples/executable-jar.html &ndash;&gt;-->
-            <!--                <groupId>org.apache.maven.plugins</groupId>-->
-            <!--                <artifactId>maven-shade-plugin</artifactId>-->
-            <!--                <version>3.5.1</version>-->
-            <!--                <executions>-->
-            <!--                    <execution>-->
-            <!--                        <phase>package</phase>-->
-            <!--                        <goals>-->
-            <!--                            <goal>shade</goal>-->
-            <!--                        </goals>-->
-            <!--                        <configuration>-->
-            <!--                            <transformers>-->
-            <!--                                <transformer-->
-            <!--                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">-->
-            <!--                                    <manifestEntries>-->
-            <!--                                        <Main-Class>com.dewarim.cinnamon.application.CinnamonServer</Main-Class>-->
-            <!--                                        <Build-Number>${buildNumber}</Build-Number>-->
-            <!--                                    </manifestEntries>-->
-            <!--                                </transformer>-->
-            <!--                            </transformers>-->
-            <!--                            <filters>-->
-            <!--                                <filter>-->
-            <!--                                    <artifact>*:*</artifact>-->
-            <!--                                    <excludes>-->
-            <!--                                        <exclude>META-INF/*.SF</exclude>-->
-            <!--                                        <exclude>META-INF/*.DSA</exclude>-->
-            <!--                                        <exclude>META-INF/*.RSA</exclude>-->
-            <!--                                    </excludes>-->
-            <!--                                </filter>-->
-            <!--                            </filters>-->
-            <!--                            <artifactSet>-->
-            <!--                                <excludes>-->
-            <!--                                    <exclude>org.apache.lucene:lucene-analysis-common:jar</exclude>-->
-            <!--                                    <exclude>org.apache.lucene:lucene-core:jar</exclude>-->
-            <!--                                    <exclude>org.apache.lucene:lucene-queryparser:jar</exclude>-->
-            <!--                                    <exclude>org.apache.lucene:lucene-*:jar</exclude>-->
-            <!--                                </excludes>-->
-            <!--                            </artifactSet>-->
-            <!--                        </configuration>-->
-            <!--                    </execution>-->
-            <!--                </executions>-->
-            <!--            </plugin>-->
             <plugin>
                 <!-- update buildNumber.properties and increase build counter whenever the maven _test_ step is executed -->
                 <!-- https://www.mojohaus.org/buildnumber-maven-plugin/ -->
@@ -439,30 +369,23 @@
                     </items>
                 </configuration>
             </plugin>
-            <!--            <plugin>-->
-            <!--                <artifactId>maven-resources-plugin</artifactId>-->
-            <!--                <version>3.3.1</version>-->
-            <!--                <executions>-->
-            <!--                    <execution>-->
-            <!--                        <id>copy-custom-jars</id>-->
-            <!--                        <phase>process-resources</phase>-->
-            <!--                        <goals>-->
-            <!--                            <goal>copy-resources</goal>-->
-            <!--                        </goals>-->
-            <!--                        <configuration>-->
-            <!--                            <outputDirectory>${project.build.directory}/lib</outputDirectory>-->
-            <!--                            <resources>-->
-            <!--                                <resource>-->
-            <!--                                    <directory>${basedir}/lib</directory>-->
-            <!--                                    <includes>-->
-            <!--                                        <include>*.jar</include>-->
-            <!--                                    </includes>-->
-            <!--                                </resource>-->
-            <!--                            </resources>-->
-            <!--                        </configuration>-->
-            <!--                    </execution>-->
-            <!--                </executions>-->
-            <!--            </plugin>-->
+            <plugin>
+                <groupId>gg.jte</groupId>
+                <artifactId>jte-maven-plugin</artifactId>
+                <version>3.1.12</version>
+                <configuration>
+                    <sourceDirectory>${project.basedir}/src/main/jte</sourceDirectory>
+                    <targetDirectory>${project.build.directory}/target/generated-sources/jte</targetDirectory>
+                    <contentType>Html</contentType>
+                    <packageName>gg.jte.generated</packageName>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>generate-sources</phase>
+                        <goals><goal>generate</goal></goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
     <repositories>

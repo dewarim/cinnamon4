@@ -1,0 +1,26 @@
+== Cinnamon Folder Edit UI
+
+Plan for the folder edit view (`/ui/folder/edit?id=<id>`).
+
+=== Operations
+
+* Rename folder (requires SET_NAME permission)
+* Move folder to a different parent (requires SET_PARENT permission on both folders)
+* Change ACL (requires SET_ACL permission)
+* Change owner (requires SET_OWNER permission)
+* Change folder type
+* Edit custom metadata (metasets)
+* Delete folder:
+** Checkbox "Delete content" — required to delete folders with OSDs
+** Checkbox "Delete recursively" — required to delete folders with subfolders
+** Confirmation dialog before executing deletion
+
+=== Servlet Refactoring
+
+Per `ui-requirements.adoc`: extract the `delete` orchestration and `createFolder` / `updateFolder` logic from `FolderServlet` into a `FolderService` so that the UI endpoints at `/ui/folder/*` can invoke the same logic without duplication.
+
+The following methods need extraction:
+
+* `FolderServlet.delete` → `FolderService.deleteFolder(ids, deleteRecursively, deleteContent, user)`
+* `FolderServlet.createFolder` → `FolderService.createFolder(request, user)`
+* `FolderServlet.updateFolder` → `FolderService.updateFolders(updates, user)`

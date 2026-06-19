@@ -1,0 +1,90 @@
+== Cinnamon UI
+
+Plan for implementing a browser based user interface for the Cinnamon CMS
+
+This is the starting point for an MVP UI.
+
+=== Tech Stack
+
+* https://bulma.io/documentation/[Bulma.css] for simple styling
+* https://htmx.org/docs/[htmx] for interactive web pages
+* https://jte.gg/[JTE] (Java Template Engine) for server side HTML generation
+* Java Servlet on Jetty (like the rest of the server)
+
+=== Features
+
+The CMS server allows the user to store data of all kind (documents, images, files in many different formats) with versioning and metadata in a folder structure.
+
+The UI should also allow administration (for users of group '_superusers') features for all things that have an API CRUD implementation, for example FolderType, Format, ObjectType etc.
+
+=== Authentication
+
+The Cinnamon Server issues a session token that is valid for the span of a user's session. The token is invalidated after some time unless the user stays active (submits requests to the server). All actions currently require the user to be logged in.
+
+The session token is currently transported in a non-standard "ticket" header field. It should be also be accepted when present in the more usual Authentication header field with the "Bearer " prefix.
+
+=== Implementation
+
+* Create a new Servlet (or more) with a URL mapping prefix of "/ui" (to differentiate from the server's existing /api mappings).
+* Implement the alternative login and authentication via Authentication header with "Bearer " prefix.
+* After Login, show the user's home folder (a Cinnamon Folder object that is a child of the "home" Folder object which itself is beneath the root folder.  The path is: /root/home/$username, but the root folder is never explicitly displayed or used when referencing a folder path.
+** if the user's home folder does not exist, create it (normally this happens automatically during user account creation)
+
+
+==== Folder view
+
+The main folder-view page should have:
+
+* A tree-view to the left with the folder structure beneath /home/$username.
+** The folders can be collapsed / expanded via [+] / [-] icons.
+** Clicking on a folder "opens" the folder, meaning its content is listed in the middle of the page.
+** Folder content is a list of subfolders and then a list of OSD (documents) inside this folder.
+** Content is filtered via a drop-down select field that defaults to "latest_head" to display the newest version of any object. Alternative is "all" to display all versions of all documents. "documents" are OSDs,  / ObjectSystemData objects that have the selected folder as their parent (field: parentId).
+** Content is filtered by ACLs, so before listing a folder or an OSD, it must be checked by the server if the user has the browsable permission. Same goes for all user actions: look up how the API handles the CRUD and other actions when operating on OSDs or Folder objects.
+** If the user is allowed to according to the ACL of the object, they can rename / edit / delete / change the content etc on an OSD or Folder.
+** There should be a radio button above the middle folder content box to select the mode: tabular or gallery (with thumbnails)
+** We also want to be able to sort-by name, type, age, size - ascending and descending
+** If an OSD has a thumbnail relation, this should be displayed in gallery mode.
+** Each OSD should have a "view" and "meta" button. When the meta button is clicked, display the OSDs metadata (system metadata, summary if any, metaset fields) to the right in an extra column.
+* The folder tree view should poll the current state of the folders and update every 10s (may later switch to websockets / SSE)
+* a folder view should have a URL that contains the folderPath as a parameter. For example if we have a user Bob,  /ui/folders?folderPath=/home/Bob/documents opens either the targeted folder or if the folderPath cannot be found, the main folder view of /home/Bob
+
+==== Object view
+
+* clicking on an OSD / Document in the folder view should show the metadata to the right in an extra column
+* clicking on the view button should open this specific object on a new show page rendering the content if possible or giving the option to download if not
+** images should be rendered
+** txt, markdown, asciidoc -> render as plain text
+** HTML: add a href to view the content in a new browser tab (needs an endpoint to retrieve content by UUID with required auth header so the user is identified - no browsable ACL match, no content shown)
+** PDF: try to use the browser's PDF view
+* actions to support:
+** docx, zip archives etc should be downloadable, so add a download button below the content
+** switch to edit mode (rename, set content, edit content in case of text formats like txt, xml, properties, toml, markdown or asciidoc). We start with a plain text editing field and maybe later add format-specific editors.
+** delete the object (needs confirmation)
+** version the object (create a new empty version)
+** clone the object (add a copy with name set to "Copy of"+old name)
+* there has to be a button to switch back to the last folder view, and the content of the folder view should be cached so the switch between OSD and Folder is quick.
+
+=== Templates
+
+We use JTE (Java Template Engine) to render HTML on the server side and htmx to enrich it with functionality.
+
+* templates are stored in src/main/resources/jte
+
+==== Menu bar
+
+Suggested structure:
+
+    <nav class="navbar">
+    <div class="container">
+        <div class="navbar-menu">
+            <div class="navbar-start">
+            # TODO: add "Home" link to user's home folder
+            </div>
+        </div>
+
+        <div class="navbar-end">
+            # TODO: add profile link to user settings
+            <a href="/logout" class="navbar-item">Abmelden</a>
+        </div>
+    </div>

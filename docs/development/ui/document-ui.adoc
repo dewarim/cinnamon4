@@ -1,0 +1,27 @@
+== Cinnamon Document UI
+
+Plan for the document display and edit views.
+
+=== Document Display View (`/ui/osd/view?id=<id>`)
+
+* Render the document's content inline if possible:
+** Images: `<img>` tag
+** Plain text, Markdown, AsciiDoc: render as pre-formatted text
+** HTML: link to open in a new tab (served via authenticated content endpoint)
+** PDF: use browser PDF viewer
+** Large content (> configurable threshold): ask for confirmation before rendering
+* Buttons: Edit, Delete (with confirmation), Copy (invoke OSD__COPY), Version (create new version), Download
+
+=== Document Edit View (`/ui/osd/edit?id=<id>`)
+
+* Menu bar: Edit content, Update system metadata, Edit custom metadata (metasets), Version, Delete, Relations CRUD, Content CRUD, Download
+* Inline text editor for text-based formats (txt, xml, markdown, asciidoc, properties, toml)
+
+=== Authenticated Content Endpoint
+
+* A `/ui/content/<uuid>` endpoint that reads the `cinnamonTicket` cookie to authenticate and streams OSD content.
+* Required for rendering images and serving download links in browser context.
+
+=== Servlet Refactoring
+
+Per `ui-requirements.adoc`: extract OSD-related business logic from `OsdServlet` into an `OsdService` so that UI endpoints can share the same operations without duplication.
