@@ -12,4 +12,4 @@ build/
 out/
 data/
 temp/
-ldap-config.xml
+src/test/resources/examples/ldap-config.xml
