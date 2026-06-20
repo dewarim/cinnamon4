@@ -386,10 +386,10 @@
             <plugin>
                 <groupId>gg.jte</groupId>
                 <artifactId>jte-maven-plugin</artifactId>
-                <version>3.1.12</version>
+                <version>3.2.4</version>
                 <configuration>
                     <sourceDirectory>${project.basedir}/src/main/jte</sourceDirectory>
-                    <targetDirectory>${project.build.directory}/target/generated-sources/jte</targetDirectory>
+                    <targetDirectory>${project.build.directory}/generated-sources/jte</targetDirectory>
                     <contentType>Html</contentType>
                     <packageName>gg.jte.generated</packageName>
                 </configuration>
