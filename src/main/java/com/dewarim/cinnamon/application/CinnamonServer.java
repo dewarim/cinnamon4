@@ -343,7 +343,7 @@ public class CinnamonServer {
 
         // Browser UI servlets
         handler.addServlet(UiLoginServlet.class, "/ui/login");
-        handler.addServlet(UiServlet.class, "/ui/*");
+        addServletWithMultipartConfig(handler, UiServlet.class, "/ui/*");
     }
 
     private <T extends jakarta.servlet.Servlet> void addServletWithMultipartConfig(

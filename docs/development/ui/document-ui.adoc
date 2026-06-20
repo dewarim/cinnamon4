@@ -12,9 +12,32 @@ Plan for the document display and edit views.
 ** Large content (> configurable threshold): ask for confirmation before rendering
 * Buttons: Edit, Delete (with confirmation), Copy (invoke OSD__COPY), Version (create new version), Download
 
+=== Document Create View (`/ui/osd/create?parentId=<folderId>`)
+
+Form for user to create a new document (OSD)
+
+* file upload allowed - or set content by text area
+
+User may choose / set:
+
+* name (required, non-blank, non-trailing/leading whitespace)
+* format from list of existing formats (default: null if no content is set, otherwise required)
+* object type from list of object types (default: default object type)
+* Lifecycle from list of lifecycles (default: null)
+* acl (default: default acl)
+* summary (must be well-formed XML)
+
+Automatically set:
+
+* owner = current user
+* parentId = folderId parameter
+* version = 1
+
+On save, createOsd and redirect to view page.
+
 === Document Edit View (`/ui/osd/edit?id=<id>`)
 
-* Menu bar: Edit content, Update system metadata, Edit custom metadata (metasets), Version, Delete, Relations CRUD, Content CRUD, Download
+* Menu bar: Edit content, Update system metadata, Edit custom metadata (metasets), Version, Delete, Relations CRUD, Content CRUD, Download, "Create new OSD"
 * Inline text editor for text-based formats (txt, xml, markdown, asciidoc, properties, toml)
 
 === Authenticated Content Endpoint
@@ -25,3 +48,26 @@ Plan for the document display and edit views.
 === Servlet Refactoring
 
 Per `ui-requirements.adoc`: extract OSD-related business logic from `OsdServlet` into an `OsdService` so that UI endpoints can share the same operations without duplication.
+
+OsdServlet methods to refactor so their business logic is available in OsdService:
+
+* createOsd
+* deleteOsds (UI currently will only delete 1 OSD at a time, so using a List of one element)
+* getContent
+* setContent
+* getObjectsByFolder (UI needs it for finding the documents in the displayed folder)
+* update (UI needs it to rename / edit the OSD)
+* version
+* copyOsd
+* getMeta
+* getRelations
+
+For later refactoring:
+
+* copyToExistingOsd
+* createMeta
+* deleteMeta
+* deleteAllMetas
+* lock
+* unlock
+* updateMetaContent

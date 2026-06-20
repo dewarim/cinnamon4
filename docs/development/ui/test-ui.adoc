@@ -1,0 +1,112 @@
+== UI Testing
+
+Create rudimentary Selenium tests that use headless Firefox to verify the user's journey.
+
+=== Basic UI Test
+
+* login
+* verify home folder view (3-column layout: tree, content, metadata panel)
+* logout
+* verify redirect to login page
+
+=== Create Folder Test
+
+* login
+* click on "+ Folder" button in toolbar
+* verify redirect to `/ui/folder/create?parentId=<id>`
+* submit form with blank name → verify error message is shown (no redirect crash)
+* fill in name "test-folder", keep defaults for ACL / type
+* save → verify redirect to `/ui/folders?folderPath=/home/$user/test-folder`
+* verify "test-folder" appears in the folder content panel
+
+=== Edit Folder Test
+
+* login
+* navigate to `/home/$user/test-folder` (created in previous test or create fresh)
+* click the "Edit" button next to the folder → verify redirect to `/ui/folder/edit?id=<id>`
+* rename folder to "test-folder-renamed"
+* save → verify redirect back to edit page with updated name
+* use the delete form: check both "Delete content" and "Delete recursively" checkboxes
+* confirm deletion dialog → verify redirect to parent folder
+* verify "test-folder-renamed" no longer appears in the folder content panel
+
+=== Create Document Test
+
+* login
+* navigate to home folder
+* click on "+ Document" button in toolbar
+* verify redirect to `/ui/osd/create?parentId=<id>`
+* submit form with blank name → verify error message shown
+* fill in name "hello-world", select a text format (e.g. text/plain), paste "hello world" in text area
+* save → verify redirect to `/ui/osd/view?id=<id>`
+* verify document name "hello-world" shown on view page
+* verify "hello world" text content rendered in the content area
+
+=== Upload Image Test
+
+* login
+* navigate to home folder
+* click on "+ Document" button
+* fill in name "cinnamon-bun", select format "image/png"
+* upload `data/cinnamon-bun.png`
+* save → verify redirect to `/ui/osd/view?id=<id>`
+* verify the image is rendered inline with an `<img>` tag (not a download link)
+* verify content size is shown in the metadata column
+
+=== Document View Test
+
+* login
+* navigate to an existing document
+* verify buttons: Edit, Copy, Version, Delete are present
+* verify Download button only present when document has content
+* click Edit → verify redirect to `/ui/osd/edit?id=<id>`
+
+=== Document Edit Test
+
+* login
+* navigate to an existing document, click Edit
+* verify system metadata form is pre-filled (name, ACL, type, owner)
+* change the name, save → verify page reloads with updated name in title
+* verify View, Copy, Version, Download, Delete action buttons in header
+* verify Details table shows correct created/modified timestamps and format
+
+=== Document Copy Test
+
+* login
+* open a document with content in view or edit page
+* click "Copy" button → verify redirect to `/ui/osd/edit?id=<id_of_copy>`
+* verify new document name starts with "Copy_"
+* verify copy appears in the same folder as the original
+
+=== Document Version Test
+
+* login
+* open a document in view page
+* click "Version" and confirm the dialog
+* verify redirect to `/ui/osd/edit?id=<id_of_new_version>`
+* verify version number incremented (e.g. "2")
+* navigate back to the parent folder
+* switch filter to "All versions" → verify both versions appear
+
+=== Delete Document Test
+
+* login
+* open a document in view page
+* click "Delete" and confirm the dialog
+* verify redirect to parent folder view
+* verify document no longer appears in the folder content panel
+
+=== Content Streaming Test
+
+* login
+* create a document with image content (PNG)
+* navigate to `/ui/content/<id>` directly
+* verify the response content-type is `image/png`
+* verify the image bytes are returned (response body not empty)
+* verify unauthenticated access to `/ui/content/<id>` redirects to login page
+
+=== Error Handling Tests
+
+* attempt to create a folder with a duplicate name → verify error message shown on form
+* attempt to delete a folder that has content without checking "Delete content" → verify error shown
+* attempt to access `/ui/osd/view?id=99999` (non-existent) → verify redirect to folder view (no server error)

@@ -20,6 +20,10 @@
         </div>
         <div class="level-right">
             <div class="level-item">
+                <a class="button is-small is-success mr-2" href="/ui/folder/create?parentId=${folder.getId()}">+ Folder</a>
+                <a class="button is-small is-primary mr-2" href="/ui/osd/create?parentId=${folder.getId()}">+ Document</a>
+            </div>
+            <div class="level-item">
                 <div class="select is-small">
                     <label for="filter">
                         <select name="filter"
@@ -40,12 +44,21 @@
 
     @if(!subFolders.isEmpty())
         <p class="heading">Subfolders</p>
-        <div class="buttons mb-3">
-            @for(Folder sub : subFolders)
-                <a class="button is-small is-light" href="/ui/folders?folderPath=${folderPath}/${sub.getName()}">
-                    📁 ${sub.getName()}
-                </a>
-            @endfor
+        <div class="mb-3">
+            <table class="table is-fullwidth is-hoverable is-narrow">
+                <tbody>
+                @for(Folder sub : subFolders)
+                    <tr>
+                        <td>
+                            <a href="/ui/folders?folderPath=${folderPath}/${sub.getName()}">📁 ${sub.getName()}</a>
+                        </td>
+                        <td class="is-narrow">
+                            <a class="button is-small is-light" href="/ui/folder/edit?id=${sub.getId()}">Edit</a>
+                        </td>
+                    </tr>
+                @endfor
+                </tbody>
+            </table>
         </div>
     @endif
 
@@ -81,7 +94,7 @@
                                 hx-swap="innerHTML">
                             Meta
                         </button>
-                        <button class="button is-small" disabled title="Document view coming soon">View</button>
+                        <a class="button is-small is-light" href="/ui/osd/view?id=${osd.getId()}">View</a>
                     </td>
                 </tr>
             @endfor

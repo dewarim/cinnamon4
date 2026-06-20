@@ -10,8 +10,8 @@ import com.dewarim.cinnamon.api.lifecycle.State;
 import com.dewarim.cinnamon.api.lifecycle.StateChangeResult;
 import com.dewarim.cinnamon.application.*;
 import com.dewarim.cinnamon.application.exception.CinnamonException;
-import com.dewarim.cinnamon.application.service.DeleteOsdService;
 import com.dewarim.cinnamon.application.service.MetaService;
+import com.dewarim.cinnamon.application.service.OsdService;
 import com.dewarim.cinnamon.dao.*;
 import com.dewarim.cinnamon.model.*;
 import com.dewarim.cinnamon.model.links.Link;
@@ -58,9 +58,9 @@ import static org.apache.hc.core5.http.HttpHeaders.CONTENT_DISPOSITION;
 public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSystemData> {
 
     private final        AuthorizationService   authorizationService = new AuthorizationService();
-    private final        DeleteOsdService       deleteOsdService     = new DeleteOsdService();
     private static final Logger                 log                  = LogManager.getLogger(OsdServlet.class);
     private              ContentProviderService contentProviderService;
+    private              OsdService             osdService;
     private              Long                   tikaMetasetTypeId;
 
     public OsdServlet() {
@@ -399,17 +399,9 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
     private void deleteOsds(CinnamonRequest request, CinnamonResponse cinnamonResponse, UserAccount user, OsdDao osdDao) throws IOException {
         DeleteOsdRequest deleteRequest = request.getMapper().readValue(request.getInputStream(), DeleteOsdRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
-        List<ObjectSystemData> osds = osdDao.getObjectsById(deleteRequest.getIds(), false);
-        // reverse sort by id, so we try to delete descendants first.
-        osds.sort(Comparator.comparingLong(ObjectSystemData::getId).reversed());
         boolean deleteDescendants = deleteRequest.isDeleteDescendants() || deleteRequest.isDeleteAllVersions();
-        boolean deleteAllVersions = deleteRequest.isDeleteAllVersions();
-
-        deleteOsdService.verifyAndDelete(osds, deleteDescendants, deleteAllVersions, user);
-
-        // TODO: deleteContent? -> cleanup process? #199
-        var deleteResponse = new DeleteResponse(true);
-        cinnamonResponse.setWrapper(deleteResponse);
+        osdService.deleteOsds(deleteRequest.getIds(), deleteDescendants, deleteRequest.isDeleteAllVersions(), user);
+        cinnamonResponse.setWrapper(new DeleteResponse(true));
     }
 
 
@@ -532,18 +524,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
             IOException {
         MetaRequest metaRequest = request.getMapper().readValue(request.getInputStream(), MetaRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
-
-        Long             osdId = metaRequest.getId();
-        ObjectSystemData osd   = osdDao.getObjectById(osdId).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
-        throwUnlessCustomMetaIsReadable(osd);
-
-        List<Meta> metaList;
-        if (metaRequest.getTypeIds() != null) {
-            metaList = new OsdMetaDao().getMetaByTypeIdsAndOsd(metaRequest.getTypeIds(), osdId);
-        } else {
-            metaList = new OsdMetaDao().listByOsd(osdId);
-        }
-
+        List<Meta> metaList = osdService.getMeta(metaRequest.getId(), metaRequest.getTypeIds(), user);
         createMetaResponse(response, metaList);
     }
 
@@ -633,26 +614,14 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
     }
 
     private void getContent(CinnamonRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws
-            ServletException, IOException {
+            IOException {
         IdRequest idRequest = request.getMapper().readValue(request.getInputStream(), IdRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
-        ObjectSystemData osd = osdDao.getObjectById(idRequest.getId()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
-        new AuthorizationService().throwUpUnlessUserOrOwnerHasPermission(osd, DefaultPermission.READ_OBJECT_CONTENT, user,
-                ErrorCode.NO_READ_PERMISSION);
-        if (osd.getContentSize() == null || osd.getContentSize() == 0) {
-            throw ErrorCode.OBJECT_HAS_NO_CONTENT.exception();
-        }
-        Optional<Format> formatOpt = new FormatDao().getObjectById(osd.getFormatId());
-        // no regular error response for missing format - this should only be possible if the database is corrupted.
-        Format format = formatOpt.orElseThrow(
-                () -> new ServletException(String.format("Encountered object #%d with content but non-existing formatId #%d.",
-                        osd.getId(), osd.getFormatId())));
-        ContentProvider contentProvider = contentProviderService.getContentProvider(osd.getContentProvider());
-        InputStream     contentStream   = contentProvider.getContentStream(osd);
-        response.setHeader(CONTENT_DISPOSITION, "attachment; filename=\"" + osd.getName().replace("\"", "%22") + "\"");
-        response.setContentType(format.getContentType());
+        OsdService.ContentResult result = osdService.getContent(idRequest.getId(), user);
+        response.setHeader(CONTENT_DISPOSITION, "attachment; filename=\"" + result.osd().getName().replace("\"", "%22") + "\"");
+        response.setContentType(result.format().getContentType());
         response.setStatus(SC_OK);
-        contentStream.transferTo(response.getOutputStream());
+        result.stream().transferTo(response.getOutputStream());
     }
 
     private void setContent(CinnamonRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws
@@ -1070,5 +1039,6 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
     @Override
     public void init() {
         contentProviderService = (ContentProviderService) getServletContext().getAttribute(CONTENT_PROVIDER_SERVICE);
+        osdService = new OsdService(contentProviderService);
     }
 }

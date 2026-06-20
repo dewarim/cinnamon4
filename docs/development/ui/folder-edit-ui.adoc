@@ -15,6 +15,23 @@ Plan for the folder edit view (`/ui/folder/edit?id=<id>`).
 ** Checkbox "Delete recursively" — required to delete folders with subfolders
 ** Confirmation dialog before executing deletion
 
+=== Folder Create View (`/ui/folder/create?parentId=<folderId>`)
+
+Form for user to create a new Folder
+
+User may choose:
+* name (required, non-blank, non-trailing/leading whitespace)
+* folder type from list of object types (default: default folder type)
+* Lifecycle from list of lifecycles (default: null)
+* acl (default: default acl)
+* summary (must be well-formed XML)
+
+Automatically set:
+* owner = current user
+* parentId = folderId parameter
+
+On save, createFolder and redirect to folder view with the new folder selected as current path.
+
 === Servlet Refactoring
 
 Per `ui-requirements.adoc`: extract the `delete` orchestration and `createFolder` / `updateFolder` logic from `FolderServlet` into a `FolderService` so that the UI endpoints at `/ui/folder/*` can invoke the same logic without duplication.

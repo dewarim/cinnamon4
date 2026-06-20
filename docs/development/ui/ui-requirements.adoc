@@ -39,6 +39,7 @@ Following the user journey.
 
 * Main middle column
 ** at the top of the area is a second menu bar that allows the user to change how the content is shown (ordering by name,size,created_at,modified_at)
+*** the second menu bar also has a button "create document" and one for "create folder"
 ** the main area lists the documents and folders.
 ** click on one of the listed objects / folders shows its metadata in the right column.
 ** each document has a "view" button to change the page to the document view
@@ -54,7 +55,7 @@ Following the user journey.
 ** if possible, PDF and other "heavy" formats (videos) are rendered with in-browser features.
 ***  if the content is large, ask for confirmation (do not auto-render a 100 MByte PDF in the browser)
 * add buttons:
-** edit -> switch to /ui/document/$id/edit
+** edit -> switch to /ui/osd/edit?id=<id>
 ** delete -> confirm deletion, if yes try to delete document and return to document's parent folder view
 ** copy -> invoke Cinnamon Server OSD__COPY method and switch to edit mode for the copy
 ** version -> create a new version and switch to edit page for this version on success
