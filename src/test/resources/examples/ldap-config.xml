@@ -1,0 +1,14 @@
+<ldapConfig>
+    <host>192.168.0.105</host>
+    <port>389</port>
+    <bindDnFormatString>cn=%s,cn=Users,dc=texolution,dc=test,dc=eu</bindDnFormatString>
+    <searchBaseDnFormatString>cn=%s,cn=Users,dc=texolution,dc=test,dc=eu</searchBaseDnFormatString>
+    <searchFilter>(&amp;(objectclass=*))</searchFilter>
+    <searchAttribute>member</searchAttribute>
+    <groupMappings>
+            <groupMapping>
+                <externalGroup>retrieval-users</externalGroup>
+                <cinnamonGroup>group-authors</cinnamonGroup>
+            </groupMapping>
+    </groupMappings>
+</ldapConfig>
