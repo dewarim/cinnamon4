@@ -1,5 +1,6 @@
 @param String folderPath
 @param String username
+@param String filter
 @template.layout(
     title = "Folders",
     username = username,
@@ -15,7 +16,7 @@
     </div>
     <div class="column" style="overflow-y: auto; height: 100%;">
         <div id="folder-content-panel"
-             hx-get="/ui/folders/content?folderPath=${folderPath}"
+             hx-get="/ui/folders/content?folderPath=${folderPath}@if(!filter.isEmpty())&filter=${filter}@endif"
              hx-trigger="load"
              hx-swap="innerHTML">
             <p class="p-3 has-text-grey is-size-7">Loading content…</p>

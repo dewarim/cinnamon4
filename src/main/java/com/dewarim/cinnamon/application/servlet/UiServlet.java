@@ -1,6 +1,7 @@
 package com.dewarim.cinnamon.application.servlet;
 
 import com.dewarim.cinnamon.application.RequestScope;
+import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.application.service.FolderService;
 import com.dewarim.cinnamon.application.service.OsdService;
 import com.dewarim.cinnamon.dao.*;
@@ -42,7 +43,7 @@ public class UiServlet extends HttpServlet {
     private static final FolderService folderService = new FolderService();
 
     private static TemplateEngine templateEngine;
-    private              OsdService     osdService;
+    private        OsdService     osdService;
 
     public static TemplateEngine getTemplateEngine() {
         if (templateEngine == null) {
@@ -70,7 +71,7 @@ public class UiServlet extends HttpServlet {
     // ─── GET ──────────────────────────────────────────────────────────────────
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String pathInfo = request.getPathInfo();
         if (pathInfo == null) pathInfo = "/";
 
@@ -80,17 +81,17 @@ public class UiServlet extends HttpServlet {
         }
 
         switch (pathInfo) {
-            case "/folders"          -> handleFolderView(request, response);
-            case "/folders/tree"     -> handleFolderTree(request, response);
-            case "/folders/content"  -> handleFolderContent(request, response);
-            case "/osd/meta"         -> handleOsdMeta(request, response);
-            case "/folder/create"    -> handleFolderCreateForm(request, response);
-            case "/folder/edit"      -> handleFolderEditForm(request, response);
-            case "/osd/create"       -> handleOsdCreateForm(request, response);
-            case "/osd/view"         -> handleOsdView(request, response);
-            case "/osd/edit"         -> handleOsdEditForm(request, response);
-            case "/logout"           -> UiLoginServlet.handleLogout(request, response);
-            default                  -> response.sendRedirect("/ui/folders");
+            case "/folders" -> handleFolderView(request, response);
+            case "/folders/tree" -> handleFolderTree(request, response);
+            case "/folders/content" -> handleFolderContent(request, response);
+            case "/osd/meta" -> handleOsdMeta(request, response);
+            case "/folder/create" -> handleFolderCreateForm(request, response);
+            case "/folder/edit" -> handleFolderEditForm(request, response);
+            case "/osd/create" -> handleOsdCreateForm(request, response);
+            case "/osd/view" -> handleOsdView(request, response);
+            case "/osd/edit" -> handleOsdEditForm(request, response);
+            case "/logout" -> UiLoginServlet.handleLogout(request, response);
+            default -> response.sendRedirect("/ui/folders");
         }
     }
 
@@ -103,14 +104,14 @@ public class UiServlet extends HttpServlet {
 
         switch (pathInfo) {
             case "/folder/create" -> handleFolderCreate(request, response);
-            case "/folder/edit"   -> handleFolderEdit(request, response);
+            case "/folder/edit" -> handleFolderEdit(request, response);
             case "/folder/delete" -> handleFolderDelete(request, response);
-            case "/osd/create"    -> handleOsdCreate(request, response);
-            case "/osd/edit"      -> handleOsdEdit(request, response);
-            case "/osd/delete"    -> handleOsdDelete(request, response);
-            case "/osd/copy"      -> handleOsdCopy(request, response);
-            case "/osd/version"   -> handleOsdVersion(request, response);
-            default               -> response.sendRedirect("/ui/folders");
+            case "/osd/create" -> handleOsdCreate(request, response);
+            case "/osd/edit" -> handleOsdEdit(request, response);
+            case "/osd/delete" -> handleOsdDelete(request, response);
+            case "/osd/copy" -> handleOsdCopy(request, response);
+            case "/osd/version" -> handleOsdVersion(request, response);
+            default -> response.sendRedirect("/ui/folders");
         }
     }
 
@@ -123,8 +124,10 @@ public class UiServlet extends HttpServlet {
             folderService.ensureHomeFolderExists(user);
             folderPath = folderService.homeFolderPath(user);
         }
+        String              filter = request.getParameter("filter");
         Map<String, Object> params = new HashMap<>();
         params.put("folderPath", folderPath);
+        params.put("filter", filter != null ? filter : "");
         params.put("username", user.getName());
         render("folders/view.jte", params, response);
     }
@@ -201,21 +204,21 @@ public class UiServlet extends HttpServlet {
         }
 
         UserAccountDao userAccountDao = new UserAccountDao();
-        String ownerName    = userAccountDao.getUserAccountById(osd.getOwnerId()).map(UserAccount::getName).orElse("unknown");
+        String         ownerName      = userAccountDao.getUserAccountById(osd.getOwnerId()).map(UserAccount::getName).orElse("unknown");
         String modifierName = osd.getModifierId() != null
                 ? userAccountDao.getUserAccountById(osd.getModifierId()).map(UserAccount::getName).orElse("unknown")
                 : "—";
 
         AclDao    aclDao    = new AclDao();
         FormatDao formatDao = new FormatDao();
-        Acl    acl    = osd.getAclId()    != null ? aclDao.getCachedVersion(osd.getAclId())       : null;
-        Format format = osd.getFormatId() != null ? formatDao.getCachedVersion(osd.getFormatId()) : null;
+        Acl       acl       = osd.getAclId() != null ? aclDao.getCachedVersion(osd.getAclId()) : null;
+        Format    format    = osd.getFormatId() != null ? formatDao.getCachedVersion(osd.getFormatId()) : null;
 
         Map<String, Object> params = new HashMap<>();
         params.put("osd", osd);
         params.put("ownerName", ownerName);
         params.put("modifierName", modifierName);
-        params.put("aclName",    acl    != null ? acl.getName()    : "—");
+        params.put("aclName", acl != null ? acl.getName() : "—");
         params.put("formatName", format != null ? format.getName() : "—");
         renderFragment("folders/osd-meta.jte", params, response);
     }
@@ -228,32 +231,32 @@ public class UiServlet extends HttpServlet {
             response.sendRedirect("/ui/folders");
             return;
         }
-        long    parentId = Long.parseLong(parentIdParam);
-        Folder  parent   = new FolderDao().getFolderById(parentId).orElse(null);
+        long   parentId = Long.parseLong(parentIdParam);
+        Folder parent   = new FolderDao().getFolderById(parentId).orElse(null);
         if (parent == null) {
             response.sendRedirect("/ui/folders");
             return;
         }
 
         Map<String, Object> params = new HashMap<>();
-        params.put("parentId",    parentId);
-        params.put("parentName",  parent.getName());
-        params.put("username",    RequestScope.getCurrentUser().getName());
-        params.put("acls",        new AclDao().list());
+        params.put("parentId", parentId);
+        params.put("parentName", parent.getName());
+        params.put("username", RequestScope.getCurrentUser().getName());
+        params.put("acls", new AclDao().list());
         params.put("folderTypes", new FolderTypeDao().list());
-        params.put("lifecycles",  new LifecycleDao().list());
+        params.put("lifecycles", new LifecycleDao().list());
         params.put("defaultAclId", parent.getAclId());
-        params.put("error",       nvl(request.getParameter("error")));
+        params.put("error", nvl(request.getParameter("error")));
         render("folders/create.jte", params, response);
     }
 
     private void handleFolderCreate(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        UserAccount user         = RequestScope.getCurrentUser();
-        String      parentIdStr  = request.getParameter("parentId");
-        String      name         = nvl(request.getParameter("name")).strip();
-        String      aclIdStr     = request.getParameter("aclId");
-        String      typeIdStr    = request.getParameter("typeId");
-        String      summary      = nvl(request.getParameter("summary"));
+        UserAccount user        = RequestScope.getCurrentUser();
+        String      parentIdStr = request.getParameter("parentId");
+        String      name        = nvl(request.getParameter("name")).strip();
+        String      aclIdStr    = request.getParameter("aclId");
+        String      typeIdStr   = request.getParameter("typeId");
+        String      summary     = nvl(request.getParameter("summary"));
 
         if (parentIdStr == null) {
             response.sendRedirect("/ui/folders");
@@ -266,12 +269,12 @@ public class UiServlet extends HttpServlet {
             return;
         }
 
-        Long aclId  = aclIdStr  != null && !aclIdStr.isBlank()  ? Long.parseLong(aclIdStr)  : null;
+        Long aclId  = aclIdStr != null && !aclIdStr.isBlank() ? Long.parseLong(aclIdStr) : null;
         Long typeId = typeIdStr != null && !typeIdStr.isBlank() ? Long.parseLong(typeIdStr) : null;
 
         try {
             Folder newFolder = folderService.createFolder(name, parentId, aclId, typeId, summary.isBlank() ? null : summary, user.getId(), user);
-            String path = new FolderDao().getFolderPath(newFolder.getId()).replace("/root", "");
+            String path      = new FolderDao().getFolderPath(newFolder.getId()).replace("/root", "");
             response.sendRedirect("/ui/folders?folderPath=" + encode(path));
         } catch (Exception e) {
             log.warn("Folder creation failed", e);
@@ -297,19 +300,19 @@ public class UiServlet extends HttpServlet {
         String folderPath = new FolderDao().getFolderPath(folderId).replace("/root", "");
 
         Map<String, Object> params = new HashMap<>();
-        params.put("folder",      folder);
-        params.put("folderPath",  folderPath);
-        params.put("username",    RequestScope.getCurrentUser().getName());
-        params.put("acls",        new AclDao().list());
+        params.put("folder", folder);
+        params.put("folderPath", folderPath);
+        params.put("username", RequestScope.getCurrentUser().getName());
+        params.put("acls", new AclDao().list());
         params.put("folderTypes", new FolderTypeDao().list());
-        params.put("users",       new UserAccountDao().listUserAccounts());
-        params.put("error",       nvl(request.getParameter("error")));
+        params.put("users", new UserAccountDao().listUserAccounts());
+        params.put("error", nvl(request.getParameter("error")));
         render("folders/edit.jte", params, response);
     }
 
     private void handleFolderEdit(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        UserAccount user      = RequestScope.getCurrentUser();
-        String      idStr     = request.getParameter("id");
+        UserAccount user  = RequestScope.getCurrentUser();
+        String      idStr = request.getParameter("id");
         if (idStr == null) {
             response.sendRedirect("/ui/folders");
             return;
@@ -322,9 +325,9 @@ public class UiServlet extends HttpServlet {
         String typeStr   = request.getParameter("typeId");
 
         Long parentId = parentStr != null && !parentStr.isBlank() ? Long.parseLong(parentStr) : null;
-        Long aclId    = aclStr    != null && !aclStr.isBlank()    ? Long.parseLong(aclStr)    : null;
-        Long ownerId  = ownerStr  != null && !ownerStr.isBlank()  ? Long.parseLong(ownerStr)  : null;
-        Long typeId   = typeStr   != null && !typeStr.isBlank()   ? Long.parseLong(typeStr)   : null;
+        Long aclId    = aclStr != null && !aclStr.isBlank() ? Long.parseLong(aclStr) : null;
+        Long ownerId  = ownerStr != null && !ownerStr.isBlank() ? Long.parseLong(ownerStr) : null;
+        Long typeId   = typeStr != null && !typeStr.isBlank() ? Long.parseLong(typeStr) : null;
 
         try {
             folderService.updateFolder(folderId, name, parentId, aclId, ownerId, typeId, null, user);
@@ -383,28 +386,28 @@ public class UiServlet extends HttpServlet {
         String parentPath = new FolderDao().getFolderPath(parentId).replace("/root", "");
 
         Map<String, Object> params = new HashMap<>();
-        params.put("parentId",    parentId);
-        params.put("parentPath",  parentPath);
-        params.put("username",    RequestScope.getCurrentUser().getName());
-        params.put("acls",        new AclDao().list());
+        params.put("parentId", parentId);
+        params.put("parentPath", parentPath);
+        params.put("username", RequestScope.getCurrentUser().getName());
+        params.put("acls", new AclDao().list());
         params.put("objectTypes", new ObjectTypeDao().list());
-        params.put("formats",     new FormatDao().list());
-        params.put("lifecycles",  new LifecycleDao().list());
+        params.put("formats", new FormatDao().list());
+        params.put("lifecycles", new LifecycleDao().list());
         params.put("defaultAclId", parent.getAclId());
-        params.put("error",       nvl(request.getParameter("error")));
+        params.put("error", nvl(request.getParameter("error")));
         render("osds/create.jte", params, response);
     }
 
-    private void handleOsdCreate(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-        UserAccount user          = RequestScope.getCurrentUser();
-        String      parentIdStr   = request.getParameter("parentId");
-        String      name          = nvl(request.getParameter("name")).strip();
-        String      aclIdStr      = request.getParameter("aclId");
-        String      typeIdStr     = request.getParameter("typeId");
-        String      formatIdStr   = request.getParameter("formatId");
-        String      lifecycleStr  = request.getParameter("lifecycleStateId");
-        String      summary       = nvl(request.getParameter("summary"));
-        String      textContent   = nvl(request.getParameter("textContent"));
+    private void handleOsdCreate(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        UserAccount user         = RequestScope.getCurrentUser();
+        String      parentIdStr  = request.getParameter("parentId");
+        String      name         = nvl(request.getParameter("name")).strip();
+        String      aclIdStr     = request.getParameter("aclId");
+        String      typeIdStr    = request.getParameter("typeId");
+        String      formatIdStr  = request.getParameter("formatId");
+        String      lifecycleStr = request.getParameter("lifecycleStateId");
+        String      summary      = nvl(request.getParameter("summary"));
+        String      textContent  = nvl(request.getParameter("textContent"));
 
         if (parentIdStr == null) {
             response.sendRedirect("/ui/folders");
@@ -417,9 +420,9 @@ public class UiServlet extends HttpServlet {
             return;
         }
 
-        Long aclId          = aclIdStr     != null && !aclIdStr.isBlank()     ? Long.parseLong(aclIdStr)     : null;
-        Long typeId         = typeIdStr    != null && !typeIdStr.isBlank()    ? Long.parseLong(typeIdStr)    : null;
-        Long formatId       = formatIdStr  != null && !formatIdStr.isBlank()  ? Long.parseLong(formatIdStr)  : null;
+        Long aclId            = aclIdStr != null && !aclIdStr.isBlank() ? Long.parseLong(aclIdStr) : null;
+        Long typeId           = typeIdStr != null && !typeIdStr.isBlank() ? Long.parseLong(typeIdStr) : null;
+        Long formatId         = formatIdStr != null && !formatIdStr.isBlank() ? Long.parseLong(formatIdStr) : null;
         Long lifecycleStateId = lifecycleStr != null && !lifecycleStr.isBlank() ? Long.parseLong(lifecycleStr) : null;
 
         if (aclId == null) {
@@ -432,7 +435,7 @@ public class UiServlet extends HttpServlet {
         }
 
         try {
-            InputStream content = null;
+            InputStream content      = null;
             Long        usedFormatId = formatId;
 
             Part filePart = request.getPart("file");
@@ -452,6 +455,7 @@ public class UiServlet extends HttpServlet {
 
             ObjectSystemData osd = osdService.createOsd(name, parentId, aclId, typeId, usedFormatId,
                     lifecycleStateId, summary.isBlank() ? null : summary, content, user);
+            ThreadLocalSqlSession.getSqlSession().commit();
             response.sendRedirect("/ui/osd/view?id=" + osd.getId());
         } catch (Exception e) {
             log.warn("OSD creation failed", e);
@@ -479,19 +483,19 @@ public class UiServlet extends HttpServlet {
         }
 
         UserAccountDao userAccountDao = new UserAccountDao();
-        String ownerName = userAccountDao.getUserAccountById(osd.getOwnerId()).map(UserAccount::getName).orElse("unknown");
-        Format format    = osd.getFormatId() != null ? new FormatDao().getObjectById(osd.getFormatId()).orElse(null) : null;
+        String         ownerName      = userAccountDao.getUserAccountById(osd.getOwnerId()).map(UserAccount::getName).orElse("unknown");
+        Format         format         = osd.getFormatId() != null ? new FormatDao().getObjectById(osd.getFormatId()).orElse(null) : null;
         String folderPath = osd.getParentId() != null
                 ? new FolderDao().getFolderPath(osd.getParentId()).replace("/root", "")
                 : folderService.homeFolderPath(user);
 
         Map<String, Object> params = new HashMap<>();
-        params.put("osd",        osd);
-        params.put("ownerName",  ownerName);
-        params.put("format",     format);
+        params.put("osd", osd);
+        params.put("ownerName", ownerName);
+        params.put("format", format);
         params.put("folderPath", folderPath);
-        params.put("username",   user.getName());
-        params.put("error",      nvl(request.getParameter("error")));
+        params.put("username", user.getName());
+        params.put("error", nvl(request.getParameter("error")));
         render("osds/view.jte", params, response);
     }
 
@@ -515,8 +519,8 @@ public class UiServlet extends HttpServlet {
         }
 
         UserAccountDao userAccountDao = new UserAccountDao();
-        String ownerName = userAccountDao.getUserAccountById(osd.getOwnerId()).map(UserAccount::getName).orElse("unknown");
-        Format format    = osd.getFormatId() != null ? new FormatDao().getObjectById(osd.getFormatId()).orElse(null) : null;
+        String         ownerName      = userAccountDao.getUserAccountById(osd.getOwnerId()).map(UserAccount::getName).orElse("unknown");
+        Format         format         = osd.getFormatId() != null ? new FormatDao().getObjectById(osd.getFormatId()).orElse(null) : null;
         String folderPath = osd.getParentId() != null
                 ? new FolderDao().getFolderPath(osd.getParentId()).replace("/root", "")
                 : folderService.homeFolderPath(user);
@@ -524,47 +528,47 @@ public class UiServlet extends HttpServlet {
         List<Meta>     metas;
         List<Relation> relations;
         try {
-            metas     = osdService.getMeta(osdId, user);
+            metas = osdService.getMeta(osdId, user);
             relations = osdService.getRelations(osdId, user);
         } catch (Exception e) {
-            metas     = List.of();
+            metas = List.of();
             relations = List.of();
         }
 
         Map<String, Object> params = new HashMap<>();
-        params.put("osd",         osd);
-        params.put("ownerName",   ownerName);
-        params.put("format",      format);
-        params.put("folderPath",  folderPath);
-        params.put("username",    user.getName());
-        params.put("acls",        new AclDao().list());
+        params.put("osd", osd);
+        params.put("ownerName", ownerName);
+        params.put("format", format);
+        params.put("folderPath", folderPath);
+        params.put("username", user.getName());
+        params.put("acls", new AclDao().list());
         params.put("objectTypes", new ObjectTypeDao().list());
-        params.put("formats",     new FormatDao().list());
-        params.put("users",       new UserAccountDao().listUserAccounts());
-        params.put("metas",       metas);
-        params.put("relations",   relations);
-        params.put("error",       nvl(request.getParameter("error")));
+        params.put("formats", new FormatDao().list());
+        params.put("users", new UserAccountDao().listUserAccounts());
+        params.put("metas", metas);
+        params.put("relations", relations);
+        params.put("error", nvl(request.getParameter("error")));
         render("osds/edit.jte", params, response);
     }
 
     private void handleOsdEdit(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        UserAccount user     = RequestScope.getCurrentUser();
-        String      idStr    = request.getParameter("id");
+        UserAccount user  = RequestScope.getCurrentUser();
+        String      idStr = request.getParameter("id");
         if (idStr == null) {
             response.sendRedirect("/ui/folders");
             return;
         }
-        long   osdId    = Long.parseLong(idStr);
-        String name     = request.getParameter("name");
+        long   osdId     = Long.parseLong(idStr);
+        String name      = request.getParameter("name");
         String parentStr = request.getParameter("parentId");
-        String aclStr   = request.getParameter("aclId");
-        String ownerStr = request.getParameter("ownerId");
-        String typeStr  = request.getParameter("typeId");
+        String aclStr    = request.getParameter("aclId");
+        String ownerStr  = request.getParameter("ownerId");
+        String typeStr   = request.getParameter("typeId");
 
         Long parentId = parentStr != null && !parentStr.isBlank() ? Long.parseLong(parentStr) : null;
-        Long aclId    = aclStr    != null && !aclStr.isBlank()    ? Long.parseLong(aclStr)    : null;
-        Long ownerId  = ownerStr  != null && !ownerStr.isBlank()  ? Long.parseLong(ownerStr)  : null;
-        Long typeId   = typeStr   != null && !typeStr.isBlank()   ? Long.parseLong(typeStr)   : null;
+        Long aclId    = aclStr != null && !aclStr.isBlank() ? Long.parseLong(aclStr) : null;
+        Long ownerId  = ownerStr != null && !ownerStr.isBlank() ? Long.parseLong(ownerStr) : null;
+        Long typeId   = typeStr != null && !typeStr.isBlank() ? Long.parseLong(typeStr) : null;
 
         try {
             osdService.updateOsd(osdId, name, parentId, aclId, ownerId, typeId, user);
@@ -584,7 +588,7 @@ public class UiServlet extends HttpServlet {
         }
         long             osdId = Long.parseLong(idStr);
         ObjectSystemData osd   = new OsdDao().getObjectById(osdId).orElse(null);
-        String           parentPath = osd != null && osd.getParentId() != null
+        String parentPath = osd != null && osd.getParentId() != null
                 ? new FolderDao().getFolderPath(osd.getParentId()).replace("/root", "")
                 : folderService.homeFolderPath(user);
 
@@ -598,14 +602,14 @@ public class UiServlet extends HttpServlet {
     }
 
     private void handleOsdCopy(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        UserAccount user          = RequestScope.getCurrentUser();
-        String      idStr         = request.getParameter("id");
+        UserAccount user            = RequestScope.getCurrentUser();
+        String      idStr           = request.getParameter("id");
         String      targetFolderStr = request.getParameter("targetFolderId");
         if (idStr == null) {
             response.sendRedirect("/ui/folders");
             return;
         }
-        long osdId         = Long.parseLong(idStr);
+        long osdId          = Long.parseLong(idStr);
         long targetFolderId = targetFolderStr != null ? Long.parseLong(targetFolderStr) : osdId; // fallback: same folder
 
         // determine target folder: use same folder as source if not specified
@@ -642,9 +646,9 @@ public class UiServlet extends HttpServlet {
 
     // ─── Content streaming ────────────────────────────────────────────────────
 
-    private void handleContentStream(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String pathInfo = request.getPathInfo(); // e.g. /content/42
-        String[] parts  = pathInfo.split("/");
+    private void handleContentStream(HttpServletRequest request, HttpServletResponse response) {
+        String   pathInfo = request.getPathInfo(); // e.g. /content/42
+        String[] parts    = pathInfo.split("/");
         if (parts.length < 3) {
             response.setStatus(SC_NOT_FOUND);
             return;

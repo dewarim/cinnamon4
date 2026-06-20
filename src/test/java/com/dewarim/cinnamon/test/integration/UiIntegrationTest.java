@@ -26,10 +26,12 @@ class UiIntegrationTest extends CinnamonIntegrationTest {
     private static final String ADMIN_USER = "admin";
     private static final String ADMIN_PASS = "admin";
 
-    private WebDriver    driver;
+    private WebDriver     driver;
     private WebDriverWait wait;
 
-    /** IDs tracked across ordered tests */
+    /**
+     * IDs tracked across ordered tests
+     */
     private long createdDocOsdId;
     private long uploadedImageOsdId;
     private long copiedDocOsdId;
@@ -44,7 +46,7 @@ class UiIntegrationTest extends CinnamonIntegrationTest {
         options.addArguments("--width=1280");
         options.addArguments("--height=900");
         driver = new FirefoxDriver(options);
-        wait   = new WebDriverWait(driver, Duration.ofSeconds(15));
+        wait = new WebDriverWait(driver, Duration.ofSeconds(15));
     }
 
     @AfterAll
@@ -68,19 +70,25 @@ class UiIntegrationTest extends CinnamonIntegrationTest {
         login(ADMIN_USER, ADMIN_PASS);
     }
 
-    /** Wait for HTMX to inject the folder content panel (level div always present). */
+    /**
+     * Wait for HTMX to inject the folder content panel (level div always present).
+     */
     private void waitForContentPanel() {
         wait.until(ExpectedConditions.presenceOfElementLocated(
                 By.cssSelector("#folder-content-panel .level")));
     }
 
-    /** Wait for HTMX to inject the folder tree panel (aside.menu always present). */
+    /**
+     * Wait for HTMX to inject the folder tree panel (aside.menu always present).
+     */
     private void waitForTreePanel() {
         wait.until(ExpectedConditions.presenceOfElementLocated(
                 By.cssSelector("#folder-tree-panel .menu")));
     }
 
-    /** Accept a native browser confirm() alert. */
+    /**
+     * Accept a native browser confirm() alert.
+     */
     private void acceptAlert() {
         wait.until(ExpectedConditions.alertIsPresent());
         driver.switchTo().alert().accept();
@@ -100,13 +108,15 @@ class UiIntegrationTest extends CinnamonIntegrationTest {
         }
     }
 
-    /** Extract a numeric query-parameter value from the current URL. */
+    /**
+     * Extract a numeric query-parameter value from the current URL.
+     */
     private long extractIdFromUrl(String param) {
         String url = driver.getCurrentUrl();
-        int idx = url.indexOf(param + "=");
+        int    idx = url.indexOf(param + "=");
         if (idx < 0) return -1;
         String rest = url.substring(idx + param.length() + 1);
-        int end = rest.indexOf('&');
+        int    end  = rest.indexOf('&');
         try {
             return Long.parseLong(end < 0 ? rest : rest.substring(0, end));
         } catch (NumberFormatException e) {
@@ -404,7 +414,8 @@ class UiIntegrationTest extends CinnamonIntegrationTest {
         driver.get(BASE_URL + "/ui/osd/view?id=" + createdDocOsdId);
         wait.until(ExpectedConditions.urlContains("/ui/osd/view"));
 
-        String versionBefore = driver.findElement(By.cssSelector(".subtitle.is-6")).getText();
+        String versionBefore = wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.cssSelector(".subtitle.is-6"))).getText();
 
         // Click Version → accept confirm → redirected to edit page of new version
         driver.findElement(By.cssSelector("form[action='/ui/osd/version'] button")).click();
@@ -416,12 +427,14 @@ class UiIntegrationTest extends CinnamonIntegrationTest {
         assertNotEquals(createdDocOsdId, newVersionId, "New version must have a different ID");
 
         // Verify version label changed
-        String versionAfter = driver.findElement(By.cssSelector(".subtitle.is-6")).getText();
+        String versionAfter = wait.until(ExpectedConditions.presenceOfElementLocated(
+                By.cssSelector(".subtitle.is-6"))).getText();
         assertNotEquals(versionBefore, versionAfter,
                 "Version text should have changed after versioning");
 
         // Navigate to parent folder via subtitle folder link
-        driver.findElement(By.cssSelector(".subtitle.is-6 a")).click();
+        wait.until(ExpectedConditions.elementToBeClickable(
+                By.cssSelector(".subtitle.is-6 a"))).click();
         wait.until(ExpectedConditions.urlContains("/ui/folders"));
         waitForContentPanel();
 
@@ -452,6 +465,8 @@ class UiIntegrationTest extends CinnamonIntegrationTest {
         driver.findElement(By.cssSelector("form[action='/ui/osd/delete'] button")).click();
         acceptAlert();
         wait.until(ExpectedConditions.urlContains("/ui/folders"));
+        // geckodriver 0.37.0: HTMX may not fire after POST→redirect; refresh forces a clean load
+        driver.navigate().refresh();
         waitForContentPanel();
 
         // Verify redirect landed on a folder view (not an OSD view)
@@ -476,8 +491,8 @@ class UiIntegrationTest extends CinnamonIntegrationTest {
         String ticketValue = sessionCookie.getValue();
 
         // Verify authenticated content streaming returns image/png
-        URL contentUrl = new URL(BASE_URL + "/ui/content/" + uploadedImageOsdId);
-        HttpURLConnection conn = (HttpURLConnection) contentUrl.openConnection();
+        URL               contentUrl = new URL(BASE_URL + "/ui/content/" + uploadedImageOsdId);
+        HttpURLConnection conn       = (HttpURLConnection) contentUrl.openConnection();
         conn.setRequestProperty("Cookie", "cinnamonTicket=" + ticketValue);
         conn.setInstanceFollowRedirects(false);
         conn.connect();
@@ -485,9 +500,9 @@ class UiIntegrationTest extends CinnamonIntegrationTest {
                 "Authenticated content request should return 200");
         assertTrue(conn.getContentType() != null && conn.getContentType().contains("image/png"),
                 "Content-Type should be image/png, was: " + conn.getContentType());
-        assertTrue(conn.getContentLength() > 0 || conn.getContentLengthLong() > 0,
-                "Response body should not be empty");
+        byte[] body = conn.getInputStream().readAllBytes();
         conn.disconnect();
+        assertTrue(body.length > 0, "Response body should not be empty");
 
         // Verify unauthenticated access redirects to login
         driver.manage().deleteAllCookies();
@@ -535,7 +550,12 @@ class UiIntegrationTest extends CinnamonIntegrationTest {
 
         // ── 3. Delete folder with content without "Delete content" shows error ─
         driver.get(BASE_URL + "/ui/folders?folderPath=/home/admin");
-        waitForContentPanel();
+        // geckodriver: force clean HTMX load after error form navigation; use breadcrumb .is-active
+        // which only shows the current folder name — avoids false positive from "📁 admin" subfolder
+        // text that appears when /home folder content is loaded instead of /home/admin
+        driver.navigate().refresh();
+        wait.until(ExpectedConditions.textToBePresentInElementLocated(
+                By.cssSelector("#folder-content-panel .breadcrumb .is-active"), "admin"));
 
         // Create "del-content-test" folder
         wait.until(ExpectedConditions.elementToBeClickable(
@@ -543,8 +563,12 @@ class UiIntegrationTest extends CinnamonIntegrationTest {
         wait.until(ExpectedConditions.urlContains("/ui/folder/create"));
         driver.findElement(By.name("name")).sendKeys("del-content-test");
         driver.findElement(By.cssSelector("button[type='submit']")).click();
+        // Verify del-content-test was created in /home/admin (URL must contain "admin")
+        wait.until(ExpectedConditions.urlContains("admin"));
         wait.until(ExpectedConditions.urlContains("del-content-test"));
-        waitForContentPanel();
+        driver.navigate().refresh();  // force clean HTMX load for new folder
+        wait.until(ExpectedConditions.textToBePresentInElementLocated(
+                By.cssSelector("#folder-content-panel .breadcrumb .is-active"), "del-content-test"));
 
         // Create a document inside the new folder
         wait.until(ExpectedConditions.elementToBeClickable(
@@ -556,7 +580,9 @@ class UiIntegrationTest extends CinnamonIntegrationTest {
 
         // Navigate to home, find and edit del-content-test folder
         driver.get(BASE_URL + "/ui/folders?folderPath=/home/admin");
-        waitForContentPanel();
+        // breadcrumb .is-active check: avoids false positive when /home content loads showing "📁 admin"
+        wait.until(ExpectedConditions.textToBePresentInElementLocated(
+                By.cssSelector("#folder-content-panel .breadcrumb .is-active"), "admin"));
         findEditBtnForFolder("/home/admin/del-content-test").click();
         wait.until(ExpectedConditions.urlContains("/ui/folder/edit"));
 
@@ -565,6 +591,7 @@ class UiIntegrationTest extends CinnamonIntegrationTest {
         acceptAlert();
         // Server fails with FOLDER_IS_NOT_EMPTY → redirect back to edit with error
         wait.until(ExpectedConditions.urlContains("error="));
+        wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(".notification.is-danger")));
         assertNotNull(driver.findElement(By.cssSelector(".notification.is-danger")),
                 "Error notification should appear when deleting folder with content");
     }

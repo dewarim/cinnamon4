@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="/static/ui/bulma.min.css">
 </head>
 <body>
-<section class="hero is-fullheight is-dark">
+<section class="hero is-fullheight">
     <div class="hero-body">
         <div class="container">
             <div class="columns is-centered">
@@ -24,15 +24,17 @@
                         @endif
                         <form method="POST" action="/ui/login">
                             <div class="field">
-                                <label class="label">Username</label>
                                 <div class="control">
-                                    <input class="input" type="text" name="username" autocomplete="username" autofocus required>
+                                    <label class="label">Username
+                                        <input class="input" type="text" name="username" autocomplete="username" autofocus required>
+                                    </label>
                                 </div>
                             </div>
                             <div class="field">
-                                <label class="label">Password</label>
                                 <div class="control">
-                                    <input class="input" type="password" name="password" autocomplete="current-password" required>
+                                    <label class="label">Password
+                                        <input class="input" type="password" name="password" autocomplete="current-password" required>
+                                    </label>
                                 </div>
                             </div>
                             <div class="field">
