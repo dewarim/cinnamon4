@@ -1,0 +1,40 @@
+POST http://localhost:9090/cinnamon/connect
+
+user=admin&password=admin
+
+# update link
+POST http://localhost:9090/api/user/list
+ticket: 9fa3563d-7821-4a7a-9635-2d1d00dadd57
+Content-Type: application/xml
+
+<listUserAccountRequest><type>FULL</type></listUserAccountRequest>
+
+#####
+
+POST http://192.168.178.59:8080/cinnamon/connect
+Content-Type: application/x-www-form-urlencoded
+
+user=admin&password=admin
+
+#####
+# update link
+POST http://192.168.178.59:8080/api/user/list
+ticket: c819902c-affe-443a-84f2-3c4632802b5a
+Content-Type: application/xml
+
+<listUserAccountRequest><type>FULL</type></listUserAccountRequest>
+
+#####
+
+POST http://192.168.178.62:8080/cinnamon/connect
+Content-Type: application/x-www-form-urlencoded
+
+user=admin&password=admin
+
+#####
+# update link
+POST http://192.168.178.62:8080/api/user/list
+ticket: c1ba30cb-2a27-4ff2-941d-d31e7055fbbe
+Content-Type: application/xml
+
+<listUserAccountRequest><type>FULL</type></listUserAccountRequest>
