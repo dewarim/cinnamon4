@@ -23,7 +23,7 @@ public class TikaServiceIntegrationTest {
 
     private final String                 baseUrl                = "http://localhost:9998";
     // cinnamon-bun.png has exif metadata from stable diffusion containing the prompt "delicious cinnamon bun"
-    private final File                   bun                    = new File("data/cinnamon-bun.png");
+    private final File                   bun                    = new File("src/test/resources/examples/cinnamon-bun.png");
     private final Format                 imageFormat            = new Format("image/png", "png", "image-png", 1L, IndexMode.TIKA);
     private final long                   osdId                  = 0L;
     private final ContentProviderService contentProviderService = new ContentProviderService();

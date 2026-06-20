@@ -3,3 +3,4 @@ target/
 cinnamon-server/target/
 cinnamon-server/temp/
 temp
+data/

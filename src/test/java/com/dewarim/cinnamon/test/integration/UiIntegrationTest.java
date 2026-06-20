@@ -269,7 +269,7 @@ class UiIntegrationTest extends CinnamonIntegrationTest {
                 .selectByVisibleText("image.png (image/png)");
 
         // Upload the test image
-        File imageFile = new File("data/cinnamon-bun.png").getAbsoluteFile();
+        File imageFile = new File("src/test/resources/examples/cinnamon-bun.png").getAbsoluteFile();
         assertTrue(imageFile.exists(), "Test image must exist: " + imageFile);
         driver.findElement(By.name("file")).sendKeys(imageFile.getAbsolutePath());
 

@@ -2279,7 +2279,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         // set up source object:
         Format imagePng = TestObjectHolder.formats.stream()
                 .filter(f -> f.getName().equals("image.png")).findFirst().orElseThrow();
-        File bun = new File("data/cinnamon-bun.png");
+        File bun = new File("src/test/resources/examples/cinnamon-bun.png");
         var toh = new TestObjectHolder(client, userId)
                 .createOsdWithContent("bunny-to-reproduce", imagePng, bun)
                 .createOsdMeta("<xml>my metaset</xml>");
@@ -2302,7 +2302,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         // set up source object:
         Format imagePng = TestObjectHolder.formats.stream()
                 .filter(f -> f.getName().equals("image.png")).findFirst().orElseThrow();
-        File bun = new File("data/cinnamon-bun.png");
+        File bun = new File("src/test/resources/examples/cinnamon-bun.png");
         var toh = prepareAclGroupWithPermissions(List.of())
                 .createOsdWithContent("bunny-to-reproduce", imagePng, bun)
                 .createOsdMeta("<xml>my metaset</xml>");

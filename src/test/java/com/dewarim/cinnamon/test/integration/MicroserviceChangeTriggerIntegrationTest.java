@@ -190,7 +190,7 @@
 //    }
 //
 //    private File getBunnyFile() {
-//        return new File("data/cinnamon-bun.png");
+//        return new File("src/test/resources/examples/cinnamon-bun.png");
 //    }
 //
 //}

@@ -39,7 +39,7 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
         // the indexerService on time (or: in its thread) for when the OSD is created.
 
         TestObjectHolder toh          = new TestObjectHolder(adminClient, userId);
-        File             bun          = new File("data/cinnamon-bun.png");
+        File             bun          = new File("src/test/resources/examples/cinnamon-bun.png");
         Format           imagePng     = TestObjectHolder.formats.stream().filter(f -> f.getName().equals("image.png")).findFirst().orElseThrow();
         ObjectSystemData relatedOsd   = toh.createOsdWithContent("related image", imagePng, bun).osd;
         Long             relatedOsdId = relatedOsd.getId();
