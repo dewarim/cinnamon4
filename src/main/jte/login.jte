@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Login — Cinnamon</title>
+    <link rel="icon" type="image/svg+xml" href="/static/ui/favicon.svg">
     <link rel="stylesheet" href="/static/ui/bulma.min.css">
 </head>
 <body>

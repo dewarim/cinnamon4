@@ -45,7 +45,7 @@ public class StaticServlet extends HttpServlet {
             }
             response.setContentType(defaultMimeByExtension);
             switch (defaultMimeByExtension) {
-                case "application/xml", "text/plain", "text/css", "text/html", "text/javascript" ->
+                case "application/xml", "image/svg+xml", "text/plain", "text/css", "text/html", "text/javascript" ->
                         response.setCharacterEncoding("UTF-8");
                 default -> {
                 } // do not set character encoding.
