@@ -56,7 +56,7 @@ public class UiServlet extends HttpServlet {
         Path jteDir = Path.of("src/main/jte");
         if (jteDir.toFile().exists()) {
             log.info("Using JTE directory code resolver from {}", jteDir.toAbsolutePath());
-            return TemplateEngine.create(new DirectoryCodeResolver(jteDir), ContentType.Html);
+            return TemplateEngine.create(new DirectoryCodeResolver(jteDir), Path.of("target/jte-classes"), ContentType.Html);
         }
         log.info("Using JTE precompiled templates");
         return TemplateEngine.createPrecompiled(ContentType.Html);
