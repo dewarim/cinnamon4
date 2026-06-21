@@ -54,7 +54,8 @@
                                hx-get="/ui/folders/navigate?folderPath=${folderPath}/${sub.getName()}"
                                hx-target="#folder-tree-panel"
                                hx-swap="innerHTML"
-                               hx-push-url="/ui/folders?folderPath=${folderPath}/${sub.getName()}">📁 ${sub.getName()}</a>
+                               hx-push-url="/ui/folders?folderPath=${folderPath}/${sub.getName()}"
+                               hx-vals="js:{expandedPaths:treeExpandedPaths()}">📁 ${sub.getName()}</a>
                         </td>
                         <td class="is-narrow">
                             <a class="button is-small is-light" href="/ui/folder/edit?id=${sub.getId()}">Edit</a>

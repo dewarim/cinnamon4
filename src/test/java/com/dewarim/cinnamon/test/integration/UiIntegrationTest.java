@@ -243,7 +243,7 @@ class UiIntegrationTest extends CinnamonIntegrationTest {
         assertTrue(driver.getCurrentUrl().contains("parentId="));
 
         // Submit with blank name → server-side error
-        WebElement form = driver.findElement(By.cssSelector("form[action='/ui/osd/create']"));
+        WebElement form = wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("form[action='/ui/osd/create']")));
         bypassHtml5Validation(form);
         form.findElement(By.cssSelector("button[type='submit']")).click();
         wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(".notification.is-danger")));
@@ -281,7 +281,7 @@ class UiIntegrationTest extends CinnamonIntegrationTest {
         wait.until(ExpectedConditions.urlContains("/ui/osd/create"));
 
         // Fill in name and format
-        driver.findElement(By.name("name")).sendKeys("cinnamon-bun");
+        wait.until(ExpectedConditions.elementToBeClickable(By.name("name"))).sendKeys("cinnamon-bun");
         new Select(driver.findElement(By.name("formatId")))
                 .selectByVisibleText("image.png (image/png)");
 

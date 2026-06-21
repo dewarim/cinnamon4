@@ -30,6 +30,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -136,25 +137,28 @@ public class UiServlet extends HttpServlet {
     }
 
     private void handleFolderTree(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        UserAccount user       = RequestScope.getCurrentUser();
-        String      folderPath = request.getParameter("folderPath");
+        UserAccount user          = RequestScope.getCurrentUser();
+        String      folderPath    = request.getParameter("folderPath");
+        String      expandedParam = request.getParameter("expandedPaths");
         if (folderPath == null || folderPath.isBlank()) {
             folderPath = folderService.homeFolderPath(user);
         }
         response.setContentType("text/html;charset=UTF-8");
-        response.getWriter().write(buildTreePanelHtml(user, folderPath));
+        response.getWriter().write(buildTreePanelHtml(user, folderPath, parseExpandedPaths(expandedParam)));
     }
 
     private void handleFolderNavigate(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        UserAccount user       = RequestScope.getCurrentUser();
-        String      folderPath = request.getParameter("folderPath");
-        String      filter     = request.getParameter("filter");
+        UserAccount user          = RequestScope.getCurrentUser();
+        String      folderPath    = request.getParameter("folderPath");
+        String      filter        = request.getParameter("filter");
+        String      expandedParam = request.getParameter("expandedPaths");
         if (folderPath == null || folderPath.isBlank()) {
             folderPath = folderService.homeFolderPath(user);
         }
 
-        String treeHtml    = buildTreePanelHtml(user, folderPath);
-        String contentHtml = buildContentPanelHtml(user, folderPath, filter);
+        Set<String> expanded   = parseExpandedPaths(expandedParam);
+        String      treeHtml   = buildTreePanelHtml(user, folderPath, expanded);
+        String      contentHtml = buildContentPanelHtml(user, folderPath, filter);
 
         response.setContentType("text/html;charset=UTF-8");
         var writer = response.getWriter();
@@ -164,7 +168,7 @@ public class UiServlet extends HttpServlet {
         writer.write("</div>");
     }
 
-    private String buildTreePanelHtml(UserAccount user, String folderPath) throws IOException {
+    private String buildTreePanelHtml(UserAccount user, String folderPath, Set<String> expanded) throws IOException {
         Folder homeFolder;
         try {
             homeFolder = folderService.ensureHomeFolderExists(user);
@@ -174,9 +178,9 @@ public class UiServlet extends HttpServlet {
             getTemplateEngine().render("folders/tree-error.jte", Map.of("message", "Home folder not found."), new WriterOutput(sw));
             return sw.toString();
         }
-        String      homePath = folderService.homeFolderPath(user);
-        UiTreeNode  root     = buildTreeNode(homeFolder, homePath, folderPath, user);
-        return renderTreeHtml(root);
+        String     homePath = folderService.homeFolderPath(user);
+        UiTreeNode root     = buildTreeNode(homeFolder, homePath, folderPath, expanded, user);
+        return renderTreeHtml(root, folderPath);
     }
 
     private String buildContentPanelHtml(UserAccount user, String folderPath, String filter) throws IOException {
@@ -202,22 +206,24 @@ public class UiServlet extends HttpServlet {
         return sw.toString();
     }
 
-    private UiTreeNode buildTreeNode(Folder folder, String path, String currentPath, UserAccount user) {
-        boolean        isCurrent  = path.equals(currentPath);
-        boolean        isOnPath   = isCurrent || currentPath.startsWith(path + "/");
-        List<Folder>   subFolders = folderService.getSubFolders(folder.getId(), user);
-        List<UiTreeNode> children = new ArrayList<>();
-        if (isOnPath) {
+    private UiTreeNode buildTreeNode(Folder folder, String path, String currentPath,
+                                     Set<String> expanded, UserAccount user) {
+        boolean          isCurrent    = path.equals(currentPath);
+        boolean          isOnPath     = isCurrent || currentPath.startsWith(path + "/");
+        boolean          shouldExpand = isOnPath || expanded.contains(path);
+        List<Folder>     subFolders   = folderService.getSubFolders(folder.getId(), user);
+        List<UiTreeNode> children     = new ArrayList<>();
+        if (shouldExpand) {
             for (Folder sub : subFolders) {
-                children.add(buildTreeNode(sub, path + "/" + sub.getName(), currentPath, user));
+                children.add(buildTreeNode(sub, path + "/" + sub.getName(), currentPath, expanded, user));
             }
         }
         return new UiTreeNode(folder, path, isCurrent, children, !subFolders.isEmpty());
     }
 
-    private String renderTreeHtml(UiTreeNode root) {
+    private String renderTreeHtml(UiTreeNode root, String currentPath) {
         StringBuilder sb = new StringBuilder();
-        sb.append("<aside class=\"menu p-2\">");
+        sb.append("<aside class=\"menu p-2\" data-current-path=\"").append(escapeAttr(currentPath)).append("\">");
         sb.append("<p class=\"menu-label\">Folders</p>");
         sb.append("<ul class=\"menu-list\">");
         appendTreeNodeHtml(sb, root);
@@ -226,22 +232,41 @@ public class UiServlet extends HttpServlet {
     }
 
     private void appendTreeNodeHtml(StringBuilder sb, UiTreeNode node) {
-        boolean expanded  = !node.children().isEmpty();
-        String  indicator = expanded ? "▼ " : (node.hasChildren() ? "▶ " : "");
-        String  emoji     = node.isCurrent() ? "📂 " : "📁 ";
-        String  active    = node.isCurrent() ? " class=\"is-active\"" : "";
-        String  path      = escapeAttr(node.path());
+        boolean isExpanded = !node.children().isEmpty();
+        String  emoji      = node.isCurrent() ? "📂 " : "📁 ";
+        String  active     = node.isCurrent() ? " class=\"is-active\"" : "";
+        String  pathAttr   = escapeAttr(node.path());
+        String  pathJs     = escapeJsInAttr(node.path());
+        String  name       = escapeHtml(node.folder().getName());
 
-        sb.append("<li>");
-        sb.append("<a href=\"/ui/folders?folderPath=").append(path).append("\"")
-          .append(" hx-get=\"/ui/folders/navigate?folderPath=").append(path).append("\"")
+        sb.append("<li data-path=\"").append(pathAttr).append("\"")
+          .append(isExpanded ? " data-expanded" : "").append(">");
+
+        sb.append("<a href=\"/ui/folders?folderPath=").append(pathAttr).append("\"")
+          .append(" hx-get=\"/ui/folders/navigate?folderPath=").append(pathAttr).append("\"")
           .append(" hx-target=\"#folder-tree-panel\"")
           .append(" hx-swap=\"innerHTML\"")
-          .append(" hx-push-url=\"/ui/folders?folderPath=").append(path).append("\"")
-          .append(active).append(">")
-          .append(indicator).append(emoji).append(escapeHtml(node.folder().getName()))
-          .append("</a>");
-        if (expanded) {
+          .append(" hx-push-url=\"/ui/folders?folderPath=").append(pathAttr).append("\"")
+          .append(" hx-vals=\"js:{expandedPaths:treeExpandedPaths()}\"")
+          .append(active).append(">");
+
+        if (isExpanded) {
+            sb.append("<span onclick=\"event.preventDefault();event.stopPropagation();treeCollapse('")
+              .append(pathJs).append("');return false;\"")
+              .append(" style=\"cursor:pointer;display:inline-block;width:1.2em;text-align:center;\"")
+              .append(" title=\"Collapse\">▼</span>");
+        } else if (node.hasChildren()) {
+            sb.append("<span onclick=\"event.preventDefault();event.stopPropagation();treeExpand('")
+              .append(pathJs).append("');return false;\"")
+              .append(" style=\"cursor:pointer;display:inline-block;width:1.2em;text-align:center;\"")
+              .append(" title=\"Expand\">▶</span>");
+        } else {
+            sb.append("<span style=\"display:inline-block;width:1.2em;\"></span>");
+        }
+
+        sb.append(emoji).append(name).append("</a>");
+
+        if (isExpanded) {
             sb.append("<ul>");
             for (UiTreeNode child : node.children()) {
                 appendTreeNodeHtml(sb, child);
@@ -249,6 +274,15 @@ public class UiServlet extends HttpServlet {
             sb.append("</ul>");
         }
         sb.append("</li>");
+    }
+
+    private static Set<String> parseExpandedPaths(String param) {
+        if (param == null || param.isBlank()) return Set.of();
+        Set<String> result = new HashSet<>();
+        for (String s : param.split(",")) {
+            if (!s.isBlank()) result.add(s);
+        }
+        return result;
     }
 
     private static String escapeHtml(String s) {
@@ -259,6 +293,13 @@ public class UiServlet extends HttpServlet {
     private static String escapeAttr(String s) {
         if (s == null) return "";
         return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;");
+    }
+
+    /** Escapes a string for use as a single-quoted JS literal inside a double-quoted HTML attribute. */
+    private static String escapeJsInAttr(String s) {
+        if (s == null) return "";
+        return s.replace("&", "&amp;").replace("<", "&lt;")
+                .replace("\\", "\\\\").replace("'", "\\'");
     }
 
     private void handleFolderContent(HttpServletRequest request, HttpServletResponse response) throws IOException {

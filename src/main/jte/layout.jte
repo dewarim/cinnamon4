@@ -11,6 +11,7 @@
     <link rel="icon" type="image/svg+xml" href="/static/ui/favicon.svg">
     <link rel="stylesheet" href="/static/ui/bulma.min.css">
     <script src="/static/ui/htmx.min.js"></script>
+    <script src="/static/ui/cinnamon-ui.js"></script>
 </head>
 <body>
 <nav class="navbar is-dark" role="navigation" aria-label="main navigation">
