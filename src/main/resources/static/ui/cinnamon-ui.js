@@ -1,8 +1,17 @@
+const TREE_STORAGE_KEY = 'cinnamonTreeExpanded';
+
 function treeExpandedPaths() {
     return [...document.querySelectorAll('#folder-tree-panel li[data-expanded]')]
         .map(li => li.dataset.path)
         .join(',');
 }
+
+// Persist expanded state after every tree panel swap so it survives full-page navigation
+document.addEventListener('htmx:afterSwap', function(evt) {
+    if (evt.detail.target.id === 'folder-tree-panel') {
+        localStorage.setItem(TREE_STORAGE_KEY, treeExpandedPaths());
+    }
+});
 
 function treeCurrentPath() {
     const aside = document.querySelector('#folder-tree-panel aside[data-current-path]');

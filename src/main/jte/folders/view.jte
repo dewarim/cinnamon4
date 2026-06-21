@@ -10,7 +10,8 @@
         <div id="folder-tree-panel"
              hx-get="/ui/folders/navigate?folderPath=${folderPath}@if(!filter.isEmpty())&filter=${filter}@endif"
              hx-trigger="load"
-             hx-swap="innerHTML">
+             hx-swap="innerHTML"
+             hx-vals="js:{expandedPaths: localStorage.getItem('cinnamonTreeExpanded') || ''}">
             <p class="p-3 has-text-grey is-size-7">Loading…</p>
         </div>
     </div>
