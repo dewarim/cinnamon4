@@ -60,10 +60,17 @@ class UiIntegrationTest extends CinnamonIntegrationTest {
 
     private void login(String username, String password) {
         driver.get(BASE_URL + "/ui/login");
-        driver.findElement(By.name("username")).sendKeys(username);
+        // Wait for the form to be interactive; geckodriver may return driver.get() before the page is ready
+        WebElement usernameEl = wait.until(ExpectedConditions.elementToBeClickable(By.name("username")));
+        usernameEl.clear();
+        usernameEl.sendKeys(username);
         driver.findElement(By.name("password")).sendKeys(password);
         driver.findElement(By.cssSelector("button[type='submit']")).click();
         wait.until(ExpectedConditions.urlContains("/ui/folders"));
+        // Wait for HTMX navigate request to complete so no in-flight XHR remains
+        // when the test navigates away. geckodriver 0.37.0 can process a late XHR
+        // response after a driver.get() and corrupt URL state.
+        waitForTreePanel();
     }
 
     private void loginAsAdmin() {
