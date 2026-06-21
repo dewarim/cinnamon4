@@ -8,17 +8,14 @@
 <div class="columns is-gapless" style="height: calc(100vh - 52px); overflow: hidden;">
     <div class="column is-2" style="border-right: 1px solid #dbdbdb; overflow-y: auto; height: 100%;">
         <div id="folder-tree-panel"
-             hx-get="/ui/folders/tree?folderPath=${folderPath}"
-             hx-trigger="load, every 10s"
+             hx-get="/ui/folders/navigate?folderPath=${folderPath}@if(!filter.isEmpty())&filter=${filter}@endif"
+             hx-trigger="load"
              hx-swap="innerHTML">
-            <p class="p-3 has-text-grey is-size-7">Loading tree…</p>
+            <p class="p-3 has-text-grey is-size-7">Loading…</p>
         </div>
     </div>
     <div class="column" style="overflow-y: auto; height: 100%;">
-        <div id="folder-content-panel"
-             hx-get="/ui/folders/content?folderPath=${folderPath}@if(!filter.isEmpty())&filter=${filter}@endif"
-             hx-trigger="load"
-             hx-swap="innerHTML">
+        <div id="folder-content-panel">
             <p class="p-3 has-text-grey is-size-7">Loading content…</p>
         </div>
     </div>

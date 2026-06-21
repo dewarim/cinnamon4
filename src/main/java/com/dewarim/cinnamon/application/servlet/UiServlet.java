@@ -24,9 +24,11 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringWriter;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -83,6 +85,7 @@ public class UiServlet extends HttpServlet {
         switch (pathInfo) {
             case "/folders" -> handleFolderView(request, response);
             case "/folders/tree" -> handleFolderTree(request, response);
+            case "/folders/navigate" -> handleFolderNavigate(request, response);
             case "/folders/content" -> handleFolderContent(request, response);
             case "/osd/meta" -> handleOsdMeta(request, response);
             case "/folder/create" -> handleFolderCreateForm(request, response);
@@ -138,22 +141,124 @@ public class UiServlet extends HttpServlet {
         if (folderPath == null || folderPath.isBlank()) {
             folderPath = folderService.homeFolderPath(user);
         }
+        response.setContentType("text/html;charset=UTF-8");
+        response.getWriter().write(buildTreePanelHtml(user, folderPath));
+    }
 
+    private void handleFolderNavigate(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        UserAccount user       = RequestScope.getCurrentUser();
+        String      folderPath = request.getParameter("folderPath");
+        String      filter     = request.getParameter("filter");
+        if (folderPath == null || folderPath.isBlank()) {
+            folderPath = folderService.homeFolderPath(user);
+        }
+
+        String treeHtml    = buildTreePanelHtml(user, folderPath);
+        String contentHtml = buildContentPanelHtml(user, folderPath, filter);
+
+        response.setContentType("text/html;charset=UTF-8");
+        var writer = response.getWriter();
+        writer.write(treeHtml);
+        writer.write("<div id=\"folder-content-panel\" hx-swap-oob=\"innerHTML\">");
+        writer.write(contentHtml);
+        writer.write("</div>");
+    }
+
+    private String buildTreePanelHtml(UserAccount user, String folderPath) throws IOException {
         Folder homeFolder;
         try {
             homeFolder = folderService.ensureHomeFolderExists(user);
         } catch (Exception e) {
             log.warn("Home folder not found for user {}: {}", user.getName(), e.getMessage());
-            renderFragment("folders/tree-error.jte", Map.of("message", "Home folder not found."), response);
-            return;
+            StringWriter sw = new StringWriter();
+            getTemplateEngine().render("folders/tree-error.jte", Map.of("message", "Home folder not found."), new WriterOutput(sw));
+            return sw.toString();
         }
+        String      homePath = folderService.homeFolderPath(user);
+        UiTreeNode  root     = buildTreeNode(homeFolder, homePath, folderPath, user);
+        return renderTreeHtml(root);
+    }
 
+    private String buildContentPanelHtml(UserAccount user, String folderPath, String filter) throws IOException {
+        boolean latestHead = !"all".equals(filter);
+        Folder  currentFolder;
+        try {
+            currentFolder = folderService.resolvePath(folderPath, user);
+        } catch (Exception e) {
+            log.warn("Folder not found or not accessible: {}", folderPath);
+            StringWriter sw = new StringWriter();
+            getTemplateEngine().render("folders/content-error.jte",
+                    Map.of("message", "Folder not found or access denied."), new WriterOutput(sw));
+            return sw.toString();
+        }
         Map<String, Object> params = new HashMap<>();
-        params.put("homeFolder", homeFolder);
-        params.put("homePath", folderService.homeFolderPath(user));
-        params.put("subFolders", folderService.getSubFolders(homeFolder.getId(), user));
-        params.put("currentFolderPath", folderPath);
-        renderFragment("folders/tree.jte", params, response);
+        params.put("folder", currentFolder);
+        params.put("folderPath", folderPath);
+        params.put("subFolders", folderService.getSubFolders(currentFolder.getId(), user));
+        params.put("osds", folderService.getFolderContent(currentFolder.getId(), latestHead, user));
+        params.put("latestHead", latestHead);
+        StringWriter sw = new StringWriter();
+        getTemplateEngine().render("folders/content.jte", params, new WriterOutput(sw));
+        return sw.toString();
+    }
+
+    private UiTreeNode buildTreeNode(Folder folder, String path, String currentPath, UserAccount user) {
+        boolean        isCurrent  = path.equals(currentPath);
+        boolean        isOnPath   = isCurrent || currentPath.startsWith(path + "/");
+        List<Folder>   subFolders = folderService.getSubFolders(folder.getId(), user);
+        List<UiTreeNode> children = new ArrayList<>();
+        if (isOnPath) {
+            for (Folder sub : subFolders) {
+                children.add(buildTreeNode(sub, path + "/" + sub.getName(), currentPath, user));
+            }
+        }
+        return new UiTreeNode(folder, path, isCurrent, children, !subFolders.isEmpty());
+    }
+
+    private String renderTreeHtml(UiTreeNode root) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("<aside class=\"menu p-2\">");
+        sb.append("<p class=\"menu-label\">Folders</p>");
+        sb.append("<ul class=\"menu-list\">");
+        appendTreeNodeHtml(sb, root);
+        sb.append("</ul></aside>");
+        return sb.toString();
+    }
+
+    private void appendTreeNodeHtml(StringBuilder sb, UiTreeNode node) {
+        boolean expanded  = !node.children().isEmpty();
+        String  indicator = expanded ? "▼ " : (node.hasChildren() ? "▶ " : "");
+        String  emoji     = node.isCurrent() ? "📂 " : "📁 ";
+        String  active    = node.isCurrent() ? " class=\"is-active\"" : "";
+        String  path      = escapeAttr(node.path());
+
+        sb.append("<li>");
+        sb.append("<a href=\"/ui/folders?folderPath=").append(path).append("\"")
+          .append(" hx-get=\"/ui/folders/navigate?folderPath=").append(path).append("\"")
+          .append(" hx-target=\"#folder-tree-panel\"")
+          .append(" hx-swap=\"innerHTML\"")
+          .append(" hx-push-url=\"/ui/folders?folderPath=").append(path).append("\"")
+          .append(active).append(">")
+          .append(indicator).append(emoji).append(escapeHtml(node.folder().getName()))
+          .append("</a>");
+        if (expanded) {
+            sb.append("<ul>");
+            for (UiTreeNode child : node.children()) {
+                appendTreeNodeHtml(sb, child);
+            }
+            sb.append("</ul>");
+        }
+        sb.append("</li>");
+    }
+
+    private static String escapeHtml(String s) {
+        if (s == null) return "";
+        return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+    }
+
+    private static String escapeAttr(String s) {
+        if (s == null) return "";
+        return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;");
     }
 
     private void handleFolderContent(HttpServletRequest request, HttpServletResponse response) throws IOException {
