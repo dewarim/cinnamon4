@@ -1,33 +1,19 @@
 package com.dewarim.cinnamon.model.request;
 
 import com.dewarim.cinnamon.api.ApiRequest;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.List;
 import java.util.Optional;
 
-@JacksonXmlRootElement(localName = "idRequest")
-public class IdRequest implements ApiRequest<IdRequest> {
-    
-    private Long id;
+@JsonRootName("idRequest")
+public record IdRequest(Long id) implements ApiRequest<IdRequest> {
 
     public IdRequest() {
+        this(null);
     }
 
-    public IdRequest(Long id) {
-        this.id = id;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    // TODO: switch from validated to validateRequest in all places
-    public boolean validated(){
+    public boolean validated() {
         return id != null && id > 0;
     }
 
@@ -37,13 +23,6 @@ public class IdRequest implements ApiRequest<IdRequest> {
         } else {
             return Optional.empty();
         }
-    }
-
-    @Override
-    public String toString() {
-        return "IdRequest{" +
-                "id=" + id +
-                '}';
     }
 
     @Override

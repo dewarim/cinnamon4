@@ -2,11 +2,11 @@ package com.dewarim.cinnamon.model.response;
 
 import com.dewarim.cinnamon.api.ApiResponse;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.List;
 
-@JacksonXmlRootElement(localName = "cinnamon")
+@JsonRootName("cinnamon")
 public class CinnamonConnectionWrapper extends BaseResponse implements Wrapper<CinnamonConnection>, ApiResponse {
 
     @JsonProperty("cinnamonConnection")

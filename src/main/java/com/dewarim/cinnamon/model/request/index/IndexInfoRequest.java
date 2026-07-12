@@ -1,46 +1,21 @@
 package com.dewarim.cinnamon.model.request.index;
 
 import com.dewarim.cinnamon.api.ApiRequest;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.List;
 
-@JacksonXmlRootElement(localName = "indexInfoRequest")
+@JsonRootName("indexInfoRequest")
+public record IndexInfoRequest(Boolean countDocuments, boolean listFailedIndexJobs) implements ApiRequest<IndexInfoRequest> {
 
-public class IndexInfoRequest implements ApiRequest<IndexInfoRequest> {
-    private boolean countDocuments      = true;
-    private boolean listFailedIndexJobs =false;
-
-    public IndexInfoRequest() {
-    }
-
-    public IndexInfoRequest(boolean countDocuments, boolean listFailedIndexJobs) {
-        this.countDocuments      = countDocuments;
-        this.listFailedIndexJobs = listFailedIndexJobs;
-    }
-
-    public boolean isCountDocuments() {
-        return countDocuments;
-    }
-
-    public void setCountDocuments(boolean countDocuments) {
-        this.countDocuments = countDocuments;
-    }
-
-    public boolean isListFailedIndexJobs() {
-        return listFailedIndexJobs;
-    }
-
-    @Override
-    public String toString() {
-        return "IndexInfoRequest{" +
-                "countDocuments=" + countDocuments +
-                ", listFailedIndexJobs=" + listFailedIndexJobs +
-                '}';
+    public IndexInfoRequest {
+        if (countDocuments == null) {
+            countDocuments = true;
+        }
     }
 
     @Override
     public List<ApiRequest<IndexInfoRequest>> examples() {
-        return List.of(new IndexInfoRequest(true,false));
+        return List.of(new IndexInfoRequest(true, false));
     }
 }

@@ -2,9 +2,9 @@ package com.dewarim.cinnamon.model.request.osd;
 
 import com.dewarim.cinnamon.api.ApiRequest;
 import com.dewarim.cinnamon.model.Meta;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,120 +12,38 @@ import java.util.Optional;
 
 import static com.dewarim.cinnamon.api.Constants.DEFAULT_SUMMARY;
 
-@JacksonXmlRootElement(localName = "createOsdRequest")
-public class CreateOsdRequest implements ApiRequest<CreateOsdRequest> {
+@JsonRootName("createOsdRequest")
+public record CreateOsdRequest(
+        String name,
+        Long parentId,
+        Long ownerId,
+        Long aclId,
+        Long typeId,
+        Long formatId,
+        Long languageId,
+        Long lifecycleStateId,
+        String summary,
+        @JacksonXmlElementWrapper(localName = "metasets")
+        @JacksonXmlProperty(localName = "metaset")
+        List<Meta> metasets) implements ApiRequest<CreateOsdRequest> {
 
-    private String     name;
-    private Long       parentId;
-    private Long       ownerId;
-    private Long       aclId;
-    private Long       typeId;
-    private Long       formatId;
-    private Long       languageId;
-    private Long       lifecycleStateId;
-    private String     summary = DEFAULT_SUMMARY;
-    @JacksonXmlElementWrapper(localName = "metasets")
-    @JacksonXmlProperty(localName = "metaset")
-    private List<Meta> metasets;
+    public CreateOsdRequest {
+        if (summary == null) {
+            summary = DEFAULT_SUMMARY;
+        }
+        if (metasets == null) {
+            metasets = new ArrayList<>();
+        }
+    }
 
     public CreateOsdRequest() {
+        this(null, null, null, null, null, null, null, null, DEFAULT_SUMMARY, new ArrayList<>());
     }
 
     public CreateOsdRequest(String name, Long parentId, Long ownerId, Long aclId,
                             Long typeId, Long formatId, Long languageId,
                             Long lifecycleStateId, String summary) {
-        this.name = name;
-        this.parentId = parentId;
-        this.ownerId = ownerId;
-        this.aclId = aclId;
-        this.typeId = typeId;
-        this.formatId = formatId;
-        this.languageId = languageId;
-        this.lifecycleStateId = lifecycleStateId;
-        this.summary = summary;
-    }
-
-    public List<Meta> getMetasets() {
-        if (metasets == null) {
-            metasets = new ArrayList<>();
-        }
-        return metasets;
-    }
-
-    public void setMetasets(List<Meta> metasets) {
-        this.metasets = metasets;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public Long getParentId() {
-        return parentId;
-    }
-
-    public void setParentId(Long parentId) {
-        this.parentId = parentId;
-    }
-
-    public Long getOwnerId() {
-        return ownerId;
-    }
-
-    public void setOwnerId(Long ownerId) {
-        this.ownerId = ownerId;
-    }
-
-    public Long getAclId() {
-        return aclId;
-    }
-
-    public void setAclId(Long aclId) {
-        this.aclId = aclId;
-    }
-
-    public Long getTypeId() {
-        return typeId;
-    }
-
-    public void setTypeId(Long typeId) {
-        this.typeId = typeId;
-    }
-
-    public Long getFormatId() {
-        return formatId;
-    }
-
-    public void setFormatId(Long formatId) {
-        this.formatId = formatId;
-    }
-
-    public Long getLanguageId() {
-        return languageId;
-    }
-
-    public void setLanguageId(Long languageId) {
-        this.languageId = languageId;
-    }
-
-    public Long getLifecycleStateId() {
-        return lifecycleStateId;
-    }
-
-    public void setLifecycleStateId(Long lifecycleStateId) {
-        this.lifecycleStateId = lifecycleStateId;
-    }
-
-    public String getSummary() {
-        return summary;
-    }
-
-    public void setSummary(String summary) {
-        this.summary = summary;
+        this(name, parentId, ownerId, aclId, typeId, formatId, languageId, lifecycleStateId, summary, new ArrayList<>());
     }
 
     private boolean validated() {
@@ -141,7 +59,7 @@ public class CreateOsdRequest implements ApiRequest<CreateOsdRequest> {
     }
 
     private boolean metaIsValid() {
-        return getMetasets().stream().allMatch(meta ->
+        return metasets.stream().allMatch(meta ->
                 meta.getTypeId() != null && meta.getTypeId() > 0 && meta.getContent() != null
         );
     }
@@ -155,27 +73,10 @@ public class CreateOsdRequest implements ApiRequest<CreateOsdRequest> {
     }
 
     @Override
-    public String toString() {
-        return "CreateOsdRequest{" +
-                "name='" + name + '\'' +
-                ", parentId=" + parentId +
-                ", ownerId=" + ownerId +
-                ", aclId=" + aclId +
-                ", typeId=" + typeId +
-                ", formatId=" + formatId +
-                ", languageId=" + languageId +
-                ", lifecycleStateId=" + lifecycleStateId +
-                ", summary='" + summary + '\'' +
-                ", metas=" + getMetasets() +
-                '}';
-    }
-
-    @Override
     public List<ApiRequest<CreateOsdRequest>> examples() {
-        CreateOsdRequest createOsdRequest = new CreateOsdRequest("create OSD request must be sent via multipart-request",
+        return List.of(new CreateOsdRequest("create OSD request must be sent via multipart-request",
                 1L, 23L, 44L, 2L, 3L, 1L, null,
-                "<summary>Optional fields: typeId, aclId, ownerId, formatId, languageId, summary, metas</summary>");
-        createOsdRequest.setMetasets(List.of(new Meta(1L, 2L, "<xml>some meta content</xml>")));
-        return List.of(createOsdRequest);
+                "<summary>Optional fields: typeId, aclId, ownerId, formatId, languageId, summary, metas</summary>",
+                List.of(new Meta(1L, 2L, "<xml>some meta content</xml>"))));
     }
 }

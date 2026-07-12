@@ -1,14 +1,14 @@
 package com.dewarim.cinnamon.model.response;
 
 import com.dewarim.cinnamon.api.ApiResponse;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@JacksonXmlRootElement(localName = "searchIdsResponse")
+@JsonRootName("searchIdsResponse")
 public class SearchIdsResponse extends BaseResponse implements ApiResponse {
 
     @JacksonXmlElementWrapper(localName = "osdIds")

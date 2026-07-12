@@ -115,9 +115,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void getObjectsByIdWithDefaultSummary() throws IOException {
         var        osdId      = new TestObjectHolder(client, userId).createOsd().osd.getId();
-        OsdRequest osdRequest = new OsdRequest();
-        osdRequest.setIds(List.of(osdId));
-        osdRequest.setIncludeSummary(false);
+        OsdRequest osdRequest = new OsdRequest(List.of(osdId), false, false);
         var                    response = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
         List<ObjectSystemData> dataList = unwrapOsds(response, 1);
         assertTrue(dataList.stream().anyMatch(osd -> osd.getSummary().equals(new ObjectSystemData().getSummary())));
@@ -127,9 +125,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     public void getObjectsByIdWithFolderPath() throws IOException {
         TestObjectHolder toh = new TestObjectHolder(client, userId);
         var        osdId      = toh.createOsd().osd.getId();
-        OsdRequest osdRequest = new OsdRequest();
-        osdRequest.setIds(List.of(osdId));
-        osdRequest.setAddFolderPath(true);
+        OsdRequest osdRequest = new OsdRequest(List.of(osdId), false, false, true);
         var                    response = sendStandardRequest(UrlMapping.OSD__GET_OBJECTS_BY_ID, osdRequest);
         List<ObjectSystemData> dataList = unwrapOsds(response, 1);
         ObjectSystemData       osd    = dataList.getFirst();
@@ -901,13 +897,8 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createOsdParentFolderNotFound() throws IOException {
-        CreateOsdRequest request = new CreateOsdRequest();
-        request.setAclId(defaultCreationAcl.getId());
-        request.setName("new osd");
-        request.setOwnerId(STANDARD_USER_ID);
-        request.setParentId(Long.MAX_VALUE);
-        request.setFormatId(PLAINTEXT_FORMAT_ID);
-        request.setTypeId(DEFAULT_OBJECT_TYPE_ID);
+        CreateOsdRequest request = new CreateOsdRequest("new osd", Long.MAX_VALUE, STANDARD_USER_ID, defaultCreationAcl.getId(),
+                DEFAULT_OBJECT_TYPE_ID, PLAINTEXT_FORMAT_ID, null, null, DEFAULT_SUMMARY);
         MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
                 .addTextBody(CINNAMON_REQUEST_PART, mapper.writeValueAsString(request),
                         APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
@@ -927,13 +918,8 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createOsdAclNotFound() throws IOException {
-        CreateOsdRequest request = new CreateOsdRequest();
-        request.setAclId(Long.MAX_VALUE);
-        request.setName("new osd");
-        request.setOwnerId(STANDARD_USER_ID);
-        request.setParentId(createFolderId);
-        request.setFormatId(PLAINTEXT_FORMAT_ID);
-        request.setTypeId(DEFAULT_OBJECT_TYPE_ID);
+        CreateOsdRequest request = new CreateOsdRequest("new osd", createFolderId, STANDARD_USER_ID, Long.MAX_VALUE,
+                DEFAULT_OBJECT_TYPE_ID, PLAINTEXT_FORMAT_ID, null, null, DEFAULT_SUMMARY);
         MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
                 .addTextBody(CINNAMON_REQUEST_PART, mapper.writeValueAsString(request),
                         APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
@@ -944,13 +930,8 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createOsdUserNotFound() throws IOException {
-        CreateOsdRequest request = new CreateOsdRequest();
-        request.setAclId(defaultCreationAcl.getId());
-        request.setName("new osd");
-        request.setOwnerId(Long.MAX_VALUE);
-        request.setParentId(createFolderId);
-        request.setFormatId(PLAINTEXT_FORMAT_ID);
-        request.setTypeId(DEFAULT_OBJECT_TYPE_ID);
+        CreateOsdRequest request = new CreateOsdRequest("new osd", createFolderId, Long.MAX_VALUE, defaultCreationAcl.getId(),
+                DEFAULT_OBJECT_TYPE_ID, PLAINTEXT_FORMAT_ID, null, null, DEFAULT_SUMMARY);
         MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
                 .addTextBody(CINNAMON_REQUEST_PART, mapper.writeValueAsString(request),
                         APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
@@ -961,13 +942,8 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createOsdObjectTypeNotFound() throws IOException {
-        CreateOsdRequest request = new CreateOsdRequest();
-        request.setAclId(defaultCreationAcl.getId());
-        request.setName("new osd");
-        request.setOwnerId(STANDARD_USER_ID);
-        request.setParentId(createFolderId);
-        request.setFormatId(PLAINTEXT_FORMAT_ID);
-        request.setTypeId(Long.MAX_VALUE);
+        CreateOsdRequest request = new CreateOsdRequest("new osd", createFolderId, STANDARD_USER_ID, defaultCreationAcl.getId(),
+                Long.MAX_VALUE, PLAINTEXT_FORMAT_ID, null, null, DEFAULT_SUMMARY);
         MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
                 .addTextBody(CINNAMON_REQUEST_PART, mapper.writeValueAsString(request),
                         APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
@@ -978,14 +954,8 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createOsdLifecycleStateNotFound() throws IOException {
-        CreateOsdRequest request = new CreateOsdRequest();
-        request.setAclId(defaultCreationAcl.getId());
-        request.setName("new osd");
-        request.setOwnerId(STANDARD_USER_ID);
-        request.setParentId(createFolderId);
-        request.setFormatId(PLAINTEXT_FORMAT_ID);
-        request.setTypeId(DEFAULT_OBJECT_TYPE_ID);
-        request.setLifecycleStateId(Long.MAX_VALUE);
+        CreateOsdRequest request = new CreateOsdRequest("new osd", createFolderId, STANDARD_USER_ID, defaultCreationAcl.getId(),
+                DEFAULT_OBJECT_TYPE_ID, PLAINTEXT_FORMAT_ID, null, Long.MAX_VALUE, DEFAULT_SUMMARY);
         MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
                 .addTextBody(CINNAMON_REQUEST_PART, mapper.writeValueAsString(request),
                         APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
@@ -996,15 +966,8 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createOsdLanguageNotFound() throws IOException {
-        CreateOsdRequest request = new CreateOsdRequest();
-        request.setAclId(defaultCreationAcl.getId());
-        request.setName("new osd");
-        request.setOwnerId(STANDARD_USER_ID);
-        request.setParentId(createFolderId);
-        request.setFormatId(PLAINTEXT_FORMAT_ID);
-        request.setTypeId(DEFAULT_OBJECT_TYPE_ID);
-        request.setLifecycleStateId(NEW_RENDERTASK_LIFECYCLE_STATE_ID);
-        request.setLanguageId(Long.MAX_VALUE);
+        CreateOsdRequest request = new CreateOsdRequest("new osd", createFolderId, STANDARD_USER_ID, defaultCreationAcl.getId(),
+                DEFAULT_OBJECT_TYPE_ID, PLAINTEXT_FORMAT_ID, Long.MAX_VALUE, NEW_RENDERTASK_LIFECYCLE_STATE_ID, DEFAULT_SUMMARY);
         MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
                 .addTextBody(CINNAMON_REQUEST_PART, mapper.writeValueAsString(request),
                         APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
@@ -1015,12 +978,8 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createOsdHappyCaseNoFile() throws IOException {
-        CreateOsdRequest request = new CreateOsdRequest();
-        request.setAclId(defaultCreationAcl.getId());
-        request.setName("new osd");
-        request.setOwnerId(STANDARD_USER_ID);
-        request.setParentId(createFolderId);
-        request.setTypeId(DEFAULT_OBJECT_TYPE_ID);
+        CreateOsdRequest request = new CreateOsdRequest("new osd", createFolderId, STANDARD_USER_ID, defaultCreationAcl.getId(),
+                DEFAULT_OBJECT_TYPE_ID, null, null, null, DEFAULT_SUMMARY);
         MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
                 .addTextBody(CINNAMON_REQUEST_PART, mapper.writeValueAsString(request),
                         APPLICATION_XML.withCharset(StandardCharsets.UTF_8));
@@ -1040,14 +999,8 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createOsdUploadedFileWithoutFormat() throws IOException {
-        CreateOsdRequest request = new CreateOsdRequest();
-        request.setAclId(defaultCreationAcl.getId());
-        request.setName("new osd");
-        request.setOwnerId(STANDARD_USER_ID);
-        request.setParentId(createFolderId);
-        request.setTypeId(DEFAULT_OBJECT_TYPE_ID);
-        request.setLifecycleStateId(NEW_RENDERTASK_LIFECYCLE_STATE_ID);
-        request.setLanguageId(GERMAN_LANGUAGE_ID);
+        CreateOsdRequest request = new CreateOsdRequest("new osd", createFolderId, STANDARD_USER_ID, defaultCreationAcl.getId(),
+                DEFAULT_OBJECT_TYPE_ID, null, GERMAN_LANGUAGE_ID, NEW_RENDERTASK_LIFECYCLE_STATE_ID, DEFAULT_SUMMARY);
         File     pomXml   = new File("pom.xml");
         FileBody fileBody = new FileBody(pomXml);
         MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
@@ -1061,15 +1014,8 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
 
     @Test
     public void createOsdUploadedFileHappyCase() throws IOException {
-        CreateOsdRequest request = new CreateOsdRequest();
-        request.setAclId(defaultCreationAcl.getId());
-        request.setName("new osd");
-        request.setOwnerId(STANDARD_USER_ID);
-        request.setParentId(createFolderId);
-        request.setTypeId(DEFAULT_OBJECT_TYPE_ID);
-        request.setLifecycleStateId(NEW_RENDERTASK_LIFECYCLE_STATE_ID);
-        request.setLanguageId(GERMAN_LANGUAGE_ID);
-        request.setFormatId(PLAINTEXT_FORMAT_ID);
+        CreateOsdRequest request = new CreateOsdRequest("new osd", createFolderId, STANDARD_USER_ID, defaultCreationAcl.getId(),
+                DEFAULT_OBJECT_TYPE_ID, PLAINTEXT_FORMAT_ID, GERMAN_LANGUAGE_ID, NEW_RENDERTASK_LIFECYCLE_STATE_ID, DEFAULT_SUMMARY);
         File     pomXml   = new File("pom.xml");
         FileBody fileBody = new FileBody(pomXml);
         MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
@@ -1173,7 +1119,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         CreateNewVersionRequest.Metadata metadata       = new CreateNewVersionRequest.Metadata();
         metadata.setContent("");
         metadata.setTypeId(Long.MAX_VALUE);
-        versionRequest.getMetaRequests().add(metadata);
+        versionRequest.metaRequests().add(metadata);
         assertClientError(() -> client.version(versionRequest), METASET_TYPE_NOT_FOUND);
     }
 
@@ -1185,7 +1131,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         CreateNewVersionRequest.Metadata metadata       = new CreateNewVersionRequest.Metadata();
         metadata.setContent("<comment>cool</comment>");
         metadata.setTypeId(1L);
-        versionRequest.getMetaRequests().add(metadata);
+        versionRequest.metaRequests().add(metadata);
         HttpEntity       entity = createSimpleMultipartEntity(CINNAMON_REQUEST_PART, versionRequest);
         ObjectSystemData version2;
         try (var versionResponse = sendStandardMultipartRequest(UrlMapping.OSD__VERSION, entity)) {
@@ -1200,7 +1146,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         toh.createOsd("version without multipart content type");
         CreateNewVersionRequest          versionRequest = new CreateNewVersionRequest(toh.osd.getId());
         CreateNewVersionRequest.Metadata metadata       = new CreateNewVersionRequest.Metadata();
-        versionRequest.getMetaRequests().add(metadata);
+        versionRequest.metaRequests().add(metadata);
         StandardResponse versionResponse = sendStandardRequest(UrlMapping.OSD__VERSION, versionRequest);
         assertCinnamonError(versionResponse, NOT_MULTIPART_UPLOAD);
     }
@@ -1210,8 +1156,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var toh = new TestObjectHolder(client, userId);
         toh.createOsd("happy version with content and lifecycle state");
         adminClient.attachLifecycle(toh.osd.getId(), 1L, 1L, true);
-        CreateNewVersionRequest versionRequest = new CreateNewVersionRequest(toh.osd.getId());
-        versionRequest.setFormatId(PLAINTEXT_FORMAT_ID);
+        CreateNewVersionRequest versionRequest = new CreateNewVersionRequest(toh.osd.getId(), java.util.List.of(), PLAINTEXT_FORMAT_ID);
         ObjectSystemData osd = client.versionWithContent(versionRequest, new File("pom.xml"));
         assertEquals(Long.valueOf(getPomXml().length()), osd.getContentSize());
         assertEquals(PLAINTEXT_FORMAT_ID, osd.getFormatId());
@@ -1250,28 +1195,28 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         ObjectSystemData        v2             = client.version(versionRequest);
 
         assertEquals("2", v2.getCmnVersion());
-        versionRequest.setId(v2.getId());
+        versionRequest = new CreateNewVersionRequest(v2.getId());
 
         ObjectSystemData v3 = client.version(versionRequest);
         assertEquals("3", v3.getCmnVersion());
 
         // create another version of v2
-        versionRequest.setId(v2.getId());
+        versionRequest = new CreateNewVersionRequest(v2.getId());
         ObjectSystemData v2Branch = client.version(versionRequest);
         assertEquals("2.1-1", v2Branch.getCmnVersion());
 
         // create next version in branch 2
-        versionRequest.setId(v2Branch.getId());
+        versionRequest = new CreateNewVersionRequest(v2Branch.getId());
         ObjectSystemData v2BranchV2 = client.version(versionRequest);
         assertEquals("2.1-2", v2BranchV2.getCmnVersion());
 
         // create next version of v2 (second parallel branch)
-        versionRequest.setId(v2.getId());
+        versionRequest = new CreateNewVersionRequest(v2.getId());
         ObjectSystemData v2parallelBranch = client.version(versionRequest);
         assertEquals("2.2-1", v2parallelBranch.getCmnVersion());
 
         // create branch of 1st branch of v2
-        versionRequest.setId(v2Branch.getId());
+        versionRequest = new CreateNewVersionRequest(v2Branch.getId());
         ObjectSystemData branchOfBranch = client.version(versionRequest);
         assertEquals("2.1-1.1-1", branchOfBranch.getCmnVersion());
     }
@@ -1281,8 +1226,7 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         var toh = new TestObjectHolder(client, userId);
         var osd = toh.createOsd("versionWithFailingLifecycleStateChange").osd;
         adminClient.attachLifecycle(osd.getId(), 4L, 4L, true);
-        CreateNewVersionRequest versionRequest = new CreateNewVersionRequest(osd.getId());
-        versionRequest.setFormatId(PLAINTEXT_FORMAT_ID);
+        CreateNewVersionRequest versionRequest = new CreateNewVersionRequest(osd.getId(), java.util.List.of(), PLAINTEXT_FORMAT_ID);
         HttpEntity entity = createMultipartEntityWithFileBody(CINNAMON_REQUEST_PART, versionRequest);
         try (StandardResponse versionResponse = sendStandardMultipartRequest(UrlMapping.OSD__VERSION, entity)) {
             assertCinnamonError(versionResponse, ErrorCode.LIFECYCLE_STATE_CHANGE_FAILED);
@@ -1438,9 +1382,8 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
                 .createOsd("update-osd-rename");
         var id = toh.osd.getId();
 
-        var request = new UpdateOsdRequest(id, null, "new name", null, null, null, null, true, true);
-        request.setUpdateContentChanged(true);
-        request.setUpdateMetadataChanged(true);
+        var built   = new UpdateOsdRequest(id, null, "new name", null, null, null, null, true, true);
+        var request = new UpdateOsdRequest(built.osds(), true, true);
         adminClient.lockOsd(id);
         adminClient.updateOsd(request);
         var updatedOsd = client.getOsdById(id, false, false);
@@ -1455,26 +1398,24 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
                 .createOsd("update-osd-rename");
         var id = toh.osd.getId();
 
-        var request = new UpdateOsdRequest(id, null, "new name", null, null, null, null, true, false);
+        var built = new UpdateOsdRequest(id, null, "new name", null, null, null, null, true, false);
         client.lockOsd(id);
 
         // try and set metadataChanged
-        var osd = request.getOsds().getFirst();
+        var osd = built.osds().getFirst();
         osd.setMetadataChanged(true);
-        request.setUpdateMetadataChanged(true);
-        assertClientError(() -> client.updateOsd(request), CHANGED_FLAG_ONLY_USABLE_BY_UNTRACKED_USERS);
+        var request1 = new UpdateOsdRequest(built.osds(), false, true);
+        assertClientError(() -> client.updateOsd(request1), CHANGED_FLAG_ONLY_USABLE_BY_UNTRACKED_USERS);
 
         // try and set contentChanged
         osd.setMetadataChanged(false);
         osd.setContentChanged(true);
-        request.setUpdateMetadataChanged(false);
-        request.setUpdateContentChanged(true);
-        assertClientError(() -> client.updateOsd(request), CHANGED_FLAG_ONLY_USABLE_BY_UNTRACKED_USERS);
+        var request2 = new UpdateOsdRequest(built.osds(), true, false);
+        assertClientError(() -> client.updateOsd(request2), CHANGED_FLAG_ONLY_USABLE_BY_UNTRACKED_USERS);
 
         // try without updateMetadataChanged flag:
-        request.setUpdateContentChanged(false);
-        request.setUpdateMetadataChanged(false);
-        client.updateOsd(request);
+        var request3 = new UpdateOsdRequest(built.osds(), false, false);
+        client.updateOsd(request3);
     }
 
     @Test

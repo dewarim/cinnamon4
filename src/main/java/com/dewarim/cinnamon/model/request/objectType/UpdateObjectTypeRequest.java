@@ -5,45 +5,39 @@ import com.dewarim.cinnamon.model.ObjectType;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.response.ObjectTypeWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@JacksonXmlRootElement(localName = "updateObjectTypeRequest")
-public class UpdateObjectTypeRequest implements UpdateRequest<ObjectType>, ApiRequest<UpdateObjectTypeRequest> {
+@JsonRootName("updateObjectTypeRequest")
+public record UpdateObjectTypeRequest(
+        @JacksonXmlElementWrapper(localName = "objectTypes")
+        @JacksonXmlProperty(localName = "objectType")
+        List<ObjectType> objectTypes) implements UpdateRequest<ObjectType>, ApiRequest<UpdateObjectTypeRequest> {
 
-    @JacksonXmlElementWrapper(localName = "objectTypes")
-    @JacksonXmlProperty(localName = "objectType")
-    private List<ObjectType> objectTypes = new ArrayList<>();
+    public UpdateObjectTypeRequest {
+        if (objectTypes == null) {
+            objectTypes = new ArrayList<>();
+        }
+    }
+
+    public UpdateObjectTypeRequest(Long id, String name) {
+        this(new ArrayList<>(List.of(new ObjectType(id, name))));
+    }
 
     @Override
     public List<ObjectType> list() {
         return objectTypes;
     }
 
-    public UpdateObjectTypeRequest() {
-    }
-
-    public UpdateObjectTypeRequest(Long id, String name) {
-        objectTypes.add(new ObjectType(id,name));
-    }
-
-    public UpdateObjectTypeRequest(List<ObjectType> ObjectTypes) {
-        this.objectTypes = ObjectTypes;
-    }
-
-    public List<ObjectType> getObjectTypes() {
-        return objectTypes;
-    }
-
     @Override
     public boolean validated() {
-        return objectTypes.stream().allMatch(ObjectType ->
-            ObjectType != null && ObjectType.getName() != null && !ObjectType.getName().trim().isEmpty()
-                    && ObjectType.getId() != null && ObjectType.getId() > 0);
+        return objectTypes.stream().allMatch(objectType ->
+                objectType != null && objectType.getName() != null && !objectType.getName().trim().isEmpty()
+                        && objectType.getId() != null && objectType.getId() > 0);
     }
 
     @Override
@@ -53,7 +47,6 @@ public class UpdateObjectTypeRequest implements UpdateRequest<ObjectType>, ApiRe
 
     @Override
     public List<ApiRequest<UpdateObjectTypeRequest>> examples() {
-        return List.of(new UpdateObjectTypeRequest(123L,"updated-object-type-name"));
+        return List.of(new UpdateObjectTypeRequest(123L, "updated-object-type-name"));
     }
-
 }

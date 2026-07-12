@@ -5,43 +5,37 @@ import com.dewarim.cinnamon.model.AclGroup;
 import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.response.AclGroupWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.Objects.isNull;
 
-@JacksonXmlRootElement(localName = "createAclGroupRequest")
-public class CreateAclGroupRequest implements CreateRequest<AclGroup>, ApiRequest<CreateAclGroupRequest> {
+@JsonRootName("createAclGroupRequest")
+public record CreateAclGroupRequest(
+        @JacksonXmlElementWrapper(localName = "aclGroups")
+        @JacksonXmlProperty(localName = "aclGroup")
+        List<AclGroup> aclGroups) implements CreateRequest<AclGroup>, ApiRequest<CreateAclGroupRequest> {
 
-    @JacksonXmlElementWrapper(localName = "aclGroups")
-    @JacksonXmlProperty(localName = "aclGroup")
-    private List<AclGroup> aclGroups = new ArrayList<>();
+    public CreateAclGroupRequest {
+        if (aclGroups == null) {
+            aclGroups = new ArrayList<>();
+        }
+    }
 
     @Override
     public List<AclGroup> list() {
         return aclGroups;
     }
 
-    public CreateAclGroupRequest() {
-    }
-
-    public CreateAclGroupRequest(List<AclGroup> aclGroups) {
-        this.aclGroups = aclGroups;
-    }
-
-    public List<AclGroup> getAclGroups() {
-        return aclGroups;
-    }
-
     @Override
     public boolean validated() {
         return aclGroups.stream().noneMatch(entry ->
-             isNull(entry) || isNull(entry.getAclId()) || isNull(entry.getGroupId())
-                    || entry.getAclId() < 1 || entry.getGroupId() < 1);
+                isNull(entry) || isNull(entry.getAclId()) || isNull(entry.getGroupId())
+                        || entry.getAclId() < 1 || entry.getGroupId() < 1);
     }
 
     @Override
@@ -52,7 +46,7 @@ public class CreateAclGroupRequest implements CreateRequest<AclGroup>, ApiReques
     @Override
     public List<ApiRequest<CreateAclGroupRequest>> examples() {
         AclGroup aclGroup = new AclGroup(1L, 2L);
-        aclGroup.setPermissionIds(List.of(10L,12L));
-        return List.of(new CreateAclGroupRequest(List.of(aclGroup, new AclGroup(1L,3L))));
+        aclGroup.setPermissionIds(List.of(10L, 12L));
+        return List.of(new CreateAclGroupRequest(List.of(aclGroup, new AclGroup(1L, 3L))));
     }
 }

@@ -1,50 +1,33 @@
 package com.dewarim.cinnamon.model.request.link;
 
 import com.dewarim.cinnamon.api.ApiRequest;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-@JacksonXmlRootElement(localName = "getLinksRequest")
-public class GetLinksRequest implements ApiRequest<GetLinksRequest> {
-    
-    private boolean includeSummary;
+@JsonRootName("getLinksRequest")
+public record GetLinksRequest(
+        @JacksonXmlElementWrapper(localName = "ids")
+        @JacksonXmlProperty(localName = "id")
+        List<Long> ids,
+        boolean includeSummary) implements ApiRequest<GetLinksRequest> {
 
-    @JacksonXmlElementWrapper(localName = "ids")
-    @JacksonXmlProperty(localName = "id")
-    List<Long> ids = new ArrayList<>();
-
-    public GetLinksRequest() {
+    public GetLinksRequest {
+        if (ids == null) {
+            ids = new ArrayList<>();
+        }
     }
 
     public GetLinksRequest(Long id, boolean includeSummary) {
-        ids.add(id);
-        this.includeSummary=includeSummary;
+        this(new ArrayList<>(java.util.Collections.singletonList(id)), includeSummary);
     }
 
-    public GetLinksRequest(List<Long> ids, boolean includeSummary) {
-        this.ids = ids;
-        this.includeSummary = includeSummary;
-    }
-
-    public List<Long> getIds() {
-        return ids;
-    }
-
-    public boolean isIncludeSummary() {
-        return includeSummary;
-    }
-
-    public void setIncludeSummary(boolean includeSummary) {
-        this.includeSummary = includeSummary;
-    }
-    
-    public boolean validated(){
-        if(ids == null || ids.isEmpty()){
+    public boolean validated() {
+        if (ids == null || ids.isEmpty()) {
             return false;
         }
         return ids.stream().allMatch(id -> id != null && id > 0);

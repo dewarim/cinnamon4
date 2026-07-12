@@ -5,35 +5,25 @@ import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.response.UserAccountWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static com.dewarim.cinnamon.model.LoginType.CINNAMON;
 
-@JacksonXmlRootElement(localName = "updateUserAccountRequest")
-public class UpdateUserAccountRequest implements UpdateRequest<UserAccount>, ApiRequest<UpdateUserAccountRequest> {
+@JsonRootName("updateUserAccountRequest")
+public record UpdateUserAccountRequest(
+        @JacksonXmlElementWrapper(localName = "userAccounts")
+        @JacksonXmlProperty(localName = "userAccount")
+        List<UserAccount> userAccounts) implements UpdateRequest<UserAccount>, ApiRequest<UpdateUserAccountRequest> {
 
-    @JacksonXmlElementWrapper(localName = "userAccounts")
-    @JacksonXmlProperty(localName = "userAccount")
-    private List<UserAccount> userAccounts = new ArrayList<>();
-
-    public UpdateUserAccountRequest() {
-    }
-
-    public UpdateUserAccountRequest(List<UserAccount> userAccounts) {
-        this.userAccounts = userAccounts;
-    }
-
-    public List<UserAccount> getUserAccounts() {
-        return userAccounts;
-    }
-
-    public void setUserAccounts(List<UserAccount> userAccounts) {
-        this.userAccounts = userAccounts;
+    public UpdateUserAccountRequest {
+        if (userAccounts == null) {
+            userAccounts = new ArrayList<>();
+        }
     }
 
     @Override

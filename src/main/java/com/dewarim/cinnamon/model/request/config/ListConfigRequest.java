@@ -2,12 +2,23 @@ package com.dewarim.cinnamon.model.request.config;
 
 import com.dewarim.cinnamon.api.ApiRequest;
 import com.dewarim.cinnamon.model.request.DefaultListRequest;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import com.dewarim.cinnamon.model.request.ListType;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.List;
 
-@JacksonXmlRootElement(localName = "listConfigRequest")
-public class ListConfigRequest extends DefaultListRequest implements ApiRequest<ListConfigRequest> {
+@JsonRootName("listConfigRequest")
+public record ListConfigRequest(ListType type) implements DefaultListRequest, ApiRequest<ListConfigRequest> {
+
+    public ListConfigRequest {
+        if (type == null) {
+            type = ListType.FULL;
+        }
+    }
+
+    public ListConfigRequest() {
+        this(ListType.FULL);
+    }
     @Override
     public List<ApiRequest<ListConfigRequest>> examples() {
         return List.of(new ListConfigRequest());

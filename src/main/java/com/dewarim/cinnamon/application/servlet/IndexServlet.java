@@ -53,11 +53,11 @@ public class IndexServlet extends BaseServlet {
             reindexResponse.setDocumentsToIndex(rowCounts.getOsdRowCount());
             reindexResponse.setFoldersToIndex(rowCounts.getFolderRowCount());
         } else {
-            if (!reindexRequest.getFolderIds().isEmpty()) {
-                reindexResponse.setFoldersToIndex(indexJobDao.reindexFolders(reindexRequest.getFolderIds()));
+            if (!reindexRequest.folderIds().isEmpty()) {
+                reindexResponse.setFoldersToIndex(indexJobDao.reindexFolders(reindexRequest.folderIds()));
             }
-            if (!reindexRequest.getOsdIds().isEmpty()) {
-                reindexResponse.setDocumentsToIndex(indexJobDao.reindexOsds(reindexRequest.getOsdIds()));
+            if (!reindexRequest.osdIds().isEmpty()) {
+                reindexResponse.setDocumentsToIndex(indexJobDao.reindexOsds(reindexRequest.osdIds()));
             }
         }
         cinnamonResponse.setResponse(reindexResponse);
@@ -69,12 +69,12 @@ public class IndexServlet extends BaseServlet {
         int               jobs          = jobDao.countJobs();
         int               failedJobs    = jobDao.countFailedJobs();
         IndexInfoResponse infoResponse  = new IndexInfoResponse();
-        if (createRequest.isCountDocuments()) {
+        if (createRequest.countDocuments()) {
             IndexJobDao.IndexRows docCounts = searchService.countDocs();
             infoResponse.setDocumentsInIndex(docCounts.getOsdRowCount());
             infoResponse.setFoldersInIndex(docCounts.getFolderRowCount());
         }
-        if(createRequest.isListFailedIndexJobs()){
+        if(createRequest.listFailedIndexJobs()){
             infoResponse.setFailedIndexJobs(new IndexJobDao().listFailedIndexJobs());
         }
         infoResponse.setJobCount(jobs);

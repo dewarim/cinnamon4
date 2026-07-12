@@ -60,7 +60,7 @@ public class AclServlet extends HttpServlet implements CruddyServlet<Acl> {
     private void getUserAcls(CinnamonRequest request, AclDao aclDao, CinnamonResponse response) throws IOException {
         IdRequest idRequest = request.getMapper().readValue(request.getInputStream(), IdRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
-        Long      userId   = idRequest.getId();
+        Long      userId   = idRequest.id();
         List<Acl> userAcls = aclDao.getUserAcls(userId);
         sendWrappedAcls(response, userAcls);
     }

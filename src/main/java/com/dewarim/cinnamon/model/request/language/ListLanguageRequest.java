@@ -3,15 +3,26 @@ package com.dewarim.cinnamon.model.request.language;
 import com.dewarim.cinnamon.api.ApiRequest;
 import com.dewarim.cinnamon.model.Language;
 import com.dewarim.cinnamon.model.request.DefaultListRequest;
+import com.dewarim.cinnamon.model.request.ListType;
 import com.dewarim.cinnamon.model.request.ListRequest;
 import com.dewarim.cinnamon.model.response.LanguageWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.List;
 
-@JacksonXmlRootElement(localName = "listLanguageRequest")
-public class ListLanguageRequest extends DefaultListRequest implements ListRequest<Language>, ApiRequest<ListLanguageRequest> {
+@JsonRootName("listLanguageRequest")
+public record ListLanguageRequest(ListType type) implements DefaultListRequest, ListRequest<Language>, ApiRequest<ListLanguageRequest> {
+
+    public ListLanguageRequest {
+        if (type == null) {
+            type = ListType.FULL;
+        }
+    }
+
+    public ListLanguageRequest() {
+        this(ListType.FULL);
+    }
     @Override
     public Wrapper<Language> fetchResponseWrapper() {
         return new LanguageWrapper();

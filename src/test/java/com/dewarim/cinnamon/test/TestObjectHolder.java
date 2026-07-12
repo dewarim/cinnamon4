@@ -158,10 +158,7 @@ public class TestObjectHolder {
                 format != null ? format.getId() : null,
                 language != null ? language.getId() : null,
                 lifecycleState != null ? lifecycleState.getId() : null,
-                summary);
-        if (metas != null) {
-            request.setMetasets(metas);
-        }
+                summary, metas);
         osd = client.createOsd(request);
         return this;
     }
@@ -171,10 +168,7 @@ public class TestObjectHolder {
                 format != null ? format.getId() : null,
                 language != null ? language.getId() : null,
                 lifecycleState != null ? lifecycleState.getId() : null,
-                summary);
-        if (metas != null) {
-            request.setMetasets(metas);
-        }
+                summary, metas);
         osd = client.createOsd(request);
         return this;
     }
@@ -189,10 +183,7 @@ public class TestObjectHolder {
                 format != null ? format.getId() : null,
                 language != null ? language.getId() : null,
                 lifecycleState != null ? lifecycleState.getId() : null,
-                summary);
-        if (metas != null) {
-            request.setMetasets(metas);
-        }
+                summary, metas);
         osd = client.createOsdWithContent(request, content);
         return this;
     }

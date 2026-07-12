@@ -1,67 +1,24 @@
 package com.dewarim.cinnamon.model.request;
 
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public abstract class DeleteByIdRequest<T> implements DeleteRequest<T> {
+/**
+ * Shared behaviour for the "delete a set of objects by id" requests. Implemented by the
+ * {@code Delete*Request} records, which supply the {@link #ids()} accessor via a record component
+ * (annotated with the {@code @JacksonXmlElementWrapper}/{@code @JacksonXmlProperty} wire mapping).
+ */
+public interface DeleteByIdRequest<T> extends DeleteRequest<T> {
 
-    private boolean ignoreNotFound = false;
+    Set<Long> ids();
 
-    @JacksonXmlElementWrapper(localName = "ids")
-    @JacksonXmlProperty(localName = "id")
-    private Set<Long> ids = new HashSet<>();
-
-    public DeleteByIdRequest(List<Long> ids) {
-        this.ids = new HashSet<>(ids);
+    @Override
+    default List<Long> list() {
+        return ids().stream().toList();
     }
 
     @Override
-    public List<Long> list() {
-        return ids.stream().toList();
-    }
-
-    public DeleteByIdRequest() {
-    }
-
-    public DeleteByIdRequest(Set<Long> ids) {
-        this.ids = ids;
-    }
-
-    public DeleteByIdRequest(Long id) {
-        ids.add(id);
-    }
-
-    public DeleteByIdRequest(Long id, boolean ignoreNotFound) {
-        ids.add(id);
-        this.ignoreNotFound = ignoreNotFound;
-    }
-
-    @Override
-    public boolean validated() {
-        return ids != null && !ids.isEmpty() && ids.stream().allMatch(id -> id != null && id > 0);
-    }
-
-    public Set<Long> getIds() {
-        return ids;
-    }
-
-    public boolean isIgnoreNotFound() {
-        return ignoreNotFound;
-    }
-
-    public void setIgnoreNotFound(boolean ignoreNotFound) {
-        this.ignoreNotFound = ignoreNotFound;
-    }
-
-    @Override
-    public String toString() {
-        return "DeleteByIdRequest{" +
-                "ignoreNotFound=" + ignoreNotFound +
-                ", ids=" + ids +
-                '}';
+    default boolean validated() {
+        return ids() != null && !ids().isEmpty() && ids().stream().allMatch(id -> id != null && id > 0);
     }
 }

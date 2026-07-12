@@ -42,7 +42,7 @@ public class SearchServlet extends BaseServlet {
     private void searchIds(CinnamonRequest request, CinnamonResponse cinnamonResponse, UserAccount user) throws IOException {
         SearchIdsRequest searchRequest = request.getMapper().readValue(request.getInputStream(), SearchIdsRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
-        SearchResult searchResult = searchService.doSearch(searchRequest.getQuery(), searchRequest.getSearchType(), user);
+        SearchResult searchResult = searchService.doSearch(searchRequest.query(), searchRequest.searchType(), user);
         cinnamonResponse.setResponse(new SearchIdsResponse(searchResult.osdIds(), searchResult.folderIds()));
     }
 

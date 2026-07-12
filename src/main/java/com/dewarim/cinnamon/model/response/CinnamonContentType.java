@@ -1,6 +1,6 @@
 package com.dewarim.cinnamon.model.response;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import org.apache.hc.core5.http.ContentType;
 
 import static com.dewarim.cinnamon.api.Constants.JSON_MAPPER;

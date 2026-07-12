@@ -1,65 +1,19 @@
 package com.dewarim.cinnamon.model.request.relation;
 
 import com.dewarim.cinnamon.api.ApiRequest;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-@JacksonXmlRootElement(localName = "searchRelationRequest")
-public class SearchRelationRequest implements ApiRequest<SearchRelationRequest> {
-
-    private List<Long>       leftIds;
-    private List<Long> rightIds;
-    private List<Long> relationTypeIds;
-    private boolean    includeMetadata;
-    private boolean          orMode = false;
+@JsonRootName("searchRelationRequest")
+public record SearchRelationRequest(List<Long> leftIds, List<Long> rightIds, List<Long> relationTypeIds,
+                                    boolean includeMetadata, boolean orMode) implements ApiRequest<SearchRelationRequest> {
 
     public SearchRelationRequest() {
-    }
-
-    public SearchRelationRequest(List<Long> leftIds, List<Long> rightIds, List<Long> relationTypeIds,
-                                 boolean includeMetadata, boolean orMode) {
-        this.leftIds = leftIds;
-        this.rightIds = rightIds;
-        this.includeMetadata = includeMetadata;
-        this.orMode = orMode;
-        this.relationTypeIds=relationTypeIds;
-    }
-
-    public List<Long> getLeftIds() {
-        return leftIds;
-    }
-
-    public List<Long> getRightIds() {
-        return rightIds;
-    }
-
-    public List<Long> getRelationTypeIds() {
-        return relationTypeIds;
-    }
-
-    public void setRelationTypeIds(List<Long> relationTypeIds) {
-        this.relationTypeIds = relationTypeIds;
-    }
-
-    public boolean isIncludeMetadata() {
-        return includeMetadata;
-    }
-
-    public void setLeftIds(List<Long> leftIds) {
-        this.leftIds = leftIds;
-    }
-
-    public void setRightIds(List<Long> rightIds) {
-        this.rightIds = rightIds;
-    }
-
-
-    public void setIncludeMetadata(boolean includeMetadata) {
-        this.includeMetadata = includeMetadata;
+        this(null, null, null, false, false);
     }
 
     public boolean validated() {
@@ -69,14 +23,6 @@ public class SearchRelationRequest implements ApiRequest<SearchRelationRequest> 
 
     private boolean longCollectionIsValid(Collection<Long> ids) {
         return Objects.nonNull(ids) && !ids.isEmpty() && ids.stream().noneMatch(o -> Objects.isNull(o) || o < 1);
-    }
-
-    public boolean isOrMode() {
-        return orMode;
-    }
-
-    public void setOrMode(boolean orMode) {
-        this.orMode = orMode;
     }
 
     public Optional<SearchRelationRequest> validateRequest() {

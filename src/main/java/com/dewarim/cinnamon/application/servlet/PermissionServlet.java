@@ -54,14 +54,14 @@ public class PermissionServlet extends HttpServlet implements CruddyServlet<Perm
         ChangePermissionsRequest changeRequest = request.getMapper().readValue(request.getInputStream(), ChangePermissionsRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         var            aclGroupDao = new AclGroupDao();
-        List<AclGroup> aclGroups   = aclGroupDao.getObjectsById(List.of(changeRequest.getAclGroupId()));
+        List<AclGroup> aclGroups   = aclGroupDao.getObjectsById(List.of(changeRequest.aclGroupId()));
         if (aclGroups.isEmpty()) {
             ErrorCode.ACL_GROUP_NOT_FOUND.throwUp();
         }
         var aclGroup              = aclGroups.getFirst();
         var aclGroupPermissionDao = new AclGroupPermissionDao();
-        aclGroupPermissionDao.addPermissions(aclGroup, changeRequest.getAdd());
-        aclGroupPermissionDao.removePermissions(aclGroup, changeRequest.getRemove());
+        aclGroupPermissionDao.addPermissions(aclGroup, changeRequest.add());
+        aclGroupPermissionDao.removePermissions(aclGroup, changeRequest.remove());
         AccessFilter.reload();
         cinnamonResponse.responseIsGenericOkay();
     }
@@ -70,8 +70,8 @@ public class PermissionServlet extends HttpServlet implements CruddyServlet<Perm
         UserPermissionRequest permissionRequest = request.getMapper().readValue(request.getInputStream(), UserPermissionRequest.class).validateRequest()
                 .orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
-        long      userId   = permissionRequest.getUserId();
-        long      aclId    = permissionRequest.getAclId();
+        long      userId   = permissionRequest.userId();
+        long      aclId    = permissionRequest.aclId();
         AclDao    aclDao   = new AclDao();
         List<Acl> userAcls = aclDao.getUserAcls(userId);
         if (userAcls == null) {

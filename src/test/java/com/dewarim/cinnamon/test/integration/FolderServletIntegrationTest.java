@@ -500,7 +500,7 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
                 adminToh.folderType.getId(), adminToh.acl.getId()
         );
         client.updateFolder(request);
-        Folder updatedFolder = client.getFolderById(request.getFolders().getFirst().getId(), false);
+        Folder updatedFolder = client.getFolderById(request.folders().getFirst().getId(), false);
         assertEquals(targetFolderId, updatedFolder.getParentId());
     }
 
@@ -515,9 +515,9 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
                 adminToh.folder.getId(), targetFolderId, "new-name-for-metadata-changed-folder", 1L,
                 adminToh.folderType.getId(), adminToh.acl.getId(), true
         );
-        request.setUpdateMetadataChanged(true);
+        request = new UpdateFolderRequest(request.folders(), true);
         adminClient.updateFolder(request);
-        Folder updatedFolder = client.getFolderById(request.getFolders().getFirst().getId(), false);
+        Folder updatedFolder = client.getFolderById(request.folders().getFirst().getId(), false);
         assertEquals(targetFolderId, updatedFolder.getParentId());
         assertTrue(updatedFolder.isMetadataChanged());
     }
@@ -529,11 +529,11 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
                 SET_OWNER, SET_ACL, SET_NAME, SET_TYPE))
                 .createFolderType()
                 .createFolder();
-        UpdateFolderRequest request = new UpdateFolderRequest(
+        UpdateFolderRequest built = new UpdateFolderRequest(
                 adminToh.folder.getId(), targetFolderId, null, 1L,
                 adminToh.folderType.getId(), adminToh.acl.getId(), true
         );
-        request.setUpdateMetadataChanged(true);
+        UpdateFolderRequest request = new UpdateFolderRequest(built.folders(), true);
         assertClientError(() -> client.updateFolder(request), CHANGED_FLAG_ONLY_USABLE_BY_UNTRACKED_USERS);
     }
 

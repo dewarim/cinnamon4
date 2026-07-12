@@ -68,7 +68,7 @@ public class ConfigEntryServlet extends HttpServlet implements CruddyServlet<Con
         ConfigEntryRequest configRequest = request.getMapper().readValue(request.getInputStream(), ConfigEntryRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         ConfigEntryDao configEntryDao = new ConfigEntryDao();
-        List<ConfigEntry> entries = configEntryDao.getObjectsById(configRequest.getIds());
+        List<ConfigEntry> entries = configEntryDao.getObjectsById(configRequest.ids());
         boolean isSuperuser = UserAccountDao.currentUserIsSuperuser();
         List<ConfigEntry> filtered = entries.stream().filter(entry -> {
             if (entry.isPublicVisibility()) {

@@ -6,34 +6,28 @@ import com.dewarim.cinnamon.model.index.IndexType;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.response.IndexItemWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-@JacksonXmlRootElement(localName = "updateIndexItemRequest")
-public class UpdateIndexItemRequest implements UpdateRequest<IndexItem>, ApiRequest<UpdateIndexItemRequest> {
+@JsonRootName("updateIndexItemRequest")
+public record UpdateIndexItemRequest(
+        @JacksonXmlElementWrapper(localName = "indexItems")
+        @JacksonXmlProperty(localName = "indexItem")
+        List<IndexItem> indexItems) implements UpdateRequest<IndexItem>, ApiRequest<UpdateIndexItemRequest> {
 
-    @JacksonXmlElementWrapper(localName = "indexItems")
-    @JacksonXmlProperty(localName = "indexItem")
-    private List<IndexItem> indexItems = new ArrayList<>();
+    public UpdateIndexItemRequest {
+        if (indexItems == null) {
+            indexItems = new ArrayList<>();
+        }
+    }
 
     @Override
     public List<IndexItem> list() {
-        return indexItems;
-    }
-
-    public UpdateIndexItemRequest() {
-    }
-
-    public UpdateIndexItemRequest(List<IndexItem> indexItems) {
-        this.indexItems = indexItems;
-    }
-
-    public List<IndexItem> getIndexItems() {
         return indexItems;
     }
 

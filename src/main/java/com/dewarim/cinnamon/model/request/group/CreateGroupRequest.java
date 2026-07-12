@@ -5,40 +5,35 @@ import com.dewarim.cinnamon.model.Group;
 import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.response.GroupWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@JacksonXmlRootElement(localName = "createGroupRequest")
-public class CreateGroupRequest implements CreateRequest<Group>, ApiRequest<CreateGroupRequest> {
+@JsonRootName("createGroupRequest")
+public record CreateGroupRequest(
+        @JacksonXmlElementWrapper(localName = "groups")
+        @JacksonXmlProperty(localName = "group")
+        List<Group> groups) implements CreateRequest<Group>, ApiRequest<CreateGroupRequest> {
 
-    @JacksonXmlElementWrapper(localName = "groups")
-    @JacksonXmlProperty(localName = "group")
-    private List<Group> groups = new ArrayList<>();
-
-    @Override
-    public List<Group> list() {
-        return groups;
-    }
-
-    public CreateGroupRequest() {
+    public CreateGroupRequest {
+        if (groups == null) {
+            groups = new ArrayList<>();
+        }
     }
 
     public CreateGroupRequest(String name) {
-        this.groups.add(new Group(name));
+        this(new ArrayList<>(List.of(new Group(name))));
     }
+
     public CreateGroupRequest(String name, Long parentId) {
-        this.groups.add(new Group(name, parentId));
+        this(new ArrayList<>(List.of(new Group(name, parentId))));
     }
 
-    public CreateGroupRequest(List<Group> groups) {
-        this.groups = groups;
-    }
-
-    public List<Group> getGroups() {
+    @Override
+    public List<Group> list() {
         return groups;
     }
 

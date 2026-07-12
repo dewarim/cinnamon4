@@ -2,11 +2,11 @@ package com.dewarim.cinnamon.api;
 
 import com.dewarim.cinnamon.model.Folder;
 import com.dewarim.cinnamon.model.ObjectSystemData;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import com.fasterxml.jackson.dataformat.xml.deser.FromXmlParser;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.dataformat.xml.XmlMapper;
+import tools.jackson.dataformat.xml.XmlWriteFeature;
 
 import java.time.LocalDateTime;
 
@@ -43,14 +43,21 @@ public class Constants {
         FOLDER_EXAMPLE = folder;
     }
 
-    public static final XmlMapper XML_MAPPER = (XmlMapper) new XmlMapper()
-            .configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL, true)
+    // Null vs empty-string handling: Jackson 2 distinguished a self-closing <x/> (-> null) from an
+    // explicit empty <x></x> (-> ""), but Jackson 3's XmlReadFeature.EMPTY_ELEMENT_AS_NULL treats both
+    // the same. To keep the two apart we write nulls as xsi:nil="true"
+    // (XmlWriteFeature.WRITE_NULLS_AS_XSI_NIL) and leave EMPTY_ELEMENT_AS_NULL off: null round-trips to
+    // null (via xsi:nil) while "" round-trips to "" (needed for NOT NULL text columns like relations.metadata).
+    public static final XmlMapper XML_MAPPER = XmlMapper.builder()
+            .configureForJackson2()
+            .configure(XmlWriteFeature.WRITE_NULLS_AS_XSI_NIL, true)
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-            .registerModule(new JavaTimeModule());
+            .build();
 
-    public static final ObjectMapper JSON_MAPPER = new ObjectMapper()
+    public static final ObjectMapper JSON_MAPPER = JsonMapper.builder()
+            .configureForJackson2()
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-            .registerModule(new JavaTimeModule());
+            .build();
 
     public static final String DEFAULT_DATABASE_SESSION_FACTORY = "com.dewarim.cinnamon.application.DbSessionFactory";
     public static final String DATA_ROOT_PATH_PROPERTY_NAME     = "dataRootPath";

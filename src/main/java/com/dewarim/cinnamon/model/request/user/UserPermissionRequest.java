@@ -1,40 +1,13 @@
 package com.dewarim.cinnamon.model.request.user;
 
 import com.dewarim.cinnamon.api.ApiRequest;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.List;
 import java.util.Optional;
 
-@JacksonXmlRootElement(localName = "userPermissionRequest")
-public class UserPermissionRequest implements ApiRequest<UserPermissionRequest> {
-
-    private Long userId;
-    private Long aclId;
-
-    public UserPermissionRequest(Long userId, Long aclId) {
-        this.userId = userId;
-        this.aclId = aclId;
-    }
-
-    public UserPermissionRequest() {
-    }
-
-    public Long getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
-
-    public Long getAclId() {
-        return aclId;
-    }
-
-    public void setAclId(Long aclId) {
-        this.aclId = aclId;
-    }
+@JsonRootName("userPermissionRequest")
+public record UserPermissionRequest(Long userId, Long aclId) implements ApiRequest<UserPermissionRequest> {
 
     public boolean validated() {
         return userId != null && userId > 0 && aclId != null && aclId > 0;
@@ -50,6 +23,6 @@ public class UserPermissionRequest implements ApiRequest<UserPermissionRequest> 
 
     @Override
     public List<ApiRequest<UserPermissionRequest>> examples() {
-        return List.of(new UserPermissionRequest(6L,7L));
+        return List.of(new UserPermissionRequest(6L, 7L));
     }
 }

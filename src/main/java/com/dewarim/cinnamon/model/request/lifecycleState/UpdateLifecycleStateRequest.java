@@ -6,34 +6,28 @@ import com.dewarim.cinnamon.model.LifecycleState;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.response.LifecycleStateWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-@JacksonXmlRootElement(localName = "updateLifecycleStateRequest")
-public class UpdateLifecycleStateRequest implements UpdateRequest<LifecycleState>, ApiRequest<UpdateLifecycleStateRequest> {
+@JsonRootName("updateLifecycleStateRequest")
+public record UpdateLifecycleStateRequest(
+        @JacksonXmlElementWrapper(localName = "lifecycleStates")
+        @JacksonXmlProperty(localName = "lifecycleState")
+        List<LifecycleState> lifecycleStates) implements UpdateRequest<LifecycleState>, ApiRequest<UpdateLifecycleStateRequest> {
 
-    @JacksonXmlElementWrapper(localName = "lifecycleStates")
-    @JacksonXmlProperty(localName = "lifecycleState")
-    private List<LifecycleState> lifecycleStates = new ArrayList<>();
+    public UpdateLifecycleStateRequest {
+        if (lifecycleStates == null) {
+            lifecycleStates = new ArrayList<>();
+        }
+    }
 
     @Override
     public List<LifecycleState> list() {
-        return lifecycleStates;
-    }
-
-    public UpdateLifecycleStateRequest() {
-    }
-
-    public UpdateLifecycleStateRequest(List<LifecycleState> lifecycleStates) {
-        this.lifecycleStates = lifecycleStates;
-    }
-
-    public List<LifecycleState> getLifecycleStates() {
         return lifecycleStates;
     }
 

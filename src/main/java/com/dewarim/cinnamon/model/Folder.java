@@ -3,9 +3,9 @@ package com.dewarim.cinnamon.model;
 import com.dewarim.cinnamon.api.Identifiable;
 import com.dewarim.cinnamon.api.OwnableWithMetadata;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -14,7 +14,7 @@ import java.util.Objects;
 
 import static com.dewarim.cinnamon.api.Constants.DEFAULT_SUMMARY;
 
-@JacksonXmlRootElement(localName = "folder")
+@JsonRootName("folder")
 public class Folder implements OwnableWithMetadata, Identifiable {
 
     private Long    id;

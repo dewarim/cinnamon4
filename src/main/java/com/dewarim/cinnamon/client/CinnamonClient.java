@@ -75,7 +75,7 @@ import com.dewarim.cinnamon.model.request.user.*;
 import com.dewarim.cinnamon.model.response.*;
 import com.dewarim.cinnamon.model.response.index.IndexInfoResponse;
 import com.dewarim.cinnamon.model.response.index.ReindexResponse;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.entity.mime.FileBody;
 import org.apache.hc.client5.http.entity.mime.MultipartEntityBuilder;
@@ -557,14 +557,13 @@ public class CinnamonClient {
 
     public Folder createFolderWithMeta(Long parentId, String name, Long ownerId, Long aclId, Long typeId, List<Meta> metas) throws IOException {
         var request  = new CreateFolderRequest(name, parentId, null, ownerId, aclId, typeId);
-        request.getFolders().getFirst().getMetasets().addAll(metas);
+        request.folders().getFirst().getMetasets().addAll(metas);
         var response = sendStandardRequest(UrlMapping.FOLDER__CREATE, request);
         return folderUnwrapper.unwrap(response, 1).getFirst();
     }
 
     public List<Folder> getFolders(List<Long> ids, boolean includeSummary, boolean addFolderPath) throws IOException {
-        FolderRequest    folderRequest = new FolderRequest(ids, includeSummary);
-        folderRequest.setAddFolderPath(addFolderPath);
+        FolderRequest    folderRequest = new FolderRequest(ids, includeSummary, addFolderPath);
         StandardResponse response      = sendStandardRequest(UrlMapping.FOLDER__GET_FOLDERS, folderRequest);
         return folderUnwrapper.unwrap(response, ids.size());
     }
@@ -582,7 +581,7 @@ public class CinnamonClient {
 
     public List<Meta> createOsdMeta(CreateMetaRequest metaRequest) throws IOException {
         var response = sendStandardRequest(UrlMapping.OSD__CREATE_META, metaRequest);
-        return metaUnwrapper.unwrap(response, metaRequest.getMetas().size());
+        return metaUnwrapper.unwrap(response, metaRequest.metas().size());
     }
 
     public Meta createOsdMeta(Long osdId, String content, Long metaTypeId) throws IOException {
@@ -1025,8 +1024,7 @@ public class CinnamonClient {
     }
 
     public List<ConfigEntry> getConfigEntries(List<Long> ids) throws IOException {
-        var request = new ConfigEntryRequest();
-        request.getIds().addAll(ids);
+        var request = new ConfigEntryRequest(ids);
         var response = sendStandardRequest(UrlMapping.CONFIG_ENTRY__GET, request);
         return configEntryUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }

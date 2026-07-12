@@ -3,22 +3,33 @@ package com.dewarim.cinnamon.model.request.index;
 import com.dewarim.cinnamon.api.ApiRequest;
 import com.dewarim.cinnamon.model.IndexItem;
 import com.dewarim.cinnamon.model.request.DeleteByIdRequest;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import com.fasterxml.jackson.annotation.JsonRootName;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
-@JacksonXmlRootElement(localName = "deleteIndexItemRequest")
-public class DeleteIndexItemRequest extends DeleteByIdRequest<IndexItem> implements ApiRequest<DeleteIndexItemRequest> {
+@JsonRootName("deleteIndexItemRequest")
+public record DeleteIndexItemRequest(
+        @JacksonXmlElementWrapper(localName = "ids")
+        @JacksonXmlProperty(localName = "id")
+        Set<Long> ids,
+        boolean ignoreNotFound) implements DeleteByIdRequest<IndexItem>, ApiRequest<DeleteIndexItemRequest> {
 
-    public DeleteIndexItemRequest() {
+    public DeleteIndexItemRequest {
+        if (ids == null) {
+            ids = new HashSet<>();
+        }
     }
 
     public DeleteIndexItemRequest(List<Long> ids) {
-        super(ids);
+        this(new HashSet<>(ids), false);
     }
 
     public DeleteIndexItemRequest(Long id) {
-        super(id);
+        this(new HashSet<>(java.util.Collections.singletonList(id)), false);
     }
 
     @Override

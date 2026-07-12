@@ -1,65 +1,43 @@
 package com.dewarim.cinnamon.model.request.index;
 
 import com.dewarim.cinnamon.api.ApiRequest;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-@JacksonXmlRootElement(localName = "reindexRequest")
-public class ReindexRequest implements ApiRequest<ReindexRequest> {
+@JsonRootName("reindexRequest")
+public record ReindexRequest(List<Long> osdIds, List<Long> folderIds, Boolean updateTikaMetaset) implements ApiRequest<ReindexRequest> {
 
-    private List<Long> osdIds;
-    private List<Long> folderIds;
+    public ReindexRequest {
+        if (osdIds == null) {
+            osdIds = new ArrayList<>();
+        }
+        if (folderIds == null) {
+            folderIds = new ArrayList<>();
+        }
+        if (updateTikaMetaset == null) {
+            updateTikaMetaset = false;
+        }
+    }
 
-    private Boolean updateTikaMetaset = false;
     public ReindexRequest() {
+        this(new ArrayList<>(), new ArrayList<>(), false);
     }
 
     public ReindexRequest(List<Long> osdIds, List<Long> folderIds) {
-        this.osdIds = osdIds;
-        this.folderIds = folderIds;
+        this(osdIds, folderIds, false);
     }
 
     public boolean doFullReindex() {
-        return getOsdIds().isEmpty() && getFolderIds().isEmpty();
-    }
-
-    public List<Long> getOsdIds() {
-        if (osdIds == null) {
-            return List.of();
-        }
-        return osdIds;
-    }
-
-    public void setOsdIds(List<Long> osdIds) {
-        this.osdIds = osdIds;
-    }
-
-    public List<Long> getFolderIds() {
-        if (folderIds == null) {
-            return List.of();
-        }
-        return folderIds;
-    }
-
-    public void setFolderIds(List<Long> folderIds) {
-        this.folderIds = folderIds;
-    }
-
-    public Boolean getUpdateTikaMetaset() {
-        return updateTikaMetaset;
-    }
-
-    public void setUpdateTikaMetaset(Boolean updateTikaMetaset) {
-        this.updateTikaMetaset = updateTikaMetaset;
+        return osdIds.isEmpty() && folderIds.isEmpty();
     }
 
     private boolean validated() {
-        boolean validFolderIds = getFolderIds().stream().noneMatch(id -> id < 1);
-        boolean validOsdIds    = getOsdIds().stream().noneMatch(id -> id < 1);
-        boolean updateSetting = updateTikaMetaset != null;
-        return validFolderIds && validOsdIds && updateSetting;
+        boolean validFolderIds = folderIds.stream().noneMatch(id -> id < 1);
+        boolean validOsdIds    = osdIds.stream().noneMatch(id -> id < 1);
+        return validFolderIds && validOsdIds && updateTikaMetaset != null;
     }
 
     public Optional<ReindexRequest> validateRequest() {
@@ -73,13 +51,5 @@ public class ReindexRequest implements ApiRequest<ReindexRequest> {
     @Override
     public List<ApiRequest<ReindexRequest>> examples() {
         return List.of(new ReindexRequest(), new ReindexRequest(List.of(13L, 23L), List.of(43L, 2L)));
-    }
-
-    @Override
-    public String toString() {
-        return "ReIndexRequest{" +
-                "osdIds=" + osdIds +
-                ", folderIds=" + folderIds +
-                '}';
     }
 }

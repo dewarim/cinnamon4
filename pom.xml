@@ -12,7 +12,7 @@
 
     <properties>
         <jetty.version>12.1.8</jetty.version>
-        <jackson.version>2.21.2</jackson.version>
+        <jackson.version>3.2.0</jackson.version>
         <junit.version>5.13.1</junit.version>
         <lucene.version>9.12.1</lucene.version>
         <mybatis.version>3.5.19</mybatis.version>
@@ -22,9 +22,9 @@
         <log4j.version>2.25.4</log4j.version>
         <httpcomponents.version>4.5.14</httpcomponents.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <java.version>21</java.version>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
+        <java.version>25</java.version>
+        <maven.compiler.source>25</maven.compiler.source>
+        <maven.compiler.target>25</maven.compiler.target>
         <unbound.ldap.version>6.0.10</unbound.ldap.version>
     </properties>
 
@@ -154,15 +154,10 @@
             <version>${postgresql.version}</version>
         </dependency>
 
-        <!-- xml handling -->
+        <!-- xml handling (Jackson 3.x, tools.jackson.*; java.time support is built in) -->
         <dependency>
-            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <groupId>tools.jackson.dataformat</groupId>
             <artifactId>jackson-dataformat-xml</artifactId>
-            <version>${jackson.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.datatype</groupId>
-            <artifactId>jackson-datatype-jsr310</artifactId>
             <version>${jackson.version}</version>
         </dependency>
 
@@ -325,7 +320,7 @@
                 <version>3.1.2</version>
                 <configuration>
                     <argLine>
-                        --illegal-access=permit
+                        --enable-native-access=ALL-UNNAMED
                     </argLine>
                 </configuration>
             </plugin>

@@ -1,34 +1,33 @@
 package com.dewarim.cinnamon.model.request.osd;
 
 import com.dewarim.cinnamon.api.ApiRequest;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-@JacksonXmlRootElement(localName = "copyToExistingOsdRequest")
-public class CopyToExistingOsdRequest implements ApiRequest<CopyToExistingOsdRequest> {
+@JsonRootName("copyToExistingOsdRequest")
+public record CopyToExistingOsdRequest(
+        @JacksonXmlElementWrapper(localName = "copyTasks")
+        @JacksonXmlProperty(localName = "copyTask")
+        List<CopyTask> copyTasks) implements ApiRequest<CopyToExistingOsdRequest> {
 
-    @JacksonXmlElementWrapper(localName = "copyTasks")
-    @JacksonXmlProperty(localName = "copyTask")
-    private List<CopyTask> copyTasks = new ArrayList<>();
-    public CopyToExistingOsdRequest() {
-    }
-
-    public CopyToExistingOsdRequest(List<CopyTask> copyTasks) {
-        this.copyTasks = copyTasks;
+    public CopyToExistingOsdRequest {
+        if (copyTasks == null) {
+            copyTasks = new ArrayList<>();
+        }
     }
 
     private boolean validated() {
-      return copyTasks != null && !copyTasks.isEmpty() &&
-              copyTasks.stream().allMatch(copyTask -> copyTask.getSourceOsdId() != null && copyTask.getSourceOsdId() > 0
-              && copyTask.getTargetOsdId() != null && copyTask.getTargetOsdId() > 0 && copyTask.getMetasetTypeIds().stream().noneMatch(Objects::isNull)
-                      && copyTask.getMetasetTypeIds().stream().noneMatch(id -> id <= 0)
-              );
+        return copyTasks != null && !copyTasks.isEmpty() &&
+                copyTasks.stream().allMatch(copyTask -> copyTask.getSourceOsdId() != null && copyTask.getSourceOsdId() > 0
+                        && copyTask.getTargetOsdId() != null && copyTask.getTargetOsdId() > 0 && copyTask.getMetasetTypeIds().stream().noneMatch(Objects::isNull)
+                        && copyTask.getMetasetTypeIds().stream().noneMatch(id -> id <= 0)
+                );
     }
 
     public Optional<CopyToExistingOsdRequest> validateRequest() {
@@ -39,23 +38,8 @@ public class CopyToExistingOsdRequest implements ApiRequest<CopyToExistingOsdReq
         }
     }
 
-    public List<CopyTask> getCopyTasks() {
-        return copyTasks;
-    }
-
-    public void setCopyTasks(List<CopyTask> copyTasks) {
-        this.copyTasks = copyTasks;
-    }
-
     @Override
     public List<ApiRequest<CopyToExistingOsdRequest>> examples() {
-        return List.of(new CopyToExistingOsdRequest(List.of(new CopyTask(100L, 200L, true, List.of(12L,13L)))));
-    }
-
-    @Override
-    public String toString() {
-        return "CopyToExistingOsdRequest{" +
-                "copyTasks=" + copyTasks +
-                '}';
+        return List.of(new CopyToExistingOsdRequest(List.of(new CopyTask(100L, 200L, true, List.of(12L, 13L)))));
     }
 }

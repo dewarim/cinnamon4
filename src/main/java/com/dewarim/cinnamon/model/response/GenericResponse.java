@@ -1,7 +1,7 @@
 package com.dewarim.cinnamon.model.response;
 
 import com.dewarim.cinnamon.api.ApiResponse;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.List;
 
@@ -9,7 +9,7 @@ import java.util.List;
  * A simple class to report the success or failure of an operation.
  * (Just using http status code 204 is a little ambiguous)
  */
-@JacksonXmlRootElement(localName = "genericResponse")
+@JsonRootName("genericResponse")
 public class GenericResponse extends BaseResponse implements ApiResponse {
 
     private String  message;

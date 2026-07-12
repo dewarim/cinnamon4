@@ -5,45 +5,39 @@ import com.dewarim.cinnamon.model.UiLanguage;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.response.UiLanguageWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@JacksonXmlRootElement(localName = "updateUiLanguageRequest")
-public class UpdateUiLanguageRequest implements UpdateRequest<UiLanguage>, ApiRequest<UpdateUiLanguageRequest> {
+@JsonRootName("updateUiLanguageRequest")
+public record UpdateUiLanguageRequest(
+        @JacksonXmlElementWrapper(localName = "uiLanguages")
+        @JacksonXmlProperty(localName = "uiLanguage")
+        List<UiLanguage> uiLanguages) implements UpdateRequest<UiLanguage>, ApiRequest<UpdateUiLanguageRequest> {
 
-    @JacksonXmlElementWrapper(localName = "uiLanguages")
-    @JacksonXmlProperty(localName = "uiLanguage")
-    private List<UiLanguage> uiLanguages = new ArrayList<>();
+    public UpdateUiLanguageRequest {
+        if (uiLanguages == null) {
+            uiLanguages = new ArrayList<>();
+        }
+    }
+
+    public UpdateUiLanguageRequest(Long id, String name) {
+        this(new ArrayList<>(List.of(new UiLanguage(id, name))));
+    }
 
     @Override
     public List<UiLanguage> list() {
         return uiLanguages;
     }
 
-    public UpdateUiLanguageRequest() {
-    }
-
-    public UpdateUiLanguageRequest(Long id, String name) {
-        uiLanguages.add(new UiLanguage(id,name));
-    }
-
-    public UpdateUiLanguageRequest(List<UiLanguage> UiLanguages) {
-        this.uiLanguages = UiLanguages;
-    }
-
-    public List<UiLanguage> getUiLanguages() {
-        return uiLanguages;
-    }
-
     @Override
     public boolean validated() {
-        return uiLanguages.stream().allMatch(UiLanguage ->
-            UiLanguage != null && UiLanguage.getIsoCode() != null && !UiLanguage.getIsoCode().trim().isEmpty()
-                    && UiLanguage.getId() != null && UiLanguage.getId() > 0);
+        return uiLanguages.stream().allMatch(uiLanguage ->
+                uiLanguage != null && uiLanguage.getIsoCode() != null && !uiLanguage.getIsoCode().trim().isEmpty()
+                        && uiLanguage.getId() != null && uiLanguage.getId() > 0);
     }
 
     @Override

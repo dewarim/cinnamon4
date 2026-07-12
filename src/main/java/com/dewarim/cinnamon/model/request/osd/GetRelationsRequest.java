@@ -1,43 +1,29 @@
 package com.dewarim.cinnamon.model.request.osd;
 
 import com.dewarim.cinnamon.api.ApiRequest;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-@JacksonXmlRootElement(localName = "getRelationsRequest")
-public class GetRelationsRequest implements ApiRequest<GetRelationsRequest> {
+@JsonRootName("getRelationsRequest")
+public record GetRelationsRequest(
+        @JacksonXmlElementWrapper(localName = "ids")
+        @JacksonXmlProperty(localName = "id")
+        List<Long> ids,
+        boolean includeMetadata) implements ApiRequest<GetRelationsRequest> {
 
-    private List<Long> ids;
-    private boolean    includeMetadata;
-
-    public GetRelationsRequest() {
+    public GetRelationsRequest {
+        if (ids == null) {
+            ids = new ArrayList<>();
+        }
     }
 
-    public GetRelationsRequest(List<Long> ids, boolean includeMetadata) {
-        this.ids = ids;
-        this.includeMetadata = includeMetadata;
-    }
-
-    public List<Long> getIds() {
-        return ids;
-    }
-
-    public void setIds(List<Long> ids) {
-        this.ids = ids;
-    }
-
-    public boolean isIncludeMetadata() {
-        return includeMetadata;
-    }
-
-    public void setIncludeMetadata(boolean includeMetadata) {
-        this.includeMetadata = includeMetadata;
-    }
-
-    public boolean validated(){
-        return ids != null && ids.size() > 0;
+    public boolean validated() {
+        return ids != null && !ids.isEmpty();
     }
 
     public Optional<GetRelationsRequest> validateRequest() {
@@ -50,6 +36,6 @@ public class GetRelationsRequest implements ApiRequest<GetRelationsRequest> {
 
     @Override
     public List<ApiRequest<GetRelationsRequest>> examples() {
-        return List.of(new GetRelationsRequest(List.of(1L,32L,4L), false));
+        return List.of(new GetRelationsRequest(List.of(1L, 32L, 4L), false));
     }
 }

@@ -7,34 +7,24 @@ import com.dewarim.cinnamon.model.LifecycleState;
 import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.response.LifecycleStateWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-@JacksonXmlRootElement(localName = "createLifecycleStateRequest")
-public class CreateLifecycleStateRequest implements CreateRequest<LifecycleState>, ApiRequest<LifecycleState> {
+@JsonRootName("createLifecycleStateRequest")
+public record CreateLifecycleStateRequest(
+        @JacksonXmlElementWrapper(localName = "lifecycleStates")
+        @JacksonXmlProperty(localName = "lifecycleState")
+        List<LifecycleState> lifecycleStates) implements CreateRequest<LifecycleState>, ApiRequest<LifecycleState> {
 
-    @JacksonXmlElementWrapper(localName = "lifecycleStates")
-    @JacksonXmlProperty(localName = "lifecycleState")
-    private List<LifecycleState> lifecycleStates = new ArrayList<>();
-
-    public CreateLifecycleStateRequest() {
-    }
-
-    public CreateLifecycleStateRequest(List<LifecycleState> lifecycleStates) {
-        this.lifecycleStates = lifecycleStates;
-    }
-
-    public List<LifecycleState> getLifecycleStates() {
-        return lifecycleStates;
-    }
-
-    public void setLifecycleStates(List<LifecycleState> lifecycleStates) {
-        this.lifecycleStates = lifecycleStates;
+    public CreateLifecycleStateRequest {
+        if (lifecycleStates == null) {
+            lifecycleStates = new ArrayList<>();
+        }
     }
 
     @Override
@@ -48,12 +38,12 @@ public class CreateLifecycleStateRequest implements CreateRequest<LifecycleState
             return false;
         }
         return lifecycleStates.stream().noneMatch(lifecycleState ->
-                         Objects.isNull(lifecycleState) ||
-                                Objects.isNull(lifecycleState.getStateClass()) ||
-                                Objects.isNull(lifecycleState.getName()) ||
-                                (lifecycleState.getStateClass() == null || lifecycleState.getStateClass().isBlank()  ) ||
-                                lifecycleState.getName().isBlank() ||
-                                 (lifecycleState.getConfig() == null || lifecycleState.getConfig().isBlank())
+                Objects.isNull(lifecycleState) ||
+                        Objects.isNull(lifecycleState.getStateClass()) ||
+                        Objects.isNull(lifecycleState.getName()) ||
+                        (lifecycleState.getStateClass() == null || lifecycleState.getStateClass().isBlank()) ||
+                        lifecycleState.getName().isBlank() ||
+                        (lifecycleState.getConfig() == null || lifecycleState.getConfig().isBlank())
         );
     }
 

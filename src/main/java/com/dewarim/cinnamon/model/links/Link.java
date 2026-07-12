@@ -3,11 +3,11 @@ package com.dewarim.cinnamon.model.links;
 import com.dewarim.cinnamon.api.Identifiable;
 import com.dewarim.cinnamon.api.Ownable;
 import com.dewarim.cinnamon.model.response.LinkResponse;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.Objects;
 
-@JacksonXmlRootElement(localName = "link")
+@JsonRootName("link")
 public class Link implements Ownable, Identifiable {
 
     private Long         id;

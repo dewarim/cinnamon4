@@ -83,9 +83,9 @@ public class CinnamonServlet extends HttpServlet {
     private void connect(CinnamonRequest request, CinnamonResponse response) throws IOException {
         ConnectionRequest conRequest = request.getMapper().readValue(request.getInputStream(), ConnectionRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
-        String username = conRequest.getUsername();
-        String password = conRequest.getPassword();
-        String format   = conRequest.getFormat();
+        String username = conRequest.username();
+        String password = conRequest.password();
+        String format   = conRequest.format();
         // TODO: maybe add a ConnectionRequest object (with fields user & password) for consistency
         SecurityConfig securityConfig = CinnamonServer.config.getSecurityConfig();
 

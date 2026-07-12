@@ -2,12 +2,12 @@ package com.dewarim.cinnamon.security;
 
 import com.dewarim.cinnamon.api.login.GroupMapping;
 import com.dewarim.cinnamon.api.login.LoginResult;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.Collections;
 import java.util.List;
 
-@JacksonXmlRootElement(localName = "ldapResult")
+@JsonRootName("ldapResult")
 public class LdapLoginResult implements LoginResult {
     private String             errorMessage;
     private boolean            validUser;

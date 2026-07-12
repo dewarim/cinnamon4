@@ -5,37 +5,31 @@ import com.dewarim.cinnamon.model.FolderType;
 import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.response.FolderTypeWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@JacksonXmlRootElement(localName = "createFolderTypeRequest")
-public class CreateFolderTypeRequest implements CreateRequest<FolderType>, ApiRequest<CreateFolderTypeRequest> {
+@JsonRootName("createFolderTypeRequest")
+public record CreateFolderTypeRequest(
+        @JacksonXmlElementWrapper(localName = "folderTypes")
+        @JacksonXmlProperty(localName = "folderType")
+        List<FolderType> folderTypes) implements CreateRequest<FolderType>, ApiRequest<CreateFolderTypeRequest> {
 
-    @JacksonXmlElementWrapper(localName = "folderTypes")
-    @JacksonXmlProperty(localName = "folderType")
-    private List<FolderType> folderTypes = new ArrayList<>();
-
-    @Override
-    public List<FolderType> list() {
-        return folderTypes;
-    }
-
-    public CreateFolderTypeRequest() {
-    }
-
-    public CreateFolderTypeRequest(List<FolderType> folderTypes) {
-        this.folderTypes = folderTypes;
+    public CreateFolderTypeRequest {
+        if (folderTypes == null) {
+            folderTypes = new ArrayList<>();
+        }
     }
 
     public CreateFolderTypeRequest(String name) {
-        this.folderTypes.add(new FolderType(name));
+        this(new ArrayList<>(List.of(new FolderType(name))));
     }
 
-    public List<FolderType> getFolderTypes() {
+    @Override
+    public List<FolderType> list() {
         return folderTypes;
     }
 

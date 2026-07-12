@@ -3,22 +3,33 @@ package com.dewarim.cinnamon.model.request.language;
 import com.dewarim.cinnamon.api.ApiRequest;
 import com.dewarim.cinnamon.model.Language;
 import com.dewarim.cinnamon.model.request.DeleteByIdRequest;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import com.fasterxml.jackson.annotation.JsonRootName;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
-@JacksonXmlRootElement(localName = "deleteLanguageRequest")
-public class DeleteLanguageRequest extends DeleteByIdRequest<Language> implements ApiRequest<DeleteLanguageRequest> {
+@JsonRootName("deleteLanguageRequest")
+public record DeleteLanguageRequest(
+        @JacksonXmlElementWrapper(localName = "ids")
+        @JacksonXmlProperty(localName = "id")
+        Set<Long> ids,
+        boolean ignoreNotFound) implements DeleteByIdRequest<Language>, ApiRequest<DeleteLanguageRequest> {
 
-    public DeleteLanguageRequest() {
+    public DeleteLanguageRequest {
+        if (ids == null) {
+            ids = new HashSet<>();
+        }
     }
 
     public DeleteLanguageRequest(List<Long> ids) {
-        super(ids);
+        this(new HashSet<>(ids), false);
     }
 
     public DeleteLanguageRequest(Long id) {
-        super(id);
+        this(new HashSet<>(java.util.Collections.singletonList(id)), false);
     }
 
     @Override

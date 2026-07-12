@@ -7,42 +7,31 @@ import com.dewarim.cinnamon.model.links.LinkType;
 import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.response.LinkWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@JacksonXmlRootElement(localName = "createLinkRequest")
-public class CreateLinkRequest implements CreateRequest<Link>, ApiRequest<CreateLinkRequest> {
+@JsonRootName("createLinkRequest")
+public record CreateLinkRequest(
+        @JacksonXmlElementWrapper(localName = "links")
+        @JacksonXmlProperty(localName = "link")
+        List<Link> links) implements CreateRequest<Link>, ApiRequest<CreateLinkRequest> {
 
-    @JacksonXmlElementWrapper(localName = "links")
-    @JacksonXmlProperty(localName = "link")
-    private List<Link> links = new ArrayList<>();
-
-    public CreateLinkRequest() {
+    public CreateLinkRequest {
+        if (links == null) {
+            links = new ArrayList<>();
+        }
     }
 
     public CreateLinkRequest(long parentId, LinkType linkType, long aclId, long ownerId, Long folderId, Long objectId, LinkResolver resolver) {
-        Link link = new Link(null, linkType, ownerId, aclId, parentId, folderId, objectId, resolver);
-        links.add(link);
-    }
-
-    public CreateLinkRequest(List<Link> links) {
-        this.links = links;
+        this(new ArrayList<>(List.of(new Link(null, linkType, ownerId, aclId, parentId, folderId, objectId, resolver))));
     }
 
     public boolean validated() {
         return links.stream().allMatch(Link::validated);
-    }
-
-    public List<Link> getLinks() {
-        return links;
-    }
-
-    public void setLinks(List<Link> links) {
-        this.links = links;
     }
 
     @Override

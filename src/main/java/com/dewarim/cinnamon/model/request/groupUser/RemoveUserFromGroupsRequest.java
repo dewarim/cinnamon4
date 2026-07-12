@@ -1,35 +1,22 @@
 package com.dewarim.cinnamon.model.request.groupUser;
 
 import com.dewarim.cinnamon.api.ApiRequest;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.List;
 import java.util.Optional;
 
-@JacksonXmlRootElement(localName = "removeUserFromGroupsRequest")
-public class RemoveUserFromGroupsRequest implements ApiRequest<RemoveUserFromGroupsRequest> {
-
-    @JacksonXmlElementWrapper(localName = "groupIds")
-    @JacksonXmlProperty(localName = "groupId")
-    private List<Long> groupIds;
-    private Long       userId;
-
-    public RemoveUserFromGroupsRequest() {
-    }
+@JsonRootName("removeUserFromGroupsRequest")
+public record RemoveUserFromGroupsRequest(
+        @JacksonXmlElementWrapper(localName = "groupIds")
+        @JacksonXmlProperty(localName = "groupId")
+        List<Long> groupIds,
+        Long userId) implements ApiRequest<RemoveUserFromGroupsRequest> {
 
     public RemoveUserFromGroupsRequest(Long userId, List<Long> groupIds) {
-        this.userId = userId;
-        this.groupIds = groupIds;
-    }
-
-    public List<Long> getGroupIds() {
-        return groupIds;
-    }
-
-    public Long getUserId() {
-        return userId;
+        this(groupIds, userId);
     }
 
     private boolean validated() {

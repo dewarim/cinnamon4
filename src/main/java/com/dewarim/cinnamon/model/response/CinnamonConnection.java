@@ -1,8 +1,8 @@
 package com.dewarim.cinnamon.model.response;
 
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
-@JacksonXmlRootElement(localName = "cinnamonConnection")
+@JsonRootName("cinnamonConnection")
 public class CinnamonConnection {
 
     private String ticket;

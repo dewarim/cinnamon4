@@ -1,40 +1,13 @@
 package com.dewarim.cinnamon.model.request.user;
 
 import com.dewarim.cinnamon.api.ApiRequest;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.List;
 import java.util.Optional;
 
-@JacksonXmlRootElement(localName = "setUserConfigRequest")
-public class SetUserConfigRequest implements ApiRequest<SetUserConfigRequest> {
-
-    private Long   userId;
-    private String config;
-
-    public SetUserConfigRequest() {
-    }
-
-    public SetUserConfigRequest(Long userId, String config) {
-        this.userId = userId;
-        this.config = config;
-    }
-
-    public Long getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
-
-    public String getConfig() {
-        return config;
-    }
-
-    public void setConfig(String config) {
-        this.config = config;
-    }
+@JsonRootName("setUserConfigRequest")
+public record SetUserConfigRequest(Long userId, String config) implements ApiRequest<SetUserConfigRequest> {
 
     public Optional<SetUserConfigRequest> validateRequest() {
         if (config != null && userId != null && userId > 0) {

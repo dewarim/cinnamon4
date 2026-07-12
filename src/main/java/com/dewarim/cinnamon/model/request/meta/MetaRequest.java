@@ -1,46 +1,25 @@
 package com.dewarim.cinnamon.model.request.meta;
 
 import com.dewarim.cinnamon.api.ApiRequest;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.List;
 import java.util.Optional;
 
-@JacksonXmlRootElement(localName = "metaRequest")
-public class MetaRequest implements ApiRequest<MetaRequest> {
+@JsonRootName("metaRequest")
+public record MetaRequest(
+        Long id,
+        @JacksonXmlElementWrapper(localName = "typeIds")
+        @JacksonXmlProperty(localName = "typeId")
+        List<Long> typeIds) implements ApiRequest<MetaRequest> {
 
-    private Long         id;
-
-    @JacksonXmlElementWrapper(localName = "typeIds")
-    @JacksonXmlProperty(localName = "typeId")
-    private List<Long> typeIds;
     public MetaRequest() {
+        this(null, null);
     }
 
-    public MetaRequest(Long id, List<Long> typeIds) {
-        this.id = id;
-        this.typeIds = typeIds;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public List<Long> getTypeIds() {
-        return typeIds;
-    }
-
-    public void setTypeIds(List<Long> typeIds) {
-        this.typeIds = typeIds;
-    }
-
-    private boolean validated(){
+    private boolean validated() {
         return id != null && id > 0 && (typeIds == null || typeIds.stream().noneMatch(typeId -> typeId == null || typeId < 0));
     }
 

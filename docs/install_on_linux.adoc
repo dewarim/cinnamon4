@@ -21,11 +21,11 @@ either with pgAdmin or https://medium.com/coding-blocks/creating-user-database-a
 
 You can either use your system's package manager to install a version of the OpenJDK or install an independent version locally. I recommend the latter, as then Cinnamon won't break if your system's version is too old, although you will have to install security updates manually. This document assumes you will use the manual installation.
 
-* Download  https://adoptopenjdk.net/[Java 16] (or a newer version).
+* Download  https://adoptium.net/[Java 25] (or a newer version).
 * Unpack the downloaded file.
 * Add Java to your PATH (for example by adding it to the end of .bashrc in your home directory)
 
-    export JAVA_HOME=/home/${USER}/bin/jdk-16
+    export JAVA_HOME=/home/${USER}/bin/jdk-25
     export PATH=${JAVA_HOME}/bin:$PATH
 
 You may have to restart / re-login to have this take effect.

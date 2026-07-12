@@ -3,9 +3,9 @@ package com.dewarim.cinnamon.model.response;
 import com.dewarim.cinnamon.model.Folder;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.links.Link;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
-@JacksonXmlRootElement(localName = "linkResponse")
+@JsonRootName("linkResponse")
 public class LinkResponse extends Link {
 
     private ObjectSystemData osd;

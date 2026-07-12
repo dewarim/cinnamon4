@@ -62,12 +62,12 @@ public class GroupServlet extends HttpServlet implements CruddyServlet<Group> {
                         .validate().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
                 List<Long> groupIds = deleteRequest.list();
                 for (Long groupId : groupIds) {
-                    if (groupDao.hasChildren(groupId) && !deleteRequest.isRecursive()) {
+                    if (groupDao.hasChildren(groupId) && !deleteRequest.recursive()) {
                         log.debug("Group with id {} still has child groups.", groupId);
                         throw ErrorCode.GROUP_HAS_CHILDREN.exception();
                     }
                 }
-                deleteGroups(groupIds, groupDao, deleteRequest.isIgnoreNotFound());
+                deleteGroups(groupIds, groupDao, deleteRequest.ignoreNotFound());
                 cinnamonResponse.setWrapper(new DeleteResponse(true));
                 AccessFilter.reload();
             }
@@ -94,8 +94,8 @@ public class GroupServlet extends HttpServlet implements CruddyServlet<Group> {
         RemoveUserFromGroupsRequest removeRequest = request.getMapper().readValue(request.getInputStream(), RemoveUserFromGroupsRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         GroupUserDao groupUserDao = new GroupUserDao();
-        groupUserDao.removeUserFromGroups(removeRequest.getUserId(), removeRequest.getGroupIds());
-        AccessFilter.reloadUser(removeRequest.getUserId());
+        groupUserDao.removeUserFromGroups(removeRequest.userId(), removeRequest.groupIds());
+        AccessFilter.reloadUser(removeRequest.userId());
         cinnamonResponse.responseIsGenericOkay();
     }
 
@@ -103,8 +103,8 @@ public class GroupServlet extends HttpServlet implements CruddyServlet<Group> {
         AddUserToGroupsRequest addRequest = request.getMapper().readValue(request.getInputStream(), AddUserToGroupsRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         GroupUserDao groupUserDao = new GroupUserDao();
-        groupUserDao.addUserToGroups(addRequest.getUserId(), addRequest.getGroupIds());
-        AccessFilter.reloadUser(addRequest.getUserId());
+        groupUserDao.addUserToGroups(addRequest.userId(), addRequest.groupIds());
+        AccessFilter.reloadUser(addRequest.userId());
         cinnamonResponse.responseIsGenericOkay();
     }
 

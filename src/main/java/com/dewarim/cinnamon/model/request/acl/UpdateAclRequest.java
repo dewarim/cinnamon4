@@ -5,45 +5,39 @@ import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.response.AclWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@JacksonXmlRootElement(localName = "updateAclRequest")
-public class UpdateAclRequest implements UpdateRequest<Acl>, ApiRequest<UpdateAclRequest> {
+@JsonRootName("updateAclRequest")
+public record UpdateAclRequest(
+        @JacksonXmlElementWrapper(localName = "acls")
+        @JacksonXmlProperty(localName = "acl")
+        List<Acl> acls) implements UpdateRequest<Acl>, ApiRequest<UpdateAclRequest> {
 
-    @JacksonXmlElementWrapper(localName = "acls")
-    @JacksonXmlProperty(localName = "acl")
-    private List<Acl> acls = new ArrayList<>();
+    public UpdateAclRequest {
+        if (acls == null) {
+            acls = new ArrayList<>();
+        }
+    }
+
+    public UpdateAclRequest(Long id, String name) {
+        this(new ArrayList<>(List.of(new Acl(id, name))));
+    }
 
     @Override
     public List<Acl> list() {
         return acls;
     }
 
-    public UpdateAclRequest() {
-    }
-
-    public UpdateAclRequest(Long id, String name) {
-        acls.add(new Acl(id,name));
-    }
-
-    public UpdateAclRequest(List<Acl> acls) {
-        this.acls = acls;
-    }
-
-    public List<Acl> getAcls() {
-        return acls;
-    }
-
     @Override
     public boolean validated() {
         return acls.stream().allMatch(acl ->
-            acl != null && acl.getName() != null && !acl.getName().trim().isEmpty()
-                    && acl.getId() != null && acl.getId() > 0);
+                acl != null && acl.getName() != null && !acl.getName().trim().isEmpty()
+                        && acl.getId() != null && acl.getId() > 0);
     }
 
     @Override

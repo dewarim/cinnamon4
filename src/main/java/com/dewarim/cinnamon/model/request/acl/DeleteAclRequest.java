@@ -3,22 +3,33 @@ package com.dewarim.cinnamon.model.request.acl;
 import com.dewarim.cinnamon.api.ApiRequest;
 import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.request.DeleteByIdRequest;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import com.fasterxml.jackson.annotation.JsonRootName;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
-@JacksonXmlRootElement(localName = "deleteAclRequest")
-public class DeleteAclRequest extends DeleteByIdRequest<Acl> implements ApiRequest<DeleteAclRequest> {
+@JsonRootName("deleteAclRequest")
+public record DeleteAclRequest(
+        @JacksonXmlElementWrapper(localName = "ids")
+        @JacksonXmlProperty(localName = "id")
+        Set<Long> ids,
+        boolean ignoreNotFound) implements DeleteByIdRequest<Acl>, ApiRequest<DeleteAclRequest> {
 
-    public DeleteAclRequest() {
+    public DeleteAclRequest {
+        if (ids == null) {
+            ids = new HashSet<>();
+        }
     }
 
     public DeleteAclRequest(List<Long> ids) {
-        super(ids);
+        this(new HashSet<>(ids), false);
     }
 
     public DeleteAclRequest(Long id) {
-        super(id);
+        this(new HashSet<>(java.util.Collections.singletonList(id)), false);
     }
 
     @Override

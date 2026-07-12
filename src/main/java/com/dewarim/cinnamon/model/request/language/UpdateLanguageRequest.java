@@ -5,45 +5,39 @@ import com.dewarim.cinnamon.model.Language;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.response.LanguageWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@JacksonXmlRootElement(localName = "updateLanguageRequest")
-public class UpdateLanguageRequest implements UpdateRequest<Language>, ApiRequest<UpdateLanguageRequest> {
+@JsonRootName("updateLanguageRequest")
+public record UpdateLanguageRequest(
+        @JacksonXmlElementWrapper(localName = "languages")
+        @JacksonXmlProperty(localName = "language")
+        List<Language> languages) implements UpdateRequest<Language>, ApiRequest<UpdateLanguageRequest> {
 
-    @JacksonXmlElementWrapper(localName = "languages")
-    @JacksonXmlProperty(localName = "language")
-    private List<Language> languages = new ArrayList<>();
+    public UpdateLanguageRequest {
+        if (languages == null) {
+            languages = new ArrayList<>();
+        }
+    }
+
+    public UpdateLanguageRequest(Long id, String name) {
+        this(new ArrayList<>(List.of(new Language(id, name))));
+    }
 
     @Override
     public List<Language> list() {
         return languages;
     }
 
-    public UpdateLanguageRequest() {
-    }
-
-    public UpdateLanguageRequest(Long id, String name) {
-        languages.add(new Language(id,name));
-    }
-
-    public UpdateLanguageRequest(List<Language> Languages) {
-        this.languages = Languages;
-    }
-
-    public List<Language> getLanguages() {
-        return languages;
-    }
-
     @Override
     public boolean validated() {
-        return languages.stream().allMatch(Language ->
-            Language != null && Language.getIsoCode() != null && !Language.getIsoCode().trim().isEmpty()
-                    && Language.getId() != null && Language.getId() > 0);
+        return languages.stream().allMatch(language ->
+                language != null && language.getIsoCode() != null && !language.getIsoCode().trim().isEmpty()
+                        && language.getId() != null && language.getId() > 0);
     }
 
     @Override
@@ -53,6 +47,6 @@ public class UpdateLanguageRequest implements UpdateRequest<Language>, ApiReques
 
     @Override
     public List<ApiRequest<UpdateLanguageRequest>> examples() {
-        return List.of(new UpdateLanguageRequest(53L,"new-isoCode-for-language"));
+        return List.of(new UpdateLanguageRequest(53L, "new-isoCode-for-language"));
     }
 }

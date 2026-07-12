@@ -5,11 +5,11 @@ import com.dewarim.cinnamon.model.index.IndexJob;
 import com.dewarim.cinnamon.model.index.IndexJobAction;
 import com.dewarim.cinnamon.model.index.IndexJobType;
 import com.dewarim.cinnamon.model.response.BaseResponse;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.List;
 
-@JacksonXmlRootElement(localName = "indexInfoResponse")
+@JsonRootName("indexInfoResponse")
 public class IndexInfoResponse extends BaseResponse implements ApiResponse {
 
     private Integer        documentsInIndex;

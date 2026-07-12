@@ -6,33 +6,27 @@ import com.dewarim.cinnamon.model.ChangeTriggerType;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.response.ChangeTriggerWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@JacksonXmlRootElement(localName = "updateChangeTriggerRequest")
-public class UpdateChangeTriggerRequest implements UpdateRequest<ChangeTrigger>, ApiRequest<UpdateRequest<ChangeTrigger>> {
+@JsonRootName("updateChangeTriggerRequest")
+public record UpdateChangeTriggerRequest(
+        @JacksonXmlElementWrapper(localName = "changeTriggers")
+        @JacksonXmlProperty(localName = "changeTrigger")
+        List<ChangeTrigger> changeTriggers) implements UpdateRequest<ChangeTrigger>, ApiRequest<UpdateRequest<ChangeTrigger>> {
 
-    @JacksonXmlElementWrapper(localName = "changeTriggers")
-    @JacksonXmlProperty(localName = "changeTrigger")
-    private List<ChangeTrigger> changeTriggers = new ArrayList<>();
+    public UpdateChangeTriggerRequest {
+        if (changeTriggers == null) {
+            changeTriggers = new ArrayList<>();
+        }
+    }
 
     @Override
     public List<ChangeTrigger> list() {
-        return changeTriggers;
-    }
-
-    public UpdateChangeTriggerRequest() {
-    }
-
-    public UpdateChangeTriggerRequest(List<ChangeTrigger> changeTriggers) {
-        this.changeTriggers = changeTriggers;
-    }
-
-    public List<ChangeTrigger> getChangeTriggers() {
         return changeTriggers;
     }
 

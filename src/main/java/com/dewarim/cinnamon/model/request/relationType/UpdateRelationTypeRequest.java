@@ -5,36 +5,31 @@ import com.dewarim.cinnamon.model.relations.RelationType;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.response.RelationTypeWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@JacksonXmlRootElement(localName = "updateRelationTypeRequest")
-public class UpdateRelationTypeRequest implements UpdateRequest<RelationType>, ApiRequest<UpdateRelationTypeRequest> {
+@JsonRootName("updateRelationTypeRequest")
+public record UpdateRelationTypeRequest(
+        @JacksonXmlElementWrapper(localName = "relationTypes")
+        @JacksonXmlProperty(localName = "relationType")
+        List<RelationType> relationTypes) implements UpdateRequest<RelationType>, ApiRequest<UpdateRelationTypeRequest> {
 
-    @JacksonXmlElementWrapper(localName = "relationTypes")
-    @JacksonXmlProperty(localName = "relationType")
-    private List<RelationType> relationTypes = new ArrayList<>();
-
-    @Override
-    public List<RelationType> list() {
-        return relationTypes;
-    }
-
-    public UpdateRelationTypeRequest() {
+    public UpdateRelationTypeRequest {
+        if (relationTypes == null) {
+            relationTypes = new ArrayList<>();
+        }
     }
 
     public UpdateRelationTypeRequest(Long id, String name) {
+        this(new ArrayList<>());
     }
 
-    public UpdateRelationTypeRequest(List<RelationType> RelationTypes) {
-        this.relationTypes = RelationTypes;
-    }
-
-    public List<RelationType> getRelationTypes() {
+    @Override
+    public List<RelationType> list() {
         return relationTypes;
     }
 

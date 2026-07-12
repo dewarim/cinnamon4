@@ -1,26 +1,13 @@
 package com.dewarim.cinnamon.model.request;
 
 import com.dewarim.cinnamon.api.ApiRequest;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.List;
 import java.util.Optional;
 
-@JacksonXmlRootElement(localName = "connectionRequest")
-public class ConnectionRequest implements ApiRequest<ConnectionRequest> {
-
-    private String username;
-    private String password;
-    private String format;
-
-    public ConnectionRequest() {
-    }
-
-    public ConnectionRequest(String username, String password, String format) {
-        this.username = username;
-        this.password = password;
-        this.format   = format;
-    }
+@JsonRootName("connectionRequest")
+public record ConnectionRequest(String username, String password, String format) implements ApiRequest<ConnectionRequest> {
 
     public boolean validated() {
         return username != null && !username.isEmpty() && !username.isBlank()
@@ -30,29 +17,17 @@ public class ConnectionRequest implements ApiRequest<ConnectionRequest> {
     public Optional<ConnectionRequest> validateRequest() {
         if (validated()) {
             return Optional.of(this);
-        }
-        else {
+        } else {
             return Optional.empty();
         }
     }
 
-    public String getUsername() {
-        return username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public String getFormat() {
-        return format;
-    }
-
     @Override
     public String toString() {
+        // never expose the password in logs
         return "ConnectionRequest{" +
                 "username='" + username + '\'' +
-                ", password='" + password + '\'' +
+                ", password='" + (password == null ? null : "***censored***") + '\'' +
                 ", format='" + format + '\'' +
                 '}';
     }

@@ -5,33 +5,27 @@ import com.dewarim.cinnamon.model.UiLanguage;
 import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.response.UiLanguageWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@JacksonXmlRootElement(localName = "createUiLanguageRequest")
-public class CreateUiLanguageRequest implements CreateRequest<UiLanguage>, ApiRequest<CreateUiLanguageRequest> {
+@JsonRootName("createUiLanguageRequest")
+public record CreateUiLanguageRequest(
+        @JacksonXmlElementWrapper(localName = "uiLanguages")
+        @JacksonXmlProperty(localName = "uiLanguage")
+        List<UiLanguage> uiLanguages) implements CreateRequest<UiLanguage>, ApiRequest<CreateUiLanguageRequest> {
 
-    @JacksonXmlElementWrapper(localName = "uiLanguages")
-    @JacksonXmlProperty(localName = "uiLanguage")
-    private List<UiLanguage> uiLanguages = new ArrayList<>();
+    public CreateUiLanguageRequest {
+        if (uiLanguages == null) {
+            uiLanguages = new ArrayList<>();
+        }
+    }
 
     @Override
     public List<UiLanguage> list() {
-        return uiLanguages;
-    }
-
-    public CreateUiLanguageRequest() {
-    }
-
-    public CreateUiLanguageRequest(List<UiLanguage> uiLanguages) {
-        this.uiLanguages = uiLanguages;
-    }
-
-    public List<UiLanguage> getUiLanguages() {
         return uiLanguages;
     }
 

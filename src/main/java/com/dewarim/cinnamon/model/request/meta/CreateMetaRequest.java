@@ -2,38 +2,32 @@ package com.dewarim.cinnamon.model.request.meta;
 
 import com.dewarim.cinnamon.api.ApiRequest;
 import com.dewarim.cinnamon.model.Meta;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-@JacksonXmlRootElement(localName = "createMetaRequest")
-public class CreateMetaRequest implements ApiRequest<CreateMetaRequest> {
+@JsonRootName("createMetaRequest")
+public record CreateMetaRequest(
+        @JacksonXmlElementWrapper(localName = "metasets")
+        @JacksonXmlProperty(localName = "metaset")
+        List<Meta> metas) implements ApiRequest<CreateMetaRequest> {
 
-    @JacksonXmlElementWrapper(localName = "metasets")
-    @JacksonXmlProperty(localName = "metaset")
-    private List<Meta> metas = new ArrayList<>();
-
-    public CreateMetaRequest() {
+    public CreateMetaRequest {
+        if (metas == null) {
+            metas = new ArrayList<>();
+        }
     }
 
-    public CreateMetaRequest(List<Meta> metas) {
-        this.metas = metas;
+    public CreateMetaRequest() {
+        this(new ArrayList<>());
     }
 
     public CreateMetaRequest(Long id, String content, Long typeId) {
-        metas.add(new Meta(id, typeId, content));
-    }
-
-    public List<Meta> getMetas() {
-        return metas;
-    }
-
-    public void setMetas(List<Meta> metas) {
-        this.metas = metas;
+        this(new ArrayList<>(List.of(new Meta(id, typeId, content))));
     }
 
     private boolean validated() {
@@ -53,13 +47,6 @@ public class CreateMetaRequest implements ApiRequest<CreateMetaRequest> {
         } else {
             return Optional.empty();
         }
-    }
-
-    @Override
-    public String toString() {
-        return "CreateMetaRequest{" +
-                "metas=" + metas +
-                '}';
     }
 
     @Override

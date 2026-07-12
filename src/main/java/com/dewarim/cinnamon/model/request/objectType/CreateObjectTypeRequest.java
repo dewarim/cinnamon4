@@ -5,37 +5,31 @@ import com.dewarim.cinnamon.model.ObjectType;
 import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.response.ObjectTypeWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@JacksonXmlRootElement(localName = "createObjectTypeRequest")
-public class CreateObjectTypeRequest implements CreateRequest<ObjectType>, ApiRequest<CreateObjectTypeRequest> {
+@JsonRootName("createObjectTypeRequest")
+public record CreateObjectTypeRequest(
+        @JacksonXmlElementWrapper(localName = "objectTypes")
+        @JacksonXmlProperty(localName = "objectType")
+        List<ObjectType> objectTypes) implements CreateRequest<ObjectType>, ApiRequest<CreateObjectTypeRequest> {
 
-    @JacksonXmlElementWrapper(localName = "objectTypes")
-    @JacksonXmlProperty(localName = "objectType")
-    private List<ObjectType> objectTypes = new ArrayList<>();
-
-    @Override
-    public List<ObjectType> list() {
-        return objectTypes;
-    }
-
-    public CreateObjectTypeRequest() {
+    public CreateObjectTypeRequest {
+        if (objectTypes == null) {
+            objectTypes = new ArrayList<>();
+        }
     }
 
     public CreateObjectTypeRequest(String name) {
-        this.objectTypes.add(new ObjectType(name));
+        this(new ArrayList<>(List.of(new ObjectType(name))));
     }
 
-    public CreateObjectTypeRequest(List<ObjectType> objectTypes) {
-        this.objectTypes = objectTypes;
-    }
-
-    public List<ObjectType> getObjectTypes() {
+    @Override
+    public List<ObjectType> list() {
         return objectTypes;
     }
 
@@ -57,5 +51,4 @@ public class CreateObjectTypeRequest implements CreateRequest<ObjectType>, ApiRe
                 List.of(new ObjectType("default type"), new ObjectType("other type"))
         ));
     }
-
 }

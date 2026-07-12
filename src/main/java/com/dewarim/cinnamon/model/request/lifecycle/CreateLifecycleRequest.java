@@ -5,34 +5,24 @@ import com.dewarim.cinnamon.model.Lifecycle;
 import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.response.LifecycleWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-@JacksonXmlRootElement(localName = "createLifecycleRequest")
-public class CreateLifecycleRequest implements CreateRequest<Lifecycle>, ApiRequest<Lifecycle> {
+@JsonRootName("createLifecycleRequest")
+public record CreateLifecycleRequest(
+        @JacksonXmlElementWrapper(localName = "lifecycles")
+        @JacksonXmlProperty(localName = "lifecycle")
+        List<Lifecycle> lifecycles) implements CreateRequest<Lifecycle>, ApiRequest<Lifecycle> {
 
-    @JacksonXmlElementWrapper(localName = "lifecycles")
-    @JacksonXmlProperty(localName = "lifecycle")
-    private List<Lifecycle> lifecycles = new ArrayList<>();
-
-    public CreateLifecycleRequest() {
-    }
-
-    public CreateLifecycleRequest(List<Lifecycle> lifecycles) {
-        this.lifecycles = lifecycles;
-    }
-
-    public List<Lifecycle> getLifecycles() {
-        return lifecycles;
-    }
-
-    public void setLifecycles(List<Lifecycle> lifecycles) {
-        this.lifecycles = lifecycles;
+    public CreateLifecycleRequest {
+        if (lifecycles == null) {
+            lifecycles = new ArrayList<>();
+        }
     }
 
     @Override
@@ -60,6 +50,6 @@ public class CreateLifecycleRequest implements CreateRequest<Lifecycle>, ApiRequ
 
     @Override
     public List<ApiRequest<Lifecycle>> examples() {
-        return List.of(new CreateLifecycleRequest(List.of(new Lifecycle("authoring",null), new Lifecycle("translation-lc",null))));
+        return List.of(new CreateLifecycleRequest(List.of(new Lifecycle("authoring", null), new Lifecycle("translation-lc", null))));
     }
 }

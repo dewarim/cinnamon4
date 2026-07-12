@@ -1,9 +1,8 @@
 package com.dewarim.cinnamon.model.request.folder;
 
-
 import com.dewarim.cinnamon.api.ApiRequest;
 import com.dewarim.cinnamon.model.Folder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.List;
 import java.util.Optional;
@@ -11,38 +10,15 @@ import java.util.Optional;
 /**
  * Request for a single folder and its ancestors.
  */
-@JacksonXmlRootElement(localName = "singleFolderRequest")
-public class SingleFolderRequest implements ApiRequest<Folder> {
-
-    private Long    id;
-    private boolean includeSummary;
+@JsonRootName("singleFolderRequest")
+public record SingleFolderRequest(Long id, boolean includeSummary) implements ApiRequest<Folder> {
 
     public SingleFolderRequest() {
-    }
-
-    public SingleFolderRequest(Long id, boolean includeSummary) {
-        this.includeSummary = includeSummary;
-        this.id = id;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public boolean isIncludeSummary() {
-        return includeSummary;
-    }
-
-    public void setIncludeSummary(boolean includeSummary) {
-        this.includeSummary = includeSummary;
+        this(null, false);
     }
 
     /**
-     * @return true if list of ids is non-empty and contains only positive long integers.
+     * @return true if the id is a positive long integer.
      */
     private boolean validated() {
         return id != null && id > 0;
@@ -58,6 +34,6 @@ public class SingleFolderRequest implements ApiRequest<Folder> {
 
     @Override
     public List<ApiRequest<Folder>> examples() {
-        return List.of(new SingleFolderRequest(123L,true), new SingleFolderRequest(321L,false));
+        return List.of(new SingleFolderRequest(123L, true), new SingleFolderRequest(321L, false));
     }
 }

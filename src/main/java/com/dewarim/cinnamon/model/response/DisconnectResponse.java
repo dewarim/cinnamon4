@@ -1,12 +1,12 @@
 package com.dewarim.cinnamon.model.response;
 
 import com.dewarim.cinnamon.api.ApiResponse;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.Collections;
 import java.util.List;
 
-@JacksonXmlRootElement(localName = "cinnamon")
+@JsonRootName("cinnamon")
 public class DisconnectResponse extends BaseResponse implements Wrapper<DisconnectResponse>, ApiResponse {
 
     boolean disconnectSuccessful;

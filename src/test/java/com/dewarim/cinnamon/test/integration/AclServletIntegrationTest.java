@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static com.dewarim.cinnamon.ErrorCode.INVALID_REQUEST;
 import static com.dewarim.cinnamon.api.Constants.ACL_DEFAULT;
@@ -104,8 +105,7 @@ public class AclServletIntegrationTest extends CinnamonIntegrationTest {
     @Test
     public void deleteAclShouldIgnoreUnknownAclOnRequest() throws IOException {
         // aclId 1 is default acl in test db, linked to root folder
-        DeleteAclRequest deleteAclRequest = new DeleteAclRequest(Long.MAX_VALUE);
-        deleteAclRequest.setIgnoreNotFound(true);
+        DeleteAclRequest deleteAclRequest = new DeleteAclRequest(Set.of(Long.MAX_VALUE), true);
         StandardResponse response = sendAdminRequest(UrlMapping.ACL__DELETE, deleteAclRequest);
         assertResponseOkay(response);
     }

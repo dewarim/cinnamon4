@@ -111,17 +111,17 @@ public class UserAccountServlet extends HttpServlet implements CruddyServlet<Use
                 SetUserConfigRequest configRequest = cinnamonRequest.getMapper().readValue(request.getInputStream(), SetUserConfigRequest.class)
                         .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
                 UserAccount           currentUser = RequestScope.getCurrentUser();
-                Optional<UserAccount> userOpt     = userAccountDao.getUserAccountById(configRequest.getUserId());
+                Optional<UserAccount> userOpt     = userAccountDao.getUserAccountById(configRequest.userId());
                 if (userOpt.isEmpty()) {
                     throw ErrorCode.USER_ACCOUNT_NOT_FOUND.exception();
                 }
-                if (!configRequest.getUserId().equals(currentUser.getId())) {
+                if (!configRequest.userId().equals(currentUser.getId())) {
                     if (!userAccountDao.isSuperuser(currentUser)) {
                         throw ErrorCode.FORBIDDEN.exception();
                     }
                 }
                 UserAccount user = userOpt.get();
-                user.setConfig(configRequest.getConfig());
+                user.setConfig(configRequest.config());
                 userAccountDao.updateUser(user);
                 cinnamonResponse.responseIsGenericOkay();
             }
@@ -129,9 +129,9 @@ public class UserAccountServlet extends HttpServlet implements CruddyServlet<Use
                 superuserCheck();
                 DeleteUserAccountRequest deleteUserAccountRequest = cinnamonRequest.getMapper().readValue(request.getInputStream(), DeleteUserAccountRequest.class)
                         .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
-                Long assetReceiverId = deleteUserAccountRequest.getAssetReceiverId();
+                Long assetReceiverId = deleteUserAccountRequest.assetReceiverId();
                 userAccountDao.getUserAccountById(assetReceiverId).orElseThrow(ErrorCode.DELETE_USER_NEEDS_ASSET_RECEIVER::exception);
-                Long        userId      = deleteUserAccountRequest.getUserId();
+                Long        userId      = deleteUserAccountRequest.userId();
                 UserAccount userAccount = userAccountDao.getUserAccountById(userId).orElseThrow(ErrorCode.USER_ACCOUNT_NOT_FOUND::exception);
                 if (userAccountDao.isSuperuser(userAccount)) {
                     throw ErrorCode.CANNOT_DELETE_SUPERUSER.exception();
@@ -162,15 +162,15 @@ public class UserAccountServlet extends HttpServlet implements CruddyServlet<Use
         SetPasswordRequest passwordRequest = request.getMapper().readValue(request.getInputStream(), SetPasswordRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         UserAccount           currentUser = RequestScope.getCurrentUser();
-        Optional<UserAccount> userOpt     = userDao.getUserAccountById(passwordRequest.getUserId());
+        Optional<UserAccount> userOpt     = userDao.getUserAccountById(passwordRequest.userId());
 
-        if (!passwordRequest.getUserId().equals(currentUser.getId())) {
+        if (!passwordRequest.userId().equals(currentUser.getId())) {
             if (!userDao.isSuperuser(currentUser)) {
                 throw ErrorCode.FORBIDDEN.exception();
             }
         }
 
-        if (passwordIsTooShort(passwordRequest.getPassword())) {
+        if (passwordIsTooShort(passwordRequest.password())) {
             throw ErrorCode.PASSWORD_TOO_SHORT.exception();
         }
 
@@ -178,7 +178,7 @@ public class UserAccountServlet extends HttpServlet implements CruddyServlet<Use
         if (!user.getLoginType().equals(LoginType.CINNAMON.name())) {
             throw ErrorCode.USER_ACCOUNT_SET_PASSWORD_NOT_ALLOWED.exception();
         }
-        String pwdHash = HashMaker.createDigest(passwordRequest.getPassword());
+        String pwdHash = HashMaker.createDigest(passwordRequest.password());
         user.setPassword(pwdHash);
         userDao.updateUser(user);
         response.responseIsGenericOkay();
@@ -187,9 +187,9 @@ public class UserAccountServlet extends HttpServlet implements CruddyServlet<Use
     private void showUserInfo(GetUserAccountRequest userInfoRequest, UserAccountDao userAccountDao, GroupUserDao groupUserDao, CinnamonResponse response) {
         Optional<UserAccount> userOpt;
         if (userInfoRequest.byId()) {
-            userOpt = userAccountDao.getUserAccountById(userInfoRequest.getUserId());
+            userOpt = userAccountDao.getUserAccountById(userInfoRequest.userId());
         } else if (userInfoRequest.byName()) {
-            userOpt = userAccountDao.getUserAccountByName(userInfoRequest.getUsername());
+            userOpt = userAccountDao.getUserAccountByName(userInfoRequest.username());
         } else {
             throw ErrorCode.USER_INFO_REQUEST_WITHOUT_NAME_OR_ID.exception();
         }

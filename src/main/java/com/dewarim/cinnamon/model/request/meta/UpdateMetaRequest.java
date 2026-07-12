@@ -5,34 +5,28 @@ import com.dewarim.cinnamon.model.Meta;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.response.MetaWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-@JacksonXmlRootElement(localName = "updateMetaRequest")
-public class UpdateMetaRequest implements ApiRequest<UpdateMetaRequest>, UpdateRequest<Meta> {
+@JsonRootName("updateMetaRequest")
+public record UpdateMetaRequest(
+        @JacksonXmlElementWrapper(localName = "metasets")
+        @JacksonXmlProperty(localName = "metaset")
+        List<Meta> metas) implements ApiRequest<UpdateMetaRequest>, UpdateRequest<Meta> {
 
-    @JacksonXmlElementWrapper(localName = "metasets")
-    @JacksonXmlProperty(localName = "metaset")
-    private List<Meta> metas = new ArrayList<>();
-
-    public UpdateMetaRequest() {
-    }
-
-    public UpdateMetaRequest(List<Meta> metas) {
-        this.metas = metas;
+    public UpdateMetaRequest {
+        if (metas == null) {
+            metas = new ArrayList<>();
+        }
     }
 
     @Override
     public List<Meta> list() {
-        return metas;
-    }
-
-    public List<Meta> getMetas() {
         return metas;
     }
 
@@ -49,13 +43,6 @@ public class UpdateMetaRequest implements ApiRequest<UpdateMetaRequest>, UpdateR
     @Override
     public Wrapper<Meta> fetchResponseWrapper() {
         return new MetaWrapper();
-    }
-
-    @Override
-    public String toString() {
-        return "UpdateMetaRequest{" +
-                "metas=" + metas +
-                '}';
     }
 
     @Override

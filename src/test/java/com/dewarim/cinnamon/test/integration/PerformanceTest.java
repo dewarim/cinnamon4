@@ -46,13 +46,8 @@ public class PerformanceTest extends CinnamonIntegrationTest {
             if(count++ % 1000 == 0) {
                 System.out.println(count);
             }
-            CreateOsdRequest request = new CreateOsdRequest();
-            request.setAclId(defaultCreationAcl.getId());
-            request.setName("new osd");
-            request.setOwnerId(userId);
-            request.setParentId(createFolderId);
-            request.setTypeId(1L);
-            request.setFormatId(jpeg.getId());
+            CreateOsdRequest request = new CreateOsdRequest("new osd", createFolderId, userId, defaultCreationAcl.getId(),
+                    1L, jpeg.getId(), null, null, null);
             FileBody fileBody = new FileBody(image);
             MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
                     .addPart("file", fileBody)

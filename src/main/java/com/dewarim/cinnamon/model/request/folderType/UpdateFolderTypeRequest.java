@@ -5,41 +5,39 @@ import com.dewarim.cinnamon.model.FolderType;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.response.FolderTypeWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@JacksonXmlRootElement(localName = "updateFolderTypeRequest")
-public class UpdateFolderTypeRequest implements UpdateRequest<FolderType>, ApiRequest<UpdateFolderTypeRequest> {
+@JsonRootName("updateFolderTypeRequest")
+public record UpdateFolderTypeRequest(
+        @JacksonXmlElementWrapper(localName = "folderTypes")
+        @JacksonXmlProperty(localName = "folderType")
+        List<FolderType> folderTypes) implements UpdateRequest<FolderType>, ApiRequest<UpdateFolderTypeRequest> {
 
-    @JacksonXmlElementWrapper(localName = "folderTypes")
-    @JacksonXmlProperty(localName = "folderType")
-    private List<FolderType> folderTypes = new ArrayList<>();
+    public UpdateFolderTypeRequest {
+        if (folderTypes == null) {
+            folderTypes = new ArrayList<>();
+        }
+    }
+
+    public UpdateFolderTypeRequest(Long id, String name) {
+        this(new ArrayList<>(List.of(new FolderType(id, name))));
+    }
 
     @Override
     public List<FolderType> list() {
         return folderTypes;
     }
 
-    public UpdateFolderTypeRequest() {
-    }
-
-    public UpdateFolderTypeRequest(Long id, String name) {
-        folderTypes.add(new FolderType(id,name));
-    }
-
-    public UpdateFolderTypeRequest(List<FolderType> folderTypes) {
-        this.folderTypes = folderTypes;
-    }
-
     @Override
     public boolean validated() {
-        return folderTypes.stream().allMatch(FolderType ->
-            FolderType != null && FolderType.getName() != null && !FolderType.getName().trim().isEmpty()
-                    && FolderType.getId() != null && FolderType.getId() > 0);
+        return folderTypes.stream().allMatch(folderType ->
+                folderType != null && folderType.getName() != null && !folderType.getName().trim().isEmpty()
+                        && folderType.getId() != null && folderType.getId() > 0);
     }
 
     @Override

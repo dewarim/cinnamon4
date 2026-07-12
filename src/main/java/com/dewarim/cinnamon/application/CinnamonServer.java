@@ -19,11 +19,10 @@ import com.dewarim.cinnamon.filter.RequestResponseFilter;
 import com.dewarim.cinnamon.model.ChangeTriggerType;
 import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.provider.ContentProviderService;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import com.fasterxml.jackson.dataformat.xml.deser.FromXmlParser;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.SerializationFeature;
+import tools.jackson.dataformat.xml.XmlMapper;
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.MultipartConfigElement;
 import jakarta.servlet.annotation.MultipartConfig;
@@ -52,6 +51,7 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -403,9 +403,10 @@ public class CinnamonServer {
     }
 
     private static void printApi() {
-        XmlMapper mapper = new XmlMapper();
-        mapper.configure(FromXmlParser.Feature.EMPTY_ELEMENT_AS_NULL, true);
-        mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+        XmlMapper mapper = XmlMapper.builder()
+                .configureForJackson2()
+                .configure(SerializationFeature.INDENT_OUTPUT, true)
+                .build();
         System.out.println("""
                 # API Endpoint Documentation
                 
@@ -456,15 +457,41 @@ public class CinnamonServer {
         );
     }
 
-    private static String requestToExample(ObjectMapper mapper, Class<? extends ApiRequest> apiRequestClass) throws JsonProcessingException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+    private static String requestToExample(ObjectMapper mapper, Class<? extends ApiRequest> apiRequestClass) throws Exception {
         if (apiRequestClass == null) {
             return "";
         }
-        ApiRequest request = apiRequestClass.getConstructor().newInstance();
+        ApiRequest request;
+        try {
+            request = apiRequestClass.getConstructor().newInstance();
+        } catch (NoSuchMethodException noNoArgCtor) {
+            // request records need not declare a no-arg constructor: build via the canonical
+            // constructor with default component values (examples() does not depend on instance state).
+            Class<?>[] componentTypes = java.util.Arrays.stream(apiRequestClass.getRecordComponents())
+                    .map(java.lang.reflect.RecordComponent::getType)
+                    .toArray(Class<?>[]::new);
+            Object[] args = java.util.Arrays.stream(componentTypes).map(CinnamonServer::defaultValue).toArray();
+            request = apiRequestClass.getDeclaredConstructor(componentTypes).newInstance(args);
+        }
         return exampleToText(mapper, request.examples());
     }
 
-    private static String responseToExample(ObjectMapper mapper, Class<? extends ApiResponse> apiResponseClass) throws JsonProcessingException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
+    private static final Map<Class<?>, Object> PRIMITIVE_DEFAULTS = Map.of(
+            boolean.class, false,
+            long.class, 0L,
+            int.class, 0,
+            double.class, 0d,
+            float.class, 0f,
+            short.class, (short) 0,
+            byte.class, (byte) 0,
+            char.class, '\0');
+
+    private static Object defaultValue(Class<?> type) {
+        // null for any non-primitive / reference type
+        return PRIMITIVE_DEFAULTS.get(type);
+    }
+
+    private static String responseToExample(ObjectMapper mapper, Class<? extends ApiResponse> apiResponseClass) throws JacksonException, NoSuchMethodException, InvocationTargetException, InstantiationException, IllegalAccessException {
         if (apiResponseClass == null) {
             return "";
         }
@@ -472,7 +499,7 @@ public class CinnamonServer {
         return exampleToText(mapper, response.examples());
     }
 
-    private static String exampleToText(ObjectMapper mapper, List<Object> examples) throws JsonProcessingException {
+    private static String exampleToText(ObjectMapper mapper, List<Object> examples) throws JacksonException {
         StringBuilder builder = new StringBuilder();
         for (Object example : examples) {
             builder.append("```xml\n");
@@ -497,9 +524,7 @@ public class CinnamonServer {
     public static void writeConfig(String filename) {
         File configFile = new File(filename);
         try (FileOutputStream fos = new FileOutputStream(configFile)) {
-            ObjectMapper xmlMapper = XML_MAPPER;
-            xmlMapper.enable(SerializationFeature.INDENT_OUTPUT);
-            xmlMapper.writeValue(fos, config);
+            XML_MAPPER.writer().with(SerializationFeature.INDENT_OUTPUT).writeValue(fos, config);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -509,8 +534,7 @@ public class CinnamonServer {
     public static CinnamonConfig readConfig(String filename) {
         File configFile = new File(filename);
         try (FileInputStream fis = new FileInputStream(configFile)) {
-            ObjectMapper xmlMapper = new XmlMapper();
-            return xmlMapper.readValue(fis, CinnamonConfig.class);
+            return XML_MAPPER.readValue(fis, CinnamonConfig.class);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

@@ -5,39 +5,33 @@ import com.dewarim.cinnamon.model.AclGroup;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.response.AclGroupWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.Objects.isNull;
 
-@JacksonXmlRootElement(localName = "updateAclGroupRequest")
-public class UpdateAclGroupRequest implements UpdateRequest<AclGroup>, ApiRequest<UpdateAclGroupRequest> {
+@JsonRootName("updateAclGroupRequest")
+public record UpdateAclGroupRequest(
+        @JacksonXmlElementWrapper(localName = "aclGroups")
+        @JacksonXmlProperty(localName = "aclGroup")
+        List<AclGroup> aclGroups) implements UpdateRequest<AclGroup>, ApiRequest<UpdateAclGroupRequest> {
 
-    @JacksonXmlElementWrapper(localName = "aclGroups")
-    @JacksonXmlProperty(localName = "aclGroup")
-    private List<AclGroup> aclGroups = new ArrayList<>();
-
-    @Override
-    public List<AclGroup> list() {
-        return aclGroups;
-    }
-
-    public UpdateAclGroupRequest() {
+    public UpdateAclGroupRequest {
+        if (aclGroups == null) {
+            aclGroups = new ArrayList<>();
+        }
     }
 
     public UpdateAclGroupRequest(Long id, Long aclId, Long groupId) {
-        aclGroups.add(new AclGroup(id, aclId, groupId));
+        this(new ArrayList<>(List.of(new AclGroup(id, aclId, groupId))));
     }
 
-    public UpdateAclGroupRequest(List<AclGroup> aclGroups) {
-        this.aclGroups = aclGroups;
-    }
-
-    public List<AclGroup> getAclGroups() {
+    @Override
+    public List<AclGroup> list() {
         return aclGroups;
     }
 
@@ -55,17 +49,10 @@ public class UpdateAclGroupRequest implements UpdateRequest<AclGroup>, ApiReques
     }
 
     @Override
-    public String toString() {
-        return "UpdateAclGroupRequest{" +
-                "aclGroups=" + aclGroups +
-                '}';
-    }
-
-    @Override
     public List<ApiRequest<UpdateAclGroupRequest>> examples() {
         AclGroup aclGroup = new AclGroup(1345L, 54L, 4L);
         aclGroup.getPermissionIds().add(5L);
         aclGroup.getPermissionIds().add(2L);
-        return List.of(new UpdateAclGroupRequest(aclGroups));
+        return List.of(new UpdateAclGroupRequest(List.of(aclGroup)));
     }
 }

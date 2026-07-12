@@ -3,7 +3,7 @@ package com.dewarim.cinnamon.application;
 
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.model.response.CinnamonContentType;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.HttpServletRequest;

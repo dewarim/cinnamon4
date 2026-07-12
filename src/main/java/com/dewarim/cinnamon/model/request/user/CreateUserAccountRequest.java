@@ -6,34 +6,43 @@ import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.response.UserAccountWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@JacksonXmlRootElement(localName = "createUserAccountRequest")
-public class CreateUserAccountRequest implements CreateRequest<UserAccount>, ApiRequest<CreateUserAccountRequest> {
+@JsonRootName("createUserAccountRequest")
+public record CreateUserAccountRequest(
+        @JacksonXmlElementWrapper(localName = "userAccounts")
+        @JacksonXmlProperty(localName = "userAccount")
+        List<UserAccount> userAccounts) implements CreateRequest<UserAccount>, ApiRequest<CreateUserAccountRequest> {
 
-    @JacksonXmlElementWrapper(localName = "userAccounts")
-    @JacksonXmlProperty(localName = "userAccount")
-    private List<UserAccount> userAccounts = new ArrayList<>();
+    public CreateUserAccountRequest {
+        if (userAccounts == null) {
+            userAccounts = new ArrayList<>();
+        }
+    }
 
     public CreateUserAccountRequest() {
+        this(new ArrayList<>());
     }
 
     public CreateUserAccountRequest(String name, String password, String fullname, String email, Long uiLanguageId,
                                     String loginType, Boolean changeTracking, Boolean activated, Boolean activateTriggers) {
+        this(singleUser(name, password, fullname, email, uiLanguageId, loginType, changeTracking, activated, activateTriggers));
+    }
+
+    private static List<UserAccount> singleUser(String name, String password, String fullname, String email, Long uiLanguageId,
+                                                String loginType, Boolean changeTracking, Boolean activated, Boolean activateTriggers) {
         UserAccount userAccount = new UserAccount(name, password, fullname, email, uiLanguageId,
                 loginType, changeTracking, activated, activateTriggers);
         userAccount.setLocked(false);
         userAccount.setPasswordExpired(false);
-        userAccounts.add(userAccount);
-    }
-
-    public CreateUserAccountRequest(List<UserAccount> userAccounts) {
-        this.userAccounts = userAccounts;
+        List<UserAccount> list = new ArrayList<>();
+        list.add(userAccount);
+        return list;
     }
 
     @Override
@@ -68,7 +77,7 @@ public class CreateUserAccountRequest implements CreateRequest<UserAccount>, Api
     public List<ApiRequest<CreateUserAccountRequest>> examples() {
         CreateUserAccountRequest request = new CreateUserAccountRequest("jane", "super-secret", "Jane Doe", "jane@example.com", 1L,
                 LoginType.CINNAMON.name(), false, true, true);
-        request.userAccounts.getFirst().getGroupIds().add(12L);
+        request.userAccounts().getFirst().getGroupIds().add(12L);
         return List.of(request);
     }
 }

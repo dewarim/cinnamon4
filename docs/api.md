@@ -65,11 +65,11 @@ Create a new ACL group. Note: permissions parameter is not yet implemented.
 
 ```xml
 <deleteAclGroupRequest>
-  <ignoreNotFound>false</ignoreNotFound>
   <ids>
     <id>5</id>
     <id>78</id>
   </ids>
+  <ignoreNotFound>false</ignoreNotFound>
 </deleteAclGroupRequest>
 
 ```
@@ -183,7 +183,17 @@ It does not otherwise change the AclGroup (as it only contains of a group and ac
 
 ```xml
 <updateAclGroupRequest>
-  <aclGroups/>
+  <aclGroups>
+    <aclGroup>
+      <id>1345</id>
+      <aclId>54</aclId>
+      <groupId>4</groupId>
+      <permissions>
+        <permissionId>5</permissionId>
+        <permissionId>2</permissionId>
+      </permissions>
+    </aclGroup>
+  </aclGroups>
 </updateAclGroupRequest>
 
 ```
@@ -270,11 +280,11 @@ It does not otherwise change the AclGroup (as it only contains of a group and ac
 
 ```xml
 <deleteAclRequest>
-  <ignoreNotFound>false</ignoreNotFound>
   <ids>
     <id>99</id>
     <id>43</id>
   </ids>
+  <ignoreNotFound>false</ignoreNotFound>
 </deleteAclRequest>
 
 ```
@@ -466,10 +476,10 @@ It does not otherwise change the AclGroup (as it only contains of a group and ac
 
 ```xml
 <deleteChangeTriggerRequest>
-  <ignoreNotFound>false</ignoreNotFound>
   <ids>
     <id>77</id>
   </ids>
+  <ignoreNotFound>false</ignoreNotFound>
 </deleteChangeTriggerRequest>
 
 ```
@@ -713,8 +723,8 @@ Delete a list of config entries
 
 ```xml
 <deleteConfigRequest>
-  <ignoreNotFound>false</ignoreNotFound>
   <ids/>
+  <ignoreNotFound>false</ignoreNotFound>
 </deleteConfigRequest>
 
 ```
@@ -998,11 +1008,11 @@ Delete a folder type
 
 ```xml
 <deleteFolderTypeRequest>
-  <ignoreNotFound>false</ignoreNotFound>
   <ids>
     <id>44</id>
     <id>543</id>
   </ids>
+  <ignoreNotFound>false</ignoreNotFound>
 </deleteFolderTypeRequest>
 
 ```
@@ -1107,7 +1117,7 @@ Create a new folder.
       <summary>&lt;summary>&lt;description>contains images&lt;/description>&lt;/summary></summary>
       <folderPath/>
       <hasSubfolders>false</hasSubfolders>
-      <created>2022-08-10T01:21:00+0000</created>
+      <created>2022-08-10T03:21:00</created>
       <metasets>
         <metaset>
           <id/>
@@ -1128,7 +1138,7 @@ Create a new folder.
       <summary>&lt;summary/></summary>
       <folderPath/>
       <hasSubfolders>false</hasSubfolders>
-      <created>2022-08-10T01:21:00+0000</created>
+      <created>2022-08-10T03:21:00</created>
       <metasets/>
     </folder>
   </folders>
@@ -1209,13 +1219,13 @@ Create a new folder.
 
 ```xml
 <deleteFolderRequest>
-  <deleteRecursively>true</deleteRecursively>
-  <deleteContent>false</deleteContent>
   <ids>
     <id>1</id>
     <id>2</id>
     <id>3</id>
   </ids>
+  <deleteRecursively>true</deleteRecursively>
+  <deleteContent>false</deleteContent>
 </deleteFolderRequest>
 
 ```
@@ -1241,11 +1251,11 @@ Delete all metasets linked to the given Folder ids. Parameter ignoreNotFound is 
 
 ```xml
 <deleteAllMetasRequest>
-  <ignoreNotFound>false</ignoreNotFound>
   <ids>
     <id>14</id>
     <id>15</id>
   </ids>
+  <ignoreNotFound>false</ignoreNotFound>
 </deleteAllMetasRequest>
 
 ```
@@ -1271,21 +1281,21 @@ Delete the folder metasets with the given meta ids.
 
 ```xml
 <deleteMetaRequest>
-  <ignoreNotFound>false</ignoreNotFound>
   <ids>
     <id>3</id>
     <id>5</id>
     <id>6</id>
   </ids>
+  <ignoreNotFound>false</ignoreNotFound>
 </deleteMetaRequest>
 
 ```
 ```xml
 <deleteMetaRequest>
-  <ignoreNotFound>false</ignoreNotFound>
   <ids>
     <id>1</id>
   </ids>
+  <ignoreNotFound>true</ignoreNotFound>
 </deleteMetaRequest>
 
 ```
@@ -1342,7 +1352,7 @@ Fetch a single folder
       <summary>&lt;summary></summary>
       <folderPath/>
       <hasSubfolders>false</hasSubfolders>
-      <created>2022-08-10T01:21:00+0000</created>
+      <created>2022-08-10T03:21:00</created>
       <metasets/>
     </folder>
   </folders>
@@ -1371,7 +1381,7 @@ Fetch a single folder
       <summary>&lt;summary/></summary>
       <folderPath/>
       <hasSubfolders>false</hasSubfolders>
-      <created>1970-01-01T00:00:00+0000</created>
+      <created>1970-01-01T00:00:00</created>
       <metasets/>
     </reference>
   </references>
@@ -1389,13 +1399,13 @@ Fetch a single folder
 
 ```xml
 <folderRequest>
-  <includeSummary>true</includeSummary>
-  <addFolderPath>true</addFolderPath>
   <ids>
     <id>1</id>
     <id>2</id>
     <id>3</id>
   </ids>
+  <includeSummary>true</includeSummary>
+  <addFolderPath>true</addFolderPath>
 </folderRequest>
 
 ```
@@ -1418,7 +1428,7 @@ Fetch a single folder
       <summary>&lt;summary></summary>
       <folderPath/>
       <hasSubfolders>false</hasSubfolders>
-      <created>2022-08-10T01:21:00+0000</created>
+      <created>2022-08-10T03:21:00</created>
       <metasets/>
     </folder>
   </folders>
@@ -1447,7 +1457,7 @@ Fetch a single folder
       <summary>&lt;summary/></summary>
       <folderPath/>
       <hasSubfolders>false</hasSubfolders>
-      <created>1970-01-01T00:00:00+0000</created>
+      <created>1970-01-01T00:00:00</created>
       <metasets/>
     </reference>
   </references>
@@ -1489,7 +1499,7 @@ Fetch a folder specified by its complete path. The path parameter must not end w
       <summary>&lt;summary></summary>
       <folderPath/>
       <hasSubfolders>false</hasSubfolders>
-      <created>2022-08-10T01:21:00+0000</created>
+      <created>2022-08-10T03:21:00</created>
       <metasets/>
     </folder>
   </folders>
@@ -1518,7 +1528,7 @@ Fetch a folder specified by its complete path. The path parameter must not end w
       <summary>&lt;summary/></summary>
       <folderPath/>
       <hasSubfolders>false</hasSubfolders>
-      <created>1970-01-01T00:00:00+0000</created>
+      <created>1970-01-01T00:00:00</created>
       <metasets/>
     </reference>
   </references>
@@ -1561,7 +1571,7 @@ Fetch a folder specified by its relative path. The relative path must not start 
       <summary>&lt;summary></summary>
       <folderPath/>
       <hasSubfolders>false</hasSubfolders>
-      <created>2022-08-10T01:21:00+0000</created>
+      <created>2022-08-10T03:21:00</created>
       <metasets/>
     </folder>
   </folders>
@@ -1590,7 +1600,7 @@ Fetch a folder specified by its relative path. The relative path must not start 
       <summary>&lt;summary/></summary>
       <folderPath/>
       <hasSubfolders>false</hasSubfolders>
-      <created>1970-01-01T00:00:00+0000</created>
+      <created>1970-01-01T00:00:00</created>
       <metasets/>
     </reference>
   </references>
@@ -1688,7 +1698,7 @@ Fetch a folder specified by its relative path. The relative path must not start 
       <summary>&lt;summary></summary>
       <folderPath/>
       <hasSubfolders>false</hasSubfolders>
-      <created>2022-08-10T01:21:00+0000</created>
+      <created>2022-08-10T03:21:00</created>
       <metasets/>
     </folder>
   </folders>
@@ -1717,7 +1727,7 @@ Fetch a folder specified by its relative path. The relative path must not start 
       <summary>&lt;summary/></summary>
       <folderPath/>
       <hasSubfolders>false</hasSubfolders>
-      <created>1970-01-01T00:00:00+0000</created>
+      <created>1970-01-01T00:00:00</created>
       <metasets/>
     </reference>
   </references>
@@ -1805,7 +1815,6 @@ Add a summary to an object, for example a short description of this folder's con
 
 ```xml
 <updateFolderRequest>
-  <updateMetadataChanged>false</updateMetadataChanged>
   <folders>
     <folder>
       <id/>
@@ -1818,10 +1827,11 @@ Add a summary to an object, for example a short description of this folder's con
       <summary>&lt;summary>update this&lt;/summary></summary>
       <folderPath/>
       <hasSubfolders>false</hasSubfolders>
-      <created>2022-08-10T01:21:00+0000</created>
+      <created>2022-08-10T03:21:00</created>
       <metasets/>
     </folder>
   </folders>
+  <updateMetadataChanged>false</updateMetadataChanged>
 </updateFolderRequest>
 
 ```
@@ -1926,10 +1936,10 @@ Update the content of a given folder metaset
 
 ```xml
 <deleteFormatRequest>
-  <ignoreNotFound>false</ignoreNotFound>
   <ids>
     <id>999</id>
   </ids>
+  <ignoreNotFound>false</ignoreNotFound>
 </deleteFormatRequest>
 
 ```
@@ -2034,12 +2044,12 @@ Update the content of a given folder metaset
 
 ```xml
 <addUserToGroupsRequest>
-  <userId>33</userId>
   <groupIds>
     <groupId>1</groupId>
     <groupId>2</groupId>
     <groupId>3</groupId>
   </groupIds>
+  <userId>33</userId>
 </addUserToGroupsRequest>
 
 ```
@@ -2119,13 +2129,13 @@ Update the content of a given folder metaset
 
 ```xml
 <deleteGroupRequest>
-  <ignoreNotFound>false</ignoreNotFound>
-  <recursive>true</recursive>
   <ids>
     <id>4</id>
     <id>6</id>
     <id>7</id>
   </ids>
+  <ignoreNotFound>false</ignoreNotFound>
+  <recursive>true</recursive>
 </deleteGroupRequest>
 
 ```
@@ -2188,12 +2198,12 @@ Update the content of a given folder metaset
 
 ```xml
 <removeUserFromGroupsRequest>
-  <userId>33</userId>
   <groupIds>
     <groupId>1</groupId>
     <groupId>2</groupId>
     <groupId>3</groupId>
   </groupIds>
+  <userId>33</userId>
 </removeUserFromGroupsRequest>
 
 ```
@@ -2311,10 +2321,10 @@ Update the content of a given folder metaset
 
 ```xml
 <deleteIndexItemRequest>
-  <ignoreNotFound>false</ignoreNotFound>
   <ids>
     <id>679</id>
   </ids>
+  <ignoreNotFound>false</ignoreNotFound>
 </deleteIndexItemRequest>
 
 ```
@@ -2552,10 +2562,10 @@ Rebuild the Lucene search index in parts or completely. When reindexing large nu
 
 ```xml
 <deleteLanguageRequest>
-  <ignoreNotFound>false</ignoreNotFound>
   <ids>
     <id>999</id>
   </ids>
+  <ignoreNotFound>false</ignoreNotFound>
 </deleteLanguageRequest>
 
 ```
@@ -2758,10 +2768,10 @@ Only superusers may use forceChange parameter to attach any state without verifi
 
 ```xml
 <deleteLifecycleStateRequest>
-  <ignoreNotFound>false</ignoreNotFound>
   <ids>
     <id>6</id>
   </ids>
+  <ignoreNotFound>false</ignoreNotFound>
 </deleteLifecycleStateRequest>
 
 ```
@@ -3034,10 +3044,10 @@ Delete lifecycles
 
 ```xml
 <deleteLifecycleRequest>
-  <ignoreNotFound>false</ignoreNotFound>
   <ids>
     <id>1024</id>
   </ids>
+  <ignoreNotFound>false</ignoreNotFound>
 </deleteLifecycleRequest>
 
 ```
@@ -3265,10 +3275,10 @@ Update lifecycles. Note: does not update lifecycle states
 
 ```xml
 <deleteLinkRequest>
-  <ignoreNotFound>false</ignoreNotFound>
   <ids>
     <id>51</id>
   </ids>
+  <ignoreNotFound>false</ignoreNotFound>
 </deleteLinkRequest>
 
 ```
@@ -3294,10 +3304,10 @@ Update lifecycles. Note: does not update lifecycle states
 
 ```xml
 <getLinksRequest>
-  <includeSummary>true</includeSummary>
   <ids>
     <id>9</id>
   </ids>
+  <includeSummary>true</includeSummary>
 </getLinksRequest>
 
 ```
@@ -3330,8 +3340,8 @@ Update lifecycles. Note: does not update lifecycle states
         <modifierId>1</modifierId>
         <ownerId>3</ownerId>
         <lockerId/>
-        <created>2022-08-10T01:21:00+0000</created>
-        <modified>2022-08-10T01:21:00+0000</modified>
+        <created>2022-08-10T03:21:00</created>
+        <modified>2022-08-10T03:21:00</modified>
         <languageId>4</languageId>
         <aclId>5</aclId>
         <parentId>5</parentId>
@@ -3373,7 +3383,7 @@ Update lifecycles. Note: does not update lifecycle states
         <summary>&lt;summary></summary>
         <folderPath/>
         <hasSubfolders>false</hasSubfolders>
-        <created>2022-08-10T01:21:00+0000</created>
+        <created>2022-08-10T03:21:00</created>
         <metasets/>
       </folder>
     </link>
@@ -3491,10 +3501,10 @@ Update lifecycles. Note: does not update lifecycle states
 
 ```xml
 <deleteMetasetTypeRequest>
-  <ignoreNotFound>false</ignoreNotFound>
   <ids>
     <id>7</id>
   </ids>
+  <ignoreNotFound>false</ignoreNotFound>
 </deleteMetasetTypeRequest>
 
 ```
@@ -3635,11 +3645,11 @@ Update lifecycles. Note: does not update lifecycle states
 
 ```xml
 <deleteObjectTypeRequest>
-  <ignoreNotFound>false</ignoreNotFound>
   <ids>
     <id>2</id>
     <id>3</id>
   </ids>
+  <ignoreNotFound>false</ignoreNotFound>
 </deleteObjectTypeRequest>
 
 ```
@@ -3732,12 +3742,12 @@ Update lifecycles. Note: does not update lifecycle states
 
 ```xml
 <copyOsdRequest>
-  <targetFolderId>20</targetFolderId>
   <sourceIds>
     <sourceId>1</sourceId>
     <sourceId>2</sourceId>
     <sourceId>3</sourceId>
   </sourceIds>
+  <targetFolderId>20</targetFolderId>
   <metasetTypeIds>
     <metasetTypeId>13</metasetTypeId>
     <metasetTypeId>15</metasetTypeId>
@@ -3765,8 +3775,8 @@ Update lifecycles. Note: does not update lifecycle states
       <modifierId>1</modifierId>
       <ownerId>3</ownerId>
       <lockerId/>
-      <created>2022-08-10T01:21:00+0000</created>
-      <modified>2022-08-10T01:21:00+0000</modified>
+      <created>2022-08-10T03:21:00</created>
+      <modified>2022-08-10T03:21:00</modified>
       <languageId>4</languageId>
       <aclId>5</aclId>
       <parentId>5</parentId>
@@ -3939,8 +3949,8 @@ should contain data.
       <modifierId>1</modifierId>
       <ownerId>3</ownerId>
       <lockerId/>
-      <created>2022-08-10T01:21:00+0000</created>
-      <modified>2022-08-10T01:21:00+0000</modified>
+      <created>2022-08-10T03:21:00</created>
+      <modified>2022-08-10T03:21:00</modified>
       <languageId>4</languageId>
       <aclId>5</aclId>
       <parentId>5</parentId>
@@ -3976,12 +3986,12 @@ should contain data.
 
 ```xml
 <deleteOsdRequest>
-  <deleteDescendants>true</deleteDescendants>
-  <deleteAllVersions>true</deleteAllVersions>
   <ids>
     <id>4</id>
     <id>6</id>
   </ids>
+  <deleteDescendants>true</deleteDescendants>
+  <deleteAllVersions>true</deleteAllVersions>
 </deleteOsdRequest>
 
 ```
@@ -4008,11 +4018,11 @@ should contain data.
 
 ```xml
 <deleteAllMetasRequest>
-  <ignoreNotFound>false</ignoreNotFound>
   <ids>
     <id>14</id>
     <id>15</id>
   </ids>
+  <ignoreNotFound>false</ignoreNotFound>
 </deleteAllMetasRequest>
 
 ```
@@ -4038,21 +4048,21 @@ Delete the OSD metasets with the given meta ids.
 
 ```xml
 <deleteMetaRequest>
-  <ignoreNotFound>false</ignoreNotFound>
   <ids>
     <id>3</id>
     <id>5</id>
     <id>6</id>
   </ids>
+  <ignoreNotFound>false</ignoreNotFound>
 </deleteMetaRequest>
 
 ```
 ```xml
 <deleteMetaRequest>
-  <ignoreNotFound>false</ignoreNotFound>
   <ids>
     <id>1</id>
   </ids>
+  <ignoreNotFound>true</ignoreNotFound>
 </deleteMetaRequest>
 
 ```
@@ -4173,8 +4183,8 @@ Returns an OSD's content according to it's format's content type.
       <modifierId>1</modifierId>
       <ownerId>3</ownerId>
       <lockerId/>
-      <created>2022-08-10T01:21:00+0000</created>
-      <modified>2022-08-10T01:21:00+0000</modified>
+      <created>2022-08-10T03:21:00</created>
+      <modified>2022-08-10T03:21:00</modified>
       <languageId>4</languageId>
       <aclId>5</aclId>
       <parentId>5</parentId>
@@ -4210,14 +4220,14 @@ Returns an OSD's content according to it's format's content type.
 
 ```xml
 <osdRequest>
-  <includeSummary>true</includeSummary>
-  <includeCustomMetadata>true</includeCustomMetadata>
-  <addFolderPath>true</addFolderPath>
   <ids>
     <id>45</id>
     <id>23</id>
     <id>2</id>
   </ids>
+  <includeSummary>true</includeSummary>
+  <includeCustomMetadata>true</includeCustomMetadata>
+  <addFolderPath>true</addFolderPath>
 </osdRequest>
 
 ```
@@ -4240,8 +4250,8 @@ Returns an OSD's content according to it's format's content type.
       <modifierId>1</modifierId>
       <ownerId>3</ownerId>
       <lockerId/>
-      <created>2022-08-10T01:21:00+0000</created>
-      <modified>2022-08-10T01:21:00+0000</modified>
+      <created>2022-08-10T03:21:00</created>
+      <modified>2022-08-10T03:21:00</modified>
       <languageId>4</languageId>
       <aclId>5</aclId>
       <parentId>5</parentId>
@@ -4278,9 +4288,9 @@ Returns an OSD's content according to it's format's content type.
 ```xml
 <getRelationsRequest>
   <ids>
-    <ids>1</ids>
-    <ids>32</ids>
-    <ids>4</ids>
+    <id>1</id>
+    <id>32</id>
+    <id>4</id>
   </ids>
   <includeMetadata>false</includeMetadata>
 </getRelationsRequest>
@@ -4475,8 +4485,6 @@ Add a summary to an object, for example a short description of the content.
 
 ```xml
 <updateOsdRequest>
-  <updateContentChanged>false</updateContentChanged>
-  <updateMetadataChanged>false</updateMetadataChanged>
   <osds>
     <osd>
       <id>1</id>
@@ -4489,8 +4497,8 @@ Add a summary to an object, for example a short description of the content.
       <modifierId/>
       <ownerId>45</ownerId>
       <lockerId/>
-      <created>2022-08-10T01:21:00+0000</created>
-      <modified>2022-08-10T01:21:00+0000</modified>
+      <created>2022-08-10T03:21:00</created>
+      <modified>2022-08-10T03:21:00</modified>
       <languageId>1</languageId>
       <aclId>56</aclId>
       <parentId>2</parentId>
@@ -4509,13 +4517,13 @@ Add a summary to an object, for example a short description of the content.
       <metasets/>
     </osd>
   </osds>
+  <updateContentChanged>false</updateContentChanged>
+  <updateMetadataChanged>false</updateMetadataChanged>
 </updateOsdRequest>
 
 ```
 ```xml
 <updateOsdRequest>
-  <updateContentChanged>true</updateContentChanged>
-  <updateMetadataChanged>true</updateMetadataChanged>
   <osds>
     <osd>
       <id>1</id>
@@ -4528,8 +4536,8 @@ Add a summary to an object, for example a short description of the content.
       <modifierId/>
       <ownerId>45</ownerId>
       <lockerId/>
-      <created>2022-08-10T01:21:00+0000</created>
-      <modified>2022-08-10T01:21:00+0000</modified>
+      <created>2022-08-10T03:21:00</created>
+      <modified>2022-08-10T03:21:00</modified>
       <languageId>1</languageId>
       <aclId>56</aclId>
       <parentId>2</parentId>
@@ -4548,6 +4556,8 @@ Add a summary to an object, for example a short description of the content.
       <metasets/>
     </osd>
   </osds>
+  <updateContentChanged>true</updateContentChanged>
+  <updateMetadataChanged>true</updateMetadataChanged>
 </updateOsdRequest>
 
 ```
@@ -4611,21 +4621,21 @@ part "file", if the new version should contain data.
 ```xml
 <createNewVersionRequest>
   <id>5</id>
-  <formatId>4</formatId>
   <metaRequests>
     <metaRequest>
       <content>&lt;xml>new metadata&lt;/xml></content>
       <typeId>1</typeId>
     </metaRequest>
   </metaRequests>
+  <formatId>4</formatId>
 </createNewVersionRequest>
 
 ```
 ```xml
 <createNewVersionRequest>
   <id>6</id>
-  <formatId/>
   <metaRequests/>
+  <formatId/>
 </createNewVersionRequest>
 
 ```
@@ -4648,8 +4658,8 @@ part "file", if the new version should contain data.
       <modifierId>1</modifierId>
       <ownerId>3</ownerId>
       <lockerId/>
-      <created>2022-08-10T01:21:00+0000</created>
-      <modified>2022-08-10T01:21:00+0000</modified>
+      <created>2022-08-10T03:21:00</created>
+      <modified>2022-08-10T03:21:00</modified>
       <languageId>4</languageId>
       <aclId>5</aclId>
       <parentId>5</parentId>
@@ -4841,11 +4851,11 @@ part "file", if the new version should contain data.
 
 ```xml
 <deleteRelationTypeRequest>
-  <ignoreNotFound>false</ignoreNotFound>
   <ids>
     <id>333</id>
     <id>543</id>
   </ids>
+  <ignoreNotFound>false</ignoreNotFound>
 </deleteRelationTypeRequest>
 
 ```
@@ -5018,10 +5028,10 @@ part "file", if the new version should contain data.
 
 ```xml
 <deleteRelationRequest>
-  <ignoreNotFound>false</ignoreNotFound>
   <ids>
     <id>68</id>
   </ids>
+  <ignoreNotFound>false</ignoreNotFound>
 </deleteRelationRequest>
 
 ```
@@ -5263,10 +5273,10 @@ Returns status code 400
 
 ```xml
 <deleteUiLanguageRequest>
-  <ignoreNotFound>false</ignoreNotFound>
   <ids>
     <id>90</id>
   </ids>
+  <ignoreNotFound>false</ignoreNotFound>
 </deleteUiLanguageRequest>
 
 ```

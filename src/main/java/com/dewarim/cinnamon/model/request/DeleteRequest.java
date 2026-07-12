@@ -28,5 +28,5 @@ public interface DeleteRequest<T> {
          return new DeleteResponse(true);
      }
 
-     boolean isIgnoreNotFound();
+     boolean ignoreNotFound();
 }

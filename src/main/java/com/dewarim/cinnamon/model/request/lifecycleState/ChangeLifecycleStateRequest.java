@@ -1,24 +1,13 @@
 package com.dewarim.cinnamon.model.request.lifecycleState;
 
 import com.dewarim.cinnamon.api.ApiRequest;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.List;
 import java.util.Optional;
 
-@JacksonXmlRootElement(localName = "changeLifecycleStateRequest")
-public class ChangeLifecycleStateRequest implements ApiRequest<ChangeLifecycleStateRequest> {
-
-    private Long   osdId;
-    private Long   stateId;
-
-    public ChangeLifecycleStateRequest() {
-    }
-
-    public ChangeLifecycleStateRequest(Long osdId, Long stateId) {
-        this.osdId = osdId;
-        this.stateId = stateId;
-    }
+@JsonRootName("changeLifecycleStateRequest")
+public record ChangeLifecycleStateRequest(Long osdId, Long stateId) implements ApiRequest<ChangeLifecycleStateRequest> {
 
     private boolean validated() {
         boolean stateIdOkay = stateId != null && stateId > 0;
@@ -33,24 +22,8 @@ public class ChangeLifecycleStateRequest implements ApiRequest<ChangeLifecycleSt
         }
     }
 
-    public Long getOsdId() {
-        return osdId;
-    }
-
-    public void setOsdId(Long osdId) {
-        this.osdId = osdId;
-    }
-
-    public Long getStateId() {
-        return stateId;
-    }
-
-    public void setStateId(Long stateId) {
-        this.stateId = stateId;
-    }
-
     @Override
     public List<ApiRequest<ChangeLifecycleStateRequest>> examples() {
-        return List.of(new ChangeLifecycleStateRequest(5L,32L));
+        return List.of(new ChangeLifecycleStateRequest(5L, 32L));
     }
 }

@@ -55,7 +55,7 @@ public interface CruddyServlet<T extends Identifiable> {
 
     default List<Long> delete(DeleteRequest<T> deleteRequest, CrudDao<T> dao, CinnamonResponse cinnamonResponse) {
         try {
-            deleteInner(deleteRequest.list(),dao, deleteRequest.isIgnoreNotFound());
+            deleteInner(deleteRequest.list(),dao, deleteRequest.ignoreNotFound());
 
         } catch (PersistenceException e) {
             throw new FailedRequestException(ErrorCode.DB_DELETE_FAILED, e);

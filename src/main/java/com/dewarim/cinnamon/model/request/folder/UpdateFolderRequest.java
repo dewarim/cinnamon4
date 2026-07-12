@@ -2,9 +2,9 @@ package com.dewarim.cinnamon.model.request.folder;
 
 import com.dewarim.cinnamon.api.ApiRequest;
 import com.dewarim.cinnamon.model.Folder;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,22 +12,36 @@ import java.util.Optional;
 
 import static com.dewarim.cinnamon.api.Constants.LOCAL_DATE_TIME_EXAMPLE;
 
-@JacksonXmlRootElement(localName = "updateFolderRequest")
-public class UpdateFolderRequest implements ApiRequest<UpdateFolderRequest> {
+@JsonRootName("updateFolderRequest")
+public record UpdateFolderRequest(
+        @JacksonXmlElementWrapper(localName = "folders")
+        @JacksonXmlProperty(localName = "folder")
+        List<Folder> folders,
+        boolean updateMetadataChanged) implements ApiRequest<UpdateFolderRequest> {
 
-    @JacksonXmlElementWrapper(localName = "folders")
-    @JacksonXmlProperty(localName = "folder")
-    private List<Folder> folders = new ArrayList<>();
-    private boolean      updateMetadataChanged;
-
-    public void setUpdateMetadataChanged(boolean updateMetadataChanged) {
-        this.updateMetadataChanged = updateMetadataChanged;
+    public UpdateFolderRequest {
+        if (folders == null) {
+            folders = new ArrayList<>();
+        }
     }
 
     public UpdateFolderRequest() {
+        this(new ArrayList<>(), false);
     }
 
     public UpdateFolderRequest(Long id, Long parentId, String name, Long ownerId, Long typeId, Long aclId, Boolean metadataChanged) {
+        this(singleFolder(id, parentId, name, ownerId, typeId, aclId, metadataChanged), false);
+    }
+
+    public UpdateFolderRequest(Long id, Long parentId, String name, Long ownerId, Long typeId, Long aclId) {
+        this(id, parentId, name, ownerId, typeId, aclId, true);
+    }
+
+    public UpdateFolderRequest(List<Folder> folder) {
+        this(new ArrayList<>(folder), false);
+    }
+
+    private static List<Folder> singleFolder(Long id, Long parentId, String name, Long ownerId, Long typeId, Long aclId, Boolean metadataChanged) {
         Folder folder = new Folder();
         folder.setId(id);
         folder.setParentId(parentId);
@@ -36,27 +50,13 @@ public class UpdateFolderRequest implements ApiRequest<UpdateFolderRequest> {
         folder.setTypeId(typeId);
         folder.setAclId(aclId);
         folder.setMetadataChanged(metadataChanged);
-        folders.add(folder);
-    }
-
-    public UpdateFolderRequest(Long id, Long parentId, String name, Long ownerId, Long typeId, Long aclId) {
-        this(id, parentId, name, ownerId, typeId, aclId, true);
-    }
-
-    public UpdateFolderRequest(List<Folder> folder) {
-        this.folders.addAll(folder);
+        List<Folder> list = new ArrayList<>();
+        list.add(folder);
+        return list;
     }
 
     public boolean isUpdateMetadataChanged() {
         return updateMetadataChanged;
-    }
-
-    public List<Folder> getFolders() {
-        return folders;
-    }
-
-    public void setFolders(List<Folder> folders) {
-        this.folders = folders;
     }
 
     private boolean validated() {
@@ -76,25 +76,15 @@ public class UpdateFolderRequest implements ApiRequest<UpdateFolderRequest> {
     public Optional<UpdateFolderRequest> validateRequest() {
         if (validated()) {
             return Optional.of(this);
-        }
-        else {
+        } else {
             return Optional.empty();
         }
-    }
-
-    @Override
-    public String toString() {
-        return "UpdateFolderRequest{" +
-                "folders=" + folders +
-                '}';
     }
 
     @Override
     public List<ApiRequest<UpdateFolderRequest>> examples() {
         Folder folder = new Folder("new name", 1L, 2L, 3L, 4L, "<summary>update this</summary>");
         folder.setCreated(LOCAL_DATE_TIME_EXAMPLE);
-        UpdateFolderRequest request = new UpdateFolderRequest(List.of(folder));
-        request.setUpdateMetadataChanged(false);
-        return List.of(request);
+        return List.of(new UpdateFolderRequest(List.of(folder)));
     }
 }

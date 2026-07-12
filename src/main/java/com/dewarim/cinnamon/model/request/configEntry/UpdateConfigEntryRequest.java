@@ -5,46 +5,40 @@ import com.dewarim.cinnamon.model.ConfigEntry;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.response.ConfigEntryWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@JacksonXmlRootElement(localName = "updateConfigEntryRequest")
-public class UpdateConfigEntryRequest implements UpdateRequest<ConfigEntry>, ApiRequest<UpdateRequest<ConfigEntry>> {
+@JsonRootName("updateConfigEntryRequest")
+public record UpdateConfigEntryRequest(
+        @JacksonXmlElementWrapper(localName = "configEntries")
+        @JacksonXmlProperty(localName = "configEntry")
+        List<ConfigEntry> configEntries) implements UpdateRequest<ConfigEntry>, ApiRequest<UpdateRequest<ConfigEntry>> {
 
-    @JacksonXmlElementWrapper(localName = "configEntries")
-    @JacksonXmlProperty(localName = "configEntry")
-    private List<ConfigEntry> configEntries = new ArrayList<>();
+    public UpdateConfigEntryRequest {
+        if (configEntries == null) {
+            configEntries = new ArrayList<>();
+        }
+    }
+
+    public UpdateConfigEntryRequest(Long id, String name, String config, boolean publicVisibility) {
+        this(new ArrayList<>(List.of(new ConfigEntry(id, name, config, publicVisibility))));
+    }
 
     @Override
     public List<ConfigEntry> list() {
         return configEntries;
     }
 
-    public UpdateConfigEntryRequest() {
-    }
-
-    public UpdateConfigEntryRequest(Long id, String name, String config, boolean publicVisibility) {
-        configEntries.add(new ConfigEntry(id,name, config, publicVisibility));
-    }
-
-    public UpdateConfigEntryRequest(List<ConfigEntry> configEntries) {
-        this.configEntries = configEntries;
-    }
-
-    public List<ConfigEntry> getConfigEntries() {
-        return configEntries;
-    }
-
     @Override
     public boolean validated() {
         return configEntries.stream().allMatch(configEntry ->
-            configEntry != null && configEntry.getName() != null && !configEntry.getName().trim().isEmpty()
-                    && configEntry.getConfig() != null
-                    && configEntry.getId() != null && configEntry.getId() > 0);
+                configEntry != null && configEntry.getName() != null && !configEntry.getName().trim().isEmpty()
+                        && configEntry.getConfig() != null
+                        && configEntry.getId() != null && configEntry.getId() > 0);
     }
 
     @Override

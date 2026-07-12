@@ -1,7 +1,7 @@
 package com.dewarim.cinnamon.configuration;
 
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import org.apache.hc.core5.http.ssl.TLS;
 
 import java.util.List;

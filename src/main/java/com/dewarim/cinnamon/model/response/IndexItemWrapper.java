@@ -4,14 +4,14 @@ package com.dewarim.cinnamon.model.response;
 import com.dewarim.cinnamon.api.ApiResponse;
 import com.dewarim.cinnamon.model.IndexItem;
 import com.dewarim.cinnamon.model.index.IndexType;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@JacksonXmlRootElement(localName = "cinnamon")
+@JsonRootName("cinnamon")
 public class IndexItemWrapper extends BaseResponse implements Wrapper<IndexItem>, ApiResponse {
 
     @JacksonXmlElementWrapper(localName = "indexItems")

@@ -1,7 +1,7 @@
 package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.model.IndexItem;
-import com.fasterxml.jackson.databind.SerializationFeature;
+import tools.jackson.databind.SerializationFeature;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Test;
@@ -39,7 +39,7 @@ public class IndexItemServletIntegrationTest extends CinnamonIntegrationTest {
         assertThat(item.getSearchCondition(), equalTo("true()"));
         assertTrue(item.isStoreField());
         assertEquals(DEFAULT_INDEXER,item.getIndexType());
-        log.info("Found IndexItem: {}", mapper.configure(SerializationFeature.INDENT_OUTPUT, true).writeValueAsString(item));
+        log.info("Found IndexItem: {}", mapper.writer().with(SerializationFeature.INDENT_OUTPUT).writeValueAsString(item));
     }
 
     @Test

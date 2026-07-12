@@ -5,49 +5,31 @@ import com.dewarim.cinnamon.model.ConfigEntry;
 import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.response.ConfigEntryWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@JacksonXmlRootElement(localName = "createConfigEntryRequest")
-public class CreateConfigEntryRequest implements CreateRequest<ConfigEntry>, ApiRequest<CreateConfigEntryRequest> {
+@JsonRootName("createConfigEntryRequest")
+public record CreateConfigEntryRequest(
+        @JacksonXmlElementWrapper(localName = "configEntries")
+        @JacksonXmlProperty(localName = "configEntry")
+        List<ConfigEntry> configEntries) implements CreateRequest<ConfigEntry>, ApiRequest<CreateConfigEntryRequest> {
 
-    @JacksonXmlElementWrapper(localName = "configEntries")
-    @JacksonXmlProperty(localName = "configEntry")
-    private List<ConfigEntry> configEntries = new ArrayList<>();
-
-    public CreateConfigEntryRequest() {
+    public CreateConfigEntryRequest {
+        if (configEntries == null) {
+            configEntries = new ArrayList<>();
+        }
     }
 
     public CreateConfigEntryRequest(String name, String config, boolean publicVisibility) {
-        configEntries.add(new ConfigEntry(name, config, publicVisibility));
+        this(new ArrayList<>(List.of(new ConfigEntry(name, config, publicVisibility))));
     }
 
     public CreateConfigEntryRequest(Long id, String name, String config, boolean publicVisibility) {
-        configEntries.add(new ConfigEntry(id, name, config, publicVisibility));
-    }
-
-    public CreateConfigEntryRequest(List<ConfigEntry> configEntries) {
-        this.configEntries = configEntries;
-    }
-
-    @Override
-    public List<ApiRequest<CreateConfigEntryRequest>> examples() {
-        return List.of(
-                new CreateConfigEntryRequest("default-ui-settings", "<xml><show-logo>true</show-logo></xml>", true),
-                new CreateConfigEntryRequest("render-server-password", "xxx", false)
-        );
-    }
-
-    public List<ConfigEntry> getConfigEntries() {
-        return configEntries;
-    }
-
-    public void setConfigEntries(List<ConfigEntry> configEntries) {
-        this.configEntries = configEntries;
+        this(new ArrayList<>(List.of(new ConfigEntry(id, name, config, publicVisibility))));
     }
 
     @Override
@@ -68,5 +50,11 @@ public class CreateConfigEntryRequest implements CreateRequest<ConfigEntry>, Api
         return new ConfigEntryWrapper();
     }
 
-
+    @Override
+    public List<ApiRequest<CreateConfigEntryRequest>> examples() {
+        return List.of(
+                new CreateConfigEntryRequest("default-ui-settings", "<xml><show-logo>true</show-logo></xml>", true),
+                new CreateConfigEntryRequest("render-server-password", "xxx", false)
+        );
+    }
 }

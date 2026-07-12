@@ -72,7 +72,7 @@ test and create a lot of basic objects in the cinnamon_test database. If this su
 
     java -jar target/cinnamon-server.jar
 
-    # java 21:
+    # java 25:
     java --add-modules jdk.incubator.vector --enable-native-access=ALL-UNNAMED -jar target/cinnamon-server.jar
 
 will start the server with default settings.

@@ -1,13 +1,13 @@
 package com.dewarim.cinnamon.model.response;
 
 import com.dewarim.cinnamon.api.ApiResponse;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.Collections;
 import java.util.List;
 
 // not the most beautiful class, but using the Wrapper-interface is more consistent and allows late-rendering of responses.
-@JacksonXmlRootElement(localName = "cinnamon")
+@JsonRootName("cinnamon")
 public class DeleteResponse extends BaseResponse implements Wrapper<DeleteResponse>, ApiResponse {
 
     private boolean success;

@@ -236,8 +236,8 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
         var linkRequest = request.getMapper().readValue(request.getInputStream(), GetLinksRequest.class)
                 .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
-        int        idCount = linkRequest.getIds().size();
-        List<Link> links   = linkDao.getObjectsById(linkRequest.getIds());
+        int        idCount = linkRequest.ids().size();
+        List<Link> links   = linkDao.getObjectsById(linkRequest.ids());
 
         if (links.size() != idCount) {
             throw ErrorCode.OBJECT_NOT_FOUND.getException().get();
@@ -258,7 +258,7 @@ public class LinkServlet extends HttpServlet implements CruddyServlet<Link> {
         }
 
         List<LinkResponse> linkResponses  = new ArrayList<>();
-        boolean            includeSummary = linkRequest.isIncludeSummary();
+        boolean            includeSummary = linkRequest.includeSummary();
         filteredLinks.forEach(link -> {
             switch (link.getType()) {
                 case FOLDER -> linkResponses.add(handleFolderLink(link, user, includeSummary));

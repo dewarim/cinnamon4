@@ -2,7 +2,7 @@ package com.dewarim.cinnamon.test.unit;
 
 import com.dewarim.cinnamon.application.service.index.ContentContainer;
 import com.dewarim.cinnamon.model.ObjectSystemData;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import tools.jackson.core.JacksonException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -23,20 +23,20 @@ public class ContentContainerTest {
     }
 
     @Test
-    public void osdWithoutContentToDocument() throws JsonProcessingException {
+    public void osdWithoutContentToDocument() throws JacksonException {
         ContentContainer contentContainer = new ContentContainer(XML_MAPPER.writeValueAsString(osd), NO_CONTENT, folderPath, "OSD#0");
         assertTrue(contentContainer.getCombinedDocument().asXML().contains("<content><empty/></content>"));
     }
 
     @Test
-    public void osdWithContentToDocument() throws JsonProcessingException {
+    public void osdWithContentToDocument() throws JacksonException {
         byte[]           content          = "<xml>test-string</xml>".getBytes(StandardCharsets.UTF_8);
         ContentContainer contentContainer = new ContentContainer(XML_MAPPER.writeValueAsString(osd), content, folderPath, "OSD#0");
         assertTrue(contentContainer.getCombinedDocument().asXML().contains("<content><xml>test-string</xml></content>"));
     }
 
     @Test
-    public void osdWithBinaryContentToDocument() throws JsonProcessingException {
+    public void osdWithBinaryContentToDocument() throws JacksonException {
         byte[]           content          = new byte[]{0, 1, 2, 3, 4};
         ContentContainer contentContainer = new ContentContainer(XML_MAPPER.writeValueAsString(osd), content, folderPath, "OSD#0");
         assertTrue(contentContainer.getCombinedDocument().asXML().contains("<content><empty/></content>"));

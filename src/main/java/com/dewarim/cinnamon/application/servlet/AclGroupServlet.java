@@ -94,9 +94,9 @@ public class AclGroupServlet extends HttpServlet implements CruddyServlet<AclGro
         AclGroupListRequest listRequest = request.getMapper().readValue(request.getInputStream(), AclGroupListRequest.class)
                 .validateRequest().orElseThrow(() -> new FailedRequestException(ErrorCode.INVALID_REQUEST));
 
-        List<AclGroup> entries = switch (listRequest.getIdType()) {
-            case ACL -> aclGroupDao.getAclGroupsByAclId(listRequest.getId());
-            case GROUP -> aclGroupDao.getAclGroupsByGroupId(listRequest.getId());
+        List<AclGroup> entries = switch (listRequest.idType()) {
+            case ACL -> aclGroupDao.getAclGroupsByAclId(listRequest.id());
+            case GROUP -> aclGroupDao.getAclGroupsByGroupId(listRequest.id());
         };
         response.setWrapper(new AclGroupWrapper(entries));
     }

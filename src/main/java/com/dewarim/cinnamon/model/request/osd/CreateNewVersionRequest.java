@@ -1,65 +1,42 @@
 package com.dewarim.cinnamon.model.request.osd;
 
 import com.dewarim.cinnamon.api.ApiRequest;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-@JacksonXmlRootElement(localName = "createNewVersionRequest")
-public class CreateNewVersionRequest implements ApiRequest<CreateNewVersionRequest> {
+@JsonRootName("createNewVersionRequest")
+public record CreateNewVersionRequest(
+        Long id,
+        @JacksonXmlElementWrapper(localName = "metaRequests")
+        @JacksonXmlProperty(localName = "metaRequest")
+        List<Metadata> metaRequests,
+        Long formatId) implements ApiRequest<CreateNewVersionRequest> {
 
-    private Long           id;
-    @JacksonXmlElementWrapper(localName = "metaRequests")
-    @JacksonXmlProperty(localName = "metaRequest")
-    private List<Metadata> metaRequests = new ArrayList<>();
-    private Long           formatId;
-
-    public CreateNewVersionRequest() {
+    public CreateNewVersionRequest {
+        if (metaRequests == null) {
+            metaRequests = new ArrayList<>();
+        }
     }
 
     public CreateNewVersionRequest(Long id) {
-        this.id = id;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public List<Metadata> getMetaRequests() {
-        return metaRequests;
-    }
-
-    public void setMetaRequests(List<Metadata> metaRequests) {
-        this.metaRequests = metaRequests;
-    }
-
-    public Long getFormatId() {
-        return formatId;
-    }
-
-    public void setFormatId(Long formatId) {
-        this.formatId = formatId;
+        this(id, new ArrayList<>(), null);
     }
 
     public boolean hasMetaRequests() {
-        return metaRequests != null && metaRequests.size() > 0;
+        return metaRequests != null && !metaRequests.isEmpty();
     }
 
     private boolean validated() {
         if (metaRequests != null &&
-                metaRequests.size() > 0 &&
+                !metaRequests.isEmpty() &&
                 metaRequests.stream().filter(Metadata::validated).count() != metaRequests.size()) {
             return false;
         }
-
         return (formatId == null || formatId > 0) && id != null && id > 0;
     }
 
@@ -102,14 +79,12 @@ public class CreateNewVersionRequest implements ApiRequest<CreateNewVersionReque
         public void setTypeId(Long typeId) {
             this.typeId = typeId;
         }
-
     }
 
     @Override
     public List<ApiRequest<CreateNewVersionRequest>> examples() {
-        CreateNewVersionRequest createNewVersionRequest = new CreateNewVersionRequest(5L);
-        createNewVersionRequest.setMetaRequests(List.of(new Metadata("<xml>new metadata</xml>", 1L)));
-        createNewVersionRequest.setFormatId(4L);
-        return List.of(createNewVersionRequest, new CreateNewVersionRequest(6L));
+        return List.of(
+                new CreateNewVersionRequest(5L, List.of(new Metadata("<xml>new metadata</xml>", 1L)), 4L),
+                new CreateNewVersionRequest(6L));
     }
 }

@@ -6,9 +6,9 @@ import com.dewarim.cinnamon.api.content.ContentMetadata;
 import com.dewarim.cinnamon.model.relations.Relation;
 import com.dewarim.cinnamon.provider.DefaultContentProvider;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -25,7 +25,7 @@ import static com.dewarim.cinnamon.api.Constants.DEFAULT_SUMMARY;
  * Core Cinnamon object, contains the system's data of an object (document, media file, other resource).
  * It's abbreviated to OSD.
  */
-@JacksonXmlRootElement(localName = "objectSystemData")
+@JsonRootName("objectSystemData")
 public class ObjectSystemData implements ContentMetadata, CinnamonObject, OwnableWithMetadata {
     private static final Logger log = LogManager.getLogger(ObjectSystemData.class);
 

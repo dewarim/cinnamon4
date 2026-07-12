@@ -10,7 +10,7 @@
 
     tar cvzf cinnamon.tar.gz cinnamon-server.jar lib
 
-    ~/bin/jdk-21/bin/java --add-modules jdk.incubator.vector --enable-native-access=ALL-UNNAMED -jar cinnamon-server.jar
+    ~/bin/jdk-25/bin/java --add-modules jdk.incubator.vector --enable-native-access=ALL-UNNAMED -jar cinnamon-server.jar
 
 This should result in a log line like:
 

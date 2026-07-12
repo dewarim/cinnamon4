@@ -8,9 +8,9 @@ import com.dewarim.cinnamon.application.exception.CinnamonException;
 import com.dewarim.cinnamon.dao.event.AccessLogDao;
 import com.dewarim.cinnamon.model.event.AccessLogEntry;
 import com.dewarim.cinnamon.model.response.CinnamonErrorWrapper;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.SerializationFeature;
+import tools.jackson.dataformat.xml.XmlMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -19,7 +19,10 @@ import java.io.IOException;
 public class AccessLogService {
     private static final Logger log = LogManager.getLogger(AccessLogService.class);
 
-    private static final ObjectMapper mapper       = new XmlMapper().enable(SerializationFeature.INDENT_OUTPUT);
+    private static final ObjectMapper mapper       = XmlMapper.builder()
+            .configureForJackson2()
+            .configure(SerializationFeature.INDENT_OUTPUT, true)
+            .build();
     private final        AccessLogDao accessLogDao = new AccessLogDao();
     private static final Object TRUNCATING_LOCK = new Object();
 

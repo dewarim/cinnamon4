@@ -6,34 +6,24 @@ import com.dewarim.cinnamon.model.IndexMode;
 import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.response.FormatWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
+import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-@JacksonXmlRootElement(localName = "createFormatRequest")
-public class CreateFormatRequest implements CreateRequest<Format>, ApiRequest<CreateFormatRequest> {
+@JsonRootName("createFormatRequest")
+public record CreateFormatRequest(
+        @JacksonXmlElementWrapper(localName = "formats")
+        @JacksonXmlProperty(localName = "format")
+        List<Format> formats) implements CreateRequest<Format>, ApiRequest<CreateFormatRequest> {
 
-    @JacksonXmlElementWrapper(localName = "formats")
-    @JacksonXmlProperty(localName = "format")
-    private List<Format> formats = new ArrayList<>();
-
-    public CreateFormatRequest() {
-    }
-
-    public CreateFormatRequest(List<Format> formats) {
-        this.formats = formats;
-    }
-
-    public List<Format> getFormats() {
-        return formats;
-    }
-
-    public void setFormats(List<Format> formats) {
-        this.formats = formats;
+    public CreateFormatRequest {
+        if (formats == null) {
+            formats = new ArrayList<>();
+        }
     }
 
     @Override

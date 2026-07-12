@@ -3,7 +3,7 @@ package com.dewarim.cinnamon.security;
 import com.dewarim.cinnamon.api.login.GroupMapping;
 import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.configuration.LdapConfig;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import tools.jackson.dataformat.xml.XmlMapper;
 import com.unboundid.ldap.sdk.LDAPConnection;
 import com.unboundid.ldap.sdk.LDAPSearchException;
 import com.unboundid.ldap.sdk.SearchResultEntry;
@@ -12,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -174,14 +173,14 @@ public class UnboundIdLdapConnector {
         return ldapConfig != null && ldapConfig.getHost() != null && ldapConfig.getPort() > 0;
     }
 
-    public static void main(String[] args) throws IOException {
+    static void main(String[] args) {
         String username = "John Doe";
         String password = "Dohn.Joe_1";
         if (args.length == 2) {
             username = args[0];
             password = args[1];
         }
-        XmlMapper  mapper     = new XmlMapper();
+        XmlMapper  mapper     = XmlMapper.builder().configureForJackson2().build();
         LdapConfig ldapConfig = mapper.readValue(new File("temp/ldap-config.xml"), LdapConfig.class);
 
         UnboundIdLdapConnector ldapConnector = new UnboundIdLdapConnector(ldapConfig);
