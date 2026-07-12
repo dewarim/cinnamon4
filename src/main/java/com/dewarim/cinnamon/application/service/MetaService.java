@@ -5,7 +5,6 @@ import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.FailedRequestException;
 import com.dewarim.cinnamon.api.Ownable;
 import com.dewarim.cinnamon.api.OwnableWithMetadata;
-import com.dewarim.cinnamon.application.exception.CinnamonException;
 import com.dewarim.cinnamon.dao.*;
 import com.dewarim.cinnamon.model.*;
 import com.dewarim.cinnamon.model.index.IndexJob;
@@ -15,7 +14,6 @@ import com.dewarim.cinnamon.security.authorization.AuthorizationService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -135,14 +133,9 @@ public class MetaService<T extends CrudDao<Meta> & MetaDao, O extends CrudDao<? 
             updates.add(metaUpdate);
         }
 
-        try {
-            dao.update(updates);
-            updateMetadataChanged(user, ownables, ownableDao);
-            updateIndex(metas, ownableDao);
-        } catch (SQLException e) {
-            log.warn("DB update failed: {} with status {} and error code {}", e.getMessage(), e.getSQLState(), e.getErrorCode(), e);
-            throw new FailedRequestException(ErrorCode.DB_UPDATE_FAILED, e);
-        }
+        dao.update(updates);
+        updateMetadataChanged(user, ownables, ownableDao);
+        updateIndex(metas, ownableDao);
     }
 
     /**
@@ -155,17 +148,13 @@ public class MetaService<T extends CrudDao<Meta> & MetaDao, O extends CrudDao<? 
                 item.setModified(LocalDateTime.now());
                 item.setModifierId(user.getId());
             }
-            try {
-                if (dao.getTypeClassName().equals(ObjectSystemData.class.getName())) {
-                    List<ObjectSystemData> osds = (List<ObjectSystemData>) ownables;
-                    ((OsdDao) dao).update(osds);
-                }
-                else {
-                    List<Folder> folders = (List<Folder>) ownables;
-                    ((FolderDao) dao).update(folders);
-                }
-            } catch (SQLException e) {
-                throw new CinnamonException("Failed to update metadataChanged flag", e);
+            if (dao.getTypeClassName().equals(ObjectSystemData.class.getName())) {
+                List<ObjectSystemData> osds = (List<ObjectSystemData>) ownables;
+                ((OsdDao) dao).update(osds);
+            }
+            else {
+                List<Folder> folders = (List<Folder>) ownables;
+                ((FolderDao) dao).update(folders);
             }
         }
     }

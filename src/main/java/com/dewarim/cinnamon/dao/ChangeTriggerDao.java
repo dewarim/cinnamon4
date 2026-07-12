@@ -5,7 +5,6 @@ import com.dewarim.cinnamon.model.ChangeTrigger;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.sql.SQLException;
 import java.util.List;
 
 public class ChangeTriggerDao implements CrudDao<ChangeTrigger>{
@@ -69,7 +68,7 @@ public class ChangeTriggerDao implements CrudDao<ChangeTrigger>{
     }
 
     @Override
-    public List<ChangeTrigger> update(List<ChangeTrigger> items) throws SQLException {
+    public List<ChangeTrigger> update(List<ChangeTrigger> items) {
         List<ChangeTrigger> updated = CrudDao.super.update(items);
         invalidateChangeTriggerCache();
         return updated;

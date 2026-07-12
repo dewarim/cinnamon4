@@ -25,7 +25,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.sql.SQLException;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
@@ -215,11 +214,7 @@ public class TikaService implements Runnable {
                 if (tikaMetaset.isPresent()) {
                     Meta tikaMeta = tikaMetaset.get();
                     tikaMeta.setContent(tikaMetadata);
-                    try {
-                        osdMetaDao.update(List.of(tikaMeta));
-                    } catch (SQLException e) {
-                        throw new CinnamonException("Failed to update tika metaset:", e);
-                    }
+                    osdMetaDao.update(List.of(tikaMeta));
                 } else {
                     Meta tikaMeta = new Meta(osd.getId(), tikaMetasetTypeId, tikaMetadata);
                     osdMetaDao.create(List.of(tikaMeta));

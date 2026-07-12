@@ -5,7 +5,6 @@ import com.dewarim.cinnamon.model.AclGroup;
 import com.dewarim.cinnamon.model.Permission;
 import org.apache.ibatis.session.SqlSession;
 
-import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -42,7 +41,7 @@ public class PermissionDao implements CrudDao<Permission> {
     }
 
     @Override
-    public List<Permission> update(List<Permission> items) throws SQLException {
+    public List<Permission> update(List<Permission> items) {
         throw new CinnamonException("Permissions can only be updated by developers.");
     }
 

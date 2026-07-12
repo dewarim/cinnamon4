@@ -13,7 +13,6 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -104,33 +103,10 @@ public interface CrudDao<T extends Identifiable> {
         }
     }
 
-    default List<List<T>> partitionList(List<T> items) {
-        List<List<T>> partitions  = new ArrayList<>(items.size() / BATCH_SIZE);
-        int           requestSize = items.size();
-        int           rowCount    = 0;
-        while (rowCount < requestSize) {
-            int lastIndex = rowCount + BATCH_SIZE;
-            if (lastIndex > requestSize) {
-                lastIndex = requestSize;
-            }
-            List<T> partialList = items.subList(rowCount, lastIndex);
-            partitions.add(partialList);
-            rowCount += BATCH_SIZE;
-        }
-        return partitions;
-    }
-
     String getTypeClassName();
 
     default String getMapperNamespace(SqlAction action) {
-        String name = getTypeClassName();
-        return switch (action) {
-            case INSERT -> name + INSERT.getSuffix();
-            case DELETE -> name + DELETE.getSuffix();
-            case GET_ALL_BY_ID -> name + GET_ALL_BY_ID.getSuffix();
-            case LIST -> name + LIST.getSuffix();
-            case UPDATE -> name + UPDATE.getSuffix();
-        };
+        return getTypeClassName() + action.getSuffix();
     }
 
     /**
@@ -155,7 +131,7 @@ public interface CrudDao<T extends Identifiable> {
         return partitions;
     }
 
-    default List<T> update(List<T> items) throws SQLException {
+    default List<T> update(List<T> items) {
         List<T>    updatedItems = new ArrayList<>();
         SqlSession sqlSession   = getSqlSession();
         items.forEach(item -> {
@@ -171,10 +147,8 @@ public interface CrudDao<T extends Identifiable> {
             }
             try {
                 int updatedRows = sqlSession.update(sqlAction, item);
-                if (updatedRows == 0) {
-                    if (ignoreNopUpdates()) {
-                        throw new FailedRequestException(ErrorCode.DB_UPDATE_FAILED, "update failed on item " + item.getId());
-                    }
+                if (updatedRows == 0 && !ignoreNopUpdates()) {
+                    throw new FailedRequestException(ErrorCode.DB_UPDATE_FAILED, "update failed on item " + item.getId());
                 }
             } catch (PersistenceException e) {
                 CinnamonError error = new CinnamonError(ErrorCode.DB_UPDATE_FAILED.getCode(), "update failed with:\n" + convertStackTrace(e) + "\n while trying to update existing item " + existing + "\n with" + item);

@@ -15,7 +15,6 @@ import com.dewarim.cinnamon.model.response.Wrapper;
 import org.apache.ibatis.exceptions.PersistenceException;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.List;
 
 /**
@@ -90,7 +89,7 @@ public interface CruddyServlet<T extends Identifiable> {
             cinnamonResponse.setWrapper(updateRequest.fetchResponseWrapper().setList(updatedItems));
             return updatedItems;
         }
-        catch (PersistenceException | SQLException e){
+        catch (PersistenceException e){
             throw new FailedRequestException(ErrorCode.DB_UPDATE_FAILED, e.getMessage());
         }
     }
