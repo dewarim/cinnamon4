@@ -63,10 +63,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
     private              ContentProviderService contentProviderService;
     private              Long                   tikaMetasetTypeId;
 
-    public OsdServlet() {
-        super();
-        ThreadLocalSqlSession.refreshSession();
-    }
+    // Session refresh is handled per request by DbSessionFilter; no constructor needed here.
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 

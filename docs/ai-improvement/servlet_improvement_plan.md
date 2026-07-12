@@ -6,6 +6,41 @@
 
 ---
 
+## Review status (2026-07-12)
+
+Reviewed against current code. This plan is the **weakest of the three and partly stale** —
+read this before acting.
+
+**Applied:**
+- Removed the one remaining redundant `ThreadLocalSqlSession.refreshSession()` (in
+  `OsdServlet`). `DbSessionFilter` (`filter/DbSessionFilter.java:38`) already refreshes the
+  session per request.
+
+**Corrections to the plan's premises:**
+- **Category 1 is largely STALE.** The plan claims all 29 servlets carry a redundant
+  `refreshSession()` in their constructor; in the current code **only `OsdServlet` did**, and
+  that has now been removed.
+- **Category 1's core recommendation — converting `new XxxDao()` to `private static final`
+  cached DAOs — is UNSAFE and is rejected.** Many DAOs cache the ThreadLocal `SqlSession` in an
+  instance field (see dao_improvement_plan Category 4); creating a fresh DAO per request is
+  exactly what keeps that safe. Making them `static` would persist a closed session across
+  requests and share it across threads → stale-session / concurrency bugs. The per-request
+  `new XxxDao()` is cheap and correct; leave it.
+
+**Reviewed and deferred / not recommended:**
+- **Categories 2–4** (extract `RequestParser`/`AuthorizationValidator`/`WrapperFactory`,
+  blanket JavaDoc, error-handling passes) — 130+ hours of churn with speculative metrics and a
+  mocked-DAO unit-test premise that contradicts the (correct) integration-test philosophy in the
+  DAO plan. The single genuinely nice, low-risk item is `RequestParser.parseAndValidate`; the
+  rest is optional polish.
+- **Categories 5–6** (upload size guard, `init()` lifecycle) — the upload-size limit has some
+  merit as hardening, but is not the critical item it is framed as. Defer.
+
+The proposed `DaoFactory` / `DaoAwareServlet` / `SqlSessionRefreshFilter` classes are **not
+needed** — `DbSessionFilter` already owns session lifecycle.
+
+---
+
 ## Executive Summary
 
 This document outlines systematic improvements to enhance servlet code quality, testability, maintainability, and performance. The analysis identified **6 critical categories** affecting architecture and code consistency:

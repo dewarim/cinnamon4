@@ -177,7 +177,7 @@ public interface CrudDao<T extends Identifiable> {
                     }
                 }
             } catch (PersistenceException e) {
-                CinnamonError error = new CinnamonError(ErrorCode.DB_UPDATE_FAILED.getCode(), "delete failed with:\n" + convertStackTrace(e) + "\n while trying to update existing item " + existing + "\n with" + item);
+                CinnamonError error = new CinnamonError(ErrorCode.DB_UPDATE_FAILED.getCode(), "update failed with:\n" + convertStackTrace(e) + "\n while trying to update existing item " + existing + "\n with" + item);
                 throw new FailedRequestException(ErrorCode.DB_UPDATE_FAILED, List.of(error));
             }
             removeFromCache(item.getId());

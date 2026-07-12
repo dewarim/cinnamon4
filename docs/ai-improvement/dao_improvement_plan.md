@@ -6,6 +6,39 @@
 
 ---
 
+## Review status (2026-07-12)
+
+Reviewed against current code; all concrete claims below still hold. **Read this before
+acting on the categories.**
+
+**Applied:**
+- **Category 5** — fixed the confirmed copy-paste bug in `CrudDao.update()` (`"delete failed"`
+  → `"update failed"`, `CrudDao.java:180`).
+- **Category 4 (partial)** — `IndexService` constructor no longer calls
+  `new IndexItemDao().list()` on an implicit ThreadLocal session; it now opens an explicit
+  `try (SqlSession … = CinnamonServer.getSqlSession())` (safe outside request threads). The
+  `IndexItemDao` injection uses the existing fluent `setSqlSession()` (there is no
+  session-taking constructor).
+
+**Reviewed and deferred / not recommended:**
+- **Category 4 (rest)** — the `SessionAwareDao` base class + `findJobs()` session-splitting +
+  `shutdownNow()` fallback. The session-caching-in-a-field is a *latent trap*, benign today
+  because these DAOs are per-request / per-`findJobs()` instances. Worth doing **only if** the
+  servlet plan's static-DAO idea were ever adopted (it is not — see below). Medium effort.
+- **Category 2** (`getTypeClassName()` → `Class<T> getTypeClass()`) — real type-safety win but
+  touches all 29 DAOs; treat as a separate, deliberate pass, not part of this cleanup.
+- **Category 1** (constructor-inject hidden DAO deps) — cosmetic; the section itself admits
+  "clarity, not testability." Low value. (Note: the pattern is wider than documented, e.g.
+  `AclDao`, `PermissionDao` also `new GroupDao()`.)
+- **Category 3** (`CacheInvalidationService`) — an abstraction for ~2 call sites; over-engineering.
+- **Category 7** (move `convertStackTrace` to a util) and **Category 6** (JavaDoc) — trivial /
+  docs; defer.
+
+The plan's **testing philosophy (integration tests over mocked-session unit tests) is correct**
+and should stay.
+
+---
+
 ## Executive Summary
 
 This document outlines systematic improvements to enhance code quality, testability, consistency, and safety across all DAO classes. The analysis identified **7 categories** of issues ranging from a confirmed bug in the core interface to systemic architectural patterns that hinder testing and coupling:

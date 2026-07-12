@@ -73,7 +73,11 @@ public class IndexService implements Runnable {
                 throw new IllegalStateException("Could not create path to index: " + indexPath.toAbsolutePath());
             }
         }
-        indexItems = new IndexItemDao().list();
+        // Use an explicit session: the constructor may run outside a request thread,
+        // where no ThreadLocal SqlSession exists.
+        try (SqlSession sqlSession = CinnamonServer.getSqlSession()) {
+            indexItems = new IndexItemDao().setSqlSession(sqlSession).list();
+        }
         xmlMapper = Constants.XML_MAPPER;
         this.contentProviderService = contentProviderService;
     }
