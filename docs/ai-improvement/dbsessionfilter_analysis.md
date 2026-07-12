@@ -2,6 +2,50 @@
 
 **Date:** 2026-04-28
 
+---
+
+## Review status (2026-07-12)
+
+Reviewed against current code. **Read this before acting on the recommendation below.**
+
+**Accurate:** The `DbSessionFilter` walkthrough matches the real `filter/DbSessionFilter.java`
+(per-request `refreshSession()`, commit/rollback on `TransactionStatus`, post-commit deletions
++ index jobs, `clearThreadLocal()` cleanup).
+
+**Applied:** The "remove the redundant constructor `refreshSession()`" advice — valid, and done.
+Only `OsdServlet` still had it; it has been removed (`DbSessionFilter` refreshes per request).
+
+**REJECTED as unsafe — do NOT convert `new XxxDao()` to `private static final` cached DAOs.**
+The doc's justification ("each thread gets its own `SqlSession` from ThreadLocal, not from the
+DAO") is **false for ~11 DAOs**. The default `CrudDao.getSqlSession()` does fetch fresh from
+ThreadLocal, but `OsdDao`, `FolderDao`, `RelationDao`, `FormatDao`, `SessionDao`,
+`MetasetTypeDao`, and the meta/index DAOs override it to **cache the session in an instance
+field**:
+
+```java
+public SqlSession getSqlSession() {
+    if (sqlSession == null) {
+        sqlSession = ThreadLocalSqlSession.getSqlSession();  // cached permanently in the field
+    }
+    return sqlSession;
+}
+```
+
+Per-request `new OsdDao()` is exactly what keeps that caching safe. As a `static` singleton it
+breaks:
+1. Request 1 (thread A) caches session **S1** in the field.
+2. `DbSessionFilter` commits and **closes S1** at end of request 1.
+3. Request 2 (thread B) reuses the same static DAO → `sqlSession != null` → returns the **closed
+   S1** → errors / wrong transaction / cross-thread session sharing.
+
+Static conversion is safe *only* for DAOs using the default `getSqlSession()`, and is worth
+doing at all only if the field-caching is first removed (the `SessionAwareDao` refactor in
+dao_improvement_plan Category 4 — not mentioned here as a prerequisite). The per-request DAO
+allocation the doc calls a performance problem is negligible (trivial objects). See the matching
+note in servlet_improvement_plan.md.
+
+---
+
 ## Quick Summary
 
 **Your codebase already has the perfect solution in `DbSessionFilter`!**
