@@ -8,7 +8,7 @@ public class MetasetType implements Identifiable {
 
     private Long    id;
     private String  name;
-    private Boolean unique = false;
+    private boolean unique = false;
 
     public MetasetType() {
     }
@@ -39,11 +39,11 @@ public class MetasetType implements Identifiable {
         this.name = name;
     }
 
-    public Boolean getUnique() {
+    public boolean getUnique() {
         return unique;
     }
 
-    public void setUnique(Boolean unique) {
+    public void setUnique(boolean unique) {
         this.unique = unique;
     }
 

@@ -59,9 +59,6 @@ public class AclGroup implements Identifiable {
     }
 
     public List<Long> getPermissionIds() {
-        if (permissionIds == null) {
-            permissionIds = new ArrayList<>();
-        }
         return permissionIds;
     }
 

@@ -53,7 +53,7 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject, Ownabl
 
     @JacksonXmlElementWrapper(localName = "metasets")
     @JacksonXmlProperty(localName = "metaset")
-    private List<Meta> metas;
+    private List<Meta> metas = new ArrayList<>();
 
     @JacksonXmlElementWrapper(localName = "relations")
     @JacksonXmlProperty(localName = "relation")
@@ -463,9 +463,6 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject, Ownabl
     }
 
     public List<Meta> getMetas() {
-        if (metas == null) {
-            metas = new ArrayList<>();
-        }
         return metas;
     }
 

@@ -69,14 +69,12 @@ public class ConfigEntry implements Identifiable {
         }
         ConfigEntry that = (ConfigEntry) o;
         return publicVisibility == that.publicVisibility &&
-               Objects.equals(name, that.name) &&
-               Objects.equals(config, that.config);
+               Objects.equals(name, that.name);
     }
 
     @Override
     public int hashCode() {
-
-        return Objects.hash(name, config, publicVisibility);
+        return Objects.hash(name);
     }
 
     @Override

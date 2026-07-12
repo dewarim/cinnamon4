@@ -37,8 +37,7 @@ public record CreateMetasetTypeRequest(
     public boolean validated() {
         return metasetTypes.stream()
                 .noneMatch(type -> type == null || type.getName() == null ||
-                        type.getName().trim().isEmpty() ||
-                        type.getUnique() == null
+                        type.getName().trim().isEmpty()
                 );
     }
 

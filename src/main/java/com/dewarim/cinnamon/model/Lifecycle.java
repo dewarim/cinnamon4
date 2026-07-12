@@ -53,9 +53,6 @@ public class Lifecycle implements Identifiable {
     }
 
     public List<LifecycleState> getLifecycleStates() {
-        if(lifecycleStates == null){
-            lifecycleStates = new ArrayList<>();
-        }
         return lifecycleStates;
     }
 

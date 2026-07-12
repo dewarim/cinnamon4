@@ -64,12 +64,12 @@ public class Session implements Identifiable {
             return false;
         }
         Session session = (Session) o;
-        return Objects.equals(id, session.id) && Objects.equals(ticket, session.ticket) && Objects.equals(expires, session.expires) && Objects.equals(userId, session.userId);
+        return Objects.equals(id, session.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, ticket, expires, userId);
+        return Objects.hash(id);
     }
 
     @Override

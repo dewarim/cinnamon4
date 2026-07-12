@@ -6,6 +6,34 @@
 
 ---
 
+## Review status (2026-07-12)
+
+This plan was reviewed against the current code and partially applied. **Read this before
+acting on the categories below.**
+
+**Applied (targeted subset):**
+- **Category 2/3** — `MetasetType.unique` converted to primitive `boolean` (with the
+  companion removal of the `getUnique() == null` check in `CreateMetasetTypeRequest`);
+  redundant null-checks removed from `Lifecycle.getLifecycleStates()` and
+  `AclGroup.getPermissionIds()`; `ObjectSystemData.metas` eagerly initialized.
+- **Category 1 — only the two clearly-problematic cases**, keeping business-key identity:
+  `ConfigEntry` no longer compares/hashes the large `config` XML blob; `Session` reduced
+  to its stable `id` (was hashing mutable `ticket`/`expires`).
+
+**Reviewed and deferred / not recommended — do not re-litigate without new evidence:**
+- **Category 1 blanket "id-only equals for ~16 models" — NOT adopted.** No concrete bug
+  was demonstrated; `equals` is relied on by tests (`assertEquals(folder, …)`,
+  `assertEquals(meta, …)`) and by a DB-loaded `Set<Group>`; and a blanket switch
+  introduces the null-id trap (transient/unsaved objects all compare equal). The stable
+  business-key `equals` on the other models is intentional and stays.
+- **Category 2 `Deletion`** — `getId()` already exists; the `long`→`Long` change is moot.
+- **Category 4 (boolean getter naming)** — the section itself concludes "no change
+  needed." Skip.
+- **Category 5 (setId symmetry, toString field-name fixes, per-field JavaDoc)** —
+  medium/docs, deferred; revisit only if it becomes a real need.
+
+---
+
 ## Executive Summary
 
 This document outlines systematic improvements to enhance code quality, consistency, and maintainability across all model classes. The analysis identified **5 critical categories** affecting 20+ models:
