@@ -1,26 +1,0 @@
-     100 files     200 files     300 files     400 files     500 files     600 files     700 files     770 text files.
-classified 742 filesDuplicate file check 742 files (616 known unique)Unique:      100 files                                          Unique:      200 files                                          Unique:      300 files                                          Unique:      400 files                                          Unique:      500 files                                          Unique:      600 files                                               685 unique files.                              
-Counting:  100Counting:  200Counting:  300Counting:  400Counting:  500Counting:  600     619 files ignored.
-
-github.com/AlDanial/cloc v 1.96  T=0.63 s (1084.0 files/s, 531299.0 lines/s)
--------------------------------------------------------------------------------
-Language                     files          blank        comment           code
--------------------------------------------------------------------------------
-XML                            119           1087            238         277742
-Java                           457           6532           1727          32469
-Markdown                        15           2626              2           8506
-Text                            47            193              0           1127
-SQL                              3             90             90            829
-AsciiDoc                        12            259              0            807
-HTML                             6              5              0            380
-Maven                            1             31            127            321
-diff                             9              3             48            260
-Bourne Shell                     7             38             26            121
-JavaScript                       2              6              2             38
-CSS                              2              0              0              6
-JSON                             2              0              0              5
-SVG                              1              0              0              3
-Properties                       2              0              2              2
--------------------------------------------------------------------------------
-SUM:                           685          10870           2262         322616
--------------------------------------------------------------------------------
