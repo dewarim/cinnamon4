@@ -6,6 +6,7 @@ import com.dewarim.cinnamon.dao.DeletionDao;
 import com.dewarim.cinnamon.model.Deletion;
 import com.dewarim.cinnamon.provider.ContentProviderService;
 import com.dewarim.cinnamon.provider.DefaultContentProvider;
+import org.apache.ibatis.session.SqlSession;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -27,34 +28,34 @@ public class DeletionTask implements Runnable {
 
     @Override
     public void run() {
-        try {
-            boolean hasLock = lock.tryLock();
-            if (!hasLock) {
-                // another thread is already working on the Deletions.
-                return;
-            }
-            try {
-                DeletionDao deletionDao = new DeletionDao();
-                ContentProvider contentProvider     = contentProviderService.getContentProvider(DefaultContentProvider.FILE_SYSTEM.name());
-                int             successfulDeletions = 0;
-                for (Deletion deletion : deletions) {
-                    ContentMetadataLight metadataLight = new ContentMetadataLight();
-                    metadataLight.setContentPath(deletion.getContentPath());
-                    if (contentProvider.deleteContent(metadataLight)) {
-                        successfulDeletions++;
-                        deletion.setDeleted(true);
-                    }
-                    else{
-                        deletion.setDeleteFailed(true);
-                        deletionDao.update(List.of(deletion));
-                    }
+        boolean hasLock = lock.tryLock();
+        if (!hasLock) {
+            // another thread is already working on the Deletions.
+            return;
+        }
+        // runs on an executorService thread, which has no request-scoped session:
+        // open an explicit session instead of using ThreadLocalSqlSession.
+        try (SqlSession sqlSession = CinnamonServer.getSqlSession()) {
+            DeletionDao     deletionDao         = new DeletionDao(sqlSession);
+            ContentProvider contentProvider     = contentProviderService.getContentProvider(DefaultContentProvider.FILE_SYSTEM.name());
+            int             successfulDeletions = 0;
+            for (Deletion deletion : deletions) {
+                ContentMetadataLight metadataLight = new ContentMetadataLight();
+                metadataLight.setContentPath(deletion.getContentPath());
+                if (contentProvider.deleteContent(metadataLight)) {
+                    successfulDeletions++;
+                    deletion.setDeleted(true);
                 }
-                deletionDao.delete(deletions.stream().filter(Deletion::isDeleted).map(Deletion::getId).collect(Collectors.toList()));
-                ThreadLocalSqlSession.getSqlSession().commit();
-                CinnamonServer.cinnamonStats.getDeletions().addAndGet(successfulDeletions);
-            } catch (Exception e) {
-                log.warn("Failed to delete content: ", e);
+                else{
+                    deletion.setDeleteFailed(true);
+                    deletionDao.update(List.of(deletion));
+                }
             }
+            deletionDao.delete(deletions.stream().filter(Deletion::isDeleted).map(Deletion::getId).collect(Collectors.toList()));
+            sqlSession.commit();
+            CinnamonServer.cinnamonStats.getDeletions().addAndGet(successfulDeletions);
+        } catch (Exception e) {
+            log.warn("Failed to delete content: ", e);
         } finally {
             lock.unlock();
         }

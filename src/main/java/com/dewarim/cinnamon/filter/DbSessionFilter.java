@@ -14,7 +14,6 @@ import org.apache.ibatis.session.SqlSession;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -29,12 +28,11 @@ public class DbSessionFilter implements Filter {
 
     private static final Logger log = LogManager.getLogger(DbSessionFilter.class);
 
-    private final DeletionDao            deletionDao = new DeletionDao();
-    private       ContentProviderService contentProviderService;
-    private       SearchService          searchService;
+    private ContentProviderService contentProviderService;
+    private SearchService          searchService;
 
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException {
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) {
         try (SqlSession sqlSession = ThreadLocalSqlSession.refreshSession()) {
             log.debug("DbSessionFilter: before");
             chain.doFilter(request, response);
@@ -50,7 +48,7 @@ public class DbSessionFilter implements Filter {
                     throw ErrorCode.COMMIT_TO_DATABASE_FAILED.exception();
                 }
                 // TODO: maybe check if an idling background thread uses less resources
-                List<Deletion> deletions = deletionDao.listPendingDeletions();
+                List<Deletion> deletions = new DeletionDao().listPendingDeletions();
                 if (deletions.size() > 0) {
                     int deletionWaitPeriod = deletions.size() + 60;
                     log.debug("Submit pending deletion tasks, will wait at most {} seconds", deletionWaitPeriod);
