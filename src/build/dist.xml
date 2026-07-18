@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Distribution archive: cinnamon-server.tar.gz
+
+    Layout inside the archive:
+        cinnamon-server/cinnamon-server.jar
+        cinnamon-server/lib/*.jar
+        cinnamon-server/cinnamon-server.cdx.json   (unless built with -DskipSbom)
+        cinnamon-server/LICENSE.txt
+
+    Built via the "dist" profile in pom.xml: mvn package -Pdist
+-->
+<assembly xmlns="http://maven.apache.org/ASSEMBLY/2.2.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.2.0
+                              http://maven.apache.org/xsd/assembly-2.2.0.xsd">
+
+    <id>dist</id>
+    <formats>
+        <format>tar.gz</format>
+    </formats>
+    <!-- unpack into a cinnamon-server/ directory rather than into the current dir -->
+    <includeBaseDirectory>true</includeBaseDirectory>
+    <baseDirectory>${project.build.finalName}</baseDirectory>
+
+    <fileSets>
+        <fileSet>
+            <directory>${project.build.directory}</directory>
+            <outputDirectory>.</outputDirectory>
+            <includes>
+                <include>${project.build.finalName}.jar</include>
+            </includes>
+        </fileSet>
+
+        <!-- dependencies, populated by dependency:copy-dependencies in the dist profile.
+             Must match the lib/ entries of the jar manifest Class-Path. -->
+        <fileSet>
+            <directory>${project.build.directory}/lib</directory>
+            <outputDirectory>lib</outputDirectory>
+            <includes>
+                <include>*.jar</include>
+            </includes>
+        </fileSet>
+
+        <!-- The SBOM is absent when building with -DskipSbom. A <fileSet> with an include
+             pattern silently matches nothing in that case, whereas a <files><file> entry
+             would fail the build - hence the fileSet here. -->
+        <fileSet>
+            <directory>${project.build.directory}</directory>
+            <outputDirectory>.</outputDirectory>
+            <includes>
+                <include>${project.build.finalName}.cdx.json</include>
+            </includes>
+        </fileSet>
+
+        <fileSet>
+            <directory>${project.basedir}</directory>
+            <outputDirectory>.</outputDirectory>
+            <includes>
+                <include>LICENSE.txt</include>
+            </includes>
+        </fileSet>
+    </fileSets>
+</assembly>

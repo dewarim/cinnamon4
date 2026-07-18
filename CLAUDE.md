@@ -18,14 +18,55 @@ Cinnamon 4 is a Java-based Content Management Server (CMS). It exposes a REST-li
 # Run a single test method:
 /home/ingo/code/tools/scripts/maven-single-test.sh AclServletIntegrationTest listAclsTest
 
-# Full build (runs all integration tests, produces fat jar):
+# Full build (runs all integration tests, produces target/cinnamon-server.jar + SBOM):
 mvn clean package
 
-# Run the server:
+# Full build plus the distribution archive target/cinnamon-server.tar.gz:
+mvn clean package -Pdist
+
+# Run the server (needs target/lib, see "Packaging" below):
 java --add-modules jdk.incubator.vector --enable-native-access=ALL-UNNAMED -jar target/cinnamon-server.jar
 ```
 
 Use `local/temp` as the temporary folder, not `/tmp` or system temp dirs.
+
+## Packaging
+
+The build produces a plain jar, **not** a fat jar: `cinnamon-server.jar` declares a
+`Class-Path` of `lib/*.jar` in its manifest and needs its dependencies next to it in `lib/`.
+The `dist` profile populates `target/lib` via `dependency:copy-dependencies`; without that
+profile the directory has to be created manually before the jar will start:
+
+```bash
+mvn dependency:copy-dependencies -DoutputDirectory=target/lib -DincludeScope=runtime
+```
+
+(`-DincludeScope=runtime` matters: without it the test dependencies land in `lib/` too, which
+no longer matches the jar manifest or the SBOM.)
+
+`mvn package -Pdist` bundles jar, `lib/`, the SBOM and `LICENSE.txt` into
+`target/cinnamon-server.tar.gz` (unpacks into a `cinnamon-server/` directory).
+The assembly descriptor is `src/build/dist.xml`.
+
+### SBOM
+
+A CycloneDX 1.6 SBOM is generated into `target/cinnamon-server.cdx.json` on every
+`mvn package`, for EU CRA / BSI TR-03183-2 compliance. This is the `sbom` profile, which is
+active unless `-DskipSbom` is passed.
+
+It requires **`jq` on the PATH**: `cyclonedx-maven-plugin` has no config parameter for the
+supplier fields, so `src/build/sbom-supplier.jq` patches them into the generated document.
+Use `-DskipSbom` to skip SBOM generation and the jq requirement.
+
+The SBOM covers compile + runtime scope only, so its component list matches both the jar
+manifest `Class-Path` and the contents of `lib/` exactly. Keep those three in sync when
+changing dependency scopes.
+
+The same step also renders `docs/sbom.adoc` (via `src/build/sbom-to-adoc.jq`), a
+human-readable dependency/license table that is checked into the repository. It is
+**generated - do not edit it by hand**. The rendering is deterministic (no build timestamp),
+so it only shows up in `git status` when the dependencies actually change. Note that
+`-DskipSbom` leaves the existing file untouched rather than updating it.
 
 ## Test Database Setup
 

@@ -2,15 +2,30 @@
 
 (work in progress)
 
-    mvn clean package
+The `dist` profile builds the whole distribution archive, so populating `target/lib` and
+creating the tar by hand is no longer necessary:
 
-    mvn dependency:copy-dependencies -DoutputDirectory=target/lib
+    mvn clean package -Pdist
 
-    cd target
+This produces `target/cinnamon-server.tar.gz`, containing the server jar, its dependencies
+in `lib/`, the CycloneDX SBOM and `LICENSE.txt`. It unpacks into a `cinnamon-server/`
+directory:
 
-    tar cvzf cinnamon.tar.gz cinnamon-server.jar lib
+    tar xzf target/cinnamon-server.tar.gz
+    cd cinnamon-server
 
     ~/bin/jdk-25/bin/java --add-modules jdk.incubator.vector --enable-native-access=ALL-UNNAMED -jar cinnamon-server.jar
+
+A plain `mvn clean package` builds only the jar and the SBOM. The jar needs its
+dependencies in `target/lib` to start, which without the `dist` profile means:
+
+    mvn dependency:copy-dependencies -DoutputDirectory=target/lib -DincludeScope=runtime
+
+`-DincludeScope=runtime` keeps the test dependencies out of `lib/`, so that its contents
+match both the jar manifest `Class-Path` and the SBOM.
+
+SBOM generation requires `jq` and can be turned off with `-DskipSbom`. See `docs/sbom.adoc`
+for the generated dependency and license overview.
 
 This should result in a log line like:
 

@@ -9,6 +9,31 @@
     <packaging>jar</packaging>
     <version>1.14.2</version>
     <name>Cinnamon CMS</name>
+    <description>Cinnamon 4 Content Management Server</description>
+    <url>https://github.com/dewarim/cinnamon4</url>
+
+    <licenses>
+        <license>
+            <name>Apache-2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <!-- The SBOM spec (and BSI TR-03183-2) requires a "supplier"; a natural person is a valid
+         supplier, so this identifies the individual developer rather than a legal entity. -->
+    <organization>
+        <name>Ingo Wiarda</name>
+        <url>https://github.com/dewarim</url>
+    </organization>
+
+    <developers>
+        <developer>
+            <name>Ingo Wiarda</name>
+            <email>ingo@dewarim.de</email>
+            <url>https://github.com/dewarim</url>
+        </developer>
+    </developers>
 
     <properties>
         <jetty.version>12.1.8</jetty.version>
@@ -274,39 +299,6 @@
             <version>${unbound.ldap.version}</version>
         </dependency>
 
-        <!-- mock server for MicroserviceChangeTrigger tests -->
-        <!-- riddled with security holes - good we only use it for testing and not in the server.jar -->
-        <!-- currently deactivated; needs refactoring and move to another test strategy;
-             kept in case we need to debug before this is achieved.-->
-        <!--        <dependency>-->
-        <!--            <groupId>org.mock-server</groupId>-->
-        <!--            <artifactId>mockserver-core</artifactId>-->
-        <!--            <version>5.15.0</version>-->
-        <!--            <scope>test</scope>-->
-        <!--            <exclusions>-->
-        <!--                <exclusion>-->
-        <!--                    <groupId>com.jayway.jsonpath</groupId>-->
-        <!--                    <artifactId>json-path</artifactId>-->
-        <!--                </exclusion>-->
-        <!--                <exclusion>-->
-        <!--                    <groupId>commons-collections</groupId>-->
-        <!--                    <artifactId>commons-collections</artifactId>-->
-        <!--                </exclusion>-->
-        <!--            </exclusions>-->
-        <!--        </dependency>-->
-        <!--        <dependency>-->
-        <!--            <groupId>org.mock-server</groupId>-->
-        <!--            <artifactId>mockserver-client-java</artifactId>-->
-        <!--            <version>5.15.0</version>-->
-        <!--            <scope>test</scope>-->
-        <!--        </dependency>-->
-        <!--        <dependency>-->
-        <!--            <groupId>org.mock-server</groupId>-->
-        <!--            <artifactId>mockserver-junit-jupiter</artifactId>-->
-        <!--            <version>5.15.0</version>-->
-        <!--            <scope>test</scope>-->
-        <!--        </dependency>-->
-
     </dependencies>
 
     <build>
@@ -360,51 +352,6 @@
                     </archive>
                 </configuration>
             </plugin>
-
-            <!--            <plugin>-->
-            <!--                &lt;!&ndash; shade plugin: used to collect all dependencies into one executable jar; alternative: assembly plugin above. &ndash;&gt;-->
-            <!--                &lt;!&ndash; https://maven.apache.org/plugins/maven-shade-plugin/examples/executable-jar.html &ndash;&gt;-->
-            <!--                <groupId>org.apache.maven.plugins</groupId>-->
-            <!--                <artifactId>maven-shade-plugin</artifactId>-->
-            <!--                <version>3.5.1</version>-->
-            <!--                <executions>-->
-            <!--                    <execution>-->
-            <!--                        <phase>package</phase>-->
-            <!--                        <goals>-->
-            <!--                            <goal>shade</goal>-->
-            <!--                        </goals>-->
-            <!--                        <configuration>-->
-            <!--                            <transformers>-->
-            <!--                                <transformer-->
-            <!--                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">-->
-            <!--                                    <manifestEntries>-->
-            <!--                                        <Main-Class>com.dewarim.cinnamon.application.CinnamonServer</Main-Class>-->
-            <!--                                        <Build-Number>${buildNumber}</Build-Number>-->
-            <!--                                    </manifestEntries>-->
-            <!--                                </transformer>-->
-            <!--                            </transformers>-->
-            <!--                            <filters>-->
-            <!--                                <filter>-->
-            <!--                                    <artifact>*:*</artifact>-->
-            <!--                                    <excludes>-->
-            <!--                                        <exclude>META-INF/*.SF</exclude>-->
-            <!--                                        <exclude>META-INF/*.DSA</exclude>-->
-            <!--                                        <exclude>META-INF/*.RSA</exclude>-->
-            <!--                                    </excludes>-->
-            <!--                                </filter>-->
-            <!--                            </filters>-->
-            <!--                            <artifactSet>-->
-            <!--                                <excludes>-->
-            <!--                                    <exclude>org.apache.lucene:lucene-analysis-common:jar</exclude>-->
-            <!--                                    <exclude>org.apache.lucene:lucene-core:jar</exclude>-->
-            <!--                                    <exclude>org.apache.lucene:lucene-queryparser:jar</exclude>-->
-            <!--                                    <exclude>org.apache.lucene:lucene-*:jar</exclude>-->
-            <!--                                </excludes>-->
-            <!--                            </artifactSet>-->
-            <!--                        </configuration>-->
-            <!--                    </execution>-->
-            <!--                </executions>-->
-            <!--            </plugin>-->
             <plugin>
                 <!-- update buildNumber.properties and increase build counter whenever the maven _test_ step is executed -->
                 <!-- https://www.mojohaus.org/buildnumber-maven-plugin/ -->
@@ -434,32 +381,219 @@
                     </items>
                 </configuration>
             </plugin>
-            <!--            <plugin>-->
-            <!--                <artifactId>maven-resources-plugin</artifactId>-->
-            <!--                <version>3.3.1</version>-->
-            <!--                <executions>-->
-            <!--                    <execution>-->
-            <!--                        <id>copy-custom-jars</id>-->
-            <!--                        <phase>process-resources</phase>-->
-            <!--                        <goals>-->
-            <!--                            <goal>copy-resources</goal>-->
-            <!--                        </goals>-->
-            <!--                        <configuration>-->
-            <!--                            <outputDirectory>${project.build.directory}/lib</outputDirectory>-->
-            <!--                            <resources>-->
-            <!--                                <resource>-->
-            <!--                                    <directory>${basedir}/lib</directory>-->
-            <!--                                    <includes>-->
-            <!--                                        <include>*.jar</include>-->
-            <!--                                    </includes>-->
-            <!--                                </resource>-->
-            <!--                            </resources>-->
-            <!--                        </configuration>-->
-            <!--                    </execution>-->
-            <!--                </executions>-->
-            <!--            </plugin>-->
         </plugins>
     </build>
+    <profiles>
+        <profile>
+            <!-- SBOM generation for EU CRA / BSI TR-03183-2 compliance.
+                 Active by default so a release can never silently ship without an SBOM;
+                 opt out with "mvn package -DskipSbom" (which also drops the "jq" requirement).
+                 Property activation is used rather than <activeByDefault>, because the latter
+                 is silently switched off as soon as any other profile is activated explicitly. -->
+            <id>sbom</id>
+            <activation>
+                <property>
+                    <name>!skipSbom</name>
+                </property>
+            </activation>
+            <properties>
+                <!-- supplier name and url are taken from <organization>; only the email needs its own property -->
+                <sbom.supplier.email>ingo@dewarim.de</sbom.supplier.email>
+                <sbom.raw.file>${project.build.directory}/${project.build.finalName}.cdx-raw.json</sbom.raw.file>
+                <sbom.file>${project.build.directory}/${project.build.finalName}.cdx.json</sbom.file>
+                <!-- human-readable rendering, checked into the repository -->
+                <sbom.doc.file>${project.basedir}/docs/sbom.adoc</sbom.doc.file>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <!-- https://github.com/CycloneDX/cyclonedx-maven-plugin -->
+                        <!-- generate a CycloneDX build SBOM during "package", for EU CRA / BSI TR-03183-2 compliance.
+                             This writes target/cinnamon-server.cdx-raw.json, which is missing the supplier field
+                             (the plugin has no config parameter for it). The exec-maven-plugin step below patches
+                             that in and produces the final target/cinnamon-server.cdx.json.
+                             skipAttach: the plugin would otherwise attach the *un-patched* raw file to
+                             install/deploy; the attach is done on the patched file further down instead. -->
+                        <groupId>org.cyclonedx</groupId>
+                        <artifactId>cyclonedx-maven-plugin</artifactId>
+                        <version>2.9.2</version>
+                        <executions>
+                            <execution>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>makeBom</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <schemaVersion>1.6</schemaVersion>
+                            <outputFormat>json</outputFormat>
+                            <outputName>${project.build.finalName}.cdx-raw</outputName>
+                            <skipAttach>true</skipAttach>
+                            <!-- the SBOM must describe what we ship, so no test/provided/system scope -->
+                            <includeCompileScope>true</includeCompileScope>
+                            <includeRuntimeScope>true</includeRuntimeScope>
+                            <includeTestScope>false</includeTestScope>
+                            <includeProvidedScope>false</includeProvidedScope>
+                            <includeSystemScope>false</includeSystemScope>
+                            <!-- record license + hash data for every component -->
+                            <includeLicenseText>false</includeLicenseText>
+                            <outputReactorProjects>true</outputReactorProjects>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <!-- https://www.mojohaus.org/exec-maven-plugin/ -->
+                        <!-- patch the supplier/author fields into the raw SBOM produced above, writing the final
+                             target/cinnamon-server.cdx.json. Requires "jq" on the PATH - if it is missing, the
+                             build fails rather than silently shipping an SBOM without supplier information. -->
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>3.6.3</version>
+                        <executions>
+                            <execution>
+                                <id>sbom-add-supplier</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>jq</executable>
+                                    <outputFile>${sbom.file}</outputFile>
+                                    <arguments>
+                                        <argument>--arg</argument>
+                                        <argument>name</argument>
+                                        <argument>${project.organization.name}</argument>
+                                        <argument>--arg</argument>
+                                        <argument>url</argument>
+                                        <argument>${project.organization.url}</argument>
+                                        <argument>--arg</argument>
+                                        <argument>email</argument>
+                                        <argument>${sbom.supplier.email}</argument>
+                                        <argument>--from-file</argument>
+                                        <argument>${project.basedir}/src/build/sbom-supplier.jq</argument>
+                                        <argument>${sbom.raw.file}</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <!-- render the SBOM as docs/sbom.adoc for human readers. Output is
+                                     deterministic (no timestamp), so this only produces a git diff
+                                     when the dependencies actually change. -->
+                                <id>sbom-to-adoc</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>jq</executable>
+                                    <outputFile>${sbom.doc.file}</outputFile>
+                                    <arguments>
+                                        <!-- raw-output: emit the rendered text, not a JSON string -->
+                                        <argument>--raw-output</argument>
+                                        <!-- the SBOM itself only carries the artifactId and the
+                                             raw file name, so pass the display values in -->
+                                        <argument>--arg</argument>
+                                        <argument>productName</argument>
+                                        <argument>${project.name}</argument>
+                                        <argument>--arg</argument>
+                                        <argument>sbomFile</argument>
+                                        <argument>${project.build.finalName}.cdx.json</argument>
+                                        <argument>--from-file</argument>
+                                        <argument>${project.basedir}/src/build/sbom-to-adoc.jq</argument>
+                                        <argument>${sbom.file}</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <!-- https://www.mojohaus.org/build-helper-maven-plugin/ -->
+                        <!-- attach the *patched* SBOM so install/deploy publish the compliant file -->
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>build-helper-maven-plugin</artifactId>
+                        <version>3.6.1</version>
+                        <executions>
+                            <execution>
+                                <id>sbom-attach</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>attach-artifact</goal>
+                                </goals>
+                                <configuration>
+                                    <artifacts>
+                                        <artifact>
+                                            <file>${sbom.file}</file>
+                                            <type>json</type>
+                                            <classifier>cyclonedx</classifier>
+                                        </artifact>
+                                    </artifacts>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <!-- Distribution archive: bundles the server jar, its dependencies and (unless
+                 -DskipSbom was given) the SBOM into target/cinnamon-server.tar.gz.
+                 Activate with "mvn package -Pdist".
+                 This also populates target/lib itself, so the previously manual
+                 "mvn dependency:copy-dependencies -DoutputDirectory=target/lib" is no longer needed. -->
+            <id>dist</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <!-- https://maven.apache.org/plugins/maven-dependency-plugin/ -->
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                        <version>3.11.0</version>
+                        <executions>
+                            <execution>
+                                <id>dist-copy-dependencies</id>
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>copy-dependencies</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                                    <!-- "runtime" means compile + runtime scope, which is exactly what the
+                                         jar manifest Class-Path lists - test deps must not end up in lib/ -->
+                                    <includeScope>runtime</includeScope>
+                                    <overWriteReleases>false</overWriteReleases>
+                                    <overWriteSnapshots>true</overWriteSnapshots>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <!-- https://maven.apache.org/plugins/maven-assembly-plugin/ -->
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <version>3.8.0</version>
+                        <executions>
+                            <execution>
+                                <id>dist-archive</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>single</goal>
+                                </goals>
+                                <configuration>
+                                    <descriptors>
+                                        <descriptor>${project.basedir}/src/build/dist.xml</descriptor>
+                                    </descriptors>
+                                    <!-- produce cinnamon-server.tar.gz, not cinnamon-server-dist.tar.gz -->
+                                    <appendAssemblyId>false</appendAssemblyId>
+                                    <finalName>${project.build.finalName}</finalName>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
     <repositories>
         <repository>
             <id>apache</id>
