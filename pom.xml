@@ -51,6 +51,9 @@
         <maven.compiler.source>25</maven.compiler.source>
         <maven.compiler.target>25</maven.compiler.target>
         <unbound.ldap.version>6.0.10</unbound.ldap.version>
+        <!-- Path of the generated SBOM. Defined here rather than in the "sbom" profile because the
+             "vulncheck" profile consumes it too and must not depend on which profiles are active. -->
+        <sbom.file>${project.build.directory}/${project.build.finalName}.cdx.json</sbom.file>
     </properties>
 
     <scm>
@@ -400,7 +403,6 @@
                 <!-- supplier name and url are taken from <organization>; only the email needs its own property -->
                 <sbom.supplier.email>ingo@dewarim.de</sbom.supplier.email>
                 <sbom.raw.file>${project.build.directory}/${project.build.finalName}.cdx-raw.json</sbom.raw.file>
-                <sbom.file>${project.build.directory}/${project.build.finalName}.cdx.json</sbom.file>
                 <!-- human-readable rendering, checked into the repository -->
                 <sbom.doc.file>${project.basedir}/docs/sbom.adoc</sbom.doc.file>
             </properties>
@@ -585,6 +587,67 @@
                                     <!-- produce cinnamon-server.tar.gz, not cinnamon-server-dist.tar.gz -->
                                     <appendAssemblyId>false</appendAssemblyId>
                                     <finalName>${project.build.finalName}</finalName>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <!-- Vulnerability report for the shipped dependencies, scanned from the CycloneDX SBOM.
+                 Activate with "mvn package -Pvulncheck"; writes target/vulnerability-report.md.
+                 Requires "osv-scanner" on the PATH (https://github.com/google/osv-scanner) and
+                 network access to osv.dev. Cannot be combined with -DskipSbom, since it consumes
+                 the SBOM produced by the "sbom" profile.
+
+                 The report is written to target/ and NOT checked into docs/ on purpose: unlike
+                 the SBOM it changes whenever new CVEs are published, not only when dependencies
+                 change, so a versioned copy would go stale and churn.
+
+                 NOTE: this is a point-in-time scan of a build. The CRA also expects ongoing
+                 monitoring of released versions - feed the SBOM to a service such as
+                 Dependency-Track for that, a build-time scan alone does not cover it. -->
+            <id>vulncheck</id>
+            <properties>
+                <vulncheck.report.file>${project.build.directory}/vulnerability-report.md</vulncheck.report.file>
+                <!-- osv-scanner exits 1 when it finds vulnerabilities. That exit code is tolerated
+                     by default so the report is produced without breaking the build - new CVEs
+                     appear without any change on our side, and should not block a build.
+                     Set -Dvulncheck.tolerated.exit.code=0 to make findings fail the build. -->
+                <vulncheck.tolerated.exit.code>1</vulncheck.tolerated.exit.code>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>3.6.3</version>
+                        <executions>
+                            <execution>
+                                <id>vulncheck-scan</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>osv-scanner</executable>
+                                    <arguments>
+                                        <argument>scan</argument>
+                                        <argument>source</argument>
+                                        <argument>--format</argument>
+                                        <argument>markdown</argument>
+                                        <!-- output-file, not shell redirection: the scanner writes
+                                             progress messages to stdout, which would end up in the
+                                             report otherwise -->
+                                        <argument>--output-file</argument>
+                                        <argument>${vulncheck.report.file}</argument>
+                                        <argument>${sbom.file}</argument>
+                                    </arguments>
+                                    <successCodes>
+                                        <successCode>0</successCode>
+                                        <successCode>${vulncheck.tolerated.exit.code}</successCode>
+                                    </successCodes>
                                 </configuration>
                             </execution>
                         </executions>

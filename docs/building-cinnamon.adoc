@@ -27,6 +27,15 @@ match both the jar manifest `Class-Path` and the SBOM.
 SBOM generation requires `jq` and can be turned off with `-DskipSbom`. See `docs/sbom.adoc`
 for the generated dependency and license overview.
 
+=== Checking dependencies for known vulnerabilities
+
+    mvn package -Pvulncheck
+
+Scans the generated SBOM with https://github.com/google/osv-scanner[osv-scanner] (which has
+to be installed and on the `PATH`) and writes `target/vulnerability-report.md`. Findings are
+reported without failing the build; use `-Dvulncheck.tolerated.exit.code=0` if the build
+should fail on them instead.
+
 This should result in a log line like:
 
     [main] INFO  com.dewarim.cinnamon.application.CinnamonServer - Server is running at http @ port 8080

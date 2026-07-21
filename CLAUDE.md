@@ -8,16 +8,22 @@ Cinnamon 4 is a Java-based Content Management Server (CMS). It exposes a REST-li
 
 ## Build Commands
 
+Compiling and testing is done through **skills**, not by calling `mvn` directly — they filter
+Maven's output down to the errors and always end in an explicit verdict. Invoke them by name:
+
+| Skill | Does | Typical cost |
+|---|---|---|
+| `maven-compile` | `mvn compile`, prints `0` or just the compiler errors | ~3s |
+| `maven-single-test` | one test method, e.g. `AclServletIntegrationTest listAclsTest` | ~5s |
+| `maven-test-all` | the whole suite (614 tests) | ~40s |
+
+The full suite is cheap enough to run before declaring anything done. Almost all of those 40s are
+integration tests actually hitting Postgres and embedded Jetty — compilation is a small fraction,
+so `clean` costs about a second and build-tool swaps (mvnd) buy back only ~3s. Don't bother.
+
+For a faster inner loop while editing, see "Checking work without Maven" below.
+
 ```bash
-# Compile only (check for errors):
-/home/ingo/code/tools/scripts/maven-compile.sh
-
-# Run all tests:
-/home/ingo/code/tools/scripts/maven-test-all.sh
-
-# Run a single test method:
-/home/ingo/code/tools/scripts/maven-single-test.sh AclServletIntegrationTest listAclsTest
-
 # Full build (runs all integration tests, produces target/cinnamon-server.jar + SBOM):
 mvn clean package
 
@@ -29,6 +35,30 @@ java --add-modules jdk.incubator.vector --enable-native-access=ALL-UNNAMED -jar 
 ```
 
 Use `local/temp` as the temporary folder, not `/tmp` or system temp dirs.
+
+## Checking work without Maven
+
+Two tools answer questions faster than a build cycle. Neither replaces the verdict from
+`maven-compile` / `maven-test-all` — use them to iterate, then confirm with Maven.
+
+**IntelliJ MCP (`get_file_problems`)** — full semantic analysis of one file in under a second,
+with no Maven invocation. Catches cross-file type errors with resolved generics, and also reports
+things javac never will (unused methods, inspection warnings). Requires IDEA running with the
+project indexed, and it reflects the IDE's model rather than the real build, so a clean result
+here is encouraging, not proof. `rename_refactoring` and `analyze_calls` have no Maven equivalent
+and are the right way to do renames and call-graph questions.
+
+**jshell** — for questions about *runtime* library behaviour, where the alternative is writing a
+throwaway test. Especially useful for Jackson XML/JSON wire format, which is easy to get wrong by
+reading the record alone. Use the `jshell-project` skill, or by hand:
+
+```bash
+mvn -q dependency:build-classpath -Dmdep.outputFile=local/temp/cp.txt -DincludeScope=test
+jshell --class-path "target/classes:target/test-classes:$(cat local/temp/cp.txt)" --execution local
+```
+
+The classpath file only needs regenerating when dependencies change; `target/classes` must be
+current, so run `maven-compile` first if sources changed.
 
 ## Packaging
 
@@ -62,7 +92,31 @@ The SBOM covers compile + runtime scope only, so its component list matches both
 manifest `Class-Path` and the contents of `lib/` exactly. Keep those three in sync when
 changing dependency scopes.
 
-The same step also renders `docs/sbom.adoc` (via `src/build/sbom-to-adoc.jq`), a
+### Vulnerability scanning
+
+```bash
+mvn package -Pvulncheck   # -> target/vulnerability-report.md
+```
+
+The `vulncheck` profile scans the generated SBOM with
+[osv-scanner](https://github.com/google/osv-scanner) (must be on the PATH; needs network
+access to osv.dev). It consumes the SBOM, so it cannot be combined with `-DskipSbom`.
+
+The scan is **report-only**: `osv-scanner` exits with code 1 when it finds something, and
+that exit code is tolerated so a newly published CVE does not break an unrelated build.
+Pass `-Dvulncheck.tolerated.exit.code=0` to make findings fail the build instead.
+
+The report is written to `target/` and deliberately *not* checked into `docs/`: unlike the
+SBOM it changes whenever new CVEs are published rather than when dependencies change, so a
+versioned copy would go stale.
+
+This is a point-in-time scan of one build. The CRA also expects ongoing monitoring of
+already-released versions, which a build-time scan does not provide - feed the SBOM to
+something like Dependency-Track for that.
+
+### Generated documentation
+
+The SBOM step also renders `docs/sbom.adoc` (via `src/build/sbom-to-adoc.jq`), a
 human-readable dependency/license table that is checked into the repository. It is
 **generated - do not edit it by hand**. The rendering is deterministic (no build timestamp),
 so it only shows up in `git status` when the dependencies actually change. Note that
