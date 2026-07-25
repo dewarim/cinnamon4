@@ -36,7 +36,7 @@
     </developers>
 
     <properties>
-        <jetty.version>12.1.8</jetty.version>
+        <jetty.version>12.1.10</jetty.version>
         <jackson.version>3.2.0</jackson.version>
         <junit.version>5.13.1</junit.version>
         <lucene.version>9.12.1</lucene.version>
