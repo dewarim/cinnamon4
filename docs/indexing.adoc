@@ -23,7 +23,7 @@ Those are only accessible for administrators.
   <id>1</id>
   <name>index.acl</name>
   <fieldName>acl</fieldName>
-  <searchString>/sysMeta/object/aclId</searchString>
+  <searchString>/objectSystemData/aclId</searchString>
   <searchCondition>true()</searchCondition>
   <multipleResults>false</multipleResults>
   <indexType>DEFAULT_INDEXER</indexType>
@@ -48,7 +48,7 @@ The reverse is also true: you can just index everything into a generic field lik
 searchString::
 An XPath expression to select specific XML nodes. The default indexer will then extract the text content of this and all child nodes for indexing.
 +
-In this example, we select the ACL id via `/sysMeta/object/aclId`. If you want to index the title element of an XML document, you could use something like //title to select it.
+In this example, we select the ACL id via `/objectSystemData/aclId` (for folders, the root element is `folder`). If you want to index the title element of an XML document, you could use something like `/objectSystemData/content//title` to select it - see the "OSD XML" section below for the structure of the document that XPath expressions are evaluated against.
 +
 See below for an example of an XML representation of an OSD (ObjectSystemData) which contains the data of a document.
 
@@ -298,8 +298,8 @@ values (nextval('seq_index_item_id'), 'osd_id', false,'created id item',
 |parent|Integer
 |summary|Text
 |folder_type|Integer
-|unique_id|String with formatting: folder#$id, for example: folder#123
-|cinnamon_class|String with value: folder
+|unique_id|String with formatting: FOLDER#$id, for example: FOLDER#123
+|cinnamon_class|String with value: FOLDER
 |===
 
 [cols="1,1"]
@@ -328,7 +328,7 @@ values (nextval('seq_index_item_id'), 'osd_id', false,'created id item',
 |lifecycle_state|Integer
 |summary|Text
 |object_type|Integer
-|unique_id|String with formatting: osd#$id, for example: osd#123
-|cinnamon_class|String with value: osd
+|unique_id|String with formatting: OSD#$id, for example: OSD#123
+|cinnamon_class|String with value: OSD
 |===
 

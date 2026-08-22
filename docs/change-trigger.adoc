@@ -26,7 +26,7 @@ This is an example of a request to create a new change trigger:
       <postTrigger>true</postTrigger>
       <copyFileContent>false</copyFileContent>
       <ranking>100</ranking>
-      <config>&lt;config>&lt;url>http://localhost:64888/createThumbnail&lt;/url>&lt;/config></config>
+      <config>&lt;config>&lt;remoteServer>http://localhost:64888/createThumbnail&lt;/remoteServer>&lt;/config></config>
       <triggerType>MICROSERVICE</triggerType>
      </changeTrigger>
     </changeTriggers>
@@ -47,18 +47,19 @@ For example, the microservice change-trigger may check if  the name of a new fol
 * copyFileContent: if true, the content of files sent to the server is temporarily copied and sent given to the change-trigger implementation. This may affect performance and resource consumption negatively, so use with care.
 * ranking: if multiple change-triggers are configured for a single endpoint, the lowest ranked change-trigger will be executed first. It's recommended to use ranking numbers in the hundreds, so you have always some room to insert another trigger before or after an existing one.
 * config: an XML snippet that is given to the change-trigger's code. In case of the microservice change-trigger, this defines the URL to call.
-* triggerType: the type of trigger - we only have MICROSERVICE at the moment (TODO: add a NOP_TRIGGER which does nothing but allows for easy testing of the basic code paths).
+* triggerType: the type of trigger - MICROSERVICE (calls a remote HTTP service) or NOP_TRIGGER (does nothing, useful for testing the basic code paths).
 
 == Microservice Change-Trigger
 
-* when used, it will send the XML request to the server configured in the /config/url section.
+* when used, it will send the XML request to the server configured in the /config/remoteServer element of the trigger's config.
 * in preTrigger mode, a non-200 response code will stop the request from going further and return an error message to the client.
 * in postTrigger mode, a non-200 response will roll back any database changes.
 * if copyFileContent is true, send any file content as multipart request to the remote service.
 * header fields are (mostly) copied where it makes sense, so the client can put special parameters for the remote service into it's request's header fields.
-* if the remote service responds with content, this is added as-is to a header field "microservice-response". Note: current assumption is: the remote service will respond with a text message that does not need further encoding.
+* the remote service's response is added to the Cinnamon response as a `<changeTriggerResponse>` element (with `url`, `httpCode` and `response`) inside `<changeTriggerResponses>`. Note: current assumption is: the remote service will respond with a text message that does not need further encoding.
 +
-if the remote service only sends an empty response (like: 200-OK without anything else), the header field will contain "<no-content/>".
+if the remote service only sends an empty response (like: 200-OK without anything else), the response field will contain "<no-content/>".
+* in postTrigger mode, the original request payload is passed to the remote service in the header field "cinnamon-request" and the pending Cinnamon response is sent as the request body.
 
 == Performance Considerations
 
