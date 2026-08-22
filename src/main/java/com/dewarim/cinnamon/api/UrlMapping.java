@@ -229,7 +229,7 @@ public enum UrlMapping {
             """,
             SetContentRequest.class, GenericResponse.class),
     OSD__SET_SUMMARY("osd", "setSummary", "/api", "Add a summary to an object, for example a short description of the content.", SetSummaryRequest.class, GenericResponse.class),
-    OSD__UNLOCK("osd", "unlock", "/api", "", IdRequest.class, GenericResponse.class),
+    OSD__UNLOCK("osd", "unlock", "/api", "", IdListRequest.class, GenericResponse.class),
     OSD__UPDATE("osd", "update", "/api", "", UpdateOsdRequest.class, GenericResponse.class),
     OSD__UPDATE_META_CONTENT("osd", "updateMetaContent", "/api",
             "Update the content of a given OSD metaset",

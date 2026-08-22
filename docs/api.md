@@ -723,7 +723,10 @@ Delete a list of config entries
 
 ```xml
 <deleteConfigRequest>
-  <ids/>
+  <ids>
+    <id>1</id>
+    <id>2</id>
+  </ids>
   <ignoreNotFound>false</ignoreNotFound>
 </deleteConfigRequest>
 
@@ -4457,9 +4460,13 @@ Add a summary to an object, for example a short description of the content.
 ## Request
 
 ```xml
-<idRequest>
-  <id>7</id>
-</idRequest>
+<idListRequest>
+  <ids>
+    <id>1</id>
+    <id>5</id>
+    <id>44</id>
+  </ids>
+</idListRequest>
 
 ```
 
