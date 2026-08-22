@@ -8,7 +8,10 @@ import com.dewarim.cinnamon.api.content.ContentMetadata;
 import com.dewarim.cinnamon.api.content.ContentProvider;
 import com.dewarim.cinnamon.api.lifecycle.State;
 import com.dewarim.cinnamon.api.lifecycle.StateChangeResult;
-import com.dewarim.cinnamon.application.*;
+import com.dewarim.cinnamon.application.CinnamonRequest;
+import com.dewarim.cinnamon.application.CinnamonResponse;
+import com.dewarim.cinnamon.application.CinnamonServer;
+import com.dewarim.cinnamon.application.RequestScope;
 import com.dewarim.cinnamon.application.exception.CinnamonException;
 import com.dewarim.cinnamon.application.service.DeleteOsdService;
 import com.dewarim.cinnamon.application.service.MetaService;
@@ -677,6 +680,11 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
             throw ErrorCode.OBJECT_MUST_BE_LOCKED_BY_USER.exception();
         }
 
+        // schedule removal of the replaced content file (same approach as copyToExisting):
+        String previousContentPath = osd.getContentPath();
+        if (previousContentPath != null && !previousContentPath.isEmpty()) {
+            new DeletionDao().create(List.of(new Deletion(osd.getId(), previousContentPath, false)));
+        }
         storeFileUpload(file.getInputStream(), osd, setContentRequest.formatId());
         if (user.isChangeTracking()) {
             osd.setContentChanged(true);

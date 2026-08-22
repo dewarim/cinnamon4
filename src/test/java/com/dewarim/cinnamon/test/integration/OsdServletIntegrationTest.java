@@ -503,6 +503,29 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         assertEquals(osd.getContentHash(), sha256Hex);
     }
 
+    @Test
+    public void setContentReplacesAndDeletesPreviousContentFile() throws IOException {
+        long osdId = new TestObjectHolder(client, userId).createOsd().osd.getId();
+        createTestContentOnOsd(osdId, false);
+        String dataRoot     = CinnamonServer.config.getServerConfig().getDataRoot();
+        String firstPath    = client.getOsdById(osdId, false, false).getContentPath();
+        File   firstContent = new File(dataRoot, firstPath);
+        assertTrue(firstContent.exists());
+
+        // replace the content with a different file:
+        client.lockOsd(osdId);
+        client.setContentOnLockedOsd(osdId, 1L, new File("README.adoc"));
+        client.unlockOsd(osdId);
+
+        ObjectSystemData osd           = client.getOsdById(osdId, false, false);
+        File             secondContent = new File(dataRoot, osd.getContentPath());
+        assertNotEquals(firstPath, osd.getContentPath());
+        assertTrue(secondContent.exists());
+        assertEquals((long) osd.getContentSize(), secondContent.length());
+        // the replaced file is scheduled for deletion and removed after the request's commit:
+        assertFalse(firstContent.exists(), "previous content file should have been deleted: " + firstContent);
+    }
+
 
     @Test
     public void setContentWithWrongContentType() throws IOException {
