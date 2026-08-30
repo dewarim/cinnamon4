@@ -19,10 +19,6 @@ import com.dewarim.cinnamon.filter.RequestResponseFilter;
 import com.dewarim.cinnamon.model.ChangeTriggerType;
 import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.provider.ContentProviderService;
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.SerializationFeature;
-import tools.jackson.dataformat.xml.XmlMapper;
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.MultipartConfigElement;
 import jakarta.servlet.annotation.MultipartConfig;
@@ -38,6 +34,10 @@ import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.util.resource.ResourceFactory;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.SerializationFeature;
+import tools.jackson.dataformat.xml.XmlMapper;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -48,11 +48,7 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
-import java.util.Arrays;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -67,7 +63,7 @@ public class CinnamonServer {
 
     private static final Logger log = LogManager.getLogger(CinnamonServer.class);
 
-    public static final String           VERSION       = "1.14.2";
+    public static final String           VERSION       = "1.14.3";
     private             Server           server;
     private static      DbSessionFactory dbSessionFactory;
     private static      DbSessionFactory dbLoggingSessionFactory;
