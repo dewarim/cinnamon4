@@ -5,6 +5,7 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import org.apache.ibatis.session.SqlSession;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -29,6 +30,10 @@ public class AclDao implements CrudDao<Acl> {
         SqlSession sqlSession = getSqlSession();
         GroupDao   groupDao   = new GroupDao();
         Set<Long> groupIds     = groupDao.getGroupIdsWithAncestorsOfUserById(userId);
+        if (groupIds.isEmpty()) {
+            // user has no groups (or does not exist)
+            return new ArrayList<>();
+        }
         List<Acl>  acls       = sqlSession.selectList("com.dewarim.cinnamon.model.Acl.getUserAcls", groupIds);
         return acls.stream().distinct().collect(Collectors.toList());
     }

@@ -278,4 +278,32 @@ public class RelationServletIntegrationTest extends CinnamonIntegrationTest {
         assertFalse(andRelations.contains(relation3));
     }
 
+    @Test
+    public void getRelationsOfNonExistentObjectsReturnsNothing() throws IOException {
+        var toh   = prepareAclWithDefaultRelationPermissions("getRelationsOfNonExistentObjects");
+        var left  = toh.createOsd("left").osd;
+        var right = toh.createOsd("right").osd;
+        client.createRelation(left.getId(), right.getId(), 1L, "<none/>");
+
+        // no existing ids must not turn into "no filter" and return every relation
+        assertTrue(client.getRelations(List.of(Long.MAX_VALUE)).isEmpty());
+    }
+
+    @Test
+    public void searchRelationsInAndModeWithEmptyLists() throws IOException {
+        var toh   = prepareAclWithDefaultRelationPermissions("searchRelationsInAndModeWithEmptyLists");
+        var left  = toh.createOsd("left").osd;
+        var right = toh.createOsd("right").osd;
+        var relation = client.createRelation(left.getId(), right.getId(), 1L, "<none/>");
+
+        // empty lists after a non-empty one must not leave a dangling AND in the WHERE clause
+        List<Long> expected = List.of(relation.getId());
+        assertEquals(expected, client.searchRelations(List.of(left.getId()), List.of(), List.of(), false, false)
+                .stream().map(Relation::getId).toList());
+        assertEquals(expected, client.searchRelations(List.of(left.getId()), List.of(right.getId()), List.of(), false, false)
+                .stream().map(Relation::getId).toList());
+        assertEquals(expected, client.searchRelations(List.of(), List.of(right.getId()), List.of(), false, false)
+                .stream().map(Relation::getId).toList());
+    }
+
 }

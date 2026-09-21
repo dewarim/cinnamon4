@@ -744,6 +744,22 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
+    public void getMetaWithEmptyTypeIdsReturnsAll() throws IOException {
+        MetasetType metasetType1 = adminClient.createMetasetType("getMetaWithEmptyTypeIds1", true);
+        MetasetType metasetType2 = adminClient.createMetasetType("getMetaWithEmptyTypeIds2", true);
+        var toh = new TestObjectHolder(client, userId)
+                .createOsd("getMetaWithEmptyTypeIdsReturnsAll")
+                .setMetasetType(metasetType1)
+                .createOsdMeta("<metaset><p>Good Test</p></metaset>")
+                .setMetasetType(metasetType2)
+                .createOsdMeta("<metaset><license>GPL</license></metaset>");
+
+        // an empty list of typeIds must not reach the mapper's foreach as "IN ()"
+        List<Meta> osdMetas = client.getOsdMetas(toh.osd.getId(), List.of());
+        assertEquals(2, osdMetas.size());
+    }
+
+    @Test
     public void createMetaInvalidRequest() throws IOException {
         CreateMetaRequest request      = new CreateMetaRequest();
         StandardResponse  metaResponse = sendStandardRequest(UrlMapping.OSD__CREATE_META, request);

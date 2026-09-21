@@ -113,6 +113,10 @@ public interface CrudDao<T extends Identifiable> {
      * partition test code in ConfigEntryServletIntegrationTest.createAndDeleteLotsOfObjects()
      */
     static List<List<Long>> partitionLongList(List<Long> ids) {
+        if (ids.isEmpty()) {
+            // no partitions, so callers never hand an empty list to a mapper's foreach
+            return List.of();
+        }
         if (ids.size() < BATCH_SIZE) {
             return List.of(ids);
         }

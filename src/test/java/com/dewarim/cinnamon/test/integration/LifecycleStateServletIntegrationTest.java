@@ -363,6 +363,18 @@ public class LifecycleStateServletIntegrationTest extends CinnamonIntegrationTes
     }
 
     @Test
+    public void getNextStatesOfFinalState() throws IOException {
+        var lifecycle  = adminClient.createLifecycle("getNextStatesOfFinalState");
+        var finalState = adminClient.createLifecycleState(
+                new LifecycleState("final-state", CONFIG, NOP_STATE, lifecycle.getId(), null));
+        var  toh   = new TestObjectHolder(client, userId).createOsd("getNextStatesOfFinalState");
+        Long osdId = toh.osd.getId();
+        adminClient.attachLifecycle(osdId, lifecycle.getId(), finalState.getId(), true);
+        // CONFIG has no nextStates, so the state config holds an empty list
+        assertTrue(client.getNextLifecycleStates(osdId).isEmpty());
+    }
+
+    @Test
     public void createLifecycleState() throws IOException {
         var lifecycle = adminClient.createLifecycle("for-lcs-create");
         var lifecycleState = adminClient.createLifecycleState(

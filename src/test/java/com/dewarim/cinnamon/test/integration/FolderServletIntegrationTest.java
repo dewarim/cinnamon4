@@ -312,6 +312,17 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
+    public void getMetaWithEmptyTypeIdsReturnsAll() throws IOException {
+        var folderId = new TestObjectHolder(client, userId)
+                .createFolder().folder.getId();
+        client.createFolderMeta(folderId, "<xml>comment 1</xml>", 1L);
+        client.createFolderMeta(folderId, "<xml>comment 2</xml>", 1L);
+        // an empty list of typeIds must not reach the mapper's foreach as "IN ()"
+        List<Meta> folderMetas = client.getFolderMetas(folderId, List.of());
+        assertEquals(2, folderMetas.size());
+    }
+
+    @Test
     public void createOsdMetasetHappyPath() throws IOException {
         long osdId = new TestObjectHolder(client, userId)
                 .createOsd("createOsdMetasetHappyPath").osd.getId();

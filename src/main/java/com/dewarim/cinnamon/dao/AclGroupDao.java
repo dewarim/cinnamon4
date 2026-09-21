@@ -11,6 +11,10 @@ import java.util.stream.Collectors;
 public class AclGroupDao implements CrudDao<AclGroup> {
 
     public List<AclGroup> getAclGroupsByGroupIdsAndAcl(Set<Long> groupIds, long aclId) {
+        if (groupIds.isEmpty()) {
+            // user has no groups. Mutable, as AccessFilter adds the everyone group to the result.
+            return new ArrayList<>();
+        }
         SqlSession sqlSession = getSqlSession();
         Map<String, Object> params = Map.of("groupIds", groupIds, "aclId", aclId);
         return sqlSession.selectList("com.dewarim.cinnamon.model.AclGroup.getAclGroupsByGroupIdsAndAcl", params);

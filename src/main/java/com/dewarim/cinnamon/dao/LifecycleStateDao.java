@@ -23,6 +23,10 @@ public class LifecycleStateDao implements CrudDao<LifecycleState> {
     }
 
     public List<LifecycleState> getLifecycleStatesByNameList(List<String> names) {
+        if (names == null || names.isEmpty()) {
+            // a final state has no next states
+            return List.of();
+        }
         SqlSession sqlSession = getSqlSession();
         return sqlSession.selectList("com.dewarim.cinnamon.model.LifecycleState.getLifecycleStatesByNameList", names);
     }

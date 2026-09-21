@@ -273,6 +273,11 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
             return;
         }
         List<Long>      ids             = osds.stream().map(ObjectSystemData::getId).collect(Collectors.toList());
+        if (ids.isEmpty()) {
+            // none of the requested objects exist: an unfiltered OR-mode query would return every relation
+            cinnamonResponse.setWrapper(new RelationWrapper());
+            return;
+        }
         List<Relation>  relations       = new RelationDao().getRelationsOrMode(ids, ids, null, relationRequest.includeMetadata());
         RelationWrapper relationWrapper = new RelationWrapper(relations);
         cinnamonResponse.setWrapper(relationWrapper);
@@ -538,7 +543,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         throwUnlessCustomMetaIsReadable(osd);
 
         List<Meta> metaList;
-        if (metaRequest.typeIds() != null) {
+        if (metaRequest.typeIds() != null && !metaRequest.typeIds().isEmpty()) {
             metaList = new OsdMetaDao().getMetaByTypeIdsAndOsd(metaRequest.typeIds(), osdId);
         } else {
             metaList = new OsdMetaDao().listByOsd(osdId);

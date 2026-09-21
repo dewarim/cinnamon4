@@ -3,9 +3,13 @@ package com.dewarim.cinnamon.test.integration;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.Constants;
 import com.dewarim.cinnamon.api.UrlMapping;
+import com.dewarim.cinnamon.client.CinnamonClient;
 import com.dewarim.cinnamon.client.StandardResponse;
 import com.dewarim.cinnamon.client.Unwrapper;
 import com.dewarim.cinnamon.model.Acl;
+import com.dewarim.cinnamon.model.Group;
+import com.dewarim.cinnamon.model.ObjectSystemData;
+import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.request.IdRequest;
 import com.dewarim.cinnamon.model.request.acl.DeleteAclRequest;
 import com.dewarim.cinnamon.model.request.acl.UpdateAclRequest;
@@ -19,10 +23,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import static com.dewarim.cinnamon.DefaultPermission.BROWSE;
 import static com.dewarim.cinnamon.ErrorCode.INVALID_REQUEST;
 import static com.dewarim.cinnamon.api.Constants.ACL_DEFAULT;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static com.dewarim.cinnamon.api.Constants.ALIAS_EVERYONE;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class AclServletIntegrationTest extends CinnamonIntegrationTest {
 
@@ -121,6 +126,27 @@ public class AclServletIntegrationTest extends CinnamonIntegrationTest {
         List<Acl> acls = client.getAclsOfUser(adminId);
         assertTrue(acls.stream().anyMatch(acl -> acl.getName().equals("reviewers.acl")));
         assertTrue(acls.stream().anyMatch(acl -> acl.getName().equals(ACL_DEFAULT)));
+    }
+
+    @Test
+    public void userWithoutGroups() throws IOException {
+        // a user without groups has an empty group id set, which must not reach a mapper's foreach as "IN ()"
+        var         tohUser   = new TestObjectHolder(adminClient, adminId).createUser();
+        UserAccount groupless = tohUser.user;
+        assertTrue(client.getAclsOfUser(groupless.getId()).isEmpty());
+
+        // the everyone group still grants permissions to a user without groups
+        Group everyoneGroup = adminClient.listGroups().stream()
+                .filter(g -> g.getName().equals(ALIAS_EVERYONE)).findFirst().orElseThrow();
+        var osd = new TestObjectHolder(adminClient, adminId)
+                .setAcl(adminClient.createAcl("userWithoutGroups-everyone-acl"))
+                .setGroup(everyoneGroup)
+                .createAclGroup()
+                .addPermissions(List.of(BROWSE))
+                .createOsd("userWithoutGroups").osd;
+        var grouplessClient = new CinnamonClient(client, groupless.getName(), tohUser.newUserPassword);
+        List<ObjectSystemData> osds = grouplessClient.getOsdsById(List.of(osd.getId()), false, false);
+        assertEquals(List.of(osd.getId()), osds.stream().map(ObjectSystemData::getId).toList());
     }
 
     @Test

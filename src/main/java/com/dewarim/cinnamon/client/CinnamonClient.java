@@ -75,7 +75,6 @@ import com.dewarim.cinnamon.model.request.user.*;
 import com.dewarim.cinnamon.model.response.*;
 import com.dewarim.cinnamon.model.response.index.IndexInfoResponse;
 import com.dewarim.cinnamon.model.response.index.ReindexResponse;
-import tools.jackson.databind.ObjectMapper;
 import org.apache.hc.client5.http.classic.HttpClient;
 import org.apache.hc.client5.http.entity.mime.FileBody;
 import org.apache.hc.client5.http.entity.mime.MultipartEntityBuilder;
@@ -84,6 +83,7 @@ import org.apache.hc.core5.http.HttpEntity;
 import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.File;
 import java.io.IOException;
@@ -1062,6 +1062,12 @@ public class CinnamonClient {
 
     public List<Meta> getFolderMetas(Long id) throws IOException {
         var request  = new MetaRequest(id, null);
+        var response = sendStandardRequest(UrlMapping.FOLDER__GET_META, request);
+        return metaUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
+    }
+
+    public List<Meta> getFolderMetas(Long id, List<Long> typeIds) throws IOException {
+        var request  = new MetaRequest(id, typeIds);
         var response = sendStandardRequest(UrlMapping.FOLDER__GET_META, request);
         return metaUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }

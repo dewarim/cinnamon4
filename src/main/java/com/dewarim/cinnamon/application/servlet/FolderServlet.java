@@ -399,7 +399,7 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
         throwUnlessCustomMetaIsReadable(folder);
 
         List<Meta> metaList;
-        if (metaRequest.typeIds() != null) {
+        if (metaRequest.typeIds() != null && !metaRequest.typeIds().isEmpty()) {
             metaList = new FolderMetaDao().getMetaByTypeIdsAndOsd(metaRequest.typeIds(), folderId);
         } else {
             metaList = new FolderMetaDao().listByFolderId(folderId);
