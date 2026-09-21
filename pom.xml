@@ -7,7 +7,7 @@
     <groupId>com.dewarim.cinnamon</groupId>
     <artifactId>cinnamon-cms</artifactId>
     <packaging>jar</packaging>
-    <version>1.14.3</version>
+    <version>1.14.4</version>
     <name>Cinnamon CMS</name>
     <description>Cinnamon 4 Content Management Server</description>
     <url>https://github.com/dewarim/cinnamon4</url>
