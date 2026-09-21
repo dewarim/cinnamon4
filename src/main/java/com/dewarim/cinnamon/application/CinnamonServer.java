@@ -453,11 +453,11 @@ public class CinnamonServer {
         );
     }
 
-    private static String requestToExample(ObjectMapper mapper, Class<? extends ApiRequest> apiRequestClass) throws Exception {
+    private static String requestToExample(ObjectMapper mapper, Class<? extends ApiRequest<?>> apiRequestClass) throws Exception {
         if (apiRequestClass == null) {
             return "";
         }
-        ApiRequest request;
+        ApiRequest<?> request;
         try {
             request = apiRequestClass.getConstructor().newInstance();
         } catch (NoSuchMethodException noNoArgCtor) {
@@ -495,7 +495,7 @@ public class CinnamonServer {
         return exampleToText(mapper, response.examples());
     }
 
-    private static String exampleToText(ObjectMapper mapper, List<Object> examples) throws JacksonException {
+    private static String exampleToText(ObjectMapper mapper, List<?> examples) throws JacksonException {
         StringBuilder builder = new StringBuilder();
         for (Object example : examples) {
             builder.append("```xml\n");

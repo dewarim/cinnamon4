@@ -5,7 +5,7 @@ Generated from the CycloneDX SBOM by `mvn package` -- *do not edit by hand*.
 The machine-readable SBOM is built to `target/cinnamon-server.cdx.json`;
 see the Packaging section of CLAUDE.md.
 
-Product:: Cinnamon CMS 1.14.3
+Product:: Cinnamon CMS 1.14.4
 Supplier:: Ingo Wiarda
 Product license:: Apache-2.0
 SBOM format:: CycloneDX 1.6

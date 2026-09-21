@@ -377,7 +377,7 @@ public enum UrlMapping {
         return action;
     }
 
-    public Class<? extends ApiRequest> getRequestClass() {
+    public Class<? extends ApiRequest<?>> getRequestClass() {
         return requestClass;
     }
 
