@@ -5,13 +5,13 @@ import com.dewarim.cinnamon.api.ApiResponse;
 import com.dewarim.cinnamon.application.exception.CinnamonException;
 import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.response.*;
-import tools.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpServletResponseWrapper;
 import org.apache.hc.core5.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -76,11 +76,11 @@ public class CinnamonResponse extends HttpServletResponseWrapper {
         response = new GenericResponse(true);
     }
 
-    public Wrapper getWrapper() {
+    public Wrapper<?> getWrapper() {
         return wrapper;
     }
 
-    public void setWrapper(Wrapper wrapper) {
+    public void setWrapper(Wrapper<?> wrapper) {
         this.wrapper = wrapper;
     }
 
