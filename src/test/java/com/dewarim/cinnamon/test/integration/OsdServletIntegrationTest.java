@@ -439,6 +439,9 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         Header           contentDisposition = response.getFirstHeader(CONTENT_DISPOSITION);
         ObjectSystemData osd                = client.getOsdById(osdId, false, false);
         assertEquals("attachment; filename=\"" + osd.getName() + "\"", contentDisposition.getValue());
+        Header contentLength = response.getFirstHeader(CONTENT_LENGTH);
+        assertNotNull(contentLength);
+        assertEquals(osd.getContentSize(), Long.parseLong(contentLength.getValue()));
         File tempFile = Files.createTempFile("cinnamon-test-get-content-", ".xml").toFile();
         try (FileOutputStream fos = new FileOutputStream(tempFile)) {
             response.getEntity().writeTo(fos);

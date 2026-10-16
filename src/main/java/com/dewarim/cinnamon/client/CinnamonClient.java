@@ -602,7 +602,7 @@ public class CinnamonClient {
 
     // FolderTypes
     public List<FolderType> createFolderTypes(List<String> names) throws IOException {
-        var              folderTypes = names.stream().map(FolderType::new).collect(Collectors.toList());
+        var              folderTypes = names.stream().map(FolderType::new).toList();
         StandardResponse response    = sendStandardRequest(UrlMapping.FOLDER_TYPE__CREATE, new CreateFolderTypeRequest(folderTypes));
         return folderTypeUnwrapper.unwrap(response, names.size());
     }

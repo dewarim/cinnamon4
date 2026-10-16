@@ -653,11 +653,13 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                 () -> new ServletException(String.format("Encountered object #%d with content but non-existing formatId #%d.",
                         osd.getId(), osd.getFormatId())));
         ContentProvider contentProvider = contentProviderService.getContentProvider(osd.getContentProvider());
-        InputStream     contentStream   = contentProvider.getContentStream(osd);
-        response.setHeader(CONTENT_DISPOSITION, "attachment; filename=\"" + osd.getName().replace("\"", "%22") + "\"");
-        response.setContentType(format.getContentType());
-        response.setStatus(SC_OK);
-        contentStream.transferTo(response.getOutputStream());
+        try (InputStream contentStream = contentProvider.getContentStream(osd)) {
+            response.setHeader(CONTENT_DISPOSITION, "attachment; filename=\"" + osd.getName().replace("\"", "%22") + "\"");
+            response.setContentType(format.getContentType());
+            response.setContentLengthLong(osd.getContentSize());
+            response.setStatus(SC_OK);
+            contentStream.transferTo(response.getOutputStream());
+        }
     }
 
     private void setContent(CinnamonRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws
