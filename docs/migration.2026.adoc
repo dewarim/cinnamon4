@@ -42,3 +42,19 @@ You can now configure if the logging table should be used and the size of the lo
 Note: this table will contain complete http requests and responses (without uploaded file data).
 Some request paths will be filtered, for example, the request to /api/user/setPassword will be replaced by "unlogged".
 
+
+=== v1.15.1
+
+Every OSD must have an owner, as folders and links already do. Before applying the change,
+check for OSDs without one:
+
+    select id from objects where owner_id is null;
+
+If there are any, give them an owner first, for example the admin user:
+
+    update objects set owner_id = <id of admin> where owner_id is null;
+
+Then:
+
+    -- SQL
+    alter table objects alter column owner_id set not null;
