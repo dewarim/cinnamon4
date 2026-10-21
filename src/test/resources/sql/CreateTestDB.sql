@@ -236,7 +236,7 @@ create table objects
     modifier_id      bigint                              not null
         constraint fk9d13c51474046739
             references users,
-    owner_id         bigint
+    owner_id         bigint                              not null
         constraint fk9d13c514332a19dd
             references users,
     parent_id        bigint                              not null
