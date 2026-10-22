@@ -484,27 +484,9 @@ public class IndexService implements Runnable {
     private IndexEvent indexFolder(IndexJobWithDependencies job, Document doc, List<IndexItem> indexItems) {
         Folder folder = job.getFolder();
         try {
-            //// index sysMeta
-            // folderpath
+            // index sysMeta
             String folderPath = job.getFolderPath();
-            log.debug("folderpath: {}", folderPath);
-            doc.add(new StringField("folderpath", folderPath.toLowerCase(), Field.Store.NO));
-
-            doc.add(new StoredField("acl", folder.getAclId()));
-            doc.add(new LongPoint("acl", folder.getAclId()));
-            // option: add a NumericDocValueField for scoring by age
-            doc.add(new LongPoint("id", folder.getId()));
-            doc.add(new StoredField("id", folder.getId()));
-            doc.add(new StringField("created", DateTools.timeToString(toEpochMillis(folder.getCreated()), DateTools.Resolution.MILLISECOND), Field.Store.NO));
-            doc.add(new LongPoint("created", toEpochMillis(folder.getCreated())));
-            doc.add(new StringField("name", folder.getName().toLowerCase(), Field.Store.NO));
-            doc.add(new LongPoint("owner", folder.getOwnerId()));
-            doc.add(new StoredField("owner", folder.getOwnerId()));
-            if (folder.getParentId() != null) {
-                doc.add(new LongPoint("parent", folder.getParentId()));
-            }
-            doc.add(new TextField("summary", folder.getSummary(), Field.Store.NO));
-            doc.add(new LongPoint("folder_type", folder.getTypeId()));
+            addFolderFields(doc, folder, folderPath);
             applyIndexItems(doc, indexItems, xmlMapper.writeValueAsString(folder), NO_CONTENT, folderPath, job);
         } catch (Exception e) {
             log.warn("Failed to index folder #{}", job, e);
@@ -513,61 +495,35 @@ public class IndexService implements Runnable {
         return SUCCESS_EVENT;
     }
 
+    static void addFolderFields(Document doc, Folder folder, String folderPath) {
+        log.debug("folderpath: {}", folderPath);
+        doc.add(new StringField("folderpath", folderPath.toLowerCase(), Field.Store.NO));
+
+        doc.add(new StoredField("acl", folder.getAclId()));
+        doc.add(new LongPoint("acl", folder.getAclId()));
+        // option: add a NumericDocValueField for scoring by age
+        doc.add(new LongPoint("id", folder.getId()));
+        doc.add(new StoredField("id", folder.getId()));
+        doc.add(new StringField("created", DateTools.timeToString(toEpochMillis(folder.getCreated()), DateTools.Resolution.MILLISECOND), Field.Store.NO));
+        doc.add(new LongPoint("created", toEpochMillis(folder.getCreated())));
+        doc.add(new StringField("name", folder.getName().toLowerCase(), Field.Store.NO));
+        doc.add(new LongPoint("owner", folder.getOwnerId()));
+        doc.add(new StoredField("owner", folder.getOwnerId()));
+        if (folder.getParentId() != null) {
+            doc.add(new LongPoint("parent", folder.getParentId()));
+        }
+        doc.add(new TextField("summary", folder.getSummary(), Field.Store.NO));
+        doc.add(new LongPoint("folder_type", folder.getTypeId()));
+    }
+
     private IndexEvent indexOsd(IndexJobWithDependencies job, Document doc, List<IndexItem> indexItems) {
         ObjectSystemData osd = job.getOsd();
         try {
-            // index sysMeta
             String folderPath = job.getFolderPath();
             if (folderPath == null) {
                 log.warn("folderPath of indexJob {} not found.", job);
             }
-            doc.add(new StringField("folderpath", job.getFolderPath().toLowerCase(), Field.Store.NO));
-
-            doc.add(new StoredField("acl", osd.getAclId()));
-            doc.add(new LongPoint("acl", osd.getAclId()));
-            doc.add(new StringField("cmn_version", osd.getCmnVersion(), Field.Store.NO));
-            doc.add(new StringField("content_changed", String.valueOf(osd.isContentChanged()), Field.Store.NO));
-            if (osd.getContentSize() != null) {
-                doc.add(new LongPoint("content_size", osd.getContentSize()));
-            }
-            // option: add a NumericDocValueField for scoring by age
-            doc.add(new StringField("created", DateTools.timeToString(toEpochMillis(osd.getCreated()), DateTools.Resolution.MILLISECOND), Field.Store.NO));
-            doc.add(new LongPoint("created", toEpochMillis(osd.getCreated())));
-            doc.add(new StringField("modified", DateTools.timeToString(toEpochMillis(osd.getModified()), DateTools.Resolution.MILLISECOND), Field.Store.NO));
-            doc.add(new LongPoint("modified", toEpochMillis(osd.getModified())));
-
-            doc.add(new LongPoint("creator", osd.getCreatorId()));
-            doc.add(new LongPoint("modifier", osd.getModifierId()));
-            if (osd.getFormatId() != null) {
-                doc.add(new LongPoint("format", osd.getFormatId()));
-            }
-            doc.add(new LongPoint("id", osd.getId()));
-            doc.add(new StoredField("id", osd.getId()));
-            if (osd.getLanguageId() != null) {
-                doc.add(new LongPoint("language", osd.getLanguageId()));
-            }
-            doc.add(new StringField("latest_branch", String.valueOf(osd.isLatestBranch()), Field.Store.NO));
-            doc.add(new StringField("latest_head", String.valueOf(osd.isLatestHead()), Field.Store.NO));
-            if (osd.getLockerId() != null) {
-                log.debug("locker: {}", osd.getLockerId());
-                doc.add(new LongPoint("locker", osd.getLockerId()));
-            }
-            doc.add(new StringField("metadata_changed", String.valueOf(osd.isMetadataChanged()), Field.Store.NO));
-            doc.add(new StringField("name", osd.getName().toLowerCase(), Field.Store.NO));
-            doc.add(new LongPoint("owner", osd.getOwnerId()));
-            doc.add(new StoredField("owner", osd.getOwnerId()));
-            doc.add(new LongPoint("parent", osd.getParentId()));
-            if (osd.getPredecessorId() != null) {
-                doc.add(new LongPoint("predecessor", osd.getPredecessorId()));
-            }
-            if (osd.getRootId() != null) {
-                doc.add(new LongPoint("root", osd.getRootId()));
-            }
-            if (osd.getLifecycleStateId() != null) {
-                doc.add(new LongPoint("lifecycle_state", osd.getLifecycleStateId()));
-            }
-            doc.add(new TextField("summary", osd.getSummary(), Field.Store.NO));
-            doc.add(new LongPoint("object_type", osd.getTypeId()));
+            addOsdFields(doc, osd, folderPath);
 
             byte[] content = NO_CONTENT;
             if (osd.getContentPath() != null && job.getFormat() != null) {
@@ -593,6 +549,56 @@ public class IndexService implements Runnable {
             return new IndexEvent(job.getIndexJob().getId(), IndexEventType.GENERIC, IndexResult.FAILED, e.getMessage());
         }
         return SUCCESS_EVENT;
+    }
+
+    static void addOsdFields(Document doc, ObjectSystemData osd, String folderPath) {
+        doc.add(new StringField("folderpath", folderPath.toLowerCase(), Field.Store.NO));
+
+        doc.add(new StoredField("acl", osd.getAclId()));
+        doc.add(new LongPoint("acl", osd.getAclId()));
+        doc.add(new StringField("cmn_version", osd.getCmnVersion(), Field.Store.NO));
+        doc.add(new StringField("content_changed", String.valueOf(osd.isContentChanged()), Field.Store.NO));
+        if (osd.getContentSize() != null) {
+            doc.add(new LongPoint("content_size", osd.getContentSize()));
+        }
+        // option: add a NumericDocValueField for scoring by age
+        doc.add(new StringField("created", DateTools.timeToString(toEpochMillis(osd.getCreated()), DateTools.Resolution.MILLISECOND), Field.Store.NO));
+        doc.add(new LongPoint("created", toEpochMillis(osd.getCreated())));
+        doc.add(new StringField("modified", DateTools.timeToString(toEpochMillis(osd.getModified()), DateTools.Resolution.MILLISECOND), Field.Store.NO));
+        doc.add(new LongPoint("modified", toEpochMillis(osd.getModified())));
+
+        doc.add(new LongPoint("creator", osd.getCreatorId()));
+        doc.add(new LongPoint("modifier", osd.getModifierId()));
+        if (osd.getFormatId() != null) {
+            doc.add(new LongPoint("format", osd.getFormatId()));
+        }
+        doc.add(new LongPoint("id", osd.getId()));
+        doc.add(new StoredField("id", osd.getId()));
+        if (osd.getLanguageId() != null) {
+            doc.add(new LongPoint("language", osd.getLanguageId()));
+        }
+        doc.add(new StringField("latest_branch", String.valueOf(osd.isLatestBranch()), Field.Store.NO));
+        doc.add(new StringField("latest_head", String.valueOf(osd.isLatestHead()), Field.Store.NO));
+        if (osd.getLockerId() != null) {
+            log.debug("locker: {}", osd.getLockerId());
+            doc.add(new LongPoint("locker", osd.getLockerId()));
+        }
+        doc.add(new StringField("metadata_changed", String.valueOf(osd.isMetadataChanged()), Field.Store.NO));
+        doc.add(new StringField("name", osd.getName().toLowerCase(), Field.Store.NO));
+        doc.add(new LongPoint("owner", osd.getOwnerId()));
+        doc.add(new StoredField("owner", osd.getOwnerId()));
+        doc.add(new LongPoint("parent", osd.getParentId()));
+        if (osd.getPredecessorId() != null) {
+            doc.add(new LongPoint("predecessor", osd.getPredecessorId()));
+        }
+        if (osd.getRootId() != null) {
+            doc.add(new LongPoint("root", osd.getRootId()));
+        }
+        if (osd.getLifecycleStateId() != null) {
+            doc.add(new LongPoint("lifecycle_state", osd.getLifecycleStateId()));
+        }
+        doc.add(new TextField("summary", osd.getSummary(), Field.Store.NO));
+        doc.add(new LongPoint("object_type", osd.getTypeId()));
     }
 
     private byte[] convertJsonToXml(InputStream jsonStream) throws IOException {
@@ -631,7 +637,7 @@ public class IndexService implements Runnable {
         }
     }
 
-    private long toEpochMillis(LocalDateTime localDateTime) {
+    static long toEpochMillis(LocalDateTime localDateTime) {
         return localDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
     }
 
