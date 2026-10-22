@@ -226,8 +226,8 @@ public class SearchService {
                     luceneFolderIds.removeAll(knownFolderIds);
                     log.warn("Unknown Folder ids: {} - will enqueue them for removal from index.", luceneFolderIds);
                     IndexJobDao indexJobDao = new IndexJobDao();
-                    for (Long unknownOsdId : luceneOsdIds) {
-                        IndexJob deleteJob = new IndexJob(IndexJobType.FOLDER, unknownOsdId, IndexJobAction.DELETE);
+                    for (Long unknownFolderId : luceneFolderIds) {
+                        IndexJob deleteJob = new IndexJob(IndexJobType.FOLDER, unknownFolderId, IndexJobAction.DELETE);
                         indexJobDao.insertIndexJob(deleteJob, false);
                     }
                 }

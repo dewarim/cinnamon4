@@ -2,6 +2,7 @@ package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
+import com.dewarim.cinnamon.configuration.LuceneConfig;
 import com.dewarim.cinnamon.model.Format;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.request.index.ReindexRequest;
@@ -10,6 +11,7 @@ import com.dewarim.cinnamon.model.response.SearchIdsResponse;
 import com.dewarim.cinnamon.model.response.index.IndexInfoResponse;
 import com.dewarim.cinnamon.model.response.index.ReindexResponse;
 import com.dewarim.cinnamon.test.TestObjectHolder;
+import org.apache.ibatis.session.SqlSession;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.BeforeAll;
@@ -17,6 +19,8 @@ import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -208,6 +212,47 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
         SearchIdsResponse response  = client.search(termQuery, SearchType.OSD);
         assertTrue(response.getOsdIds().size() > 0);
         assertEquals(toh.osd.getId(), response.getOsdIds().getFirst());
+    }
+
+    // verifySearchResults: a folder that is still in the Lucene index but no longer in the database
+    // must be enqueued for removal from the index (the clean-up used to iterate over the unknown OSD ids).
+    @Test
+    public void unknownFolderIsRemovedFromIndex() throws IOException, InterruptedException, SQLException {
+        String name            = "unknown-folder-" + System.currentTimeMillis();
+        Long   unknownFolderId = new TestObjectHolder(client, userId).createFolder(name, createFolderId).folder.getId();
+        String query           = createTermQuery("name", name);
+        assertTrue(waitForFolderSearchResult(query, List.of(unknownFolderId)), "new folder should be searchable");
+
+        // remove the folder from the database only, so that the index still contains it:
+        SqlSession sqlSession = ThreadLocalSqlSession.getSqlSession();
+        try (PreparedStatement statement = sqlSession.getConnection().prepareStatement("delete from folders where id = ?")) {
+            statement.setLong(1, unknownFolderId);
+            assertEquals(1, statement.executeUpdate());
+        }
+        // force: the session does not know about the raw JDBC update, so a plain commit() would skip it
+        sqlSession.commit(true);
+
+        // verification hides the unknown folder and enqueues its removal from the index:
+        assertEquals(List.of(), client.search(query, SearchType.FOLDER).getFolderIds());
+
+        LuceneConfig luceneConfig = CinnamonServer.config.getLuceneConfig();
+        luceneConfig.setVerifySearchResults(false);
+        try {
+            assertTrue(waitForFolderSearchResult(query, List.of()), "unknown folder should have been removed from the index");
+        } finally {
+            luceneConfig.setVerifySearchResults(true);
+        }
+    }
+
+    private boolean waitForFolderSearchResult(String query, List<Long> expectedFolderIds) throws IOException, InterruptedException {
+        long deadline = System.currentTimeMillis() + CinnamonServer.config.getLuceneConfig().getMillisToWaitBetweenRuns() + 10_000L;
+        while (System.currentTimeMillis() < deadline) {
+            if (client.search(query, SearchType.FOLDER).getFolderIds().equals(expectedFolderIds)) {
+                return true;
+            }
+            Thread.sleep(200);
+        }
+        return false;
     }
 
 }
