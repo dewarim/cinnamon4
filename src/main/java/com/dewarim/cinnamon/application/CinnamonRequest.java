@@ -66,7 +66,7 @@ public class CinnamonRequest extends HttpServletRequestWrapper {
                 useCopiedFileContent = true;
             }
         } else {
-            byteInput = new CinnamonServletInputStream(new ByteArrayInputStream(getRequest().getInputStream().readAllBytes()));
+            byteInput = new CinnamonServletInputStream(new ByteArrayInputStream(readBodyBounded()));
         }
         useCopy = true;
     }
@@ -76,10 +76,33 @@ public class CinnamonRequest extends HttpServletRequestWrapper {
         if (useCopy) {
             log.debug("byteInput: '{}'", byteInput.getContent());
         } else {
-            byteInput = new CinnamonServletInputStream(new ByteArrayInputStream(getRequest().getInputStream().readAllBytes()));
+            byteInput = new CinnamonServletInputStream(new ByteArrayInputStream(readBodyBounded()));
             useCopy = true;
         }
         return byteInput;
+    }
+
+    /**
+     * Read the (non-multipart) request body into memory, but never more than the configured
+     * maxRequestBodySize, so a large body cannot exhaust the heap. A declared Content-Length over the
+     * limit is rejected up front; since Content-Length may be absent (chunked) or untruthful, the limit
+     * is also enforced while reading.
+     */
+    private byte[] readBodyBounded() throws IOException {
+        long maxBytes = CinnamonServer.getConfig().getHttpLimitsConfig().getMaxRequestBodySize();
+        if (maxBytes <= 0) {
+            // 0 = no limit
+            return getRequest().getInputStream().readAllBytes();
+        }
+        if (request.getContentLengthLong() > maxBytes) {
+            throw ErrorCode.REQUEST_PAYLOAD_TOO_LARGE.exception();
+        }
+        int     toRead = (int) Math.min(maxBytes + 1, Integer.MAX_VALUE);
+        byte[]  data   = getRequest().getInputStream().readNBytes(toRead);
+        if (data.length > maxBytes) {
+            throw ErrorCode.REQUEST_PAYLOAD_TOO_LARGE.exception();
+        }
+        return data;
     }
 
     @Override

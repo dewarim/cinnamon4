@@ -87,4 +87,14 @@
     <maxElementDepth>100</maxElementDepth>
     <maxXMLNameLimit>1000</maxXMLNameLimit>
   </xmlParserConfig>
+  <!-- HTTP/HTTPS layer limits and information disclosure; sizes in bytes, 0 = unlimited -->
+  <httpLimitsConfig>
+    <maxRequestBodySize>67108864</maxRequestBodySize>
+    <maxMultipartRequestSize>0</maxMultipartRequestSize>
+    <maxMultipartFileSize>0</maxMultipartFileSize>
+    <multipartFileSizeThreshold>1048576</multipartFileSizeThreshold>
+    <sendServerVersion>false</sendServerVersion>
+    <showStackTraces>false</showStackTraces>
+    <requestHeaderSize>8192</requestHeaderSize>
+  </httpLimitsConfig>
 </CinnamonConfig>

@@ -75,6 +75,7 @@ public enum ErrorCode {
     METASET_UNIQUE_CHECK_FAILED("Cannot create multiple unique metasets", SC_BAD_REQUEST),
     MISSING_FILE_PARAMETER("parameter 'file' for uploaded content is missing", SC_BAD_REQUEST),
     MISSING_REQUEST_PAYLOAD("request is missing request data", SC_BAD_REQUEST),
+    REQUEST_PAYLOAD_TOO_LARGE("request body exceeds the configured maximum size", SC_REQUEST_ENTITY_TOO_LARGE),
     MISSING_SET_ACL_PERMISSION("missing set_acl permission", SC_UNAUTHORIZED),
     MISSING_WRITE_OBJECT_SYS_METADATA("missing write_object_sys_metadata", SC_UNAUTHORIZED),
     NAME_PARAM_IS_INVALID("name param is invalid", SC_BAD_REQUEST),

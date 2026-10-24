@@ -18,6 +18,7 @@ public class CinnamonConfig {
     private DebugConfig               debugConfig         = new DebugConfig();
     private LoggingConfig             loggingConfig       = new LoggingConfig();
     private XmlParserConfig           xmlParserConfig     = new XmlParserConfig();
+    private HttpLimitsConfig          httpLimitsConfig    = new HttpLimitsConfig();
     private boolean showConfig;
 
     public DebugConfig getDebugConfig() {
@@ -116,6 +117,14 @@ public class CinnamonConfig {
         this.xmlParserConfig = xmlParserConfig;
     }
 
+    public HttpLimitsConfig getHttpLimitsConfig() {
+        return httpLimitsConfig;
+    }
+
+    public void setHttpLimitsConfig(HttpLimitsConfig httpLimitsConfig) {
+        this.httpLimitsConfig = httpLimitsConfig;
+    }
+
     @Override
     public String toString() {
         return "CinnamonConfig{" +
@@ -131,6 +140,7 @@ public class CinnamonConfig {
                 ", debugConfig=" + debugConfig +
                 ", loggingConfig=" + loggingConfig +
                 ", xmlParserConfig=" + xmlParserConfig +
+                ", httpLimitsConfig=" + httpLimitsConfig +
                 ", showConfig=" + showConfig +
                 '}';
     }

@@ -26,6 +26,7 @@ import org.apache.ibatis.session.SqlSession;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
+import org.eclipse.jetty.ee10.servlet.ErrorHandler;
 import org.eclipse.jetty.ee10.servlet.FilterHolder;
 import org.eclipse.jetty.ee10.servlet.ServletHolder;
 import org.eclipse.jetty.ee10.webapp.WebAppContext;
@@ -113,6 +114,14 @@ public class CinnamonServer {
         Resource baseResource = ResourceFactory.root().newResource(tempDir);
         webAppContext.setBaseResource(baseResource);
 
+        // Do not leak stack traces or internal messages on error pages for requests that do not go through
+        // the Cinnamon error rendering (e.g. errors raised inside Jetty itself).
+        ErrorHandler errorHandler = new ErrorHandler();
+        errorHandler.setShowStacks(config.getHttpLimitsConfig().isShowStackTraces());
+        errorHandler.setShowMessageInTitle(config.getHttpLimitsConfig().isShowStackTraces());
+        errorHandler.setShowCauses(config.getHttpLimitsConfig().isShowStackTraces());
+        webAppContext.setErrorHandler(errorHandler);
+
         addFilters(webAppContext);
         addServlets(webAppContext);
         configureChangeTriggers(config.getChangeTriggerConfig());
@@ -189,18 +198,31 @@ public class CinnamonServer {
         }
     }
 
+    /**
+     * Base HttpConfiguration shared by the HTTP and HTTPS connectors, so both apply the same hardening:
+     * no Server-version header disclosure by default and a bounded request header size.
+     */
+    private HttpConfiguration baseHttpConfiguration() {
+        HttpLimitsConfig  limits     = config.getHttpLimitsConfig();
+        HttpConfiguration httpConfig = new HttpConfiguration();
+        httpConfig.setSendServerVersion(limits.isSendServerVersion());
+        httpConfig.setRequestHeaderSize(limits.getRequestHeaderSize());
+        return httpConfig;
+    }
+
     private Connector createHttpConnector(HttpConnectorConfig httpConfig) {
         // The number of acceptor threads.
         int             acceptors = httpConfig.getAcceptors();
         int             selectors = httpConfig.getSelectors();
-        ServerConnector connector = new ServerConnector(server, acceptors, selectors, new HttpConnectionFactory());
+        ServerConnector connector = new ServerConnector(server, acceptors, selectors,
+                new HttpConnectionFactory(baseHttpConfiguration()));
         connector.setAcceptQueueSize(httpConfig.getAcceptQueueSize());
         connector.setPort(httpConfig.getPort());
         return connector;
     }
 
     private Connector createHttpsConnector(HttpsConnectorConfig httpsConfig) {
-        HttpConfiguration httpConfig = new HttpConfiguration();
+        HttpConfiguration httpConfig = baseHttpConfiguration();
         // Add the SecureRequestCustomizer because we are using TLS.
         SecureRequestCustomizer secureRequestCustomizer = new SecureRequestCustomizer();
         // disable SNI check when testing with localhost:
@@ -345,11 +367,17 @@ public class CinnamonServer {
         ServletHolder servletHolder = handler.addServlet(servletClass, pathSpec);
         MultipartConfig multipartConfig = servletClass.getAnnotation(MultipartConfig.class);
         if (multipartConfig != null) {
+            // Limits come from the configuration rather than the annotation, so they can be tuned without
+            // recompiling. In our config 0 means unlimited; the servlet spec expresses "unlimited" as -1,
+            // so translate it here - passing 0 would reject every upload.
+            HttpLimitsConfig limits = config.getHttpLimitsConfig();
+            long maxFileSize    = limits.getMaxMultipartFileSize() <= 0 ? -1L : limits.getMaxMultipartFileSize();
+            long maxRequestSize = limits.getMaxMultipartRequestSize() <= 0 ? -1L : limits.getMaxMultipartRequestSize();
             servletHolder.getRegistration().setMultipartConfig(new MultipartConfigElement(
                     multipartConfig.location(),
-                    multipartConfig.maxFileSize(),
-                    multipartConfig.maxRequestSize(),
-                    multipartConfig.fileSizeThreshold()));
+                    maxFileSize,
+                    maxRequestSize,
+                    limits.getMultipartFileSizeThreshold()));
         }
     }
 
