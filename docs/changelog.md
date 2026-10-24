@@ -195,11 +195,46 @@ Recorded here so they are not rediscovered from scratch.
   limit must **not** be added to the index side without a decision: it would silently truncate
   indexed content.
 - **Locale-dependent lowercasing.** `IndexService.addOsdFields` / `addFolderFields` (`name`,
-  `folderpath`), `CompleteStringIndexer` and `BooleanIndexer` call `toLowerCase()` without a locale.
-  On a Turkish-locale server `"INVOICE"` is indexed as `"ınvoıce"`, so a client query for `invoice`
-  never matches, and the behaviour disagrees with Lucene's locale-independent `LowerCaseFilter`.
+  `folderpath`), `CompleteStringIndexer` and `BooleanIndexer` call `toLowerCase()` without a locale,
+  which means `Locale.getDefault()` - ambient machine configuration (`LANG`, the OS locale, a
+  `-Duser.language` flag, a container base image). On a Turkish-locale server `"INVOICE"` is indexed
+  as `"ınvoıce"`, so a client query for `invoice` never matches. The client cannot know the server's
+  locale, so the two processes must agree on a casing algorithm that neither declares.
   `toLowerCase(Locale.ROOT)` is the fix; for `de_DE` and `en_US` nothing changes for ASCII, so no
   reindex would be needed in practice.
+
+  Measured exhaustively rather than assumed. Every Unicode codepoint against every language the JVM
+  knows (1 112 064 x 245 = 272 455 680 comparisons), plus every cased codepoint followed by every
+  combining mark (1460 x 2020 x 245 = 722 554 000 comparisons):
+
+  - The affected languages are exactly **`tr`, `az`, `lt`** - nothing else in Unicode or in the JVM's
+    245 languages, contextually or otherwise.
+  - `tr`/`az`: `U+0049 I` and `U+0130 İ`, i.e. **plain ASCII** - ordinary names like `INVOICE`,
+    `TITLE`, `DIAGRAM` are affected.
+  - `lt`: `I`/`J` followed by **any** combining mark inserts `U+0307` (7611 such sequences). Not only
+    the precomposed `Ì Í Ĩ`.
+  - Only 1460 of 1 112 064 codepoints (0.13%) have any lowercase mapping at all. **Emoji, CJK, kana
+    and Hangul are not cased**, so they are identical under every locale - searching for `中文💩` is
+    unaffected by the server locale.
+
+  Scope is narrower than it first looks: analyzed fields go through Lucene's `LowerCaseFilter`, which
+  is locale-independent (`"Bericht 中文 INVOICE"` -> `[bericht, 中, 文, invoice]` in any locale). Only
+  the four hand-lowercased places above can be affected.
+
+  Caveat for the fix: `Locale.ROOT` removes the machine dependency but does **not** make the two
+  mechanisms identical. For `U+0130 İ`, `String.toLowerCase(ROOT)` yields `i` + `U+0307` (Unicode
+  full case mapping, two codepoints) while `LowerCaseFilter` yields `i` (`Character.toLowerCase` is
+  per-codepoint and cannot expand). Harmless for `name`/`folderpath`, which are their own
+  non-analyzed fields matched exactly, but do not assume the two become interchangeable.
+
+- **CJK is tokenized one term per character.** `StandardTokenizer` emits `中文` as `[中, 文]`, so a
+  `TermQuery` for the whole word does not match - that term is not in the index - and relevance is
+  poor because single Han characters are very common terms. Chinese or Japanese word search currently
+  needs a phrase query. The usual remedy is `CJKAnalyzer` / `CJKBigramFilter`, which indexes
+  overlapping bigrams. This is unrelated to locale and is a far more practically significant gap than
+  the lowercasing issue above; it is the strongest concrete motivation for the per-language analyzer
+  work sketched below. Emoji are handled well, each becoming its own token, with ZWJ sequences such
+  as `👨‍💻` kept as a single token.
 - **Search filters by BROWSE permission only.** Content and metadata of objects a user may browse but
   may not read are still searchable. Whether that is acceptable is a product decision.
 - **`IndexMode.TIKA` and `NONE`** are not handled in `indexOsd`'s switch, so `TIKA` content is
