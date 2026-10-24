@@ -17,50 +17,76 @@
  */
 package com.dewarim.cinnamon.application.service.search;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.apache.lucene.document.Document;
 import org.apache.lucene.index.LeafReaderContext;
-import org.apache.lucene.search.*;
+import org.apache.lucene.index.NumericDocValues;
+import org.apache.lucene.index.StoredFields;
+import org.apache.lucene.search.Collector;
+import org.apache.lucene.search.LeafCollector;
+import org.apache.lucene.search.Scorable;
+import org.apache.lucene.search.ScoreMode;
 
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Arrays;
+
+import static com.dewarim.cinnamon.api.Constants.LUCENE_FIELD_ID;
 
 /**
- *
+ * Collects the Cinnamon ids of all matching documents.
+ * <p>
+ * Result sets are deliberately unbounded: callers need complete sets (for example "every image
+ * contained in a technical handbook"), so no hit may go missing. To make that affordable, only the
+ * id of each hit is retained - 8 bytes per hit in a primitive array, instead of a whole Lucene
+ * {@link org.apache.lucene.document.Document} (which measured ~471 bytes per hit).
+ * <p>
+ * Permission and type filtering is <i>not</i> done here: it is pushed into the Lucene query by
+ * {@link com.dewarim.cinnamon.application.service.SearchService}, so documents the user may not
+ * browse are never collected in the first place.
+ * <p>
+ * The id is read from the {@value com.dewarim.cinnamon.api.Constants#LUCENE_FIELD_ID} NumericDocValues
+ * field, which is a columnar per-segment read. Indexes written before that field existed fall back to
+ * the stored field, so an index keeps working until it has been rebuilt.
  */
 public class ResultCollector implements Collector {
 
-    private static final Logger log = LogManager.getLogger(ResultCollector.class);
-
-    private       Set<Document> documents = new HashSet<>();
-    private final IndexSearcher searcher;
-    private       Set<Integer>  hits      = new HashSet<>();
-
-    public ResultCollector(IndexSearcher searcher) {
-        this.searcher = searcher;
-    }
+    private long[] ids = new long[256];
+    private int    size;
 
     @Override
-    public LeafCollector getLeafCollector(LeafReaderContext leafReaderContext) {
+    public LeafCollector getLeafCollector(LeafReaderContext leafReaderContext) throws IOException {
+        // both obtained once per segment, not once per hit
+        NumericDocValues idValues     = leafReaderContext.reader().getNumericDocValues(LUCENE_FIELD_ID);
+        StoredFields     storedFields = leafReaderContext.reader().storedFields();
 
-        final int docBase = leafReaderContext.docBase;
         return new LeafCollector() {
 
             @Override
-            public void setScorer(Scorable scorer) throws IOException {
-                // ignore scorer
+            public void setScorer(Scorable scorer) {
+                // ignore scorer: we collect every match, scores are irrelevant
             }
 
+            @Override
             public void collect(int doc) throws IOException {
-                log.debug("adding leaf hit for doc id {}", doc);
-                hits.add(doc + docBase);
-                Document d = searcher.doc(doc + docBase);
-                documents.add(d);
+                add(readId(doc));
             }
 
+            /**
+             * Hits arrive in increasing docId order within a segment, which is what the
+             * NumericDocValues iterator requires.
+             */
+            private long readId(int doc) throws IOException {
+                if (idValues != null && idValues.advanceExact(doc)) {
+                    return idValues.longValue();
+                }
+                return storedFields.document(doc).getField(LUCENE_FIELD_ID).numericValue().longValue();
+            }
         };
+    }
+
+    private void add(long id) {
+        if (size == ids.length) {
+            ids = Arrays.copyOf(ids, ids.length * 2);
+        }
+        ids[size++] = id;
     }
 
     @Override
@@ -68,7 +94,15 @@ public class ResultCollector implements Collector {
         return ScoreMode.COMPLETE_NO_SCORES;
     }
 
-    public Set<Document> getDocuments() {
-        return documents;
+    /**
+     * @return the collected ids, in collection order and possibly containing duplicates.
+     * Deduplication happens in {@link ResultCollectorManager#reduce}.
+     */
+    long[] ids() {
+        return ids;
+    }
+
+    int size() {
+        return size;
     }
 }

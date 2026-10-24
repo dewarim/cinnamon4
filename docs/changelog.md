@@ -1,0 +1,256 @@
+# Changelog
+
+Detailed record of notable changes, with the reasoning behind them.
+
+This complements the terse per-release notes in `docs/changes/<date>__<version>.txt`: those say
+*what* shipped in a release, this says *why* and *how* for changes where the reasoning matters.
+Newest first.
+
+---
+
+## Unreleased (after v2.0.17)
+
+### Security review of parsers on user-supplied data paths
+
+A review of the parsers reachable from user input (XML, HTTP, Lucene), since users can supply
+arbitrary content and metadata. Findings and fixes below. Benchmarks for the search rework are in
+`docs/ai-improvement/benchmark.md`.
+
+#### Removed `woodstox-core-asl` 4.4.1 (commit `8b8b5c41`)
+
+The build pulled in an unused `org.codehaus.woodstox:woodstox-core-asl:4.4.1` alongside Jackson's
+current `com.fasterxml.woodstox:woodstox-core:7.2.1`. Both declare the same 200 `com.ctc.wstx.*`
+classes, so classpath order decided which XML parser implementation actually ran - a 2011 parser
+could silently shadow the current one. Removed, together with its transitive
+`javax.xml.stream:stax-api:1.0-2`. SBOM components: 50 -> 48.
+
+#### XML parser limits are now explicit and configurable (commit `00b9b2cc`)
+
+User-supplied XML (document content, metadata) is parsed with dom4j/SAX in `ParamParser`. The JDK's
+JAXP secure-processing limits - entity expansion, total entity size, element depth, attribute count
+and so on - were left at whatever the running JRE's `conf/jaxp.properties` happened to contain. That
+made protection against entity-expansion bombs ("billion laughs"), quadratic blowup and deeply
+nested XML a property of the JRE *installation* rather than of Cinnamon.
+
+These limits are now set explicitly on the `SAXReader` from a new `XmlParserConfig`
+(`<xmlParserConfig>` in the server config). Defaults match JDK 25; `0` means "no limit".
+
+| setting | default |
+|---|---|
+| `entityExpansionLimit` | 2500 |
+| `totalEntitySizeLimit` | 100000 |
+| `maxGeneralEntitySizeLimit` | 100000 |
+| `maxParameterEntitySizeLimit` | 15000 |
+| `entityReplacementLimit` | 100000 |
+| `elementAttributeLimit` | 200 |
+| `maxElementDepth` | 100 |
+| `maxXMLNameLimit` | 1000 |
+
+Note: `ParamParser.DOCTYPE_OR_ENTITY_PATTERN` strips a DOCTYPE only once and can be bypassed by
+nesting (`<!DOC<!ENTITY>TYPE`). The parser limits, not that regex, are the actual protection - which
+is why making them explicit matters. Request bodies (Jackson/Woodstox) were already safe: DTDs are
+disabled there, and all XXE and entity-bomb probes were rejected in milliseconds.
+
+#### Search survives deeply nested queries (commit `00b9b2cc`)
+
+Lucene's recursive-descent query and regex parsers overflow the stack on deeply nested input (for
+example 200 000 nested parentheses in a `RegexQuery`). `SearchService` now catches
+`StackOverflowError` from `CoreParser.parse` and converts it into a `CinnamonException`, so a hostile
+query fails like any other unparseable query instead of producing a raw 500 and an unstable thread.
+
+`IndexSearcher.setMaxClauseCount(10000)` was deliberately left unchanged: the Windows client builds
+very complex queries with many thousands of clauses, so lowering it is not an option.
+
+#### HTTP request body size limit and reduced information disclosure (commit `97977b7c`)
+
+New `HttpLimitsConfig` (`<httpLimitsConfig>`). Sizes in bytes, `0` means unlimited.
+
+| setting | default | effect |
+|---|---|---|
+| `maxRequestBodySize` | 67108864 (64 MB) | bounds the in-memory read of non-multipart bodies |
+| `maxMultipartRequestSize` | 0 | total size cap for content uploads |
+| `maxMultipartFileSize` | 0 | per-file cap for content uploads |
+| `multipartFileSizeThreshold` | 1048576 | spill multipart parts to disk above this |
+| `sendServerVersion` | false | suppresses the `Server: Jetty(...)` header |
+| `showStackTraces` | false | keeps stack traces and version off error pages |
+| `requestHeaderSize` | 8192 | maximum HTTP request header size |
+
+- **Unauthenticated heap exhaustion.** `CinnamonRequest` buffered non-multipart bodies with
+  `getInputStream().readAllBytes()`, unbounded. A 700 MB body sent to `/cinnamon/connect` - which
+  requires no authentication - drove the server into `OutOfMemoryError`. The new
+  `readBodyBounded()` rejects an over-limit declared `Content-Length` up front *and* enforces the cap
+  while reading, because `Content-Length` may be absent (chunked) or untruthful. Over-limit requests
+  now get the new `REQUEST_PAYLOAD_TOO_LARGE` (HTTP 413) in about 0.1 s with no OOM.
+- **Error pages.** A custom ee10 `ErrorHandler` on the webapp context disables `showStacks`,
+  `showMessageInTitle` and `showCauses`, so 404 and 500 pages no longer disclose stack traces, the
+  exact Jetty version or the "Powered by Jetty" footer.
+- **Server header.** `createHttpConnector` previously had no `HttpConfiguration` at all, so the plain
+  HTTP connector leaked the version header even though the HTTPS one did not. Both connectors now
+  share one `baseHttpConfiguration()`.
+
+> **Trap worth remembering:** `MultipartConfigElement` treats `0` as *zero bytes allowed*; unlimited
+> is `-1`. Passing the config default `0` straight through rejected **every** file upload.
+> `addServletWithMultipartConfig` therefore translates `<= 0` to `-1`.
+
+#### Search: collect ids instead of documents, push ACL filtering into the query
+
+The largest change of the review. Measurements: `docs/ai-improvement/benchmark.md`.
+
+**Problem.** `ResultCollector` materialised one Lucene `Document` per hit - about 460-477 bytes each,
+measured - into a `HashSet`, with no upper bound, and ACL filtering ran *afterwards* in Java. Any
+authenticated user, *including one with no browse permissions at all*, could therefore make the
+server load every stored document in the index into the heap with a cheap query such as
+`<WildcardQuery fieldName="name">*</WildcardQuery>`. On a 10M-object repository that is roughly
+4.5 GB. There was no result limit at any layer: `SearchServlet.searchIds` passes the query straight
+through and `SearchIdsRequest` has no page size.
+
+Three supporting defects: `Document` overrides neither `equals` nor `hashCode`, so the `HashSet` had
+identity semantics and deduplicated nothing; the `Set<Integer> hits` field was populated on every hit
+but never read; and `searcher.doc(doc + docBase)` resolved the leaf through the top-level reader on
+every single hit.
+
+**Why not simply cap the result set.** Callers need exhaustive sets - "every image contained in a
+technical DITA handbook" - and a user legitimately may own 10 million documents. Truncating or
+erroring would break the feature. So the fix had to make completeness *affordable* rather than
+forbid it.
+
+**What was done.**
+
+1. **ACL and type filters pushed into the Lucene query.** `BrowsableAcls.hasBrowsePermission` is
+   `objectAcls.contains(aclId) || (owner.equals(userId) && ownerAcls.contains(aclId))`, and `acl`,
+   `owner` and `id` are all indexed as `LongPoint` while `cinnamon_class` is a `StringField`. That
+   predicate therefore translates exactly into
+   `(acl IN objectAcls) OR (owner == userId AND acl IN ownerAcls)`. Browse permissions are now
+   resolved *before* searching, so Lucene never collects a document the user may not browse. A user
+   who can browse nothing skips the search entirely.
+   - Verified equivalent to the Java predicate over randomised ACL/owner distributions.
+   - `LongPoint.newSetQuery` builds a single `PointInSetQuery`, **not** one boolean clause per value,
+     so even thousands of ACLs cost **zero** clauses and cannot collide with the high
+     `maxClauseCount` the Windows client needs. A 5000-ACL filter was verified to work with
+     `maxClauseCount` forced to 8.
+2. **Only ids are retained**, in a growable `long[]`: 8-10 bytes per hit instead of ~460.
+3. **New `NumericDocValuesField("id")`** on OSD and folder documents, so the id of each hit is read
+   from a columnar per-segment iterator instead of a decompressed stored field. Falls back to the
+   stored field when the field is absent, so an index written by an older version keeps working.
+4. **`ResultCollectorManager`** replaces the deprecated `search(Query, Collector)` with
+   `search(Query, CollectorManager)`, and merges per-slice results by sorting and deduplicating.
+   Results are now **deterministically ordered**; the previous `HashSet` iteration order was not.
+   Deduplication is by Cinnamon id, which is what the old `Collectors.toSet()` effectively did, and
+   still guards against a stale duplicate document for an id (see issue #414).
+5. `SearchType.ALL` runs one search per type instead of one search plus a post-hoc class filter.
+6. Removed the dead `hits` set and the per-hit `log.debug` call, which wrote one log line per
+   matching document when debug logging was enabled.
+
+**Effect:** 1M-document match-all search goes from 2 851 ms / 437 MB to 19 ms / 8.2 MB; with a user
+who may browse ~5% of documents, from 2 799 ms / 437 MB to 3 ms / 0.3 MB.
+
+**Upgrade note:** a **reindex is recommended** after upgrading, so documents gain the `id`
+NumericDocValues field. Search works without it - the collector falls back to stored fields - but the
+speed-up for large result sets depends on it. Existing indexes improve as they are rebuilt.
+
+#### Deprecated Lucene APIs removed
+
+`javac -Xlint:deprecation` over all main sources reported exactly two deprecated Lucene usages, both
+removed by the search rework:
+
+- `IndexSearcher.doc(int)` -> per-leaf `LeafReader.storedFields()` with leaf-local docIds
+- `IndexSearcher.search(Query, Collector)` -> `search(Query, CollectorManager)`
+
+No deprecated Lucene API remains. (Two unrelated warnings remain in
+`MicroserviceChangeTrigger`, from Apache HttpClient 5's SSL builder.)
+
+#### Confirmed safe, no change needed
+
+- **Tokenizers on adversarial Unicode.** `StandardAnalyzer` is linear and bounded: token length is
+  capped at 255 characters, and there is no ICU dependency. See the table in
+  `docs/ai-improvement/benchmark.md`.
+- **`RegexpQuery` / `WildcardQuery` cost.** Both are built without an explicit determinize work
+  limit, so they use Lucene's default of 10 000 and raise `TooComplexToDeterminizeException`, which
+  `doSearch` already converts into a `CinnamonException`.
+- **OSD and folder ids are globally unique.** Both `FolderMapper.xml` and
+  `ObjectSystemDataMapper.xml` draw from the single `seq_folder_and_object_ids` sequence; the older
+  per-type `seq_object_id` and `seq_folder_id` are dropped by the schema, and `docs/migration.md`
+  creates the combined sequence starting at 10000000, above the previous maxima. Search does not
+  depend on this - each type is queried separately and deduplicated within its own result set - but
+  it confirms an id collision between an OSD and a folder cannot occur.
+
+### Known issues, not yet addressed
+
+Recorded here so they are not rediscovered from scratch.
+
+- **Unbounded content read while indexing.** `IndexService.indexOsd` calls
+  `contentStream.readAllBytes()` with no size cap; `PLAIN_TEXT` mode additionally builds
+  `"<plainText>" + new String(bytes) + "</plainText>"` and then `getBytes()`, holding roughly four
+  copies, after which `ContentContainer` parses the whole thing into a dom4j DOM. The effective heap
+  multiplier is above 10x the file size, with up to `threadPoolSize` (8) documents in flight. Gated
+  by the format's `index_mode` (schema default `NONE`) and by the multipart upload limit (default
+  unlimited). `indexOsd` catches `Throwable`, so an OOM marks the job failed rather than killing the
+  index thread, but heap pressure is JVM-wide. A configurable `maxIndexableContentSize` that skips
+  and logs oversized content would fix it - the threshold is a policy decision, since skipping makes
+  that document's content unsearchable.
+- **`LimitTokenCountAnalyzer(analyzer, Integer.MAX_VALUE)`** in `SearchService` limits nothing
+  (confirmed by measurement). It wraps only the query-side analyzer, and query-side token explosion
+  is already bounded by `maxClauseCount` and the 64 MB body limit, so this is latent rather than
+  live. Either give it a real, generous, configurable value or drop the misleading wrapper. A token
+  limit must **not** be added to the index side without a decision: it would silently truncate
+  indexed content.
+- **Locale-dependent lowercasing.** `IndexService.addOsdFields` / `addFolderFields` (`name`,
+  `folderpath`), `CompleteStringIndexer` and `BooleanIndexer` call `toLowerCase()` without a locale.
+  On a Turkish-locale server `"INVOICE"` is indexed as `"ınvoıce"`, so a client query for `invoice`
+  never matches, and the behaviour disagrees with Lucene's locale-independent `LowerCaseFilter`.
+  `toLowerCase(Locale.ROOT)` is the fix; for `de_DE` and `en_US` nothing changes for ASCII, so no
+  reindex would be needed in practice.
+- **Search filters by BROWSE permission only.** Content and metadata of objects a user may browse but
+  may not read are still searchable. Whether that is acceptable is a product decision.
+- **`IndexMode.TIKA` and `NONE`** are not handled in `indexOsd`'s switch, so `TIKA` content is
+  indexed as empty - presumably intentional, with Tika handled by an external service, but worth
+  confirming.
+
+### Race conditions in the index/search and database workflow (analysis only)
+
+Diagnosis of long-standing integration test instability. Nothing changed yet.
+
+1. **MyBatis session cache, not Postgres.** `mybatis-config.xml` does not set `localCacheScope`, so
+   MyBatis defaults to `SESSION`: a repeated identical query within one `SqlSession` returns
+   **cached** rows and never reaches the database. The transaction isolation level is correctly
+   `READ_COMMITTED`, so Postgres would have returned fresh data - MyBatis simply did not ask. This is
+   the real cause of tests appearing to get stale results "because Postgres was too slow", and it is
+   why `ThreadLocalSqlSession.refreshSession()` is used as a workaround in test setup.
+   Candidate fix: `<setting name="localCacheScope" value="STATEMENT"/>`. Needs care - code that
+   mutates a DAO-returned object and expects the same instance later would change behaviour.
+2. **`waitUntilIndexed` gives up silently.** Two paths complete as if successful while the item is
+   not searchable: `if (currentJob.getFailed() >= config.getMaxIndexAttempts()) { return; }` - and
+   `maxIndexAttempts` defaults to **1**, so a single transient failure returns immediately - and
+   retry exhaustion, which throws into a `catch` that only calls `log.warn`. The request then
+   succeeds while a following search finds nothing.
+3. **`waitUntilSearchable` defaults to `false`**, so by default nothing waits and tests fall back to
+   `Thread.sleep(millisToWaitBetweenRuns + 5000L)`, a guess against a 1 s poll loop plus unbounded
+   batch time.
+4. **The response can reach the client before the index wait.** Filter order is `DbSessionFilter`
+   (outermost) -> `AuthenticationFilter` -> `RequestResponseFilter` -> `ChangeTriggerFilter` ->
+   servlet, and `RequestResponseFilter.renderResponseIfNecessary()` writes the body *inside*
+   `chain.doFilter()`. `waitUntilIndexed` only runs afterwards. Jetty's output buffer (32 KB by
+   default) hides this for small responses, but a search response with many ids exceeds it,
+   auto-flushes, and the client is free to send the next request. The existing
+   `// TODO: RequestResponseFilter also commits... due to http5client being so fast` records the same
+   problem already observed for the database commit.
+
+Minor: `doSearch` guards `maybeRefreshBlocking()` behind `if (!isSearcherCurrent())`, which is
+redundant because `maybeRefreshBlocking` performs that check itself, and inconsistent with
+`isIndexed`, which calls it unconditionally. The `SearchService.indexReader` field is also dead once
+`SearcherManager` takes ownership of the reader.
+
+### Ideas for future search improvements
+
+- **Per-language analyzers for content, without changing metadata indexing.**
+  `PerFieldAnalyzerWrapper` works per *field*, not per document, so the standard approach is to index
+  content into per-language fields (`content_de`, `content_en`, ...) and map each to a language
+  analyzer, leaving every metadata field on the current analyzer. The OSD already carries
+  `languageId`, so the language is known at index time. The open question is that content field names
+  come from the DB-configured `IndexItem`, so the indexer has to become language-aware - a new
+  `IndexType` or a flag on `IndexItem`. Schema plus config decision, not a mechanical change.
+- **Response size for very large result sets.** Even with the collector rework, 10 million ids
+  serialise to roughly 200 MB of XML, buffered through `CinnamonResponse`. At that scale the response
+  path, not the search, is the bottleneck. A streaming or paged variant would be an API change.
+- **Concurrent search.** `ResultCollectorManager` already supports being sliced across threads; the
+  `IndexSearcher` is currently constructed without an executor.

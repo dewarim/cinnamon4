@@ -5,7 +5,7 @@ import com.dewarim.cinnamon.application.DbSessionFactory;
 import com.dewarim.cinnamon.application.exception.CinnamonException;
 import com.dewarim.cinnamon.application.service.search.BrowsableAcls;
 import com.dewarim.cinnamon.application.service.search.RegexQueryBuilder;
-import com.dewarim.cinnamon.application.service.search.ResultCollector;
+import com.dewarim.cinnamon.application.service.search.ResultCollectorManager;
 import com.dewarim.cinnamon.application.service.search.WildcardQueryBuilder;
 import com.dewarim.cinnamon.configuration.LuceneConfig;
 import com.dewarim.cinnamon.dao.FolderDao;
@@ -44,7 +44,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static com.dewarim.cinnamon.api.Constants.*;
 
@@ -190,20 +189,24 @@ public class SearchService {
                 throw new CinnamonException("query is nested too deeply", e);
             }
             log.debug("parsed query: {}", query);
-            ResultCollector collector = new ResultCollector(searcher);
-            searcher.search(query, collector);
-            log.debug("Found {} documents.", collector.getDocuments().size());
 
+            // Determine the user's browse permissions *before* searching and push them into the query,
+            // so documents the user may not browse are never collected.
             BrowsableAcls browsableAcls = new AuthorizationService().getBrowsableAcls(user);
+            Query         browseFilter  = browsePermissionFilter(browsableAcls);
             List<Long>    osdIds        = List.of();
             List<Long>    folderIds     = List.of();
-            switch (searchType) {
-                case OSD -> osdIds = filterForType(collector, IndexJobType.OSD, browsableAcls);
-                case FOLDER -> folderIds = filterForType(collector, IndexJobType.FOLDER, browsableAcls);
-                case ALL -> {
-                    osdIds = filterForType(collector, IndexJobType.OSD, browsableAcls);
-                    folderIds = filterForType(collector, IndexJobType.FOLDER, browsableAcls);
+            if (browseFilter != null) {
+                switch (searchType) {
+                    case OSD -> osdIds = searchForType(searcher, query, browseFilter, IndexJobType.OSD);
+                    case FOLDER -> folderIds = searchForType(searcher, query, browseFilter, IndexJobType.FOLDER);
+                    case ALL -> {
+                        osdIds = searchForType(searcher, query, browseFilter, IndexJobType.OSD);
+                        folderIds = searchForType(searcher, query, browseFilter, IndexJobType.FOLDER);
+                    }
                 }
+            } else {
+                log.debug("User {} has no browsable acls, returning empty result.", user.getId());
             }
 
             // see #414 - search finds objects that have been deleted
@@ -252,16 +255,55 @@ public class SearchService {
         }
     }
 
-    private List<Long> filterForType(ResultCollector collector, IndexJobType jobType, BrowsableAcls browsableAcls) {
-        return collector.getDocuments().stream()
-                .filter(doc -> doc.getField(LUCENE_FIELD_CINNAMON_CLASS).stringValue().equals(jobType.name()))
-                .filter(doc -> browsableAcls.hasBrowsePermission(
-                        doc.getField(LUCENE_FIELD_ACL_ID).numericValue().longValue(),
-                        doc.getField(LUCENE_FIELD_OWNER_ID).numericValue().longValue()))
-                .map(doc -> doc.getField("id").numericValue().longValue())
-                .collect(Collectors.toSet())
-                .stream()
-                .toList();
+    /**
+     * Run the user's query restricted to one Cinnamon type, with the browse-permission filter applied
+     * by Lucene itself. Only the ids of matching documents are collected.
+     */
+    private List<Long> searchForType(IndexSearcher searcher, Query userQuery, Query browseFilter,
+                                     IndexJobType jobType) throws IOException {
+        Query query = new BooleanQuery.Builder()
+                .add(userQuery, BooleanClause.Occur.MUST)
+                .add(new TermQuery(new Term(LUCENE_FIELD_CINNAMON_CLASS, jobType.name())), BooleanClause.Occur.FILTER)
+                .add(browseFilter, BooleanClause.Occur.FILTER)
+                .build();
+        long[] ids = searcher.search(query, new ResultCollectorManager());
+        log.debug("Found {} {} documents.", ids.length, jobType);
+        List<Long> result = new ArrayList<>(ids.length);
+        for (long id : ids) {
+            result.add(id);
+        }
+        return result;
+    }
+
+    /**
+     * Translates {@link BrowsableAcls#hasBrowsePermission} into a Lucene query:
+     * <pre>(acl IN objectAcls) OR (owner == userId AND acl IN ownerAcls)</pre>
+     * Note that {@code LongPoint.newSetQuery} builds a single PointInSetQuery rather than one boolean
+     * clause per value, so even a large number of acls does not count towards maxClauseCount.
+     *
+     * @return the filter, or null if the user cannot browse anything at all (in which case no search
+     * needs to run)
+     */
+    // package private & static for SearchServiceUnitTest, which verifies it against hasBrowsePermission
+    static Query browsePermissionFilter(BrowsableAcls browsableAcls) {
+        boolean hasObjectAcls = !browsableAcls.objectAcls().isEmpty();
+        boolean hasOwnerAcls  = !browsableAcls.ownerAcls().isEmpty() && browsableAcls.userId() != null;
+        if (!hasObjectAcls && !hasOwnerAcls) {
+            return null;
+        }
+        BooleanQuery.Builder builder = new BooleanQuery.Builder();
+        if (hasObjectAcls) {
+            builder.add(LongPoint.newSetQuery(LUCENE_FIELD_ACL_ID, browsableAcls.objectAcls()),
+                    BooleanClause.Occur.SHOULD);
+        }
+        if (hasOwnerAcls) {
+            Query ownedByUserWithBrowsableAcl = new BooleanQuery.Builder()
+                    .add(LongPoint.newExactQuery(LUCENE_FIELD_OWNER_ID, browsableAcls.userId()), BooleanClause.Occur.MUST)
+                    .add(LongPoint.newSetQuery(LUCENE_FIELD_ACL_ID, browsableAcls.ownerAcls()), BooleanClause.Occur.MUST)
+                    .build();
+            builder.add(ownedByUserWithBrowsableAcl, BooleanClause.Occur.SHOULD);
+        }
+        return builder.setMinimumNumberShouldMatch(1).build();
     }
 
 }

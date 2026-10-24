@@ -97,6 +97,7 @@ public class Constants {
     public static final String LUCENE_FIELD_CINNAMON_CLASS = "cinnamon_class";
     public static final String LUCENE_FIELD_ACL_ID         = "acl";
     public static final String LUCENE_FIELD_OWNER_ID       = "owner";
+    public static final String LUCENE_FIELD_ID             = "id";
 
     public static final String TIKA_METASET_NAME = "tika";
 

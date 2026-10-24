@@ -504,6 +504,8 @@ public class IndexService implements Runnable {
         // option: add a NumericDocValueField for scoring by age
         doc.add(new LongPoint("id", folder.getId()));
         doc.add(new StoredField("id", folder.getId()));
+        // columnar id, so a search can read the id of every hit without decompressing stored fields
+        doc.add(new NumericDocValuesField(LUCENE_FIELD_ID, folder.getId()));
         doc.add(new StringField("created", DateTools.timeToString(toEpochMillis(folder.getCreated()), DateTools.Resolution.MILLISECOND), Field.Store.NO));
         doc.add(new LongPoint("created", toEpochMillis(folder.getCreated())));
         doc.add(new StringField("name", folder.getName().toLowerCase(), Field.Store.NO));
@@ -574,6 +576,8 @@ public class IndexService implements Runnable {
         }
         doc.add(new LongPoint("id", osd.getId()));
         doc.add(new StoredField("id", osd.getId()));
+        // columnar id, so a search can read the id of every hit without decompressing stored fields
+        doc.add(new NumericDocValuesField(LUCENE_FIELD_ID, osd.getId()));
         if (osd.getLanguageId() != null) {
             doc.add(new LongPoint("language", osd.getLanguageId()));
         }
