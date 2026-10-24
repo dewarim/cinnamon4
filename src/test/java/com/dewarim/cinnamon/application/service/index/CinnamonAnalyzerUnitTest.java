@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -166,5 +167,30 @@ public class CinnamonAnalyzerUnitTest {
         // emoji are not cased characters, so they survive analysis unchanged
         assertEquals(List.of("💩"), analyze("💩"));
         assertEquals(List.of("report", "💩", "draft"), analyze("report 💩 draft"));
+    }
+
+    /**
+     * Analysis must not depend on the server's default locale. Of all 245 languages the JVM knows,
+     * only Turkish, Azeri and Lithuanian lowercase differently, and they all do it to "I" - so a
+     * Turkish-locale server would otherwise index "INVOICE" as "ınvoıce" with a dotless i.
+     */
+    @Test
+    public void analysisDoesNotDependOnTheDefaultLocale() throws IOException {
+        Locale original = Locale.getDefault();
+        try {
+            List<String> expected;
+            Locale.setDefault(Locale.ROOT);
+            expected = analyze("INVOICE TITLE DIAGRAM");
+            assertEquals(List.of("invoice", "title", "diagram"), expected);
+
+            for (Locale locale : List.of(Locale.US, Locale.GERMANY, Locale.of("tr", "TR"),
+                    Locale.of("az"), Locale.of("lt"))) {
+                Locale.setDefault(locale);
+                assertEquals(expected, analyze("INVOICE TITLE DIAGRAM"),
+                        "analysis must be identical under locale " + locale);
+            }
+        } finally {
+            Locale.setDefault(original);
+        }
     }
 }

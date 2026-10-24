@@ -66,6 +66,18 @@
         Off by default: words of two or more characters are findable without it, while turning it on
         roughly doubles the number of CJK terms. Needs a reindex to take effect. -->
    <cjkOutputUnigrams>false</cjkOutputUnigrams>
+   <!-- maximum tokens one analyzed query clause may produce; 0 = no limit -->
+   <maxQueryTokenCount>100000</maxQueryTokenCount>
+   <!-- Largest file content that is read into memory for indexing, in MEGABYTES; 0 = no limit.
+        Content above the limit is not indexed: the object stays findable by name and metadata, but
+        its content is not searchable. Mind the multiplier when choosing a value - indexing parses
+        the content into a DOM and needs roughly ten times the file size in heap, with up to
+        threadPoolSize documents in flight at once. -->
+   <maxIndexableContentSizeMB>2048</maxIndexableContentSizeMB>
+   <!-- Same limit expressed as a percentage of the JVM's maximum heap (-Xmx), not of physical RAM,
+        because running out of memory while indexing is a heap event. 0 = not used.
+        If both are set, the SMALLER of the two applies. -->
+   <maxIndexableContentPercentOfHeap>0</maxIndexableContentPercentOfHeap>
  </luceneConfig>
   <cinnamonTikaConfig>
     <baseUrl>http://127.0.0.1:9998</baseUrl>

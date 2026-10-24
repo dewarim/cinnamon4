@@ -498,7 +498,7 @@ public class IndexService implements Runnable {
 
     static void addFolderFields(Document doc, Folder folder, String folderPath) {
         log.debug("folderpath: {}", folderPath);
-        doc.add(new StringField("folderpath", folderPath.toLowerCase(), Field.Store.NO));
+        doc.add(new StringField("folderpath", folderPath.toLowerCase(Locale.ROOT), Field.Store.NO));
 
         doc.add(new StoredField("acl", folder.getAclId()));
         doc.add(new LongPoint("acl", folder.getAclId()));
@@ -509,7 +509,7 @@ public class IndexService implements Runnable {
         doc.add(new NumericDocValuesField(LUCENE_FIELD_ID, folder.getId()));
         doc.add(new StringField("created", DateTools.timeToString(toEpochMillis(folder.getCreated()), DateTools.Resolution.MILLISECOND), Field.Store.NO));
         doc.add(new LongPoint("created", toEpochMillis(folder.getCreated())));
-        doc.add(new StringField("name", folder.getName().toLowerCase(), Field.Store.NO));
+        doc.add(new StringField("name", folder.getName().toLowerCase(Locale.ROOT), Field.Store.NO));
         doc.add(new LongPoint("owner", folder.getOwnerId()));
         doc.add(new StoredField("owner", folder.getOwnerId()));
         if (folder.getParentId() != null) {
@@ -529,16 +529,20 @@ public class IndexService implements Runnable {
             addOsdFields(doc, osd, folderPath);
 
             byte[] content = NO_CONTENT;
-            if (osd.getContentPath() != null && job.getFormat() != null) {
+            if (osd.getContentPath() != null && job.getFormat() != null && contentIsSmallEnoughToIndex(osd)) {
                 ContentProvider contentProvider = contentProviderService.getContentProvider(osd.getContentProvider());
                 try (InputStream contentStream = contentProvider.getContentStream(osd)) {
                     Format format = job.getFormat();
                     switch (format.getIndexMode()) {
-                        case XML -> content = contentStream.readAllBytes();
+                        case XML -> content = readContentBounded(contentStream, osd);
                         case JSON -> content = convertJsonToXml(contentStream);
                         case PLAIN_TEXT ->
-                                content = ("<plainText>" + new String(contentStream.readAllBytes(), StandardCharsets.UTF_8) + "</plainText>").getBytes();
+                                content = ("<plainText>" + new String(readContentBounded(contentStream, osd), StandardCharsets.UTF_8) + "</plainText>").getBytes();
                     }
+                } catch (ContentTooLargeToIndexException e) {
+                    // index the object without its content rather than failing the whole job
+                    log.warn("{}", e.getMessage());
+                    content = NO_CONTENT;
                 } catch (IOException e) {
                     throw new CinnamonException("Failed to load content for OSD " + osd.getId() + " at " + osd.getContentPath(), e);
                 }
@@ -555,7 +559,7 @@ public class IndexService implements Runnable {
     }
 
     static void addOsdFields(Document doc, ObjectSystemData osd, String folderPath) {
-        doc.add(new StringField("folderpath", folderPath.toLowerCase(), Field.Store.NO));
+        doc.add(new StringField("folderpath", folderPath.toLowerCase(Locale.ROOT), Field.Store.NO));
 
         doc.add(new StoredField("acl", osd.getAclId()));
         doc.add(new LongPoint("acl", osd.getAclId()));
@@ -589,7 +593,7 @@ public class IndexService implements Runnable {
             doc.add(new LongPoint("locker", osd.getLockerId()));
         }
         doc.add(new StringField("metadata_changed", String.valueOf(osd.isMetadataChanged()), Field.Store.NO));
-        doc.add(new StringField("name", osd.getName().toLowerCase(), Field.Store.NO));
+        doc.add(new StringField("name", osd.getName().toLowerCase(Locale.ROOT), Field.Store.NO));
         doc.add(new LongPoint("owner", osd.getOwnerId()));
         doc.add(new StoredField("owner", osd.getOwnerId()));
         doc.add(new LongPoint("parent", osd.getParentId()));
@@ -604,6 +608,56 @@ public class IndexService implements Runnable {
         }
         doc.add(new TextField("summary", osd.getSummary(), Field.Store.NO));
         doc.add(new LongPoint("object_type", osd.getTypeId()));
+    }
+
+    /**
+     * Signals that content exceeds the configured indexable size. Not an error: the object is still
+     * indexed, just without its content.
+     */
+    private static class ContentTooLargeToIndexException extends IOException {
+        ContentTooLargeToIndexException(String message) {
+            super(message);
+        }
+    }
+
+    /**
+     * Checked before the content stream is even opened, using the stored content size. Indexing reads
+     * the whole file into memory, turns it into a String and parses it into a DOM, needing roughly
+     * ten times the file size in heap - with up to threadPoolSize documents in flight at once.
+     */
+    private boolean contentIsSmallEnoughToIndex(ObjectSystemData osd) {
+        long limit = config.getMaxIndexableContentSizeInBytes();
+        if (limit <= 0 || osd.getContentSize() == null) {
+            // no limit configured, or size unknown - readContentBounded() still enforces the limit
+            return true;
+        }
+        if (osd.getContentSize() > limit) {
+            log.warn("Content of OSD {} is {} bytes, more than the configured maximum of {} bytes;" +
+                            " indexing the object without its content. It stays findable by name and metadata," +
+                            " but its content will not be searchable.",
+                    osd.getId(), osd.getContentSize(), limit);
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Reads the content, but never more than the configured limit. The stored content size is checked
+     * first, so this only triggers when that size is absent or wrong.
+     */
+    private byte[] readContentBounded(InputStream contentStream, ObjectSystemData osd) throws IOException {
+        long limit = config.getMaxIndexableContentSizeInBytes();
+        if (limit <= 0) {
+            return contentStream.readAllBytes();
+        }
+        int    toRead = (int) Math.min(limit + 1, Integer.MAX_VALUE);
+        byte[] data   = contentStream.readNBytes(toRead);
+        if (data.length > limit) {
+            throw new ContentTooLargeToIndexException("Content of OSD " + osd.getId() + " exceeds the configured" +
+                    " maximum indexable size of " + limit + " bytes (its recorded content size was " +
+                    osd.getContentSize() + "); indexing the object without its content.");
+        }
+        return data;
     }
 
     private byte[] convertJsonToXml(InputStream jsonStream) throws IOException {

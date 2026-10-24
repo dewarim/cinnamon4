@@ -52,7 +52,6 @@ public class SearchService {
     private static final Logger log = LogManager.getLogger(SearchService.class);
 
     private final LuceneConfig            config;
-    private       DirectoryReader         indexReader;
     private final SearcherManager         searcherManager;
     private final LimitTokenCountAnalyzer limitTokenCountAnalyzer;
     private final RetryPolicy<Boolean>    retryPolicy;
@@ -68,12 +67,16 @@ public class SearchService {
         }
         IndexSearcher.setMaxClauseCount(10000);
         Directory directory = FSDirectory.open(Path.of(config.getIndexPath()));
-        indexReader = DirectoryReader.open(directory);
+        // SearcherManager takes ownership of the reader and reopens it on refresh, so there is no
+        // point in keeping our own reference: it would be stale after the first refresh.
+        DirectoryReader indexReader = DirectoryReader.open(directory);
         searcherManager = new SearcherManager(indexReader, new SearcherFactory());
         searcherManager.maybeRefresh();
         // must be the same analyzer IndexService indexes with, or analyzed queries stop matching
         Analyzer analyzer = new CinnamonAnalyzer(config.isCjkOutputUnigrams());
-        limitTokenCountAnalyzer = new LimitTokenCountAnalyzer(analyzer, Integer.MAX_VALUE);
+        // Bounds how many tokens one analyzed query clause may produce. This used to be
+        // Integer.MAX_VALUE, i.e. no limit at all, which made the wrapper pure decoration.
+        limitTokenCountAnalyzer = new LimitTokenCountAnalyzer(analyzer, maxQueryTokenCount(config));
 
         retryPolicy = RetryPolicy.<Boolean>builder()
                 .handleResult(false)
@@ -84,6 +87,15 @@ public class SearchService {
                 .build();
 
         // TODO: refresh periodically - or if last refresh was > config.lucene.refreshTime
+    }
+
+    /**
+     * 0 in the configuration means "no limit", which LimitTokenCountAnalyzer expresses as
+     * Integer.MAX_VALUE.
+     */
+    private static int maxQueryTokenCount(LuceneConfig config) {
+        int configured = config.getMaxQueryTokenCount();
+        return configured <= 0 ? Integer.MAX_VALUE : configured;
     }
 
     /**
@@ -180,9 +192,10 @@ public class SearchService {
     public IndexJobDao.IndexRows countDocs() throws IOException {
         IndexSearcher searcher = null;
         try {
-            if (!searcherManager.isSearcherCurrent()) {
-                searcherManager.maybeRefreshBlocking();
-            }
+            // maybeRefreshBlocking() already checks whether a refresh is needed and returns at once
+            // if the searcher is current, so guarding it with isSearcherCurrent() only duplicated
+            // that check - and did it in a separate step, which isIndexed() never bothered with.
+            searcherManager.maybeRefreshBlocking();
             searcher = searcherManager.acquire();
             int documents = searcher.count(new TermQuery(new Term(LUCENE_FIELD_CINNAMON_CLASS, "OSD")));
             int folders   = searcher.count(new TermQuery(new Term(LUCENE_FIELD_CINNAMON_CLASS, "FOLDER")));
@@ -200,9 +213,9 @@ public class SearchService {
     public SearchResult doSearch(String xmlQuery, SearchType searchType, UserAccount user) throws IOException {
         IndexSearcher searcher = null;
         try {
-            if (!searcherManager.isSearcherCurrent()) {
-                searcherManager.maybeRefreshBlocking();
-            }
+            // see countDocs(): the isSearcherCurrent() guard was a redundant duplicate of the check
+            // maybeRefreshBlocking() performs itself
+            searcherManager.maybeRefreshBlocking();
             searcher = searcherManager.acquire();
             log.debug("xmlQuery: {}", xmlQuery);
             InputStream xmlInputStream = new ByteArrayInputStream(xmlQuery.getBytes(StandardCharsets.UTF_8));

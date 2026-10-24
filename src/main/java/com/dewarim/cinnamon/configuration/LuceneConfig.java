@@ -63,6 +63,45 @@ public class LuceneConfig {
      */
     private boolean cjkOutputUnigrams = false;
 
+    /**
+     * Maximum number of tokens one analyzed search query clause may produce. 0 = no limit.
+     * <br>
+     * Generous on purpose: the Windows client builds very complex queries, and a real query never
+     * comes close to this. It exists so that a hostile query cannot make the analyzer produce an
+     * unbounded token stream.
+     */
+    private int maxQueryTokenCount = 100_000;
+
+    /**
+     * Maximum size of file content that will be read into memory for indexing, in <b>megabytes</b>.
+     * 0 = no limit.
+     * <br>
+     * Content above the limit is <b>not</b> indexed - the object itself is still indexed with its
+     * metadata, so it stays findable by name and metadata, but its content is not searchable. This is
+     * a deliberate trade: indexing reads the whole file into a byte array, converts it to a String
+     * and then parses it into a DOM, which needs roughly ten times the file size in heap, and up to
+     * {@link #threadPoolSize} documents are processed at once. Without a limit a single large upload
+     * could exhaust the heap.
+     * <br>
+     * Note the multiplier when choosing a value: 2048 MB of content does not need 2 GB of heap, it
+     * needs far more. The effective limit is the smaller of this and
+     * {@link #maxIndexableContentPercentOfHeap}.
+     */
+    private long maxIndexableContentSizeMB = 2048;
+
+    /**
+     * Alternative, machine-relative form of {@link #maxIndexableContentSizeMB}, as a percentage of
+     * the JVM's maximum heap. 0 = not used (the default).
+     * <br>
+     * This is a share of the <i>heap</i> ({@code Runtime.maxMemory()}), not of physical RAM, because
+     * running out of memory while indexing is a heap event: physical RAM beyond {@code -Xmx} cannot
+     * help. Useful to keep one configuration sensible across machines with different heap sizes.
+     * <br>
+     * When both this and {@link #maxIndexableContentSizeMB} are set, the <b>smaller</b> of the two
+     * applies, so the absolute value acts as a ceiling and this one as a safety net on small heaps.
+     */
+    private int maxIndexableContentPercentOfHeap = 0;
+
     public int getUncommittedLimit() {
         return uncommittedLimit;
     }
@@ -158,6 +197,9 @@ public class LuceneConfig {
                 ", maxCombinedMetasetSize=" + maxCombinedMetasetSize +
                 ", waitUntilSearchable=" + waitUntilSearchable +
                 ", cjkOutputUnigrams=" + cjkOutputUnigrams +
+                ", maxQueryTokenCount=" + maxQueryTokenCount +
+                ", maxIndexableContentSizeMB=" + maxIndexableContentSizeMB +
+                ", maxIndexableContentPercentOfHeap=" + maxIndexableContentPercentOfHeap +
                 '}';
     }
 
@@ -183,5 +225,49 @@ public class LuceneConfig {
 
     public void setCjkOutputUnigrams(boolean cjkOutputUnigrams) {
         this.cjkOutputUnigrams = cjkOutputUnigrams;
+    }
+
+    public int getMaxQueryTokenCount() {
+        return maxQueryTokenCount;
+    }
+
+    public void setMaxQueryTokenCount(int maxQueryTokenCount) {
+        this.maxQueryTokenCount = maxQueryTokenCount;
+    }
+
+    public long getMaxIndexableContentSizeMB() {
+        return maxIndexableContentSizeMB;
+    }
+
+    public void setMaxIndexableContentSizeMB(long maxIndexableContentSizeMB) {
+        this.maxIndexableContentSizeMB = maxIndexableContentSizeMB;
+    }
+
+    public int getMaxIndexableContentPercentOfHeap() {
+        return maxIndexableContentPercentOfHeap;
+    }
+
+    public void setMaxIndexableContentPercentOfHeap(int maxIndexableContentPercentOfHeap) {
+        this.maxIndexableContentPercentOfHeap = maxIndexableContentPercentOfHeap;
+    }
+
+    /**
+     * The effective content size limit in bytes: the smaller of the absolute megabyte value and the
+     * percentage of maximum heap, ignoring whichever of the two is not set.
+     *
+     * @return the limit in bytes, or 0 if content size is not limited at all
+     */
+    public long getMaxIndexableContentSizeInBytes() {
+        long absolute = maxIndexableContentSizeMB > 0 ? maxIndexableContentSizeMB * 1024L * 1024L : 0L;
+        long relative = maxIndexableContentPercentOfHeap > 0
+                ? Runtime.getRuntime().maxMemory() / 100L * maxIndexableContentPercentOfHeap
+                : 0L;
+        if (absolute == 0L) {
+            return relative;
+        }
+        if (relative == 0L) {
+            return absolute;
+        }
+        return Math.min(absolute, relative);
     }
 }

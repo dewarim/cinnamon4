@@ -232,34 +232,65 @@ No deprecated Lucene API remains. (Two unrelated warnings remain in
   depend on this - each type is queried separately and deduplicated within its own result set - but
   it confirms an id collision between an OSD and a folder cannot occur.
 
+#### Indexable content size is now limited
+
+`IndexService.indexOsd` read file content with an unbounded `readAllBytes()`. Indexing then converts
+that to a String and parses it into a dom4j DOM, needing roughly **ten times** the file size in heap,
+with up to `threadPoolSize` (8) documents in flight at once - so a single large upload could exhaust
+the heap. Two new settings in `luceneConfig`:
+
+| setting | default | meaning |
+|---|---|---|
+| `maxIndexableContentSizeMB` | 2048 | absolute limit, in **megabytes**; 0 = no limit |
+| `maxIndexableContentPercentOfHeap` | 0 | the same limit as a percentage of maximum heap; 0 = not used |
+
+If both are set the **smaller** applies, so the absolute value is a ceiling and the percentage a
+safety net on machines with a small heap. The percentage is a share of the JVM's maximum heap
+(`Runtime.maxMemory()`), not of physical RAM, because running out of memory while indexing is a heap
+event - RAM beyond `-Xmx` cannot help.
+
+Over-sized content is **skipped rather than failed**: the object is still indexed with its metadata,
+so it stays findable by name and metadata, and only its content is not searchable. A warning naming
+the object and both sizes is logged. Failing the job instead would have made the object invisible
+entirely and then retried forever.
+
+The check uses the recorded `contentSize` before the stream is even opened, and `readContentBounded`
+enforces the limit again while reading, for the case where that recorded size is missing or wrong.
+
+Note when choosing a value: with the ~10x multiplier, 2048 MB of content needs considerably more than
+2 GB of heap. The default is a backstop against pathological cases, not a tight bound.
+
+#### Smaller cleanups
+
+- **Locale-dependent `toLowerCase()` fixed in all eight places**, now `toLowerCase(Locale.ROOT)`:
+  `IndexService.addOsdFields` / `addFolderFields` (`name`, `folderpath`), `CompleteStringIndexer`,
+  `BooleanIndexer` - and, found while fixing those, `CinnamonRequest` and `OsdServlet`, which
+  lowercase the **Content-Type header** to detect multipart requests. HTTP header values are
+  case-insensitive, so a client sending `MULTIPART/form-data` to a Turkish-locale server would have
+  produced `multıpart/` with a dotless i, the request would not have been recognised as multipart,
+  and **file upload would have broken** - a worse consequence than the indexing issue that led here.
+  `CinnamonAnalyzerUnitTest` asserts analysis is identical under `ROOT`, `en_US`, `de_DE`, `tr_TR`,
+  `az` and `lt`.
+- **`LimitTokenCountAnalyzer` now actually limits.** It was wired to `Integer.MAX_VALUE`, making the
+  wrapper pure decoration. New `maxQueryTokenCount` (default 100 000, 0 = no limit) bounds how many
+  tokens one analyzed query clause may produce. Deliberately generous: the Windows client builds very
+  complex queries and never comes close.
+- **Redundant searcher-refresh guard removed.** `doSearch` and `countDocs` wrapped
+  `maybeRefreshBlocking()` in `if (!isSearcherCurrent())`, duplicating the check that method performs
+  itself - and inconsistently with `isIndexed`, which always called it unconditionally.
+- **Dead `indexReader` field removed** from `SearchService`. `SearcherManager` takes ownership of the
+  reader and reopens it on refresh, so the field was stale after the first refresh. Now a local
+  variable.
+
 ### Known issues, not yet addressed
 
 Recorded here so they are not rediscovered from scratch.
 
-- **Unbounded content read while indexing.** `IndexService.indexOsd` calls
-  `contentStream.readAllBytes()` with no size cap; `PLAIN_TEXT` mode additionally builds
-  `"<plainText>" + new String(bytes) + "</plainText>"` and then `getBytes()`, holding roughly four
-  copies, after which `ContentContainer` parses the whole thing into a dom4j DOM. The effective heap
-  multiplier is above 10x the file size, with up to `threadPoolSize` (8) documents in flight. Gated
-  by the format's `index_mode` (schema default `NONE`) and by the multipart upload limit (default
-  unlimited). `indexOsd` catches `Throwable`, so an OOM marks the job failed rather than killing the
-  index thread, but heap pressure is JVM-wide. A configurable `maxIndexableContentSize` that skips
-  and logs oversized content would fix it - the threshold is a policy decision, since skipping makes
-  that document's content unsearchable.
-- **`LimitTokenCountAnalyzer(analyzer, Integer.MAX_VALUE)`** in `SearchService` limits nothing
-  (confirmed by measurement). It wraps only the query-side analyzer, and query-side token explosion
-  is already bounded by `maxClauseCount` and the 64 MB body limit, so this is latent rather than
-  live. Either give it a real, generous, configurable value or drop the misleading wrapper. A token
-  limit must **not** be added to the index side without a decision: it would silently truncate
-  indexed content.
-- **Locale-dependent lowercasing.** `IndexService.addOsdFields` / `addFolderFields` (`name`,
-  `folderpath`), `CompleteStringIndexer` and `BooleanIndexer` call `toLowerCase()` without a locale,
-  which means `Locale.getDefault()` - ambient machine configuration (`LANG`, the OS locale, a
-  `-Duser.language` flag, a container base image). On a Turkish-locale server `"INVOICE"` is indexed
-  as `"ınvoıce"`, so a client query for `invoice` never matches. The client cannot know the server's
-  locale, so the two processes must agree on a casing algorithm that neither declares.
-  `toLowerCase(Locale.ROOT)` is the fix; for `de_DE` and `en_US` nothing changes for ASCII, so no
-  reindex would be needed in practice.
+- ~~**Unbounded content read while indexing.**~~ Fixed, see "Indexable content size is now limited".
+- ~~**`LimitTokenCountAnalyzer(analyzer, Integer.MAX_VALUE)`**~~ Fixed, see "Smaller cleanups".
+- ~~**Locale-dependent lowercasing.**~~ Fixed in all eight places, see "Smaller cleanups". The
+  measurements behind it are kept here because they are the reference for what locale can and cannot
+  affect.
 
   Measured exhaustively rather than assumed. Every Unicode codepoint against every language the JVM
   knows (1 112 064 x 245 = 272 455 680 comparisons), plus every cased codepoint followed by every
@@ -279,7 +310,7 @@ Recorded here so they are not rediscovered from scratch.
   is locale-independent (`"Bericht 中文 INVOICE"` -> `[bericht, 中, 文, invoice]` in any locale). Only
   the four hand-lowercased places above can be affected.
 
-  Caveat for the fix: `Locale.ROOT` removes the machine dependency but does **not** make the two
+  Caveat: `Locale.ROOT` removes the machine dependency but does **not** make the two
   mechanisms identical. For `U+0130 İ`, `String.toLowerCase(ROOT)` yields `i` + `U+0307` (Unicode
   full case mapping, two codepoints) while `LowerCaseFilter` yields `i` (`Character.toLowerCase` is
   per-codepoint and cannot expand). Harmless for `name`/`folderpath`, which are their own
@@ -397,15 +428,9 @@ enable the setting, create an object, search for it with no sleeping and no poll
 does **not** fail against the old ordering, for the buffering reason above; it is a guarantee test,
 not a regression test.
 
-Minor, not changed: `doSearch` guards `maybeRefreshBlocking()` behind `if (!isSearcherCurrent())`,
-which is redundant because `maybeRefreshBlocking` performs that check itself, and inconsistent with
-`isIndexed`, which calls it unconditionally. The `SearchService.indexReader` field is also dead once
-`SearcherManager` takes ownership of the reader.
-
-Minor: `doSearch` guards `maybeRefreshBlocking()` behind `if (!isSearcherCurrent())`, which is
-redundant because `maybeRefreshBlocking` performs that check itself, and inconsistent with
-`isIndexed`, which calls it unconditionally. The `SearchService.indexReader` field is also dead once
-`SearcherManager` takes ownership of the reader.
+Both minor items noted here earlier - the redundant `isSearcherCurrent()` guard around
+`maybeRefreshBlocking()` and the dead `SearchService.indexReader` field - have since been fixed, see
+"Smaller cleanups".
 
 ### Ideas for future search improvements
 

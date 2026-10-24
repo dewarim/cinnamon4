@@ -1072,7 +1072,9 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
     private void verifyIsMultipart(HttpServletRequest request) {
         String contentType = Optional.ofNullable(request.getContentType())
                 .orElseThrow(ErrorCode.NO_CONTENT_TYPE_IN_HEADER.getException());
-        if (!contentType.toLowerCase().startsWith(MULTIPART)) {
+        // Locale.ROOT: see CinnamonRequest - header values are case-insensitive and this comparison
+        // must not depend on the server's default locale
+        if (!contentType.toLowerCase(java.util.Locale.ROOT).startsWith(MULTIPART)) {
             throw ErrorCode.NOT_MULTIPART_UPLOAD.exception();
         }
     }

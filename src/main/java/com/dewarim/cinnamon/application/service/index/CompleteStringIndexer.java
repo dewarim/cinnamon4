@@ -2,6 +2,8 @@ package com.dewarim.cinnamon.application.service.index;
 
 import org.dom4j.Node;
 
+import java.util.Locale;
+
 /**
  * <p>The CompleteStringIndexer expects an XPath parameter as searchString and will stored
  * the results of this search in the Lucene document.</p>
@@ -21,7 +23,9 @@ public class CompleteStringIndexer extends DefaultIndexer {
         if (stringValue == null) {
             return null;
         } else {
-            return stringValue.toLowerCase();
+            // Locale.ROOT: the indexed form must not depend on the server's default locale, which
+            // would otherwise lowercase "I" to a dotless "ı" on a Turkish or Azeri system
+            return stringValue.toLowerCase(Locale.ROOT);
         }
     }
 }

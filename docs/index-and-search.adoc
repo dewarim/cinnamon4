@@ -135,3 +135,114 @@ See https://lucene.apache.org/core/9_4_2/core/org/apache/lucene/util/automaton/R
   </Clause>
 </BooleanQuery>
 ----
+== Text analysis
+
+Indexing and query parsing both use `CinnamonAnalyzer`, which is Lucene's `StandardAnalyzer` plus two
+filters for CJK (Chinese, Japanese, Korean) text. Both sides must use the same analyzer, otherwise
+analyzed queries stop matching what was indexed.
+
+    StandardTokenizer -> CJKWidthFilter -> LowerCaseFilter -> CJKBigramFilter
+
+Latin text is tokenized exactly as before: `CJKBigramFilter` only combines tokens whose script is
+Han, Hiragana, Katakana or Hangul, and leaves everything else untouched. Part numbers such as
+`P/N 4711-A` are unaffected, and no stop words are removed - a trailing `A` is usually a revision
+designator, so Lucene's ready-made `CJKAnalyzer`, which applies an English stop-word list, is
+deliberately *not* used.
+
+Tokens are capped at 255 characters, so a single unbroken "word" of a million characters is split
+rather than buffered whole.
+
+=== CJK text
+
+`StandardTokenizer` follows UAX#29 and emits one token per Han character, which makes CJK words
+unsearchable on their own: `液压泵` ("hydraulic pump") would be indexed as `液`, `压`, `泵`, and no term
+for the word itself would exist. `CJKBigramFilter` indexes overlapping bigrams instead:
+
+[cols="1,2"]
+|===
+| input | index terms
+
+| `液压泵`
+| `液压`, `压泵`
+
+| `中文`
+| `中文`
+
+| `液压泵 Hydraulikpumpe P/N 4711-A`
+| `液压`, `压泵`, `hydraulikpumpe`, `p`, `n`, `4711`, `a`
+|===
+
+A `TermQuery` for a two-character word therefore matches, because its bigram term is exactly that
+word. For longer words use a phrase query. A *single* CJK character is not a term of its own unless
+`cjkOutputUnigrams` is enabled.
+
+=== Full-width and half-width characters
+
+`CJKWidthFilter` folds full-width Latin to ASCII and half-width Katakana to full width. Documents
+authored in Asia routinely write part numbers in full width, so a search for `ABC-123` now also finds
+a document containing `ＡＢＣ－１２３`.
+
+=== Locale independence
+
+Analysis never depends on the server's default locale. Of the 245 languages the JVM knows, only
+Turkish, Azeri and Lithuanian lowercase differently - all of them for the letter `I` - so on a
+Turkish-locale server `INVOICE` would otherwise have been indexed as `ınvoıce` with a dotless i and a
+search for `invoice` would have found nothing. Emoji and CJK characters are not cased at all and are
+identical under every locale.
+
+== Configuration
+
+All settings live in `luceneConfig`, see `docs/cinnamon-config.xml` for a complete sample.
+
+[cols="2,1,4"]
+|===
+| setting | default | effect
+
+| `cjkOutputUnigrams`
+| `false`
+| Also index every single CJK character in addition to the bigrams. Words of two or more characters -
+practically all CJK vocabulary and all technical terminology - are searchable without it, and
+enabling it roughly doubles the number of CJK terms. Turn it on where a lone character must be
+findable as a term of its own, for example in a parts list. Needs a reindex.
+
+| `maxQueryTokenCount`
+| `100000`
+| Maximum number of tokens one analyzed query clause may produce. `0` = no limit. Generous on
+purpose: a real query never comes close, it only stops a hostile query from producing an unbounded
+token stream.
+
+| `maxIndexableContentSizeMB`
+| `2048`
+| Largest file content read into memory for indexing, in *megabytes*. `0` = no limit. Content above
+the limit is not indexed: the object stays findable by name and metadata, but its content is not
+searchable, and a warning is logged. Mind the multiplier - indexing parses content into a DOM and
+needs roughly ten times the file size in heap, with up to `threadPoolSize` documents in flight at
+once, so 2048 MB of content needs considerably more than 2 GB of heap.
+
+| `maxIndexableContentPercentOfHeap`
+| `0`
+| The same limit as a percentage of the JVM's maximum heap (`-Xmx`) rather than an absolute size.
+This is a share of the *heap*, not of physical RAM, because running out of memory while indexing is
+a heap event. `0` = not used. If both limits are set, the *smaller* one applies, so the absolute
+value acts as a ceiling and this one as a safety net on machines with a small heap.
+
+| `verifySearchResults`
+| `true`
+| Check search hits against the database and enqueue removal of index entries whose object no longer
+exists.
+
+| `waitUntilSearchable`
+| `false`
+| Make a write request wait until the item it changed is searchable before the response is sent.
+Adds roughly `millisToWaitBetweenRuns` to such requests.
+|===
+
+== Permission filtering
+
+Search results are filtered by the *browse* permission, which is pushed into the Lucene query rather
+than applied afterwards: documents a user may not browse are never collected. The filter is
+`(acl IN browsableAcls) OR (owner == currentUser AND acl IN ownerBrowsableAcls)`, which is exactly
+the check `BrowsableAcls.hasBrowsePermission` performs.
+
+Note that browse is the *only* permission applied. A user who may browse an object but not read its
+content can still find it by searching its content or metadata.

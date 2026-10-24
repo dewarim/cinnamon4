@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.Locale;
 import java.util.Optional;
 
 import static com.dewarim.cinnamon.api.Constants.*;
@@ -36,7 +37,10 @@ public class CinnamonRequest extends HttpServletRequestWrapper {
         super(request);
         this.request = request;
         Optional<String> contentTypeOpt = Optional.ofNullable(request.getContentType());
-        multiPart = contentTypeOpt.map(s -> s.toLowerCase().startsWith(MULTIPART)).orElse(false);
+        // Locale.ROOT: HTTP header values are case-insensitive, so a client may send
+        // "MULTIPART/form-data". With the default locale this comparison would break on a Turkish
+        // system, where "I" lowercases to a dotless "ı" and the prefix no longer matches.
+        multiPart = contentTypeOpt.map(s -> s.toLowerCase(Locale.ROOT).startsWith(MULTIPART)).orElse(false);
         CinnamonContentType cinnamonContentType;
         if (multiPart) {
             cinnamonContentType = CinnamonContentType.getByHttpContentType(contentTypeOpt.orElse(CONTENT_TYPE_XML));

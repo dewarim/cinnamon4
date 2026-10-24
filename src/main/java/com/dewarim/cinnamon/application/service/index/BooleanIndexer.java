@@ -17,7 +17,7 @@ public class BooleanIndexer extends DefaultIndexer {
 
 	@Override
 	public String convertNodeToString(Node node){
-		return node.getText().trim().toLowerCase();
+		return node.getText().trim().toLowerCase(java.util.Locale.ROOT);
 	}
 
 }
