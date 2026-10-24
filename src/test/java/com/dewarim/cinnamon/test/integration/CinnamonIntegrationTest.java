@@ -331,6 +331,52 @@ public class CinnamonIntegrationTest {
     }
 
     /**
+     * A condition that is allowed to fail with an exception while it is not yet true - a search
+     * against an index that has not caught up yet, for example.
+     */
+    protected interface AsyncCondition {
+        boolean test() throws Exception;
+    }
+
+    /**
+     * Wait until an asynchronous operation - usually Lucene indexing - has caught up, by polling
+     * until the condition holds.
+     * <p>
+     * This replaces {@code Thread.sleep(someGuess)}: indexing runs in a background thread on its own
+     * schedule ({@code millisToWaitBetweenRuns}, batched), so a fixed sleep is simultaneously too
+     * short (flaky when the machine is loaded) and too long (the common case finishes in
+     * milliseconds). Polling returns as soon as the condition is true and fails with a useful
+     * message when it never becomes true.
+     *
+     * @param description what is being waited for, used in the failure message
+     */
+    protected static void awaitCondition(String description, AsyncCondition condition) {
+        long      pollInterval = 100L;
+        long      timeout      = CinnamonServer.config.getLuceneConfig().getMillisToWaitBetweenRuns() + 30_000L;
+        long      deadline     = System.currentTimeMillis() + timeout;
+        Exception lastFailure  = null;
+        while (System.currentTimeMillis() < deadline) {
+            try {
+                if (condition.test()) {
+                    return;
+                }
+                lastFailure = null;
+            } catch (Exception e) {
+                // not there yet - keep polling, but remember why in case we time out
+                lastFailure = e;
+            }
+            try {
+                Thread.sleep(pollInterval);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                fail("interrupted while waiting for: " + description);
+            }
+        }
+        fail("timed out after " + timeout + "ms waiting for: " + description
+                + (lastFailure == null ? "" : " (last error: " + lastFailure + ")"));
+    }
+
+    /**
      * Verify that a search request for an exact id finds the expected number of documents.
      *
      * @param fieldName field used by IndexService in the Lucene index

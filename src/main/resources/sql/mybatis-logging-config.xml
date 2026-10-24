@@ -6,6 +6,8 @@
     <settings>
         <setting name="logImpl" value="LOG4J2"/>
         <setting name="defaultEnumTypeHandler" value="org.apache.ibatis.type.EnumTypeHandler"/>
+        <!-- see mybatis-config.xml: avoid stale reads from MyBatis' session-level local cache -->
+        <setting name="localCacheScope" value="STATEMENT"/>
     </settings>
     <typeHandlers>
     </typeHandlers>

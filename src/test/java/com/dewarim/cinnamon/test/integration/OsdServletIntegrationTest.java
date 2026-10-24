@@ -17,6 +17,7 @@ import com.dewarim.cinnamon.model.request.meta.CreateMetaRequest;
 import com.dewarim.cinnamon.model.request.meta.DeleteMetaRequest;
 import com.dewarim.cinnamon.model.request.meta.MetaRequest;
 import com.dewarim.cinnamon.model.request.osd.*;
+import com.dewarim.cinnamon.model.request.search.SearchType;
 import com.dewarim.cinnamon.model.response.CinnamonContentType;
 import com.dewarim.cinnamon.model.response.CinnamonError;
 import com.dewarim.cinnamon.model.response.OsdWrapper;
@@ -2311,35 +2312,63 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     /**
      * Verify that locked / unlocked OSDs are correctly indexed by Lucene.
      */
+    /**
+     * How many documents the index holds for this osd with this locker. Scoped to a single osd id on
+     * purpose: asserting a global count of "all osds locked by this user" only works on a pristine
+     * index, which is why this test used to be disabled rather than merely slow.
+     */
+    private static int countIndexedAsLockedBy(long osdId, long lockerId) throws IOException {
+        String query = "<BooleanQuery>"
+                + "<Clause occurs='must'><ExactPointQuery fieldName='id' value='" + osdId + "' type='long'/></Clause>"
+                + "<Clause occurs='must'><ExactPointQuery fieldName='locker' value='" + lockerId + "' type='long'/></Clause>"
+                + "</BooleanQuery>";
+        return client.search(query, SearchType.OSD).getOsdIds().size();
+    }
+
+    private static int countIndexed(long osdId) throws IOException {
+        String query = "<ExactPointQuery fieldName='id' value='" + osdId + "' type='long'/>";
+        return client.search(query, SearchType.OSD).getOsdIds().size();
+    }
+
+    /**
+     * Was disabled because it slept for 16 seconds. Polling for the expected index state makes it
+     * deterministic and fast enough to run with the rest of the suite.
+     */
     @Test
-    @Disabled("manual only since it sleeps")
-    public void lockAndUnlockAndSearch() throws IOException, InterruptedException {
+    public void lockAndUnlockAndSearch() throws IOException {
         var toh = new TestObjectHolder(client, userId)
                 .createOsd().lockOsd();
         var v1 = toh.osd;
         var v2 = toh.version().lockOsd().osd;
-        Thread.sleep(4000);
-        assertTrue(verifySearchFindsPointField("locker", userId, 2));
+        awaitCondition("v1 to be indexed as locked",
+                () -> countIndexedAsLockedBy(v1.getId(), userId) == 1);
+        awaitCondition("v2 to be indexed as locked",
+                () -> countIndexedAsLockedBy(v2.getId(), userId) == 1);
+
         toh.unlockOsd(v1.getId());
-        Thread.sleep(4000);
-        assertTrue(verifySearchFindsPointField("locker", userId, 1));
-        Thread.sleep(4000);
+        awaitCondition("v1 to be indexed as no longer locked",
+                () -> countIndexedAsLockedBy(v1.getId(), userId) == 0);
+        // unlocking v1 must not have unlocked v2
+        assertEquals(1, countIndexedAsLockedBy(v2.getId(), userId));
+
         toh.unlockOsd(v2.getId());
-        Thread.sleep(4000);
-        assertTrue(verifySearchFindsPointField("locker", userId, 0));
+        awaitCondition("v2 to be indexed as no longer locked",
+                () -> countIndexedAsLockedBy(v2.getId(), userId) == 0);
     }
 
     @Test
-    @Disabled("manual only since it sleeps")
-    public void deleteAndSearch() throws IOException, InterruptedException {
+    public void deleteAndSearch() throws IOException {
         var toh = new TestObjectHolder(client, userId).createOsd().lockOsd();
         var v1  = toh.osd;
         var v2  = toh.version().lockOsd().osd;
-        Thread.sleep(4000);
-        assertTrue(verifySearchFindsPointField("locker", userId, 2));
+        awaitCondition("v2 to be indexed as locked",
+                () -> countIndexedAsLockedBy(v2.getId(), userId) == 1);
+
         toh.deleteOsd(v2.getId());
-        Thread.sleep(4000);
-        assertTrue(verifySearchFindsPointField("locker", userId, 1));
+        awaitCondition("the deleted v2 to be removed from the index",
+                () -> countIndexed(v2.getId()) == 0);
+        // deleting v2 must not have removed v1
+        assertEquals(1, countIndexed(v1.getId()));
     }
 
     @Test

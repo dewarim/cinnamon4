@@ -71,9 +71,12 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
         toh.selectFormat("json")
                 .createOsdWithContent(new File("src/test/resources/test.json"));
 
-        if(!CinnamonServer.getConfig().getLuceneConfig().isWaitUntilSearchable()) {
-            Thread.sleep(CinnamonServer.config.getLuceneConfig().getMillisToWaitBetweenRuns() + 5000L);
-        }
+        // Wait for the objects created above to become searchable instead of sleeping for a fixed
+        // period: indexing is asynchronous, so a fixed sleep is both flaky under load and needlessly
+        // slow in the common case.
+        awaitCondition("the objects created for this test class to become searchable", () ->
+                !client.search(createTermQuery("name", "search-me-osd"), SearchType.OSD).getOsdIds().isEmpty()
+                        && !client.search(createTermQuery("name", "search-me-folder"), SearchType.FOLDER).getFolderIds().isEmpty());
         ThreadLocalSqlSession.refreshSession();
     }
 
@@ -173,19 +176,19 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
         assertFalse(response.getOsdIds().isEmpty());
     }
 
-    private String createPointQuery(String fieldName, long query) {
+    private static String createPointQuery(String fieldName, long query) {
         String pointQuery = "<BooleanQuery><Clause occurs='must'><ExactPointQuery fieldName='" + fieldName + "' value='" + query + "' type='long'/></Clause></BooleanQuery>";
         log.debug("pointQuery: {}", pointQuery);
         return pointQuery;
     }
 
-    private String createTermQuery(String fieldName, String query) {
+    private static String createTermQuery(String fieldName, String query) {
         String booleanQuery = "<BooleanQuery><Clause occurs='must'><TermQuery fieldName='" + fieldName + "'>" + query + "</TermQuery></Clause></BooleanQuery>";
         log.debug("createTermQuery: {}", booleanQuery);
         return booleanQuery;
     }
 
-    private String createWildcardQuery(String fieldName, String query) {
+    private static String createWildcardQuery(String fieldName, String query) {
         String wildQuery = "<BooleanQuery><Clause occurs='must'><WildcardQuery fieldName='" + fieldName + "'>" + query + "</WildcardQuery></Clause></BooleanQuery>";
         log.debug("wildcardQuery: {}", wildQuery);
         return wildQuery;
@@ -202,33 +205,56 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
     }
 
     @Test
-    public void reindexAllTheThings() throws IOException, InterruptedException {
-        ReindexResponse response = adminClient.reindex(new ReindexRequest(List.of(), List.of()));
+    public void reindexAllTheThings() throws IOException {
+        int             jobsBefore = adminClient.getIndexInfo(false, false).getJobCount();
+        ReindexResponse response   = adminClient.reindex(new ReindexRequest(List.of(), List.of()));
         assertTrue(response.getDocumentsToIndex() > 0);
         assertTrue(response.getFoldersToIndex() > 0);
-        Thread.sleep(3000);
+
+        waitForReindexToDrain(jobsBefore);
+        IndexInfoResponse info = adminClient.getIndexInfo(true, false);
+        assertTrue(info.getDocumentsInIndex() > 0, "reindex must leave documents in the index");
+        assertTrue(info.getFoldersInIndex() > 0, "reindex must leave folders in the index");
     }
 
     @Test
-    public void reindexSpecificObjects() throws IOException, InterruptedException {
-        ReindexResponse response = adminClient.reindex(new ReindexRequest(List.of(osdId), List.of(folderId)));
+    public void reindexSpecificObjects() throws IOException {
+        int             jobsBefore = adminClient.getIndexInfo(false, false).getJobCount();
+        ReindexResponse response   = adminClient.reindex(new ReindexRequest(List.of(osdId), List.of(folderId)));
         assertEquals(1, response.getFoldersToIndex());
         assertEquals(1, response.getDocumentsToIndex());
-        Thread.sleep(3000);
+
+        waitForReindexToDrain(jobsBefore);
+        assertTrue(verifySearchFindsPointField("id", osdId, 1), "the reindexed osd must still be searchable");
+        assertTrue(verifySearchFindsPointField("id", folderId, 1, SearchType.FOLDER),
+                "the reindexed folder must still be searchable");
+    }
+
+    /**
+     * Wait until the index jobs created by a reindex have been processed, rather than sleeping for a
+     * fixed period: otherwise later tests race against the still-running reindex.
+     * <p>
+     * The number of jobs from before the reindex is the baseline, because permanently failed jobs
+     * (CreateTestDB.sql seeds one on purpose) stay in the table forever and never drain to zero.
+     */
+    private void waitForReindexToDrain(int jobsBefore) {
+        awaitCondition("reindex jobs to be processed (down to " + jobsBefore + ")",
+                () -> adminClient.getIndexInfo(false, false).getJobCount() <= jobsBefore);
     }
 
     // ticket 389: meta operations do not trigger reindex
     @Test
-    public void updateMetaTest() throws IOException, InterruptedException {
+    public void updateMetaTest() throws IOException {
         var toh = new TestObjectHolder(client, userId)
                 .createOsd();
-        Thread.sleep(1300);
         toh.createOsdMeta("<xml>issue389</xml>");
-        Thread.sleep(1300);
 
-        String            termQuery = createTermQuery("meta_content", "issue389");
-        SearchIdsResponse response  = client.search(termQuery, SearchType.OSD);
-        assertTrue(response.getOsdIds().size() > 0);
+        String termQuery = createTermQuery("meta_content", "issue389");
+        awaitCondition("new metaset content to become searchable",
+                () -> !client.search(termQuery, SearchType.OSD).getOsdIds().isEmpty());
+
+        SearchIdsResponse response = client.search(termQuery, SearchType.OSD);
+        assertEquals(1, response.getOsdIds().size());
         assertEquals(toh.osd.getId(), response.getOsdIds().getFirst());
     }
 

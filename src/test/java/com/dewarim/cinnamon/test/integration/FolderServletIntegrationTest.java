@@ -891,16 +891,19 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         assertClientError(() -> client.updateFolderMeta(new Meta()), INVALID_REQUEST);
     }
 
+    /**
+     * Was disabled because it slept for 8 seconds; polling for the expected index state instead
+     * makes it both deterministic and fast enough to run with the rest of the suite.
+     */
     @Test
-    @Disabled("manual only since it sleeps")
-    public void deleteFolderAndSearch() throws IOException, InterruptedException {
+    public void deleteFolderAndSearch() throws IOException {
         var toh      = new TestObjectHolder(client, userId).createFolder();
         var folderId = toh.folder.getId();
-        Thread.sleep(4000);
-        assertTrue(verifySearchFindsPointField("id", folderId, 1, SearchType.FOLDER));
+        awaitCondition("the new folder to be searchable",
+                () -> verifySearchFindsPointField("id", folderId, 1, SearchType.FOLDER));
         toh.deleteFolder(folderId);
-        Thread.sleep(4000);
-        assertTrue(verifySearchFindsPointField("id", folderId, 0, SearchType.FOLDER));
+        awaitCondition("the deleted folder to be removed from the index",
+                () -> verifySearchFindsPointField("id", folderId, 0, SearchType.FOLDER));
     }
 
 

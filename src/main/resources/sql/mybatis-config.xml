@@ -6,6 +6,17 @@
     <settings>
         <setting name="logImpl" value="LOG4J2"/>
         <setting name="defaultEnumTypeHandler" value="org.apache.ibatis.type.EnumTypeHandler"/>
+        <!--
+          MyBatis defaults localCacheScope to SESSION: a repeated identical query inside one
+          SqlSession is then answered from the session's local cache and never reaches the database.
+          That is invisible for a request-scoped session (DbSessionFilter opens a fresh one per
+          request, and any write clears the cache anyway), but a long-lived session - such as the one
+          the integration test thread keeps for a whole test class - goes stale as soon as another
+          thread commits, which looks exactly like the database returning outdated rows.
+          STATEMENT scope keeps the cache only for the duration of a single statement, so reads
+          always see committed data. Isolation stays READ_COMMITTED (see below).
+        -->
+        <setting name="localCacheScope" value="STATEMENT"/>
     </settings>
     <typeHandlers>
         <typeHandler javaType="com.dewarim.cinnamon.model.links.LinkType" handler="com.dewarim.cinnamon.model.links.LinkTypeEnumHandler" jdbcType="VARCHAR"/>

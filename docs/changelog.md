@@ -206,34 +206,91 @@ Recorded here so they are not rediscovered from scratch.
   indexed as empty - presumably intentional, with Tika handled by an external service, but worth
   confirming.
 
-### Race conditions in the index/search and database workflow (analysis only)
+### Race conditions in the index/search and database workflow
 
-Diagnosis of long-standing integration test instability. Nothing changed yet.
+Diagnosis of long-standing integration test instability. Items 1 and 2 are fixed, 3 and 4 are not.
 
-1. **MyBatis session cache, not Postgres.** `mybatis-config.xml` does not set `localCacheScope`, so
-   MyBatis defaults to `SESSION`: a repeated identical query within one `SqlSession` returns
-   **cached** rows and never reaches the database. The transaction isolation level is correctly
-   `READ_COMMITTED`, so Postgres would have returned fresh data - MyBatis simply did not ask. This is
-   the real cause of tests appearing to get stale results "because Postgres was too slow", and it is
-   why `ThreadLocalSqlSession.refreshSession()` is used as a workaround in test setup.
-   Candidate fix: `<setting name="localCacheScope" value="STATEMENT"/>`. Needs care - code that
-   mutates a DAO-returned object and expects the same instance later would change behaviour.
-2. **`waitUntilIndexed` gives up silently.** Two paths complete as if successful while the item is
-   not searchable: `if (currentJob.getFailed() >= config.getMaxIndexAttempts()) { return; }` - and
-   `maxIndexAttempts` defaults to **1**, so a single transient failure returns immediately - and
-   retry exhaustion, which throws into a `catch` that only calls `log.warn`. The request then
-   succeeds while a following search finds nothing.
-3. **`waitUntilSearchable` defaults to `false`**, so by default nothing waits and tests fall back to
-   `Thread.sleep(millisToWaitBetweenRuns + 5000L)`, a guess against a 1 s poll loop plus unbounded
-   batch time.
-4. **The response can reach the client before the index wait.** Filter order is `DbSessionFilter`
-   (outermost) -> `AuthenticationFilter` -> `RequestResponseFilter` -> `ChangeTriggerFilter` ->
-   servlet, and `RequestResponseFilter.renderResponseIfNecessary()` writes the body *inside*
-   `chain.doFilter()`. `waitUntilIndexed` only runs afterwards. Jetty's output buffer (32 KB by
-   default) hides this for small responses, but a search response with many ids exceeds it,
-   auto-flushes, and the client is free to send the next request. The existing
-   `// TODO: RequestResponseFilter also commits... due to http5client being so fast` records the same
-   problem already observed for the database commit.
+#### 1. Stale reads came from MyBatis, not Postgres (fixed)
+
+`mybatis-config.xml` did not set `localCacheScope`, so MyBatis used its default of `SESSION`: a
+repeated identical query within one `SqlSession` was answered from the session's local cache and
+never reached the database. The transaction isolation level is correctly `READ_COMMITTED`, so
+Postgres would have returned fresh rows - MyBatis simply did not ask.
+
+This is invisible for a request-scoped session (`DbSessionFilter` opens a fresh one per request, and
+any write clears the cache anyway), but the integration test thread keeps **one** `ThreadLocal`
+session for a whole test class and never refreshes it. As soon as a server thread committed, the test
+thread's cached reads went stale - which looks exactly like the database returning outdated rows. It
+is also why `ThreadLocalSqlSession.refreshSession()` appears as a workaround in some test setups.
+
+Fixed by setting `localCacheScope` to `STATEMENT` in both `mybatis-config.xml` and
+`mybatis-logging-config.xml`, so the local cache lives only for the duration of one statement.
+
+#### 2. `waitUntilIndexed` reported success when it had failed (fixed)
+
+Two paths completed as if the item were searchable when it was not:
+
+- `if (currentJob.getFailed() >= config.getMaxIndexAttempts()) { log.error(...); return; }` - a plain
+  `return`, indistinguishable from a successful wait.
+- retry exhaustion, which threw into a `catch` that only called `log.warn`.
+
+There was also an **off-by-one**: `IndexService` selects jobs with `failed <= maxIndexAttempts`, so a
+job is only abandoned once it has failed *more* often than that. Giving up at
+`>= maxIndexAttempts` stopped waiting one attempt too early - and since `maxIndexAttempts` defaults
+to **1**, a single transient failure made `waitUntilIndexed` return immediately while the indexer was
+still going to retry.
+
+Fixed: the permanent-failure case now throws a dedicated `IndexJobFailedPermanentlyException`, which
+the retry policy aborts on, and the two outcomes are logged distinguishably at error level. The
+give-up threshold now matches the indexer (`failed > maxIndexAttempts`).
+
+Deliberately *not* changed: this still cannot fail the request. The data is already committed, so
+telling the client the operation failed would be less accurate than telling it the object exists -
+it just is not searchable yet.
+
+#### Tests no longer sleep and hope (fixed)
+
+`CinnamonIntegrationTest.awaitCondition(description, condition)` polls until an asynchronous
+operation has caught up and fails with a useful message if it never does. Indexing runs on its own
+schedule, so a fixed sleep is simultaneously too short (flaky under load) and too long (the common
+case finishes in milliseconds).
+
+Converted: the `IndexAndSearchServletIntegrationTest` class setup (6 s), both reindex tests (3 s
+each, which only existed so later tests would not race against a running reindex - they now wait for
+the job count to drain back to its pre-reindex baseline) and `updateMetaTest` (2 x 1.3 s). That
+removes **14.6 s of fixed sleeps**.
+
+Three tests marked `@Disabled("manual only since it sleeps")` are now enabled and take 3.9 s in
+total instead of the 32 s they used to sleep: `lockAndUnlockAndSearch`, `deleteAndSearch` and
+`deleteFolderAndSearch`. Note that sleeping was not their only problem - `lockAndUnlockAndSearch`
+and `deleteAndSearch` asserted a **global** count ("all osds locked by this user is exactly 2"),
+which only holds on a pristine index; other tests in the suite leave locked objects behind. Their
+assertions are now scoped to the ids the test creates, and they additionally verify that unlocking or
+deleting one version does not affect the other.
+
+Suite: 654 tests, 11 skipped (was 14), three consecutive runs at 37.2 / 38.4 / 37.2 s.
+
+#### 3. `waitUntilSearchable` defaults to `false` (not changed)
+
+So by default nothing waits. This no longer affects the tests, which now poll for the state they
+need rather than depending on the server having waited.
+
+#### 4. The response can reach the client before the index wait (not changed)
+
+Filter order is `DbSessionFilter` (outermost) -> `AuthenticationFilter` -> `RequestResponseFilter`
+-> `ChangeTriggerFilter` -> servlet, and `RequestResponseFilter.renderResponseIfNecessary()` writes
+the body *inside* `chain.doFilter()`. `waitUntilIndexed` only runs afterwards. Jetty's output buffer
+(32 KB by default) hides this for small responses, but a search response with many ids exceeds it,
+auto-flushes, and the client is then free to send the next request before the server has waited for
+the index. The existing `// TODO: RequestResponseFilter also commits... due to http5client being so
+fast` in `DbSessionFilter` records the same ordering problem, already observed for the database
+commit. Fixing it means moving the post-commit work ahead of the response write, which touches the
+filter chain and deserves its own change.
+
+Minor, not changed: `doSearch` guards `maybeRefreshBlocking()` behind `if (!isSearcherCurrent())`,
+which is redundant because `maybeRefreshBlocking` performs that check itself, and inconsistent with
+`isIndexed`, which calls it unconditionally. The `SearchService.indexReader` field is also dead once
+`SearcherManager` takes ownership of the reader.
 
 Minor: `doSearch` guards `maybeRefreshBlocking()` behind `if (!isSearcherCurrent())`, which is
 redundant because `maybeRefreshBlocking` performs that check itself, and inconsistent with

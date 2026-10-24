@@ -76,6 +76,8 @@ public class SearchService {
 
         retryPolicy = RetryPolicy.<Boolean>builder()
                 .handleResult(false)
+                // a permanently failed index job will never succeed, so stop retrying at once
+                .abortOn(IndexJobFailedPermanentlyException.class)
                 .withDelay(Duration.ofMillis(config.getMillisToWaitBetweenRuns()))
                 .withMaxRetries(config.getWaitingRetries())
                 .build();
@@ -83,6 +85,26 @@ public class SearchService {
         // TODO: refresh periodically - or if last refresh was > config.lucene.refreshTime
     }
 
+    /**
+     * Thrown when an index job has failed so often that IndexService will not pick it up again, so
+     * there is no point in waiting for it any longer.
+     */
+    private static class IndexJobFailedPermanentlyException extends RuntimeException {
+        IndexJobFailedPermanentlyException(String message) {
+            super(message);
+        }
+    }
+
+    /**
+     * Wait until the items of the given index jobs are searchable (used when waitUntilSearchable is
+     * enabled).
+     * <p>
+     * Note that this cannot fail the request: the data has already been committed, so reporting a
+     * failure to the client would be worse than reporting success - the object does exist, it is just
+     * not searchable yet. Both ways of not reaching the goal are therefore logged at error level
+     * rather than thrown, and they are logged distinguishably, because previously a permanently
+     * failed job was indistinguishable from a successful wait.
+     */
     public void waitUntilIndexed(List<IndexJob> indexJobs) {
         log.debug("waitUntilIndexed for {} jobs", indexJobs.size());
         List<IndexJob> jobsToWaitFor = indexJobs.stream()
@@ -101,10 +123,13 @@ public class SearchService {
                     }
                     if (indexJob.isPresent()) {
                         IndexJob currentJob = indexJob.get();
-                        if (currentJob.getFailed() >= config.getMaxIndexAttempts()) {
-                            log.error("IndexJob {} for item {} ({}) failed more than {} times.",
-                                    currentJob.getId(), currentJob.getItemId(), currentJob.getJobType(), config.getMaxIndexAttempts());
-                            return;
+                        // IndexService selects jobs with "failed <= maxIndexAttempts", so a job is
+                        // only abandoned once it has failed MORE often than that. Giving up at
+                        // ">= maxIndexAttempts" stopped waiting one attempt too early.
+                        if (currentJob.getFailed() > config.getMaxIndexAttempts()) {
+                            throw new IndexJobFailedPermanentlyException("index job " + currentJob.getId()
+                                    + " failed " + currentJob.getFailed() + " times, more than the configured "
+                                    + config.getMaxIndexAttempts() + " maxIndexAttempts");
                         }
                         log.debug("Job {} still pending (failed: {})", currentJob.getId(), currentJob.getFailed());
                         throw new CinnamonException("Job still pending");
@@ -117,8 +142,14 @@ public class SearchService {
                     }
                     log.debug("Item {} is indexed.", job.getItemId());
                 });
+            } catch (IndexJobFailedPermanentlyException e) {
+                log.error("Item {} ({}) will NOT become searchable: {}. Indexing has given up on it.",
+                        job.getItemId(), job.getJobType(), e.getMessage());
             } catch (Exception e) {
-                log.warn("Failed to wait until item {} was indexed: {}", job.getItemId(), e.getMessage(), e);
+                log.error("Gave up waiting for item {} ({}) to become searchable after {} retries ({}ms apart):" +
+                                " {}. The item exists, but is not searchable yet.",
+                        job.getItemId(), job.getJobType(), config.getWaitingRetries(),
+                        config.getMillisToWaitBetweenRuns(), e.getMessage());
             }
         }
     }
