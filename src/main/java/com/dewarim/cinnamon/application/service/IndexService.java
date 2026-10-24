@@ -16,8 +16,8 @@ import tools.jackson.dataformat.xml.XmlMapper;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import com.dewarim.cinnamon.application.service.index.CinnamonAnalyzer;
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.*;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
@@ -85,15 +85,16 @@ public class IndexService implements Runnable {
 
     public void run() {
         log.info("IndexService thread is running");
-        try (Analyzer standardAnalyzer = new StandardAnalyzer();
+        // must be the same analyzer SearchService uses to parse queries
+        try (Analyzer analyzer = new CinnamonAnalyzer(config.isCjkOutputUnigrams());
              Directory indexDir = FSDirectory.open(indexPath, new SingleInstanceLockFactory())) {
             if (!isInitialized) {
                 // signals SearchService it's okay to open the (potentially new) index for reading
-                initializeLuceneIndex(indexDir, standardAnalyzer);
+                initializeLuceneIndex(indexDir, analyzer);
             }
             while (!stopped) {
                 int               maxJobSize   = config.getMaxBatchSize();
-                IndexWriterConfig writerConfig = new IndexWriterConfig(standardAnalyzer);
+                IndexWriterConfig writerConfig = new IndexWriterConfig(analyzer);
                 writerConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
                 writerConfig.setCommitOnClose(false);
                 try (IndexWriter indexWriter = new IndexWriter(indexDir, writerConfig)) {
@@ -306,8 +307,8 @@ public class IndexService implements Runnable {
         }
     }
 
-    private void initializeLuceneIndex(Directory indexDir, Analyzer standardAnalyzer) throws IOException {
-        IndexWriterConfig writerConfig = new IndexWriterConfig(standardAnalyzer);
+    private void initializeLuceneIndex(Directory indexDir, Analyzer analyzer) throws IOException {
+        IndexWriterConfig writerConfig = new IndexWriterConfig(analyzer);
         writerConfig.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
         writerConfig.setCommitOnClose(true);
         IndexWriter writer = new IndexWriter(indexDir, writerConfig);

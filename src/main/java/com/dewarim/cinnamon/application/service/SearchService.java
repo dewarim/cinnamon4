@@ -3,6 +3,7 @@ package com.dewarim.cinnamon.application.service;
 
 import com.dewarim.cinnamon.application.DbSessionFactory;
 import com.dewarim.cinnamon.application.exception.CinnamonException;
+import com.dewarim.cinnamon.application.service.index.CinnamonAnalyzer;
 import com.dewarim.cinnamon.application.service.search.BrowsableAcls;
 import com.dewarim.cinnamon.application.service.search.RegexQueryBuilder;
 import com.dewarim.cinnamon.application.service.search.ResultCollectorManager;
@@ -25,7 +26,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.miscellaneous.LimitTokenCountAnalyzer;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.Term;
@@ -71,7 +71,8 @@ public class SearchService {
         indexReader = DirectoryReader.open(directory);
         searcherManager = new SearcherManager(indexReader, new SearcherFactory());
         searcherManager.maybeRefresh();
-        Analyzer analyzer = new StandardAnalyzer();
+        // must be the same analyzer IndexService indexes with, or analyzed queries stop matching
+        Analyzer analyzer = new CinnamonAnalyzer(config.isCjkOutputUnigrams());
         limitTokenCountAnalyzer = new LimitTokenCountAnalyzer(analyzer, Integer.MAX_VALUE);
 
         retryPolicy = RetryPolicy.<Boolean>builder()

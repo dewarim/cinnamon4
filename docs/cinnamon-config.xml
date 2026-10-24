@@ -62,6 +62,10 @@
    <maxIndexAttempts>1</maxIndexAttempts>
    <maxBatchSize>64</maxBatchSize>
    <verifySearchResults>true</verifySearchResults>
+   <!-- also index every single CJK character, not just the bigrams that make CJK text searchable.
+        Off by default: words of two or more characters are findable without it, while turning it on
+        roughly doubles the number of CJK terms. Needs a reindex to take effect. -->
+   <cjkOutputUnigrams>false</cjkOutputUnigrams>
  </luceneConfig>
   <cinnamonTikaConfig>
     <baseUrl>http://127.0.0.1:9998</baseUrl>

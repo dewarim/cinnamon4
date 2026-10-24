@@ -148,6 +148,64 @@ who may browse ~5% of documents, from 2 799 ms / 437 MB to 3 ms / 0.3 MB.
 NumericDocValues field. Search works without it - the collector falls back to stored fields - but the
 speed-up for large result sets depends on it. Existing indexes improve as they are rebuilt.
 
+#### CJK text is searchable: new CinnamonAnalyzer
+
+Cinnamon aims at technical documentation - machine manuals and the like - and customers plausibly
+handle documents originating from Chinese partner factories. Such documents are mixed-script:
+Chinese prose with Latin part numbers, model codes and units.
+
+`StandardTokenizer` follows UAX#29 and therefore emits **one token per Han character**, so
+`液压泵` ("hydraulic pump") was indexed as `[液, 压, 泵]`. A `TermQuery` for the word itself matched
+nothing, because no such term existed, and relevance was poor because single Han characters occur in
+enormous numbers of compounds. Chinese and Japanese word search was effectively broken.
+
+New `CinnamonAnalyzer`, used by **both** `IndexService` and `SearchService` (they must agree, or
+analyzed queries stop matching what was indexed):
+
+```
+StandardTokenizer -> CJKWidthFilter -> LowerCaseFilter -> CJKBigramFilter
+```
+
+- `CJKBigramFilter` indexes overlapping bigrams of CJK runs: `液压泵` -> `[液压, 压泵]`.
+- `CJKWidthFilter` folds full-width Latin to ASCII and half-width Katakana to full width. Documents
+  authored in Asia routinely write part numbers in full width, so **a search for `ABC-123` now finds
+  a document containing `ＡＢＣ－１２３`**, which it did not before. This is a worthwhile gain on its own,
+  independent of Chinese word search.
+- New `<cjkOutputUnigrams>` in `luceneConfig`, default **false**. Words of two or more characters -
+  practically all CJK vocabulary and all technical terminology - are searchable without it. Turning
+  it on also indexes every single CJK character, which roughly doubles the number of CJK terms; it is
+  only needed where a lone character must be findable as a term of its own, as in a parts list.
+
+**Latin content is unaffected.** `CJKBigramFilter` only combines tokens whose script is Han,
+Hiragana, Katakana or Hangul; everything else passes through untouched. `CinnamonAnalyzerUnitTest`
+asserts the output is byte-for-byte identical to `StandardAnalyzer`'s for German and English input,
+including part numbers such as `P/N 4711-A` and `XJ-900/B rev. 2.1`, because that was the entire risk
+of the change.
+
+**Not** Lucene's ready-made `CJKAnalyzer`: it bundles an English stop-word list, which drops the
+trailing `A` of `P/N 4711-A` - in technical documentation usually a variant or revision designator.
+A test pins that down, including a check that the stock analyzer really does drop it, so nobody
+"simplifies" this later.
+
+No new dependency: all three filters are already in `lucene-analysis-common`. The 255-character
+token-length cap that `StandardAnalyzer` applies is preserved explicitly and asserted by a test,
+since it is what stops a single million-character "word" from being buffered whole.
+
+Effect on existing clients is an improvement with no regression. A `TermQuery` for a two-character
+word now matches, because its bigram term is exactly that word; a `TermQuery` for a three-character
+word still does not match, but it did not before either (the index held single characters).
+Phrase and analyzed (`UserQuery`) searches become considerably more precise.
+
+**Upgrade note:** requires a reindex, as does any later change to `cjkOutputUnigrams`.
+
+Deliberately not done: `ICUTokenizer`, `SmartChineseAnalyzer` (Simplified Chinese only) and Kuromoji
+(Japanese only) all offer dictionary-grade segmentation and better precision, but each adds a
+dependency, and ICU in particular reintroduces exactly the Unicode implementation complexity whose
+absence made Cinnamon's analysis chain easy to clear during this review. For occasional documents
+from Chinese partners, bigrams are the better trade. If a customer eventually needs dictionary-grade
+Chinese search, that is the point at which per-language analyzers earn their keep - as a refinement
+on top of this, not instead of it.
+
 #### Deprecated Lucene APIs removed
 
 `javac -Xlint:deprecation` over all main sources reported exactly two deprecated Lucene usages, both
@@ -227,14 +285,7 @@ Recorded here so they are not rediscovered from scratch.
   per-codepoint and cannot expand). Harmless for `name`/`folderpath`, which are their own
   non-analyzed fields matched exactly, but do not assume the two become interchangeable.
 
-- **CJK is tokenized one term per character.** `StandardTokenizer` emits `中文` as `[中, 文]`, so a
-  `TermQuery` for the whole word does not match - that term is not in the index - and relevance is
-  poor because single Han characters are very common terms. Chinese or Japanese word search currently
-  needs a phrase query. The usual remedy is `CJKAnalyzer` / `CJKBigramFilter`, which indexes
-  overlapping bigrams. This is unrelated to locale and is a far more practically significant gap than
-  the lowercasing issue above; it is the strongest concrete motivation for the per-language analyzer
-  work sketched below. Emoji are handled well, each becoming its own token, with ZWJ sequences such
-  as `👨‍💻` kept as a single token.
+- ~~**CJK is tokenized one term per character.**~~ Fixed, see "CJK text is searchable" below.
 - **Search filters by BROWSE permission only.** Content and metadata of objects a user may browse but
   may not read are still searchable. Whether that is acceptable is a product decision.
 - **`IndexMode.TIKA` and `NONE`** are not handled in `indexOsd`'s switch, so `TIKA` content is
@@ -358,13 +409,22 @@ redundant because `maybeRefreshBlocking` performs that check itself, and inconsi
 
 ### Ideas for future search improvements
 
-- **Per-language analyzers for content, without changing metadata indexing.**
-  `PerFieldAnalyzerWrapper` works per *field*, not per document, so the standard approach is to index
-  content into per-language fields (`content_de`, `content_en`, ...) and map each to a language
-  analyzer, leaving every metadata field on the current analyzer. The OSD already carries
-  `languageId`, so the language is known at index time. The open question is that content field names
-  come from the DB-configured `IndexItem`, so the indexer has to become language-aware - a new
-  `IndexType` or a flag on `IndexItem`. Schema plus config decision, not a mechanical change.
+- **Per-language analyzers for content.** Partly superseded: the motivating case was CJK, and that is
+  solved globally by `CinnamonAnalyzer` without any per-document language handling, because
+  `CJKBigramFilter` only touches CJK script runs and leaves everything else alone. So the
+  per-language-field design previously sketched here is *not* needed for CJK, and the simpler change
+  was the right one.
+
+  It would still be the way to add language-specific **stemming** (German compound splitting,
+  English/German snowball stemming), which genuinely cannot be done in one global chain. The
+  mechanism remains: `PerFieldAnalyzerWrapper` works per *field*, not per document, so content would
+  be indexed into per-language fields (`content_de`, `content_en`, ...) with metadata fields left on
+  the current analyzer. The OSD already carries `languageId`. The open question is unchanged -
+  content field names come from the DB-configured `IndexItem`, so the indexer must become
+  language-aware via a new `IndexType` or a flag on `IndexItem`, which is a schema plus config
+  decision rather than a mechanical change. Worth doing only when a customer actually wants stemming;
+  note that stemming is a mixed blessing for technical documentation, where exact part numbers and
+  model designations matter more than morphological recall.
 - **Response size for very large result sets.** Even with the collector rework, 10 million ids
   serialise to roughly 200 MB of XML, buffered through `CinnamonResponse`. At that scale the response
   path, not the search, is the bottleneck. A streaming or paged variant would be an API change.

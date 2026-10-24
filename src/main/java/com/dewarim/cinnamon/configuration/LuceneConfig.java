@@ -50,6 +50,19 @@ public class LuceneConfig {
      */
     private int waitingRetries = 120;
 
+    /**
+     * Also index each CJK (Chinese, Japanese, Korean) character on its own, in addition to the
+     * overlapping bigrams that make CJK text searchable at all.
+     * <br>
+     * Off by default: words of two or more characters - practically all CJK vocabulary and all
+     * technical terminology - are searchable without it, while turning it on roughly doubles the
+     * number of CJK terms in the index. Turn it on if a single CJK character has to be findable as a
+     * term of its own, for example in a parts list.
+     * <br>
+     * Changing this requires a reindex to take effect for existing documents.
+     */
+    private boolean cjkOutputUnigrams = false;
+
     public int getUncommittedLimit() {
         return uncommittedLimit;
     }
@@ -144,6 +157,7 @@ public class LuceneConfig {
                 ", verifySearchResults=" + verifySearchResults +
                 ", maxCombinedMetasetSize=" + maxCombinedMetasetSize +
                 ", waitUntilSearchable=" + waitUntilSearchable +
+                ", cjkOutputUnigrams=" + cjkOutputUnigrams +
                 '}';
     }
 
@@ -161,5 +175,13 @@ public class LuceneConfig {
 
     public void setWaitingRetries(int waitingRetries) {
         this.waitingRetries = waitingRetries;
+    }
+
+    public boolean isCjkOutputUnigrams() {
+        return cjkOutputUnigrams;
+    }
+
+    public void setCjkOutputUnigrams(boolean cjkOutputUnigrams) {
+        this.cjkOutputUnigrams = cjkOutputUnigrams;
     }
 }
