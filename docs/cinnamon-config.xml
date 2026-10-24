@@ -76,4 +76,15 @@
       <tlsVersion>V_1_3</tlsVersion>
     </tlsVersions>
   </changeTriggerConfig>
+  <!-- limits of the JDK XML parser for user supplied XML (content, metadata); defaults as in JDK 25, 0 = no limit -->
+  <xmlParserConfig>
+    <entityExpansionLimit>2500</entityExpansionLimit>
+    <totalEntitySizeLimit>100000</totalEntitySizeLimit>
+    <maxGeneralEntitySizeLimit>100000</maxGeneralEntitySizeLimit>
+    <maxParameterEntitySizeLimit>15000</maxParameterEntitySizeLimit>
+    <entityReplacementLimit>100000</entityReplacementLimit>
+    <elementAttributeLimit>200</elementAttributeLimit>
+    <maxElementDepth>100</maxElementDepth>
+    <maxXMLNameLimit>1000</maxXMLNameLimit>
+  </xmlParserConfig>
 </CinnamonConfig>

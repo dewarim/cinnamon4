@@ -181,7 +181,14 @@ public class SearchService {
             coreParser.addQueryBuilder("PointRangeQuery", new PointRangeQueryBuilder());
             coreParser.addQueryBuilder("RangeQuery", new RangeQueryBuilder());
             coreParser.addQueryBuilder("ExactPointQuery", new ExactPointQueryBuilder());
-            Query query = coreParser.parse(xmlInputStream);
+            Query query;
+            try {
+                query = coreParser.parse(xmlInputStream);
+            } catch (StackOverflowError e) {
+                // Lucene's recursive descent parsers (RegExp, classic QueryParser) overflow on deeply nested input.
+                // Turn this into a regular exception so it fails like any other unparseable query.
+                throw new CinnamonException("query is nested too deeply", e);
+            }
             log.debug("parsed query: {}", query);
             ResultCollector collector = new ResultCollector(searcher);
             searcher.search(query, collector);

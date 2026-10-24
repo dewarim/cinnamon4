@@ -24,6 +24,7 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
 
+import static com.dewarim.cinnamon.ErrorCode.INTERNAL_SERVER_ERROR_TRY_AGAIN_LATER;
 import static com.dewarim.cinnamon.ErrorCode.INVALID_REQUEST;
 import static com.dewarim.cinnamon.ErrorCode.REQUIRES_SUPERUSER_STATUS;
 import static org.junit.jupiter.api.Assertions.*;
@@ -148,6 +149,23 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
         // verifyOsdSearchResult(client.search(createTermQuery("element_names", "dependency"), SearchType.OSD));
         SearchIdsResponse jsonName = client.search("<BooleanQuery><Clause occurs='must'><TermQuery fieldName='json_name'>bob</TermQuery></Clause></BooleanQuery>", SearchType.OSD);
         assertEquals(1, jsonName.getOsdIds().size());
+    }
+
+    @Test
+    public void searchWithMalformedQuery() {
+        assertClientError(() -> client.search("<BooleanQuery><Clause occurs='must'>", SearchType.ALL),
+                INTERNAL_SERVER_ERROR_TRY_AGAIN_LATER);
+    }
+
+    @Test
+    public void searchWithDeeplyNestedRegexFailsLikeMalformedQuery() {
+        // Lucene's recursive regex parser throws StackOverflowError on this, which must not escape the
+        // request handling as an Error but fail like any other unparseable query.
+        String nested = "(".repeat(200_000) + "a" + ")".repeat(200_000);
+        assertClientError(() -> client.search("<RegexQuery fieldName='name'>" + nested + "</RegexQuery>", SearchType.ALL),
+                INTERNAL_SERVER_ERROR_TRY_AGAIN_LATER);
+        // server is still fine afterwards:
+        verifyOsdSearchResult(assertDoesNotThrow(() -> client.search(createTermQuery("name", "search-me-osd"), SearchType.OSD)));
     }
 
     private void verifyOsdSearchResult(SearchIdsResponse response) {

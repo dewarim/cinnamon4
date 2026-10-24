@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.application.service.index;
 
+import com.dewarim.cinnamon.application.CinnamonServer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.dom4j.Document;
@@ -15,6 +16,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -62,6 +64,10 @@ public class ParamParser {
             reader.setIncludeExternalDTDDeclarations(false);
             // do not validate - we are only interested in receiving a doc.
             reader.setValidation(false);
+            // entity expansion and nesting limits: set explicitly, so they do not depend on the JRE's jaxp.properties
+            for (Map.Entry<String, Integer> limit : CinnamonServer.getConfig().getXmlParserConfig().toJdkProperties().entrySet()) {
+                reader.setProperty(limit.getKey(), limit.getValue());
+            }
             return reader.read(new StringReader(xml));
         } catch (IOException|DocumentException | SAXException e) {
             log.debug("ParamParser::DocumentException::", e);

@@ -17,6 +17,7 @@ public class CinnamonConfig {
     private ChangeTriggerConfig       changeTriggerConfig = new ChangeTriggerConfig();
     private DebugConfig               debugConfig         = new DebugConfig();
     private LoggingConfig             loggingConfig       = new LoggingConfig();
+    private XmlParserConfig           xmlParserConfig     = new XmlParserConfig();
     private boolean showConfig;
 
     public DebugConfig getDebugConfig() {
@@ -107,6 +108,14 @@ public class CinnamonConfig {
         this.loggingConfig = loggingConfig;
     }
 
+    public XmlParserConfig getXmlParserConfig() {
+        return xmlParserConfig;
+    }
+
+    public void setXmlParserConfig(XmlParserConfig xmlParserConfig) {
+        this.xmlParserConfig = xmlParserConfig;
+    }
+
     @Override
     public String toString() {
         return "CinnamonConfig{" +
@@ -121,6 +130,7 @@ public class CinnamonConfig {
                 ", changeTriggerConfig=" + changeTriggerConfig +
                 ", debugConfig=" + debugConfig +
                 ", loggingConfig=" + loggingConfig +
+                ", xmlParserConfig=" + xmlParserConfig +
                 ", showConfig=" + showConfig +
                 '}';
     }
