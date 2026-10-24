@@ -242,6 +242,38 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
                 () -> adminClient.getIndexInfo(false, false).getJobCount() <= jobsBefore);
     }
 
+    /**
+     * With waitUntilSearchable enabled, an item must be searchable by the time the client has the
+     * response - without the test sleeping or polling at all.
+     * <p>
+     * Honest note on what this does and does not prove: it pins down the guarantee, but it does
+     * <b>not</b> fail against the previous ordering, where the wait ran in DbSessionFilter after
+     * RequestResponseFilter had already written the body. Jetty keeps a small response in its output
+     * buffer until the request completes - which is after every filter has returned - so the late
+     * wait still happened to finish in time. Only a response flushed early (larger than the 32 KB
+     * output buffer) would let a client run ahead of the server, and the endpoints that create index
+     * jobs all return small responses, which makes that race latent rather than reachable today.
+     * The wait is nevertheless done before the write now, so correctness no longer depends on
+     * response size and buffer configuration.
+     */
+    @Test
+    public void waitUntilSearchableMakesItemSearchableBeforeTheResponseArrives() throws IOException {
+        LuceneConfig luceneConfig = CinnamonServer.config.getLuceneConfig();
+        boolean      original     = luceneConfig.isWaitUntilSearchable();
+        luceneConfig.setWaitUntilSearchable(true);
+        try {
+            String name = "wait-until-searchable-" + System.currentTimeMillis();
+            var    osd  = new TestObjectHolder(client, userId).createOsd(name).osd;
+
+            // deliberately no awaitCondition() here - that is the whole point of the setting
+            SearchIdsResponse response = client.search(createTermQuery("name", name), SearchType.OSD);
+            assertEquals(List.of(osd.getId()), response.getOsdIds(),
+                    "the new osd must already be searchable when the create response has arrived");
+        } finally {
+            luceneConfig.setWaitUntilSearchable(original);
+        }
+    }
+
     // ticket 389: meta operations do not trigger reindex
     @Test
     public void updateMetaTest() throws IOException {

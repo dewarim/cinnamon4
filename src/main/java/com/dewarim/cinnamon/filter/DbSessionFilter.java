@@ -2,10 +2,8 @@ package com.dewarim.cinnamon.filter;
 
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.application.*;
-import com.dewarim.cinnamon.application.service.SearchService;
 import com.dewarim.cinnamon.dao.DeletionDao;
 import com.dewarim.cinnamon.model.Deletion;
-import com.dewarim.cinnamon.model.index.IndexJob;
 import com.dewarim.cinnamon.provider.ContentProviderService;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,7 +17,6 @@ import java.util.concurrent.TimeUnit;
 
 import static com.dewarim.cinnamon.ErrorCode.INTERNAL_SERVER_ERROR_TRY_AGAIN_LATER;
 import static com.dewarim.cinnamon.api.Constants.CONTENT_PROVIDER_SERVICE;
-import static com.dewarim.cinnamon.api.Constants.SEARCH_SERVICE;
 
 /**
  *
@@ -29,7 +26,6 @@ public class DbSessionFilter implements Filter {
     private static final Logger log = LogManager.getLogger(DbSessionFilter.class);
 
     private ContentProviderService contentProviderService;
-    private SearchService          searchService;
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) {
@@ -55,11 +51,9 @@ public class DbSessionFilter implements Filter {
                     CinnamonServer.executorService.submit(new DeletionTask(deletions, contentProviderService)).get(deletionWaitPeriod, TimeUnit.SECONDS);
                 }
                 sqlSession.close();
-                List<IndexJob> indexJobs = RequestScope.getIndexJobs();
-                if (indexJobs.size() > 0 && CinnamonServer.getConfig().getLuceneConfig().isWaitUntilSearchable()) {
-                    log.debug("Will wait until items from index jobs are searchable.");
-                    searchService.waitUntilIndexed(indexJobs);
-                }
+                // waitUntilSearchable is handled by RequestResponseFilter, which sits inside this
+                // filter and therefore still runs before the response body is written. Waiting here
+                // would be too late: the client may already have received the response.
             } else {
                 log.debug("TransactionStatus is not OK -> do not commit changes, roll back the sqlSession.");
                 sqlSession.rollback();
@@ -79,6 +73,5 @@ public class DbSessionFilter implements Filter {
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
         contentProviderService = (ContentProviderService) filterConfig.getServletContext().getAttribute(CONTENT_PROVIDER_SERVICE);
-        searchService = (SearchService) filterConfig.getServletContext().getAttribute(SEARCH_SERVICE);
     }
 }

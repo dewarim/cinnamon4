@@ -275,17 +275,41 @@ Suite: 654 tests, 11 skipped (was 14), three consecutive runs at 37.2 / 38.4 / 3
 So by default nothing waits. This no longer affects the tests, which now poll for the state they
 need rather than depending on the server having waited.
 
-#### 4. The response can reach the client before the index wait (not changed)
+#### 4. The index wait ran after the response was written (fixed, but it was latent)
 
 Filter order is `DbSessionFilter` (outermost) -> `AuthenticationFilter` -> `RequestResponseFilter`
--> `ChangeTriggerFilter` -> servlet, and `RequestResponseFilter.renderResponseIfNecessary()` writes
-the body *inside* `chain.doFilter()`. `waitUntilIndexed` only runs afterwards. Jetty's output buffer
-(32 KB by default) hides this for small responses, but a search response with many ids exceeds it,
-auto-flushes, and the client is then free to send the next request before the server has waited for
-the index. The existing `// TODO: RequestResponseFilter also commits... due to http5client being so
-fast` in `DbSessionFilter` records the same ordering problem, already observed for the database
-commit. Fixing it means moving the post-commit work ahead of the response write, which touches the
-filter chain and deserves its own change.
+-> `ChangeTriggerFilter` -> servlet. `RequestResponseFilter` commits and then calls
+`renderResponseIfNecessary()`, which writes the body - but `waitUntilIndexed` ran in
+`DbSessionFilter`, outside it, and therefore only after the body had been written. The existing
+`// TODO: RequestResponseFilter also commits... due to http5client being so fast` in
+`DbSessionFilter` records the same ordering problem, already observed for the database commit.
+
+`waitUntilIndexed` now runs in `RequestResponseFilter`, after the commit and the post-commit change
+triggers but **before** the response is written. All index jobs that are waited for are created while
+the servlet runs, so the commit has already made them visible to `IndexService`; post-commit triggers
+only call external services and do not add index jobs. `DbSessionFilter` no longer waits (and no
+longer needs the `SearchService`).
+
+**How reachable was it?** Less than it first appeared, and this was worth measuring rather than
+assuming. Jetty keeps a response in its output buffer (32 KB by default) until the request completes,
+which happens after every filter has returned - so for a small response the late wait still finished
+in time. Only an early-flushed response lets the client run ahead, and the endpoints that create
+index jobs all return small responses. An attempt to force a large write response (a 64 KB summary)
+did not reproduce it either, because the summary is set by a separate call whose response does not
+echo it. So this was a **latent** ordering bug, not a demonstrated failure.
+
+It is still worth fixing: correctness no longer depends on response size and on Jetty's buffer
+configuration, either of which could change without anyone connecting it to search behaviour.
+
+Trade-off introduced: the request's `SqlSession` now stays open across the wait, so its pooled
+connection is held for roughly `millisToWaitBetweenRuns` longer than before, when `DbSessionFilter`
+closed the session first. This only applies when `waitUntilSearchable` is switched on, which already
+documents itself as making responses about a second slower.
+
+Test: `waitUntilSearchableMakesItemSearchableBeforeTheResponseArrives` pins the guarantee down -
+enable the setting, create an object, search for it with no sleeping and no polling. Note that it
+does **not** fail against the old ordering, for the buffering reason above; it is a guarantee test,
+not a regression test.
 
 Minor, not changed: `doSearch` guards `maybeRefreshBlocking()` behind `if (!isSearcherCurrent())`,
 which is redundant because `maybeRefreshBlocking` performs that check itself, and inconsistent with
