@@ -101,17 +101,57 @@ Worth noting for question 1: this means Tika-extracted full text of binary docum
 
 ---
 
-## 3. Minor: the JSON index path is not covered by `readContentBounded`
+## 3. Minor: the JSON index path does not honour `contentIsSmallEnoughToIndex`'s own contract
 
-`convertJsonToXml(contentStream)` reads the stream itself rather than going through
-`readContentBounded`, so for `IndexMode.JSON` the only size limit is the up-front
-`contentIsSmallEnoughToIndex(osd)` check against `osd.getContentSize()`.
+Not a security item, and the first version of this note overstated it. Kept only because the code
+contradicts one of its own comments, which is worth tidying.
 
-That check is the primary guard and it is applied, so this is not a hole in normal operation. It
-only matters if `content_size` in the database ever disagrees with the file on disk — e.g. after a
-content provider is migrated, or a file is replaced out of band. `readContentBounded`'s own
-re-check exists precisely because that column is not authoritative.
+### `content_size` is trustworthy
 
-Cheap to close: have `convertJsonToXml` take the bounded bytes instead of the stream. Not done yet
-because it needs a decision on whether a truncated-JSON failure should skip the content (as the
-oversize path does) or fail the job.
+That first version justified `readContentBounded`'s second check by claiming `content_size` might
+disagree with the file on disk. The reasoning does not hold:
+
+- it is not a client-supplied value. `FileSystemContentProvider.writeContentStream` sets it from
+  `Files.copy`'s return value, which is the number of bytes that actually landed on disk;
+- `OsdServlet.storeContent` sets hash, path and size together from that single return value, so they
+  cannot be written out of step with one another;
+- content files are named by a random UUID and are never rewritten. New content means a new file, so
+  there is no in-place update for the recorded size to drift from;
+- `ContentProviderService` is a hardcoded switch with a single case, so there is no second provider
+  to migrate between and no third-party provider that might report sizes differently.
+
+For anything Cinnamon 4 wrote, `content_size` is authoritative. Divergence takes filesystem
+corruption or a hand-edited `dataRoot`.
+
+### `contentHash` cannot substitute for the size check
+
+Verifying a SHA-256 means reading the whole file, which is exactly the cost the size limit exists to
+avoid: the check would have to read the file to decide whether the file is too big to read. The hash
+is the right tool for integrity verification and the wrong tool for a size bound.
+
+### What is actually left
+
+The trigger is a MISSING size, not a wrong one. `content_size` is a nullable `bigint`, and
+`contentIsSmallEnoughToIndex` deliberately returns `true` when it is null, commented
+"size unknown - readContentBounded() still enforces the limit". That promise holds for `XML` and
+`PLAIN_TEXT`; it is false for `JSON`, where `convertJsonToXml` calls
+`JSON_MAPPER.readTree(jsonStream)` and parses the whole stream unbounded, after which
+`XML_MAPPER.writeValueAsBytes` makes a second full copy.
+
+Cinnamon 4 never produces a non-null `content_path` with a null `content_size`, so this is reachable
+only through a raw-SQL migration from Cinnamon 3 or a hand-edited database.
+
+### Decision needed
+
+Make the code match the comment, or the comment match the code:
+
+- pass the bounded bytes to `convertJsonToXml` instead of the stream, which needs a decision on
+  whether a JSON file that hits the limit should skip its content, as the oversize path does, or
+  fail the job; or
+- drop the "readContentBounded still enforces the limit" clause from the comment and accept the
+  up-front check as the only guard, given that `content_size` is reliable.
+
+Independent of either: the limit is compared against the RAW FILE SIZE, while the heap cost is a
+per-mode multiple of it - roughly ten times for the dom4j path, more for `readTree` plus XML
+re-serialization. That is a calibration note about the default, already flagged in
+`cinnamon-config.xml`, rather than a correctness problem.

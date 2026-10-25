@@ -326,7 +326,10 @@ Recorded here so they are not rediscovered from scratch.
   text arrives as custom metadata on the next pass. See `ai-improvement/open-questions.md`,
   question 2.
 - **The JSON index path bypasses `readContentBounded`**, so `IndexMode.JSON` relies solely on the
-  up-front `content_size` check. See `ai-improvement/open-questions.md`, question 3.
+  up-front `content_size` check. Not a security item: `content_size` comes from `Files.copy`'s
+  return value and content files are never rewritten, so it is authoritative. What remains is that
+  `contentIsSmallEnoughToIndex` documents a fallback for a *missing* size which the JSON path does
+  not provide. See `ai-improvement/open-questions.md`, question 3.
 
 ### Race conditions in the index/search and database workflow
 
