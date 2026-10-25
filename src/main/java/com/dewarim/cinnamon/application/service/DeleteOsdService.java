@@ -66,8 +66,21 @@ public class DeleteOsdService {
                     }
                 }
         );
-        osds.addAll(osdDao.getObjectsById(new ArrayList<>(descendants), false));
         osdIds.addAll(descendants);
+
+        /*
+         * Keep osds in step with osdIds. Everything below uses the two interchangeably, but
+         * they drift apart: with deleteAllVersions the ids are root ids, which need not be
+         * among the objects the caller passed, while the versions the caller did pass turn up
+         * again as descendants of that root. An object in osdIds but not in osds was deleted
+         * without a permission check and left its content file behind; an object in osds
+         * twice failed the whole request on the unique key of deletions.osd_id.
+         */
+        List<ObjectSystemData> osdsToDelete = osdDao.getObjectsById(new ArrayList<>(osdIds), false);
+        // Descendants first, as OsdServlet sorts them before handing them over.
+        osdsToDelete.sort(Comparator.comparingLong(ObjectSystemData::getId).reversed());
+        osds.clear();
+        osds.addAll(osdsToDelete);
 
         /*
          * Check for protected relations.
