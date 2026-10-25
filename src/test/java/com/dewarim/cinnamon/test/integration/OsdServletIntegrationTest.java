@@ -2087,16 +2087,26 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         assertEquals(copyState.getId(), copy.getLifecycleStateId());
     }
 
+    /**
+     * cinnamonStats.getDeletions() counts every content file the DeletionTask has removed since the
+     * server started, and the server starts once for the whole suite - so an absolute count only
+     * holds while this happens to be the suite's first content deletion. Assert the delta instead,
+     * and wait for it rather than sleeping a fixed time, because the DeletionTask runs in the
+     * background. The bound is ">= before + 1" on purpose: deletions queued by earlier tests may
+     * still be draining, so this test can only claim that its own content was deleted too.
+     */
     @Test
-    public void deleteOsdWithContent() throws IOException, InterruptedException {
+    public void deleteOsdWithContent() throws IOException {
         var toh = new TestObjectHolder(adminClient, adminId);
         toh.createOsd("deleteOsdWithContent - deletionTask test");
         var osd = toh.osd;
         createTestContentOnOsd(osd.getId(), true);
         toh.lockOsd();
+
+        long deletionsBefore = CinnamonServer.cinnamonStats.getDeletions().get();
         adminClient.deleteOsd(osd.getId());
-        Thread.sleep(500);
-        assertEquals(1, CinnamonServer.cinnamonStats.getDeletions().get());
+        awaitCondition("DeletionTask to delete the content of OSD " + osd.getId(),
+                () -> CinnamonServer.cinnamonStats.getDeletions().get() >= deletionsBefore + 1);
     }
 
     @Test
