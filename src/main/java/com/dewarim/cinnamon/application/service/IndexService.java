@@ -31,6 +31,7 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
@@ -67,11 +68,10 @@ public class IndexService implements Runnable {
     public IndexService(LuceneConfig config, ContentProviderService contentProviderService) {
         this.config = config;
         indexPath = Paths.get(config.getIndexPath());
-        if (!indexPath.toFile().exists()) {
-            boolean madeDirs = indexPath.toFile().mkdirs();
-            if (madeDirs) {
-                throw new IllegalStateException("Could not create path to index: " + indexPath.toAbsolutePath());
-            }
+        try {
+            Files.createDirectories(indexPath);
+        } catch (IOException failure) {
+            throw new IllegalStateException("Could not create path to index: " + indexPath.toAbsolutePath(), failure);
         }
         // Use an explicit session: the constructor may run outside a request thread,
         // where no ThreadLocal SqlSession exists.
