@@ -6,6 +6,7 @@ import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.relations.Relation;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.ArrayList;
@@ -34,6 +35,15 @@ public class OsdWrapper extends BaseResponse implements Wrapper<ObjectSystemData
     @JacksonXmlElementWrapper(localName = "relations")
     @JacksonXmlProperty(localName = "relation")
     private List<Relation> relations = new ArrayList<>();
+
+    /**
+     * Which copy came from which source, filled by OSD__COPY only. Left out of the response
+     * entirely when empty, so that every other endpoint using this wrapper is unaffected.
+     */
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JacksonXmlElementWrapper(localName = "copies")
+    @JacksonXmlProperty(localName = "copy")
+    private List<CopyMapping> copies = new ArrayList<>();
 
     public OsdWrapper() {
     }
@@ -74,6 +84,17 @@ public class OsdWrapper extends BaseResponse implements Wrapper<ObjectSystemData
 
     public List<Relation> getRelations() {
         return relations;
+    }
+
+    public List<CopyMapping> getCopies() {
+        if (copies == null) {
+            copies = new ArrayList<>();
+        }
+        return copies;
+    }
+
+    public void setCopies(List<CopyMapping> copies) {
+        this.copies = copies;
     }
 
     public void setRelations(List<Relation> relations) {

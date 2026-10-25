@@ -1114,6 +1114,21 @@ public class CinnamonClient {
         return osdUnwrapper.unwrap(response, ids.size());
     }
 
+    /**
+     * Copy objects and find out which copy came from which source.
+     * <p>
+     * The copies alone do not say: a copy starts a version tree of its own, so it has neither
+     * a predecessor nor a shared root, and the order of the response does not have to match
+     * the order of the request. {@link OsdWrapper#getCopies()} carries the mapping, which is
+     * what makes it possible to copy a whole selection in one request and still post-process
+     * each copy against its source.
+     */
+    public OsdWrapper copyOsdsWithSources(long targetFolderId, List<Long> ids, List<Long> metasetTypeIds) throws IOException {
+        var copyOsdRequest = new CopyOsdRequest(ids, targetFolderId, metasetTypeIds);
+        var response       = sendStandardRequest(UrlMapping.OSD__COPY, copyOsdRequest);
+        return new SingletonUnwrapper<>(OsdWrapper.class).unwrap(response);
+    }
+
     public List<Relation> getRelations(List<Long> ids) throws IOException {
         var request  = new GetRelationsRequest(ids, true);
         var response = sendStandardRequest(UrlMapping.OSD__GET_RELATIONS, request);
