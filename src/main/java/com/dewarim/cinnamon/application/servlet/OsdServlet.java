@@ -322,6 +322,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         var                    relationDao       = new RelationDao();
         var                    lifecycleStateDao = new LifecycleStateDao();
         List<ObjectSystemData> copies            = new ArrayList<>();
+        List<CopyMapping>      copyMappings      = new ArrayList<>();
         for (ObjectSystemData osd : sourceOsds) {
             long id     = osd.getId();
             long userId = user.getId();
@@ -395,9 +396,15 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                 copyContent(user, osdDao, copy, osd, osd.getFormatId());
             }
             copies.add(copy);
+            copyMappings.add(new CopyMapping(osd.getId(), copy.getId()));
         }
 
-        cinnamonResponse.setWrapper(new OsdWrapper(copies));
+        OsdWrapper wrapper = new OsdWrapper(copies);
+        // A copy keeps no reference to its source, and sourceOsds comes back from a
+        // getObjectsById in no particular order, so the mapping is the only way for a caller
+        // to tell which copy belongs to which source without copying one at a time.
+        wrapper.setCopies(copyMappings);
+        cinnamonResponse.setWrapper(wrapper);
     }
 
 

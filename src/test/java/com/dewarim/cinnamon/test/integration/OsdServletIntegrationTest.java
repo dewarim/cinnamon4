@@ -2,6 +2,7 @@ package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.DefaultPermission;
 import com.dewarim.cinnamon.ErrorCode;
+import com.dewarim.cinnamon.api.Constants;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.client.CinnamonClientException;
@@ -19,6 +20,7 @@ import com.dewarim.cinnamon.model.request.meta.MetaRequest;
 import com.dewarim.cinnamon.model.request.osd.*;
 import com.dewarim.cinnamon.model.request.search.SearchType;
 import com.dewarim.cinnamon.model.response.CinnamonContentType;
+import com.dewarim.cinnamon.model.response.CopyMapping;
 import com.dewarim.cinnamon.model.response.CinnamonError;
 import com.dewarim.cinnamon.model.response.OsdWrapper;
 import com.dewarim.cinnamon.model.response.Summary;
@@ -1997,6 +1999,60 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
                 .createFolder("copyWithoutCreateObjectPermission-target", createFolderId);
         assertClientError(() -> client.copyOsds(toh.folder.getId(), List.of(toh.osd.getId())),
                 NO_CREATE_PERMISSION);
+    }
+
+    /**
+     * Copying several objects in one request and telling which copy came from which source.
+     * The copies carry no reference back - a copy starts its own version tree - and the
+     * response order does not have to match the request, so the mapping is the only way.
+     */
+    @Test
+    public void copySeveralObjectsReportsTheSourceOfEachCopy() throws IOException {
+        var first  = createCopySourceObject("copyBatchFirst");
+        var second = createCopySourceObject("copyBatchSecond");
+        var third  = createCopySourceObject("copyBatchThird");
+        List<Long> sourceIds = List.of(first.osd.getId(), second.osd.getId(), third.osd.getId());
+
+        var wrapper = adminClient.copyOsdsWithSources(createFolderId, sourceIds, List.of());
+
+        assertEquals(3, wrapper.getOsds().size());
+        assertEquals(3, wrapper.getCopies().size());
+        // every source appears exactly once, and every copy is one of the returned objects
+        assertEquals(new HashSet<>(sourceIds),
+                wrapper.getCopies().stream().map(CopyMapping::getSourceId).collect(Collectors.toSet()));
+        Set<Long> copyIds = wrapper.getOsds().stream().map(ObjectSystemData::getId).collect(Collectors.toSet());
+        assertEquals(copyIds,
+                wrapper.getCopies().stream().map(CopyMapping::getCopyId).collect(Collectors.toSet()));
+
+        // and the mapping is right, not merely complete: each copy is named after its source
+        Map<Long, ObjectSystemData> osdsById = wrapper.getOsds().stream()
+                .collect(Collectors.toMap(ObjectSystemData::getId, osd -> osd));
+        Map<Long, String> sourceNames = Map.of(
+                first.osd.getId(), first.osd.getName(),
+                second.osd.getId(), second.osd.getName(),
+                third.osd.getId(), third.osd.getName());
+        for (CopyMapping mapping : wrapper.getCopies()) {
+            assertEquals("Copy_" + sourceNames.get(mapping.getSourceId()),
+                    osdsById.get(mapping.getCopyId()).getName(),
+                    "copy " + mapping.getCopyId() + " should come from source " + mapping.getSourceId());
+        }
+    }
+
+    /**
+     * The mapping is left off the wire entirely when there is nothing to report, so adding it
+     * changes no other endpoint's response. Asserted on the serialized XML rather than on the
+     * parsed wrapper, whose getter would hand back an empty list either way.
+     */
+    @Test
+    public void copyMappingIsAbsentFromOtherOsdResponses() {
+        String withoutCopies = Constants.XML_MAPPER.writeValueAsString(new OsdWrapper(List.of(Constants.OSD_EXAMPLE)));
+        assertFalse(withoutCopies.contains("copies"), withoutCopies);
+
+        OsdWrapper withCopies = new OsdWrapper(List.of(Constants.OSD_EXAMPLE));
+        withCopies.setCopies(List.of(new CopyMapping(1L, 2L)));
+        String serialized = Constants.XML_MAPPER.writeValueAsString(withCopies);
+        assertTrue(serialized.contains("<copies><copy><sourceId>1</sourceId><copyId>2</copyId></copy></copies>"),
+                serialized);
     }
 
     @Test
