@@ -904,6 +904,32 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         assertTrue(client.getOsdsById(List.of(toh.osd.getId(), version1.getId(), version2.getId(), branch.getId()), false, false).isEmpty());
     }
 
+    /**
+     * Naming a later version with deleteAllVersions deletes the first version too, so its own
+     * ACL has to allow it. The first version is not among the objects the caller named, which
+     * is how it used to be deleted without a permission check of its own.
+     */
+    @Test
+    public void deleteAllVersionsWithoutDeletePermissionOnFirstVersion() throws IOException {
+        var  toh    = prepareAclGroupWithPermissions(List.of(CREATE_OBJECT, VERSION_OBJECT, DELETE))
+                .createOsd("delete-all-versions-with-protected-first-version");
+        Long rootId = toh.osd.getId();
+        ObjectSystemData version = client.version(new CreateNewVersionRequest(rootId));
+
+        // take DELETE away from the first version only
+        Acl protectedAcl = prepareAclGroupWithPermissions(List.of(BROWSE)).acl;
+        adminClient.updateOsd(new UpdateOsdRequest(rootId, null, null, null, protectedAcl.getId(),
+                null, null, false, false));
+
+        var ex = assertThrows(CinnamonClientException.class,
+                () -> client.deleteOsd(version.getId(), true, true));
+        assertEquals(CANNOT_DELETE_DUE_TO_ERRORS, ex.getErrorCode());
+        assertTrue(ex.getErrorWrapper().getErrors().stream()
+                .anyMatch(error -> error.getCode().equals(NO_DELETE_PERMISSION.getCode())));
+        assertFalse(adminClient.getOsdsById(List.of(rootId), false, false).isEmpty(),
+                "the first version must survive a delete it does not permit");
+    }
+
     @Test
     public void createOsdNoContentTypeInHeader() throws IOException {
         ClassicHttpRequest request  = createStandardRequestHeader(UrlMapping.OSD__CREATE_OSD);

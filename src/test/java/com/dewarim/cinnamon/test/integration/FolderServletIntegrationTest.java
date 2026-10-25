@@ -13,6 +13,7 @@ import com.dewarim.cinnamon.model.request.folder.*;
 import com.dewarim.cinnamon.model.request.meta.CreateMetaRequest;
 import com.dewarim.cinnamon.model.request.meta.DeleteMetaRequest;
 import com.dewarim.cinnamon.model.request.meta.MetaRequest;
+import com.dewarim.cinnamon.model.request.osd.CreateNewVersionRequest;
 import com.dewarim.cinnamon.model.request.osd.SetSummaryRequest;
 import com.dewarim.cinnamon.model.request.search.SearchType;
 import com.dewarim.cinnamon.model.response.FolderWrapper;
@@ -21,6 +22,7 @@ import com.dewarim.cinnamon.test.TestObjectHolder;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
@@ -705,6 +707,29 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
         client.createFolder(folderWithSubfolder.getId(), "subfolder", userId, toh.acl.getId(), folderWithSubfolder.getTypeId());
         client.deleteFolder(folderWithSubfolder.getId(), true, false);
         assertClientError(() -> client.getFolderById(folderWithSubfolder.getId(), false), FOLDER_NOT_FOUND);
+    }
+
+    /**
+     * Folder contains two versions of one object, both with content, and deleteContent=true.
+     * <p>
+     * FolderServlet hands DeleteOsdService every version in the folder while also asking for
+     * all versions to be deleted, so each version is named once in its own right and once as
+     * a descendant of the first version. Only objects with content reach the deletions table,
+     * which is where the duplicate used to surface.
+     */
+    @Test
+    public void deleteFolderWithSeveralVersionsOfOneObjectWithContent() throws IOException {
+        File             content = new File("src/test/resources/test.json");
+        TestObjectHolder toh     = prepareAclGroupWithPermissions(List.of(DefaultPermission.DELETE))
+                .createFolder("folderWithTwoVersionsWithContent", createFolderId)
+                .selectFormat("json")
+                .createOsdWithContent(content);
+        Folder folder = toh.folder;
+        adminClient.versionWithContent(
+                new CreateNewVersionRequest(toh.osd.getId(), List.of(), toh.osd.getFormatId()), content);
+
+        client.deleteFolder(folder.getId(), false, true);
+        assertClientError(() -> client.getFolderById(folder.getId(), false), FOLDER_NOT_FOUND);
     }
 
     /**
