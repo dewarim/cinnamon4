@@ -462,7 +462,17 @@ public class CinnamonClient {
     }
 
     public boolean deleteOsds(List<Long> id, boolean deleteDescendants) throws IOException {
-        DeleteOsdRequest deleteRequest = new DeleteOsdRequest(id, deleteDescendants, false);
+        return deleteOsds(id, deleteDescendants, false);
+    }
+
+    /**
+     * Delete several objects in one request, optionally with every version of each.
+     * <p>
+     * The two-argument overload cannot ask for all versions, which left callers that need it
+     * deleting one object per request.
+     */
+    public boolean deleteOsds(List<Long> ids, boolean deleteDescendants, boolean deleteAllVersions) throws IOException {
+        DeleteOsdRequest deleteRequest = new DeleteOsdRequest(ids, deleteDescendants, deleteAllVersions);
         var              response      = sendStandardRequest(UrlMapping.OSD__DELETE, deleteRequest);
         return verifyDeleteResponse(response);
     }
