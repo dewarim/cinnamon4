@@ -318,10 +318,15 @@ Recorded here so they are not rediscovered from scratch.
 
 - ~~**CJK is tokenized one term per character.**~~ Fixed, see "CJK text is searchable" below.
 - **Search filters by BROWSE permission only.** Content and metadata of objects a user may browse but
-  may not read are still searchable. Whether that is acceptable is a product decision.
-- **`IndexMode.TIKA` and `NONE`** are not handled in `indexOsd`'s switch, so `TIKA` content is
-  indexed as empty - presumably intentional, with Tika handled by an external service, but worth
-  confirming.
+  may not read are still searchable. Whether that is acceptable is a product decision - written up
+  in detail, with what a fix would cost, in `ai-improvement/open-questions.md`, question 1.
+  Awaiting an inspection of real customer ACL configurations.
+- ~~**`IndexMode.TIKA` and `NONE`** are not handled in `indexOsd`'s switch.~~ Not a defect:
+  `TikaService` stores the extracted text in the `tika` metaset and queues a fresh index job, so the
+  text arrives as custom metadata on the next pass. See `ai-improvement/open-questions.md`,
+  question 2.
+- **The JSON index path bypasses `readContentBounded`**, so `IndexMode.JSON` relies solely on the
+  up-front `content_size` check. See `ai-improvement/open-questions.md`, question 3.
 
 ### Race conditions in the index/search and database workflow
 
