@@ -628,7 +628,7 @@ public class IndexService implements Runnable {
     private boolean contentIsSmallEnoughToIndex(ObjectSystemData osd) {
         long limit = config.getMaxIndexableContentSizeInBytes();
         if (limit <= 0 || osd.getContentSize() == null) {
-            // no limit configured, or size unknown - readContentBounded() still enforces the limit
+            // no limit configured, or no size recorded - nothing to compare against
             return true;
         }
         if (osd.getContentSize() > limit) {
@@ -643,7 +643,10 @@ public class IndexService implements Runnable {
 
     /**
      * Reads the content, but never more than the configured limit. The stored content size is checked
-     * first, so this only triggers when that size is absent or wrong.
+     * first and is authoritative - it is set from the number of bytes actually written, and content
+     * files are never rewritten - so this only triggers for an object that has a content path but no
+     * recorded size, which Cinnamon 4 does not produce. Note that the JSON index mode does not go
+     * through here.
      */
     private byte[] readContentBounded(InputStream contentStream, ObjectSystemData osd) throws IOException {
         long limit = config.getMaxIndexableContentSizeInBytes();

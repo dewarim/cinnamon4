@@ -141,15 +141,23 @@ The trigger is a MISSING size, not a wrong one. `content_size` is a nullable `bi
 Cinnamon 4 never produces a non-null `content_path` with a null `content_size`, so this is reachable
 only through a raw-SQL migration from Cinnamon 3 or a hand-edited database.
 
-### Decision needed
+### Decided: the comment was corrected, the code left alone
 
-Make the code match the comment, or the comment match the code:
+Decision (Ingo, 2026-10-25): remove the misleading clause rather than route JSON through the bounded
+read. Since `content_size` is reliable, a second layer would defend against a state the application
+cannot produce, and changing the JSON path would have forced a decision about truncated-JSON
+handling for no real gain.
 
-- pass the bounded bytes to `convertJsonToXml` instead of the stream, which needs a decision on
-  whether a JSON file that hits the limit should skip its content, as the oversize path does, or
-  fail the job; or
-- drop the "readContentBounded still enforces the limit" clause from the comment and accept the
-  up-front check as the only guard, given that `content_size` is reliable.
+Both comments carried the premise and both were corrected:
+
+- `contentIsSmallEnoughToIndex` now reads "no limit configured, or no size recorded - nothing to
+  compare against";
+- `readContentBounded`'s javadoc now states that the stored size is authoritative and why, that the
+  bounded read therefore only triggers for an object with a content path but no recorded size, and
+  that the JSON mode does not go through it at all.
+
+No behaviour changed. This entry stays as the record of why the asymmetry between the JSON path and
+the other two is deliberate.
 
 Independent of either: the limit is compared against the RAW FILE SIZE, while the heap cost is a
 per-mode multiple of it - roughly ten times for the dom4j path, more for `readTree` plus XML
