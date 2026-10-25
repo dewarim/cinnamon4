@@ -733,6 +733,24 @@ public class FolderServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     /**
+     * Folder contains a subfolder which contains content, deleteRecursively=true and
+     * deleteContent=true. The content has to be below the top folder: an object in the top
+     * folder itself was always deleted exactly once.
+     */
+    @Test
+    public void deleteFolderRecursivelyWithContentInSubfolder() throws IOException {
+        TestObjectHolder toh = prepareAclGroupWithPermissions(List.of(DefaultPermission.DELETE))
+                .createFolder("folderWithSubfolderWithContent", createFolderId);
+        Folder top = toh.folder;
+        toh.createFolder("subfolderWithContent", top.getId())
+                .selectFormat("json")
+                .createOsdWithContent(new File("src/test/resources/test.json"));
+
+        client.deleteFolder(top.getId(), true, true);
+        assertClientError(() -> client.getFolderById(top.getId(), false), FOLDER_NOT_FOUND);
+    }
+
+    /**
      * Folder contains OSD and deleteContent=false
      */
     @Test
