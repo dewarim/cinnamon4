@@ -33,14 +33,31 @@
         WHERE failed > 0
     </select>
 
+    <!--
+      One row per (job_type, item_id): a second "update this index-item" entry would be redundant,
+      since IndexService always indexes the item's current state rather than a diff.
+
+      The pending row must not be reused silently, though. IndexService reads a job, loads a
+      snapshot of the item, indexes that snapshot, and only then deletes the job by id. A change
+      committed inside that window would be lost for good if its insert were simply dropped here:
+      the index would keep the document built from the stale snapshot, the job would be gone, and
+      nothing would be left to retry it - no failed job, no error.
+
+      So a conflicting insert takes the row over with a fresh id. The in-flight indexer's
+      "DELETE ... WHERE id = {old id}" then matches nothing, the row survives, and the next pass
+      indexes the item from a current snapshot. The price is an occasional redundant re-index,
+      which is idempotent - the alternative is losing the change.
+
+      failed is deliberately left as it is, so that a job cannot escape maxIndexAttempts by being
+      touched over and over.
+    -->
     <insert id="insert" parameterType="com.dewarim.cinnamon.model.index.IndexJob">
         <selectKey keyProperty="id" resultType="long" order="BEFORE">
             select nextval('seq_index_job_id')
         </selectKey>
         INSERT INTO index_jobs(id, item_id, job_type, action, failed)
         VALUES (#{id}, #{itemId}, #{jobType}, #{action}, 0)
-        <!-- We do not need a second "update this index-item" entry  -->
-        ON CONFLICT DO NOTHING
+        ON CONFLICT (job_type, item_id) DO UPDATE SET id = #{id}
     </insert>
 
     <delete id="delete" parameterType="long">

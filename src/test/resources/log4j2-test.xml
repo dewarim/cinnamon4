@@ -8,7 +8,7 @@
 
 
     <Loggers>
-        <Root level="debug">
+        <Root level="info">
             <AppenderRef ref="Console"/>
         </Root>
         <Logger name="org.eclipse" level="warn" additivity="false">

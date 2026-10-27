@@ -114,19 +114,17 @@ public class CinnamonIntegrationTest {
 
             Path tempIndexDir = Files.createTempDirectory("cinnamon-index-root");
             CinnamonServer.config.getLuceneConfig().setIndexPath(tempIndexDir.toAbsolutePath().toString());
-            // Index poll interval, left at the production default unless overridden.
-            // Dialing it down makes the suite ~6s faster (the waits below are condition-based, so
-            // they notice work as soon as the index does), but it also makes an index race
-            // reproducible: with -Dcinnamon.test.index.poll.millis=100 the suite fails in about
-            // one run in three, with the job queue fully drained and the content of an OSD missing
-            // from the index. Keep this at the default until that race is fixed; the property is
-            // here to reproduce it.
+            // Index poll interval. The production default of one second is pure waiting here:
+            // the waits in these tests are condition-based, so they notice work as soon as the
+            // index does. This had to stay at the production default for a while, because dialing
+            // it down made a race in IndexService reproducible - a change committed while an older
+            // snapshot of the same item was being indexed got dropped, which left a fully drained
+            // job queue and a stale document in the index. That is fixed (see the insert statement
+            // in IndexJobMapper.xml), so the index can run at test speed again.
             // waitUntilSearchable stays false on purpose: turning it on makes every write request
             // block until its item is searchable, which costs far more than it saves.
-            Long indexPollMillis = Long.getLong("cinnamon.test.index.poll.millis");
-            if (indexPollMillis != null) {
-                CinnamonServer.config.getLuceneConfig().setMillisToWaitBetweenRuns(indexPollMillis);
-            }
+            long indexPollMillis = Long.getLong("cinnamon.test.index.poll.millis", 25L);
+            CinnamonServer.config.getLuceneConfig().setMillisToWaitBetweenRuns(indexPollMillis);
 
             ThreadLocalSqlSession.setDbSessionFactory(dbSessionFactory);
             cinnamonServer.setDbSessionFactory(dbSessionFactory);

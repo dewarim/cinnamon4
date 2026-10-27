@@ -333,3 +333,32 @@ It's recommended to use a copy of production for testing.
 
 
     alter table index_jobs add column update_tika_metaset boolean default false
+
+
+## To Cinnamon 1.15.0
+
+### Changes in behavior
+
+* An index job for an item that already has a pending job now takes that pending row over with a
+  fresh id, instead of being dropped. This stops a change committed while `IndexService` is busy
+  indexing an older snapshot of the same item from being lost: the indexer deletes the job it read
+  *by id*, so after a takeover that delete matches nothing, the row survives, and the item is
+  indexed again from a current snapshot. The cost is an occasional redundant re-index, which is
+  idempotent.
+
+### Database changes
+
+`index_jobs` needs a unique constraint on `(job_type, item_id)`, which the insert's `ON CONFLICT`
+clause now names explicitly. Databases built with the SQL in the 3.7 section above **do not have
+it**: without the constraint every index job insert fails with *"there is no unique or exclusion
+constraint matching the ON CONFLICT specification"*, and duplicate job rows will have piled up in
+the meantime (`ON CONFLICT DO NOTHING` never fired, so one row per change was inserted).
+
+    -- duplicates have to go first, or the constraint cannot be created.
+    -- Keeping the newest job per item loses nothing: a job carries no payload, and IndexService
+    -- indexes the item's current state rather than a diff.
+    delete from index_jobs
+    where id not in (select max(id) from index_jobs group by job_type, item_id);
+
+    alter table index_jobs
+        add constraint index_jobs_type_and_id_unique unique (job_type, item_id);
