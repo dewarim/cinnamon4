@@ -8,6 +8,8 @@ import com.dewarim.cinnamon.model.index.IndexJobType;
 import org.apache.ibatis.session.SqlSession;
 import org.junit.jupiter.api.Test;
 
+import java.util.Map;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -82,6 +84,37 @@ public class IndexJobDaoIntegrationTest extends CinnamonIntegrationTest {
             jobDao.insertIndexJob(newChange, false);
             assertEquals(0, jobDao.getIndexJobById(newChange.getId()).orElseThrow().getFailed().intValue(),
                     "a new change should start over with a full set of attempts");
+
+            sqlSession.rollback();
+        }
+    }
+
+    /**
+     * maxBatchSize has to be applied by the database. This used to pass MyBatis' RowBounds to a
+     * statement with no LIMIT, and RowBounds paginates in memory by default: every pending job row
+     * was fetched and all but the first maxBatchSize thrown away, which is the opposite of what a
+     * batch size is for on an installation with a backlog.
+     * <br>
+     * The row count cannot tell the two apart - in-memory truncation returns the same rows - so
+     * this asserts the statement itself carries the limit.
+     */
+    @Test
+    public void theBatchLimitIsAppliedByTheDatabase() {
+        long itemIdBase = 999_000_100L;
+        try (SqlSession sqlSession = CinnamonServer.getSqlSession()) {
+            IndexJobDao jobDao = new IndexJobDao(sqlSession);
+            for (int i = 0; i < 5; i++) {
+                jobDao.insertIndexJob(new IndexJob(IndexJobType.OSD, itemIdBase + i, IndexJobAction.UPDATE), false);
+            }
+
+            String sql = sqlSession.getConfiguration()
+                    .getMappedStatement("com.dewarim.cinnamon.model.index.IndexJob.getIndexJobsByFailedCount")
+                    .getBoundSql(Map.of("failed", 1, "limit", 3))
+                    .getSql();
+            assertTrue(sql.toUpperCase().contains("LIMIT"),
+                    "the statement has to limit the rows itself, otherwise the whole job table is fetched: " + sql);
+            assertEquals(3, jobDao.getIndexJobsByFailedCountWithLimit(1, 3).size(),
+                    "and the limit should still be honoured");
 
             sqlSession.rollback();
         }

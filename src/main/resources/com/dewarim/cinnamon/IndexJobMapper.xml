@@ -14,12 +14,19 @@
         <result property="failed" column="failed"/>
     </resultMap>
 
-    <!-- order by item_id to get the newest index_job first -->
+    <!--
+      Highest item_id first: ids come from one increasing sequence, so this prefers the most
+      recently created objects and folders.
+      The limit is maxBatchSize, and the database has to apply it. MyBatis' RowBounds, which the
+      DAO used to pass instead, paginates in memory: every pending job row was fetched and all but
+      the first maxBatchSize discarded, which is the opposite of what a batch size is for.
+    -->
     <select id="getIndexJobsByFailedCount" resultMap="indexJobMap">
         SELECT *
         FROM index_jobs
         WHERE failed &lt;= #{failed}
         ORDER BY item_id DESC
+        LIMIT #{limit}
     </select>
 
     <select id="countJobs" resultType="int">

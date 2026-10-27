@@ -6,7 +6,6 @@ import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.index.IndexJob;
 import com.dewarim.cinnamon.model.index.IndexJobAction;
 import com.dewarim.cinnamon.model.request.osd.VersionPredicate;
-import org.apache.ibatis.session.RowBounds;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,8 +28,8 @@ public class IndexJobDao {
 
     public List<IndexJob> getIndexJobsByFailedCountWithLimit(int failedCount, int limit) {
         SqlSession          sqlSession = getSqlSession();
-        Map<String, Object> params     = Map.of("failed", failedCount);
-        return sqlSession.selectList("com.dewarim.cinnamon.model.index.IndexJob.getIndexJobsByFailedCount", params, new RowBounds(0, limit));
+        Map<String, Object> params     = Map.of("failed", failedCount, "limit", limit);
+        return sqlSession.selectList("com.dewarim.cinnamon.model.index.IndexJob.getIndexJobsByFailedCount", params);
     }
 
     public Optional<IndexJob> getIndexJobById(Long id) {
