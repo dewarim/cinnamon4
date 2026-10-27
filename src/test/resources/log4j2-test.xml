@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="debug">
+<Configuration>
     <Appenders>
         <Console name="Console" target="SYSTEM_OUT">
             <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
@@ -11,44 +11,44 @@
         <Root level="debug">
             <AppenderRef ref="Console"/>
         </Root>
-        <Logger name="org.eclipse" level="warn">
+        <Logger name="org.eclipse" level="warn" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
-        <Logger name="com.dewarim.cinnamon.model.UserAccount" level="warn"><AppenderRef ref="Console"/></Logger>
-        <Logger name="com.dewarim.cinnamon.filter.ChangeTriggerFilter" level="debug">
+        <Logger name="com.dewarim.cinnamon.model.UserAccount" level="warn" additivity="false"><AppenderRef ref="Console"/></Logger>
+        <Logger name="com.dewarim.cinnamon.filter.ChangeTriggerFilter" level="debug" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
-        <Logger name="com.dewarim.cinnamon.filter.PostCommitChangeTriggerHandler" level="debug">
+        <Logger name="com.dewarim.cinnamon.filter.PostCommitChangeTriggerHandler" level="debug" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
-        <Logger name="com.dewarim.cinnamon.model.event.AccessLogEntry" level="debug"><AppenderRef ref="Console"/></Logger>
-        <Logger name="com.dewarim.cinnamon.model.event.AccessLogDao" level="debug"><AppenderRef ref="Console"/></Logger>
-        <Logger name="com.dewarim.cinnamon.model.Group" level="warn"><AppenderRef ref="Console"/></Logger>
-        <Logger name="com.dewarim.cinnamon.model.GroupUser" level="warn"><AppenderRef ref="Console"/></Logger>
-        <Logger name="com.dewarim.cinnamon.model.AclGroup" level="warn"><AppenderRef ref="Console"/></Logger>
-        <Logger name="com.dewarim.cinnamon.model.AclGroupPermission" level="warn"><AppenderRef ref="Console"/></Logger>
-        <Logger name="com.dewarim.cinnamon.model.Acl" level="warn"><AppenderRef ref="Console"/></Logger>
-        <Logger name="com.dewarim.cinnamon.model.ObjectType" level="warn"><AppenderRef ref="Console"/></Logger>
-        <Logger name="com.dewarim.cinnamon.model.Language" level="warn"><AppenderRef ref="Console"/></Logger>
-        <Logger name="com.dewarim.cinnamon.model.Deletion" level="warn"><AppenderRef ref="Console"/></Logger>
-        <Logger name="com.dewarim.cinnamon.model.SessionMapper" level="warn"><AppenderRef ref="Console"/></Logger>
-        <Logger name="com.dewarim.cinnamon.filter.AuthenticationFilter" level="warn"><AppenderRef ref="Console"/></Logger>
-        <Logger name="org.apache.hc.client5.http" level="warn"><AppenderRef ref="Console"/></Logger>
-        <Logger name="io.netty.util" level="warn"><AppenderRef ref="Console"/></Logger>
-        <Logger name="com.networknt" level="warn">
+        <Logger name="com.dewarim.cinnamon.model.event.AccessLogEntry" level="debug" additivity="false"><AppenderRef ref="Console"/></Logger>
+        <Logger name="com.dewarim.cinnamon.model.event.AccessLogDao" level="debug" additivity="false"><AppenderRef ref="Console"/></Logger>
+        <Logger name="com.dewarim.cinnamon.model.Group" level="warn" additivity="false"><AppenderRef ref="Console"/></Logger>
+        <Logger name="com.dewarim.cinnamon.model.GroupUser" level="warn" additivity="false"><AppenderRef ref="Console"/></Logger>
+        <Logger name="com.dewarim.cinnamon.model.AclGroup" level="warn" additivity="false"><AppenderRef ref="Console"/></Logger>
+        <Logger name="com.dewarim.cinnamon.model.AclGroupPermission" level="warn" additivity="false"><AppenderRef ref="Console"/></Logger>
+        <Logger name="com.dewarim.cinnamon.model.Acl" level="warn" additivity="false"><AppenderRef ref="Console"/></Logger>
+        <Logger name="com.dewarim.cinnamon.model.ObjectType" level="warn" additivity="false"><AppenderRef ref="Console"/></Logger>
+        <Logger name="com.dewarim.cinnamon.model.Language" level="warn" additivity="false"><AppenderRef ref="Console"/></Logger>
+        <Logger name="com.dewarim.cinnamon.model.Deletion" level="warn" additivity="false"><AppenderRef ref="Console"/></Logger>
+        <Logger name="com.dewarim.cinnamon.model.SessionMapper" level="warn" additivity="false"><AppenderRef ref="Console"/></Logger>
+        <Logger name="com.dewarim.cinnamon.filter.AuthenticationFilter" level="warn" additivity="false"><AppenderRef ref="Console"/></Logger>
+        <Logger name="org.apache.hc.client5.http" level="warn" additivity="false"><AppenderRef ref="Console"/></Logger>
+        <Logger name="io.netty.util" level="warn" additivity="false"><AppenderRef ref="Console"/></Logger>
+        <Logger name="com.networknt" level="warn" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
-        <Logger name="com.networknt.schema.TypeValidator" level="warn">
+        <Logger name="com.networknt.schema.TypeValidator" level="warn" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
 
-        <Logger name="org.apache.ibatis.transaction" level="debug">
+        <Logger name="org.apache.ibatis.transaction" level="debug" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
-        <Logger name="org.apache.ibatis.datasource" level="debug">
+        <Logger name="org.apache.ibatis.datasource" level="debug" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
-        <Logger name="com.dewarim.cinnamon.model.event.AccessLogEntry.insert" level="debug">
+        <Logger name="com.dewarim.cinnamon.model.event.AccessLogEntry.insert" level="debug" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
     </Loggers>

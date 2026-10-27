@@ -28,6 +28,7 @@ public class AccessFilter {
     private final        Set<Long>                   objectAclsWithBrowsePermissions;
     private final        Set<Long>                   ownerAclsWithBrowsePermissions;
     private final        Map<AclPermission, Boolean> checkedPermissions                 = new ConcurrentHashMap<>();
+    private final        Map<Long, Set<Long>>        ownerAclIdSetsByPermission         = new ConcurrentHashMap<>();
     private final        UserAccount                 user;
     private final        boolean                     superuser;
     private static final Map<Long, Set<Long>>        userAclsWithBrowsePermissionCache  = new ConcurrentHashMap<>();
@@ -100,23 +101,17 @@ public class AccessFilter {
         }
 
         if (checkOwnerPermission) {
-            // generate all AclPermissions available for this permission.
-            Set<Long> ownerAclIdSet = generateOwnerAclIdSet(permission, user);
-            ownerAclIdSet.forEach(id -> {
-                        AclPermission aclPerm = new AclPermission(aclId, permission.getId(), true);
-                        checkedPermissions.put(aclPerm, true);
-                    }
-            );
-            acls.forEach(myAcl -> {
-                if (!ownerAclIdSet.contains(myAcl.getId())) {
-                    AclPermission aclPerm = new AclPermission(myAcl.getId(), permission.getId(), true);
-                    checkedPermissions.put(aclPerm, false);
-                }
-            });
-            return checkedPermissions.get(new AclPermission(aclId, permission.getId(), true));
+            // The set of acls that grant this permission to the owner group depends only on
+            // (permission, user) - not on aclId. So compute it once per permission instead of
+            // writing a cache entry for every acl in the system on every check.
+            Set<Long> ownerAclIdSet = ownerAclIdSetsByPermission
+                    .computeIfAbsent(permission.getId(), permissionId -> generateOwnerAclIdSet(permission, user));
+            boolean ownerResult = ownerAclIdSet.contains(aclId);
+            checkedPermissions.put(aclPermission, ownerResult);
+            return ownerResult;
         }
 
-        boolean checkResult = checkAclGroups(acl, permission, user);
+        boolean checkResult = checkAclGroups(acl, permission, groupIdsOf(user));
         checkedPermissions.put(aclPermission, checkResult);
         return checkResult;
     }
@@ -170,23 +165,21 @@ public class AccessFilter {
             // Superusers are exempt from permission checking, so they automatically have BrowsePermission on all objects.
             return acls.stream().map(Acl::getId).collect(Collectors.toSet());
         }
-        Set<Long> aclIds = new HashSet<>();
-
-        for (Acl acl : acls) {
-            // compute browse permissions for acls
-            boolean checkAclResult = checkAclGroups(acl, permission, user);
-            if (checkAclResult) {
-                aclIds.add(acl.getId());
-            }
-
-        }
-        return aclIds;
+        // One query for every acl at once, instead of three queries per acl: the per-acl loop
+        // made the cost of a cache miss grow with the number of acls in the installation.
+        Set<Long> aclIdsWithPermission = new AclGroupPermissionDao()
+                .listAclIdsWithPermissionForGroups(groupIdsOf(user), permission);
+        // stay restricted to the acls we know about, as the per-acl loop was:
+        return acls.stream().map(Acl::getId).filter(aclIdsWithPermission::contains).collect(Collectors.toSet());
     }
 
-    private static boolean checkAclGroups(Acl acl, Permission permission, UserAccount user) {
+    private static Set<Long> groupIdsOf(UserAccount user) {
+        return new GroupDao().getGroupIdsWithAncestorsOfUserById(user.getId());
+    }
+
+    private static boolean checkAclGroups(Acl acl, Permission permission, Set<Long> groupIds) {
         // create Union of Sets: user.groups and acl.groups => iterate over each group for permitlevel.
 
-        Set<Long>      groupIds    = new GroupDao().getGroupIdsWithAncestorsOfUserById(user.getId());
         AclGroupDao    aclGroupDao = new AclGroupDao();
         List<AclGroup> aclGroups   = aclGroupDao.getAclGroupsByGroupIdsAndAcl(groupIds, acl.getId());
 

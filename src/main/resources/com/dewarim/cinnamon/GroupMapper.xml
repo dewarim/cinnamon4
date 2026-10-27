@@ -109,17 +109,23 @@
         from groups_of_user;
     </select>
 
+    <!--
+      The groups the user is a member of, plus those groups' ancestors - permissions are inherited
+      upwards, so a member of a subgroup also gets what the groups above it were granted.
+      The recursive step walks up one level at a time: it joins the parent_id of a group already
+      collected to the id of the group above it, so the row it adds is that group's parent.
+    -->
     <select id="getGroupIdsWithAncestorsOfUserById" resultType="long">
         with recursive groups_of_user(id, name, parent_id)
                            as (select g.id, name, parent_id
                                from groups g
                                where g.id in (select gu.group_id from group_users gu where gu.user_id = #{userId})
                                union all
-                               select child.id,
-                                      child.name,
-                                      child.parent_id
-                               from groups child
-                                        join groups_of_user gou on gou.parent_id = child.id)
+                               select parent.id,
+                                      parent.name,
+                                      parent.parent_id
+                               from groups parent
+                                        join groups_of_user gou on gou.parent_id = parent.id)
         select id
         from groups_of_user;
     </select>

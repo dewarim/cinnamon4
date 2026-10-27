@@ -22,6 +22,25 @@
         AND permission_id = #{permissionId}
     </select>
 
+    <!--
+      All acl ids that grant the given permission to a user, either through one of the user's own
+      groups or through the "everyone" group. This replaces a per-acl loop of three queries in
+      AccessFilter.generateObjectAclSet, whose cost grew with the number of acls in the system.
+    -->
+    <select id="listAclIdsWithPermissionForGroups" parameterType="map" resultType="long">
+        SELECT DISTINCT ag.acl_id
+        FROM acl_groups ag
+        JOIN acl_group_permissions agp ON agp.acl_group_id = ag.id
+        JOIN groups g ON g.id = ag.group_id
+        WHERE agp.permission_id = #{permissionId}
+        AND (g.name = #{everyoneGroupName}
+        <if test="groupIds != null and groupIds.size() > 0">
+            OR ag.group_id IN
+            <foreach item="item" collection="groupIds" open="(" separator="," close=")">#{item}</foreach>
+        </if>
+        )
+    </select>
+
     <select id="listByAclGroupIds" parameterType="list" resultMap="aepMap">
         SELECT *
         FROM acl_group_permissions

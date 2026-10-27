@@ -18,6 +18,7 @@ import com.dewarim.cinnamon.model.response.CinnamonConnectionWrapper;
 import com.dewarim.cinnamon.model.response.CinnamonContentType;
 import com.dewarim.cinnamon.model.response.CinnamonError;
 import com.dewarim.cinnamon.model.response.CinnamonErrorWrapper;
+import com.dewarim.cinnamon.model.response.index.IndexInfoResponse;
 import com.dewarim.cinnamon.test.TestObjectHolder;
 import tools.jackson.databind.ObjectMapper;
 import org.apache.hc.client5.http.classic.HttpClient;
@@ -43,6 +44,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.BooleanSupplier;
 import java.util.stream.Collectors;
 
 import static com.dewarim.cinnamon.DefaultPermission.BROWSE;
@@ -112,6 +114,19 @@ public class CinnamonIntegrationTest {
 
             Path tempIndexDir = Files.createTempDirectory("cinnamon-index-root");
             CinnamonServer.config.getLuceneConfig().setIndexPath(tempIndexDir.toAbsolutePath().toString());
+            // Index poll interval, left at the production default unless overridden.
+            // Dialing it down makes the suite ~6s faster (the waits below are condition-based, so
+            // they notice work as soon as the index does), but it also makes an index race
+            // reproducible: with -Dcinnamon.test.index.poll.millis=100 the suite fails in about
+            // one run in three, with the job queue fully drained and the content of an OSD missing
+            // from the index. Keep this at the default until that race is fixed; the property is
+            // here to reproduce it.
+            // waitUntilSearchable stays false on purpose: turning it on makes every write request
+            // block until its item is searchable, which costs far more than it saves.
+            Long indexPollMillis = Long.getLong("cinnamon.test.index.poll.millis");
+            if (indexPollMillis != null) {
+                CinnamonServer.config.getLuceneConfig().setMillisToWaitBetweenRuns(indexPollMillis);
+            }
 
             ThreadLocalSqlSession.setDbSessionFactory(dbSessionFactory);
             cinnamonServer.setDbSessionFactory(dbSessionFactory);
@@ -328,6 +343,86 @@ public class CinnamonIntegrationTest {
 
     protected Acl getReviewerAcl() {
         return new TestObjectHolder(client).getAcls().stream().filter(a -> a.getName().equals("reviewers.acl")).toList().getFirst();
+    }
+
+    /**
+     * How long waitFor() polls before giving up. Generous on purpose: the timeout only matters
+     * when something is actually broken, since a satisfied condition is noticed within
+     * ASYNC_POLL_MILLIS.
+     */
+    static final long ASYNC_WAIT_TIMEOUT_MILLIS = 15_000L;
+    static final long ASYNC_POLL_MILLIS         = 25L;
+
+    /**
+     * Poll until the condition holds, instead of sleeping for a fixed time. Indexing and deletion
+     * run asynchronously, so how long they need is not something a test can know up front: a fixed
+     * sleep is both slower than necessary and still a guess.
+     *
+     * @return true if the condition became true before the deadline
+     */
+    static boolean waitFor(BooleanSupplier condition) {
+        long deadline = System.currentTimeMillis() + ASYNC_WAIT_TIMEOUT_MILLIS;
+        while (true) {
+            if (condition.getAsBoolean()) {
+                return true;
+            }
+            if (System.currentTimeMillis() >= deadline) {
+                return false;
+            }
+            try {
+                Thread.sleep(ASYNC_POLL_MILLIS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return false;
+            }
+        }
+    }
+
+    /**
+     * Wait until the asynchronous index has caught up, so a following search sees everything the
+     * test has created. All index jobs are then done except those that failed permanently -
+     * CreateTestDB.sql adds a broken one on purpose, so the count never reaches 0.
+     * <br>
+     * "Permanently" has to mean here what it means in IndexService, which picks up every job with
+     * failed &lt;= maxIndexAttempts. Treating all jobs with failed &gt; 0 as finished - which is
+     * what IndexInfoResponse.failedJobCount reports - would call the index idle while a job that
+     * has failed exactly once is still queued for its retry.
+     * <br>
+     * IndexService commits to Lucene before it deletes the job rows, so an idle job table means
+     * the changes are searchable.
+     */
+    static boolean waitUntilIndexIsIdle() {
+        int maxIndexAttempts = CinnamonServer.config.getLuceneConfig().getMaxIndexAttempts();
+        return waitFor(() -> {
+            try {
+                IndexInfoResponse info = client.getIndexInfo(false, true);
+                // failedIndexJobs holds every job with failed > 0, so the rest have not been
+                // tried yet and are pending by definition.
+                int  notTriedYet    = info.getJobCount() - info.getFailedIndexJobs().size();
+                long stillRetryable = info.getFailedIndexJobs().stream()
+                        .filter(job -> job.getFailed() <= maxIndexAttempts)
+                        .count();
+                return notTriedYet + stillRetryable == 0;
+            } catch (IOException e) {
+                log.debug("getIndexInfo failed while waiting for the index: {}", e.getMessage());
+                return false;
+            }
+        });
+    }
+
+    /**
+     * What the index looks like right now - for the failure message of a wait that timed out,
+     * so a flaky index test leaves evidence behind instead of just "expected true".
+     */
+    static String indexState() {
+        try {
+            IndexInfoResponse info = client.getIndexInfo(true, true);
+            return "jobs: " + info.getJobCount() + ", failed: " + info.getFailedJobCount()
+                    + ", docs: " + info.getDocumentsInIndex() + ", folders: " + info.getFoldersInIndex()
+                    + ", failedJobs: " + info.getFailedIndexJobs();
+        } catch (IOException e) {
+            return "index state unavailable: " + e.getMessage();
+        }
     }
 
     /**

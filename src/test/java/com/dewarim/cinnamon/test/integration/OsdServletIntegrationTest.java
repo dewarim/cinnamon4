@@ -2087,15 +2087,22 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
     }
 
     @Test
-    public void deleteOsdWithContent() throws IOException, InterruptedException {
+    public void deleteOsdWithContent() throws IOException {
         var toh = new TestObjectHolder(adminClient, adminId);
         toh.createOsd("deleteOsdWithContent - deletionTask test");
         var osd = toh.osd;
         createTestContentOnOsd(osd.getId(), true);
         toh.lockOsd();
+        // cinnamonStats.deletions counts every deletion in this JVM and is never reset, so this
+        // test can only assert that its own deletion happened - waiting for an absolute 1 would
+        // become unreachable (and then burn the full timeout) as soon as another test deletes
+        // content first.
+        long deletionsBefore = CinnamonServer.cinnamonStats.getDeletions().get();
         adminClient.deleteOsd(osd.getId());
-        Thread.sleep(500);
-        assertEquals(1, CinnamonServer.cinnamonStats.getDeletions().get());
+        // DeletionTask runs asynchronously, so poll for it instead of guessing how long it needs:
+        assertTrue(waitFor(() -> CinnamonServer.cinnamonStats.getDeletions().get() > deletionsBefore),
+                () -> "DeletionTask should have deleted this object, but deletions stayed at "
+                        + deletionsBefore);
     }
 
     @Test

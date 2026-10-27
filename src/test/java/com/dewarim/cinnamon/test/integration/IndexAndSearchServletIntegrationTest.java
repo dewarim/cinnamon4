@@ -37,7 +37,7 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
     public static Long osdWithContentId;
 
     @BeforeAll
-    public static void initializeObjects() throws IOException, InterruptedException {
+    public static void initializeObjects() throws IOException {
         // create indexItem for xml-content
         // the index item is created by CreateTestDB.sql, otherwise it may not be ready/available to
         // the indexerService on time (or: in its thread) for when the OSD is created.
@@ -70,9 +70,24 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
         toh.selectFormat("json")
                 .createOsdWithContent(new File("src/test/resources/test.json"));
 
-        if(!CinnamonServer.getConfig().getLuceneConfig().isWaitUntilSearchable()) {
-            Thread.sleep(CinnamonServer.config.getLuceneConfig().getMillisToWaitBetweenRuns() + 5000L);
+        // An idle index job table is not enough here: content is extracted and indexed in later
+        // passes (TikaService inserts a second index job of its own), so the job queue can be
+        // empty simply because the work has not been enqueued yet. Wait for what the tests below
+        // actually query instead.
+        assertTrue(waitUntilIndexIsIdle(), "index did not catch up with the test fixtures");
+        long contentDeadline = System.currentTimeMillis();
+        assertTrue(waitUntilOsdSearchFindsSomething(createTermQuery("xml_content", "cinnamon")),
+                () -> "xml content of the pom should be searchable - " + indexState());
+        assertTrue(waitUntilOsdSearchFindsSomething(createTermQuery("xml_content", "bob")),
+                () -> "json content should be searchable - " + indexState());
+        if (CinnamonServer.getConfig().getCinnamonTikaConfig().isUseTika()) {
+            // Tika extraction is a pass of its own, and the index job it enqueues afterwards is a
+            // third one - so searchForContent's tika_meta assertion needs its own wait, under the
+            // same condition that guards the assertion.
+            assertTrue(waitUntilOsdSearchFindsSomething(createTermQuery("tika_meta", "delicious")),
+                    () -> "tika metadata should be searchable - " + indexState());
         }
+        log.info("waited {} ms for content to become searchable", System.currentTimeMillis() - contentDeadline);
         ThreadLocalSqlSession.refreshSession();
     }
 
@@ -155,19 +170,19 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
         assertFalse(response.getOsdIds().isEmpty());
     }
 
-    private String createPointQuery(String fieldName, long query) {
+    private static String createPointQuery(String fieldName, long query) {
         String pointQuery = "<BooleanQuery><Clause occurs='must'><ExactPointQuery fieldName='" + fieldName + "' value='" + query + "' type='long'/></Clause></BooleanQuery>";
         log.debug("pointQuery: {}", pointQuery);
         return pointQuery;
     }
 
-    private String createTermQuery(String fieldName, String query) {
+    private static String createTermQuery(String fieldName, String query) {
         String booleanQuery = "<BooleanQuery><Clause occurs='must'><TermQuery fieldName='" + fieldName + "'>" + query + "</TermQuery></Clause></BooleanQuery>";
         log.debug("createTermQuery: {}", booleanQuery);
         return booleanQuery;
     }
 
-    private String createWildcardQuery(String fieldName, String query) {
+    private static String createWildcardQuery(String fieldName, String query) {
         String wildQuery = "<BooleanQuery><Clause occurs='must'><WildcardQuery fieldName='" + fieldName + "'>" + query + "</WildcardQuery></Clause></BooleanQuery>";
         log.debug("wildcardQuery: {}", wildQuery);
         return wildQuery;
@@ -184,29 +199,30 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
     }
 
     @Test
-    public void reindexAllTheThings() throws IOException, InterruptedException {
+    public void reindexAllTheThings() throws IOException {
         ReindexResponse response = adminClient.reindex(new ReindexRequest(List.of(), List.of()));
         assertTrue(response.getDocumentsToIndex() > 0);
         assertTrue(response.getFoldersToIndex() > 0);
-        Thread.sleep(3000);
+        // wait for the reindex to finish, so it does not disturb the following tests:
+        assertTrue(waitUntilIndexIsIdle(), "reindex did not finish");
     }
 
     @Test
-    public void reindexSpecificObjects() throws IOException, InterruptedException {
+    public void reindexSpecificObjects() throws IOException {
         ReindexResponse response = adminClient.reindex(new ReindexRequest(List.of(osdId), List.of(folderId)));
         assertEquals(1, response.getFoldersToIndex());
         assertEquals(1, response.getDocumentsToIndex());
-        Thread.sleep(3000);
+        assertTrue(waitUntilIndexIsIdle(), "reindex did not finish");
     }
 
     // ticket 389: meta operations do not trigger reindex
     @Test
-    public void updateMetaTest() throws IOException, InterruptedException {
+    public void updateMetaTest() throws IOException {
         var toh = new TestObjectHolder(client, userId)
                 .createOsd();
-        Thread.sleep(1300);
+        assertTrue(waitUntilIndexIsIdle(), "new osd was not indexed");
         toh.createOsdMeta("<xml>issue389</xml>");
-        Thread.sleep(1300);
+        assertTrue(waitUntilIndexIsIdle(), "osd meta was not indexed");
 
         String            termQuery = createTermQuery("meta_content", "issue389");
         SearchIdsResponse response  = client.search(termQuery, SearchType.OSD);
@@ -217,7 +233,7 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
     // verifySearchResults: a folder that is still in the Lucene index but no longer in the database
     // must be enqueued for removal from the index (the clean-up used to iterate over the unknown OSD ids).
     @Test
-    public void unknownFolderIsRemovedFromIndex() throws IOException, InterruptedException, SQLException {
+    public void unknownFolderIsRemovedFromIndex() throws IOException, SQLException {
         String name            = "unknown-folder-" + System.currentTimeMillis();
         Long   unknownFolderId = new TestObjectHolder(client, userId).createFolder(name, createFolderId).folder.getId();
         String query           = createTermQuery("name", name);
@@ -244,15 +260,24 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
         }
     }
 
-    private boolean waitForFolderSearchResult(String query, List<Long> expectedFolderIds) throws IOException, InterruptedException {
-        long deadline = System.currentTimeMillis() + CinnamonServer.config.getLuceneConfig().getMillisToWaitBetweenRuns() + 10_000L;
-        while (System.currentTimeMillis() < deadline) {
-            if (client.search(query, SearchType.FOLDER).getFolderIds().equals(expectedFolderIds)) {
-                return true;
+    private static boolean waitUntilOsdSearchFindsSomething(String query) {
+        return waitFor(() -> {
+            try {
+                return !client.search(query, SearchType.OSD).getOsdIds().isEmpty();
+            } catch (IOException e) {
+                return false;
             }
-            Thread.sleep(200);
-        }
-        return false;
+        });
+    }
+
+    private boolean waitForFolderSearchResult(String query, List<Long> expectedFolderIds) {
+        return waitFor(() -> {
+            try {
+                return client.search(query, SearchType.FOLDER).getFolderIds().equals(expectedFolderIds);
+            } catch (IOException e) {
+                return false;
+            }
+        });
     }
 
 }
