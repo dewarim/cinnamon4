@@ -345,6 +345,11 @@ It's recommended to use a copy of production for testing.
   *by id*, so after a takeover that delete matches nothing, the row survives, and the item is
   indexed again from a current snapshot. The cost is an occasional redundant re-index, which is
   idempotent.
+* That takeover also resets the job's failure count, so a new change to an item gives its index
+  job a fresh set of attempts. Before, a job past `maxIndexAttempts` was never picked up again,
+  and since only one job per item can exist it blocked every later change to that item
+  indefinitely. Failures are still recorded and still listed by `listFailedIndexJobs` after each
+  attempt - an item that cannot be indexed is simply no longer given up on.
 
 ### Database changes
 

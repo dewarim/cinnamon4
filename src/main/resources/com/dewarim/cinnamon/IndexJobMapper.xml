@@ -48,8 +48,12 @@
       indexes the item from a current snapshot. The price is an occasional redundant re-index,
       which is idempotent - the alternative is losing the change.
 
-      failed is deliberately left as it is, so that a job cannot escape maxIndexAttempts by being
-      touched over and over.
+      failed is reset, because a new change deserves a fresh set of attempts: the earlier failure
+      may well have been about the state the job was carrying. It also keeps a dead row from
+      blocking an item permanently - only one job per item can exist, and a job whose failure count
+      is past maxIndexAttempts is never picked up again, so without the reset every later change to
+      that item would be stuck behind it. A genuinely unindexable item still shows up in
+      listFailedIndexJobs after each attempt; it just is not given up on.
     -->
     <insert id="insert" parameterType="com.dewarim.cinnamon.model.index.IndexJob">
         <selectKey keyProperty="id" resultType="long" order="BEFORE">
@@ -57,7 +61,7 @@
         </selectKey>
         INSERT INTO index_jobs(id, item_id, job_type, action, failed)
         VALUES (#{id}, #{itemId}, #{jobType}, #{action}, 0)
-        ON CONFLICT (job_type, item_id) DO UPDATE SET id = #{id}
+        ON CONFLICT (job_type, item_id) DO UPDATE SET id = #{id}, failed = 0
     </insert>
 
     <delete id="delete" parameterType="long">

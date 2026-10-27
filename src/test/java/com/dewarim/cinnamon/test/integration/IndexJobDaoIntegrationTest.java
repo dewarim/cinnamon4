@@ -8,6 +8,7 @@ import com.dewarim.cinnamon.model.index.IndexJobType;
 import org.apache.ibatis.session.SqlSession;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -52,6 +53,35 @@ public class IndexJobDaoIntegrationTest extends CinnamonIntegrationTest {
             jobDao.delete(firstJob);
             assertTrue(jobDao.getIndexJobById(secondId).isPresent(),
                     "deleting the job the indexer read must not remove the job for the newer change");
+
+            sqlSession.rollback();
+        }
+    }
+
+    /**
+     * A job that failed keeps its failure count, and IndexService stops picking it up once that
+     * count is past maxIndexAttempts. A new change to the same item has to hand it those attempts
+     * back: the earlier failure may have been about the state the job was carrying, and since only
+     * one job per item can exist, a dead row would otherwise block every later change to that item
+     * for good.
+     */
+    @Test
+    public void aNewChangeGivesAFailedJobItsAttemptsBack() {
+        long itemId = 999_000_002L;
+        try (SqlSession sqlSession = CinnamonServer.getSqlSession()) {
+            IndexJobDao jobDao = new IndexJobDao(sqlSession);
+
+            IndexJob job = new IndexJob(IndexJobType.OSD, itemId, IndexJobAction.UPDATE);
+            jobDao.insertIndexJob(job, false);
+            job.setFailed(99);
+            jobDao.updateStatus(job);
+            assertEquals(99, jobDao.getIndexJobById(job.getId()).orElseThrow().getFailed().intValue(),
+                    "the job should be recorded as failed before the next change arrives");
+
+            IndexJob newChange = new IndexJob(IndexJobType.OSD, itemId, IndexJobAction.UPDATE);
+            jobDao.insertIndexJob(newChange, false);
+            assertEquals(0, jobDao.getIndexJobById(newChange.getId()).orElseThrow().getFailed().intValue(),
+                    "a new change should start over with a full set of attempts");
 
             sqlSession.rollback();
         }
