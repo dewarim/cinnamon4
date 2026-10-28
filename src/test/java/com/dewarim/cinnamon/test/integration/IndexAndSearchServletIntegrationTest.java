@@ -3,8 +3,14 @@ package com.dewarim.cinnamon.test.integration;
 import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.configuration.LuceneConfig;
+import com.dewarim.cinnamon.dao.IndexEventDao;
+import com.dewarim.cinnamon.dao.IndexJobDao;
 import com.dewarim.cinnamon.model.Format;
 import com.dewarim.cinnamon.model.ObjectSystemData;
+import com.dewarim.cinnamon.model.index.IndexEvent;
+import com.dewarim.cinnamon.model.index.IndexJob;
+import com.dewarim.cinnamon.model.index.IndexJobAction;
+import com.dewarim.cinnamon.model.index.IndexJobType;
 import com.dewarim.cinnamon.model.request.index.ReindexRequest;
 import com.dewarim.cinnamon.model.request.search.SearchType;
 import com.dewarim.cinnamon.model.response.SearchIdsResponse;
@@ -257,6 +263,44 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
             assertTrue(waitForFolderSearchResult(query, List.of()), "unknown folder should have been removed from the index");
         } finally {
             luceneConfig.setVerifySearchResults(true);
+        }
+    }
+
+    /**
+     * An item can be deleted between an index job being queued and IndexService picking it up.
+     * findJobs then has nothing to index: the job row goes, and for a CREATE or UPDATE job that is
+     * all that should happen. Handing such a job to the indexer anyway would dereference the
+     * missing item, so this asserts no failed index event was recorded - the job row is deleted
+     * either way, which makes that event the only observable difference between dropping the job
+     * in findJobs and dropping it one step later.
+     */
+    @Test
+    public void jobForAVanishedItemIsDroppedWithoutAFailedIndexEvent() {
+        // an item id nothing can own: object and folder ids come from seq_folder_and_object_ids,
+        // which starts at 10000000 and would need ~989 million rows to reach this one.
+        long     itemId = 999_000_003L;
+        IndexJob job    = new IndexJob(IndexJobType.OSD, itemId, IndexJobAction.UPDATE);
+        // committed, since the point is to let the live IndexService thread pick this up:
+        try (SqlSession sqlSession = CinnamonServer.getSqlSession()) {
+            new IndexJobDao(sqlSession).insertIndexJob(job, false);
+            sqlSession.commit();
+        }
+        Long jobId = job.getId();
+
+        assertTrue(waitFor(() -> {
+                    try (SqlSession sqlSession = CinnamonServer.getSqlSession()) {
+                        return new IndexJobDao(sqlSession).getIndexJobById(jobId).isEmpty();
+                    }
+                }),
+                () -> "IndexService should have removed the job for the missing item - " + indexState());
+
+        try (SqlSession sqlSession = CinnamonServer.getSqlSession()) {
+            List<IndexEvent> events = new IndexEventDao(sqlSession).list().stream()
+                    .filter(event -> jobId.equals(event.getJobId()))
+                    .toList();
+            assertTrue(events.isEmpty(),
+                    () -> "a job whose item is gone should not be handed to the indexer, but it recorded "
+                            + events.stream().map(IndexEvent::getMessage).toList());
         }
     }
 
