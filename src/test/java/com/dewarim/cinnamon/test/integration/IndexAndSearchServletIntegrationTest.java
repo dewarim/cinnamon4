@@ -276,8 +276,9 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
      */
     @Test
     public void jobForAVanishedItemIsDroppedWithoutAFailedIndexEvent() {
-        // an item id nothing can own: object and folder ids come from seq_folder_and_object_ids,
-        // which starts at 10000000 and would need ~989 million rows to reach this one.
+        // an item id this suite cannot reach: objects and folders share seq_folder_and_object_ids,
+        // which starts at 1 in the test database (at 10000000 in a migrated one) and climbs by a
+        // few hundred per run. Ids are never reused, so nothing can claim this one later either.
         long     itemId = 999_000_003L;
         IndexJob job    = new IndexJob(IndexJobType.OSD, itemId, IndexJobAction.UPDATE);
         // committed, since the point is to let the live IndexService thread pick this up:
