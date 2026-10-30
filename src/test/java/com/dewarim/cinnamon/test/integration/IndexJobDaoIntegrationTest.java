@@ -90,6 +90,56 @@ public class IndexJobDaoIntegrationTest extends CinnamonIntegrationTest {
     }
 
     /**
+     * Deleting an item and changing it both arrive as inserts here, and the unique constraint only
+     * makes them queue up behind each other, so either can commit last. The delete has to win in
+     * both orders: the item is gone either way, and a row left saying UPDATE means IndexService
+     * finds nothing to index, drops the job, and leaves the item's document in the Lucene index.
+     * <br>
+     * This is the order that used to lose the delete.
+     */
+    @Test
+    public void aDeleteTakesOverAPendingUpdate() {
+        long itemId = 999_000_004L;
+        try (SqlSession sqlSession = CinnamonServer.getSqlSession()) {
+            IndexJobDao jobDao = new IndexJobDao(sqlSession);
+            jobDao.insertIndexJob(new IndexJob(IndexJobType.OSD, itemId, IndexJobAction.UPDATE), false);
+
+            IndexJob deleteJob = new IndexJob(IndexJobType.OSD, itemId, IndexJobAction.DELETE);
+            jobDao.insertIndexJob(deleteJob, false);
+            assertEquals(IndexJobAction.DELETE, jobDao.getIndexJobById(deleteJob.getId()).orElseThrow().getAction(),
+                    "the delete has to take over the pending update, or the item stays in the index");
+
+            sqlSession.rollback();
+        }
+    }
+
+    /**
+     * And the other order: a pending DELETE is never downgraded. Keeping it is sound because item
+     * ids come from seq_folder_and_object_ids and are never reused, so no CREATE or UPDATE can
+     * legitimately refer to an item that has already been deleted. Were ids recycled, this would
+     * be the wrong default - a new item reusing the id would never be indexed.
+     */
+    @Test
+    public void aPendingDeleteIsNotDowngradedByALaterUpdate() {
+        long itemId = 999_000_005L;
+        try (SqlSession sqlSession = CinnamonServer.getSqlSession()) {
+            IndexJobDao jobDao = new IndexJobDao(sqlSession);
+            jobDao.insertIndexJob(new IndexJob(IndexJobType.OSD, itemId, IndexJobAction.DELETE), false);
+
+            IndexJob updateJob = new IndexJob(IndexJobType.OSD, itemId, IndexJobAction.UPDATE);
+            jobDao.insertIndexJob(updateJob, false);
+            IndexJob stored = jobDao.getIndexJobById(updateJob.getId()).orElseThrow();
+            assertEquals(IndexJobAction.DELETE, stored.getAction(),
+                    "a change cannot arrive after its item was deleted, so DELETE has to stick");
+            // the id still rotates, so an indexer already holding the older job cannot delete this row:
+            assertEquals(updateJob.getId(), stored.getId(),
+                    "the takeover should still have given the row the new job's index-job id");
+
+            sqlSession.rollback();
+        }
+    }
+
+    /**
      * maxBatchSize has to be applied by the database. This used to pass MyBatis' RowBounds to a
      * statement with no LIMIT, and RowBounds paginates in memory by default: every pending job row
      * was fetched and all but the first maxBatchSize thrown away, which is the opposite of what a

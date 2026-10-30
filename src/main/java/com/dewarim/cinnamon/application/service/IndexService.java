@@ -465,6 +465,11 @@ public class IndexService implements Runnable {
             case FAILED -> log.info("Failed to index {}", job);
             case SUCCESS -> {
                 switch (job.getAction()) {
+                    // updateDocument deletes every document matching the term and adds this one in a
+                    // single atomic call, so a changed item's document is replaced rather than
+                    // duplicated and the item is never briefly absent from the index. This is the
+                    // other deletion in this class: part of re-indexing an item that still exists,
+                    // as opposed to deleteFromIndex, which is for an item that is gone.
                     case UPDATE -> indexWriter.updateDocument(new Term(LUCENE_FIELD_UNIQUE_ID, key.toString()), doc);
                     case CREATE -> indexWriter.addDocument(doc);
                 }
@@ -615,6 +620,19 @@ public class IndexService implements Runnable {
         }
     }
 
+    /**
+     * Removes the item's document from the Lucene index for good, because the OSD or folder itself
+     * has been deleted. This is what an {@link IndexJobAction#DELETE} job asks for, and nothing is
+     * added back.
+     * <p>
+     * Not to be confused with the delete that is part of an update: re-indexing a changed item also
+     * has to get rid of that item's previous document, but that happens as one atomic
+     * {@code IndexWriter.updateDocument} call in {@link #handleIndexItem}, not here.
+     * <p>
+     * The term is {@code unique_id}, i.e. {@link IndexKey#toString()} ("OSD#42"), which carries
+     * neither the action nor the index-job id - so it matches the item's document whichever job
+     * wrote it.
+     */
     private IndexEvent deleteFromIndex(IndexKey key, IndexJob job, IndexWriter indexWriter) {
         try {
             indexWriter.deleteDocuments(new Term(LUCENE_FIELD_UNIQUE_ID, key.toString()));

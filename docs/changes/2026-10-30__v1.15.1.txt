@@ -1,0 +1,34 @@
+Changes v1.15.1:
+
+- no database changes
+
+- fixed: an index update could be lost silently. While IndexService was indexing an item, a new change to that item
+  inserted nothing at all (ON CONFLICT DO NOTHING on the one row per job_type/item_id), and the indexer then deleted
+  the job it had read - so the index kept the document built from the stale snapshot, no job was left to retry it, and
+  nothing was logged: no failed job, no error. A conflicting insert now takes the pending row over with a fresh
+  index-job id, so the in-flight indexer's "delete from index_jobs where id = ?" matches nothing and the work stays
+  queued. The cost is an occasional redundant re-index, which is idempotent.
+  This also repairs waitUntilSearchable: SearchService.waitUntilIndexed treats a missing job row as "indexed", and a
+  swallowed insert used to hand it an index-job id that was never in the database, so the wait returned immediately.
+
+- fixed: deleting an OSD or folder while an index job for it was still pending left that job's action as CREATE or
+  UPDATE, so the item's document was not removed from the Lucene index - IndexService found no item to index, dropped
+  the job, and the document stayed until a search result verification noticed the unknown id. A pending DELETE now
+  wins the takeover, and is never downgraded by an insert arriving after it (item ids come from a sequence and are
+  never reused, so no change can legitimately follow a delete job).
+
+- fixed: a new change to an item now resets its index job's failure count. Before, a job past maxIndexAttempts was
+  never picked up again, and since only one job per item can exist, that dead row blocked every later change to the
+  same item indefinitely. Failures are still recorded and still listed by listFailedIndexJobs after each attempt - an
+  item that cannot be indexed is simply no longer given up on.
+
+- fixed: maxBatchSize is now applied by the database when fetching index jobs. It was passed as a MyBatis RowBounds to
+  a statement without a LIMIT, and RowBounds paginates in memory: every pending job row was fetched and all but the
+  first maxBatchSize discarded, which is the opposite of what a batch size is for on an installation with a backlog.
+
+- optimizations: the AccessFilter permission rebuild no longer runs three queries per acl. A permission check now
+  resolves the acls granting that permission to the user's groups in a single query, so the cost of a cache miss no
+  longer grows with the number of acls in the installation.
+
+- test suite: runtime down from ~40s to ~17.5s - fixed sleeps replaced by condition polling, and duplicate log output
+  removed (loggers declaring an appender without additivity="false" printed every message twice).
