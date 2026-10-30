@@ -1,6 +1,8 @@
 Changes v1.15.1:
 
-- no database changes
+- database change: objects.owner_id is now not null, as it already was for folders and links. Existing OSDs
+  without an owner have to be given one before the constraint can be applied - see docs/migration.2026.adoc,
+  section v1.15.1, for the check and the DDL.
 
 - added: the OSD__COPY response now reports which copy came from which source, as a <copies> list of
   <copy><sourceId/><copyId/></copy>. A copy keeps no reference to its source - predecessorId and rootId are cleared
