@@ -122,6 +122,17 @@ human-readable dependency/license table that is checked into the repository. It 
 so it only shows up in `git status` when the dependencies actually change. Note that
 `-DskipSbom` leaves the existing file untouched rather than updating it.
 
+The `dist` profile regenerates `docs/api.md` the same way, from the `UrlMapping` enum and the
+`examples()` of the request/response classes, so the checked-in API documentation cannot drift
+from the code. Also **generated - do not edit it by hand**: change the `examples()` method or the
+`UrlMapping` entry and rebuild. It is written by `CinnamonServer --write-api <file>`, which writes
+to the file directly; `--api` prints the same document to stdout for reading. Redirecting `--api`
+into the file from a build is what the `--write-api` flag exists to avoid - `exec-maven-plugin`
+folds stderr into `outputFile`, so a JVM warning lands as the document's first line.
+
+Both renderings are deterministic: API examples use the fixed `Constants.LOCAL_DATE_TIME_EXAMPLE`
+rather than the current time, so two consecutive builds produce byte-identical files.
+
 ## Test Database Setup
 
 Integration tests require a running PostgreSQL instance:

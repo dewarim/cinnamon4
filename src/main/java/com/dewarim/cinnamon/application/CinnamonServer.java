@@ -46,6 +46,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.*;
@@ -354,21 +355,31 @@ public class CinnamonServer {
     }
 
     public static void main(String[] args) throws Exception {
-        log.info("Cinnamon Server version {}", CinnamonServer.VERSION);
-
-
         Args       cliArguments = new Args();
         JCommander commander    = JCommander.newBuilder().addObject(cliArguments).build();
         commander.parse(args);
 
-        if (cliArguments.help) {
-            commander.setColumnSize(80);
-            commander.usage();
+        /*
+         * --api writes the API documentation to stdout, and the dist build redirects that into
+         * docs/api.md, so nothing may be logged before it: the version banner would otherwise end
+         * up as the first line of the generated document. Every other mode still logs the version
+         * first, so starting the server - or asking it for a config template - reports it as before.
+         */
+        if (cliArguments.api) {
+            printApi();
             return;
         }
 
-        if (cliArguments.api) {
-            printApi();
+        if (cliArguments.writeApiFile != null) {
+            writeApiDoc(cliArguments.writeApiFile);
+            return;
+        }
+
+        log.info("Cinnamon Server version {}", CinnamonServer.VERSION);
+
+        if (cliArguments.help) {
+            commander.setColumnSize(80);
+            commander.usage();
             return;
         }
 
@@ -399,16 +410,35 @@ public class CinnamonServer {
     }
 
     private static void printApi() {
+        System.out.print(renderApi());
+    }
+
+    /**
+     * Write the API documentation to a file instead of stdout. The dist build regenerates
+     * docs/api.md with this rather than by redirecting stdout, so that nothing the JVM or a
+     * library happens to print - an incubator-module warning, for instance - can end up in the
+     * generated document.
+     */
+    private static void writeApiDoc(String filename) {
+        try {
+            Files.writeString(Path.of(filename), renderApi());
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to write API documentation to " + filename, e);
+        }
+    }
+
+    private static String renderApi() {
+        StringBuilder api = new StringBuilder();
         XmlMapper mapper = XmlMapper.builder()
                 .configureForJackson2()
                 .configure(SerializationFeature.INDENT_OUTPUT, true)
                 .build();
-        System.out.println("""
+        api.append("""
                 # API Endpoint Documentation
                 
                 Note: response examples are not directly matching request examples, they just show the format you can expect.
                 
-                """);
+                """).append("\n");
         Arrays.stream(UrlMapping.values()).forEach(urlMapping -> {
                     String formatted;
                     if (urlMapping.getRequestClass() != null) {
@@ -448,9 +478,10 @@ public class CinnamonServer {
                                 .replace("__endpoint__", urlMapping.getPath())
                                 .replace("__description__", urlMapping.getDescription());
                     }
-                    System.out.println(formatted);
+                    api.append(formatted).append("\n");
                 }
         );
+        return api.toString();
     }
 
     private static String requestToExample(ObjectMapper mapper, Class<? extends ApiRequest<?>> apiRequestClass) throws Exception {
@@ -551,6 +582,9 @@ public class CinnamonServer {
 
         @Parameter(names = {"--api"}, description = "Print API documentation")
         boolean api;
+
+        @Parameter(names = "--write-api", description = "Write the API documentation to the filename given.")
+        String writeApiFile;
 
         @Parameter(names = {"--show-config"}, description = "Show config details on startup like DB connection used etc. May include passwords!")
         boolean showConfig;
