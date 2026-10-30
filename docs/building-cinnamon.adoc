@@ -41,3 +41,72 @@ This should result in a log line like:
     [main] INFO  com.dewarim.cinnamon.application.CinnamonServer - Server is running at http @ port 8080
 
 (if there is a postgres server running with the default cinnamon database)
+=== Building a release
+
+==== 1. Bump the version, by hand, in two places
+
+* `pom.xml` - the `<version>` element directly under `<project>`
+* `CinnamonServer.VERSION`
+
+`VersionConsistencyTest` parses `pom.xml` at test time and fails when the two disagree, so a
+half-done bump shows up as a red suite rather than as a wrong version at runtime.
+
+Nothing else carries the version by hand: `src/main/resources/buildNumber.properties` is rewritten
+by `buildnumber-maven-plugin` on every compile (it is committed on purpose - the number counts how
+many builds a feature took), and `docs/sbom.adoc` is generated, ending up as a one-line diff of the
+product version.
+
+==== 2. Record the changes
+
+Add `docs/changes/<YYYY-MM-DD>__v<version>.txt` - plain text, a `Changes vX.Y.Z:` header and `-`
+bullets - covering every change in the release, and say "no database changes" when there are none.
+Schema changes additionally go into `docs/migration.2026.adoc` as a `=== vX.Y.Z` section with the
+DDL indented four spaces; versions without schema changes do not appear there at all.
+
+==== 3. Build
+
+    mvn clean package -Pdist
+
+The two `Unknown keyword meta:enum` / `deprecated` warnings from the CycloneDX schema validator
+appear on every SBOM run and are harmless.
+
+==== 4. Check the artifact
+
+The jar is a plain jar whose manifest declares `Class-Path: lib/*.jar`, so jar, `lib/` and SBOM all
+have to agree. Check the unpacked archive, not `target/`:
+
+    # a) the tests really ran in this build, and all of them passed:
+    grep -h 'tests="' target/surefire-reports/TEST-*.xml \
+      | sed 's/.*tests="\([0-9]*\)".*failures="\([0-9]*\)".*/\1 \2/' \
+      | awk '{t+=$1; f+=$2} END {print "tests:", t, "failures:", f}'
+
+    mkdir -p local/temp/distcheck && tar xzf target/cinnamon-server.tar.gz -C local/temp/distcheck
+    cd local/temp/distcheck/cinnamon-server
+
+    # b) the manifest Class-Path and lib/ must match exactly:
+    unzip -p cinnamon-server.jar META-INF/MANIFEST.MF | tr -d '\r' \
+      | awk '/^Class-Path:/{p=1;sub(/^Class-Path: /,"");printf "%s",$0;next} \
+             /^ /{if(p){sub(/^ /,"");printf "%s",$0;next}} {p=0}' \
+      | tr ' ' '\n' | sed 's|^lib/||' | grep -v '^$' | sort > cp.txt
+    ls lib/ | sort > lib.txt
+    diff cp.txt lib.txt
+
+    # c) no test-scope dependency leaked into lib/ (must print nothing):
+    ls lib/ | grep -Ei "junit|mockito|opentest|assertj|hamcrest"
+
+    # d) the SBOM names the new version, and has one component per jar in lib/:
+    jq -r '.metadata.component | "\(.name) \(.version)"' cinnamon-server.cdx.json
+    ls lib/*.jar | wc -l
+
+    # e) the unpacked jar starts and reports the new version:
+    java --add-modules jdk.incubator.vector --enable-native-access=ALL-UNNAMED \
+         -jar cinnamon-server.jar --write-config smoke-config.xml
+
+Do not skip (e). It is the only check that exercises the manifest `Class-Path` against a real
+`lib/` directory, and `--write-config` writes a config template and exits instead of starting a
+server, so it needs no database and cannot hang.
+
+==== 5. Commit and tag
+
+Keep the version bump as its own commit (`version++`), including the regenerated `docs/sbom.adoc`,
+then tag `vX.Y.Z` and push.
