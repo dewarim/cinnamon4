@@ -23,6 +23,8 @@ public class Relation implements Identifiable {
     @NotNull
     @Positive
     private Long typeId;
+    // NOT NULL in the database, and the insert writes it as given
+    @NotNull
     private String metadata;
     private Boolean isParent;
 

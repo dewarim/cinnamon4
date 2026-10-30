@@ -5,6 +5,7 @@ import com.dewarim.cinnamon.api.OwnableWithMetadata;
 import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
@@ -50,7 +51,7 @@ public class Folder implements OwnableWithMetadata, Identifiable {
 
     @JacksonXmlElementWrapper(localName = "metasets")
     @JacksonXmlProperty(localName = "metaset")
-    private List<Meta> metasets = new ArrayList<>();
+    private List<@Valid Meta> metasets = new ArrayList<>();
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime created = LocalDateTime.now();

@@ -4,7 +4,6 @@ import com.dewarim.cinnamon.api.ApiRequest;
 import com.dewarim.cinnamon.application.service.RequestValidator;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.PositiveOrZero;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
@@ -17,7 +16,7 @@ public record MetaRequest(
         @NotNull @Positive Long id,
         @JacksonXmlElementWrapper(localName = "typeIds")
         @JacksonXmlProperty(localName = "typeId")
-        List<@NotNull @PositiveOrZero Long> typeIds) implements ApiRequest<MetaRequest> {
+        List<@NotNull @Positive Long> typeIds) implements ApiRequest<MetaRequest> {
 
     public MetaRequest() {
         this(null, null);

@@ -3,12 +3,16 @@ package com.dewarim.cinnamon.test.integration;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.client.CinnamonClient;
 import com.dewarim.cinnamon.client.CinnamonClientException;
+import com.dewarim.cinnamon.model.ChangeTrigger;
+import com.dewarim.cinnamon.model.LifecycleState;
 import com.dewarim.cinnamon.model.LoginType;
 import com.dewarim.cinnamon.model.Meta;
+import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.UiLanguage;
 import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.request.osd.CreateOsdRequest;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.function.Executable;
 
 import java.io.IOException;
 import java.util.List;
@@ -118,5 +122,84 @@ public class RequestValidationIntegrationTest extends CinnamonIntegrationTest {
         var osd = client.createOsd(new CreateOsdRequest("spike-valid-osd", createFolderId, userId, 1L, 1L,
                 null, 1L, null, "<sum/>"));
         assertEquals("spike-valid-osd", osd.getName());
+    }
+
+    /*
+     * The tests below cover fields that are NOT NULL in the database but were not checked anywhere:
+     * the request passed validation, the servlet handed the null on, and the caller got a database
+     * error instead of being told which field was missing.
+     */
+
+    private String assertInvalidRequest(Executable call) {
+        CinnamonClientException ex = assertThrows(CinnamonClientException.class, call);
+        assertEquals(ErrorCode.INVALID_REQUEST, ex.getErrorCode());
+        return messageOf(ex);
+    }
+
+    @Test
+    public void setSummaryNeedsASummary() throws Exception {
+        ObjectSystemData osd = client.createOsd(new CreateOsdRequest("set-summary-validation", createFolderId,
+                userId, 1L, 1L, null, 1L, null, "<sum/>"));
+        // objects.summary and folders.summary are NOT NULL: this used to fail in the database
+        assertTrue(assertInvalidRequest(() -> client.setSummary(osd.getId(), null)).contains("summary"));
+        assertTrue(assertInvalidRequest(() -> client.setFolderSummary(createFolderId, null)).contains("summary"));
+        assertTrue(assertInvalidRequest(() -> client.setSummary(null, "<sum/>")).contains("id"));
+    }
+
+    @Test
+    public void aChangeTriggerNeedsAControllerAnActionAndAType() {
+        // change_triggers.controller, .action and .trigger_type are NOT NULL, and only the name was checked
+        ChangeTrigger trigger = new ChangeTrigger(null, "validation-trigger", null, null,
+                true, true, false, false, "<config/>", null, 1, false);
+        String message = assertInvalidRequest(() -> adminClient.createChangeTrigger(trigger));
+        assertTrue(message.contains("changeTriggers[0].controller"), message);
+        assertTrue(message.contains("changeTriggers[0].action"), message);
+        assertTrue(message.contains("changeTriggers[0].triggerType"), message);
+    }
+
+    @Test
+    public void updatingALifecycleStateNeedsItsStateClass() {
+        // the update statement writes state_class, which is NOT NULL, so the update has to carry it
+        LifecycleState state = new LifecycleState("validation-state", "<config/>", null, null, null);
+        state.setId(1L);
+        assertTrue(assertInvalidRequest(() -> adminClient.updateLifecycleState(state))
+                .contains("lifecycleStates[0].stateClass"));
+    }
+
+    @Test
+    public void aRelationNeedsItsMetadata() {
+        // relations.metadata is NOT NULL and the insert writes it as given
+        assertTrue(assertInvalidRequest(() -> client.createRelation(1L, 2L, 1L, null))
+                .contains("relations[0].metadata"));
+    }
+
+    @Test
+    public void updatingAMetasetNeedsTheObjectItBelongsTo() {
+        // the servlet compares the object id with the one it loaded, so a null used to end up as
+        // the less precise INVALID_UPDATE
+        Meta meta = new Meta(null, 1L, "<xml/>");
+        meta.setId(1L);
+        assertTrue(assertInvalidRequest(() -> client.updateOsdMeta(meta)).contains("metas[0].objectId"));
+    }
+
+    @Test
+    public void listingObjectsNeedsAFolderId() {
+        // folderId is a primitive long, so a request that omits it arrives as 0 and used to be
+        // answered with an empty list
+        assertTrue(assertInvalidRequest(() -> client.getOsdsInFolderWrapped(0L, false, true, false))
+                .contains("folderId"));
+    }
+
+    @Test
+    public void aUserUpdateHasToCarryEveryColumnItWrites() {
+        // users.name, .login_type, .fullname and .config are NOT NULL and the update statement
+        // writes all of them, so a partial update used to answer DB_UPDATE_FAILED
+        UserAccount partial = new UserAccount();
+        partial.setId(userId);
+        partial.setEmail("partial@example.com");
+        String message = assertInvalidRequest(() -> adminClient.updateUser(partial));
+        assertTrue(message.contains("userAccounts[0].name"), message);
+        assertTrue(message.contains("userAccounts[0].loginType"), message);
+        assertTrue(message.contains("userAccounts[0].fullname"), message);
     }
 }

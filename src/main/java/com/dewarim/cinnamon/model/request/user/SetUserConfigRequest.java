@@ -1,20 +1,22 @@
 package com.dewarim.cinnamon.model.request.user;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.dewarim.cinnamon.application.service.RequestValidator;
 import com.fasterxml.jackson.annotation.JsonRootName;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 import java.util.List;
 import java.util.Optional;
 
 @JsonRootName("setUserConfigRequest")
-public record SetUserConfigRequest(Long userId, String config) implements ApiRequest<SetUserConfigRequest> {
+public record SetUserConfigRequest(@NotNull @Positive Long userId,
+                                   // users.config is NOT NULL
+                                   @NotNull String config) implements ApiRequest<SetUserConfigRequest> {
 
     public Optional<SetUserConfigRequest> validateRequest() {
-        if (config != null && userId != null && userId > 0) {
-            return Optional.of(this);
-        } else {
-            return Optional.empty();
-        }
+        RequestValidator.validate(this);
+        return Optional.of(this);
     }
 
     @Override

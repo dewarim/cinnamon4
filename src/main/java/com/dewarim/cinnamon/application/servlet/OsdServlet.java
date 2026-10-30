@@ -735,7 +735,8 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
 
     private void setSummary(CinnamonRequest request, CinnamonResponse response, UserAccount user, OsdDao osdDao) throws
             IOException {
-        SetSummaryRequest summaryRequest = request.getMapper().readValue(request.getInputStream(), SetSummaryRequest.class);
+        SetSummaryRequest summaryRequest = request.getMapper().readValue(request.getInputStream(), SetSummaryRequest.class)
+                .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         ObjectSystemData  osd            = osdDao.getObjectById(summaryRequest.id()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
         authorizationService.throwUpUnlessUserOrOwnerHasPermission(osd, DefaultPermission.SET_SUMMARY, user,
                 ErrorCode.NO_SET_SUMMARY_PERMISSION);
@@ -924,7 +925,8 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
 
     private void getObjectsByFolderId(CinnamonRequest request, CinnamonResponse response, UserAccount
             user, OsdDao osdDao) throws IOException {
-        OsdByFolderRequest     osdRequest     = request.getMapper().readValue(request.getInputStream(), OsdByFolderRequest.class);
+        OsdByFolderRequest     osdRequest     = request.getMapper().readValue(request.getInputStream(), OsdByFolderRequest.class)
+                .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         long                   folderId       = osdRequest.folderId();
         boolean                includeSummary = osdRequest.includeSummary();
         boolean                includeMeta    = osdRequest.includeCustomMetadata();

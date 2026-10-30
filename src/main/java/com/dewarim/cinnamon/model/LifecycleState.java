@@ -2,7 +2,6 @@ package com.dewarim.cinnamon.model;
 
 import com.dewarim.cinnamon.api.Identifiable;
 import com.dewarim.cinnamon.api.lifecycle.LifecycleStateConfig;
-import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.constraints.NotBlank;
@@ -25,8 +24,8 @@ public class LifecycleState implements Identifiable {
     private String name;
     @NotBlank
     private String config = "<config />";
-    // an update leaves the state class alone, so it is only demanded on create
-    @NotBlank(groups = CreateRequest.class)
+    // the update statement writes state_class, which is NOT NULL, so an update has to carry it
+    @NotBlank
     private String stateClass;
     private Long   lifecycleId;
     private Long   lifecycleStateForCopyId;

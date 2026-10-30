@@ -214,6 +214,12 @@ message naming each offending field (`links[0].aclId must not be null`), rendere
 - `UiLanguageServlet` calls `RequestValidator.invalidateUiLanguageCache()` on create/update/delete: the locales a
   message can be rendered in are fixed when the validator is built.
 
+The sharpest check for a missing constraint is the schema: if a mapper's insert or update statement writes a
+`NOT NULL` column straight from the request object, that field needs `@NotNull`/`@NotEmpty`, or the caller gets a
+database error instead of being told what was missing. A column `DEFAULT` does not help - an explicit null still
+violates the constraint. It only *doesn't* apply where the servlet merges field by field onto the row it loaded
+(`FolderServlet.updateFolder`, `OsdServlet.update`) or builds the object itself (`createFolder`, `createOsd`).
+
 ## Adding a New API Endpoint
 
 1. Add a `Request` class in `model/request/<resource>/` and a `Response`/`Wrapper` in `model/response/`, with

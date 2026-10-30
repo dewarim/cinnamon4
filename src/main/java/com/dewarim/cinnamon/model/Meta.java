@@ -1,7 +1,6 @@
 package com.dewarim.cinnamon.model;
 
 import com.dewarim.cinnamon.api.Identifiable;
-import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -10,13 +9,19 @@ import java.util.Objects;
 
 public class Meta implements Identifiable {
 
+    /**
+     * Validation group for a request that attaches metadata to an object which already exists.
+     * createOsd and createFolder carry their metasets as Meta objects too, but the object is only
+     * created together with them, so objectId cannot be demanded there.
+     */
+    public interface OnExistingObject {
+    }
+
     // Request validation, checked when a request cascades into this class with @Valid.
     @NotNull(groups = UpdateRequest.class)
     @Positive(groups = UpdateRequest.class)
     private Long   id;
-    // a createOsd request carries metasets whose object is only created with them, so the object
-    // id is demanded by createMeta (which passes CreateRequest.class) and not by the Default group
-    @NotNull(groups = CreateRequest.class)
+    @NotNull(groups = {OnExistingObject.class, UpdateRequest.class})
     @Positive
     private Long   objectId;
     @NotNull

@@ -29,7 +29,7 @@ public record CreateOsdRequest(
         @Positive Long typeId,
         @Positive Long formatId,
         @Positive Long languageId,
-        Long lifecycleStateId,
+        @Positive Long lifecycleStateId,
         // never null: the compact constructor substitutes DEFAULT_SUMMARY
         @NotBlank String summary,
         @JacksonXmlElementWrapper(localName = "metasets")

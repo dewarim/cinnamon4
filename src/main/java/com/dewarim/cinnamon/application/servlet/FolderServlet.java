@@ -486,8 +486,8 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
     }
 
     private void setSummary(CinnamonRequest request, CinnamonResponse response, UserAccount user, FolderDao folderDao) throws IOException {
-        // TODO: add SetSummaryRequest.validateRequest
-        SetSummaryRequest summaryRequest = request.getMapper().readValue(request.getInputStream(), SetSummaryRequest.class);
+        SetSummaryRequest summaryRequest = request.getMapper().readValue(request.getInputStream(), SetSummaryRequest.class)
+                .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         Optional<Folder>  folderOpt      = folderDao.getFolderById(summaryRequest.id());
         if (folderOpt.isPresent()) {
             Folder folder = folderOpt.get();

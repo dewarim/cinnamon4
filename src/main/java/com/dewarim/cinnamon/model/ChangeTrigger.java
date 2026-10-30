@@ -14,7 +14,9 @@ public class ChangeTrigger implements Identifiable {
     private Long              id;
     @NotBlank
     private String            name;
+    @NotBlank
     private String            controller;
+    @NotBlank
     private String            action;
     private boolean           active;
     private boolean           preTrigger;
@@ -22,7 +24,9 @@ public class ChangeTrigger implements Identifiable {
     private boolean           postCommitTrigger;
     private boolean           copyFileContent;
     private int               ranking;
+    @NotNull
     private String            config = "<config/>";
+    @NotNull
     private ChangeTriggerType triggerType;
 
     public ChangeTrigger() {

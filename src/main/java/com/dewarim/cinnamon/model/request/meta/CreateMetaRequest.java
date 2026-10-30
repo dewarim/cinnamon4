@@ -3,7 +3,6 @@ package com.dewarim.cinnamon.model.request.meta;
 import com.dewarim.cinnamon.api.ApiRequest;
 import com.dewarim.cinnamon.application.service.RequestValidator;
 import com.dewarim.cinnamon.model.Meta;
-import com.dewarim.cinnamon.model.request.CreateRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
@@ -35,7 +34,7 @@ public record CreateMetaRequest(
     }
 
     public Optional<CreateMetaRequest> validateRequest() {
-        RequestValidator.validate(this, CreateRequest.class);
+        RequestValidator.validate(this, Meta.OnExistingObject.class);
         return Optional.of(this);
     }
 

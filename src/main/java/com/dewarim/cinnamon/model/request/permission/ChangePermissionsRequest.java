@@ -17,10 +17,10 @@ public record ChangePermissionsRequest(
         @NotNull @Positive Long aclGroupId,
         @JacksonXmlElementWrapper(localName = "addPermissions")
         @JacksonXmlProperty(localName = "addId")
-        List<Long> add,
+        List<@NotNull @Positive Long> add,
         @JacksonXmlElementWrapper(localName = "removePermissions")
         @JacksonXmlProperty(localName = "removeId")
-        List<Long> remove) implements ApiRequest<ChangePermissionsRequest> {
+        List<@NotNull @Positive Long> remove) implements ApiRequest<ChangePermissionsRequest> {
 
     public ChangePermissionsRequest {
         if (add == null) {

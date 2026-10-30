@@ -19,6 +19,37 @@ Changes v1.16.0:
   request; the ones with an explicit emptiness check (a minority) are unchanged. A unit test now walks UrlMapping and
   asserts the whole set, so a request added later cannot reopen the hole.
 
+- fixed: a request could leave a NOT NULL column without a value, and the caller was answered with a database
+  error instead of being told which field was missing. Found by walking every insert and update statement in the
+  MyBatis mappers and checking each NOT NULL column it writes against the validation of the field behind it. Six
+  endpoints were affected, and all six now answer INVALID_REQUEST naming the field:
+  * setSummary (for objects and for folders) validated nothing at all - a request without a summary set the NOT NULL
+    column to null, and one without an id looked up object null.
+  * createChangeTrigger and updateChangeTrigger only checked the name, while controller, action, trigger_type and
+    config are all NOT NULL.
+  * updateLifecycleState did not require stateClass, which the update statement writes to a NOT NULL column.
+  * createRelation did not require metadata, which the insert writes as given to a NOT NULL column.
+  * updateUser accepted a partial account - "at least one field to change" - but the update statement writes name,
+    login_type, fullname and config, all NOT NULL, straight from the request. An update therefore has to carry them.
+    The password stays the exception: an empty one still means "keep the stored password".
+  * updateMeta stopped requiring the object id in the previous commit, which left it to the servlet's less precise
+    INVALID_UPDATE. Both createMeta and updateMeta demand it again, while the metasets carried along by createOsd
+    and createFolder still do not - the object they belong to is only created with them.
+  The ids inside aclGroup.permissionIds, userAccount.groupIds, changePermissions' add/remove lists and
+  getRelations' id list are checked per element now; they end up in NOT NULL columns too.
+
+- fixed: getObjectsByFolderId answered with an empty list when the request carried no folder id. The field is a
+  primitive long, so an absent one arrives as 0 rather than null, and nothing checked it. Also applies to
+  setPassword, setUserConfig and getUserAccount, which validated their fields inline and now do it by annotation;
+  getUserAccount keeps its own USER_INFO_REQUEST_WITHOUT_NAME_OR_ID for the "name or id" rule.
+
+- changed: a metaset type id of zero is rejected by getMeta instead of matching nothing. The old check read
+  "typeId < 0", which let zero through; no type id in the database is ever zero. createOsd now also rejects a
+  lifecycleStateId of zero.
+
+- fixed: createFolder did not validate the metasets it carries. createOsd has always cascaded into them; a folder's
+  went to the database unchecked.
+
 - fixed: createRelation accepted a relation whose rightId or typeId was not positive. The check read
   "leftId <= 0 || rightId <= 0 && typeId <= 0", and && binds tighter than ||, so a non-positive rightId alone - or a
   non-positive typeId alone - passed. All three ids are now required to be positive.

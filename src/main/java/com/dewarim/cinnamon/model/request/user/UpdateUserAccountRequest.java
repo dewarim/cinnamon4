@@ -34,22 +34,6 @@ public record UpdateUserAccountRequest(
     }
 
     @Override
-    /**
-     * An update has to name at least one field to change. That is a rule about the account as a
-     * whole rather than about any single field, so it stays hand-written; which fields may be
-     * changed, and what a changed value has to look like, is annotated on UserAccount.
-     */
-    public boolean validated() {
-        return userAccounts.stream().allMatch(user ->
-                user.getName() != null ||
-                        user.getLoginType() != null ||
-                        user.getUiLanguageId() != null ||
-                        user.getEmail() != null ||
-                        user.getFullname() != null ||
-                        (user.getPassword() != null && !user.getPassword().trim().isEmpty()));
-    }
-
-    @Override
     public Wrapper<UserAccount> fetchResponseWrapper() {
         return new UserAccountWrapper();
     }

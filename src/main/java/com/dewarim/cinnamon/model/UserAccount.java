@@ -25,9 +25,12 @@ public class UserAccount implements Principal, LoginUser, Identifiable {
     @NotNull(groups = UpdateRequest.class)
     @Positive(groups = UpdateRequest.class)
     private Long    id;
-    @NotEmpty(groups = CreateRequest.class)
+    // name, loginType, fullname and config are NOT NULL and the update statement writes all of
+    // them from the request, so an update has to carry them too. The password is the exception:
+    // UserAccountServlet keeps the stored one when the request leaves it empty.
+    @NotEmpty
     private String  name;
-    @NotEmpty(groups = CreateRequest.class)
+    @NotEmpty
     private String  loginType;
     @NotEmpty(groups = CreateRequest.class)
     private String  password;
@@ -36,7 +39,7 @@ public class UserAccount implements Principal, LoginUser, Identifiable {
     @NotNull(groups = CreateRequest.class)
     @Positive
     private Long    uiLanguageId;
-    @NotEmpty(groups = CreateRequest.class)
+    @NotEmpty
     private String  fullname;
     @NotEmpty(groups = CreateRequest.class)
     private String  email;
@@ -50,7 +53,8 @@ public class UserAccount implements Principal, LoginUser, Identifiable {
 
     @JacksonXmlElementWrapper(localName = "groupIds")
     @JacksonXmlProperty(localName = "groupId")
-    private List<Long> groupIds = new ArrayList<>();
+    private List<@NotNull @Positive Long> groupIds = new ArrayList<>();
+    @NotNull
     private String     config   = "<config/>";
     @JsonIgnore
     private boolean    newUser  = false;

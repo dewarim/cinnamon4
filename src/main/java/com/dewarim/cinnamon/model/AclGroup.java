@@ -28,7 +28,7 @@ public class AclGroup implements Identifiable {
 
     @JacksonXmlElementWrapper(localName = "permissions")
     @JacksonXmlProperty(localName = "permissionId")
-    private List<Long> permissionIds = new ArrayList<>();
+    private List<@NotNull @Positive Long> permissionIds = new ArrayList<>();
 
     public AclGroup() {
     }
