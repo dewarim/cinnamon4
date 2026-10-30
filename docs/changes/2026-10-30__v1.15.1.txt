@@ -2,6 +2,14 @@ Changes v1.15.1:
 
 - no database changes
 
+- added: the OSD__COPY response now reports which copy came from which source, as a <copies> list of
+  <copy><sourceId/><copyId/></copy>. A copy keeps no reference to its source - predecessorId and rootId are cleared
+  on purpose, since a copy starts a version tree of its own - and the sources are loaded by id list, whose order need
+  not match that of the request, so a caller having to touch each copy afterwards could only copy one object per
+  request. The new element is left off the wire entirely when empty, so no other endpoint using OsdWrapper changes
+  shape, and the copies themselves are still returned as osds: existing clients keep working unchanged.
+  CinnamonClient.copyOsdsWithSources exposes the mapping; copyOsds is unchanged.
+
 - fixed: an index update could be lost silently. While IndexService was indexing an item, a new change to that item
   inserted nothing at all (ON CONFLICT DO NOTHING on the one row per job_type/item_id), and the indexer then deleted
   the job it had read - so the index kept the document built from the stale snapshot, no job was left to retry it, and
