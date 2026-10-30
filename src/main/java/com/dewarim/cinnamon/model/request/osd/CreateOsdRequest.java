@@ -76,7 +76,7 @@ public record CreateOsdRequest(
     public List<ApiRequest<CreateOsdRequest>> examples() {
         return List.of(new CreateOsdRequest("create OSD request must be sent via multipart-request",
                 1L, 23L, 44L, 2L, 3L, 1L, null,
-                "<summary>Optional fields: typeId, aclId, ownerId, formatId, languageId, summary, metas</summary>",
+                "<summary>Optional fields: formatId, languageId, lifecycleStateId, summary, metas</summary>",
                 List.of(new Meta(1L, 2L, "<xml>some meta content</xml>"))));
     }
 }

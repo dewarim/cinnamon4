@@ -3921,7 +3921,7 @@ should contain data.
   <formatId>3</formatId>
   <languageId>1</languageId>
   <lifecycleStateId/>
-  <summary>&lt;summary>Optional fields: typeId, aclId, ownerId, formatId, languageId, summary, metas&lt;/summary></summary>
+  <summary>&lt;summary>Optional fields: formatId, languageId, lifecycleStateId, summary, metas&lt;/summary></summary>
   <metasets>
     <metaset>
       <id/>
