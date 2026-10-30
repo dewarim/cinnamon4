@@ -1,11 +1,16 @@
 package com.dewarim.cinnamon.test.integration;
 
 import com.dewarim.cinnamon.ErrorCode;
+import com.dewarim.cinnamon.client.CinnamonClient;
 import com.dewarim.cinnamon.client.CinnamonClientException;
+import com.dewarim.cinnamon.model.LoginType;
 import com.dewarim.cinnamon.model.Meta;
+import com.dewarim.cinnamon.model.UiLanguage;
+import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.request.osd.CreateOsdRequest;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -59,6 +64,52 @@ public class RequestValidationIntegrationTest extends CinnamonIntegrationTest {
         String message = messageOf(ex);
         System.out.println("broken metaset -> " + message);
         assertTrue(message.contains("metasets[0].typeId"), "should name the element: " + message);
+    }
+
+    /**
+     * A client authenticated as a freshly created user with the given ui language. The default test
+     * users all have ui_language_id 1 ("DE"), so a second user is needed to tell a message rendered
+     * in the user's language apart from one rendered in the server's default locale.
+     */
+    private CinnamonClient clientForUserWithLanguage(String name, Long uiLanguageId) throws IOException {
+        adminClient.createUser(new UserAccount(name, "passwehde", "-", "-", uiLanguageId,
+                LoginType.CINNAMON.name(), true, true, true));
+        return new CinnamonClient(client, name, "passwehde");
+    }
+
+    private String triggerViolation(CinnamonClient asUser) {
+        CinnamonClientException ex = assertThrows(CinnamonClientException.class, () -> asUser.lockOsd(List.of()));
+        assertEquals(ErrorCode.INVALID_REQUEST, ex.getErrorCode());
+        return messageOf(ex);
+    }
+
+    @Test
+    public void messageIsRenderedInTheUsersUiLanguage() throws IOException {
+        // user "doe", like every default test user, has ui_language_id 1 -> "DE"
+        String german = triggerViolation(client);
+        // id 2 is "EN" in CreateTestDB.sql
+        String english = triggerViolation(clientForUserWithLanguage("validation-lang-en", 2L));
+
+        System.out.println("DE user -> " + german);
+        System.out.println("EN user -> " + english);
+        assertEquals("ids darf nicht leer sein", german);
+        assertEquals("ids must not be empty", english);
+    }
+
+    @Test
+    public void aNewUiLanguageIsPickedUpWithoutARestart() throws IOException {
+        /*
+         * The locales a message can be rendered in are fixed when the validator is built, so
+         * UiLanguageServlet invalidates the cache on create/update/delete and the validator is rebuilt
+         * with the new language. Without that call the resolver finds FR missing from the locales the
+         * validator was built for and falls back to English, so this assertion is what guards the
+         * invalidation. The fallback is deliberate: asking the validator for a locale it was not built
+         * for fails interpolation with HV000250 and would lose the constraint violation itself.
+         */
+        UiLanguage french = adminClient.createUiLanguage("FR");
+        String message = triggerViolation(clientForUserWithLanguage("validation-lang-fr", french.getId()));
+        System.out.println("FR user -> " + message);
+        assertEquals("ids ne doit pas \u00eatre vide", message);
     }
 
     @Test
