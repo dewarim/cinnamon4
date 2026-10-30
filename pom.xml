@@ -51,6 +51,7 @@
         <maven.compiler.source>25</maven.compiler.source>
         <maven.compiler.target>25</maven.compiler.target>
         <unbound.ldap.version>6.0.10</unbound.ldap.version>
+        <hibernate.validator.version>9.0.1.Final</hibernate.validator.version>
         <!-- Path of the generated SBOM. Defined here rather than in the "sbom" profile because the
              "vulncheck" profile consumes it too and must not depend on which profiles are active. -->
         <sbom.file>${project.build.directory}/${project.build.finalName}.cdx.json</sbom.file>
@@ -63,6 +64,16 @@
 
     <dependencyManagement>
         <dependencies>
+            <!-- Bean Validation for request objects. Deliberately WITHOUT an Expression Language
+                 implementation: RequestValidator uses ParameterMessageInterpolator, so constraint
+                 messages are never evaluated as EL. Adding jakarta.el would re-open the EL
+                 injection class (CVE-2020-10693, CVE-2025-35036) and risk a second EL
+                 implementation on the Class-Path next to the one jetty-ee10-webapp can bring. -->
+            <dependency>
+                <groupId>org.hibernate.validator</groupId>
+                <artifactId>hibernate-validator</artifactId>
+                <version>${hibernate.validator.version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
@@ -117,6 +128,11 @@
     </dependencyManagement>
 
     <dependencies>
+
+        <dependency>
+            <groupId>org.hibernate.validator</groupId>
+            <artifactId>hibernate-validator</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>com.jayway.jsonpath</groupId>

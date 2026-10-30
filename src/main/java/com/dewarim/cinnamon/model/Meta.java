@@ -8,7 +8,11 @@ public class Meta implements Identifiable {
 
     private Long   id;
     private Long   objectId;
+    // checked when a request cascades into its metasets with @Valid
+    @jakarta.validation.constraints.NotNull
+    @jakarta.validation.constraints.Positive
     private Long   typeId;
+    @jakarta.validation.constraints.NotNull
     private String content;
 
     public Meta() {

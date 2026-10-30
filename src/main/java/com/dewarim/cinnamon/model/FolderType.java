@@ -1,12 +1,25 @@
 package com.dewarim.cinnamon.model;
 
 import com.dewarim.cinnamon.api.Identifiable;
+import com.dewarim.cinnamon.model.request.UpdateRequest;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 import java.util.Objects;
 
 public class FolderType implements Identifiable {
     
+    /*
+     * An update must name the row to change, a create must not - so the id constraints belong to
+     * the UpdateRequest group, and Bean Validation groups are plain interfaces, which lets the
+     * existing UpdateRequest interface serve as the group marker.
+     */
+    @NotNull(groups = UpdateRequest.class)
+    @Positive(groups = UpdateRequest.class)
     private Long id;
+
+    @NotBlank
     private String name;
 
     public FolderType() {

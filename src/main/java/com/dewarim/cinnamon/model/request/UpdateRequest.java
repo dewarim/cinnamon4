@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.model.request;
 
+import com.dewarim.cinnamon.application.service.RequestValidator;
 import com.dewarim.cinnamon.model.response.Wrapper;
 
 import java.util.List;
@@ -9,9 +10,18 @@ public interface UpdateRequest<T> {
 
     List<T> list();
 
-    boolean validated();
+    /**
+     * Hand-written validation, for rules that constraint annotations cannot express. Defaults to
+     * true: a request whose fields are fully described by annotations does not implement this.
+     */
+    default boolean validated() {
+        return true;
+    }
 
     default Optional<UpdateRequest<T>> validateRequest(){
+        // annotation-based validation first: it throws INVALID_REQUEST naming the offending
+        // fields, which is more than the Optional.empty() below can carry
+        RequestValidator.validate(this, UpdateRequest.class);
         if (validated()) {
             return Optional.of(this);
         } else {
