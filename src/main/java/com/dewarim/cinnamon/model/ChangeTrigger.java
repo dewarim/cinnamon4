@@ -1,10 +1,18 @@
 package com.dewarim.cinnamon.model;
 
 import com.dewarim.cinnamon.api.Identifiable;
+import com.dewarim.cinnamon.model.request.UpdateRequest;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 public class ChangeTrigger implements Identifiable {
 
+    // Request validation, checked when a request cascades into this class with @Valid.
+    @NotNull(groups = UpdateRequest.class)
+    @Positive(groups = UpdateRequest.class)
     private Long              id;
+    @NotBlank
     private String            name;
     private String            controller;
     private String            action;

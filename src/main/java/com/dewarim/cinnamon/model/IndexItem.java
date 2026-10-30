@@ -2,8 +2,12 @@ package com.dewarim.cinnamon.model;
 
 import com.dewarim.cinnamon.api.Identifiable;
 import com.dewarim.cinnamon.model.index.IndexType;
+import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonRootName;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 import java.util.Objects;
 
@@ -12,13 +16,21 @@ import java.util.Objects;
         "storeField"})
 public class IndexItem implements Identifiable {
 
+    // Request validation, checked when a request cascades into this class with @Valid.
+    @NotNull(groups = UpdateRequest.class)
+    @Positive(groups = UpdateRequest.class)
     private Long      id;
+    @NotBlank
     private String    fieldName;
     private boolean   multipleResults;
+    @NotBlank
     private String    name;
+    @NotBlank
     private String    searchString;
+    @NotBlank
     private String    searchCondition;
     private boolean   storeField;
+    @NotNull
     private IndexType indexType;
 
     public IndexItem() {

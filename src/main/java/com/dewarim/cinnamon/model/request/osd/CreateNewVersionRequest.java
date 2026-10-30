@@ -1,6 +1,10 @@
 package com.dewarim.cinnamon.model.request.osd;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.dewarim.cinnamon.application.service.RequestValidator;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
@@ -11,11 +15,11 @@ import java.util.Optional;
 
 @JsonRootName("createNewVersionRequest")
 public record CreateNewVersionRequest(
-        Long id,
+        @NotNull @Positive Long id,
         @JacksonXmlElementWrapper(localName = "metaRequests")
         @JacksonXmlProperty(localName = "metaRequest")
-        List<Metadata> metaRequests,
-        Long formatId) implements ApiRequest<CreateNewVersionRequest> {
+        List<@Valid Metadata> metaRequests,
+        @Positive Long formatId) implements ApiRequest<CreateNewVersionRequest> {
 
     public CreateNewVersionRequest {
         if (metaRequests == null) {
@@ -31,25 +35,17 @@ public record CreateNewVersionRequest(
         return metaRequests != null && !metaRequests.isEmpty();
     }
 
-    private boolean validated() {
-        if (metaRequests != null &&
-                !metaRequests.isEmpty() &&
-                metaRequests.stream().filter(Metadata::validated).count() != metaRequests.size()) {
-            return false;
-        }
-        return (formatId == null || formatId > 0) && id != null && id > 0;
-    }
-
     public Optional<CreateNewVersionRequest> validateRequest() {
-        if (validated()) {
-            return Optional.of(this);
-        } else {
-            return Optional.empty();
-        }
+        RequestValidator.validate(this);
+        return Optional.of(this);
     }
 
     public static class Metadata {
+        // Request validation, checked when a request cascades into this class with @Valid.
+        @NotNull
         private String content;
+        @NotNull
+        @Positive
         private Long   typeId;
 
         public Metadata() {
@@ -58,10 +54,6 @@ public record CreateNewVersionRequest(
         public Metadata(String content, Long typeId) {
             this.content = content;
             this.typeId = typeId;
-        }
-
-        private boolean validated() {
-            return ((typeId != null && typeId > 0)) && (content != null);
         }
 
         public String getContent() {

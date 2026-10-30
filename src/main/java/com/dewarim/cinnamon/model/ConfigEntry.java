@@ -1,13 +1,22 @@
 package com.dewarim.cinnamon.model;
 
 import com.dewarim.cinnamon.api.Identifiable;
+import com.dewarim.cinnamon.model.request.UpdateRequest;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 import java.util.Objects;
 
 public class ConfigEntry implements Identifiable {
     
+    // Request validation, checked when a request cascades into this class with @Valid.
+    @NotNull(groups = UpdateRequest.class)
+    @Positive(groups = UpdateRequest.class)
     private Long    id;
+    @NotBlank
     private String  name;
+    @NotNull
     private String  config;
     private boolean publicVisibility;
 

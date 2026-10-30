@@ -5,6 +5,8 @@ import com.dewarim.cinnamon.model.Acl;
 import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.response.AclWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
@@ -16,7 +18,7 @@ import java.util.List;
 public record CreateAclRequest(
         @JacksonXmlElementWrapper(localName = "acls")
         @JacksonXmlProperty(localName = "acl")
-        List<Acl> acls) implements CreateRequest<Acl>, ApiRequest<CreateAclRequest> {
+        @NotEmpty List<@Valid Acl> acls) implements CreateRequest<Acl>, ApiRequest<CreateAclRequest> {
 
     public CreateAclRequest {
         if (acls == null) {
@@ -31,12 +33,6 @@ public record CreateAclRequest(
     @Override
     public List<Acl> list() {
         return acls;
-    }
-
-    @Override
-    public boolean validated() {
-        return acls.stream().noneMatch(acl ->
-                acl == null || acl.getName() == null || acl.getName().trim().isEmpty());
     }
 
     @Override

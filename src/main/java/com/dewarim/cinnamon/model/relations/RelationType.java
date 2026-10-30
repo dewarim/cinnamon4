@@ -1,14 +1,22 @@
 package com.dewarim.cinnamon.model.relations;
 
 import com.dewarim.cinnamon.api.Identifiable;
+import com.dewarim.cinnamon.model.request.UpdateRequest;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 import java.util.Objects;
 
 public class RelationType implements Identifiable {
 
+    // Request validation, checked when a request cascades into this class with @Valid.
+    @NotNull(groups = UpdateRequest.class)
+    @Positive(groups = UpdateRequest.class)
     private Long    id;
     private boolean leftObjectProtected;
     private boolean rightObjectProtected;
+    @NotBlank
     private String  name;
     private boolean cloneOnRightCopy;
     private boolean cloneOnLeftCopy;

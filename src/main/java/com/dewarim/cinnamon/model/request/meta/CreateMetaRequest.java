@@ -1,7 +1,11 @@
 package com.dewarim.cinnamon.model.request.meta;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.dewarim.cinnamon.application.service.RequestValidator;
 import com.dewarim.cinnamon.model.Meta;
+import com.dewarim.cinnamon.model.request.CreateRequest;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
@@ -14,7 +18,7 @@ import java.util.Optional;
 public record CreateMetaRequest(
         @JacksonXmlElementWrapper(localName = "metasets")
         @JacksonXmlProperty(localName = "metaset")
-        List<Meta> metas) implements ApiRequest<CreateMetaRequest> {
+        @NotEmpty List<@Valid Meta> metas) implements ApiRequest<CreateMetaRequest> {
 
     public CreateMetaRequest {
         if (metas == null) {
@@ -30,23 +34,9 @@ public record CreateMetaRequest(
         this(new ArrayList<>(List.of(new Meta(id, typeId, content))));
     }
 
-    private boolean validated() {
-        if (metas == null || metas.isEmpty()) {
-            return false;
-        }
-        return metas.stream().allMatch(meta ->
-                meta.getObjectId() != null && meta.getObjectId() > 0
-                        && (meta.getTypeId() != null && meta.getTypeId() > 0)
-                        && (meta.getContent() != null)
-        );
-    }
-
     public Optional<CreateMetaRequest> validateRequest() {
-        if (validated()) {
-            return Optional.of(this);
-        } else {
-            return Optional.empty();
-        }
+        RequestValidator.validate(this, CreateRequest.class);
+        return Optional.of(this);
     }
 
     @Override

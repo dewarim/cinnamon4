@@ -1,7 +1,11 @@
 package com.dewarim.cinnamon.model.request.osd;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.dewarim.cinnamon.application.service.RequestValidator;
 import com.dewarim.cinnamon.model.ObjectSystemData;
+import com.dewarim.cinnamon.model.request.UpdateRequest;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
@@ -16,7 +20,7 @@ import static com.dewarim.cinnamon.api.Constants.LOCAL_DATE_TIME_EXAMPLE;
 public record UpdateOsdRequest(
         @JacksonXmlElementWrapper(localName = "osds")
         @JacksonXmlProperty(localName = "osd")
-        List<ObjectSystemData> osds,
+        @NotEmpty List<@Valid ObjectSystemData> osds,
         boolean updateContentChanged,
         boolean updateMetadataChanged) implements ApiRequest<UpdateOsdRequest> {
 
@@ -49,35 +53,9 @@ public record UpdateOsdRequest(
         return list;
     }
 
-    /**
-     * A valid UpdateOsdRequest must contain the object's id as well at least
-     * one potentially valid field that should be updated.
-     */
-    private boolean validated() {
-        return osds != null && !osds.isEmpty() && osds.stream().allMatch(osd -> {
-            String name = osd.getName();
-            if (name != null && (name.isEmpty() || name.trim().length() < name.length() || name.matches("^\\s+$"))) {
-                return false;
-            }
-            return assertNullOrPositiveLong(osd.getParentId()) &&
-                    assertNullOrPositiveLong(osd.getOwnerId()) &&
-                    assertNullOrPositiveLong(osd.getAclId()) &&
-                    assertNullOrPositiveLong(osd.getTypeId()) &&
-                    assertNullOrPositiveLong(osd.getLanguageId()) &&
-                    osd.getId() != null && osd.getId() > 0;
-        });
-    }
-
-    private boolean assertNullOrPositiveLong(Long id) {
-        return id == null || id >= 0;
-    }
-
     public Optional<UpdateOsdRequest> validateRequest() {
-        if (validated()) {
-            return Optional.of(this);
-        } else {
-            return Optional.empty();
-        }
+        RequestValidator.validate(this, UpdateRequest.class);
+        return Optional.of(this);
     }
 
     @Override

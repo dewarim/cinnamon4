@@ -1,7 +1,11 @@
 package com.dewarim.cinnamon.model.request.folder;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.dewarim.cinnamon.application.service.RequestValidator;
 import com.dewarim.cinnamon.model.Folder;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
@@ -12,7 +16,7 @@ import java.util.*;
 public record DeleteFolderRequest(
         @JacksonXmlElementWrapper(localName = "ids")
         @JacksonXmlProperty(localName = "id")
-        Set<Long> ids,
+        @NotEmpty Set<@NotNull @Positive Long> ids,
         boolean deleteRecursively,
         boolean deleteContent) implements ApiRequest<Folder> {
 
@@ -39,14 +43,8 @@ public record DeleteFolderRequest(
         return List.of(new DeleteFolderRequest(List.of(1L, 2L, 3L), true, false));
     }
 
-    private boolean validated() {
-        return ids != null && !ids.isEmpty() && ids.stream().allMatch(id -> Objects.nonNull(id) && id > 0);
-    }
-
     public Optional<DeleteFolderRequest> validateRequest() {
-        if (validated()) {
-            return Optional.of(this);
-        }
-        return Optional.empty();
+        RequestValidator.validate(this);
+        return Optional.of(this);
     }
 }

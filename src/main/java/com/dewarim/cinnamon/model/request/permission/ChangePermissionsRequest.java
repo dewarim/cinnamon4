@@ -1,6 +1,9 @@
 package com.dewarim.cinnamon.model.request.permission;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.dewarim.cinnamon.application.service.RequestValidator;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
@@ -11,7 +14,7 @@ import java.util.Optional;
 
 @JsonRootName("changePermissionsRequest")
 public record ChangePermissionsRequest(
-        Long aclGroupId,
+        @NotNull @Positive Long aclGroupId,
         @JacksonXmlElementWrapper(localName = "addPermissions")
         @JacksonXmlProperty(localName = "addId")
         List<Long> add,
@@ -28,21 +31,17 @@ public record ChangePermissionsRequest(
         }
     }
 
+    /**
+     * There has to be something to change. Neither list is required on its own, so this one rule
+     * stays hand-written.
+     */
     public boolean validated() {
-        boolean hasAdd    = add != null && !add.isEmpty();
-        boolean hasRemove = remove != null && !remove.isEmpty();
-        if (!hasAdd && !hasRemove) {
-            return false;
-        }
-        return aclGroupId != null && aclGroupId > 0;
+        return !add.isEmpty() || !remove.isEmpty();
     }
 
     public Optional<ChangePermissionsRequest> validateRequest() {
-        if (validated()) {
-            return Optional.of(this);
-        } else {
-            return Optional.empty();
-        }
+        RequestValidator.validate(this);
+        return validated() ? Optional.of(this) : Optional.empty();
     }
 
     @Override

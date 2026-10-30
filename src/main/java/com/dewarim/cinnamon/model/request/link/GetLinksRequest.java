@@ -1,6 +1,10 @@
 package com.dewarim.cinnamon.model.request.link;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.dewarim.cinnamon.application.service.RequestValidator;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
@@ -13,7 +17,7 @@ import java.util.Optional;
 public record GetLinksRequest(
         @JacksonXmlElementWrapper(localName = "ids")
         @JacksonXmlProperty(localName = "id")
-        List<Long> ids,
+        @NotEmpty List<@NotNull @Positive Long> ids,
         boolean includeSummary) implements ApiRequest<GetLinksRequest> {
 
     public GetLinksRequest {
@@ -26,19 +30,9 @@ public record GetLinksRequest(
         this(new ArrayList<>(java.util.Collections.singletonList(id)), includeSummary);
     }
 
-    public boolean validated() {
-        if (ids == null || ids.isEmpty()) {
-            return false;
-        }
-        return ids.stream().allMatch(id -> id != null && id > 0);
-    }
-
     public Optional<GetLinksRequest> validateRequest() {
-        if (validated()) {
-            return Optional.of(this);
-        } else {
-            return Optional.empty();
-        }
+        RequestValidator.validate(this);
+        return Optional.of(this);
     }
 
     @Override

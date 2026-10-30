@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.model.request;
 
+import com.dewarim.cinnamon.application.service.RequestValidator;
 import com.dewarim.cinnamon.model.response.Wrapper;
 
 import java.util.Optional;
@@ -12,17 +13,11 @@ import java.util.Optional;
  */
 public interface ListRequest<T> {
 
-    default boolean validated() {
-        // not much to validate about a simple list request at the moment
-        return true;
-    }
-
     default Optional<ListRequest<T>> validateRequest() {
-        if (validated()) {
-            return Optional.of(this);
-        } else {
-            return Optional.empty();
-        }
+        // there is nothing to check on a list request yet; a future filter field gets validated
+        // by annotation, like every other request
+        RequestValidator.validate(this);
+        return Optional.of(this);
     }
 
     Wrapper<T> fetchResponseWrapper();

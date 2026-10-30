@@ -6,6 +6,8 @@ import com.dewarim.cinnamon.model.ChangeTriggerType;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.response.ChangeTriggerWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
@@ -17,7 +19,7 @@ import java.util.List;
 public record UpdateChangeTriggerRequest(
         @JacksonXmlElementWrapper(localName = "changeTriggers")
         @JacksonXmlProperty(localName = "changeTrigger")
-        List<ChangeTrigger> changeTriggers) implements UpdateRequest<ChangeTrigger>, ApiRequest<UpdateRequest<ChangeTrigger>> {
+        @NotEmpty List<@Valid ChangeTrigger> changeTriggers) implements UpdateRequest<ChangeTrigger>, ApiRequest<UpdateRequest<ChangeTrigger>> {
 
     public UpdateChangeTriggerRequest {
         if (changeTriggers == null) {
@@ -28,13 +30,6 @@ public record UpdateChangeTriggerRequest(
     @Override
     public List<ChangeTrigger> list() {
         return changeTriggers;
-    }
-
-    @Override
-    public boolean validated() {
-        return changeTriggers.stream().allMatch(changeTrigger ->
-                changeTrigger != null && changeTrigger.getName() != null && !changeTrigger.getName().trim().isEmpty()
-                        && changeTrigger.getId() != null && changeTrigger.getId() > 0);
     }
 
     @Override

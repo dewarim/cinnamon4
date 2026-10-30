@@ -1,7 +1,11 @@
 package com.dewarim.cinnamon.model.request.folder;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.dewarim.cinnamon.application.service.RequestValidator;
 import com.dewarim.cinnamon.model.Folder;
+import com.dewarim.cinnamon.model.request.UpdateRequest;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
@@ -16,7 +20,7 @@ import static com.dewarim.cinnamon.api.Constants.LOCAL_DATE_TIME_EXAMPLE;
 public record UpdateFolderRequest(
         @JacksonXmlElementWrapper(localName = "folders")
         @JacksonXmlProperty(localName = "folder")
-        List<Folder> folders,
+        @NotEmpty List<@Valid Folder> folders,
         boolean updateMetadataChanged) implements ApiRequest<UpdateFolderRequest> {
 
     public UpdateFolderRequest {
@@ -59,26 +63,9 @@ public record UpdateFolderRequest(
         return updateMetadataChanged;
     }
 
-    private boolean validated() {
-        if (folders == null || folders.isEmpty()) {
-            return false;
-        }
-        return folders.stream().allMatch(folder ->
-                folder.getId() != null && folder.getId() > 0
-                        && (folder.getParentId() == null || folder.getParentId() > 0)
-                        && (folder.getName() == null || !folder.getName().trim().isEmpty())
-                        && (folder.getTypeId() == null || folder.getTypeId() > 0)
-                        && (folder.getOwnerId() == null || folder.getOwnerId() > 0)
-                        && (folder.getAclId() == null || folder.getAclId() > 0)
-        );
-    }
-
     public Optional<UpdateFolderRequest> validateRequest() {
-        if (validated()) {
-            return Optional.of(this);
-        } else {
-            return Optional.empty();
-        }
+        RequestValidator.validate(this, UpdateRequest.class);
+        return Optional.of(this);
     }
 
     @Override

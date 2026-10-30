@@ -8,6 +8,8 @@ import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.response.LinkResponse;
 import com.dewarim.cinnamon.model.response.LinkWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
@@ -20,7 +22,7 @@ import java.util.stream.Collectors;
 public record UpdateLinkRequest(
         @JacksonXmlElementWrapper(localName = "links")
         @JacksonXmlProperty(localName = "link")
-        List<Link> links) implements UpdateRequest<Link>, ApiRequest<UpdateLinkRequest> {
+        @NotEmpty List<@Valid Link> links) implements UpdateRequest<Link>, ApiRequest<UpdateLinkRequest> {
 
     public UpdateLinkRequest {
         if (links == null) {
@@ -54,7 +56,8 @@ public record UpdateLinkRequest(
     }
 
     public boolean validated() {
-        return !links.isEmpty() && links.stream().allMatch(Link::validated);
+        // Link.validated() carries the folder-or-object rule, which no annotation expresses
+        return links.stream().allMatch(Link::validated);
     }
 
     @Override

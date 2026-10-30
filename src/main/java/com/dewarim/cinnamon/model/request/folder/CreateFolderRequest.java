@@ -6,6 +6,8 @@ import com.dewarim.cinnamon.model.Meta;
 import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.response.FolderWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
@@ -19,7 +21,7 @@ import static com.dewarim.cinnamon.api.Constants.LOCAL_DATE_TIME_EXAMPLE;
 public record CreateFolderRequest(
         @JacksonXmlElementWrapper(localName = "folders")
         @JacksonXmlProperty(localName = "folder")
-        List<Folder> folders) implements CreateRequest<Folder>, ApiRequest<Folder> {
+        @NotEmpty List<@Valid Folder> folders) implements CreateRequest<Folder>, ApiRequest<Folder> {
 
     public CreateFolderRequest {
         if (folders == null) {
@@ -33,16 +35,6 @@ public record CreateFolderRequest(
 
     public CreateFolderRequest(String name, Long parentId, String summary, Long ownerId, Long aclId, Long typeId) {
         this(new ArrayList<>(List.of(new Folder(name, aclId, ownerId, parentId, typeId, summary))));
-    }
-
-    public boolean validated() {
-        return folders != null && !folders.isEmpty() && folders.stream().allMatch(f ->
-                f.getName() != null && f.getName().trim().length() > 0
-                        && f.getParentId() != null && f.getParentId() > 0
-                        && (f.getTypeId() == null || f.getTypeId() > 0)
-                        && (f.getAclId() == null || f.getAclId() > 0)
-                        && (f.getOwnerId() == null || f.getOwnerId() > 0)
-        );
     }
 
     @Override

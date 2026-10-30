@@ -143,43 +143,38 @@ public class LifecycleStateServlet extends BaseServlet implements CruddyServlet<
     }
 
     private void attachLifecycleState(CinnamonRequest request, CinnamonResponse response, OsdDao osdDao, LifecycleDao lifecycleDao, LifecycleStateDao stateDao, UserAccount user) throws IOException {
-        AttachLifecycleRequest attachReq = request.getMapper().readValue(request.getInputStream(), AttachLifecycleRequest.class);
-        if (attachReq.validated()) {
-            ObjectSystemData osd = osdDao.getObjectById(attachReq.osdId()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
-            // TODO: should we check for readSysMeta, i.e. if OSD is browsable?
-            verifyWritePermissionForLifecycleState(osd, user);
+        AttachLifecycleRequest attachReq = request.getMapper().readValue(request.getInputStream(), AttachLifecycleRequest.class)
+                .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
-            Lifecycle lifecycle = lifecycleDao.getLifecycleById(attachReq.lifecycleId())
-                    .orElseThrow(ErrorCode.LIFECYCLE_NOT_FOUND.getException());
+        ObjectSystemData osd = osdDao.getObjectById(attachReq.osdId()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
+        // TODO: should we check for readSysMeta, i.e. if OSD is browsable?
+        verifyWritePermissionForLifecycleState(osd, user);
 
-            LifecycleState           lifecycleState;
-            Optional<LifecycleState> stateOpt = stateDao.getLifecycleStateById(attachReq.lifecycleStateId());
+        Lifecycle lifecycle = lifecycleDao.getLifecycleById(attachReq.lifecycleId())
+                .orElseThrow(ErrorCode.LIFECYCLE_NOT_FOUND.getException());
+
+        LifecycleState           lifecycleState;
+        Optional<LifecycleState> stateOpt = stateDao.getLifecycleStateById(attachReq.lifecycleStateId());
+        if (stateOpt.isEmpty()) {
+            stateOpt = stateDao.getLifecycleStateById(lifecycle.getDefaultStateId());
             if (stateOpt.isEmpty()) {
-                stateOpt = stateDao.getLifecycleStateById(lifecycle.getDefaultStateId());
-                if (stateOpt.isEmpty()) {
-                    throw ErrorCode.LIFECYCLE_STATE_NOT_FOUND.exception();
-                }
+                throw ErrorCode.LIFECYCLE_STATE_NOT_FOUND.exception();
             }
-            lifecycleState = stateOpt.get();
-            State newState = StateProviderService.getInstance().getStateProvider(lifecycleState.getStateClass()).getState();
-            changeStateAndCreateResponse(newState, osd, lifecycleState, osdDao, response, attachReq.forceChange());
-
-        } else {
-            throw ErrorCode.INVALID_REQUEST.exception();
         }
+        lifecycleState = stateOpt.get();
+        State newState = StateProviderService.getInstance().getStateProvider(lifecycleState.getStateClass()).getState();
+        changeStateAndCreateResponse(newState, osd, lifecycleState, osdDao, response, attachReq.forceChange());
     }
 
     private void getLifecycleState(CinnamonRequest request, CinnamonResponse response) throws IOException {
-        IdRequest         stateRequest = request.getMapper().readValue(request.getInputStream(), IdRequest.class);
+        IdRequest         stateRequest = request.getMapper().readValue(request.getInputStream(), IdRequest.class)
+                .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         LifecycleStateDao stateDao     = new LifecycleStateDao();
-        if (stateRequest.validated()) {
-            Optional<LifecycleState> state   = stateDao.getLifecycleStateById(stateRequest.id());
-            LifecycleStateWrapper    wrapper = new LifecycleStateWrapper();
-            wrapper.setLifecycleStates(Collections.singletonList(state.orElseThrow(ErrorCode.LIFECYCLE_STATE_NOT_FOUND.getException())));
-            response.setWrapper(wrapper);
-            return;
-        }
-        throw ErrorCode.INVALID_REQUEST.exception();
+
+        Optional<LifecycleState> state   = stateDao.getLifecycleStateById(stateRequest.id());
+        LifecycleStateWrapper    wrapper = new LifecycleStateWrapper();
+        wrapper.setLifecycleStates(Collections.singletonList(state.orElseThrow(ErrorCode.LIFECYCLE_STATE_NOT_FOUND.getException())));
+        response.setWrapper(wrapper);
     }
 
 }

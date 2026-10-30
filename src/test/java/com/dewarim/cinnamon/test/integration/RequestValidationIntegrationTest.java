@@ -18,8 +18,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * SPIKE: annotation-based request validation. Shows the two things the hand-written validated()
- * methods could not do - reject an empty collection by default, and say which field was wrong.
+ * Annotation-based request validation. Shows the two things the hand-written validated() methods
+ * could not do - reject an empty collection by default, and say which field was wrong.
  */
 public class RequestValidationIntegrationTest extends CinnamonIntegrationTest {
 

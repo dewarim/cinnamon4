@@ -5,6 +5,8 @@ import com.dewarim.cinnamon.model.MetasetType;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.response.MetasetTypeWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
@@ -16,7 +18,7 @@ import java.util.List;
 public record UpdateMetasetTypeRequest(
         @JacksonXmlElementWrapper(localName = "metasetTypes")
         @JacksonXmlProperty(localName = "metasetType")
-        List<MetasetType> metasetTypes) implements UpdateRequest<MetasetType>, ApiRequest<UpdateMetasetTypeRequest> {
+        @NotEmpty List<@Valid MetasetType> metasetTypes) implements UpdateRequest<MetasetType>, ApiRequest<UpdateMetasetTypeRequest> {
 
     public UpdateMetasetTypeRequest {
         if (metasetTypes == null) {
@@ -31,13 +33,6 @@ public record UpdateMetasetTypeRequest(
     @Override
     public List<MetasetType> list() {
         return metasetTypes;
-    }
-
-    @Override
-    public boolean validated() {
-        return metasetTypes.stream().allMatch(metasetType ->
-                metasetType != null && metasetType.getName() != null && !metasetType.getName().trim().isEmpty()
-                        && metasetType.getId() != null && metasetType.getId() > 0);
     }
 
     @Override

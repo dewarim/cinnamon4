@@ -5,19 +5,20 @@ import com.dewarim.cinnamon.model.Lifecycle;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.response.LifecycleWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 @JsonRootName("updateLifecycleRequest")
 public record UpdateLifecycleRequest(
         @JacksonXmlElementWrapper(localName = "lifecycles")
         @JacksonXmlProperty(localName = "lifecycle")
-        List<Lifecycle> lifecycles) implements UpdateRequest<Lifecycle>, ApiRequest<UpdateLifecycleRequest> {
+        @NotEmpty List<@Valid Lifecycle> lifecycles) implements UpdateRequest<Lifecycle>, ApiRequest<UpdateLifecycleRequest> {
 
     public UpdateLifecycleRequest {
         if (lifecycles == null) {
@@ -28,19 +29,6 @@ public record UpdateLifecycleRequest(
     @Override
     public List<Lifecycle> list() {
         return lifecycles;
-    }
-
-    @Override
-    public boolean validated() {
-        if (lifecycles == null || lifecycles.isEmpty()) {
-            return false;
-        }
-        return lifecycles.stream().noneMatch(lifecycle ->
-                Objects.isNull(lifecycle) ||
-                        Objects.isNull(lifecycle.getId()) ||
-                        Objects.isNull(lifecycle.getName()) ||
-                        lifecycle.getId() < 1 ||
-                        lifecycle.getName().isBlank());
     }
 
     @Override

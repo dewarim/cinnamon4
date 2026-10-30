@@ -6,6 +6,11 @@ import com.dewarim.cinnamon.model.response.Wrapper;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Also a Bean Validation group: a constraint annotated {@code groups = UpdateRequest.class} on a shared
+ * model class is only checked when that model arrives in an update request. Groups are plain
+ * interfaces, so this interface can serve as its own marker - see FolderType for an example.
+ */
 public interface UpdateRequest<T> {
 
     List<T> list();

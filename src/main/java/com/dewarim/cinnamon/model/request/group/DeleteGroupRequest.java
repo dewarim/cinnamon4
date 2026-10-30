@@ -4,6 +4,9 @@ import com.dewarim.cinnamon.api.ApiRequest;
 import com.dewarim.cinnamon.model.Group;
 import com.dewarim.cinnamon.model.request.DeleteByIdRequest;
 import com.fasterxml.jackson.annotation.JsonRootName;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
@@ -16,7 +19,7 @@ import java.util.Set;
 public record DeleteGroupRequest(
         @JacksonXmlElementWrapper(localName = "ids")
         @JacksonXmlProperty(localName = "id")
-        Set<Long> ids,
+        @NotEmpty Set<@NotNull @Positive Long> ids,
         boolean ignoreNotFound,
         boolean recursive) implements DeleteByIdRequest<Group>, ApiRequest<DeleteGroupRequest> {
 
@@ -38,12 +41,11 @@ public record DeleteGroupRequest(
         this(new HashSet<>(ids), false, recursive);
     }
 
+    /**
+     * Like validateRequest(), but keeps the concrete type, which GroupServlet needs for recursive().
+     */
     public Optional<DeleteGroupRequest> validate() {
-        if (validated()) {
-            return Optional.of(this);
-        } else {
-            return Optional.empty();
-        }
+        return validateRequest().map(request -> this);
     }
 
     @Override

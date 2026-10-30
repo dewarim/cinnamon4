@@ -1,6 +1,8 @@
 package com.dewarim.cinnamon.model.request.osd;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.dewarim.cinnamon.application.service.RequestValidator;
+import jakarta.validation.constraints.NotEmpty;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
@@ -13,7 +15,7 @@ import java.util.Optional;
 public record GetRelationsRequest(
         @JacksonXmlElementWrapper(localName = "ids")
         @JacksonXmlProperty(localName = "id")
-        List<Long> ids,
+        @NotEmpty List<Long> ids,
         boolean includeMetadata) implements ApiRequest<GetRelationsRequest> {
 
     public GetRelationsRequest {
@@ -22,16 +24,9 @@ public record GetRelationsRequest(
         }
     }
 
-    public boolean validated() {
-        return ids != null && !ids.isEmpty();
-    }
-
     public Optional<GetRelationsRequest> validateRequest() {
-        if (validated()) {
-            return Optional.of(this);
-        } else {
-            return Optional.empty();
-        }
+        RequestValidator.validate(this);
+        return Optional.of(this);
     }
 
     @Override

@@ -4,6 +4,9 @@ import com.dewarim.cinnamon.api.ApiRequest;
 import com.dewarim.cinnamon.model.Meta;
 import com.dewarim.cinnamon.model.request.DeleteByIdRequest;
 import com.fasterxml.jackson.annotation.JsonRootName;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
@@ -16,7 +19,7 @@ import java.util.TreeSet;
 public record DeleteAllMetasRequest(
         @JacksonXmlElementWrapper(localName = "ids")
         @JacksonXmlProperty(localName = "id")
-        Set<Long> ids,
+        @NotEmpty Set<@NotNull @Positive Long> ids,
         boolean ignoreNotFound) implements DeleteByIdRequest<Meta>, ApiRequest<DeleteAllMetasRequest> {
 
     public DeleteAllMetasRequest {

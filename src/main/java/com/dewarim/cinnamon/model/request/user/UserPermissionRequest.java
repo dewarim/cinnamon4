@@ -1,24 +1,20 @@
 package com.dewarim.cinnamon.model.request.user;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.dewarim.cinnamon.application.service.RequestValidator;
 import com.fasterxml.jackson.annotation.JsonRootName;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 import java.util.List;
 import java.util.Optional;
 
 @JsonRootName("userPermissionRequest")
-public record UserPermissionRequest(Long userId, Long aclId) implements ApiRequest<UserPermissionRequest> {
-
-    public boolean validated() {
-        return userId != null && userId > 0 && aclId != null && aclId > 0;
-    }
+public record UserPermissionRequest(@NotNull @Positive Long userId, @NotNull @Positive Long aclId) implements ApiRequest<UserPermissionRequest> {
 
     public Optional<UserPermissionRequest> validateRequest() {
-        if (validated()) {
-            return Optional.of(this);
-        } else {
-            return Optional.empty();
-        }
+        RequestValidator.validate(this);
+        return Optional.of(this);
     }
 
     @Override

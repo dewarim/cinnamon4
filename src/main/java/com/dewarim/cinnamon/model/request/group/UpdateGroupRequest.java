@@ -5,6 +5,8 @@ import com.dewarim.cinnamon.model.Group;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.response.GroupWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
@@ -16,7 +18,7 @@ import java.util.List;
 public record UpdateGroupRequest(
         @JacksonXmlElementWrapper(localName = "groups")
         @JacksonXmlProperty(localName = "group")
-        List<Group> groups) implements UpdateRequest<Group>, ApiRequest<UpdateGroupRequest> {
+        @NotEmpty List<@Valid Group> groups) implements UpdateRequest<Group>, ApiRequest<UpdateGroupRequest> {
 
     public UpdateGroupRequest {
         if (groups == null) {
@@ -31,13 +33,6 @@ public record UpdateGroupRequest(
     @Override
     public List<Group> list() {
         return groups;
-    }
-
-    @Override
-    public boolean validated() {
-        return groups.stream().allMatch(group ->
-                group != null && group.getName() != null && !group.getName().trim().isEmpty()
-                        && group.getId() != null && group.getId() > 0);
     }
 
     @Override

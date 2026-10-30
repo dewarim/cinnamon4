@@ -1,18 +1,28 @@
 package com.dewarim.cinnamon.model;
 
 import com.dewarim.cinnamon.api.Identifiable;
+import com.dewarim.cinnamon.model.request.CreateRequest;
+import com.dewarim.cinnamon.model.request.UpdateRequest;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 import java.util.Objects;
 
 public class Meta implements Identifiable {
 
+    // Request validation, checked when a request cascades into this class with @Valid.
+    @NotNull(groups = UpdateRequest.class)
+    @Positive(groups = UpdateRequest.class)
     private Long   id;
+    // a createOsd request carries metasets whose object is only created with them, so the object
+    // id is demanded by createMeta (which passes CreateRequest.class) and not by the Default group
+    @NotNull(groups = CreateRequest.class)
+    @Positive
     private Long   objectId;
-    // checked when a request cascades into its metasets with @Valid
-    @jakarta.validation.constraints.NotNull
-    @jakarta.validation.constraints.Positive
+    @NotNull
+    @Positive
     private Long   typeId;
-    @jakarta.validation.constraints.NotNull
+    @NotNull
     private String content;
 
     public Meta() {
