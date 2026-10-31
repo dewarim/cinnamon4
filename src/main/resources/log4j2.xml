@@ -54,6 +54,12 @@
         <Logger name="org.apache.hc.client5.http" level="warn">
             <AppenderRef ref="Console"/>
         </Logger>
+        <Logger name="org.hibernate.validator" level="info" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
+        <Logger name="org.jboss.logging" level="info" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
 
     </Loggers>
 </Configuration>

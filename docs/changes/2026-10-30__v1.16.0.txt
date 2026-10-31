@@ -87,3 +87,15 @@ Changes v1.16.0:
   updateFolder, which carry a model in update shape without implementing the interface, and createMeta, which needs
   a group of its own) declare it. This is what lets the api.md generator document the same constraints the server
   enforces rather than the union of all groups. No change for clients.
+
+- changed: hibernate-validator logs its whole factory configuration at debug level, which the shipped log4j2.xml
+  showed because its root logger is at debug - about fifteen HV000234 lines whenever the validator is built, and
+  again after every ui language change. org.hibernate.validator and org.jboss.logging are at info now, which keeps
+  the one line naming the validator version. The example and test configurations were already quiet, their root
+  loggers being at warn and info.
+
+- changed: building a request validator without a database no longer logs a warning. The command line tools have
+  no database - "--write-api" builds a validator only to read constraint metadata, which needs no messages at all -
+  and that is not the same thing as a configured database that cannot be reached. The warning is still there for
+  the second case, where it means the next validation message comes out in English rather than the user's language.
+

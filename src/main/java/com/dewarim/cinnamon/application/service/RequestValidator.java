@@ -4,6 +4,7 @@ import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.FailedRequestException;
 import com.dewarim.cinnamon.api.ApiRequest;
 import com.dewarim.cinnamon.application.RequestScope;
+import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.dao.UiLanguageDao;
 import com.dewarim.cinnamon.model.UiLanguage;
 import com.dewarim.cinnamon.model.UserAccount;
@@ -168,6 +169,12 @@ public final class RequestValidator {
     private static Set<Locale> supportedLocales() {
         Set<Locale> locales = new HashSet<>();
         locales.add(DEFAULT_LOCALE);
+        if (!ThreadLocalSqlSession.hasSessionFactory()) {
+            // --write-api builds a validator to read constraint metadata, which needs no messages at
+            // all. Nothing to warn about: there is no database because none was asked for.
+            log.debug("No database configured, constraint messages will be English only");
+            return locales;
+        }
         try {
             new UiLanguageDao().list().stream()
                     .map(UiLanguage::getIsoCode)
@@ -175,8 +182,9 @@ public final class RequestValidator {
                     .flatMap(Optional::stream)
                     .forEach(locales::add);
         } catch (Exception failure) {
-            // the first validation failure can happen before the database is reachable; English-only
-            // messages are a better outcome than losing the validation error itself
+            // a configured database that cannot be reached yet: the first validation failure can happen
+            // before it is up. English-only messages are a better outcome than losing the validation
+            // error itself
             log.warn("Could not read ui_languages, constraint messages will be English only: {}", failure.toString());
         }
         return locales;
