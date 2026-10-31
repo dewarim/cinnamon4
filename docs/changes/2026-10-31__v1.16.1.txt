@@ -3,7 +3,7 @@ Changes v1.16.1:
 No database changes.
 
 - changed: /cinnamon/info reports the git revision the server was built from instead of a build counter, and
-  gained a buildTime element next to it. The <build> element is still there and still a string, but its content
+  gained a buildTime element next to it. The build element is still there and still a string, but its content
   changed shape - from a number such as "931" to a twelve-character revision such as "e383727faf8f". A client
   that parses it as an integer has to stop doing that; one that treats it as an opaque string is unaffected.
   "unknown" is reported when the build had no git repository to read, as when building from a source archive.

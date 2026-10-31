@@ -64,6 +64,13 @@ bullets - covering every change in the release, and say "no database changes" wh
 Schema changes additionally go into `docs/migration.2026.adoc` as a `=== vX.Y.Z` section with the
 DDL indented four spaces; versions without schema changes do not appear there at all.
 
+Write them so they survive being pasted into the GitHub release form, which is how they reach the
+release page: plain text going in, Markdown coming out. Two things get mangled there. A bare
+`+@name+` becomes a mention that notifies whoever owns that GitHub account - `+@Valid+` in the
+v1.16.0 entry notified a real user of that name and listed them as a contributor on v1.16.1 - and a
+bare `+<element>+` is swallowed as an HTML tag and disappears from the rendered notes. Write "a Valid
+annotation" and "the build element" instead, or quote them.
+
 ==== 3. Build
 
 Check `git status` first and commit anything outstanding. The build stamp is `git rev-parse HEAD`,
