@@ -215,3 +215,13 @@ is recorded there instead of being repeated.
   security review that produced several of the entries above is recorded in docs/changelog.md together
   with the issues it found that are not yet addressed.
 
+- test suite: 713 tests, up from 649 at v1.15.1. New unit tests cover the Lucene document field mapping
+  (which system fields an OSD and a folder document carry), the analyzer - including that its output is
+  identical to StandardAnalyzer's for Latin input and identical under the Turkish, Azeri and Lithuanian
+  locales - the search service's permission translation, and the request validation. A recursive folder
+  delete with content below the top folder is covered now, and the content-deletion assertions compare a
+  delta rather than an absolute count, which used to make them order-dependent.
+
+- internal: the Lucene system fields of OSD and folder documents are built by static methods now, so the
+  indexer and the tests that assert the field mapping agree by construction.
+
