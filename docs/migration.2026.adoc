@@ -43,6 +43,29 @@ Note: this table will contain complete http requests and responses (without uplo
 Some request paths will be filtered, for example, the request to /api/user/setPassword will be replaced by "unlogged".
 
 
+=== v1.16.0
+
+Lucene was upgraded from 9.12.1 to 10.6.0, which changed the index format.
+
+*No action is required.* The server ships `lucene-backward-codecs`, so an existing index keeps
+working: it is read as before, new documents are still written to it, and its old segments are
+rewritten in the current format as Lucene merges them. Nothing has to be stopped, deleted or
+rebuilt to upgrade.
+
+A full reindex is *recommended but optional*, because only segments in the current format benefit
+from the newer format's performance work. It can be done while the server is running:
+
+    POST /api/index/reindex
+
+Reindexing a large repository affects performance while it runs, so pick a quiet window - and note
+that on a machine with slow storage this is I/O bound and can take a long time. Letting the merge
+policy migrate the segments over time is a legitimate alternative.
+
+If you would rather start from an empty index: stop the server, delete the directory configured as
+`indexPath` in `luceneConfig` (default `/opt/cinnamon4/cinnamon-data/index`), start the server and
+reindex. Searches return nothing until the reindex has caught up, so this is the one variant that
+needs a maintenance window.
+
 === v1.15.1
 
 Every OSD must have an owner, as folders and links already do. Before applying the change,

@@ -117,7 +117,7 @@ public class CinnamonSearchTest {
         Query query = coreParser.parse(xmlInputStream);
         log.info("query: {}", query);
         TopDocs topDocs = indexSearcher.search(query, 100);
-        assertEquals(1, topDocs.totalHits.value);
+        assertEquals(1, topDocs.totalHits.value());
     }
 
     private void searchWithXmlPointRangeQuery(IndexSearcher searcher) throws ParserException, IOException {
@@ -127,7 +127,7 @@ public class CinnamonSearchTest {
         Query query = coreParser.parse(xmlInputStream);
         log.info("query: {}", query);
         TopDocs topDocs = searcher.search(query, 100);
-        assertEquals(1, topDocs.totalHits.value);
+        assertEquals(1, topDocs.totalHits.value());
     }
     private void searchWithXmlExactPointQuery(IndexSearcher searcher) throws ParserException, IOException {
         InputStream xmlInputStream = new ByteArrayInputStream(exactPoint.getBytes(StandardCharsets.UTF_8));
@@ -136,7 +136,7 @@ public class CinnamonSearchTest {
         Query query = coreParser.parse(xmlInputStream);
         log.info("query: {}", query);
         TopDocs topDocs = searcher.search(query, 100);
-        assertEquals(1, topDocs.totalHits.value);
+        assertEquals(1, topDocs.totalHits.value());
     }
 
     private IndexSearcher createIndexSearcher() throws IOException {
@@ -151,14 +151,14 @@ public class CinnamonSearchTest {
         queryParser.setPointsConfigMap(pointsConfigMap);
         Query   query   = queryParser.parse("300", "p");
         TopDocs topDocs = searcher.search(query, 100);
-        assertEquals(1, topDocs.totalHits.value);
+        assertEquals(1, topDocs.totalHits.value());
     }
 
     private void searchWithStandardQuery(IndexSearcher searcher, String queryString) throws QueryNodeException, IOException {
         StandardQueryParser queryParser = new StandardQueryParser(new StandardAnalyzer());
         Query   query   = queryParser.parse(queryString, "content");
         TopDocs topDocs = searcher.search(query, 100);
-        assertEquals(1, topDocs.totalHits.value);
+        assertEquals(1, topDocs.totalHits.value());
     }
 
 

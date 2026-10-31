@@ -185,6 +185,24 @@ File content is managed by `ContentProviderService`, which currently supports on
 
 `IndexService` (background thread) watches for `IndexJob` entries created during requests and indexes OSD/Folder content into a Lucene index. `SearchService` queries the Lucene index and applies ACL filtering. Index field types are implemented as `*Indexer` classes under `application/service/index/`.
 
+Lucene is run with `--add-modules jdk.incubator.vector`, which it needs to use the Panama Vector API
+for postings decoding and vector similarity. The flag only has an effect while Lucene supports the
+running JDK: it caps that itself and falls back to scalar code otherwise, logging *"You are running
+with Java N or later. To make full use of the Vector API, please update Apache Lucene."* If that line
+appears, the flag is buying nothing and Lucene needs upgrading - the gate is Lucene's version, not a
+missing flag. `--enable-native-access=ALL-UNNAMED` is separate and always needed, for
+`MMapDirectory`'s `madvise` calls through `java.lang.foreign`. Surefire passes both, so tests
+exercise the same code paths as the server.
+
+Vector width is detected at runtime, so the gain depends on the hardware: AVX-512 machines report
+`preferredBitSize=512`, the common AMD EPYC Rome/Milan cloud instances only have AVX2 and report
+256, and on slow storage the I/O dominates to the point where none of it matters. Do not benchmark
+this on a dev box and extrapolate.
+
+`lucene-backward-codecs` is a runtime dependency so the server can read - and keep writing to - an
+index created by the previous Lucene major version. Nothing references it; Lucene loads the old
+codecs through the `ServiceLoader`. It is what makes a Lucene major upgrade not require a reindex.
+
 ### Configuration
 
 Server configuration is XML (`CinnamonConfig`) loaded from a file (default: `default-config.xml`). Key sections: `serverConfig`, `databaseConfig`, `securityConfig` (includes LDAP), `mailConfig`. Generate a config template with `java -jar cinnamon-server.jar --write-config my-config.xml`.

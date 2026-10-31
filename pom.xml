@@ -39,7 +39,7 @@
         <jetty.version>12.1.10</jetty.version>
         <jackson.version>3.2.0</jackson.version>
         <junit.version>5.13.1</junit.version>
-        <lucene.version>9.12.1</lucene.version>
+        <lucene.version>10.6.0</lucene.version>
         <mybatis.version>3.5.19</mybatis.version>
         <postgresql.version>42.7.12</postgresql.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -184,6 +184,17 @@
             <artifactId>lucene-queryparser</artifactId>
             <version>${lucene.version}</version>
         </dependency>
+        <dependency>
+            <!-- Lets Lucene 10 read - and keep writing to - an index created by Lucene 9, so that
+                 upgrading does not force a reindex. Nothing references it: Lucene finds the old
+                 codecs through the ServiceLoader, hence runtime scope. Old segments migrate to the
+                 current format as they are merged; once every installation has been reindexed or
+                 fully merged, this can be dropped again. -->
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-backward-codecs</artifactId>
+            <version>${lucene.version}</version>
+            <scope>runtime</scope>
+        </dependency>
 
         <!-- database dependencies -->
         <dependency>
@@ -326,6 +337,10 @@
                 <configuration>
                     <argLine>
                         --enable-native-access=ALL-UNNAMED
+                        <!-- same flags the server is started with: without the vector module,
+                             Lucene falls back to scalar code and the tests would exercise a
+                             different implementation than production does -->
+                        --add-modules jdk.incubator.vector
                     </argLine>
                 </configuration>
             </plugin>

@@ -177,7 +177,7 @@ public class SearchService {
                     .add(LongPoint.newExactQuery("id", id), BooleanClause.Occur.MUST)
                     .build();
             TopDocs topDocs = searcher.search(query, 1);
-            boolean found   = topDocs.totalHits.value > 0;
+            boolean found   = topDocs.totalHits.value() > 0;
             if (!found) {
                 log.debug("Item {} of type {} not yet indexed.", id, type);
             }

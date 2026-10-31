@@ -99,3 +99,19 @@ Changes v1.16.0:
   and that is not the same thing as a configured database that cannot be reached. The warning is still there for
   the second case, where it means the next validation message comes out in English rather than the user's language.
 
+- changed: Lucene upgraded from 9.12.1 to 10.6.0. Lucene 9.12 only uses the Panama Vector API on Java 22 or
+  earlier, so on Java 25 it logged "You are running with Java 23 or later. To make full use of the Vector API,
+  please update Apache Lucene." on every start and fell back to scalar code - with or without the
+  "--add-modules jdk.incubator.vector" the server has always been started with. 10.6 supports the current JDK, so
+  the warning is gone and the flag now does what it was added for. How much that is worth depends on the hardware:
+  vector width is detected at runtime, and the common AMD EPYC Rome/Milan cloud instances offer AVX2 (256 bit)
+  rather than AVX-512. Surefire now passes the same two JVM flags as the server, so the tests exercise the same
+  implementation.
+
+- added: lucene-backward-codecs, as a runtime dependency, so that this upgrade does not force a reindex. Lucene 10
+  cannot read a Lucene 9 index on its own - it fails with IndexFormatTooOldException - but with the backward codecs
+  an existing index is read as before and still accepts new documents, and its old segments are rewritten in the
+  current format as they are merged. A full reindex is recommended, because only segments in the current format
+  benefit from the newer format's work, but it is optional and can be done while the server runs. See
+  docs/migration.2026.adoc.
+
