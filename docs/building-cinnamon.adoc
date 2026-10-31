@@ -51,10 +51,11 @@ This should result in a log line like:
 `VersionConsistencyTest` parses `pom.xml` at test time and fails when the two disagree, so a
 half-done bump shows up as a red suite rather than as a wrong version at runtime.
 
-Nothing else carries the version by hand: `src/main/resources/buildNumber.properties` is rewritten
-by `buildnumber-maven-plugin` on every compile (it is committed on purpose - the number counts how
-many builds a feature took), and `docs/sbom.adoc` is generated, ending up as a one-line diff of the
-product version.
+Nothing else carries the version by hand. `docs/sbom.adoc` is generated, ending up as a one-line
+diff of the product version, and the build stamp needs no attention at all: `buildnumber-maven-plugin`
+reads the git revision at `validate` and it is filtered into `target/classes/cinnamon-build.properties`,
+so nothing in the working tree changes when you build. `/cinnamon/info` reports that revision and the
+build timestamp next to the version.
 
 ==== 2. Record the changes
 

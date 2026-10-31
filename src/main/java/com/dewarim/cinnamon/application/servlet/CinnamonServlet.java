@@ -7,7 +7,6 @@ import com.dewarim.cinnamon.application.CinnamonRequest;
 import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.application.RequestScope;
-import com.dewarim.cinnamon.application.exception.CinnamonException;
 import com.dewarim.cinnamon.configuration.SecurityConfig;
 import com.dewarim.cinnamon.dao.SessionDao;
 import com.dewarim.cinnamon.dao.UserAccountDao;
@@ -28,6 +27,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Optional;
 import java.util.Properties;
 
@@ -182,16 +182,33 @@ public class CinnamonServlet extends HttpServlet {
     public static class CinnamonVersion {
         private final String version;
         private final String build;
+        private final String buildTime;
 
+        /**
+         * What /cinnamon/info reports. {@code build} used to be a counter kept in the repository; it is the
+         * git revision the server was built from now, which answers the question the counter was asked -
+         * "which source is this?" - instead of only ordering builds. {@code buildTime} is new and keeps the
+         * ordering a revision cannot express.
+         * <p>
+         * A missing or unreadable build-info file is reported as "unknown" rather than thrown: this runs
+         * once at servlet construction, and failing it would take /cinnamon/info - the endpoint a client
+         * uses to find out what it is talking to - down with it.
+         */
         public CinnamonVersion() {
             version = CinnamonServer.VERSION;
-            try {
-                Properties properties = new Properties();
-                properties.load(getClass().getResourceAsStream("/buildNumber.properties"));
-                build = properties.getProperty("buildNumber0");
+            Properties properties = new Properties();
+            try (InputStream buildInfo = getClass().getResourceAsStream("/cinnamon-build.properties")) {
+                if (buildInfo != null) {
+                    properties.load(buildInfo);
+                }
+                else {
+                    log.warn("cinnamon-build.properties is missing from the jar");
+                }
             } catch (IOException e) {
-                throw new CinnamonException("Could not load build number.");
+                log.warn("Could not read cinnamon-build.properties: {}", e.toString());
             }
+            build     = properties.getProperty("revision", "unknown");
+            buildTime = properties.getProperty("timestamp", "unknown");
         }
 
         public String getVersion() {
@@ -200,6 +217,10 @@ public class CinnamonServlet extends HttpServlet {
 
         public String getBuild() {
             return build;
+        }
+
+        public String getBuildTime() {
+            return buildTime;
         }
     }
 

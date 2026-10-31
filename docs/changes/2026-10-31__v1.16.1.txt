@@ -1,0 +1,29 @@
+Changes v1.16.1:
+
+No database changes.
+
+- changed: /cinnamon/info reports the git revision the server was built from instead of a build counter, and
+  gained a buildTime element next to it. The <build> element is still there and still a string, but its content
+  changed shape - from a number such as "931" to a twelve-character revision such as "e383727faf8f". A client
+  that parses it as an integer has to stop doing that; one that treats it as an opaque string is unaffected.
+  "unknown" is reported when the build had no git repository to read, as when building from a source archive.
+  The reason for the change: semantic versioning and the release tags already identify a release, so the
+  counter said nothing the version did not, while failing to answer the question it looked like it answered -
+  which source a running server was built from. The revision answers exactly that, and buildTime keeps the
+  at-a-glance ordering a revision cannot express.
+
+- changed: nothing in the working tree is rewritten by a build any more. The counter lived in a tracked
+  src/main/resources/buildNumber.properties, which 205 of the first 881 commits in this repository touched;
+  the revision is filtered into target/classes/cinnamon-build.properties at build time and the file in
+  src/main/resources holds only placeholders. That also removes an off-by-one that affected every release so
+  far: buildnumber-maven-plugin ran at the compile phase, after process-resources had already copied the
+  resources, so the released jar always carried the number from before the build while the repository recorded
+  the one after it - v1.16.0's jar says 931 where its release commit says 932. The plugin runs at validate now,
+  before the resources are copied.
+
+- fixed: a missing build-info file no longer takes /cinnamon/info down with it. getResourceAsStream returns
+  null when the file is absent, and Properties.load(null) throws a NullPointerException rather than the
+  IOException the catch block expected, so the exception escaped servlet construction uncaught. The file is
+  now checked for null, a failure is logged, and version and build fall back to "unknown" - the endpoint a
+  client uses to find out what it is talking to should not be the one that fails. This was recorded as item E3
+  in docs/ai-improvement/extended-improvement-plan.md.

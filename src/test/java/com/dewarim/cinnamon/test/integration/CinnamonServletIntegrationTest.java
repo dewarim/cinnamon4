@@ -106,6 +106,21 @@ public class CinnamonServletIntegrationTest extends CinnamonIntegrationTest {
         CinnamonServlet.CinnamonVersion cinnamonVersion = servlet.getCinnamonVersion();
         assertEquals(version.getBuild(), cinnamonVersion.getBuild());
         assertEquals(version.getVersion(), cinnamonVersion.getVersion());
+
+        /*
+         * build and buildTime are filtered into cinnamon-build.properties at build time. The failure
+         * mode worth guarding is not a wrong value but no filtering at all: that leaves the literal
+         * "${buildNumber}" in the jar, which nothing else would notice. "unknown" is allowed because a
+         * build from a source archive has no .git directory to read a revision from.
+         */
+        assertFalse(cinnamonVersion.getBuild().contains("${"),
+                "the build revision was not filtered: " + cinnamonVersion.getBuild());
+        assertFalse(cinnamonVersion.getBuildTime().contains("${"),
+                "the build timestamp was not filtered: " + cinnamonVersion.getBuildTime());
+        assertTrue(cinnamonVersion.getBuild().matches("[0-9a-f]{12}|unknown"),
+                "expected a short git revision, got: " + cinnamonVersion.getBuild());
+        assertTrue(cinnamonVersion.getBuildTime().matches("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z|unknown"),
+                "expected an ISO timestamp, got: " + cinnamonVersion.getBuildTime());
     }
 
 }

@@ -40,6 +40,9 @@
         <jackson.version>3.2.0</jackson.version>
         <junit.version>5.13.1</junit.version>
         <lucene.version>10.6.0</lucene.version>
+        <!-- UTC, and ordered as a string, so two builds can be compared at a glance - which a git
+             revision on its own cannot be -->
+        <maven.build.timestamp.format>yyyy-MM-dd'T'HH:mm:ss'Z'</maven.build.timestamp.format>
         <mybatis.version>3.5.19</mybatis.version>
         <postgresql.version>42.7.12</postgresql.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -327,6 +330,24 @@
 
     <build>
         <finalName>cinnamon-server</finalName>
+        <resources>
+            <!-- Only cinnamon-build.properties is filtered: the other resources are XML, SQL and mapper
+                 files, where an accidental ${...} must survive untouched. -->
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+                <excludes>
+                    <exclude>cinnamon-build.properties</exclude>
+                </excludes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>cinnamon-build.properties</include>
+                </includes>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <!-- https://maven.apache.org/surefire/maven-surefire-plugin/ -->
@@ -381,17 +402,21 @@
                 </configuration>
             </plugin>
             <plugin>
-                <!-- update buildNumber.properties and increase build counter whenever the maven _test_ step is executed -->
+                <!-- Stamps the build with the git revision it came from, which is what actually identifies a
+                     running server - the version itself is in pom.xml and CinnamonServer.VERSION. This replaced
+                     a monotonic counter kept in a tracked properties file: semantic versioning and the release
+                     tags already identify releases, and rewriting that file touched 205 of the first 881
+                     commits without telling anyone which source a build was made from. -->
                 <!-- https://www.mojohaus.org/buildnumber-maven-plugin/ -->
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>buildnumber-maven-plugin</artifactId>
                 <version>3.2.0</version>
                 <executions>
                     <execution>
-                        <!-- use "package" instead of default validate - we do not check remote git at the moment,
-                        and a build is only relevant if it compiles and tests work, so
-                        no need to change build number before package step. -->
-                        <phase>compile</phase>
+                        <!-- validate, so ${buildNumber} exists before process-resources filters it into
+                             target/classes. The old binding to compile ran *after* the resources had been
+                             copied, which is why the released jar always carried the previous number. -->
+                        <phase>validate</phase>
                         <goals>
                             <goal>create</goal>
                         </goals>
@@ -400,13 +425,9 @@
                 <configuration>
                     <doCheck>false</doCheck>
                     <doUpdate>false</doUpdate>
-                    <buildNumberPropertiesFileLocation>src/main/resources/buildNumber.properties
-                    </buildNumberPropertiesFileLocation>
-                    <buildNumberPropertyName>build</buildNumberPropertyName>
-                    <format>{0,number}</format>
-                    <items>
-                        <item>buildNumber0</item>
-                    </items>
+                    <shortRevisionLength>12</shortRevisionLength>
+                    <!-- a source archive has no .git directory; the build has to work anyway -->
+                    <revisionOnScmFailure>unknown</revisionOnScmFailure>
                 </configuration>
             </plugin>
         </plugins>
