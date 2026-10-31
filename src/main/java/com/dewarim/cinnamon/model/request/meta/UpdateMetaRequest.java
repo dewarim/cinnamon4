@@ -5,19 +5,20 @@ import com.dewarim.cinnamon.model.Meta;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.response.MetaWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 @JsonRootName("updateMetaRequest")
 public record UpdateMetaRequest(
         @JacksonXmlElementWrapper(localName = "metasets")
         @JacksonXmlProperty(localName = "metaset")
-        List<Meta> metas) implements ApiRequest<UpdateMetaRequest>, UpdateRequest<Meta> {
+        @NotEmpty List<@Valid Meta> metas) implements ApiRequest<UpdateMetaRequest>, UpdateRequest<Meta> {
 
     public UpdateMetaRequest {
         if (metas == null) {
@@ -28,16 +29,6 @@ public record UpdateMetaRequest(
     @Override
     public List<Meta> list() {
         return metas;
-    }
-
-    @Override
-    public boolean validated() {
-        return Objects.nonNull(metas) && !metas.isEmpty() &&
-                metas.stream().allMatch(meta ->
-                        meta.getId() != null && meta.getId() > 0 &&
-                                meta.getObjectId() != null && meta.getObjectId() > 0
-                                && (meta.getTypeId() != null && meta.getTypeId() > 0)
-                                && (meta.getContent() != null));
     }
 
     @Override

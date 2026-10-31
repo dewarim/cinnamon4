@@ -1,23 +1,18 @@
 package com.dewarim.cinnamon.model.request.osd;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.dewarim.cinnamon.application.service.RequestValidator;
 import com.fasterxml.jackson.annotation.JsonRootName;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 import java.util.Optional;
 
 @JsonRootName("setContentRequest")
-public record SetContentRequest(Long id, Long formatId) implements ApiRequest<SetContentRequest> {
+public record SetContentRequest(@NotNull @Positive Long id, @NotNull @Positive Long formatId) implements ApiRequest<SetContentRequest> {
 
     public Optional<SetContentRequest> validateRequest() {
-        if (validated()) {
-            return Optional.of(this);
-        } else {
-            return Optional.empty();
-        }
-    }
-
-    private boolean validated() {
-        return id != null && id > 0 &&
-                formatId != null && formatId > 0;
+        RequestValidator.validate(this);
+        return Optional.of(this);
     }
 }

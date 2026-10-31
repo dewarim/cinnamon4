@@ -2185,10 +2185,14 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         createTestContentOnOsd(osd.getId(), true);
         toh.lockOsd();
 
+        // cinnamonStats.deletions counts every deletion in this JVM and is never reset, so this
+        // test can only assert that its own deletion happened - waiting for an absolute 1 would
+        // become unreachable (and then burn the full timeout) as soon as another test deletes
+        // content first.
         long deletionsBefore = CinnamonServer.cinnamonStats.getDeletions().get();
         adminClient.deleteOsd(osd.getId());
         awaitCondition("DeletionTask to delete the content of OSD " + osd.getId(),
-                () -> CinnamonServer.cinnamonStats.getDeletions().get() >= deletionsBefore + 1);
+                () -> CinnamonServer.cinnamonStats.getDeletions().get() > deletionsBefore);
     }
 
     @Test

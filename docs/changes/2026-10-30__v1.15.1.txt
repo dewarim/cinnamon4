@@ -1,0 +1,77 @@
+Changes v1.15.1:
+
+- database change: objects.owner_id is now not null, as it already was for folders and links. Existing OSDs
+  without an owner have to be given one before the constraint can be applied - see docs/migration.2026.adoc,
+  section v1.15.1, for the check and the DDL.
+
+- added: the OSD__COPY response now reports which copy came from which source, as a <copies> list of
+  <copy><sourceId/><copyId/></copy>. A copy keeps no reference to its source - predecessorId and rootId are cleared
+  on purpose, since a copy starts a version tree of its own - and the sources are loaded by id list, whose order need
+  not match that of the request, so a caller having to touch each copy afterwards could only copy one object per
+  request. The new element is left off the wire entirely when empty, so no other endpoint using OsdWrapper changes
+  shape, and the copies themselves are still returned as osds: existing clients keep working unchanged.
+  CinnamonClient.copyOsdsWithSources exposes the mapping; copyOsds is unchanged.
+
+- fixed: an index update could be lost silently. While IndexService was indexing an item, a new change to that item
+  inserted nothing at all (ON CONFLICT DO NOTHING on the one row per job_type/item_id), and the indexer then deleted
+  the job it had read - so the index kept the document built from the stale snapshot, no job was left to retry it, and
+  nothing was logged: no failed job, no error. A conflicting insert now takes the pending row over with a fresh
+  index-job id, so the in-flight indexer's "delete from index_jobs where id = ?" matches nothing and the work stays
+  queued. The cost is an occasional redundant re-index, which is idempotent.
+  This also repairs waitUntilSearchable: SearchService.waitUntilIndexed treats a missing job row as "indexed", and a
+  swallowed insert used to hand it an index-job id that was never in the database, so the wait returned immediately.
+
+- fixed: deleting an OSD or folder while an index job for it was still pending left that job's action as CREATE or
+  UPDATE, so the item's document was not removed from the Lucene index - IndexService found no item to index, dropped
+  the job, and the document stayed until a search result verification noticed the unknown id. A pending DELETE now
+  wins the takeover, and is never downgraded by an insert arriving after it (item ids come from a sequence and are
+  never reused, so no change can legitimately follow a delete job).
+
+- fixed: a new change to an item now resets its index job's failure count. Before, a job past maxIndexAttempts was
+  never picked up again, and since only one job per item can exist, that dead row blocked every later change to the
+  same item indefinitely. Failures are still recorded and still listed by listFailedIndexJobs after each attempt - an
+  item that cannot be indexed is simply no longer given up on.
+
+- fixed: maxBatchSize is now applied by the database when fetching index jobs. It was passed as a MyBatis RowBounds to
+  a statement without a LIMIT, and RowBounds paginates in memory: every pending job row was fetched and all but the
+  first maxBatchSize discarded, which is the opposite of what a batch size is for on an installation with a backlog.
+
+- fixed: search result verification never removed a stale folder document from the index. The folder branch looped
+  over the unknown *OSD* ids instead of the unknown folder ids, so it enqueued a FOLDER/DELETE job per vanished OSD -
+  ids which, since folders and objects draw from one sequence, can never name a folder - and enqueued nothing at all
+  for the folders it had just reported as unknown. Stale folder documents therefore stayed in the index indefinitely,
+  while every verified search containing a vanished OSD added a job with nothing to delete. No live folder was ever
+  removed from the index by this.
+
+- fixed: handing a vanished item to the indexer no longer records a failed index event. findJobs synthesized a
+  DELETE-keyed entry for every job whose item was already gone, including CREATE and UPDATE jobs with nothing left to
+  index; the entry is now built only for a DELETE job, where the document still has to leave the index.
+
+- fixed: a server whose configured Lucene indexPath did not exist yet refused to start with "Could not create path to
+  index". IndexService threw when mkdirs() returned true - that is, exactly when it had just created the directory
+  successfully. Starting a second time worked, because the directory left behind by the failed attempt made the
+  enclosing exists() check skip the branch. Replaced by Files.createDirectories: idempotent, so it needs no prior
+  existence check, cannot lose a race against another process creating the directory, and reports why it failed.
+
+- fixed: deleting OSDs could skip the DELETE permission check and leave content files behind. verifyAndDelete built a
+  set of ids and a list of the objects behind them, then used the two interchangeably - but with deleteAllVersions the
+  ids are root ids, so the set can name an object the caller never passed, while every version the caller did pass
+  reappears in the set as a descendant of that root. An object in the set but not in the list was deleted without a
+  DELETE permission check of its own and left its content file on disk, because no row was written to deletions:
+  naming a later version of an object whose first version has a stricter ACL deleted that first version anyway. An
+  object in the list twice produced two deletions rows and failed the whole request on the unique key of
+  deletions.osd_id, which made FOLDER__DELETE with deleteContent unusable on any folder holding two versions of a
+  file with content, since FolderServlet passes every version in the folder. The list is now rebuilt from the set
+  once the set is complete, so both describe the same objects.
+
+- dependencies: removed woodstox-core-asl 4.4.1. It was unused, but shared 200 com.ctc.wstx classes with the
+  com.fasterxml woodstox-core 7.2.1 that jackson-dataformat-xml pulls in, and which of the two was loaded depended
+  only on dependency declaration order. Its transitive javax.xml.stream:stax-api 1.0-2, which duplicates the JDK's
+  java.xml module, is gone with it. lib/ and the SBOM drop from 50 to 48 components.
+
+- optimizations: the AccessFilter permission rebuild no longer runs three queries per acl. A permission check now
+  resolves the acls granting that permission to the user's groups in a single query, so the cost of a cache miss no
+  longer grows with the number of acls in the installation.
+
+- test suite: runtime down from ~40s to ~17.5s - fixed sleeps replaced by condition polling, and duplicate log output
+  removed (loggers declaring an appender without additivity="false" printed every message twice).

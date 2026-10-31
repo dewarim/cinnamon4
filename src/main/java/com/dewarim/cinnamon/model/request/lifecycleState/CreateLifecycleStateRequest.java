@@ -7,19 +7,20 @@ import com.dewarim.cinnamon.model.LifecycleState;
 import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.response.LifecycleStateWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 @JsonRootName("createLifecycleStateRequest")
 public record CreateLifecycleStateRequest(
         @JacksonXmlElementWrapper(localName = "lifecycleStates")
         @JacksonXmlProperty(localName = "lifecycleState")
-        List<LifecycleState> lifecycleStates) implements CreateRequest<LifecycleState>, ApiRequest<LifecycleState> {
+        @NotEmpty List<@Valid LifecycleState> lifecycleStates) implements CreateRequest<LifecycleState>, ApiRequest<LifecycleState> {
 
     public CreateLifecycleStateRequest {
         if (lifecycleStates == null) {
@@ -30,21 +31,6 @@ public record CreateLifecycleStateRequest(
     @Override
     public List<LifecycleState> list() {
         return lifecycleStates;
-    }
-
-    @Override
-    public boolean validated() {
-        if (lifecycleStates == null || lifecycleStates.isEmpty()) {
-            return false;
-        }
-        return lifecycleStates.stream().noneMatch(lifecycleState ->
-                Objects.isNull(lifecycleState) ||
-                        Objects.isNull(lifecycleState.getStateClass()) ||
-                        Objects.isNull(lifecycleState.getName()) ||
-                        (lifecycleState.getStateClass() == null || lifecycleState.getStateClass().isBlank()) ||
-                        lifecycleState.getName().isBlank() ||
-                        (lifecycleState.getConfig() == null || lifecycleState.getConfig().isBlank())
-        );
     }
 
     @Override

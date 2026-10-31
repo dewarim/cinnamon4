@@ -47,6 +47,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.*;
@@ -64,7 +65,7 @@ public class CinnamonServer {
 
     private static final Logger log = LogManager.getLogger(CinnamonServer.class);
 
-    public static final String           VERSION       = "1.15.0";
+    public static final String           VERSION       = "1.16.0";
     private             Server           server;
     private static      DbSessionFactory dbSessionFactory;
     private static      DbSessionFactory dbLoggingSessionFactory;
@@ -382,21 +383,31 @@ public class CinnamonServer {
     }
 
     public static void main(String[] args) throws Exception {
-        log.info("Cinnamon Server version {}", CinnamonServer.VERSION);
-
-
         Args       cliArguments = new Args();
         JCommander commander    = JCommander.newBuilder().addObject(cliArguments).build();
         commander.parse(args);
 
-        if (cliArguments.help) {
-            commander.setColumnSize(80);
-            commander.usage();
+        /*
+         * --api writes the API documentation to stdout, and the dist build redirects that into
+         * docs/api.md, so nothing may be logged before it: the version banner would otherwise end
+         * up as the first line of the generated document. Every other mode still logs the version
+         * first, so starting the server - or asking it for a config template - reports it as before.
+         */
+        if (cliArguments.api) {
+            printApi();
             return;
         }
 
-        if (cliArguments.api) {
-            printApi();
+        if (cliArguments.writeApiFile != null) {
+            writeApiDoc(cliArguments.writeApiFile);
+            return;
+        }
+
+        log.info("Cinnamon Server version {}", CinnamonServer.VERSION);
+
+        if (cliArguments.help) {
+            commander.setColumnSize(80);
+            commander.usage();
             return;
         }
 
@@ -427,16 +438,44 @@ public class CinnamonServer {
     }
 
     private static void printApi() {
+        System.out.print(renderApi());
+    }
+
+    /**
+     * Write the API documentation to a file instead of stdout. The dist build regenerates
+     * docs/api.md with this rather than by redirecting stdout, so that nothing the JVM or a
+     * library happens to print - an incubator-module warning, for instance - can end up in the
+     * generated document.
+     */
+    private static void writeApiDoc(String filename) {
+        try {
+            Files.writeString(Path.of(filename), renderApi());
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to write API documentation to " + filename, e);
+        }
+    }
+
+    private static String renderApi() {
+        StringBuilder api = new StringBuilder();
         XmlMapper mapper = XmlMapper.builder()
                 .configureForJackson2()
                 .configure(SerializationFeature.INDENT_OUTPUT, true)
                 .build();
-        System.out.println("""
+        api.append("""
                 # API Endpoint Documentation
                 
                 Note: response examples are not directly matching request examples, they just show the format you can expect.
                 
-                """);
+                The constraint table of an endpoint lists what the server checks before a request reaches the business
+                logic; a violation is answered with the error code INVALID_REQUEST and a message naming every offending
+                field. A path ending in `[]` constrains the elements of a list or set, and a nested path such as
+                `osds[].name` constrains the objects the request carries - these are the paths the error message uses,
+                so a client can match a rejection against the table. What a create and an update of the same object
+                require differs, and each table shows only the constraints of its own endpoint. The tables are generated
+                from the annotations the server validates with, so they cannot drift from what it enforces; a rule that
+                no annotation expresses is stated in prose under the table instead.
+                
+                """).append("\n");
         Arrays.stream(UrlMapping.values()).forEach(urlMapping -> {
                     String formatted;
                     if (urlMapping.getRequestClass() != null) {
@@ -448,7 +487,7 @@ public class CinnamonServer {
                                     
                                     ## Request
                                     
-                                    __request__
+                                    __request____constraints__
                                     
                                     ## Response
                                     
@@ -456,10 +495,13 @@ public class CinnamonServer {
                                     
                                     ---
                                     """;
+                            // one instance for both: the examples and the constraints that apply to them
+                            ApiRequest<?> request = newRequest(urlMapping.getRequestClass());
                             formatted = template
                                     .replace("__endpoint__", urlMapping.getPath())
                                     .replace("__description__", urlMapping.getDescription())
-                                    .replace("__request__", requestToExample(mapper, urlMapping.getRequestClass()))
+                                    .replace("__request__", exampleToText(mapper, request.examples()))
+                                    .replace("__constraints__", ApiDocConstraints.render(request))
                                     .replace("__response__", responseToExample(mapper, urlMapping.getResponseClass()))
                             ;
                         } catch (Exception e) {
@@ -476,28 +518,28 @@ public class CinnamonServer {
                                 .replace("__endpoint__", urlMapping.getPath())
                                 .replace("__description__", urlMapping.getDescription());
                     }
-                    System.out.println(formatted);
+                    api.append(formatted).append("\n");
                 }
         );
+        return api.toString();
     }
 
-    private static String requestToExample(ObjectMapper mapper, Class<? extends ApiRequest<?>> apiRequestClass) throws Exception {
-        if (apiRequestClass == null) {
-            return "";
-        }
-        ApiRequest<?> request;
+    /**
+     * An instance of a request class, for its examples() and its validationGroups(). Neither depends on
+     * instance state, so the component values do not matter.
+     */
+    private static ApiRequest<?> newRequest(Class<? extends ApiRequest<?>> apiRequestClass) throws Exception {
         try {
-            request = apiRequestClass.getConstructor().newInstance();
+            return apiRequestClass.getConstructor().newInstance();
         } catch (NoSuchMethodException noNoArgCtor) {
             // request records need not declare a no-arg constructor: build via the canonical
-            // constructor with default component values (examples() does not depend on instance state).
+            // constructor with default component values.
             Class<?>[] componentTypes = java.util.Arrays.stream(apiRequestClass.getRecordComponents())
                     .map(java.lang.reflect.RecordComponent::getType)
                     .toArray(Class<?>[]::new);
             Object[] args = java.util.Arrays.stream(componentTypes).map(CinnamonServer::defaultValue).toArray();
-            request = apiRequestClass.getDeclaredConstructor(componentTypes).newInstance(args);
+            return apiRequestClass.getDeclaredConstructor(componentTypes).newInstance(args);
         }
-        return exampleToText(mapper, request.examples());
     }
 
     private static final Map<Class<?>, Object> PRIMITIVE_DEFAULTS = Map.of(
@@ -579,6 +621,9 @@ public class CinnamonServer {
 
         @Parameter(names = {"--api"}, description = "Print API documentation")
         boolean api;
+
+        @Parameter(names = "--write-api", description = "Write the API documentation to the filename given.")
+        String writeApiFile;
 
         @Parameter(names = {"--show-config"}, description = "Show config details on startup like DB connection used etc. May include passwords!")
         boolean showConfig;

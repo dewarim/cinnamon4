@@ -1,0 +1,43 @@
+Changes v1.15.0:
+
+- no database changes
+
+- added: a CycloneDX 1.6 SBOM is generated into target/cinnamon-server.cdx.json on every mvn package, for EU CRA /
+  BSI TR-03183-2 compliance, along with the human-readable dependency and license table in docs/sbom.adoc. Needs jq
+  on the PATH; -DskipSbom turns both off.
+
+- added: a vulnerability scan of that SBOM via osv-scanner, as the vulncheck profile
+  (mvn package -Pvulncheck -> target/vulnerability-report.md). Report-only, so a newly published CVE does not break
+  an unrelated build unless -Dvulncheck.tolerated.exit.code=0 is passed.
+
+- added: the getContent response now carries a Content-Length header.
+
+- fixed: setContent left the old content file on disk. Orphaned content was only ever removed when the OSD itself was
+  deleted; replacing the content of an OSD now deletes the file it replaced.
+
+- fixed: CrudDao.update() had its ignoreNopUpdates check inverted and so behaved opposite to its documentation. A
+  no-op update is now reported as an error when the flag is false.
+
+- fixed: inverted boolean in FileSystemContentProvider::contentUnavailable.
+
+- fixed: an unavailable content file no longer produces an uncontrolled exception with a huge stack trace. TikaService
+  and the content provider now check that the file is readable and log an error naming the OSD id instead. This does
+  not make the missing file reappear, but it is logged as an error rather than thrown.
+
+- fixed: empty lists are no longer handed to MyBatis foreach parameters, where they produce invalid SQL.
+
+- fixed: session handling in DeletionDao.
+
+- fixed: access log truncation is synchronized, so parallel requests no longer truncate the logging table at once.
+
+- api: /api/osd/unlock is now declared as IdListRequest. The code always accepted a list - only api.md described it
+  as an idRequest - so no client behaviour changes.
+
+- updated dependencies: jetty-server 12.1.10, postgresql 42.7.12, httpclient5 5.6.3, log4j-api 2.25.5, jaxen 2.0.1
+
+- cleanup: obsolete toString and dead no-arg constructors dropped from the request records; raw-type compiler
+  warnings removed (ApiRequest among others); the never-thrown "throws SQLException" removed from update() in
+  CrudDao, ChangeTriggerDao and PermissionDao, together with the dead SQLException catches it forced in CruddyServlet,
+  TikaService and MetaService; unused partitionList removed; fewer hardcoded object names in the tests.
+
+- documentation: database and service setup documentation updated.

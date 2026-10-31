@@ -1,0 +1,101 @@
+Changes v1.16.0:
+
+- changed: request validation is now driven by constraint annotations (Jakarta Bean Validation, implemented by
+  hibernate-validator) instead of a hand-written validated() method per request class. Every request still answers
+  with the same error code it did before, INVALID_REQUEST, but the error message now lists every field that was
+  wrong, by name and - for a list payload - by index, for example "links[0].aclId must not be null". Messages are
+  rendered in the requesting user's uiLanguage where hibernate-validator ships that language, English otherwise.
+  Nothing on the wire changed: no request or response gained, lost or renamed an element, and the request and
+  response examples in docs/api.md are unchanged. The constraints live on the request records and on the model classes the requests carry (Acl,
+  Folder, UserAccount, ...), where they are checked only when a request cascades into them with @Valid, not as
+  invariants of the class. A rule no annotation can express - "a link points at a folder or at an object", "an
+  account update has to name at least one field to change", "a relation search has to be narrowed by at least one of
+  its three id lists" - is still hand-written in validated(), which stays as the documented escape hatch.
+
+- fixed: a create, update or delete request with an empty payload is now rejected instead of being accepted and
+  handed to the servlet. Most of the hand-written checks tested the payload with allMatch or noneMatch, and both are
+  vacuously true for an empty collection, so an empty body passed validation. What happened next depended on the
+  endpoint: usually an empty response, sometimes a confusing later error. Affected every create, update and delete
+  request; the ones with an explicit emptiness check (a minority) are unchanged. A unit test now walks UrlMapping and
+  asserts the whole set, so a request added later cannot reopen the hole.
+
+- fixed: a request could leave a NOT NULL column without a value, and the caller was answered with a database
+  error instead of being told which field was missing. Found by walking every insert and update statement in the
+  MyBatis mappers and checking each NOT NULL column it writes against the validation of the field behind it. Six
+  endpoints were affected, and all six now answer INVALID_REQUEST naming the field:
+  * setSummary (for objects and for folders) validated nothing at all - a request without a summary set the NOT NULL
+    column to null, and one without an id looked up object null.
+  * createChangeTrigger and updateChangeTrigger only checked the name, while controller, action, trigger_type and
+    config are all NOT NULL.
+  * updateLifecycleState did not require stateClass, which the update statement writes to a NOT NULL column.
+  * createRelation did not require metadata, which the insert writes as given to a NOT NULL column.
+  * updateUser accepted a partial account - "at least one field to change" - but the update statement writes name,
+    login_type, fullname and config, all NOT NULL, straight from the request. An update therefore has to carry them.
+    The password stays the exception: an empty one still means "keep the stored password".
+  * updateMeta stopped requiring the object id in the previous commit, which left it to the servlet's less precise
+    INVALID_UPDATE. Both createMeta and updateMeta demand it again, while the metasets carried along by createOsd
+    and createFolder still do not - the object they belong to is only created with them.
+  The ids inside aclGroup.permissionIds, userAccount.groupIds, changePermissions' add/remove lists and
+  getRelations' id list are checked per element now; they end up in NOT NULL columns too.
+
+- fixed: getObjectsByFolderId answered with an empty list when the request carried no folder id. The field is a
+  primitive long, so an absent one arrives as 0 rather than null, and nothing checked it. Also applies to
+  setPassword, setUserConfig and getUserAccount, which validated their fields inline and now do it by annotation;
+  getUserAccount keeps its own USER_INFO_REQUEST_WITHOUT_NAME_OR_ID for the "name or id" rule.
+
+- changed: a metaset type id of zero is rejected by getMeta instead of matching nothing. The old check read
+  "typeId < 0", which let zero through; no type id in the database is ever zero. createOsd now also rejects a
+  lifecycleStateId of zero.
+
+- fixed: createFolder did not validate the metasets it carries. createOsd has always cascaded into them; a folder's
+  went to the database unchecked.
+
+- fixed: createRelation accepted a relation whose rightId or typeId was not positive. The check read
+  "leftId <= 0 || rightId <= 0 && typeId <= 0", and && binds tighter than ||, so a non-positive rightId alone - or a
+  non-positive typeId alone - passed. All three ids are now required to be positive.
+
+- fixed: updateLink with an owner id of null answered 500 instead of 400. Link.validated() null-checked aclId but
+  then unboxed ownerId, so a link without an owner threw a NullPointerException inside validation.
+
+- changed: id fields that were documented as positive are now rejected when zero, where before the request passed
+  validation and the lookup behind it answered "not found". updateOsd accepted zero for parentId, ownerId, aclId,
+  typeId and languageId (its check read ">= 0"); listAclGroups accepted an aclGroupId or groupId of zero as long as
+  an idType was given. Both now answer INVALID_REQUEST, naming the field. No id in the database is ever zero, so no
+  request that used to succeed is affected.
+
+- added: an OSD insert now checks that owner, creator and modifier are present before writing the row, and answers
+  OBJECT_IS_MISSING_MANDATORY_USER instead of letting the not-null constraint fail as a database error. All three
+  are set by every caller; the check is there so a new call path cannot quietly reach the database without them.
+
+- changed: docs/api.md is regenerated by the dist build, from the UrlMapping enum and the examples() of the
+  request/response classes, so the checked-in API documentation cannot drift from the code. It is written by
+  "CinnamonServer --write-api <file>"; "--api" prints the same document to stdout. Both renderings are
+  deterministic, so two consecutive builds produce byte-identical files.
+
+- added: docs/api.md now documents the validation contract. Every endpoint carries a constraint table listing what
+  the server checks before the request reaches the business logic, under the same field paths the INVALID_REQUEST
+  message uses, so a client can match a rejection against the table. Constraints on the objects a request carries
+  are listed with their nested path ("folders[].metasets[].typeId"), and a constraint on the elements of a list or
+  set with a trailing "[]" ("ids[]"). The tables are generated from the constraint metadata of the validator that
+  checks the requests, so the documentation cannot describe a contract the server does not enforce. A create and an
+  update of the same object differ in what they require, and each table shows only its own endpoint's constraints.
+  A rule no annotation expresses - the six that are hand-written - is stated in prose under the table.
+
+- changed: the validation groups an endpoint uses are declared by ApiRequest.validationGroups() instead of being
+  passed to RequestValidator.validate() at the call site. Implementing CreateRequest, UpdateRequest or DeleteRequest
+  still selects the matching group by default; the three requests that need something else (updateOsd and
+  updateFolder, which carry a model in update shape without implementing the interface, and createMeta, which needs
+  a group of its own) declare it. This is what lets the api.md generator document the same constraints the server
+  enforces rather than the union of all groups. No change for clients.
+
+- changed: hibernate-validator logs its whole factory configuration at debug level, which the shipped log4j2.xml
+  showed because its root logger is at debug - about fifteen HV000234 lines whenever the validator is built, and
+  again after every ui language change. org.hibernate.validator and org.jboss.logging are at info now, which keeps
+  the one line naming the validator version. The example and test configurations were already quiet, their root
+  loggers being at warn and info.
+
+- changed: building a request validator without a database no longer logs a warning. The command line tools have
+  no database - "--write-api" builds a validator only to read constraint metadata, which needs no messages at all -
+  and that is not the same thing as a configured database that cannot be reached. The warning is still there for
+  the second case, where it means the next validation message comes out in English rather than the user's language.
+

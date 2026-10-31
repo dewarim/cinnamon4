@@ -5,6 +5,8 @@ import com.dewarim.cinnamon.model.Language;
 import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.response.LanguageWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
@@ -16,7 +18,7 @@ import java.util.List;
 public record CreateLanguageRequest(
         @JacksonXmlElementWrapper(localName = "languages")
         @JacksonXmlProperty(localName = "language")
-        List<Language> languages) implements CreateRequest<Language>, ApiRequest<Language> {
+        @NotEmpty List<@Valid Language> languages) implements CreateRequest<Language>, ApiRequest<Language> {
 
     public CreateLanguageRequest {
         if (languages == null) {
@@ -31,13 +33,6 @@ public record CreateLanguageRequest(
     @Override
     public List<Language> list() {
         return languages;
-    }
-
-    @Override
-    public boolean validated() {
-        return languages.stream().noneMatch(language -> language == null ||
-                language.getIsoCode() == null ||
-                language.getIsoCode().trim().isEmpty());
     }
 
     @Override

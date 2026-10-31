@@ -7,7 +7,7 @@
     <groupId>com.dewarim.cinnamon</groupId>
     <artifactId>cinnamon-cms</artifactId>
     <packaging>jar</packaging>
-    <version>1.15.0</version>
+    <version>1.16.0</version>
     <name>Cinnamon CMS</name>
     <description>Cinnamon 4 Content Management Server</description>
     <url>https://github.com/dewarim/cinnamon4</url>
@@ -51,6 +51,7 @@
         <maven.compiler.source>25</maven.compiler.source>
         <maven.compiler.target>25</maven.compiler.target>
         <unbound.ldap.version>6.0.10</unbound.ldap.version>
+        <hibernate.validator.version>9.0.1.Final</hibernate.validator.version>
         <!-- Path of the generated SBOM. Defined here rather than in the "sbom" profile because the
              "vulncheck" profile consumes it too and must not depend on which profiles are active. -->
         <sbom.file>${project.build.directory}/${project.build.finalName}.cdx.json</sbom.file>
@@ -63,6 +64,16 @@
 
     <dependencyManagement>
         <dependencies>
+            <!-- Bean Validation for request objects. Deliberately WITHOUT an Expression Language
+                 implementation: RequestValidator uses ParameterMessageInterpolator, so constraint
+                 messages are never evaluated as EL. Adding jakarta.el would re-open the EL
+                 injection class (CVE-2020-10693, CVE-2025-35036) and risk a second EL
+                 implementation on the Class-Path next to the one jetty-ee10-webapp can bring. -->
+            <dependency>
+                <groupId>org.hibernate.validator</groupId>
+                <artifactId>hibernate-validator</artifactId>
+                <version>${hibernate.validator.version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
@@ -117,6 +128,11 @@
     </dependencyManagement>
 
     <dependencies>
+
+        <dependency>
+            <groupId>org.hibernate.validator</groupId>
+            <artifactId>hibernate-validator</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>com.jayway.jsonpath</groupId>
@@ -537,6 +553,10 @@
                  This also populates target/lib itself, so the previously manual
                  "mvn dependency:copy-dependencies -DoutputDirectory=target/lib" is no longer needed. -->
             <id>dist</id>
+            <properties>
+                <!-- generated API documentation, checked into the repository -->
+                <api.doc.file>${project.basedir}/docs/api.md</api.doc.file>
+            </properties>
             <build>
                 <plugins>
                     <plugin>
@@ -558,6 +578,43 @@
                                     <includeScope>runtime</includeScope>
                                     <overWriteReleases>false</overWriteReleases>
                                     <overWriteSnapshots>true</overWriteSnapshots>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <!-- https://www.mojohaus.org/exec-maven-plugin/ -->
+                        <!-- Regenerate docs/api.md from the UrlMapping enum and the request/response
+                             examples, so the checked-in API documentation cannot drift from the code.
+                             The "write-api" flag makes the server write the document to the file directly.
+                             Capturing stdout would be fragile: exec-maven-plugin redirects stderr into
+                             outputFile as well, so a JVM warning (for instance about the incubator module)
+                             would become the first line of the generated document.
+                             The output is deterministic (examples use a fixed timestamp, see
+                             Constants.LOCAL_DATE_TIME_EXAMPLE), so this only shows up in git status when
+                             the API actually changes - same as docs/sbom.adoc. -->
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>3.6.3</version>
+                        <executions>
+                            <execution>
+                                <id>dist-api-doc</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>java</executable>
+                                    <arguments>
+                                        <argument>--add-modules</argument>
+                                        <argument>jdk.incubator.vector</argument>
+                                        <argument>--enable-native-access=ALL-UNNAMED</argument>
+                                        <argument>-classpath</argument>
+                                        <classpath/>
+                                        <argument>com.dewarim.cinnamon.application.CinnamonServer</argument>
+                                        <argument>--write-api</argument>
+                                        <argument>${api.doc.file}</argument>
+                                    </arguments>
                                 </configuration>
                             </execution>
                         </executions>

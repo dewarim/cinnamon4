@@ -1,6 +1,9 @@
 package com.dewarim.cinnamon.model.request.meta;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.dewarim.cinnamon.application.service.RequestValidator;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
@@ -10,25 +13,18 @@ import java.util.Optional;
 
 @JsonRootName("metaRequest")
 public record MetaRequest(
-        Long id,
+        @NotNull @Positive Long id,
         @JacksonXmlElementWrapper(localName = "typeIds")
         @JacksonXmlProperty(localName = "typeId")
-        List<Long> typeIds) implements ApiRequest<MetaRequest> {
+        List<@NotNull @Positive Long> typeIds) implements ApiRequest<MetaRequest> {
 
     public MetaRequest() {
         this(null, null);
     }
 
-    private boolean validated() {
-        return id != null && id > 0 && (typeIds == null || typeIds.stream().noneMatch(typeId -> typeId == null || typeId < 0));
-    }
-
     public Optional<MetaRequest> validateRequest() {
-        if (validated()) {
-            return Optional.of(this);
-        } else {
-            return Optional.empty();
-        }
+        RequestValidator.validate(this);
+        return Optional.of(this);
     }
 
     @Override

@@ -1,25 +1,20 @@
 package com.dewarim.cinnamon.model.request.lifecycleState;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.dewarim.cinnamon.application.service.RequestValidator;
 import com.fasterxml.jackson.annotation.JsonRootName;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 import java.util.List;
 import java.util.Optional;
 
 @JsonRootName("changeLifecycleStateRequest")
-public record ChangeLifecycleStateRequest(Long osdId, Long stateId) implements ApiRequest<ChangeLifecycleStateRequest> {
-
-    private boolean validated() {
-        boolean stateIdOkay = stateId != null && stateId > 0;
-        return osdId != null && osdId > 0 && stateIdOkay;
-    }
+public record ChangeLifecycleStateRequest(@NotNull @Positive Long osdId, @NotNull @Positive Long stateId) implements ApiRequest<ChangeLifecycleStateRequest> {
 
     public Optional<ChangeLifecycleStateRequest> validateRequest() {
-        if (validated()) {
-            return Optional.of(this);
-        } else {
-            return Optional.empty();
-        }
+        RequestValidator.validate(this);
+        return Optional.of(this);
     }
 
     @Override

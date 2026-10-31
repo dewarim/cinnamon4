@@ -6,6 +6,8 @@ import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.response.UserAccountWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
@@ -17,7 +19,7 @@ import java.util.List;
 public record CreateUserAccountRequest(
         @JacksonXmlElementWrapper(localName = "userAccounts")
         @JacksonXmlProperty(localName = "userAccount")
-        List<UserAccount> userAccounts) implements CreateRequest<UserAccount>, ApiRequest<CreateUserAccountRequest> {
+        @NotEmpty List<@Valid UserAccount> userAccounts) implements CreateRequest<UserAccount>, ApiRequest<CreateUserAccountRequest> {
 
     public CreateUserAccountRequest {
         if (userAccounts == null) {
@@ -43,24 +45,6 @@ public record CreateUserAccountRequest(
         List<UserAccount> list = new ArrayList<>();
         list.add(userAccount);
         return list;
-    }
-
-    @Override
-    public boolean validated() {
-        return userAccounts.stream().allMatch(user -> {
-            boolean nonNull = user.getName() != null && user.getPassword() != null && user.getFullname() != null
-                    && user.getEmail() != null && user.getUiLanguageId() != null
-                    && user.getLoginType() != null;
-            if (!nonNull) {
-                return false;
-            }
-            boolean empty = user.getName().isEmpty() || user.getPassword().isEmpty() || user.getFullname().isEmpty()
-                    || user.getEmail().isEmpty() || user.getLoginType().isEmpty();
-            if (empty) {
-                return false;
-            }
-            return user.getUiLanguageId() > 0;
-        });
     }
 
     @Override

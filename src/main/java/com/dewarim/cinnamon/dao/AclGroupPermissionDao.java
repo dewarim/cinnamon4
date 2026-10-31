@@ -1,5 +1,6 @@
 package com.dewarim.cinnamon.dao;
 
+import com.dewarim.cinnamon.api.Constants;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.model.AclGroup;
 import com.dewarim.cinnamon.model.AclGroupPermission;
@@ -34,6 +35,20 @@ public class AclGroupPermissionDao {
         List<AclGroupPermission> aclGroupPermissions = fetchAepCombinationOfAclGroupsAndThisPermission(aclGroups, permission);
         Set<Long>                allowedAclGroupIds  = aclGroupPermissions.stream().map(AclGroupPermission::getAclGroupId).collect(Collectors.toSet());
         return aclGroups.stream().filter(aclGroup -> allowedAclGroupIds.contains(aclGroup.getId())).collect(Collectors.toList());
+    }
+
+    /**
+     * All acl ids that grant this permission to the user, either through one of the user's groups
+     * or through the "everyone" group - in one query, instead of three per acl.
+     */
+    public Set<Long> listAclIdsWithPermissionForGroups(Set<Long> groupIds, Permission permission) {
+        Map<String, Object> params = Map.of(
+                "groupIds", groupIds,
+                "permissionId", permission.getId(),
+                "everyoneGroupName", Constants.ALIAS_EVERYONE);
+        List<Long> aclIds = getSqlSession()
+                .selectList("com.dewarim.cinnamon.model.AclGroupPermission.listAclIdsWithPermissionForGroups", params);
+        return new HashSet<>(aclIds);
     }
 
     private List<AclGroupPermission> fetchAepCombinationOfAclGroupsAndThisPermission(List<AclGroup> aclGroups, Permission permission) {

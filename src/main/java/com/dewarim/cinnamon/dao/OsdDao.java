@@ -13,6 +13,8 @@ import com.dewarim.cinnamon.model.index.IndexJobAction;
 import com.dewarim.cinnamon.model.index.IndexJobType;
 import com.dewarim.cinnamon.model.request.osd.VersionPredicate;
 import org.apache.ibatis.session.SqlSession;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -22,6 +24,8 @@ import java.util.stream.Collectors;
  * note: calling default update() implementation on OSD will not update changeTracking.
  */
 public class OsdDao implements CrudDao<ObjectSystemData> {
+
+    private static final Logger log = LogManager.getLogger(OsdDao.class);
 
     /**
      * Max number of ids in "in clause" is 32768 for Postgresql.
@@ -131,6 +135,7 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
     }
 
     public ObjectSystemData saveOsd(ObjectSystemData osd) {
+        verifyMandatoryUsersArePresent(osd);
         SqlSession sqlSession = getSqlSession();
         int        resultRows = sqlSession.insert("com.dewarim.cinnamon.model.ObjectSystemData.insertOsd", osd);
         if (resultRows != 1) {
@@ -143,6 +148,31 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
         IndexJob indexJob = new IndexJob(IndexJobType.OSD, osd.getId(), IndexJobAction.CREATE);
         new IndexJobDao(sqlSession).insertIndexJob(indexJob, true);
         return osd;
+    }
+
+    /**
+     * objects.owner_id, creator_id and modifier_id are all not null in the database, and none of them
+     * is taken from the request as given: the owner is validated and checked for existence first, the
+     * creator and modifier come from the authenticated user. A null in any of them is therefore a
+     * mistake on one of the create paths rather than a malformed request, which is why this reports a
+     * server error and names the field instead of leaving it to a constraint violation from Postgres.
+     */
+    private void verifyMandatoryUsersArePresent(ObjectSystemData osd) {
+        List<String> missing = new ArrayList<>(3);
+        if (osd.getOwnerId() == null) {
+            missing.add("owner");
+        }
+        if (osd.getCreatorId() == null) {
+            missing.add("creator");
+        }
+        if (osd.getModifierId() == null) {
+            missing.add("modifier");
+        }
+        if (!missing.isEmpty()) {
+            log.error("Cannot create object '{}' in folder {}: missing {}",
+                    osd.getName(), osd.getParentId(), String.join(", ", missing));
+            throw ErrorCode.OBJECT_IS_MISSING_MANDATORY_USER.exception();
+        }
     }
 
     public Optional<String> findLastDescendantVersion(long predecessorId) {

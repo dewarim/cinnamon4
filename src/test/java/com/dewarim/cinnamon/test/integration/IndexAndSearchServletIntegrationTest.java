@@ -3,8 +3,14 @@ package com.dewarim.cinnamon.test.integration;
 import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.configuration.LuceneConfig;
+import com.dewarim.cinnamon.dao.IndexEventDao;
+import com.dewarim.cinnamon.dao.IndexJobDao;
 import com.dewarim.cinnamon.model.Format;
 import com.dewarim.cinnamon.model.ObjectSystemData;
+import com.dewarim.cinnamon.model.index.IndexEvent;
+import com.dewarim.cinnamon.model.index.IndexJob;
+import com.dewarim.cinnamon.model.index.IndexJobAction;
+import com.dewarim.cinnamon.model.index.IndexJobType;
 import com.dewarim.cinnamon.model.request.index.ReindexRequest;
 import com.dewarim.cinnamon.model.request.search.SearchType;
 import com.dewarim.cinnamon.model.response.SearchIdsResponse;
@@ -38,7 +44,7 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
     public static Long osdWithContentId;
 
     @BeforeAll
-    public static void initializeObjects() throws IOException, InterruptedException {
+    public static void initializeObjects() throws IOException {
         // create indexItem for xml-content
         // the index item is created by CreateTestDB.sql, otherwise it may not be ready/available to
         // the indexerService on time (or: in its thread) for when the OSD is created.
@@ -71,12 +77,24 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
         toh.selectFormat("json")
                 .createOsdWithContent(new File("src/test/resources/test.json"));
 
-        // Wait for the objects created above to become searchable instead of sleeping for a fixed
-        // period: indexing is asynchronous, so a fixed sleep is both flaky under load and needlessly
-        // slow in the common case.
-        awaitCondition("the objects created for this test class to become searchable", () ->
-                !client.search(createTermQuery("name", "search-me-osd"), SearchType.OSD).getOsdIds().isEmpty()
-                        && !client.search(createTermQuery("name", "search-me-folder"), SearchType.FOLDER).getFolderIds().isEmpty());
+        // An idle index job table is not enough here: content is extracted and indexed in later
+        // passes (TikaService inserts a second index job of its own), so the job queue can be
+        // empty simply because the work has not been enqueued yet. Wait for what the tests below
+        // actually query instead.
+        assertTrue(waitUntilIndexIsIdle(), "index did not catch up with the test fixtures");
+        long contentDeadline = System.currentTimeMillis();
+        assertTrue(waitUntilOsdSearchFindsSomething(createTermQuery("xml_content", "cinnamon")),
+                () -> "xml content of the pom should be searchable - " + indexState());
+        assertTrue(waitUntilOsdSearchFindsSomething(createTermQuery("xml_content", "bob")),
+                () -> "json content should be searchable - " + indexState());
+        if (CinnamonServer.getConfig().getCinnamonTikaConfig().isUseTika()) {
+            // Tika extraction is a pass of its own, and the index job it enqueues afterwards is a
+            // third one - so searchForContent's tika_meta assertion needs its own wait, under the
+            // same condition that guards the assertion.
+            assertTrue(waitUntilOsdSearchFindsSomething(createTermQuery("tika_meta", "delicious")),
+                    () -> "tika metadata should be searchable - " + indexState());
+        }
+        log.info("waited {} ms for content to become searchable", System.currentTimeMillis() - contentDeadline);
         ThreadLocalSqlSession.refreshSession();
     }
 
@@ -206,41 +224,25 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
 
     @Test
     public void reindexAllTheThings() throws IOException {
-        int             jobsBefore = adminClient.getIndexInfo(false, false).getJobCount();
-        ReindexResponse response   = adminClient.reindex(new ReindexRequest(List.of(), List.of()));
+        ReindexResponse response = adminClient.reindex(new ReindexRequest(List.of(), List.of()));
         assertTrue(response.getDocumentsToIndex() > 0);
         assertTrue(response.getFoldersToIndex() > 0);
-
-        waitForReindexToDrain(jobsBefore);
-        IndexInfoResponse info = adminClient.getIndexInfo(true, false);
-        assertTrue(info.getDocumentsInIndex() > 0, "reindex must leave documents in the index");
-        assertTrue(info.getFoldersInIndex() > 0, "reindex must leave folders in the index");
+        // wait for the reindex to finish, so it does not disturb the following tests:
+        assertTrue(waitUntilIndexIsIdle(), "reindex did not finish");
     }
 
     @Test
     public void reindexSpecificObjects() throws IOException {
-        int             jobsBefore = adminClient.getIndexInfo(false, false).getJobCount();
-        ReindexResponse response   = adminClient.reindex(new ReindexRequest(List.of(osdId), List.of(folderId)));
+        ReindexResponse response = adminClient.reindex(new ReindexRequest(List.of(osdId), List.of(folderId)));
         assertEquals(1, response.getFoldersToIndex());
         assertEquals(1, response.getDocumentsToIndex());
 
-        waitForReindexToDrain(jobsBefore);
+        assertTrue(waitUntilIndexIsIdle(), "reindex did not finish");
         assertTrue(verifySearchFindsPointField("id", osdId, 1), "the reindexed osd must still be searchable");
         assertTrue(verifySearchFindsPointField("id", folderId, 1, SearchType.FOLDER),
                 "the reindexed folder must still be searchable");
     }
 
-    /**
-     * Wait until the index jobs created by a reindex have been processed, rather than sleeping for a
-     * fixed period: otherwise later tests race against the still-running reindex.
-     * <p>
-     * The number of jobs from before the reindex is the baseline, because permanently failed jobs
-     * (CreateTestDB.sql seeds one on purpose) stay in the table forever and never drain to zero.
-     */
-    private void waitForReindexToDrain(int jobsBefore) {
-        awaitCondition("reindex jobs to be processed (down to " + jobsBefore + ")",
-                () -> adminClient.getIndexInfo(false, false).getJobCount() <= jobsBefore);
-    }
 
     /**
      * With waitUntilSearchable enabled, an item must be searchable by the time the client has the
@@ -279,7 +281,9 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
     public void updateMetaTest() throws IOException {
         var toh = new TestObjectHolder(client, userId)
                 .createOsd();
+        assertTrue(waitUntilIndexIsIdle(), "new osd was not indexed");
         toh.createOsdMeta("<xml>issue389</xml>");
+        assertTrue(waitUntilIndexIsIdle(), "osd meta was not indexed");
 
         String termQuery = createTermQuery("meta_content", "issue389");
         awaitCondition("new metaset content to become searchable",
@@ -293,7 +297,7 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
     // verifySearchResults: a folder that is still in the Lucene index but no longer in the database
     // must be enqueued for removal from the index (the clean-up used to iterate over the unknown OSD ids).
     @Test
-    public void unknownFolderIsRemovedFromIndex() throws IOException, InterruptedException, SQLException {
+    public void unknownFolderIsRemovedFromIndex() throws IOException, SQLException {
         String name            = "unknown-folder-" + System.currentTimeMillis();
         Long   unknownFolderId = new TestObjectHolder(client, userId).createFolder(name, createFolderId).folder.getId();
         String query           = createTermQuery("name", name);
@@ -320,15 +324,63 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
         }
     }
 
-    private boolean waitForFolderSearchResult(String query, List<Long> expectedFolderIds) throws IOException, InterruptedException {
-        long deadline = System.currentTimeMillis() + CinnamonServer.config.getLuceneConfig().getMillisToWaitBetweenRuns() + 10_000L;
-        while (System.currentTimeMillis() < deadline) {
-            if (client.search(query, SearchType.FOLDER).getFolderIds().equals(expectedFolderIds)) {
-                return true;
-            }
-            Thread.sleep(200);
+    /**
+     * An item can be deleted between an index job being queued and IndexService picking it up.
+     * findJobs then has nothing to index: the job row goes, and for a CREATE or UPDATE job that is
+     * all that should happen. Handing such a job to the indexer anyway would dereference the
+     * missing item, so this asserts no failed index event was recorded - the job row is deleted
+     * either way, which makes that event the only observable difference between dropping the job
+     * in findJobs and dropping it one step later.
+     */
+    @Test
+    public void jobForAVanishedItemIsDroppedWithoutAFailedIndexEvent() {
+        // an item id this suite cannot reach: objects and folders share seq_folder_and_object_ids,
+        // which starts at 1 in the test database (at 10000000 in a migrated one) and climbs by a
+        // few hundred per run. Ids are never reused, so nothing can claim this one later either.
+        long     itemId = 999_000_003L;
+        IndexJob job    = new IndexJob(IndexJobType.OSD, itemId, IndexJobAction.UPDATE);
+        // committed, since the point is to let the live IndexService thread pick this up:
+        try (SqlSession sqlSession = CinnamonServer.getSqlSession()) {
+            new IndexJobDao(sqlSession).insertIndexJob(job, false);
+            sqlSession.commit();
         }
-        return false;
+        Long jobId = job.getId();
+
+        assertTrue(waitFor(() -> {
+                    try (SqlSession sqlSession = CinnamonServer.getSqlSession()) {
+                        return new IndexJobDao(sqlSession).getIndexJobById(jobId).isEmpty();
+                    }
+                }),
+                () -> "IndexService should have removed the job for the missing item - " + indexState());
+
+        try (SqlSession sqlSession = CinnamonServer.getSqlSession()) {
+            List<IndexEvent> events = new IndexEventDao(sqlSession).list().stream()
+                    .filter(event -> jobId.equals(event.getJobId()))
+                    .toList();
+            assertTrue(events.isEmpty(),
+                    () -> "a job whose item is gone should not be handed to the indexer, but it recorded "
+                            + events.stream().map(IndexEvent::getMessage).toList());
+        }
+    }
+
+    private static boolean waitUntilOsdSearchFindsSomething(String query) {
+        return waitFor(() -> {
+            try {
+                return !client.search(query, SearchType.OSD).getOsdIds().isEmpty();
+            } catch (IOException e) {
+                return false;
+            }
+        });
+    }
+
+    private boolean waitForFolderSearchResult(String query, List<Long> expectedFolderIds) {
+        return waitFor(() -> {
+            try {
+                return client.search(query, SearchType.FOLDER).getFolderIds().equals(expectedFolderIds);
+            } catch (IOException e) {
+                return false;
+            }
+        });
     }
 
 }

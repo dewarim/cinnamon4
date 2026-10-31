@@ -54,8 +54,9 @@ public class UserAccountServlet extends HttpServlet implements CruddyServlet<Use
         UrlMapping mapping = UrlMapping.getByPath(request.getRequestURI());
         switch (mapping) {
             case USER__GET ->
-                    showUserInfo(cinnamonRequest.getMapper().readValue(request.getInputStream(), GetUserAccountRequest.class), userAccountDao,
-                            groupUserDao, cinnamonResponse);
+                    showUserInfo(cinnamonRequest.getMapper().readValue(request.getInputStream(), GetUserAccountRequest.class)
+                                    .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException()),
+                            userAccountDao, groupUserDao, cinnamonResponse);
             case USER__LIST -> {
                 list(convertListRequest(cinnamonRequest, ListUserAccountRequest.class), userAccountDao, cinnamonResponse);
                 ((List<UserAccount>) cinnamonResponse.getWrapper().list()).forEach(user -> {

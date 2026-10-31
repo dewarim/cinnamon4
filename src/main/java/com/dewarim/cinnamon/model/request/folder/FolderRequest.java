@@ -1,6 +1,10 @@
 package com.dewarim.cinnamon.model.request.folder;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.dewarim.cinnamon.application.service.RequestValidator;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
@@ -13,7 +17,7 @@ import java.util.Optional;
 public record FolderRequest(
         @JacksonXmlElementWrapper(localName = "ids")
         @JacksonXmlProperty(localName = "id")
-        List<Long> ids,
+        @NotEmpty List<@NotNull @Positive Long> ids,
         boolean includeSummary,
         boolean addFolderPath) implements ApiRequest<FolderRequest> {
 
@@ -27,19 +31,9 @@ public record FolderRequest(
         this(ids, includeSummary, false);
     }
 
-    /**
-     * @return true if list of ids is non-empty and contains only positive long integers.
-     */
-    private boolean validated() {
-        return ids != null && !ids.isEmpty() && ids.stream().allMatch(id -> id != null && id > 0);
-    }
-
     public Optional<FolderRequest> validateRequest() {
-        if (validated()) {
-            return Optional.of(this);
-        } else {
-            return Optional.empty();
-        }
+        RequestValidator.validate(this);
+        return Optional.of(this);
     }
 
     @Override

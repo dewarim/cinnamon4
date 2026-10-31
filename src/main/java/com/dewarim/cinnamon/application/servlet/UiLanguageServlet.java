@@ -4,6 +4,7 @@ import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonRequest;
 import com.dewarim.cinnamon.application.CinnamonResponse;
+import com.dewarim.cinnamon.application.service.RequestValidator;
 import com.dewarim.cinnamon.dao.UiLanguageDao;
 import com.dewarim.cinnamon.model.UiLanguage;
 import com.dewarim.cinnamon.model.request.uiLanguage.CreateUiLanguageRequest;
@@ -36,16 +37,25 @@ public class UiLanguageServlet extends HttpServlet implements CruddyServlet<UiLa
                 superuserCheck();
                 create(convertCreateRequest(cinnamonRequest, CreateUiLanguageRequest.class),
                         languageDao, cinnamonResponse);
+                // the set of locales constraint messages can be rendered in is fixed when the
+                // request validator is built, so it has to be rebuilt when that set changes
+                RequestValidator.invalidateUiLanguageCache();
             }
             case UI_LANGUAGE__UPDATE -> {
                 superuserCheck();
                 update(convertUpdateRequest(cinnamonRequest, UpdateUiLanguageRequest.class),
                         languageDao, cinnamonResponse);
+                // the set of locales constraint messages can be rendered in is fixed when the
+                // request validator is built, so it has to be rebuilt when that set changes
+                RequestValidator.invalidateUiLanguageCache();
             }
             case UI_LANGUAGE__DELETE -> {
                 superuserCheck();
                 delete(convertDeleteRequest(cinnamonRequest, DeleteUiLanguageRequest.class),
                         languageDao, cinnamonResponse);
+                // the set of locales constraint messages can be rendered in is fixed when the
+                // request validator is built, so it has to be rebuilt when that set changes
+                RequestValidator.invalidateUiLanguageCache();
             }
 
             default -> ErrorCode.RESOURCE_NOT_FOUND.throwUp();

@@ -1,25 +1,19 @@
 package com.dewarim.cinnamon.model.request;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.dewarim.cinnamon.application.service.RequestValidator;
 import com.fasterxml.jackson.annotation.JsonRootName;
+import jakarta.validation.constraints.NotBlank;
 
 import java.util.List;
 import java.util.Optional;
 
 @JsonRootName("connectionRequest")
-public record ConnectionRequest(String username, String password, String format) implements ApiRequest<ConnectionRequest> {
-
-    public boolean validated() {
-        return username != null && !username.isEmpty() && !username.isBlank()
-                && password != null && !password.isEmpty() && !password.isBlank();
-    }
+public record ConnectionRequest(@NotBlank String username, @NotBlank String password, String format) implements ApiRequest<ConnectionRequest> {
 
     public Optional<ConnectionRequest> validateRequest() {
-        if (validated()) {
-            return Optional.of(this);
-        } else {
-            return Optional.empty();
-        }
+        RequestValidator.validate(this);
+        return Optional.of(this);
     }
 
     @Override

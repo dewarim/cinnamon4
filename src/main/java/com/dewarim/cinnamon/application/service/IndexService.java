@@ -174,21 +174,6 @@ public class IndexService implements Runnable {
                         List<Runnable> updateJobs = new ArrayList<>();
                         List<Runnable> deleteJobs = new ArrayList<>();
 
-                        // also remove index jobs if their object has already been deleted - can happen with short-lived objects
-                        // note: nomenclature of indexJob and indexJobWithDependencies is a bit confusing since both are called jobs,
-                        // but only the former is in the DB and should be deleted from it.
-                        jobsToDo.removeIf(job -> {
-                            IndexKey       indexKey  = job.getIndexKey();
-                            IndexJobAction action    = job.getIndexJob().getAction();
-                            IndexKey       deleteKey = new IndexKey(indexKey.type(), indexKey.itemId(), IndexJobAction.DELETE);
-                            boolean        canRemove = (action.equals(IndexJobAction.UPDATE) || action.equals(IndexJobAction.CREATE)) && jobsToDo.stream().anyMatch(candidate -> candidate.getIndexKey().equals(deleteKey));
-                            if (canRemove) {
-                                log.debug("Removing {} because its object has already been deleted.", job.getIndexJob());
-                                jobsToDelete.add(job.getIndexJob());
-                            }
-                            return canRemove;
-                        });
-
                         for (IndexJobWithDependencies job : jobsToDo) {
                             Runnable runnable = () -> consumer.accept(job);
                             switch (job.getIndexJob().getAction()) {
@@ -374,9 +359,15 @@ public class IndexService implements Runnable {
                         // OSD:
                         ObjectSystemData osd = osds.get(indexJob.getItemId());
                         if (osd == null) {
+                            // The item is gone - it can be deleted between queueing this job and picking it up. A DELETE job
+                            // still has work to do, since its document has to leave the index; a CREATE or UPDATE job
+                            // has nothing left to index and indexOsd would dereference the missing osd, so it is only
+                            // dropped from the database. Either way the job row goes.
                             log.warn("IndexJob: OSD {} not found, skipping.", indexJob.getItemId());
                             jobsToDelete.add(indexJob);
-                            jobsToDo.add(new IndexJobWithDependencies(indexJob, new IndexKey(IndexJobType.OSD, indexJob.getItemId(), IndexJobAction.DELETE)));
+                            if (indexJob.getAction() == IndexJobAction.DELETE) {
+                                jobsToDo.add(indexJobWithDependencies);
+                            }
                             continue;
                         }
                         indexJobWithDependencies.setOsd(osd);
@@ -414,9 +405,12 @@ public class IndexService implements Runnable {
                         // Folder:
                         Folder folder = folders.get(indexJob.getItemId());
                         if (folder == null) {
+                            // see the osd branch above: only a DELETE job has anything left to do here
                             log.warn("IndexJob: Folder {} not found, skipping.", indexJob.getItemId());
                             jobsToDelete.add(indexJob);
-                            jobsToDo.add(new IndexJobWithDependencies(indexJob, new IndexKey(IndexJobType.FOLDER, indexJob.getItemId(), IndexJobAction.DELETE)));
+                            if (indexJob.getAction() == IndexJobAction.DELETE) {
+                                jobsToDo.add(indexJobWithDependencies);
+                            }
                             continue;
                         }
                         String folderPath = folderPaths.get(folder.getParentId());
@@ -472,6 +466,11 @@ public class IndexService implements Runnable {
             case FAILED -> log.info("Failed to index {}", job);
             case SUCCESS -> {
                 switch (job.getAction()) {
+                    // updateDocument deletes every document matching the term and adds this one in a
+                    // single atomic call, so a changed item's document is replaced rather than
+                    // duplicated and the item is never briefly absent from the index. This is the
+                    // other deletion in this class: part of re-indexing an item that still exists,
+                    // as opposed to deleteFromIndex, which is for an item that is gone.
                     case UPDATE -> indexWriter.updateDocument(new Term(LUCENE_FIELD_UNIQUE_ID, key.toString()), doc);
                     case CREATE -> indexWriter.addDocument(doc);
                 }
@@ -689,6 +688,19 @@ public class IndexService implements Runnable {
         }
     }
 
+    /**
+     * Removes the item's document from the Lucene index for good, because the OSD or folder itself
+     * has been deleted. This is what an {@link IndexJobAction#DELETE} job asks for, and nothing is
+     * added back.
+     * <p>
+     * Not to be confused with the delete that is part of an update: re-indexing a changed item also
+     * has to get rid of that item's previous document, but that happens as one atomic
+     * {@code IndexWriter.updateDocument} call in {@link #handleIndexItem}, not here.
+     * <p>
+     * The term is {@code unique_id}, i.e. {@link IndexKey#toString()} ("OSD#42"), which carries
+     * neither the action nor the index-job id - so it matches the item's document whichever job
+     * wrote it.
+     */
     private IndexEvent deleteFromIndex(IndexKey key, IndexJob job, IndexWriter indexWriter) {
         try {
             indexWriter.deleteDocuments(new Term(LUCENE_FIELD_UNIQUE_ID, key.toString()));

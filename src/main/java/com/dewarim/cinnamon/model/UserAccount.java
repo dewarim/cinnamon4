@@ -2,7 +2,12 @@ package com.dewarim.cinnamon.model;
 
 import com.dewarim.cinnamon.api.Identifiable;
 import com.dewarim.cinnamon.api.login.LoginUser;
+import com.dewarim.cinnamon.model.request.CreateRequest;
+import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 
@@ -16,14 +21,27 @@ import java.util.Objects;
  */
 public class UserAccount implements Principal, LoginUser, Identifiable {
 
+    // Request validation, checked when a request cascades into this class with @Valid.
+    @NotNull(groups = UpdateRequest.class)
+    @Positive(groups = UpdateRequest.class)
     private Long    id;
+    // name, loginType, fullname and config are NOT NULL and the update statement writes all of
+    // them from the request, so an update has to carry them too. The password is the exception:
+    // UserAccountServlet keeps the stored one when the request leaves it empty.
+    @NotEmpty
     private String  name;
+    @NotEmpty
     private String  loginType;
+    @NotEmpty(groups = CreateRequest.class)
     private String  password;
     private boolean activated;
     private boolean locked;
+    @NotNull(groups = CreateRequest.class)
+    @Positive
     private Long    uiLanguageId;
+    @NotEmpty
     private String  fullname;
+    @NotEmpty(groups = CreateRequest.class)
     private String  email;
     private boolean changeTracking;
     private boolean activateTriggers = true;
@@ -35,7 +53,8 @@ public class UserAccount implements Principal, LoginUser, Identifiable {
 
     @JacksonXmlElementWrapper(localName = "groupIds")
     @JacksonXmlProperty(localName = "groupId")
-    private List<Long> groupIds = new ArrayList<>();
+    private List<@NotNull @Positive Long> groupIds = new ArrayList<>();
+    @NotNull
     private String     config   = "<config/>";
     @JsonIgnore
     private boolean    newUser  = false;

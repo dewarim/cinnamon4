@@ -5,6 +5,8 @@ import com.dewarim.cinnamon.model.ConfigEntry;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.response.ConfigEntryWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
@@ -16,7 +18,7 @@ import java.util.List;
 public record UpdateConfigEntryRequest(
         @JacksonXmlElementWrapper(localName = "configEntries")
         @JacksonXmlProperty(localName = "configEntry")
-        List<ConfigEntry> configEntries) implements UpdateRequest<ConfigEntry>, ApiRequest<UpdateRequest<ConfigEntry>> {
+        @NotEmpty List<@Valid ConfigEntry> configEntries) implements UpdateRequest<ConfigEntry>, ApiRequest<UpdateRequest<ConfigEntry>> {
 
     public UpdateConfigEntryRequest {
         if (configEntries == null) {
@@ -31,14 +33,6 @@ public record UpdateConfigEntryRequest(
     @Override
     public List<ConfigEntry> list() {
         return configEntries;
-    }
-
-    @Override
-    public boolean validated() {
-        return configEntries.stream().allMatch(configEntry ->
-                configEntry != null && configEntry.getName() != null && !configEntry.getName().trim().isEmpty()
-                        && configEntry.getConfig() != null
-                        && configEntry.getId() != null && configEntry.getId() > 0);
     }
 
     @Override

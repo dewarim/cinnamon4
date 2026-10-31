@@ -1,13 +1,15 @@
 package com.dewarim.cinnamon.model.request.aclGroup;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.dewarim.cinnamon.application.service.RequestValidator;
 import com.fasterxml.jackson.annotation.JsonRootName;
+import jakarta.validation.constraints.Positive;
 
 import java.util.List;
 import java.util.Optional;
 
 @JsonRootName("aclGroupListRequest")
-public record AclGroupListRequest(Long id, IdType idType) implements ApiRequest<AclGroupListRequest> {
+public record AclGroupListRequest(@Positive Long id, IdType idType) implements ApiRequest<AclGroupListRequest> {
 
     public enum IdType {
         ACL, GROUP
@@ -17,16 +19,22 @@ public record AclGroupListRequest(Long id, IdType idType) implements ApiRequest<
         this(null, null);
     }
 
+    /**
+     * The request has to name something to list by. Which of the two fields it is cannot be said
+     * per field, so this one rule stays hand-written.
+     */
     private boolean validated() {
-        return id != null && id > 0 || (idType != null);
+        return id != null || idType != null;
+    }
+
+    @Override
+    public String additionalRules() {
+        return "At least one of id and idType has to be set.";
     }
 
     public Optional<AclGroupListRequest> validateRequest() {
-        if (validated()) {
-            return Optional.of(this);
-        } else {
-            return Optional.empty();
-        }
+        RequestValidator.validate(this);
+        return validated() ? Optional.of(this) : Optional.empty();
     }
 
     @Override

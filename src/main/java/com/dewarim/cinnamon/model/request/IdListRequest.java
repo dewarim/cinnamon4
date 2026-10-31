@@ -1,6 +1,10 @@
 package com.dewarim.cinnamon.model.request;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.dewarim.cinnamon.application.service.RequestValidator;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
@@ -14,7 +18,7 @@ import java.util.Set;
 public record IdListRequest(
         @JacksonXmlElementWrapper(localName = "ids")
         @JacksonXmlProperty(localName = "id")
-        Set<Long> ids) implements ApiRequest<IdListRequest> {
+        @NotEmpty Set<@NotNull @Positive Long> ids) implements ApiRequest<IdListRequest> {
 
     public IdListRequest {
         if (ids == null) {
@@ -26,19 +30,9 @@ public record IdListRequest(
         this(new HashSet<>(ids));
     }
 
-    public boolean validated() {
-        if (ids == null) {
-            return false;
-        }
-        return ids.stream().allMatch(id -> id != null && id > 0);
-    }
-
     public Optional<IdListRequest> validateRequest() {
-        if (validated()) {
-            return Optional.of(this);
-        } else {
-            return Optional.empty();
-        }
+        RequestValidator.validate(this);
+        return Optional.of(this);
     }
 
     @Override

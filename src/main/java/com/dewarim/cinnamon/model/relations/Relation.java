@@ -3,6 +3,8 @@ package com.dewarim.cinnamon.model.relations;
 import com.dewarim.cinnamon.api.Identifiable;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 import java.util.Objects;
 
@@ -11,9 +13,18 @@ import java.util.Objects;
 public class Relation implements Identifiable {
     
     private Long id;
+    // Request validation, checked when a request cascades into this class with @Valid.
+    @NotNull
+    @Positive
     private Long leftId;
+    @NotNull
+    @Positive
     private Long rightId;
+    @NotNull
+    @Positive
     private Long typeId;
+    // NOT NULL in the database, and the insert writes it as given
+    @NotNull
     private String metadata;
     private Boolean isParent;
 

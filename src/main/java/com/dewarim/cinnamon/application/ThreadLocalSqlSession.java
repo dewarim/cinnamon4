@@ -54,6 +54,15 @@ public class ThreadLocalSqlSession {
         transactionStatus.set(status);
     }
 
+    /**
+     * Whether a database is configured at all. False in the command line tools - --write-api builds a
+     * request validator without one - which is not the same thing as a database that is configured but
+     * cannot be reached.
+     */
+    public static boolean hasSessionFactory() {
+        return dbSessionFactory != null;
+    }
+
     public static void setDbSessionFactory(DbSessionFactory dbSessionFactory) {
         ThreadLocalSqlSession.dbSessionFactory = dbSessionFactory;
     }

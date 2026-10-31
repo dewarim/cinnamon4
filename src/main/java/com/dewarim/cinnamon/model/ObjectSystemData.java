@@ -4,8 +4,11 @@ import com.dewarim.cinnamon.api.CinnamonObject;
 import com.dewarim.cinnamon.api.OwnableWithMetadata;
 import com.dewarim.cinnamon.api.content.ContentMetadata;
 import com.dewarim.cinnamon.model.relations.Relation;
+import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.provider.DefaultContentProvider;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
@@ -29,7 +32,15 @@ import static com.dewarim.cinnamon.api.Constants.DEFAULT_SUMMARY;
 public class ObjectSystemData implements ContentMetadata, CinnamonObject, OwnableWithMetadata {
     private static final Logger log = LogManager.getLogger(ObjectSystemData.class);
 
+    // Request validation, checked when a request cascades into this class with @Valid.
+    @NotNull(groups = UpdateRequest.class)
+    @Positive(groups = UpdateRequest.class)
     private Long   id;
+    // an update may leave the name alone, but not blank it out or pad it with whitespace.
+    // Fully qualified: java.util.regex.Pattern is already imported here.
+    @jakarta.validation.constraints.Pattern(regexp = "\\S(.*\\S)?",
+            flags = jakarta.validation.constraints.Pattern.Flag.DOTALL,
+            message = "must not be blank or padded with whitespace")
     private String name;
     private String contentPath;
     private Long   contentSize;
@@ -37,6 +48,7 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject, Ownabl
     private Long   rootId;
     private Long   creatorId;
     private Long   modifierId;
+    @Positive
     private Long   ownerId;
     private Long   lockerId;
 
@@ -44,10 +56,14 @@ public class ObjectSystemData implements ContentMetadata, CinnamonObject, Ownabl
     private LocalDateTime created = LocalDateTime.now();
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime modified = LocalDateTime.now();
+    @Positive
     private Long   languageId;
+    @Positive
     private Long   aclId;
+    @Positive
     private Long   parentId;
     private Long   formatId;
+    @Positive
     private Long   typeId;
     private String folderPath;
 

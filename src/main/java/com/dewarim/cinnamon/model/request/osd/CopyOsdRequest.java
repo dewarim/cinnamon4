@@ -1,6 +1,10 @@
 package com.dewarim.cinnamon.model.request.osd;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.dewarim.cinnamon.application.service.RequestValidator;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
@@ -13,11 +17,11 @@ import java.util.Optional;
 public record CopyOsdRequest(
         @JacksonXmlElementWrapper(localName = "sourceIds")
         @JacksonXmlProperty(localName = "sourceId")
-        List<Long> sourceIds,
-        Long targetFolderId,
+        @NotEmpty List<@NotNull @Positive Long> sourceIds,
+        @NotNull @Positive Long targetFolderId,
         @JacksonXmlElementWrapper(localName = "metasetTypeIds")
         @JacksonXmlProperty(localName = "metasetTypeId")
-        List<Long> metasetTypeIds) implements ApiRequest<CopyOsdRequest> {
+        List<@NotNull @Positive Long> metasetTypeIds) implements ApiRequest<CopyOsdRequest> {
 
     public CopyOsdRequest {
         if (sourceIds == null) {
@@ -28,20 +32,9 @@ public record CopyOsdRequest(
         }
     }
 
-    private boolean validated() {
-        return !sourceIds.isEmpty()
-                && sourceIds.stream().allMatch(id -> id != null && id > 0)
-                && targetFolderId != null
-                && targetFolderId > 0
-                && metasetTypeIds.stream().allMatch(id -> id != null && id > 0);
-    }
-
     public Optional<CopyOsdRequest> validateRequest() {
-        if (validated()) {
-            return Optional.of(this);
-        } else {
-            return Optional.empty();
-        }
+        RequestValidator.validate(this);
+        return Optional.of(this);
     }
 
     @Override

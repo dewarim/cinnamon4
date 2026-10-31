@@ -1,12 +1,22 @@
 package com.dewarim.cinnamon.model;
 
 import com.dewarim.cinnamon.api.Identifiable;
+import com.dewarim.cinnamon.model.request.UpdateRequest;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 public class ChangeTrigger implements Identifiable {
 
+    // Request validation, checked when a request cascades into this class with @Valid.
+    @NotNull(groups = UpdateRequest.class)
+    @Positive(groups = UpdateRequest.class)
     private Long              id;
+    @NotBlank
     private String            name;
+    @NotBlank
     private String            controller;
+    @NotBlank
     private String            action;
     private boolean           active;
     private boolean           preTrigger;
@@ -14,7 +24,9 @@ public class ChangeTrigger implements Identifiable {
     private boolean           postCommitTrigger;
     private boolean           copyFileContent;
     private int               ranking;
+    @NotNull
     private String            config = "<config/>";
+    @NotNull
     private ChangeTriggerType triggerType;
 
     public ChangeTrigger() {

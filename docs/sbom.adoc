@@ -5,11 +5,11 @@ Generated from the CycloneDX SBOM by `mvn package` -- *do not edit by hand*.
 The machine-readable SBOM is built to `target/cinnamon-server.cdx.json`;
 see the Packaging section of CLAUDE.md.
 
-Product:: Cinnamon CMS 1.15.0
+Product:: Cinnamon CMS 1.16.0
 Supplier:: Ingo Wiarda
 Product license:: Apache-2.0
 SBOM format:: CycloneDX 1.6
-Components:: 48
+Components:: 52
 
 == Components
 
@@ -22,6 +22,7 @@ declared licenses without asserting which one applies.
 | com.beust:jcommander | 1.82 | Apache-2.0
 | com.fasterxml.jackson.core:jackson-annotations | 2.22 | Apache-2.0
 | com.fasterxml.woodstox:woodstox-core | 7.2.1 | Apache-2.0
+| com.fasterxml:classmate | 1.7.0 | Apache-2.0
 | com.github.ben-manes.caffeine:caffeine | 3.2.0 | Apache-2.0
 | com.google.errorprone:error_prone_annotations | 2.36.0 | Apache-2.0
 | com.jayway.jsonpath:json-path | 2.10.0 | Apache-2.0
@@ -30,6 +31,7 @@ declared licenses without asserting which one applies.
 | commons-io:commons-io | 2.19.0 | Apache-2.0
 | dev.failsafe:failsafe | 3.3.2 | Apache-2.0
 | jakarta.servlet:jakarta.servlet-api | 6.0.0 | EPL-2.0, GPL-2.0-with-classpath-exception
+| jakarta.validation:jakarta.validation-api | 3.1.1 | Apache-2.0
 | jaxen:jaxen | 2.0.1 | BSD License 2.0
 | net.minidev:accessors-smart | 2.5.2 | Apache-2.0
 | net.minidev:json-smart | 2.5.2 | Apache-2.0
@@ -58,6 +60,8 @@ declared licenses without asserting which one applies.
 | org.eclipse.jetty:jetty-session | 12.1.10 | EPL-2.0, Apache-2.0
 | org.eclipse.jetty:jetty-util | 12.1.10 | EPL-2.0, Apache-2.0
 | org.eclipse.jetty:jetty-xml | 12.1.10 | EPL-2.0, Apache-2.0
+| org.hibernate.validator:hibernate-validator | 9.0.1.Final | Apache-2.0
+| org.jboss.logging:jboss-logging | 3.6.1.Final | Apache-2.0
 | org.jspecify:jspecify | 1.0.0 | Apache-2.0
 | org.mindrot:jbcrypt | 0.4 | ISC
 | org.mybatis:mybatis | 3.5.19 | Apache-2.0

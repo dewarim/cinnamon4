@@ -1,6 +1,9 @@
 package com.dewarim.cinnamon.model.request.permission;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.dewarim.cinnamon.application.service.RequestValidator;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
@@ -11,13 +14,13 @@ import java.util.Optional;
 
 @JsonRootName("changePermissionsRequest")
 public record ChangePermissionsRequest(
-        Long aclGroupId,
+        @NotNull @Positive Long aclGroupId,
         @JacksonXmlElementWrapper(localName = "addPermissions")
         @JacksonXmlProperty(localName = "addId")
-        List<Long> add,
+        List<@NotNull @Positive Long> add,
         @JacksonXmlElementWrapper(localName = "removePermissions")
         @JacksonXmlProperty(localName = "removeId")
-        List<Long> remove) implements ApiRequest<ChangePermissionsRequest> {
+        List<@NotNull @Positive Long> remove) implements ApiRequest<ChangePermissionsRequest> {
 
     public ChangePermissionsRequest {
         if (add == null) {
@@ -28,21 +31,22 @@ public record ChangePermissionsRequest(
         }
     }
 
+    /**
+     * There has to be something to change. Neither list is required on its own, so this one rule
+     * stays hand-written.
+     */
     public boolean validated() {
-        boolean hasAdd    = add != null && !add.isEmpty();
-        boolean hasRemove = remove != null && !remove.isEmpty();
-        if (!hasAdd && !hasRemove) {
-            return false;
-        }
-        return aclGroupId != null && aclGroupId > 0;
+        return !add.isEmpty() || !remove.isEmpty();
+    }
+
+    @Override
+    public String additionalRules() {
+        return "At least one of addPermissions and removePermissions has to be non-empty.";
     }
 
     public Optional<ChangePermissionsRequest> validateRequest() {
-        if (validated()) {
-            return Optional.of(this);
-        } else {
-            return Optional.empty();
-        }
+        RequestValidator.validate(this);
+        return validated() ? Optional.of(this) : Optional.empty();
     }
 
     @Override

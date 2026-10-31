@@ -1,6 +1,9 @@
 package com.dewarim.cinnamon.model;
 
 import com.dewarim.cinnamon.api.Identifiable;
+import com.dewarim.cinnamon.model.request.UpdateRequest;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
@@ -12,13 +15,20 @@ import java.util.Objects;
 @JsonRootName("aclGroup")
 public class AclGroup implements Identifiable {
 
+    // Request validation, checked when a request cascades into this class with @Valid.
+    @NotNull(groups = UpdateRequest.class)
+    @Positive(groups = UpdateRequest.class)
     private Long id;
+    @NotNull
+    @Positive
     private Long aclId;
+    @NotNull
+    @Positive
     private Long groupId;
 
     @JacksonXmlElementWrapper(localName = "permissions")
     @JacksonXmlProperty(localName = "permissionId")
-    private List<Long> permissionIds = new ArrayList<>();
+    private List<@NotNull @Positive Long> permissionIds = new ArrayList<>();
 
     public AclGroup() {
     }

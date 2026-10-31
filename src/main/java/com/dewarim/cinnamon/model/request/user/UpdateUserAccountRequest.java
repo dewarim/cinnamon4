@@ -5,6 +5,8 @@ import com.dewarim.cinnamon.model.UserAccount;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.response.UserAccountWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
@@ -18,7 +20,7 @@ import static com.dewarim.cinnamon.model.LoginType.CINNAMON;
 public record UpdateUserAccountRequest(
         @JacksonXmlElementWrapper(localName = "userAccounts")
         @JacksonXmlProperty(localName = "userAccount")
-        List<UserAccount> userAccounts) implements UpdateRequest<UserAccount>, ApiRequest<UpdateUserAccountRequest> {
+        @NotEmpty List<@Valid UserAccount> userAccounts) implements UpdateRequest<UserAccount>, ApiRequest<UpdateUserAccountRequest> {
 
     public UpdateUserAccountRequest {
         if (userAccounts == null) {
@@ -29,19 +31,6 @@ public record UpdateUserAccountRequest(
     @Override
     public List<UserAccount> list() {
         return userAccounts;
-    }
-
-    @Override
-    public boolean validated() {
-        return userAccounts.stream().allMatch(user -> {
-            boolean hasValue = user.getName() != null ||
-                    user.getLoginType() != null ||
-                    (user.getUiLanguageId() != null && user.getUiLanguageId() > 0) ||
-                    user.getEmail() != null ||
-                    user.getFullname() != null ||
-                    (user.getPassword() != null && !user.getPassword().trim().isEmpty());
-            return user.getId() != null && user.getId() > 0 && hasValue;
-        });
     }
 
     @Override

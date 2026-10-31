@@ -5,6 +5,8 @@ import com.dewarim.cinnamon.model.ObjectType;
 import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.response.ObjectTypeWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
@@ -16,7 +18,7 @@ import java.util.List;
 public record CreateObjectTypeRequest(
         @JacksonXmlElementWrapper(localName = "objectTypes")
         @JacksonXmlProperty(localName = "objectType")
-        List<ObjectType> objectTypes) implements CreateRequest<ObjectType>, ApiRequest<CreateObjectTypeRequest> {
+        @NotEmpty List<@Valid ObjectType> objectTypes) implements CreateRequest<ObjectType>, ApiRequest<CreateObjectTypeRequest> {
 
     public CreateObjectTypeRequest {
         if (objectTypes == null) {
@@ -31,13 +33,6 @@ public record CreateObjectTypeRequest(
     @Override
     public List<ObjectType> list() {
         return objectTypes;
-    }
-
-    @Override
-    public boolean validated() {
-        return objectTypes.stream().noneMatch(type -> type == null ||
-                type.getName() == null ||
-                type.getName().trim().isEmpty());
     }
 
     @Override

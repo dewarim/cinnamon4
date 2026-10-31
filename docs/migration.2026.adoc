@@ -43,7 +43,7 @@ Note: this table will contain complete http requests and responses (without uplo
 Some request paths will be filtered, for example, the request to /api/user/setPassword will be replaced by "unlogged".
 
 
-=== v1.15.0
+=== v1.15.1
 
 Every OSD must have an owner, as folders and links already do. Before applying the change,
 check for OSDs without one:

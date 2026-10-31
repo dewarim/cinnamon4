@@ -1,6 +1,10 @@
 package com.dewarim.cinnamon.model.request.groupUser;
 
 import com.dewarim.cinnamon.api.ApiRequest;
+import com.dewarim.cinnamon.application.service.RequestValidator;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
@@ -12,23 +16,16 @@ import java.util.Optional;
 public record RemoveUserFromGroupsRequest(
         @JacksonXmlElementWrapper(localName = "groupIds")
         @JacksonXmlProperty(localName = "groupId")
-        List<Long> groupIds,
-        Long userId) implements ApiRequest<RemoveUserFromGroupsRequest> {
+        @NotEmpty List<@NotNull @Positive Long> groupIds,
+        @NotNull @Positive Long userId) implements ApiRequest<RemoveUserFromGroupsRequest> {
 
     public RemoveUserFromGroupsRequest(Long userId, List<Long> groupIds) {
         this(groupIds, userId);
     }
 
-    private boolean validated() {
-        return userId != null && userId > 0 && groupIds != null && !groupIds.isEmpty() && groupIds.stream().allMatch(id -> id > 0);
-    }
-
     public Optional<RemoveUserFromGroupsRequest> validateRequest() {
-        if (validated()) {
-            return Optional.of(this);
-        } else {
-            return Optional.empty();
-        }
+        RequestValidator.validate(this);
+        return Optional.of(this);
     }
 
     @Override

@@ -4,18 +4,31 @@ import com.dewarim.cinnamon.api.Identifiable;
 import com.dewarim.cinnamon.api.Ownable;
 import com.dewarim.cinnamon.model.response.LinkResponse;
 import com.fasterxml.jackson.annotation.JsonRootName;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 import java.util.Objects;
 
 @JsonRootName("link")
 public class Link implements Ownable, Identifiable {
 
+    // Request validation, checked when a request cascades into this class with @Valid.
+    @Positive
     private Long         id;
+    @NotNull
     private LinkType     type;
+    @NotNull
+    @Positive
     private Long         ownerId;
+    @NotNull
+    @Positive
     private Long         aclId;
+    @NotNull
+    @Positive
     private Long         parentId;
+    @Positive
     private Long         folderId;
+    @Positive
     private Long         objectId;
     private Long         resolvedId;
     private LinkResolver resolver = LinkResolver.FIXED;
@@ -167,18 +180,12 @@ public class Link implements Ownable, Identifiable {
     }
 
     /**
-     * Check if base values look okay - missing id is allowed.
-     * Use this to links supplied from external sources (update/create requests)
+     * The one rule the constraints above cannot express: a link points either at a folder or at an
+     * object - never at both, never at neither. Everything else is checked by annotation.
      *
-     * @return true if all values pass basic validity check.
+     * @return true if exactly one of folderId and objectId is set.
      */
     public boolean validated() {
-        if (folderId != null && objectId != null) {
-            return false;
-        }
-        return (id == null || id > 0) && getAclId() != null && getType() != null &&
-                ((folderId != null && folderId > 0) || (objectId != null && objectId > 0))
-                && aclId > 0 && ownerId > 0
-                && parentId != null && parentId > 0;
+        return (folderId == null) != (objectId == null);
     }
 }

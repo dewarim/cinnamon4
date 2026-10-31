@@ -417,38 +417,34 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
     }
 
     private void getFolderByPath(CinnamonRequest request, CinnamonResponse response, UserAccount user, FolderDao folderDao) throws IOException {
-        FolderPathRequest pathRequest = request.getMapper().readValue(request.getInputStream(), FolderPathRequest.class);
-        if (pathRequest.validated()) {
-            List<Folder> rawFolders = folderDao.getFolderByPathWithAncestors(pathRequest.path(), pathRequest.includeSummary());
-            // TODO: if rawFolders is empty, and create flag is set, iteratively create path and children starting at root.
-            List<Folder> folders    = new AuthorizationService().filterFoldersByBrowsePermission(rawFolders, user);
-            if (folders.isEmpty()) {
-                throw ErrorCode.OBJECT_NOT_FOUND.exception();
-            }
-            response.setWrapper(new FolderWrapper(folders));
-        } else {
-            throw ErrorCode.INVALID_REQUEST.exception();
+        FolderPathRequest pathRequest = request.getMapper().readValue(request.getInputStream(), FolderPathRequest.class)
+                .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
+
+        List<Folder> rawFolders = folderDao.getFolderByPathWithAncestors(pathRequest.path(), pathRequest.includeSummary());
+        // TODO: if rawFolders is empty, and create flag is set, iteratively create path and children starting at root.
+        List<Folder> folders    = new AuthorizationService().filterFoldersByBrowsePermission(rawFolders, user);
+        if (folders.isEmpty()) {
+            throw ErrorCode.OBJECT_NOT_FOUND.exception();
         }
+        response.setWrapper(new FolderWrapper(folders));
     }
 
     private void getFolderByRelativePath(CinnamonRequest request, CinnamonResponse response, UserAccount user, FolderDao folderDao) throws IOException {
-        FolderByRelativePathRequest pathRequest = request.getMapper().readValue(request.getInputStream(), FolderByRelativePathRequest.class);
-        if (pathRequest.validated()) {
-            Folder parentFolder     = folderDao.getFolderById(pathRequest.parentId()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
-            String parentFolderPath = folderDao.getFolderPath(parentFolder.getId())
-                    // root is added by folderDao below.
-                    .replace("/root", "");
-            String fullPath         = parentFolderPath + "/" + pathRequest.relativePath();
+        FolderByRelativePathRequest pathRequest = request.getMapper().readValue(request.getInputStream(), FolderByRelativePathRequest.class)
+                .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
 
-            List<Folder> rawFolders = folderDao.getFolderByPathWithAncestors(fullPath, pathRequest.includeSummary());
-            List<Folder> folders    = new AuthorizationService().filterFoldersByBrowsePermission(rawFolders, user);
-            if (folders.isEmpty()) {
-                throw ErrorCode.OBJECT_NOT_FOUND.exception();
-            }
-            response.setWrapper(new FolderWrapper(folders));
-        } else {
-            throw ErrorCode.INVALID_REQUEST.exception();
+        Folder parentFolder     = folderDao.getFolderById(pathRequest.parentId()).orElseThrow(ErrorCode.OBJECT_NOT_FOUND.getException());
+        String parentFolderPath = folderDao.getFolderPath(parentFolder.getId())
+                // root is added by folderDao below.
+                .replace("/root", "");
+        String fullPath         = parentFolderPath + "/" + pathRequest.relativePath();
+
+        List<Folder> rawFolders = folderDao.getFolderByPathWithAncestors(fullPath, pathRequest.includeSummary());
+        List<Folder> folders    = new AuthorizationService().filterFoldersByBrowsePermission(rawFolders, user);
+        if (folders.isEmpty()) {
+            throw ErrorCode.OBJECT_NOT_FOUND.exception();
         }
+        response.setWrapper(new FolderWrapper(folders));
     }
 
 
@@ -490,8 +486,8 @@ public class FolderServlet extends BaseServlet implements CruddyServlet<Folder> 
     }
 
     private void setSummary(CinnamonRequest request, CinnamonResponse response, UserAccount user, FolderDao folderDao) throws IOException {
-        // TODO: add SetSummaryRequest.validateRequest
-        SetSummaryRequest summaryRequest = request.getMapper().readValue(request.getInputStream(), SetSummaryRequest.class);
+        SetSummaryRequest summaryRequest = request.getMapper().readValue(request.getInputStream(), SetSummaryRequest.class)
+                .validateRequest().orElseThrow(ErrorCode.INVALID_REQUEST.getException());
         Optional<Folder>  folderOpt      = folderDao.getFolderById(summaryRequest.id());
         if (folderOpt.isPresent()) {
             Folder folder = folderOpt.get();

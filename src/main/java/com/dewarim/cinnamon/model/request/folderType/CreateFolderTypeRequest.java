@@ -5,6 +5,8 @@ import com.dewarim.cinnamon.model.FolderType;
 import com.dewarim.cinnamon.model.request.CreateRequest;
 import com.dewarim.cinnamon.model.response.FolderTypeWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
@@ -16,7 +18,7 @@ import java.util.List;
 public record CreateFolderTypeRequest(
         @JacksonXmlElementWrapper(localName = "folderTypes")
         @JacksonXmlProperty(localName = "folderType")
-        List<FolderType> folderTypes) implements CreateRequest<FolderType>, ApiRequest<CreateFolderTypeRequest> {
+        @NotEmpty List<@Valid FolderType> folderTypes) implements CreateRequest<FolderType>, ApiRequest<CreateFolderTypeRequest> {
 
     public CreateFolderTypeRequest {
         if (folderTypes == null) {
@@ -31,12 +33,6 @@ public record CreateFolderTypeRequest(
     @Override
     public List<FolderType> list() {
         return folderTypes;
-    }
-
-    @Override
-    public boolean validated() {
-        return folderTypes.stream().noneMatch(folderType -> folderType == null ||
-                folderType.getName() == null || folderType.getName().trim().isEmpty());
     }
 
     @Override

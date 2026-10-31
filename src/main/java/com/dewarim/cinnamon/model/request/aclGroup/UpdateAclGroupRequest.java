@@ -5,6 +5,8 @@ import com.dewarim.cinnamon.model.AclGroup;
 import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.dewarim.cinnamon.model.response.AclGroupWrapper;
 import com.dewarim.cinnamon.model.response.Wrapper;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
@@ -18,7 +20,7 @@ import static java.util.Objects.isNull;
 public record UpdateAclGroupRequest(
         @JacksonXmlElementWrapper(localName = "aclGroups")
         @JacksonXmlProperty(localName = "aclGroup")
-        List<AclGroup> aclGroups) implements UpdateRequest<AclGroup>, ApiRequest<UpdateAclGroupRequest> {
+        @NotEmpty List<@Valid AclGroup> aclGroups) implements UpdateRequest<AclGroup>, ApiRequest<UpdateAclGroupRequest> {
 
     public UpdateAclGroupRequest {
         if (aclGroups == null) {
@@ -33,14 +35,6 @@ public record UpdateAclGroupRequest(
     @Override
     public List<AclGroup> list() {
         return aclGroups;
-    }
-
-    @Override
-    public boolean validated() {
-        return aclGroups.stream().noneMatch(entry ->
-                isNull(entry) || isNull(entry.getAclId()) || isNull(entry.getGroupId())
-                        || isNull(entry.getId())
-                        || entry.getAclId() < 1 || entry.getGroupId() < 1 || entry.getId() < 1);
     }
 
     @Override

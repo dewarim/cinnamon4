@@ -2,6 +2,15 @@
 
 Note: response examples are not directly matching request examples, they just show the format you can expect.
 
+The constraint table of an endpoint lists what the server checks before a request reaches the business
+logic; a violation is answered with the error code INVALID_REQUEST and a message naming every offending
+field. A path ending in `[]` constrains the elements of a list or set, and a nested path such as
+`osds[].name` constrains the objects the request carries - these are the paths the error message uses,
+so a client can match a rejection against the table. What a create and an update of the same object
+require differs, and each table shows only the constraints of its own endpoint. The tables are generated
+from the annotations the server validates with, so they cannot drift from what it enforces; a rule that
+no annotation expresses is stated in prose under the table instead.
+
 
 # /api/aclGroup/create
 Create a new ACL group. Note: permissions parameter is not yet implemented.
@@ -30,6 +39,15 @@ Create a new ACL group. Note: permissions parameter is not yet implemented.
 </createAclGroupRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `aclGroups` | `@NotEmpty` |
+| `aclGroups[].aclId` | `@NotNull`, `@Positive` |
+| `aclGroups[].groupId` | `@NotNull`, `@Positive` |
+| `aclGroups[].permissionIds[]` | `@NotNull`, `@Positive` |
 
 
 ## Response
@@ -73,6 +91,13 @@ Create a new ACL group. Note: permissions parameter is not yet implemented.
 </deleteAclGroupRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `ids` | `@NotEmpty` |
+| `ids[]` | `@NotNull`, `@Positive` |
 
 
 ## Response
@@ -147,6 +172,14 @@ Create a new ACL group. Note: permissions parameter is not yet implemented.
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `id` | `@Positive` |
+
+**Also:** At least one of id and idType has to be set.
+
 
 ## Response
 
@@ -197,6 +230,16 @@ It does not otherwise change the AclGroup (as it only contains of a group and ac
 </updateAclGroupRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `aclGroups` | `@NotEmpty` |
+| `aclGroups[].aclId` | `@NotNull`, `@Positive` |
+| `aclGroups[].groupId` | `@NotNull`, `@Positive` |
+| `aclGroups[].id` | `@NotNull`, `@Positive` |
+| `aclGroups[].permissionIds[]` | `@NotNull`, `@Positive` |
 
 
 ## Response
@@ -250,6 +293,13 @@ It does not otherwise change the AclGroup (as it only contains of a group and ac
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `acls` | `@NotEmpty` |
+| `acls[].name` | `@NotBlank` |
+
 
 ## Response
 
@@ -289,6 +339,13 @@ It does not otherwise change the AclGroup (as it only contains of a group and ac
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `ids` | `@NotEmpty` |
+| `ids[]` | `@NotNull`, `@Positive` |
+
 
 ## Response
 
@@ -314,6 +371,12 @@ It does not otherwise change the AclGroup (as it only contains of a group and ac
 </idRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `id` | `@NotNull`, `@Positive` |
 
 
 ## Response
@@ -390,6 +453,14 @@ It does not otherwise change the AclGroup (as it only contains of a group and ac
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `acls` | `@NotEmpty` |
+| `acls[].id` | `@NotNull`, `@Positive` |
+| `acls[].name` | `@NotBlank` |
+
 
 ## Response
 
@@ -440,6 +511,17 @@ It does not otherwise change the AclGroup (as it only contains of a group and ac
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `changeTriggers` | `@NotEmpty` |
+| `changeTriggers[].action` | `@NotBlank` |
+| `changeTriggers[].config` | `@NotNull` |
+| `changeTriggers[].controller` | `@NotBlank` |
+| `changeTriggers[].name` | `@NotBlank` |
+| `changeTriggers[].triggerType` | `@NotNull` |
+
 
 ## Response
 
@@ -483,6 +565,13 @@ It does not otherwise change the AclGroup (as it only contains of a group and ac
 </deleteChangeTriggerRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `ids` | `@NotEmpty` |
+| `ids[]` | `@NotNull`, `@Positive` |
 
 
 ## Response
@@ -566,6 +655,18 @@ It does not otherwise change the AclGroup (as it only contains of a group and ac
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `changeTriggers` | `@NotEmpty` |
+| `changeTriggers[].action` | `@NotBlank` |
+| `changeTriggers[].config` | `@NotNull` |
+| `changeTriggers[].controller` | `@NotBlank` |
+| `changeTriggers[].id` | `@NotNull`, `@Positive` |
+| `changeTriggers[].name` | `@NotBlank` |
+| `changeTriggers[].triggerType` | `@NotNull` |
+
 
 ## Response
 
@@ -635,6 +736,13 @@ in the request header field "ticket".
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `password` | `@NotBlank` |
+| `username` | `@NotBlank` |
+
 
 ## Response
 
@@ -695,6 +803,14 @@ Create a new config entry
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `configEntries` | `@NotEmpty` |
+| `configEntries[].config` | `@NotNull` |
+| `configEntries[].name` | `@NotBlank` |
+
 
 ## Response
 
@@ -732,6 +848,13 @@ Delete a list of config entries
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `ids` | `@NotEmpty` |
+| `ids[]` | `@NotNull`, `@Positive` |
+
 
 ## Response
 
@@ -767,6 +890,13 @@ Retrieve a config entries by names or ids
 </configEntryRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `ids` | `@NotEmpty` |
+| `ids[]` | `@NotNull`, `@Positive` |
 
 
 ## Response
@@ -853,6 +983,15 @@ Update a list of config entries
 </updateConfigEntryRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `configEntries` | `@NotEmpty` |
+| `configEntries[].config` | `@NotNull` |
+| `configEntries[].id` | `@NotNull`, `@Positive` |
+| `configEntries[].name` | `@NotBlank` |
 
 
 ## Response
@@ -985,6 +1124,13 @@ Create a new folder type
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `folderTypes` | `@NotEmpty` |
+| `folderTypes[].name` | `@NotBlank` |
+
 
 ## Response
 
@@ -1019,6 +1165,13 @@ Delete a folder type
 </deleteFolderTypeRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `ids` | `@NotEmpty` |
+| `ids[]` | `@NotNull`, `@Positive` |
 
 
 ## Response
@@ -1081,6 +1234,14 @@ List all folder types
 </updateFolderTypeRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `folderTypes` | `@NotEmpty` |
+| `folderTypes[].id` | `@NotNull`, `@Positive` |
+| `folderTypes[].name` | `@NotBlank` |
 
 
 ## Response
@@ -1149,6 +1310,20 @@ Create a new folder.
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `folders` | `@NotEmpty` |
+| `folders[].aclId` | `@Positive` |
+| `folders[].metasets[].content` | `@NotNull` |
+| `folders[].metasets[].objectId` | `@Positive` |
+| `folders[].metasets[].typeId` | `@NotNull`, `@Positive` |
+| `folders[].name` | `@NotNull`, `@Pattern(flags = [DOTALL], regexp = ".*\S.*")` |
+| `folders[].ownerId` | `@Positive` |
+| `folders[].parentId` | `@NotNull`, `@Positive` |
+| `folders[].typeId` | `@Positive` |
+
 
 ## Response
 
@@ -1187,6 +1362,15 @@ Create a new folder.
 </createMetaRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `metas` | `@NotEmpty` |
+| `metas[].content` | `@NotNull` |
+| `metas[].objectId` | `@NotNull`, `@Positive` |
+| `metas[].typeId` | `@NotNull`, `@Positive` |
 
 
 ## Response
@@ -1233,6 +1417,13 @@ Create a new folder.
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `ids` | `@NotEmpty` |
+| `ids[]` | `@NotNull`, `@Positive` |
+
 
 ## Response
 
@@ -1262,6 +1453,13 @@ Delete all metasets linked to the given Folder ids. Parameter ignoreNotFound is 
 </deleteAllMetasRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `ids` | `@NotEmpty` |
+| `ids[]` | `@NotNull`, `@Positive` |
 
 
 ## Response
@@ -1303,6 +1501,13 @@ Delete the folder metasets with the given meta ids.
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `ids` | `@NotEmpty` |
+| `ids[]` | `@NotNull`, `@Positive` |
+
 
 ## Response
 
@@ -1336,6 +1541,12 @@ Fetch a single folder
 </singleFolderRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `id` | `@NotNull`, `@Positive` |
 
 
 ## Response
@@ -1413,6 +1624,13 @@ Fetch a single folder
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `ids` | `@NotEmpty` |
+| `ids[]` | `@NotNull`, `@Positive` |
+
 
 ## Response
 
@@ -1483,6 +1701,12 @@ Fetch a folder specified by its complete path. The path parameter must not end w
 </folderPathRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `path` | `@NotEmpty` |
 
 
 ## Response
@@ -1555,6 +1779,13 @@ Fetch a folder specified by its relative path. The relative path must not start 
 </folderByRelativePathRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `parentId` | `@NotNull`, `@Positive` |
+| `relativePath` | `@NotEmpty`, `@Pattern(flags = [DOTALL], regexp = "[^/](.*[^/])?")` |
 
 
 ## Response
@@ -1636,6 +1867,13 @@ Fetch a folder specified by its relative path. The relative path must not start 
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `id` | `@NotNull`, `@Positive` |
+| `typeIds[]` | `@NotNull`, `@Positive` |
+
 
 ## Response
 
@@ -1682,6 +1920,12 @@ Fetch a folder specified by its relative path. The relative path must not start 
 </singleFolderRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `id` | `@NotNull`, `@Positive` |
 
 
 ## Response
@@ -1757,6 +2001,13 @@ Fetch a folder specified by its relative path. The relative path must not start 
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `ids` | `@NotEmpty` |
+| `ids[]` | `@NotNull`, `@Positive` |
+
 
 ## Response
 
@@ -1795,6 +2046,13 @@ Add a summary to an object, for example a short description of this folder's con
 </setSummaryRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `id` | `@NotNull`, `@Positive` |
+| `summary` | `@NotNull` |
 
 
 ## Response
@@ -1839,6 +2097,22 @@ Add a summary to an object, for example a short description of this folder's con
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `folders` | `@NotEmpty` |
+| `folders[].aclId` | `@Positive` |
+| `folders[].id` | `@NotNull`, `@Positive` |
+| `folders[].metasets[].content` | `@NotNull` |
+| `folders[].metasets[].id` | `@NotNull`, `@Positive` |
+| `folders[].metasets[].objectId` | `@NotNull`, `@Positive` |
+| `folders[].metasets[].typeId` | `@NotNull`, `@Positive` |
+| `folders[].name` | `@Pattern(flags = [DOTALL], regexp = ".*\S.*")` |
+| `folders[].ownerId` | `@Positive` |
+| `folders[].parentId` | `@Positive` |
+| `folders[].typeId` | `@Positive` |
+
 
 ## Response
 
@@ -1872,6 +2146,16 @@ Update the content of a given folder metaset
 </updateMetaRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `metas` | `@NotEmpty` |
+| `metas[].content` | `@NotNull` |
+| `metas[].id` | `@NotNull`, `@Positive` |
+| `metas[].objectId` | `@NotNull`, `@Positive` |
+| `metas[].typeId` | `@NotNull`, `@Positive` |
 
 
 ## Response
@@ -1908,6 +2192,17 @@ Update the content of a given folder metaset
 </createFormatRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `formats` | `@NotEmpty` |
+| `formats[].contentType` | `@NotBlank` |
+| `formats[].defaultObjectTypeId` | `@Positive` |
+| `formats[].extension` | `@NotBlank` |
+| `formats[].indexMode` | `@NotNull` |
+| `formats[].name` | `@NotBlank` |
 
 
 ## Response
@@ -1946,6 +2241,13 @@ Update the content of a given folder metaset
 </deleteFormatRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `ids` | `@NotEmpty` |
+| `ids[]` | `@NotNull`, `@Positive` |
 
 
 ## Response
@@ -2017,6 +2319,18 @@ Update the content of a given folder metaset
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `formats` | `@NotEmpty` |
+| `formats[].contentType` | `@NotBlank` |
+| `formats[].defaultObjectTypeId` | `@NotNull`, `@Positive` |
+| `formats[].extension` | `@NotBlank` |
+| `formats[].id` | `@NotNull`, `@Positive` |
+| `formats[].indexMode` | `@NotNull` |
+| `formats[].name` | `@NotBlank` |
+
 
 ## Response
 
@@ -2056,6 +2370,14 @@ Update the content of a given folder metaset
 </addUserToGroupsRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `groupIds` | `@NotEmpty` |
+| `groupIds[]` | `@NotNull`, `@Positive` |
+| `userId` | `@NotNull`, `@Positive` |
 
 
 ## Response
@@ -2100,6 +2422,14 @@ Update the content of a given folder metaset
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `groups` | `@NotEmpty` |
+| `groups[].name` | `@NotBlank` |
+| `groups[].parentId` | `@Positive` |
+
 
 ## Response
 
@@ -2142,6 +2472,13 @@ Update the content of a given folder metaset
 </deleteGroupRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `ids` | `@NotEmpty` |
+| `ids[]` | `@NotNull`, `@Positive` |
 
 
 ## Response
@@ -2211,6 +2548,14 @@ Update the content of a given folder metaset
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `groupIds` | `@NotEmpty` |
+| `groupIds[]` | `@NotNull`, `@Positive` |
+| `userId` | `@NotNull`, `@Positive` |
+
 
 ## Response
 
@@ -2243,6 +2588,15 @@ Update the content of a given folder metaset
 </updateGroupRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `groups` | `@NotEmpty` |
+| `groups[].id` | `@NotNull`, `@Positive` |
+| `groups[].name` | `@NotBlank` |
+| `groups[].parentId` | `@Positive` |
 
 
 ## Response
@@ -2292,6 +2646,17 @@ Update the content of a given folder metaset
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `indexItems` | `@NotEmpty` |
+| `indexItems[].fieldName` | `@NotBlank` |
+| `indexItems[].indexType` | `@NotNull` |
+| `indexItems[].name` | `@NotBlank` |
+| `indexItems[].searchCondition` | `@NotBlank` |
+| `indexItems[].searchString` | `@NotBlank` |
+
 
 ## Response
 
@@ -2331,6 +2696,13 @@ Update the content of a given folder metaset
 </deleteIndexItemRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `ids` | `@NotEmpty` |
+| `ids[]` | `@NotNull`, `@Positive` |
 
 
 ## Response
@@ -2406,6 +2778,18 @@ Update the content of a given folder metaset
 </updateIndexItemRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `indexItems` | `@NotEmpty` |
+| `indexItems[].fieldName` | `@NotBlank` |
+| `indexItems[].id` | `@NotNull`, `@Positive` |
+| `indexItems[].indexType` | `@NotNull` |
+| `indexItems[].name` | `@NotBlank` |
+| `indexItems[].searchCondition` | `@NotBlank` |
+| `indexItems[].searchString` | `@NotBlank` |
 
 
 ## Response
@@ -2499,6 +2883,14 @@ Rebuild the Lucene search index in parts or completely. When reindexing large nu
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `folderIds[]` | `@NotNull`, `@Positive` |
+| `osdIds[]` | `@NotNull`, `@Positive` |
+| `updateTikaMetaset` | `@NotNull` |
+
 
 ## Response
 
@@ -2539,6 +2931,13 @@ Rebuild the Lucene search index in parts or completely. When reindexing large nu
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `languages` | `@NotEmpty` |
+| `languages[].isoCode` | `@NotBlank` |
+
 
 ## Response
 
@@ -2572,6 +2971,13 @@ Rebuild the Lucene search index in parts or completely. When reindexing large nu
 </deleteLanguageRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `ids` | `@NotEmpty` |
+| `ids[]` | `@NotNull`, `@Positive` |
 
 
 ## Response
@@ -2635,6 +3041,14 @@ Rebuild the Lucene search index in parts or completely. When reindexing large nu
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `languages` | `@NotEmpty` |
+| `languages[].id` | `@NotNull`, `@Positive` |
+| `languages[].isoCode` | `@NotBlank` |
+
 
 ## Response
 
@@ -2669,6 +3083,14 @@ Only superusers may use forceChange parameter to attach any state without verifi
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `lifecycleId` | `@NotNull`, `@Positive` |
+| `lifecycleStateId` | `@Positive` |
+| `osdId` | `@NotNull`, `@Positive` |
+
 
 ## Response
 
@@ -2696,6 +3118,13 @@ Only superusers may use forceChange parameter to attach any state without verifi
 </changeLifecycleStateRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `osdId` | `@NotNull`, `@Positive` |
+| `stateId` | `@NotNull`, `@Positive` |
 
 
 ## Response
@@ -2741,6 +3170,15 @@ Only superusers may use forceChange parameter to attach any state without verifi
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `lifecycleStates` | `@NotEmpty` |
+| `lifecycleStates[].config` | `@NotBlank` |
+| `lifecycleStates[].name` | `@NotBlank` |
+| `lifecycleStates[].stateClass` | `@NotBlank` |
+
 
 ## Response
 
@@ -2779,6 +3217,13 @@ Only superusers may use forceChange parameter to attach any state without verifi
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `ids` | `@NotEmpty` |
+| `ids[]` | `@NotNull`, `@Positive` |
+
 
 ## Response
 
@@ -2804,6 +3249,12 @@ Only superusers may use forceChange parameter to attach any state without verifi
 </idRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `id` | `@NotNull`, `@Positive` |
 
 
 ## Response
@@ -2831,6 +3282,12 @@ Only superusers may use forceChange parameter to attach any state without verifi
 </idRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `id` | `@NotNull`, `@Positive` |
 
 
 ## Response
@@ -2866,6 +3323,12 @@ Only superusers may use forceChange parameter to attach any state without verifi
 </idRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `id` | `@NotNull`, `@Positive` |
 
 
 ## Response
@@ -2946,6 +3409,16 @@ Only superusers may use forceChange parameter to attach any state without verifi
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `lifecycleStates` | `@NotEmpty` |
+| `lifecycleStates[].config` | `@NotBlank` |
+| `lifecycleStates[].id` | `@NotNull`, `@Positive` |
+| `lifecycleStates[].name` | `@NotBlank` |
+| `lifecycleStates[].stateClass` | `@NotBlank` |
+
 
 ## Response
 
@@ -2993,6 +3466,14 @@ Create lifecycles. Note: does not create lifecycle states, defaultStateId should
 </createLifecycleRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `lifecycles` | `@NotEmpty` |
+| `lifecycles[].defaultStateId` | `@Positive` |
+| `lifecycles[].name` | `@NotBlank` |
 
 
 ## Response
@@ -3054,6 +3535,13 @@ Delete lifecycles
 </deleteLifecycleRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `ids` | `@NotEmpty` |
+| `ids[]` | `@NotNull`, `@Positive` |
 
 
 ## Response
@@ -3146,6 +3634,15 @@ Update lifecycles. Note: does not update lifecycle states
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `lifecycles` | `@NotEmpty` |
+| `lifecycles[].defaultStateId` | `@Positive` |
+| `lifecycles[].id` | `@NotNull`, `@Positive` |
+| `lifecycles[].name` | `@NotBlank` |
+
 
 ## Response
 
@@ -3234,6 +3731,21 @@ Update lifecycles. Note: does not update lifecycle states
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `links` | `@NotEmpty` |
+| `links[].aclId` | `@NotNull`, `@Positive` |
+| `links[].folderId` | `@Positive` |
+| `links[].id` | `@Positive` |
+| `links[].objectId` | `@Positive` |
+| `links[].ownerId` | `@NotNull`, `@Positive` |
+| `links[].parentId` | `@NotNull`, `@Positive` |
+| `links[].type` | `@NotNull` |
+
+**Also:** Every link points either at a folder or at an object - never at both, never at neither.
+
 
 ## Response
 
@@ -3286,6 +3798,13 @@ Update lifecycles. Note: does not update lifecycle states
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `ids` | `@NotEmpty` |
+| `ids[]` | `@NotNull`, `@Positive` |
+
 
 ## Response
 
@@ -3314,6 +3833,13 @@ Update lifecycles. Note: does not update lifecycle states
 </getLinksRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `ids` | `@NotEmpty` |
+| `ids[]` | `@NotNull`, `@Positive` |
 
 
 ## Response
@@ -3422,6 +3948,21 @@ Update lifecycles. Note: does not update lifecycle states
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `links` | `@NotEmpty` |
+| `links[].aclId` | `@NotNull`, `@Positive` |
+| `links[].folderId` | `@Positive` |
+| `links[].id` | `@Positive` |
+| `links[].objectId` | `@Positive` |
+| `links[].ownerId` | `@NotNull`, `@Positive` |
+| `links[].parentId` | `@NotNull`, `@Positive` |
+| `links[].type` | `@NotNull` |
+
+**Also:** Every link points either at a folder or at an object - never at both, never at neither.
+
 
 ## Response
 
@@ -3477,6 +4018,13 @@ Update lifecycles. Note: does not update lifecycle states
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `metasetTypes` | `@NotEmpty` |
+| `metasetTypes[].name` | `@NotBlank` |
+
 
 ## Response
 
@@ -3511,6 +4059,13 @@ Update lifecycles. Note: does not update lifecycle states
 </deleteMetasetTypeRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `ids` | `@NotEmpty` |
+| `ids[]` | `@NotNull`, `@Positive` |
 
 
 ## Response
@@ -3576,6 +4131,14 @@ Update lifecycles. Note: does not update lifecycle states
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `metasetTypes` | `@NotEmpty` |
+| `metasetTypes[].id` | `@NotNull`, `@Positive` |
+| `metasetTypes[].name` | `@NotBlank` |
+
 
 ## Response
 
@@ -3622,6 +4185,13 @@ Update lifecycles. Note: does not update lifecycle states
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `objectTypes` | `@NotEmpty` |
+| `objectTypes[].name` | `@NotBlank` |
+
 
 ## Response
 
@@ -3656,6 +4226,13 @@ Update lifecycles. Note: does not update lifecycle states
 </deleteObjectTypeRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `ids` | `@NotEmpty` |
+| `ids[]` | `@NotNull`, `@Positive` |
 
 
 ## Response
@@ -3719,6 +4296,14 @@ Update lifecycles. Note: does not update lifecycle states
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `objectTypes` | `@NotEmpty` |
+| `objectTypes[].id` | `@NotNull`, `@Positive` |
+| `objectTypes[].name` | `@NotBlank` |
+
 
 ## Response
 
@@ -3759,6 +4344,15 @@ Update lifecycles. Note: does not update lifecycle states
 </copyOsdRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `metasetTypeIds[]` | `@NotNull`, `@Positive` |
+| `sourceIds` | `@NotEmpty` |
+| `sourceIds[]` | `@NotNull`, `@Positive` |
+| `targetFolderId` | `@NotNull`, `@Positive` |
 
 
 ## Response
@@ -3830,6 +4424,15 @@ Update lifecycles. Note: does not update lifecycle states
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `copyTasks` | `@NotEmpty` |
+| `copyTasks[].metasetTypeIds[]` | `@NotNull`, `@Positive` |
+| `copyTasks[].sourceOsdId` | `@NotNull`, `@Positive` |
+| `copyTasks[].targetOsdId` | `@NotNull`, `@Positive` |
+
 
 ## Response
 
@@ -3877,6 +4480,15 @@ Update lifecycles. Note: does not update lifecycle states
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `metas` | `@NotEmpty` |
+| `metas[].content` | `@NotNull` |
+| `metas[].objectId` | `@NotNull`, `@Positive` |
+| `metas[].typeId` | `@NotNull`, `@Positive` |
+
 
 ## Response
 
@@ -3921,7 +4533,7 @@ should contain data.
   <formatId>3</formatId>
   <languageId>1</languageId>
   <lifecycleStateId/>
-  <summary>&lt;summary>Optional fields: typeId, aclId, ownerId, formatId, languageId, summary, metas&lt;/summary></summary>
+  <summary>&lt;summary>Optional fields: formatId, languageId, lifecycleStateId, summary, metas&lt;/summary></summary>
   <metasets>
     <metaset>
       <id/>
@@ -3933,6 +4545,23 @@ should contain data.
 </createOsdRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `aclId` | `@Positive` |
+| `formatId` | `@Positive` |
+| `languageId` | `@Positive` |
+| `lifecycleStateId` | `@Positive` |
+| `metasets[].content` | `@NotNull` |
+| `metasets[].objectId` | `@Positive` |
+| `metasets[].typeId` | `@NotNull`, `@Positive` |
+| `name` | `@NotBlank` |
+| `ownerId` | `@NotNull`, `@Positive` |
+| `parentId` | `@NotNull`, `@Positive` |
+| `summary` | `@NotBlank` |
+| `typeId` | `@Positive` |
 
 
 ## Response
@@ -3999,6 +4628,13 @@ should contain data.
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `ids` | `@NotEmpty` |
+| `ids[]` | `@NotNull`, `@Positive` |
+
 
 ## Response
 
@@ -4029,6 +4665,13 @@ should contain data.
 </deleteAllMetasRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `ids` | `@NotEmpty` |
+| `ids[]` | `@NotNull`, `@Positive` |
 
 
 ## Response
@@ -4070,6 +4713,13 @@ Delete the OSD metasets with the given meta ids.
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `ids` | `@NotEmpty` |
+| `ids[]` | `@NotNull`, `@Positive` |
+
 
 ## Response
 
@@ -4095,6 +4745,12 @@ Returns an OSD's content according to it's format's content type.
 </idRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `id` | `@NotNull`, `@Positive` |
 
 
 ## Response
@@ -4124,6 +4780,13 @@ Returns an OSD's content according to it's format's content type.
 </metaRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `id` | `@NotNull`, `@Positive` |
+| `typeIds[]` | `@NotNull`, `@Positive` |
 
 
 ## Response
@@ -4167,6 +4830,12 @@ Returns an OSD's content according to it's format's content type.
 </osdByFolderRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `folderId` | `@Positive` |
 
 
 ## Response
@@ -4235,6 +4904,13 @@ Returns an OSD's content according to it's format's content type.
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `ids` | `@NotEmpty` |
+| `ids[]` | `@NotNull`, `@Positive` |
+
 
 ## Response
 
@@ -4300,6 +4976,13 @@ Returns an OSD's content according to it's format's content type.
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `ids` | `@NotEmpty` |
+| `ids[]` | `@NotNull`, `@Positive` |
+
 
 ## Response
 
@@ -4340,6 +5023,13 @@ Returns an OSD's content according to it's format's content type.
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `ids` | `@NotEmpty` |
+| `ids[]` | `@NotNull`, `@Positive` |
+
 
 ## Response
 
@@ -4375,6 +5065,13 @@ Returns an OSD's content according to it's format's content type.
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `ids` | `@NotEmpty` |
+| `ids[]` | `@NotNull`, `@Positive` |
+
 
 ## Response
 
@@ -4403,6 +5100,13 @@ Set an OSD's content. Requires a multipart-mime request, with part "cinnamonRequ
 </setContentRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `formatId` | `@NotNull`, `@Positive` |
+| `id` | `@NotNull`, `@Positive` |
 
 
 ## Response
@@ -4439,6 +5143,13 @@ Add a summary to an object, for example a short description of the content.
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `id` | `@NotNull`, `@Positive` |
+| `summary` | `@NotNull` |
+
 
 ## Response
 
@@ -4469,6 +5180,13 @@ Add a summary to an object, for example a short description of the content.
 </idListRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `ids` | `@NotEmpty` |
+| `ids[]` | `@NotNull`, `@Positive` |
 
 
 ## Response
@@ -4569,6 +5287,19 @@ Add a summary to an object, for example a short description of the content.
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `osds` | `@NotEmpty` |
+| `osds[].aclId` | `@Positive` |
+| `osds[].id` | `@NotNull`, `@Positive` |
+| `osds[].languageId` | `@Positive` |
+| `osds[].name` | `@Pattern(flags = [DOTALL], regexp = "\S(.*\S)?")` |
+| `osds[].ownerId` | `@Positive` |
+| `osds[].parentId` | `@Positive` |
+| `osds[].typeId` | `@Positive` |
+
 
 ## Response
 
@@ -4602,6 +5333,16 @@ Update the content of a given OSD metaset
 </updateMetaRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `metas` | `@NotEmpty` |
+| `metas[].content` | `@NotNull` |
+| `metas[].id` | `@NotNull`, `@Positive` |
+| `metas[].objectId` | `@NotNull`, `@Positive` |
+| `metas[].typeId` | `@NotNull`, `@Positive` |
 
 
 ## Response
@@ -4646,6 +5387,15 @@ part "file", if the new version should contain data.
 </createNewVersionRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `formatId` | `@Positive` |
+| `id` | `@NotNull`, `@Positive` |
+| `metaRequests[].content` | `@NotNull` |
+| `metaRequests[].typeId` | `@NotNull`, `@Positive` |
 
 
 ## Response
@@ -4717,6 +5467,16 @@ part "file", if the new version should contain data.
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `aclGroupId` | `@NotNull`, `@Positive` |
+| `add[]` | `@NotNull`, `@Positive` |
+| `remove[]` | `@NotNull`, `@Positive` |
+
+**Also:** At least one of addPermissions and removePermissions has to be non-empty.
+
 
 ## Response
 
@@ -4744,6 +5504,13 @@ part "file", if the new version should contain data.
 </userPermissionRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `aclId` | `@NotNull`, `@Positive` |
+| `userId` | `@NotNull`, `@Positive` |
 
 
 ## Response
@@ -4826,6 +5593,13 @@ part "file", if the new version should contain data.
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `relationTypes` | `@NotEmpty` |
+| `relationTypes[].name` | `@NotBlank` |
+
 
 ## Response
 
@@ -4866,6 +5640,13 @@ part "file", if the new version should contain data.
 </deleteRelationTypeRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `ids` | `@NotEmpty` |
+| `ids[]` | `@NotNull`, `@Positive` |
 
 
 ## Response
@@ -4941,6 +5722,14 @@ part "file", if the new version should contain data.
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `relationTypes` | `@NotEmpty` |
+| `relationTypes[].id` | `@NotNull`, `@Positive` |
+| `relationTypes[].name` | `@NotBlank` |
+
 
 ## Response
 
@@ -5004,6 +5793,16 @@ part "file", if the new version should contain data.
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `relations` | `@NotEmpty` |
+| `relations[].leftId` | `@NotNull`, `@Positive` |
+| `relations[].metadata` | `@NotNull` |
+| `relations[].rightId` | `@NotNull`, `@Positive` |
+| `relations[].typeId` | `@NotNull`, `@Positive` |
+
 
 ## Response
 
@@ -5042,6 +5841,13 @@ part "file", if the new version should contain data.
 </deleteRelationRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `ids` | `@NotEmpty` |
+| `ids[]` | `@NotNull`, `@Positive` |
 
 
 ## Response
@@ -5083,6 +5889,16 @@ Search for relations matching all( with orMode=false) or some (with orMode=true)
 </searchRelationRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `leftIds[]` | `@NotNull`, `@Positive` |
+| `relationTypeIds[]` | `@NotNull`, `@Positive` |
+| `rightIds[]` | `@NotNull`, `@Positive` |
+
+**Also:** At least one of leftIds, rightIds and relationTypeIds has to be non-empty.
 
 
 ## Response
@@ -5183,6 +5999,13 @@ Field of objects contain the id, so acl field will index the acl.id.
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `query` | `@NotEmpty` |
+| `searchType` | `@NotNull` |
+
 
 ## Response
 
@@ -5254,6 +6077,13 @@ Returns status code 400
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `uiLanguages` | `@NotEmpty` |
+| `uiLanguages[].isoCode` | `@NotBlank` |
+
 
 ## Response
 
@@ -5287,6 +6117,13 @@ Returns status code 400
 </deleteUiLanguageRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `ids` | `@NotEmpty` |
+| `ids[]` | `@NotNull`, `@Positive` |
 
 
 ## Response
@@ -5354,6 +6191,14 @@ Returns status code 400
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `uiLanguages` | `@NotEmpty` |
+| `uiLanguages[].id` | `@NotNull`, `@Positive` |
+| `uiLanguages[].isoCode` | `@NotBlank` |
+
 
 ## Response
 
@@ -5404,6 +6249,20 @@ Returns status code 400
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `userAccounts` | `@NotEmpty` |
+| `userAccounts[].config` | `@NotNull` |
+| `userAccounts[].email` | `@NotEmpty` |
+| `userAccounts[].fullname` | `@NotEmpty` |
+| `userAccounts[].groupIds[]` | `@NotNull`, `@Positive` |
+| `userAccounts[].loginType` | `@NotEmpty` |
+| `userAccounts[].name` | `@NotEmpty` |
+| `userAccounts[].password` | `@NotEmpty` |
+| `userAccounts[].uiLanguageId` | `@NotNull`, `@Positive` |
+
 
 ## Response
 
@@ -5453,6 +6312,13 @@ Note: this is not optimized for users who own vast collections of objects or fol
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `assetReceiverId` | `@NotNull`, `@Positive` |
+| `userId` | `@NotNull`, `@Positive` |
+
 
 ## Response
 
@@ -5487,6 +6353,14 @@ Note: this is not optimized for users who own vast collections of objects or fol
 </getUserAccountRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `userId` | `@Positive` |
+
+**Also:** At least one of userId and username has to be set.
 
 
 ## Response
@@ -5581,6 +6455,13 @@ Update a user's individual configuration
 
 ```
 
+### Constraints
+
+| field | constraints |
+|---|---|
+| `config` | `@NotNull` |
+| `userId` | `@NotNull`, `@Positive` |
+
 
 ## Response
 
@@ -5608,6 +6489,13 @@ Update a user's individual configuration
 </setPasswordRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `password` | `@NotNull` |
+| `userId` | `@NotNull`, `@Positive` |
 
 
 ## Response
@@ -5658,6 +6546,19 @@ Update a user's account. This also updates the user's groups,
 </updateUserAccountRequest>
 
 ```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `userAccounts` | `@NotEmpty` |
+| `userAccounts[].config` | `@NotNull` |
+| `userAccounts[].fullname` | `@NotEmpty` |
+| `userAccounts[].groupIds[]` | `@NotNull`, `@Positive` |
+| `userAccounts[].id` | `@NotNull`, `@Positive` |
+| `userAccounts[].loginType` | `@NotEmpty` |
+| `userAccounts[].name` | `@NotEmpty` |
+| `userAccounts[].uiLanguageId` | `@Positive` |
 
 
 ## Response

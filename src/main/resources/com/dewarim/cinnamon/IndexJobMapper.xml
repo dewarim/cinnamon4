@@ -14,12 +14,19 @@
         <result property="failed" column="failed"/>
     </resultMap>
 
-    <!-- order by item_id to get the newest index_job first -->
+    <!--
+      Highest item_id first: ids come from one increasing sequence, so this prefers the most
+      recently created objects and folders.
+      The limit is maxBatchSize, and the database has to apply it. MyBatis' RowBounds, which the
+      DAO used to pass instead, paginates in memory: every pending job row was fetched and all but
+      the first maxBatchSize discarded, which is the opposite of what a batch size is for.
+    -->
     <select id="getIndexJobsByFailedCount" resultMap="indexJobMap">
         SELECT *
         FROM index_jobs
         WHERE failed &lt;= #{failed}
         ORDER BY item_id DESC
+        LIMIT #{limit}
     </select>
 
     <select id="countJobs" resultType="int">
@@ -33,14 +40,49 @@
         WHERE failed > 0
     </select>
 
+    <!--
+      One row per (job_type, item_id): a second "update this index-item" entry would be redundant,
+      since IndexService always indexes the item's current state rather than a diff.
+
+      The pending row must not be reused silently, though. IndexService reads a job, loads a
+      snapshot of the item, indexes that snapshot, and only then deletes the job row by its own
+      index-job id (index_jobs.id - not the item id, and not anything Lucene knows about). A change
+      committed inside that window would be lost for good if its insert were simply dropped here:
+      the index would keep the document built from the stale snapshot, the job would be gone, and
+      nothing would be left to retry it - no failed job, no error.
+
+      So a conflicting insert takes the row over with a fresh index-job id. The in-flight indexer's
+      "DELETE ... WHERE id = {the index-job id it read}" then matches nothing, the row survives, and
+      the next pass indexes the item from a current snapshot. The price is an occasional redundant
+      re-index, which is idempotent - the alternative is losing the change.
+
+      The incoming action is applied too, with one exception: a pending DELETE is never downgraded
+      to a CREATE or an UPDATE. Deleting an item and changing it both arrive here as inserts, and
+      the unique constraint only makes the two queue up behind each other, so either can commit
+      last. If a later UPDATE won, the row would say UPDATE for an item that no longer exists:
+      IndexService would find nothing to index, drop the job, and leave the item's document in the
+      Lucene index. Keeping DELETE is sound because item ids come from seq_folder_and_object_ids and
+      are never reused - no CREATE or UPDATE can legitimately refer to an item that has been
+      deleted. (If ids were recycled, this would be exactly the wrong default: a new item reusing
+      the id would never be indexed.)
+
+      failed is reset, because a new change deserves a fresh set of attempts: the earlier failure
+      may well have been about the state the job was carrying. It also keeps a dead row from
+      blocking an item permanently - only one job per item can exist, and a job whose failure count
+      is past maxIndexAttempts is never picked up again, so without the reset every later change to
+      that item would be stuck behind it. A genuinely unindexable item still shows up in
+      listFailedIndexJobs after each attempt; it just is not given up on.
+    -->
     <insert id="insert" parameterType="com.dewarim.cinnamon.model.index.IndexJob">
         <selectKey keyProperty="id" resultType="long" order="BEFORE">
             select nextval('seq_index_job_id')
         </selectKey>
         INSERT INTO index_jobs(id, item_id, job_type, action, failed)
         VALUES (#{id}, #{itemId}, #{jobType}, #{action}, 0)
-        <!-- We do not need a second "update this index-item" entry  -->
-        ON CONFLICT DO NOTHING
+        ON CONFLICT (job_type, item_id) DO UPDATE SET
+        id = #{id},
+        failed = 0,
+        action = case when index_jobs.action = 'DELETE' then 'DELETE' else excluded.action end
     </insert>
 
     <delete id="delete" parameterType="long">

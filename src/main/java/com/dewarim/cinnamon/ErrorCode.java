@@ -110,6 +110,7 @@ public enum ErrorCode {
     OBJECT_HAS_NO_CONTENT("this object has no content", HttpServletResponse.SC_NOT_FOUND),
     OBJECT_HAS_PROTECTED_RELATIONS("this object has protected relations", SC_UNAUTHORIZED),
     OBJECT_HAS_VANISHED_DURING_UPDATE("the object the you wanted to change was not found in the database anymore (maybe someone deleted it?)", HttpServletResponse.SC_NOT_FOUND),
+    OBJECT_IS_MISSING_MANDATORY_USER("object must have an owner, a creator and a modifier", HttpServletResponse.SC_INTERNAL_SERVER_ERROR),
     OBJECT_LOCKED_BY_OTHER_USER("object is locked by another user", HttpServletResponse.SC_FORBIDDEN),
     OBJECT_MUST_BE_LOCKED_BY_USER("object must be locked by current user before setContent is allowed", HttpServletResponse.SC_FORBIDDEN),
     OBJECT_NOT_FOUND("object not found", HttpServletResponse.SC_NOT_FOUND),

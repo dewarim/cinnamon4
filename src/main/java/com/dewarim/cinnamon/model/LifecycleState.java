@@ -2,7 +2,11 @@ package com.dewarim.cinnamon.model;
 
 import com.dewarim.cinnamon.api.Identifiable;
 import com.dewarim.cinnamon.api.lifecycle.LifecycleStateConfig;
+import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -12,9 +16,16 @@ import static com.dewarim.cinnamon.api.Constants.XML_MAPPER;
 @JsonIgnoreProperties(value = { "lifecycleStateConfig" })
 public class LifecycleState implements Identifiable {
 
+    // Request validation, checked when a request cascades into this class with @Valid.
+    @NotNull(groups = UpdateRequest.class)
+    @Positive(groups = UpdateRequest.class)
     private Long   id;
+    @NotBlank
     private String name;
+    @NotBlank
     private String config = "<config />";
+    // the update statement writes state_class, which is NOT NULL, so an update has to carry it
+    @NotBlank
     private String stateClass;
     private Long   lifecycleId;
     private Long   lifecycleStateForCopyId;

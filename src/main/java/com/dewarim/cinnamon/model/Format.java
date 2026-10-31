@@ -1,16 +1,30 @@
 package com.dewarim.cinnamon.model;
 
 import com.dewarim.cinnamon.api.Identifiable;
+import com.dewarim.cinnamon.model.request.UpdateRequest;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 import java.util.Objects;
 
 public class Format implements Identifiable {
 
+    // Request validation, checked when a request cascades into this class with @Valid.
+    @NotNull(groups = UpdateRequest.class)
+    @Positive(groups = UpdateRequest.class)
     private Long      id;
+    @NotBlank
     private String    contentType;
+    @NotBlank
     private String    extension;
+    @NotBlank
     private String    name;
+    // an update has always demanded this, a create has always left it optional
+    @NotNull(groups = UpdateRequest.class)
+    @Positive
     private Long      defaultObjectTypeId;
+    @NotNull
     private IndexMode indexMode;
 
     public Format() {

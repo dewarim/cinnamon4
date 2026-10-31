@@ -2,7 +2,13 @@ package com.dewarim.cinnamon.model;
 
 import com.dewarim.cinnamon.api.Identifiable;
 import com.dewarim.cinnamon.api.OwnableWithMetadata;
+import com.dewarim.cinnamon.model.request.CreateRequest;
+import com.dewarim.cinnamon.model.request.UpdateRequest;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.annotation.JsonRootName;
@@ -17,11 +23,22 @@ import static com.dewarim.cinnamon.api.Constants.DEFAULT_SUMMARY;
 @JsonRootName("folder")
 public class Folder implements OwnableWithMetadata, Identifiable {
 
+    // Request validation, checked when a request cascades into this class with @Valid.
+    @NotNull(groups = UpdateRequest.class)
+    @Positive(groups = UpdateRequest.class)
     private Long    id;
+    // an update may leave the name alone, but must not blank it out
+    @NotNull(groups = CreateRequest.class)
+    @Pattern(regexp = ".*\\S.*", flags = Pattern.Flag.DOTALL, message = "must not be blank")
     private String  name;
+    @Positive
     private Long    aclId;
+    @Positive
     private Long    ownerId;
+    @NotNull(groups = CreateRequest.class)
+    @Positive
     private Long    parentId;
+    @Positive
     private Long    typeId;
     private boolean metadataChanged;
     private String  summary;
@@ -34,7 +51,7 @@ public class Folder implements OwnableWithMetadata, Identifiable {
 
     @JacksonXmlElementWrapper(localName = "metasets")
     @JacksonXmlProperty(localName = "metaset")
-    private List<Meta> metasets = new ArrayList<>();
+    private List<@Valid Meta> metasets = new ArrayList<>();
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime created = LocalDateTime.now();
