@@ -66,6 +66,14 @@ DDL indented four spaces; versions without schema changes do not appear there at
 
 ==== 3. Build
 
+Check `git status` first and commit anything outstanding. The build stamp is `git rev-parse HEAD`,
+taken without regard to what is in the working copy, so a release built over uncommitted edits ships
+a jar whose `/cinnamon/info` names a commit that does not describe it. There is no automatic guard:
+`buildnumber-maven-plugin` can detect local modifications (`doCheck`), but it only offers to fail the
+build over them, and the `buildIsTainted` property its documentation describes for recording the fact
+is never actually set in 3.2.0 - verified, it resolves to null while `buildNumber` resolves. So this
+one is on you rather than on the build.
+
     mvn clean package -Pdist
 
 The two `Unknown keyword meta:enum` / `deprecated` warnings from the CycloneDX schema validator
