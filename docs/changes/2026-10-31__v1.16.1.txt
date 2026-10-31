@@ -27,3 +27,18 @@ No database changes.
   now checked for null, a failure is logged, and version and build fall back to "unknown" - the endpoint a
   client uses to find out what it is talking to should not be the one that fails. This was recorded as item E3
   in docs/ai-improvement/extended-improvement-plan.md.
+
+- fixed: a server that cannot bind its port no longer keeps running without one (github issue #435). The
+  connectors are bound after the background services have been started, and none of those threads is a
+  daemon, so a BindException left main while the JVM stayed alive - indexing, holding database connections,
+  answering nothing. The exception was logged, which is why this looked like a startup failure in the log and
+  like a running server to the init system. Startup failure now logs and exits with status 1. Verified both
+  ways against an occupied port: the process used to still be running when killed after 25 seconds, and now
+  exits immediately.
+
+- added: databaseConfig.poolMaximumActiveConnections is configurable (github issue #410). It was hardcoded to
+  50 in the MyBatis configuration, where it could not be reached without rebuilding. The default is still 50,
+  so nothing changes for an existing configuration file. The server needs one connection per request in
+  flight plus one per background thread, so a value below the Jetty thread pool size turns load into waiting
+  for a connection rather than into work.
+

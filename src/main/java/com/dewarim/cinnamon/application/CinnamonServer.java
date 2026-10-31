@@ -433,7 +433,20 @@ public class CinnamonServer {
         }
 
         CinnamonServer server = new CinnamonServer(config.getServerConfig().getHttpConnectorConfig().getPort());
-        server.start();
+        try {
+            server.start();
+        } catch (Exception failedToStart) {
+            /*
+             * Letting this leave main would not stop the process. start() calls addSingletons() before
+             * it binds the connectors, so IndexService and TikaService are already running by the time a
+             * port turns out to be taken - and none of those threads is a daemon, so the JVM stays alive
+             * with nothing listening while they keep indexing. Exiting explicitly is what takes them
+             * with it.
+             */
+            log.error("Could not start the server - shutting down instead of running without a port.",
+                    failedToStart);
+            System.exit(1);
+        }
         server.getServer().join();
     }
 

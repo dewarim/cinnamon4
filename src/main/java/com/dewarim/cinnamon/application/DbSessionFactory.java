@@ -20,12 +20,18 @@ public class DbSessionFactory {
         try {
             InputStream mybatisConfigStream = Resources.getResourceAsStream(resourcePath);
             Properties properties = new Properties();
+            // seeded first so that a properties file written before this setting existed - the test
+            // configuration, for one - still resolves the placeholder in mybatis-config.xml
+            properties.put("poolMaximumActiveConnections",
+                    String.valueOf(DatabaseConfig.DEFAULT_POOL_MAXIMUM_ACTIVE_CONNECTIONS));
             if (propertiesFilename == null) {
                 DatabaseConfig databaseConfig = CinnamonServer.config.getDatabaseConfig();
                 properties.put("username",databaseConfig.getUser());
                 properties.put("password",databaseConfig.getPassword());
                 properties.put("driver",databaseConfig.getDriver());
                 properties.put("url",databaseConfig.getDatabaseUrl());
+                properties.put("poolMaximumActiveConnections",
+                        String.valueOf(databaseConfig.getPoolMaximumActiveConnections()));
             }
             else {
                 InputStream propertyStream = Resources.getResourceAsStream(propertiesFilename);
