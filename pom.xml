@@ -82,6 +82,11 @@
                 <artifactId>slf4j-api</artifactId>
                 <version>2.0.17</version>
             </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>jul-to-slf4j</artifactId>
+                <version>2.0.17</version>
+            </dependency>
 
             <!-- fix vulnerabilities in dependencies of dom4j: -->
             <dependency>
@@ -169,6 +174,14 @@
                     <artifactId>log4j-api</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+
+        <!-- Lucene logs through java.util.logging, which log4j2.xml cannot configure. This routes JUL
+        into SLF4J, and from there into log4j2 through log4j-slf4j2-impl above, so Lucene's messages
+        obey the same configuration as everything else. Installed by CinnamonServer. -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jul-to-slf4j</artifactId>
         </dependency>
 
         <!-- Lucene -->

@@ -60,6 +60,10 @@
         <Logger name="org.jboss.logging" level="info" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
+        <!-- reaches Lucene only because CinnamonServer installs the java.util.logging bridge -->
+        <Logger name="org.apache.lucene" level="info" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
 
     </Loggers>
 </Configuration>

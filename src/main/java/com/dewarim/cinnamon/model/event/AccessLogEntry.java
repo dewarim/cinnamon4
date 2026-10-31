@@ -9,7 +9,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.Set;
 
 public class AccessLogEntry {
@@ -30,7 +30,7 @@ public class AccessLogEntry {
     private String    response;
     private ErrorCode errorCode;
     private String    errorMessage;
-    private Timestamp created;
+    private LocalDateTime created;
     private String    url;
     private Long      userId;
 
@@ -94,11 +94,11 @@ public class AccessLogEntry {
         this.errorCode = errorCode;
     }
 
-    public Timestamp getCreated() {
+    public LocalDateTime getCreated() {
         return created;
     }
 
-    public void setCreated(Timestamp created) {
+    public void setCreated(LocalDateTime created) {
         this.created = created;
     }
 

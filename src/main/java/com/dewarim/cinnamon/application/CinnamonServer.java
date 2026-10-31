@@ -26,6 +26,7 @@ import org.apache.ibatis.session.SqlSession;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 import org.eclipse.jetty.ee10.servlet.ErrorHandler;
 import org.eclipse.jetty.ee10.servlet.FilterHolder;
 import org.eclipse.jetty.ee10.servlet.ServletHolder;
@@ -62,6 +63,21 @@ import static com.dewarim.cinnamon.api.Constants.*;
  *
  */
 public class CinnamonServer {
+
+    static {
+        /*
+         * Lucene logs through java.util.logging, so its messages used to bypass log4j2.xml entirely:
+         * a different format, written straight to stderr, with no way to configure the level. The
+         * bridge routes JUL into SLF4J and from there into log4j2, which makes "org.apache.lucene" an
+         * ordinary logger like any other.
+         *
+         * removeHandlersForRootLogger has to come first, or each record is written twice - once by
+         * JUL's own ConsoleHandler and once through the bridge. A static initializer, because this has
+         * to happen before anything logs, and main is not the only entry point into this class.
+         */
+        SLF4JBridgeHandler.removeHandlersForRootLogger();
+        SLF4JBridgeHandler.install();
+    }
 
     private static final Logger log = LogManager.getLogger(CinnamonServer.class);
 

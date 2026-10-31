@@ -42,3 +42,21 @@ No database changes.
   flight plus one per background thread, so a value below the Jetty thread pool size turns load into waiting
   for a connection rather than into work.
 
+- changed: Lucene's log output obeys log4j2.xml like everything else (github issue #436). Lucene logs through
+  java.util.logging, so its startup messages went straight to stderr in a different, two-line format that no
+  configuration could reach - which is how "You are running with Java 23 or later" came to be a startup
+  warning nobody could turn off. jul-to-slf4j routes java.util.logging into SLF4J and from there into log4j2
+  through the log4j-slf4j2-impl bridge that was already on the classpath for Jetty; CinnamonServer installs it
+  before anything logs. "org.apache.lucene" is an ordinary logger now, at info, so the line reporting whether
+  the vector API is active is kept and anything else can be quieted in the configuration file. The one message
+  still outside this is the JVM's own "Using incubator modules: jdk.incubator.vector", which is printed before
+  any logging exists and cannot be configured away while the Vector API is an incubator module.
+
+- changed: AccessLogEntry.created is a LocalDateTime instead of a java.sql.Timestamp (github issues #228, #432).
+  It was the last legacy date type left in the main sources. The field is written by the database
+  (access_log.created defaults to CURRENT_TIMESTAMP) and read by MyBatis auto-mapping, and no code calls the
+  accessors, so nothing else changed. Note that access_log.created is a timestamptz while the column behind
+  every other LocalDateTime in the model is a plain timestamp: reading it as a LocalDateTime converts to the
+  JVM's zone and drops the offset. That matches the rest of the model and the field is unused, but
+  OffsetDateTime would be the faithful mapping if it ever gets read.
+
