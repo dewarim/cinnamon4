@@ -59,11 +59,6 @@ public class Constants {
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
             .build();
 
-    public static final String DATA_ROOT_PATH_PROPERTY_NAME     = "dataRootPath";
-
-
-    public static final String ADMIN_USER_NAME = "admin";
-
     public static final String CONTENT_TYPE_XML        = "application/xml";
     public static final String CONTENT_TYPE_PLAIN_TEXT = "text/plain";
 
