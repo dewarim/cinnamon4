@@ -38,6 +38,11 @@ public record CreateLinkRequest(
     }
 
     @Override
+    public String additionalRules() {
+        return "Every link points either at a folder or at an object - never at both, never at neither.";
+    }
+
+    @Override
     public List<Link> list() {
         return links;
     }

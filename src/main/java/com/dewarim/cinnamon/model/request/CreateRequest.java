@@ -25,8 +25,9 @@ public interface CreateRequest<T> {
 
     default Optional<CreateRequest<T>> validateRequest(){
         // annotation-based validation first: it throws INVALID_REQUEST naming the offending
-        // fields, which is more than the Optional.empty() below can carry
-        RequestValidator.validate(this, CreateRequest.class);
+        // fields, which is more than the Optional.empty() below can carry. The group this interface
+        // stands for is declared by ApiRequest.validationGroups(), not passed in here.
+        RequestValidator.validate(this);
         if (validated()) {
             return Optional.of(this);
         } else {

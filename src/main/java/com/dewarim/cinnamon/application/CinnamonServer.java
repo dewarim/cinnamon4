@@ -438,6 +438,15 @@ public class CinnamonServer {
                 
                 Note: response examples are not directly matching request examples, they just show the format you can expect.
                 
+                The constraint table of an endpoint lists what the server checks before a request reaches the business
+                logic; a violation is answered with the error code INVALID_REQUEST and a message naming every offending
+                field. A path ending in `[]` constrains the elements of a list or set, and a nested path such as
+                `osds[].name` constrains the objects the request carries - these are the paths the error message uses,
+                so a client can match a rejection against the table. What a create and an update of the same object
+                require differs, and each table shows only the constraints of its own endpoint. The tables are generated
+                from the annotations the server validates with, so they cannot drift from what it enforces; a rule that
+                no annotation expresses is stated in prose under the table instead.
+                
                 """).append("\n");
         Arrays.stream(UrlMapping.values()).forEach(urlMapping -> {
                     String formatted;
@@ -450,7 +459,7 @@ public class CinnamonServer {
                                     
                                     ## Request
                                     
-                                    __request__
+                                    __request____constraints__
                                     
                                     ## Response
                                     
@@ -458,10 +467,13 @@ public class CinnamonServer {
                                     
                                     ---
                                     """;
+                            // one instance for both: the examples and the constraints that apply to them
+                            ApiRequest<?> request = newRequest(urlMapping.getRequestClass());
                             formatted = template
                                     .replace("__endpoint__", urlMapping.getPath())
                                     .replace("__description__", urlMapping.getDescription())
-                                    .replace("__request__", requestToExample(mapper, urlMapping.getRequestClass()))
+                                    .replace("__request__", exampleToText(mapper, request.examples()))
+                                    .replace("__constraints__", ApiDocConstraints.render(request))
                                     .replace("__response__", responseToExample(mapper, urlMapping.getResponseClass()))
                             ;
                         } catch (Exception e) {
@@ -484,23 +496,22 @@ public class CinnamonServer {
         return api.toString();
     }
 
-    private static String requestToExample(ObjectMapper mapper, Class<? extends ApiRequest<?>> apiRequestClass) throws Exception {
-        if (apiRequestClass == null) {
-            return "";
-        }
-        ApiRequest<?> request;
+    /**
+     * An instance of a request class, for its examples() and its validationGroups(). Neither depends on
+     * instance state, so the component values do not matter.
+     */
+    private static ApiRequest<?> newRequest(Class<? extends ApiRequest<?>> apiRequestClass) throws Exception {
         try {
-            request = apiRequestClass.getConstructor().newInstance();
+            return apiRequestClass.getConstructor().newInstance();
         } catch (NoSuchMethodException noNoArgCtor) {
             // request records need not declare a no-arg constructor: build via the canonical
-            // constructor with default component values (examples() does not depend on instance state).
+            // constructor with default component values.
             Class<?>[] componentTypes = java.util.Arrays.stream(apiRequestClass.getRecordComponents())
                     .map(java.lang.reflect.RecordComponent::getType)
                     .toArray(Class<?>[]::new);
             Object[] args = java.util.Arrays.stream(componentTypes).map(CinnamonServer::defaultValue).toArray();
-            request = apiRequestClass.getDeclaredConstructor(componentTypes).newInstance(args);
+            return apiRequestClass.getDeclaredConstructor(componentTypes).newInstance(args);
         }
-        return exampleToText(mapper, request.examples());
     }
 
     private static final Map<Class<?>, Object> PRIMITIVE_DEFAULTS = Map.of(

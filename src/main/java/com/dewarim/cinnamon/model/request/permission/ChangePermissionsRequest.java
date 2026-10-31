@@ -39,6 +39,11 @@ public record ChangePermissionsRequest(
         return !add.isEmpty() || !remove.isEmpty();
     }
 
+    @Override
+    public String additionalRules() {
+        return "At least one of addPermissions and removePermissions has to be non-empty.";
+    }
+
     public Optional<ChangePermissionsRequest> validateRequest() {
         RequestValidator.validate(this);
         return validated() ? Optional.of(this) : Optional.empty();

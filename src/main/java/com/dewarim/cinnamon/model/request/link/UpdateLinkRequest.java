@@ -61,6 +61,11 @@ public record UpdateLinkRequest(
     }
 
     @Override
+    public String additionalRules() {
+        return "Every link points either at a folder or at an object - never at both, never at neither.";
+    }
+
+    @Override
     public List<ApiRequest<UpdateLinkRequest>> examples() {
         return List.of(new UpdateLinkRequest(List.of(new Link(1L, LinkType.OBJECT, 2L, 3L, 4L, 5L, 6L, LinkResolver.FIXED))));
     }

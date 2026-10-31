@@ -36,6 +36,11 @@ public record SearchRelationRequest(List<@NotNull @Positive Long> leftIds,
         return Objects.nonNull(ids) && !ids.isEmpty();
     }
 
+    @Override
+    public String additionalRules() {
+        return "At least one of leftIds, rightIds and relationTypeIds has to be non-empty.";
+    }
+
     public Optional<SearchRelationRequest> validateRequest() {
         RequestValidator.validate(this);
         return validated() ? Optional.of(this) : Optional.empty();

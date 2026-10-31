@@ -122,9 +122,10 @@ human-readable dependency/license table that is checked into the repository. It 
 so it only shows up in `git status` when the dependencies actually change. Note that
 `-DskipSbom` leaves the existing file untouched rather than updating it.
 
-The `dist` profile regenerates `docs/api.md` the same way, from the `UrlMapping` enum and the
-`examples()` of the request/response classes, so the checked-in API documentation cannot drift
-from the code. Also **generated - do not edit it by hand**: change the `examples()` method or the
+The `dist` profile regenerates `docs/api.md` the same way, from the `UrlMapping` enum, the
+`examples()` of the request/response classes and the constraint metadata of the request validator
+(`ApiDocConstraints` renders the per-endpoint constraint table), so the checked-in API documentation
+cannot drift from the code. Also **generated - do not edit it by hand**: change the `examples()` method or the
 `UrlMapping` entry and rebuild. It is written by `CinnamonServer --write-api <file>`, which writes
 to the file directly; `--api` prints the same document to stdout for reading. Redirecting `--api`
 into the file from a build is what the `--write-api` flag exists to avoid - `exec-maven-plugin`
@@ -206,9 +207,17 @@ message naming each offending field (`links[0].aclId must not be null`), rendere
 - Where a create and an update disagree, scope the constraint with `groups = CreateRequest.class` /
   `groups = UpdateRequest.class`. Bean Validation groups are plain interfaces, so those two interfaces are their
   own group markers.
+- Which groups an endpoint is validated with is declared by `ApiRequest.validationGroups()`. Implementing
+  `CreateRequest`/`UpdateRequest`/`DeleteRequest` is enough for the common case; override it where a request
+  carries a model in create or update shape without implementing the interface (`UpdateOsdRequest`,
+  `UpdateFolderRequest`) or needs a group of its own (`CreateMetaRequest`). Do not pass the group to
+  `RequestValidator.validate()` instead - the api.md generator reads `validationGroups()` to decide which
+  constraints to document, so a group passed at the call site would be enforced but not documented.
 - `validated()` remains as the escape hatch for a rule no annotation expresses - a choice between two fields, or
   "at least one field has to be set". Returning `false` from it still yields a bare `INVALID_REQUEST` with no
-  message, so prefer an annotation wherever one fits.
+  message, so prefer an annotation wherever one fits. A request that declares `validated()` also has to implement
+  `additionalRules()`: that one sentence is how the rule reaches `docs/api.md`, and `ApiDocConstraintsTest` fails
+  if it is missing.
 - No EL implementation is on the classpath on purpose (`ParameterMessageInterpolator`), which keeps the EL
   injection class of CVEs out of the request path. Do not use `{...}` expressions in constraint messages.
 - `UiLanguageServlet` calls `RequestValidator.invalidateUiLanguageCache()` on create/update/delete: the locales a

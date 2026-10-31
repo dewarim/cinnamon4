@@ -2,6 +2,7 @@ package com.dewarim.cinnamon.application.service;
 
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.FailedRequestException;
+import com.dewarim.cinnamon.api.ApiRequest;
 import com.dewarim.cinnamon.application.RequestScope;
 import com.dewarim.cinnamon.dao.UiLanguageDao;
 import com.dewarim.cinnamon.model.UiLanguage;
@@ -11,6 +12,7 @@ import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 import jakarta.validation.groups.Default;
+import jakarta.validation.metadata.BeanDescriptor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.validator.HibernateValidator;
@@ -61,12 +63,33 @@ public final class RequestValidator {
 
     /**
      * Validate the annotations of a request. The Default group is always included, so constraints
-     * without a group are always checked; pass CreateRequest.class or UpdateRequest.class to select
-     * the constraints that apply only when creating or only when updating.
+     * without a group are always checked; which further groups apply is declared by the request itself
+     * in {@link ApiRequest#validationGroups()} rather than passed in here, so that the api.md generator
+     * documents the same set of constraints this method enforces.
      *
      * @throws FailedRequestException INVALID_REQUEST, listing every violation, if there is one
      */
-    public static void validate(Object request, Class<?>... groups) {
+    public static void validate(Object request) {
+        validate(request, groupsOf(request));
+    }
+
+    /**
+     * The groups a request declares. Anything that is not an ApiRequest - a model class validated on
+     * its own, or a test calling in directly - is checked against the Default group only.
+     */
+    private static Class<?>[] groupsOf(Object request) {
+        return request instanceof ApiRequest<?> apiRequest ? apiRequest.validationGroups() : new Class<?>[0];
+    }
+
+    /**
+     * Constraint metadata for the api.md generator, read from the same validator that checks the
+     * requests - so the generated documentation cannot describe a contract the server does not enforce.
+     */
+    public static BeanDescriptor describe(Class<?> beanClass) {
+        return validator().getConstraintsForClass(beanClass);
+    }
+
+    private static void validate(Object request, Class<?>[] groups) {
         Class<?>[] allGroups = new Class<?>[groups.length + 1];
         allGroups[0] = Default.class;
         System.arraycopy(groups, 0, allGroups, 1, groups.length);

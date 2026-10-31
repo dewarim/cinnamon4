@@ -53,8 +53,17 @@ public record UpdateOsdRequest(
         return list;
     }
 
+    /**
+     * The osds arrive in update shape although this request does not implement UpdateRequest - OsdServlet
+     * merges them onto the loaded row itself instead of going through CruddyServlet.
+     */
+    @Override
+    public Class<?>[] validationGroups() {
+        return new Class<?>[]{UpdateRequest.class};
+    }
+
     public Optional<UpdateOsdRequest> validateRequest() {
-        RequestValidator.validate(this, UpdateRequest.class);
+        RequestValidator.validate(this);
         return Optional.of(this);
     }
 

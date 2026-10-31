@@ -20,6 +20,15 @@ public record GetUserAccountRequest(@Positive Long userId, String username) impl
         return Optional.of(this);
     }
 
+    /**
+     * Not a validated() rule: UserAccountServlet checks this one so it can answer the more specific
+     * error code. It is still part of the contract, so api.md has to state it.
+     */
+    @Override
+    public String additionalRules() {
+        return "At least one of userId and username has to be set.";
+    }
+
     public boolean byId() {
         return userId != null;
     }

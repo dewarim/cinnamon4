@@ -33,8 +33,18 @@ public record CreateMetaRequest(
         this(new ArrayList<>(List.of(new Meta(id, typeId, content))));
     }
 
+    /**
+     * Metadata is attached to an object that already exists, so the objectId is required here - unlike
+     * in createOsd and createFolder, which carry their metasets as Meta objects too but create the
+     * object together with them.
+     */
+    @Override
+    public Class<?>[] validationGroups() {
+        return new Class<?>[]{Meta.OnExistingObject.class};
+    }
+
     public Optional<CreateMetaRequest> validateRequest() {
-        RequestValidator.validate(this, Meta.OnExistingObject.class);
+        RequestValidator.validate(this);
         return Optional.of(this);
     }
 

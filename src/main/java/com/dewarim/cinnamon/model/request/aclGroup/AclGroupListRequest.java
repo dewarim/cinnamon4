@@ -27,6 +27,11 @@ public record AclGroupListRequest(@Positive Long id, IdType idType) implements A
         return id != null || idType != null;
     }
 
+    @Override
+    public String additionalRules() {
+        return "At least one of id and idType has to be set.";
+    }
+
     public Optional<AclGroupListRequest> validateRequest() {
         RequestValidator.validate(this);
         return validated() ? Optional.of(this) : Optional.empty();
