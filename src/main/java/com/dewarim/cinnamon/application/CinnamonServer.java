@@ -304,8 +304,6 @@ public class CinnamonServer {
             dbLoggingSessionFactory = new DbSessionFactory(null, "sql/mybatis-logging-config.xml");
         }
         ThreadLocalSqlSession.dbSessionFactory = dbSessionFactory;
-        // TODO: unused?
-        server.setAttribute(DEFAULT_DATABASE_SESSION_FACTORY, dbSessionFactory);
 
         ContentProviderService contentProviderService = new ContentProviderService();
         // order is important here: searchService waits for indexService to finish initialization
@@ -322,8 +320,6 @@ public class CinnamonServer {
         // test query:
         // add DAOs
         UserAccountDao userAccountDao = new UserAccountDao();
-        // TODO: unused?
-        server.setAttribute(DAO_USER_ACCOUNT, userAccountDao);
         List<UserAccount> userAccounts = userAccountDao.listUserAccounts();
         log.info("Test query: database contains {} user accounts.", userAccounts.size());
     }

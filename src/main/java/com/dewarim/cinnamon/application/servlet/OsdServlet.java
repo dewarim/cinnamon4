@@ -419,7 +419,8 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
 
         deleteOsdService.verifyAndDelete(osds, deleteDescendants, deleteAllVersions, user);
 
-        // TODO: deleteContent? -> cleanup process? #199
+        // content is not deleted here: verifyAndDelete records a Deletion row per OSD that has a
+        // content path, and DbSessionFilter hands those to DeletionTask after the commit (issue #199)
         var deleteResponse = new DeleteResponse(true);
         cinnamonResponse.setWrapper(deleteResponse);
     }

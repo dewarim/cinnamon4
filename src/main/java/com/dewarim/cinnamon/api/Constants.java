@@ -59,10 +59,8 @@ public class Constants {
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
             .build();
 
-    public static final String DEFAULT_DATABASE_SESSION_FACTORY = "com.dewarim.cinnamon.application.DbSessionFactory";
     public static final String DATA_ROOT_PATH_PROPERTY_NAME     = "dataRootPath";
 
-    public static final String DAO_USER_ACCOUNT = "UserAccountDao";
 
     public static final String ADMIN_USER_NAME = "admin";
 
