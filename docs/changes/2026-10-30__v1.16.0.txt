@@ -115,3 +115,103 @@ Changes v1.16.0:
   benefit from the newer format's work, but it is optional and can be done while the server runs. See
   docs/migration.2026.adoc.
 
+The entries below come from the search, indexing and security work that was developed on a branch and
+is released here for the first time. Some of that branch was already cherry-picked into v1.15.1 and
+is recorded there instead of being repeated.
+
+- security: any authenticated user could exhaust the server's heap with a single cheap search.
+  ResultCollector materialised one Lucene Document per hit (460-477 bytes, measured) into an unbounded
+  HashSet and filtered by ACL afterwards in Java, so a query such as <WildcardQuery fieldName='name'>*
+  </WildcardQuery> loaded every stored document in the index - about 4.5 GB on a 10M-object repository
+  - and it did so even for a user with no browse permission at all. No result limit existed at any
+  layer. Capping the result set was not an option, because callers legitimately need exhaustive sets
+  ("every image in this handbook") and a user may own millions of objects, so completeness is kept and
+  made affordable instead: browse permissions and the type filter are resolved before the search and
+  pushed into the Lucene query, so a document the user may not browse is never collected, and a user
+  who may browse nothing skips the search entirely. Only ids are retained, in a growable long[], at
+  8-10 bytes per hit instead of 460. A 1M-document match-all went from 2851 ms / 437 MB to 19 ms /
+  8.2 MB; with a user who may browse 5% of documents, from 2799 ms / 437 MB to 3 ms / 0.3 MB. The
+  permission translation uses LongPoint.newSetQuery, which is one query rather than one clause per
+  acl, so it cannot collide with the high maxClauseCount the Windows client needs.
+
+- changed: search results are now deterministically ordered. The collector merges its slices by
+  sorting and deduplicating ids; the previous HashSet iteration order was arbitrary.
+
+- security: XML parser limits are now set explicitly instead of being inherited from the JRE. User
+  supplied XML - document content and metadata - is parsed by dom4j/SAX, and the JAXP
+  secure-processing limits that protect against entity-expansion bombs, quadratic blowup and deeply
+  nested documents depended on whatever conf/jaxp.properties the running JRE happened to ship. A new
+  XmlParserConfig sets entity expansion, total entity size, element depth, attribute count and the
+  rest on the reader itself; defaults match JDK 25, 0 means no limit.
+
+- security: a deeply nested search query no longer answers 500. Lucene's recursive-descent query and
+  regex parsers can overflow the stack, which escaped as a raw server error; SearchService catches
+  StackOverflowError and reports it as an ordinary bad query.
+
+- security: a request body is now bounded. Non-multipart API request bodies are buffered in memory,
+  so an unbounded body let an *unauthenticated* client exhaust the heap through /cinnamon/connect. The
+  new maxRequestBodySize (default 64MB) is checked against a declared Content-Length up front and
+  enforced again while reading, for chunked or untruthful lengths, and answers the new error code
+  REQUEST_PAYLOAD_TOO_LARGE (HTTP 413). maxMultipartRequestSize and maxMultipartFileSize bound content
+  uploads. 0 means no limit.
+
+- security: the server no longer discloses its version or stack traces. The plain HTTP connector had
+  no HttpConfiguration of its own and leaked a "Server: Jetty(version)" header; both connectors now
+  share one, with sendServerVersion off. A custom error handler replaces Jetty's error pages, which
+  showed stack traces and the version. requestHeaderSize is configurable, default 8192.
+
+- changed: CJK text is searchable. The tokenizer follows UAX#29 and emits one token per Han character,
+  so a Chinese word was indexed as its individual characters: searching for the word itself matched
+  nothing, and single characters are too common for relevance to be useful. A new CinnamonAnalyzer -
+  used by both the indexer and the query parser, which have to agree - adds CJK bigrams and folds
+  full-width Latin and half-width Katakana, so a search for ABC-123 also finds a document written as
+  the full-width equivalent. Latin text is unaffected, which a unit test pins down by asserting the
+  tokens are identical to StandardAnalyzer's. Lucene's ready-made CJKAnalyzer was deliberately not
+  used: it bundles an English stop-word list, which would drop the trailing "A" from a part number
+  like P/N 4711-A. luceneConfig.cjkOutputUnigrams additionally indexes each CJK character on its own,
+  off by default because it roughly doubles the number of CJK terms. Existing documents keep the
+  tokens they were indexed with - see docs/migration.2026.adoc for when that needs a reindex.
+
+- added: a limit on how much content is indexed. IndexService read file content with an unbounded
+  readAllBytes(), turned it into a String and parsed it into a DOM - roughly ten times the file size in
+  heap, with up to eight documents in flight - so one large upload could exhaust the heap. New
+  luceneConfig settings maxIndexableContentSizeMB (default 2048) and maxIndexableContentPercentOfHeap
+  (default 0, a share of maximum heap rather than of physical RAM, because this is a heap event); when
+  both are set the smaller applies, so the absolute value is a ceiling and the percentage a safety net
+  on small machines. Over-sized content is skipped rather than failed: the object is still indexed with
+  its metadata and stays findable by name and metadata, and a warning naming the object and both sizes
+  is logged. Failing the job would have made the object invisible altogether and then retried forever.
+
+- fixed: file upload was broken on servers running under a Turkish locale. toLowerCase() without a
+  locale means the machine's default, and both CinnamonRequest and OsdServlet used it to lowercase the
+  Content-Type header when detecting multipart requests - so a client sending MULTIPART/form-data to
+  such a server produced "multipart" with a dotless i, the request was not recognised as multipart, and
+  the upload failed. The same bug affected the tokens indexed for object names and folder paths, in
+  IndexService, CompleteStringIndexer and BooleanIndexer. All eight call sites now use Locale.ROOT.
+  Measured rather than assumed: across every Unicode codepoint and all 245 languages the JVM knows,
+  only Turkish, Azeri and Lithuanian lowercase differently, and only for "I".
+
+- fixed: the limit on how many tokens one analyzed query clause may produce was pure decoration. The
+  analyzer was wrapped in a LimitTokenCountAnalyzer configured with Integer.MAX_VALUE; the new
+  maxQueryTokenCount (default 100000, 0 = no limit) is generous on purpose, because the Windows client
+  builds very complex queries.
+
+- fixed: with waitUntilSearchable enabled, the wait ran after the response body had already been
+  written. It was done in the outermost filter, so it only executed once the response had been handed
+  over; it now runs after the commit and the post-commit change triggers but before the body is
+  written. This was latent rather than a demonstrated failure - Jetty holds a small response in its
+  32 KB output buffer until the request completes, and every endpoint that creates index jobs returns a
+  small response - but correctness no longer depends on response size or buffer configuration. The
+  trade-off is that the request's database session stays open across the wait, which only applies when
+  waitUntilSearchable is on, a setting that already documents itself as making responses about a second
+  slower.
+
+- added: the client can delete every version of several objects in one request. OSD__DELETE has always
+  taken a list of ids and a deleteAllVersions flag, but the client's list overload hardcoded the flag to
+  false, so deleting whole version trees meant one request per object.
+
+- docs: docs/index-and-search.adoc gained sections on text analysis, CJK handling, full-width folding,
+  locale independence and permission filtering, plus a table of every luceneConfig search setting. The
+  security review that produced several of the entries above is recorded in docs/changelog.md together
+  with the issues it found that are not yet addressed.
+

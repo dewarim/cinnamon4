@@ -45,21 +45,66 @@ Some request paths will be filtered, for example, the request to /api/user/setPa
 
 === v1.16.0
 
-Lucene was upgraded from 9.12.1 to 10.6.0, which changed the index format.
+Two separate things changed about the search index in this release: Lucene was upgraded from 9.12.1
+to 10.6.0, and the text analyzer changed. They have different consequences, so they are described
+apart.
 
-*No action is required.* The server ships `lucene-backward-codecs`, so an existing index keeps
-working: it is read as before, new documents are still written to it, and its old segments are
-rewritten in the current format as Lucene merges them. Nothing has to be stopped, deleted or
-rebuilt to upgrade.
+==== The index format: no action required
 
-A full reindex is *recommended but optional*, because only segments in the current format benefit
-from the newer format's performance work. It can be done while the server is running:
+Lucene 10 uses a new index format and cannot read a Lucene 9 index on its own. The server ships
+`lucene-backward-codecs`, so it does not have to: an existing index is read as before, new documents
+are still written to it, and its old segments are rewritten in the current format as Lucene merges
+them. Nothing has to be stopped, deleted or rebuilt for the upgrade itself.
+
+==== The analyzer: reindex if the repository holds CJK or full-width text
+
+A document keeps the tokens it was indexed with. Lucene analyzes text when a document is added and
+never again - merging segments copies already-inverted data, it does not re-run the analyzer - so
+documents indexed by an earlier version keep the tokens `StandardAnalyzer` produced, while queries
+are now analyzed by `CinnamonAnalyzer`. Where the two disagree, old documents stop being found.
+
+For Latin text they do not disagree: `CinnamonAnalyzer` is `StandardAnalyzer` plus two CJK filters,
+and `CinnamonAnalyzerUnitTest` asserts that both produce identical tokens for Latin input. A
+repository without CJK or full-width content therefore needs no reindex for correctness.
+
+It matters in three cases:
+
+* *CJK text.* `液压泵` was indexed as the three tokens `[液, 压, 泵]`, because the tokenizer follows
+  UAX#29 and emits one token per Han character. Queries now produce the bigrams `[液压, 压泵]`, which
+  do not match the old tokens. CJK documents indexed before this release will not be found by the
+  new queries until they are reindexed - note that this is the same change that makes CJK search work
+  at all, so for those documents a reindex is what delivers the fix.
+* *Full-width Latin.* A document containing `ＡＢＣ－１２３` is now folded to `abc-123` at index time,
+  so a search for `ABC-123` finds it. Documents indexed earlier kept the full-width form and are
+  only reachable by searching in full width.
+* *Turkish, Azeri or Lithuanian server locale.* Object names and folder paths were lowercased with
+  the machine's default locale, so `I` was indexed as the dotless `ı`. That is fixed, and a reindex
+  corrects the affected tokens. (Installations on any other locale are unaffected: across every
+  Unicode codepoint and all 245 languages the JVM knows, only those three lowercase differently.)
+
+==== Performance: reindex recommended
+
+Independently of correctness, two improvements only apply to documents that have been reindexed:
+
+* The search rework reads object ids from a `NumericDocValuesField`, which older documents do not
+  have. A stored-field fallback keeps them working, so this is a speed difference rather than a
+  functional one.
+* Only segments in Lucene's current format benefit from the new format's encoding work.
+
+==== How to reindex
+
+It can be done while the server is running:
 
     POST /api/index/reindex
 
-Reindexing a large repository affects performance while it runs, so pick a quiet window - and note
-that on a machine with slow storage this is I/O bound and can take a long time. Letting the merge
-policy migrate the segments over time is a legitimate alternative.
+Reindexing a large repository affects performance while it runs, so pick a quiet window - on a
+machine with slow storage this is I/O bound and can take a long time.
+
+*Check one setting first.* `maxIndexableContentSizeMB` (new in this release, default 2048) caps the
+content size the indexer will read. A document whose content was indexed before that cap existed
+becomes metadata-only when it is reindexed: still findable by name and metadata, but its content is
+no longer searchable, with a warning naming the object and both sizes in the log. Raise the limit, or
+`maxIndexableContentPercentOfHeap`, before reindexing if any content exceeds it.
 
 If you would rather start from an empty index: stop the server, delete the directory configured as
 `indexPath` in `luceneConfig` (default `/opt/cinnamon4/cinnamon-data/index`), start the server and
