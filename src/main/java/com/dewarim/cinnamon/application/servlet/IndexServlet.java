@@ -158,6 +158,15 @@ public class IndexServlet extends BaseServlet {
         }
         TikaFailureDao tikaFailureDao = new TikaFailureDao();
         if (createRequest.listFailedTikaExtractions()) {
+            // These rows name objects by id and carry the error text Tika or the content store
+            // produced, which includes content paths and exception messages - operator information
+            // about objects the caller may have no permission to read at all. The counts below
+            // disclose nothing and stay open to every authenticated user, as this endpoint always
+            // has been; listFailedIndexJobs stays open for the same reason, having been part of the
+            // API since v1.15.1.
+            if (!new AuthorizationService().currentUserIsSuperuser()) {
+                throw ErrorCode.REQUIRES_SUPERUSER_STATUS.exception();
+            }
             infoResponse.setFailedTikaExtractions(tikaFailureDao.list());
         }
         infoResponse.setFailedTikaExtractionCount(tikaFailureDao.count());

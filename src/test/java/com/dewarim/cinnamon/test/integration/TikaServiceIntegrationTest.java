@@ -128,12 +128,12 @@ public class TikaServiceIntegrationTest {
         config.setRetryDelayInSeconds(1);
         config.setMaxRetryDelayInSeconds(1);
         TikaService tikaService = new TikaService(config, contentProviderService);
-        try (FileInputStream bunnyStream = new FileInputStream(bun)) {
-            FailsafeException exception = assertThrows(FailsafeException.class,
-                    () -> tikaService.parseWithTika(bunnyStream, bun.length(), imageFormat, osdId));
-            // this is the exception TikaService' run loop recognizes as "retry, do not count":
-            assertInstanceOf(IOException.class, exception.getCause());
-        }
+        // a source rather than a stream: every attempt opens the content again, so a retry cannot
+        // send what is left of a stream the previous attempt already consumed.
+        FailsafeException exception = assertThrows(FailsafeException.class,
+                () -> tikaService.parseWithTika(() -> new FileInputStream(bun), bun.length(), imageFormat, osdId));
+        // this is the exception TikaService' run loop recognizes as "retry, do not count":
+        assertInstanceOf(IOException.class, exception.getCause());
     }
 
     @Test

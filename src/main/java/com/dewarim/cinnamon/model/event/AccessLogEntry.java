@@ -16,14 +16,19 @@ public class AccessLogEntry {
 
     private static final Logger log = LogManager.getLogger(AccessLogEntry.class);
 
-    private static Set<String> unloggedPaths;
-    {
-        unloggedPaths = Set.of(
-                UrlMapping.CINNAMON__CONNECT.getPath(),
-                UrlMapping.USER__SET_PASSWORD.getPath(),
-                UrlMapping.USER__UPDATE.getPath()
-        );
-    }
+    /**
+     * The requests whose body is not written to the access log, because it carries a password.
+     * <p>
+     * Assigned where it is declared rather than from an instance initializer: the initializer ran on
+     * every constructor call, which since the list statement gained a no-argument constructor means
+     * once per row read - an unsynchronized write to a static field, from whichever thread happens
+     * to be reading the log.
+     */
+    private static final Set<String> unloggedPaths = Set.of(
+            UrlMapping.CINNAMON__CONNECT.getPath(),
+            UrlMapping.USER__SET_PASSWORD.getPath(),
+            UrlMapping.USER__UPDATE.getPath()
+    );
 
     private Long      id;
     private String    request;

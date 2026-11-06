@@ -6,10 +6,17 @@
 <!-- No resultMap: every column of tika_failures is derivable by mapUnderscoreToCamelCase. -->
 <mapper namespace="com.dewarim.cinnamon.model.index.TikaFailure">
 
-    <select id="list" resultType="com.dewarim.cinnamon.model.index.TikaFailure">
+    <!--
+      Limited on purpose: one row per content-bearing object is possible (a Tika server that
+      rejects a format after an upgrade), each with up to 1000 characters of error text, and
+      index/info renders the whole list into one XML document. The count is reported separately,
+      so a client can tell that it is looking at the newest rows of a longer list.
+    -->
+    <select id="list" parameterType="map" resultType="com.dewarim.cinnamon.model.index.TikaFailure">
         SELECT *
         FROM tika_failures
         ORDER BY last_attempt DESC, osd_id
+        LIMIT #{limit}
     </select>
 
     <select id="count" resultType="int">

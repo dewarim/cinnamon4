@@ -311,6 +311,21 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
     }
 
     /**
+     * The list of failed Tika extractions is operator information: the rows name objects by id and
+     * carry the error text, which includes content paths and exception messages for objects the
+     * caller may have no permission to read. The counts say nothing about any single object and
+     * stay open to every authenticated user, as this endpoint always has been.
+     */
+    @Test
+    public void listingFailedTikaExtractionsRequiresSuperuserStatus() throws IOException {
+        assertClientError(() -> client.getIndexInfo(false, false, true), REQUIRES_SUPERUSER_STATUS);
+
+        IndexInfoResponse counts = client.getIndexInfo(false, false, false);
+        assertNull(counts.getFailedTikaExtractions());
+        assertNotNull(counts.getFailedTikaExtractionCount());
+    }
+
+    /**
      * A recorded Tika failure must not stand in the way of deleting its object: tika_failures
      * references objects, and nothing in the delete path clears the row - the foreign key cascades.
      */

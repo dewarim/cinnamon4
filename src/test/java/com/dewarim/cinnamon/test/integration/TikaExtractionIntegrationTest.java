@@ -19,6 +19,8 @@ import org.junit.jupiter.api.Test;
 import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Optional;
 
@@ -239,7 +241,12 @@ public class TikaExtractionIntegrationTest extends CinnamonIntegrationTest {
         Long             osdId = osd.getId();
         File contentFile = new File(CinnamonServer.config.getServerConfig().getDataRoot(), osd.getContentPath());
         assertTrue(contentFile.exists());
-        assertTrue(contentFile.delete(), "could not remove the content file for the test");
+        // Moved aside rather than deleted, and put back in the finally block: the object stays in
+        // the database for the rest of the suite, and a row whose content_path points at nothing
+        // would be a trap for anything that touches it later - DeletionTask, the indexer, or
+        // another test's sweep over the content store.
+        File hiddenContent = new File(contentFile.getPath() + ".hidden-by-test");
+        Files.move(contentFile.toPath(), hiddenContent.toPath(), StandardCopyOption.REPLACE_EXISTING);
         try (FakeTikaServer fakeTika = new FakeTikaServer()) {
             tikaServiceFor(fakeTika.getBaseUrl(), 3).extractMetaset(osd, formatOf(osd));
 
@@ -250,6 +257,7 @@ public class TikaExtractionIntegrationTest extends CinnamonIntegrationTest {
             assertEquals(0, fakeTika.getRequestCount(), "Tika should not have been bothered at all");
         }
         finally {
+            Files.move(hiddenContent.toPath(), contentFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
             cleanUp(osdId);
         }
     }

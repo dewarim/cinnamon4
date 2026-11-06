@@ -548,6 +548,11 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         client.createOsdMeta(osdId, "<tika>metadata of the first file</tika>", tikaType.getId());
         assertEquals(1, client.getOsdMetas(osdId, List.of(tikaType.getId())).size());
 
+        // The flag is read straight off the server-wide configuration by the setContent path, so
+        // there is no way to exercise it without flipping it on the one embedded server. That is
+        // safe here only because the suite runs sequentially (no parallel configuration in
+        // junit-platform.properties or surefire): nothing else is issuing requests in this window.
+        // It would have to be injected into the servlet before the suite could be parallelized.
         CinnamonTikaConfig tikaConfig   = CinnamonServer.config.getCinnamonTikaConfig();
         boolean            originalFlag = tikaConfig.isUseTika();
         tikaConfig.setUseTika(true);

@@ -30,8 +30,24 @@ public class TikaFailureDao {
         this.sqlSession = sqlSession;
     }
 
+    /**
+     * How many rows {@link #list()} returns at most. The table grows with the size of the
+     * repository rather than with the number of mistakes, so the list cannot be unbounded: see the
+     * statement's comment.
+     */
+    public static final int LIST_LIMIT = 1000;
+
+    /**
+     * The most recently failed objects, newest first, up to {@link #LIST_LIMIT}. Use
+     * {@link #count()} to find out whether there are more.
+     */
     public List<TikaFailure> list() {
-        return getSqlSession().selectList("com.dewarim.cinnamon.model.index.TikaFailure.list");
+        return list(LIST_LIMIT);
+    }
+
+    public List<TikaFailure> list(int limit) {
+        return getSqlSession().selectList("com.dewarim.cinnamon.model.index.TikaFailure.list",
+                Map.of("limit", limit));
     }
 
     public int count() {

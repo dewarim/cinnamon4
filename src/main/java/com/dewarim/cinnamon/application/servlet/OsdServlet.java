@@ -103,7 +103,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
 
     private Long getTikaMetasetTypeId() {
         if (tikaMetasetTypeId == null) {
-            Optional<MetasetType> tikaMetasetType = new MetasetTypeDao().list().stream().filter(metasetType -> metasetType.getName().equals(TIKA_METASET_NAME)).findFirst();
+            Optional<MetasetType> tikaMetasetType = new MetasetTypeDao().getMetasetTypeByName(TIKA_METASET_NAME);
             if (tikaMetasetType.isPresent()) {
                 tikaMetasetTypeId = tikaMetasetType.get().getId();
             } else {

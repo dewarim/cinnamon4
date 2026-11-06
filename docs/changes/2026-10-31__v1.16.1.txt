@@ -123,7 +123,10 @@ Changes v1.16.1:
   401, 403, 404, 408, 429, 502, 503 and 504 are what a restarting server, a wrong baseUrl or a proxy in front
   of Tika answers to every request alike and are not counted at all. Otherwise an outage would still write
   off the whole backlog, just visibly instead of silently. A server that cannot be reached is treated the
-  same way and always was: it says nothing about the document, so it is retried indefinitely.
+  same way and always was: it says nothing about the document, so it is retried indefinitely. Such a retry
+  opens the content again for every attempt instead of re-sending what is left of the stream the failed
+  attempt consumed: that would have uploaded a truncated document under the original length, and Tika
+  answering 200 to half a file would have stored metadata for a document nobody has.
 
 - fixed: the Tika service survives a failed pass. Its loop had nothing catching an exception from the pass
   itself, so one object pointing at a format row that no longer exists ended the thread for the lifetime of
@@ -136,7 +139,12 @@ Changes v1.16.1:
 
 - added: the objects whose Tika extraction failed are recorded in a new tika_failures table with their
   attempt count and the last error, and reported by index/info - the new listFailedTikaExtractions flag
-  returns the list, and the count is always included. Without the record there was no way to find out that a
+  returns the list, and the count is always included. Listing them requires superuser status, which the rest
+  of index/info does not: the rows carry the error text Tika or the content store produced, which includes
+  content paths and exception messages for objects the caller may have no permission to read. The list is
+  also capped at the thousand most recent rows - the table has one row per object at worst, so an unbounded
+  list would be a request that renders the repository into one XML document; the count tells a client whether
+  it is looking at all of them. Without the record there was no way to find out that a
   document has no Tika metadata, because the document itself is indexed and searchable. A document is given
   up on after maxTikaAttempts tries (new in cinnamonTikaConfig, default 3) instead of being retried on every
   pass of the service forever, which is what used to happen to an object whose content file was missing.
@@ -159,11 +167,17 @@ Changes v1.16.1:
   index_jobs.update_tika_metaset column (never written, and no property on IndexJob), the third parameter of
   OsdDao.updateOsd, which the method body ignored, and the local flag the version endpoint computed to pass
   to it. The retryDelayInSeconds and maxRetryDelayInSeconds settings of cinnamonTikaConfig are now actually
-  read - the retry policy had the defaults hard-coded - and a configuration that leaves no room to back off
-  retries at a constant delay instead of failing the server at startup.
+  read - the retry policy had the defaults hard-coded - and a configuration that cannot work is reported and
+  replaced by the default rather than taken literally: a delay of zero or less is what failsafe rejects with
+  an IllegalArgumentException naming neither the setting nor the file, thrown out of server startup, and a
+  maxTikaAttempts of zero reads like "no limit" while meaning that the first failure writes a document off
+  for good. A configuration that leaves no room to back off retries at a constant delay, as before.
 
 - fixed: the access log can be read back. Its created column was a timestamptz, which the driver refuses to
   hand to the LocalDateTime property it belongs to, and the entry class had no constructor MyBatis could use
   - so AccessLogDao.list threw on both counts. Nothing in the server reads the access log, which is why
   neither showed up: a statement has to return a row before either can fail. The column is a plain timestamp
-  now, like every other timestamp the models read, and the read path has a test.
+  now, like every other timestamp the models read, and the read path has a test. The constructor the read
+  needs also exposed an older oddity in the same class: the set of paths whose request body is not logged was
+  assigned from an instance initializer, so it was re-assigned on every construction - which for a read means
+  once per row, from whichever thread is reading. It is assigned where it is declared now.

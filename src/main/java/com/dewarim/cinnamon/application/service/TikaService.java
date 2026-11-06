@@ -52,6 +52,15 @@ public class TikaService implements Runnable {
      */
     private static final Set<Integer> STATUS_NOT_ABOUT_THE_DOCUMENT = Set.of(401, 403, 404, 408, 429, 502, 503, 504);
 
+    /**
+     * Used when the configured value cannot work at all, so that a mistake in the configuration
+     * file costs a warning rather than the server's startup. They are the defaults of
+     * CinnamonTikaConfig; a change there should be made here too.
+     */
+    private static final int DEFAULT_RETRY_DELAY_IN_SECONDS     = 1;
+    private static final int DEFAULT_MAX_RETRY_DELAY_IN_SECONDS = 10;
+    private static final int DEFAULT_MAX_TIKA_ATTEMPTS          = 3;
+
     private final CinnamonTikaConfig     config;
     private       Long                   tikaMetasetTypeId;
     private final RetryPolicy<String>    retryPolicy;
@@ -63,8 +72,10 @@ public class TikaService implements Runnable {
         // IOException only: a connection that failed says nothing about the document, so it is
         // worth retrying. A document Tika rejects (TikaFailedException) is not - it would fail the
         // same way three times in a row.
-        Duration delay    = Duration.ofSeconds(config.getRetryDelayInSeconds());
-        Duration maxDelay = Duration.ofSeconds(config.getMaxRetryDelayInSeconds());
+        Duration delay    = Duration.ofSeconds(positiveSeconds(config.getRetryDelayInSeconds(),
+                DEFAULT_RETRY_DELAY_IN_SECONDS, "retryDelayInSeconds"));
+        Duration maxDelay = Duration.ofSeconds(positiveSeconds(config.getMaxRetryDelayInSeconds(),
+                DEFAULT_MAX_RETRY_DELAY_IN_SECONDS, "maxRetryDelayInSeconds"));
         RetryPolicyBuilder<String> policyBuilder = RetryPolicy.<String>builder()
                 .handle(IOException.class);
         // withBackoff insists on delay < maxDelay, so a configuration that leaves no room to back
@@ -72,13 +83,36 @@ public class TikaService implements Runnable {
         retryPolicy = (maxDelay.compareTo(delay) > 0
                 ? policyBuilder.withBackoff(delay, maxDelay)
                 : policyBuilder.withDelay(delay)).build();
+        if (config.getMaxTikaAttempts() < 1) {
+            // 0 reads like "no limit" and would mean the opposite: the queue subtracts documents
+            // whose attempts have reached the limit, so the first failure would write a document
+            // off for good.
+            log.warn("cinnamonTikaConfig.maxTikaAttempts is {}, which would give up on a document"
+                            + " after its first failure - using the default of {} instead.",
+                    config.getMaxTikaAttempts(), DEFAULT_MAX_TIKA_ATTEMPTS);
+            config.setMaxTikaAttempts(DEFAULT_MAX_TIKA_ATTEMPTS);
+        }
     }
 
+    /**
+     * Failsafe rejects a delay of zero or less with an IllegalArgumentException that names neither
+     * the setting nor the configuration file, and it would be thrown out of server startup. A
+     * configuration that asks for an impossible delay is reported and replaced by the default
+     * instead - the same reasoning as the constant-delay fallback above.
+     */
+    private static int positiveSeconds(int configured, int fallback, String settingName) {
+        if (configured > 0) {
+            return configured;
+        }
+        log.warn("cinnamonTikaConfig.{} is {}, which is not a usable delay - using the default of {} seconds.",
+                settingName, configured, fallback);
+        return fallback;
+    }
 
     private Long getTikaMetasetTypeId() {
         if (tikaMetasetTypeId == null) {
             try (SqlSession sqlSession = CinnamonServer.getSqlSession()) {
-                Optional<MetasetType> tikaMetasetType = new MetasetTypeDao(sqlSession).list().stream().filter(metasetType -> metasetType.getName().equals(TIKA_METASET_NAME)).findFirst();
+                Optional<MetasetType> tikaMetasetType = new MetasetTypeDao(sqlSession).getMetasetTypeByName(TIKA_METASET_NAME);
                 if (tikaMetasetType.isPresent()) {
                     tikaMetasetTypeId = tikaMetasetType.get().getId();
                     log.info("Found tika metaset: {}", tikaMetasetTypeId);
@@ -201,9 +235,8 @@ public class TikaService implements Runnable {
                 recordFailure(osd, "content is unavailable at " + osd.getContentPath());
                 return false;
             }
-            try (InputStream contentStream = contentProvider.getContentStream(osd)) {
-                return convertContentToTikaMetaset(osd, contentStream, format);
-            }
+            // The stream is opened per attempt rather than once, see parseWithTika.
+            return convertContentToTikaMetaset(osd, () -> contentProvider.getContentStream(osd), format);
         }
         catch (TikaFailedException e) {
             log.error("Tika did not return metadata for OSD {}: {}", osd.getId(), e.getMessage());
@@ -309,11 +342,30 @@ public class TikaService implements Runnable {
         return config.isUseTika();
     }
 
-    public String parseWithTika(InputStream contentStream, Long contentLength, Format format, Long osdId) {
-        // if the content comes from the file system anyway, this is some overhead.
-        // if (some day) it comes from an API, the retry mechanism is easier when using a file
-        // instead of an inputStream that may have been closed / cannot be reset().
-        return Failsafe.with(retryPolicy).get(() -> parseData(contentStream, contentLength, format, osdId));
+    /**
+     * Ask Tika, retrying a connection that failed - with a stream of its own for every attempt.
+     * <p>
+     * That is the point of taking a source rather than a stream: an upload that fails halfway
+     * leaves the stream at or past the position it reached, and a retry sending the rest of it
+     * under the original Content-Length would be a truncated document. Tika answering 200 to that
+     * is the damaging case, since metadata extracted from half a file would be stored as this
+     * object's tika metaset and the object would never be offered again.
+     */
+    public String parseWithTika(ContentStreamSource contentSource, Long contentLength, Format format, Long osdId) {
+        return Failsafe.with(retryPolicy).get(() -> {
+            try (InputStream contentStream = contentSource.open()) {
+                return parseData(contentStream, contentLength, format, osdId);
+            }
+        });
+    }
+
+    /**
+     * Opens the content of one object, once per attempt. The content provider is the only thing
+     * that knows how, and it can be asked again - which an InputStream cannot.
+     */
+    @FunctionalInterface
+    public interface ContentStreamSource {
+        InputStream open() throws IOException;
     }
 
     /**
@@ -326,7 +378,7 @@ public class TikaService implements Runnable {
      *
      * @return true if a metaset was stored, false if this object is not a candidate for extraction
      */
-    public boolean convertContentToTikaMetaset(ObjectSystemData osd, InputStream contentStream, Format format) throws
+    public boolean convertContentToTikaMetaset(ObjectSystemData osd, ContentStreamSource contentSource, Format format) throws
             IOException {
         if (!isEnabled() || format.getIndexMode() != IndexMode.TIKA || osd.getContentSize() <= 0) {
             // The queue selects on exactly these properties, so for TikaService itself this is
@@ -336,7 +388,7 @@ public class TikaService implements Runnable {
         }
         Long metasetTypeId = getTikaMetasetTypeId();
         log.debug("Parse OSD #{} with Tika", osd.getId());
-        String tikaMetadata = parseWithTika(contentStream, osd.getContentSize(), format, osd.getId());
+        String tikaMetadata = parseWithTika(contentSource, osd.getContentSize(), format, osd.getId());
         tikaMetadata = tikaMetadata.replace(" xmlns=\"http://www.w3.org/1999/xhtml\"", "");
         if (config.isRemoveNewXmlVersionHeader() && tikaMetadata.startsWith("<?xml version=\"1.1\"")) {
             tikaMetadata = tikaMetadata.replaceFirst("version=\"1.1\"", "version=\"1.0\"");
