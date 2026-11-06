@@ -5,24 +5,19 @@
 
 <mapper namespace="com.dewarim.cinnamon.model.Acl">
 
-    <resultMap id="aclMap" type="com.dewarim.cinnamon.model.Acl">
-        <id property="id" column="id"/>
-        <result property="name" column="name"/>
-    </resultMap>
-
-    <select id="getAclByName" parameterType="String" resultMap="aclMap">
+    <select id="getAclByName" parameterType="String" resultType="com.dewarim.cinnamon.model.Acl">
         SELECT *
         FROM acls
         WHERE name = #{name}
     </select>
 
-    <select id="getAclById" parameterType="long" resultMap="aclMap">
+    <select id="getAclById" parameterType="long" resultType="com.dewarim.cinnamon.model.Acl">
         SELECT *
         FROM acls
         WHERE id = #{id}
     </select>
 
-    <select id="getAllById" parameterType="list" resultMap="aclMap">
+    <select id="getAllById" parameterType="list" resultType="com.dewarim.cinnamon.model.Acl">
         SELECT *
         FROM acls
         WHERE id in
@@ -55,12 +50,12 @@
         </foreach>
     </delete>
 
-    <select id="list" resultMap="aclMap">
+    <select id="list" resultType="com.dewarim.cinnamon.model.Acl">
         SELECT *
         FROM acls
     </select>
 
-    <select id="getUserAcls" resultMap="aclMap" parameterType="collection">
+    <select id="getUserAcls" resultType="com.dewarim.cinnamon.model.Acl" parameterType="collection">
         SELECT a.* FROM acls a join acl_groups ae on a.id = ae.acl_id WHERE ae.group_id IN
         <foreach item="item" index="index" collection="collection"
                  open="(" separator="," close=")">

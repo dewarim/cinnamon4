@@ -2825,6 +2825,7 @@ Provides information on the status of the Lucene search index
 <indexInfoRequest>
   <countDocuments>true</countDocuments>
   <listFailedIndexJobs>false</listFailedIndexJobs>
+  <listFailedTikaExtractions>false</listFailedTikaExtractions>
 </indexInfoRequest>
 
 ```
@@ -2847,6 +2848,15 @@ Provides information on the status of the Lucene search index
     </failedIndexJobs>
   </failedIndexJobs>
   <jobCount>41</jobCount>
+  <failedTikaExtractionCount>1</failedTikaExtractionCount>
+  <failedTikaExtractions>
+    <failedTikaExtractions>
+      <osdId>143</osdId>
+      <attempts>3</attempts>
+      <lastAttempt>2022-08-10T03:21:00</lastAttempt>
+      <lastError>Tika answered with HTTP status 422</lastError>
+    </failedTikaExtractions>
+  </failedTikaExtractions>
   <changeTriggerResponses/>
 </indexInfoResponse>
 
@@ -2898,6 +2908,7 @@ Rebuild the Lucene search index in parts or completely. When reindexing large nu
 <reindexResponse>
   <documentsToIndex>1000</documentsToIndex>
   <foldersToIndex>123</foldersToIndex>
+  <tikaMetasetsDeleted>1000</tikaMetasetsDeleted>
   <changeTriggerResponses/>
 </reindexResponse>
 

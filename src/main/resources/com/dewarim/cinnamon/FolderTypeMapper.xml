@@ -5,24 +5,19 @@
 
 <mapper namespace="com.dewarim.cinnamon.model.FolderType">
 
-    <resultMap id="folderTypeMap" type="com.dewarim.cinnamon.model.FolderType">
-        <id property="id" column="id"/>
-        <result property="name" column="name"/>
-    </resultMap>
-
-    <select id="list" parameterType="map" resultMap="folderTypeMap">
-        SELECT *
+    <select id="list" parameterType="map" resultType="com.dewarim.cinnamon.model.FolderType">
+        SELECT id, name
         FROM folder_types
     </select>
 
-    <select id="getFolderTypeById" parameterType="Long" resultMap="folderTypeMap">
-        SELECT *
+    <select id="getFolderTypeById" parameterType="Long" resultType="com.dewarim.cinnamon.model.FolderType">
+        SELECT id, name
         FROM folder_types
         WHERE id = #{id}
     </select>
 
-    <select id="getFolderTypeByName" parameterType="String" resultMap="folderTypeMap">
-        SELECT *
+    <select id="getFolderTypeByName" parameterType="String" resultType="com.dewarim.cinnamon.model.FolderType">
+        SELECT id, name
         FROM folder_types
         WHERE name = #{name}
     </select>
@@ -50,8 +45,8 @@
         </foreach>
     </delete>
 
-    <select id="getAllById" parameterType="list" resultMap="folderTypeMap">
-        SELECT *
+    <select id="getAllById" parameterType="list" resultType="com.dewarim.cinnamon.model.FolderType">
+        SELECT id, name
         FROM folder_types
         WHERE id in
         <foreach item="item" index="index" collection="list"

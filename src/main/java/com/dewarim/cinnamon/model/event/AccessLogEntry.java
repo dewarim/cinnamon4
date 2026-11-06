@@ -34,6 +34,14 @@ public class AccessLogEntry {
     private String    url;
     private Long      userId;
 
+    /**
+     * For MyBatis, which has no other way to create the entries the list statement reads: there is
+     * no resultMap declaring constructor arguments, so it needs a no-argument constructor and the
+     * setters below.
+     */
+    public AccessLogEntry() {
+    }
+
     public AccessLogEntry(CinnamonRequest cinnamonRequest, CinnamonResponse cinnamonResponse, String errorWrapper, ErrorCode errorCode, String message, Long userId) throws IOException {
         url = cinnamonRequest.getRequest().getRequestURI();
         if(unloggedPaths.contains(url)){

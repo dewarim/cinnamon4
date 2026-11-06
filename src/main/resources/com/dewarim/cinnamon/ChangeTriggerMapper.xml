@@ -5,26 +5,12 @@
 
 <mapper namespace="com.dewarim.cinnamon.model.ChangeTrigger">
 
-    <resultMap id="changeTriggerMap" type="com.dewarim.cinnamon.model.ChangeTrigger">
-        <id property="id" column="id"/>
-        <result property="name" column="name"/>
-        <result property="active" column="active"/>
-        <result property="ranking" column="ranking"/>
-        <result property="preTrigger" column="pre_trigger"/>
-        <result property="postTrigger" column="post_trigger"/>
-        <result property="copyFileContent" column="copy_file_content"/>
-        <result property="config" column="config"/>
-        <result property="controller" column="controller"/>
-        <result property="triggerType" column="trigger_type"/>
-        <result property="postCommitTrigger" column="post_commit_trigger"/>
-    </resultMap>
-
-    <select id="list" resultMap="changeTriggerMap">
+    <select id="list" resultType="com.dewarim.cinnamon.model.ChangeTrigger">
         SELECT *
         FROM change_triggers
     </select>
 
-    <select id="getChangeTriggerById" parameterType="Long" resultMap="changeTriggerMap">
+    <select id="getChangeTriggerById" parameterType="Long" resultType="com.dewarim.cinnamon.model.ChangeTrigger">
         SELECT *
         FROM change_triggers
         WHERE id = #{id}
@@ -67,7 +53,7 @@
         #{copyFileContent}, #{config}, #{controller}, #{triggerType}, #{postCommitTrigger} )
     </insert>
 
-    <select id="getAllById" parameterType="list" resultMap="changeTriggerMap">
+    <select id="getAllById" parameterType="list" resultType="com.dewarim.cinnamon.model.ChangeTrigger">
         SELECT *
         FROM change_triggers
         WHERE id in

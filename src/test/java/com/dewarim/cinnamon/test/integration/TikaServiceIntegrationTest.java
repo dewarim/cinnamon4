@@ -1,11 +1,14 @@
 package com.dewarim.cinnamon.test.integration;
 
 
+import com.dewarim.cinnamon.application.exception.TikaFailedException;
 import com.dewarim.cinnamon.application.service.TikaService;
 import com.dewarim.cinnamon.configuration.CinnamonTikaConfig;
 import com.dewarim.cinnamon.model.Format;
 import com.dewarim.cinnamon.model.IndexMode;
 import com.dewarim.cinnamon.provider.ContentProviderService;
+import com.sun.net.httpserver.HttpServer;
+import dev.failsafe.FailsafeException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Disabled;
@@ -14,8 +17,12 @@ import org.junit.jupiter.api.Test;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TikaServiceIntegrationTest {
@@ -60,6 +67,61 @@ public class TikaServiceIntegrationTest {
         }
         assertTrue(bunData.contains("delicious cinnamon bun"));
         assertTrue(bunData.startsWith("<?xml version=\"1.1\""));
+    }
+
+    /**
+     * A Tika server that answers with an error must not produce metaset content. A stored
+     * tikaFailedToParse document would look like a successful extraction to
+     * getOsdsMissingTikaMetaset, and the OSD would never be offered again - so a Tika server that
+     * returns 404 after an upgrade, or a wrong baseUrl, would silently and permanently write off
+     * every document it was given.
+     */
+    @Test
+    public void tikaErrorResponseMustNotBecomeMetasetContent() throws IOException {
+        HttpServer brokenTika = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        brokenTika.createContext("/tika", exchange -> {
+            // read the upload, or the client sees a reset connection rather than our status:
+            exchange.getRequestBody().readAllBytes();
+            exchange.sendResponseHeaders(503, -1);
+            exchange.close();
+        });
+        brokenTika.start();
+        try {
+            CinnamonTikaConfig config = new CinnamonTikaConfig(
+                    "http://127.0.0.1:" + brokenTika.getAddress().getPort(), true);
+            TikaService tikaService = new TikaService(config, contentProviderService);
+            try (FileInputStream bunnyStream = new FileInputStream(bun)) {
+                TikaFailedException exception = assertThrows(TikaFailedException.class,
+                        () -> tikaService.parseData(bunnyStream, bun.length(), imageFormat, osdId));
+                assertTrue(exception.getMessage().contains("503"), exception.getMessage());
+            }
+        }
+        finally {
+            brokenTika.stop(0);
+        }
+    }
+
+    /**
+     * A Tika server that cannot be reached at all must not look like a document failure: TikaService
+     * counts document failures against maxTikaAttempts and gives up at the limit, so counting an
+     * outage would write off every pending document while Tika was down.
+     */
+    @Test
+    public void unreachableTikaIsNotADocumentFailure() throws IOException {
+        int closedPort;
+        try (ServerSocket socket = new ServerSocket(0)) {
+            closedPort = socket.getLocalPort();
+        }
+        CinnamonTikaConfig config = new CinnamonTikaConfig("http://127.0.0.1:" + closedPort, true);
+        config.setRetryDelayInSeconds(1);
+        config.setMaxRetryDelayInSeconds(1);
+        TikaService tikaService = new TikaService(config, contentProviderService);
+        try (FileInputStream bunnyStream = new FileInputStream(bun)) {
+            FailsafeException exception = assertThrows(FailsafeException.class,
+                    () -> tikaService.parseWithTika(bunnyStream, bun.length(), imageFormat, osdId));
+            // this is the exception TikaService' run loop recognizes as "retry, do not count":
+            assertInstanceOf(IOException.class, exception.getCause());
+        }
     }
 
     @Test

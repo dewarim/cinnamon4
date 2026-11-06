@@ -117,7 +117,7 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
         return Optional.of(objectsById.getFirst());
     }
 
-    public void updateOsd(ObjectSystemData osd, boolean updateModifier, boolean updateTikaMetaset) {
+    public void updateOsd(ObjectSystemData osd, boolean updateModifier) {
         SqlSession sqlSession = getSqlSession();
         if (updateModifier) {
             UserAccount currentUser = RequestScope.getCurrentUser();
@@ -128,10 +128,6 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
         }
         sqlSession.update("com.dewarim.cinnamon.model.ObjectSystemData.updateOsd", osd);
         new IndexJobDao(sqlSession).insertIndexJob(new IndexJob(IndexJobType.OSD, osd.getId(), IndexJobAction.UPDATE), true);
-    }
-
-    public void updateOsd(ObjectSystemData osd, boolean updateModifier) {
-        updateOsd(osd, updateModifier, false);
     }
 
     public ObjectSystemData saveOsd(ObjectSystemData osd) {
@@ -259,9 +255,16 @@ public class OsdDao implements CrudDao<ObjectSystemData> {
         return session.selectList("com.dewarim.cinnamon.model.ObjectSystemData.rootIdForLatestHeadLinks", osdIdsToToDelete);
     }
 
-    public List<ObjectSystemData> getOsdsMissingTikaMetaset(Long tikaMetasetTypeId, int limit) {
+    /**
+     * The OSDs that TikaService should extract metadata from: content-bearing objects of a format
+     * that is indexed by Tika, without a Tika metaset, and not given up on - an OSD whose
+     * extraction has failed maxAttempts times is left out, or a document Tika cannot handle would
+     * be retried on every pass forever (see TikaFailureDao).
+     */
+    public List<ObjectSystemData> getOsdsMissingTikaMetaset(Long tikaMetasetTypeId, int limit, int maxAttempts) {
         SqlSession session = getSqlSession();
-        Map<String,Object> params = Map.of("tikaMetasetTypeId", tikaMetasetTypeId, "limit", limit);
+        Map<String,Object> params = Map.of("tikaMetasetTypeId", tikaMetasetTypeId, "limit", limit,
+                "maxAttempts", maxAttempts);
         return session.selectList("com.dewarim.cinnamon.model.ObjectSystemData.getOsdsMissingTikaMetaset", params);
     }
 

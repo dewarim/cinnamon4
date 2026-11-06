@@ -5,11 +5,10 @@
 
 <mapper namespace="com.dewarim.cinnamon.model.OsdMeta">
 
+    <!-- only the columns mapUnderscoreToCamelCase cannot derive -->
     <resultMap id="osdMetaMap" type="com.dewarim.cinnamon.model.Meta">
         <id property="id" column="id"/>
         <result property="objectId" column="osd_id"/>
-        <result property="typeId" column="type_id"/>
-        <result property="content" column="content"/>
     </resultMap>
 
     <select id="listByOsd" parameterType="long" resultMap="osdMetaMap">
@@ -89,6 +88,27 @@
                  open="(" separator="," close=")">
             #{item}
         </foreach>
+    </delete>
+
+    <!--
+      Used to make Tika extract a document again: an OSD without a tika metaset is picked up by
+      TikaService, so deleting the metaset is what schedules the re-extraction (see IndexServlet).
+    -->
+    <delete id="deleteByTypeIdAndOsdIds" parameterType="map">
+        DELETE
+        FROM osd_meta
+        WHERE type_id = #{typeId}
+        AND osd_id IN
+        <foreach item="item" index="index" collection="osdIds"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <delete id="deleteByTypeId" parameterType="map">
+        DELETE
+        FROM osd_meta
+        WHERE type_id = #{typeId}
     </delete>
 
     <select id="getAllById" parameterType="list" resultMap="osdMetaMap">

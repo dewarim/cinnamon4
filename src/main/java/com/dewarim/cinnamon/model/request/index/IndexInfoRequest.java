@@ -6,7 +6,8 @@ import com.fasterxml.jackson.annotation.JsonRootName;
 import java.util.List;
 
 @JsonRootName("indexInfoRequest")
-public record IndexInfoRequest(Boolean countDocuments, boolean listFailedIndexJobs) implements ApiRequest<IndexInfoRequest> {
+public record IndexInfoRequest(Boolean countDocuments, boolean listFailedIndexJobs,
+                               boolean listFailedTikaExtractions) implements ApiRequest<IndexInfoRequest> {
 
     public IndexInfoRequest {
         if (countDocuments == null) {
@@ -16,6 +17,6 @@ public record IndexInfoRequest(Boolean countDocuments, boolean listFailedIndexJo
 
     @Override
     public List<ApiRequest<IndexInfoRequest>> examples() {
-        return List.of(new IndexInfoRequest(true, false));
+        return List.of(new IndexInfoRequest(true, false, false));
     }
 }

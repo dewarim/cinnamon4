@@ -5,29 +5,24 @@
 
 <mapper namespace="com.dewarim.cinnamon.model.Permission">
 
-    <resultMap id="permissionMap" type="com.dewarim.cinnamon.model.Permission">
-        <id property="id" column="id"/>
-        <result property="name" column="name"/>
-    </resultMap>
-
-    <select id="list" resultMap="permissionMap">
+    <select id="list" resultType="com.dewarim.cinnamon.model.Permission">
         SELECT *
         FROM permissions
     </select>
 
-    <select id="getAclGroupPermissionsForAclGroup" parameterType="long" resultMap="permissionMap">
+    <select id="getAclGroupPermissionsForAclGroup" parameterType="long" resultType="com.dewarim.cinnamon.model.Permission">
         SELECT p.*
         FROM permissions p JOIN acl_group_permissions agp on p.id = agp.permission_id
         WHERE agp.acl_group_id=#{aclGroupId}
     </select>
 
-    <select id="getPermissionByName" resultMap="permissionMap">
+    <select id="getPermissionByName" resultType="com.dewarim.cinnamon.model.Permission">
         SELECT *
         FROM permissions
         WHERE name = #{name}
     </select>
 
-    <select id="getUserPermissionsForAclGroups" resultMap="permissionMap">
+    <select id="getUserPermissionsForAclGroups" resultType="com.dewarim.cinnamon.model.Permission">
         SELECT p.*
         FROM permissions p
         JOIN acl_group_permissions a on p.id = a.permission_id

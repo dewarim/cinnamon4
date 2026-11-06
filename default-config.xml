@@ -74,6 +74,7 @@
     <maxRetryDelayInSeconds>10</maxRetryDelayInSeconds>
     <tikaBatchSize>8</tikaBatchSize>
     <tikaPauseInMillis>1000</tikaPauseInMillis>
+    <maxTikaAttempts>3</maxTikaAttempts>
     <removeNewXmlVersionHeader>false</removeNewXmlVersionHeader>
   </cinnamonTikaConfig>
   <loginProviders/>

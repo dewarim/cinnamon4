@@ -1,6 +1,12 @@
 Changes v1.16.1:
 
-No database changes.
+- database change: four columns are renamed - deletions.is_deleted to deleted, users.pwd to password,
+  objects.state_id to lifecycle_state_id and lifecycle_states.copy_state_id to
+  lifecycle_state_for_copy_id. A new tika_failures table records the objects whose Tika extraction failed,
+  the unused index_jobs.update_tika_metaset column is dropped, and access_log.created becomes a plain
+  timestamp. A repository that has been running with Tika also needs a one-time cleanup of the metasets the
+  old error handling left behind - see docs/migration.2026.adoc, section v1.16.1, for the DDL and the
+  queries. No API client sees any of this, but SQL you maintain yourself refers to the old column names.
 
 - changed: /cinnamon/info reports the git revision the server was built from instead of a build counter, and
   gained a buildTime element next to it. The build element is still there and still a string, but its content
@@ -60,3 +66,84 @@ No database changes.
   JVM's zone and drops the offset. That matches the rest of the model and the field is unused, but
   OffsetDateTime would be the faithful mapping if it ever gets read.
 
+
+- changed: column names are mapped by convention rather than declared one by one. MyBatis'
+  mapUnderscoreToCamelCase setting is enabled, so content_hash reaches contentHash without a line saying so,
+  and the mappers went from 35 resultMap declarations holding 169 mapping lines to 4 holding 7. Two of the
+  maps that went existed only because a statement gave a computed column a name of its own: those now alias
+  the column after the property ("as path" in getFolderPaths, "as head_id" in rootAndLatestHead), one held
+  nothing but the primary key of a column already called id, and four more were retired by renaming the
+  column in the database (see the first entry). The four that remain are the exceptions that cannot be
+  renamed away: osd_id and folder_id to objectId, where one Meta class serves two tables and links carries
+  both columns on purpose, and is_unique to unique, where the column cannot take the property's name
+  because unique is a reserved word. Nothing on the wire
+  changed and no query changed its result: a resultMap always took precedence over auto-mapping, so enabling
+  the setting on its own was a no-op, and every deleted declaration listed exactly what the convention now
+  derives. Note that MyBatis matches column names case-insensitively, which is why formats.contenttype
+  reaches contentType and index_items.fieldname reaches fieldName with no declaration at all.
+
+- added: the test run fails when a statement selects a column that the result type has no property for,
+  instead of dropping it silently. That is MyBatis' autoMappingUnknownColumnBehavior, set to FAILING through
+  a system property that surefire passes and DbSessionFactory reads. Production leaves it at NONE on purpose:
+  over a hundred statements select every column of their table, so FAILING there would turn a migration that
+  adds a column into failing reads until the model caught up. Under NONE the behaviour is exactly what it has
+  always been, which is what makes the strictness safe to confine to the build.
+
+- fixed: getGroupsOfUserById selected every column of both joined tables, and groups and group_users each
+  have an id column, so the result set carried two columns of that name and which one filled Group.id
+  depended on the order the driver reported them in. It selects only the groups columns now. Found by the
+  check above; the statement is exercised by no test, so this was caught by reading the mappers against the
+  schema rather than by a failure.
+
+- fixed: statements over four tables no longer select columns their model cannot hold. The sessions table
+  carries username and ui_language_id, and folder_types and object_types each
+  carry a config column that no mapper or model mentions; all were being fetched and thrown away. Those
+  statements list their columns explicitly instead. No behaviour change - the values were already discarded -
+  but selecting them made the tables and the models look like they agreed when they do not.
+
+- changed: AccessLogMapper lost a resultMap that no statement referenced. Its one select already named a
+  result type, so the declaration had been dead since it was written. The access log uses a second MyBatis
+  session factory with its own configuration file, which got the same two settings as the main one so the two
+  cannot drift apart.
+
+- fixed: a Tika server that answers with an HTTP error no longer makes the document unindexable for good.
+  The error was turned into metaset content ("tikaFailedToParse"), and since the Tika service looks for
+  objects that have no tika metaset, that counted as a finished extraction and the document was never
+  offered again. A Tika server that starts rejecting a content type after an upgrade, or a wrong baseUrl,
+  therefore wrote off everything it was handed, silently and permanently: nothing reported it, and no API
+  call could undo it. Such a rejection is now an error rather than a result, and the document stays in the
+  queue. Note that a server which cannot be reached at all is treated differently and always was: that says
+  nothing about the document, so it is retried indefinitely and never counted against it.
+
+- added: the objects whose Tika extraction failed are recorded in a new tika_failures table with their
+  attempt count and the last error, and reported by index/info - the new listFailedTikaExtractions flag
+  returns the list, and the count is always included. Without the record there was no way to find out that a
+  document has no Tika metadata, because the document itself is indexed and searchable. A document is given
+  up on after maxTikaAttempts tries (new in cinnamonTikaConfig, default 3) instead of being retried on every
+  pass of the service forever, which is what used to happen to an object whose content file was missing.
+
+- fixed: reindex honours updateTikaMetaset again. The flag has been part of the request, validated and
+  documented, since the Tika service became asynchronous in v1.6.8, and has been ignored for just as long -
+  there was no way left to ask for a fresh extraction. It now deletes the tika metasets of the objects named
+  (all of them, for a full reindex) and forgets their recorded failures, which is what puts the documents
+  back in the extraction queue; the response says how many metasets were deleted. This is also the recovery
+  path after a Tika server was broken or a content store was unmounted.
+
+- fixed: replacing the content of an object with setContent deletes its tika metaset, so the metadata is
+  extracted from the new file. Without that the object kept the metadata of the file it no longer holds -
+  indexed, searchable and wrong - because nothing revisits an object that already has a tika metaset. The
+  other paths that replace content already did this (copyToExisting) or create a new object that has no
+  metaset to begin with (create, version, copy).
+
+- changed: removed what was left of the synchronous Tika path, all of it unreachable since v1.6.8: the
+  index_jobs.update_tika_metaset column (never written, and no property on IndexJob), the third parameter of
+  OsdDao.updateOsd, which the method body ignored, and the local flag the version endpoint computed to pass
+  to it. The retryDelayInSeconds and maxRetryDelayInSeconds settings of cinnamonTikaConfig are now actually
+  read - the retry policy had the defaults hard-coded - and a configuration that leaves no room to back off
+  retries at a constant delay instead of failing the server at startup.
+
+- fixed: the access log can be read back. Its created column was a timestamptz, which the driver refuses to
+  hand to the LocalDateTime property it belongs to, and the entry class had no constructor MyBatis could use
+  - so AccessLogDao.list threw on both counts. Nothing in the server reads the access log, which is why
+  neither showed up: a statement has to return a row before either can fail. The column is a plain timestamp
+  now, like every other timestamp the models read, and the read path has a test.

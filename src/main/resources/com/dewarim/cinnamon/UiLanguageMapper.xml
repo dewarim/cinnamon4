@@ -5,30 +5,24 @@
 
 <mapper namespace="com.dewarim.cinnamon.model.UiLanguage">
 
-    <resultMap id="uiLanguageMap" type="com.dewarim.cinnamon.model.UiLanguage">
-        <id property="id" column="id"/>
-        <result property="isoCode" column="iso_code"/>
-    </resultMap>
-
-    <select id="list" parameterType="map" resultMap="uiLanguageMap">
+    <select id="list" parameterType="map" resultType="com.dewarim.cinnamon.model.UiLanguage">
         SELECT *
         FROM ui_languages
     </select>
-    
-    <select id="getUiLanguageById" parameterType="Long" resultMap="uiLanguageMap">
+
+    <select id="getUiLanguageById" parameterType="Long" resultType="com.dewarim.cinnamon.model.UiLanguage">
         SELECT *
         FROM ui_languages
         WHERE id = #{id}
     </select>
 
-
-    <select id="getLanguageByIsoCode" parameterType="String" resultMap="uiLanguageMap">
+    <select id="getLanguageByIsoCode" parameterType="String" resultType="com.dewarim.cinnamon.model.UiLanguage">
         SELECT *
         FROM ui_languages
         WHERE iso_code = #{isoCode}
     </select>
 
-    <select id="getAllById" parameterType="list" resultMap="uiLanguageMap">
+    <select id="getAllById" parameterType="list" resultType="com.dewarim.cinnamon.model.UiLanguage">
         SELECT *
         FROM ui_languages
         WHERE id in

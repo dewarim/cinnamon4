@@ -12,7 +12,7 @@ CREATE TABLE users
 (
     id                BIGINT PRIMARY KEY,
     name              VARCHAR(255) NOT NULL unique,
-    pwd               VARCHAR(255) NOT NULL,
+    password               VARCHAR(255) NOT NULL,
     login_type        VARCHAR(64)  NOT NULL DEFAULT 'CINNAMON',
     activated         BOOLEAN      NOT NULL DEFAULT TRUE,
     locked            BOOLEAN      NOT NULL DEFAULT FALSE,
@@ -193,7 +193,7 @@ create table lifecycle_states
     life_cycle_id bigint
         constraint fke3bd9877407f648b
             references lifecycles,
-    copy_state_id bigint references lifecycle_states
+    lifecycle_state_for_copy_id bigint references lifecycle_states
 );
 
 alter table lifecycles
@@ -251,7 +251,7 @@ create table objects
     type_id          bigint                              not null
         constraint fk9d13c51426408304
             references object_types,
-    state_id         bigint
+    lifecycle_state_id         bigint
         constraint lifecycle_state
             references lifecycle_states,
     content_changed  boolean       default false         not null,
@@ -521,7 +521,7 @@ create table deletions
 (
     osd_id        bigint       not null unique,
     content_path  varchar(255) not null,
-    is_deleted    boolean default false,
+    deleted    boolean default false,
     delete_failed boolean default false
 );
 
@@ -537,8 +537,19 @@ create table index_jobs
     item_id             bigint       not null,
     failed              int          not null default 0,
     action              varchar(127) not null,
-    update_tika_metaset boolean               default false,
     constraint index_jobs_type_and_id_unique unique (job_type, item_id)
+);
+
+-- tika_failures: one row per OSD whose Tika extraction was rejected, see TikaService.
+drop table if exists tika_failures cascade;
+create table tika_failures
+(
+    osd_id       bigint      not null
+        constraint tika_failures_pkey primary key
+        constraint tika_failures_osd_id_fkey references objects on delete cascade,
+    attempts     int         not null default 1,
+    last_attempt timestamp   not null default current_timestamp,
+    last_error   text        not null
 );
 
 
@@ -582,23 +593,23 @@ create sequence seq_index_event_id;
 -- -----------------------
 
 -- #1
-INSERT INTO users(id, name, pwd, activated, ui_language_id, fullname, change_tracking, activate_triggers)
+INSERT INTO users(id, name, password, activated, ui_language_id, fullname, change_tracking, activate_triggers)
 VALUES (nextval('seq_user_id'), 'admin', '$2a$10$VG9LCf6h/Qwb7Y.pafHkaepdnJNgFZUzzuMV3EcyvLbKnueHQ4IW.', true, 1,
         'The Admin', false, false);
 -- #2
-INSERT INTO users(id, name, pwd, activated, ui_language_id, fullname, activate_triggers)
+INSERT INTO users(id, name, password, activated, ui_language_id, fullname, activate_triggers)
 VALUES (nextval('seq_user_id'), 'doe', '$2a$10$VG9LCf6h/Qwb7Y.pafHkaepdnJNgFZUzzuMV3EcyvLbKnueHQ4IW.', true, 1,
         'Jane Doe', true);
 -- #3
-INSERT INTO users(id, name, pwd, activated, ui_language_id, fullname, activate_triggers)
+INSERT INTO users(id, name, password, activated, ui_language_id, fullname, activate_triggers)
 VALUES (nextval('seq_user_id'), 'deactivated user', '$2a$10$VG9LCf6h/Qwb7Y.pafHkaepdnJNgFZUzzuMV3EcyvLbKnueHQ4IW.',
         false, 1, 'inactive', true);
 -- #4
-INSERT INTO users(id, name, pwd, activated, locked, ui_language_id, fullname, activate_triggers)
+INSERT INTO users(id, name, password, activated, locked, ui_language_id, fullname, activate_triggers)
 VALUES (nextval('seq_user_id'), 'locked user', '$2a$10$VG9LCf6h/Qwb7Y.pafHkaepdnJNgFZUzzuMV3EcyvLbKnueHQ4IW.', true,
         true, 1, 'locked', true);
 -- #5 - LDAP user
-INSERT INTO users(id, name, pwd, activated, locked, ui_language_id, fullname, activate_triggers, login_type)
+INSERT INTO users(id, name, password, activated, locked, ui_language_id, fullname, activate_triggers, login_type)
 VALUES (nextval('seq_user_id'), 'ldap', '$2a$10$VG9LCf6h/Qwb7Y.pafHkaepdnJNgFZUzzuMV3EcyvLbKnueHQ4IW.', true, true, 1,
         'ldap-user', true, 'LDAP');
 
@@ -833,7 +844,7 @@ insert into lifecycles(id, name, default_state_id)
 VALUES (nextval('seq_lifecycle_id'), 'fail.lc', null);
 
 -- #1 lifecycle_state of lc #1
-insert into lifecycle_states (id, name, config, state_class, life_cycle_id, copy_state_id)
+insert into lifecycle_states (id, name, config, state_class, life_cycle_id, lifecycle_state_for_copy_id)
 values (nextval('seq_lifecycle_state_id'), 'newRenderTask', '<config>' ||
                                                             '<properties><property><name>render.server.host</name><value>localhost</value></property></properties>' ||
                                                             '<nextStates/>' ||
@@ -844,7 +855,7 @@ set default_state_id=1
 where id = 1;
 
 -- #2 first lifecycle_state of lc 3 with ChangeAclState
-insert into lifecycle_states(id, name, config, state_class, life_cycle_id, copy_state_id)
+insert into lifecycle_states(id, name, config, state_class, life_cycle_id, lifecycle_state_for_copy_id)
 values (nextval('seq_lifecycle_state_id'), 'authoring', '<config>' ||
                                                         '<properties><property><name>aclName</name><value>creation.acl</value></property></properties>' ||
                                                         '<nextStates><name>published</name></nextStates>' ||
@@ -855,7 +866,7 @@ set default_state_id=1
 where id = 3;
 
 -- #3 second lifecycle_state of lc 3 with ChangeAclState
-insert into lifecycle_states(id, name, config, state_class, life_cycle_id, copy_state_id)
+insert into lifecycle_states(id, name, config, state_class, life_cycle_id, lifecycle_state_for_copy_id)
 values (nextval('seq_lifecycle_state_id'), 'published', '<config>' ||
                                                         '<properties><property><name>aclName</name><value>_default_acl</value></property></properties>' ||
                                                         '<nextStates><name>authoring</name></nextStates>' ||
@@ -863,7 +874,7 @@ values (nextval('seq_lifecycle_state_id'), 'published', '<config>' ||
         currval('seq_lifecycle_state_id'));
 
 -- #4 failState for lc 4
-insert into lifecycle_states(id, name, config, state_class, life_cycle_id, copy_state_id)
+insert into lifecycle_states(id, name, config, state_class, life_cycle_id, lifecycle_state_for_copy_id)
 values (nextval('seq_lifecycle_state_id'), 'failed', '<config></config>', 'com.dewarim.cinnamon.lifecycle.FailState', 4,
         currval('seq_lifecycle_state_id'));
 
@@ -917,7 +928,7 @@ create table access_log
     response text,
     error_code    varchar(255),
     error_message text,
-    created       timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created       timestamp   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     url      text,
     user_id  BIGINT
         constraint fk_access_log_user_id references users

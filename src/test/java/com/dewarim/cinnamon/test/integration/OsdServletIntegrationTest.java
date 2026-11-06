@@ -5,6 +5,7 @@ import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.Constants;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.application.CinnamonServer;
+import com.dewarim.cinnamon.configuration.CinnamonTikaConfig;
 import com.dewarim.cinnamon.client.CinnamonClientException;
 import com.dewarim.cinnamon.client.StandardResponse;
 import com.dewarim.cinnamon.lifecycle.NopState;
@@ -50,6 +51,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.dewarim.cinnamon.DefaultPermission.*;
+import static com.dewarim.cinnamon.api.Constants.TIKA_METASET_NAME;
 import static com.dewarim.cinnamon.ErrorCode.*;
 import static com.dewarim.cinnamon.api.Constants.*;
 import static com.dewarim.cinnamon.model.request.osd.VersionPredicate.*;
@@ -532,6 +534,34 @@ public class OsdServletIntegrationTest extends CinnamonIntegrationTest {
         assertFalse(firstContent.exists(), "previous content file should have been deleted: " + firstContent);
     }
 
+
+    /**
+     * Replacing the content of an OSD invalidates its Tika metadata: TikaService only ever offers
+     * OSDs that have no tika metaset, so leaving the old one in place would keep the metadata of the
+     * replaced file forever - indexed, searchable and wrong.
+     */
+    @Test
+    public void setContentDeletesTheStaleTikaMetaset() throws IOException {
+        MetasetType tikaType = TestObjectHolder.getMetasetType(TIKA_METASET_NAME);
+        long        osdId    = new TestObjectHolder(client, userId).createOsd("setContentDeletesTheStaleTikaMetaset").osd.getId();
+        createTestContentOnOsd(osdId, false);
+        client.createOsdMeta(osdId, "<tika>metadata of the first file</tika>", tikaType.getId());
+        assertEquals(1, client.getOsdMetas(osdId, List.of(tikaType.getId())).size());
+
+        CinnamonTikaConfig tikaConfig   = CinnamonServer.config.getCinnamonTikaConfig();
+        boolean            originalFlag = tikaConfig.isUseTika();
+        tikaConfig.setUseTika(true);
+        try {
+            client.lockOsd(osdId);
+            client.setContentOnLockedOsd(osdId, 1L, new File("README.adoc"));
+            client.unlockOsd(osdId);
+        }
+        finally {
+            tikaConfig.setUseTika(originalFlag);
+        }
+        assertTrue(client.getOsdMetas(osdId, List.of(tikaType.getId())).isEmpty(),
+                "the tika metaset described the content that was just replaced and should be gone");
+    }
 
     @Test
     public void setContentWithWrongContentType() throws IOException {

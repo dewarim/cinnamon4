@@ -5,13 +5,7 @@
 
 <mapper namespace="com.dewarim.cinnamon.model.AclGroupPermission">
 
-    <resultMap id="aepMap" type="com.dewarim.cinnamon.model.AclGroupPermission">
-        <id property="id" column="id"/>
-        <result property="aclGroupId" column="acl_group_id"/>
-        <result property="permissionId" column="permission_id"/>
-    </resultMap>
-
-    <select id="getAclGroupPermissionForAclGroupsAndPermission" parameterType="map" resultMap="aepMap">
+    <select id="getAclGroupPermissionForAclGroupsAndPermission" parameterType="map" resultType="com.dewarim.cinnamon.model.AclGroupPermission">
         SELECT *
         FROM acl_group_permissions
         WHERE acl_group_id IN
@@ -41,7 +35,7 @@
         )
     </select>
 
-    <select id="listByAclGroupIds" parameterType="list" resultMap="aepMap">
+    <select id="listByAclGroupIds" parameterType="list" resultType="com.dewarim.cinnamon.model.AclGroupPermission">
         SELECT *
         FROM acl_group_permissions
         WHERE acl_group_id IN

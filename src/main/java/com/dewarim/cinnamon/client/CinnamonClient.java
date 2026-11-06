@@ -1323,7 +1323,12 @@ public class CinnamonClient {
     }
 
     public IndexInfoResponse getIndexInfo(boolean countDocuments, boolean listFailedIndexJobs) throws IOException {
-        var              request  = new IndexInfoRequest(countDocuments, listFailedIndexJobs);
+        return getIndexInfo(countDocuments, listFailedIndexJobs, false);
+    }
+
+    public IndexInfoResponse getIndexInfo(boolean countDocuments, boolean listFailedIndexJobs,
+                                          boolean listFailedTikaExtractions) throws IOException {
+        var              request  = new IndexInfoRequest(countDocuments, listFailedIndexJobs, listFailedTikaExtractions);
         StandardResponse response = sendStandardRequest(INDEX__INFO, request);
         return new SingletonUnwrapper<>(IndexInfoResponse.class).unwrap(response);
     }

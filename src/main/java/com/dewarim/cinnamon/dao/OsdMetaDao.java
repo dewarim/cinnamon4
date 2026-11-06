@@ -83,6 +83,29 @@ public class OsdMetaDao implements CrudDao<Meta>, MetaDao {
         });
     }
 
+    /**
+     * Delete the metasets of one type from the given OSDs, and report how many rows went. Used for
+     * the tika metaset, where deleting it is what makes TikaService extract the document again.
+     */
+    public int deleteByTypeIdAndOsdIds(Long typeId, List<Long> osdIds) {
+        if (osdIds.isEmpty()) {
+            return 0;
+        }
+        SqlSession sqlSession = getSqlSession();
+        return CrudDao.partitionLongList(osdIds).stream()
+                .mapToInt(partition -> sqlSession.delete("com.dewarim.cinnamon.model.OsdMeta.deleteByTypeIdAndOsdIds",
+                        Map.of("typeId", typeId, "osdIds", partition)))
+                .sum();
+    }
+
+    /**
+     * Delete every metaset of one type, in the whole repository.
+     */
+    public int deleteByTypeId(Long typeId) {
+        return getSqlSession().delete("com.dewarim.cinnamon.model.OsdMeta.deleteByTypeId",
+                Map.of("typeId", typeId));
+    }
+
     @Override
     public SqlSession getSqlSession() {
         if (sqlSession == null) {

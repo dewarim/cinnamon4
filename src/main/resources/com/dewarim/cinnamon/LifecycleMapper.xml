@@ -5,18 +5,12 @@
 
 <mapper namespace="com.dewarim.cinnamon.model.Lifecycle">
 
-    <resultMap id="lifecycleMap" type="com.dewarim.cinnamon.model.Lifecycle">
-        <id property="id" column="id"/>
-        <result property="name" column="name"/>
-        <result property="defaultStateId" column="default_state_id"/>
-    </resultMap>
-
-    <select id="list" parameterType="map" resultMap="lifecycleMap">
+    <select id="list" parameterType="map" resultType="com.dewarim.cinnamon.model.Lifecycle">
         SELECT *
         FROM lifecycles
     </select>
-    
-    <select id="getLifecycleById" parameterType="Long" resultMap="lifecycleMap">
+
+    <select id="getLifecycleById" parameterType="Long" resultType="com.dewarim.cinnamon.model.Lifecycle">
         SELECT *
         FROM lifecycles
         WHERE id = #{id}
@@ -46,7 +40,7 @@
         </foreach>
     </delete>
 
-    <select id="getAllById" parameterType="list" resultMap="lifecycleMap">
+    <select id="getAllById" parameterType="list" resultType="com.dewarim.cinnamon.model.Lifecycle">
         SELECT *
         FROM lifecycles
         WHERE id in

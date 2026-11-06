@@ -5,15 +5,7 @@
 
 <mapper namespace="com.dewarim.cinnamon.model.relations.Relation">
 
-    <resultMap id="relationMap" type="com.dewarim.cinnamon.model.relations.Relation">
-        <id property="id" column="id"/>
-        <result property="leftId" column="left_id"/>
-        <result property="rightId" column="right_id"/>
-        <result property="typeId" column="type_id"/>
-        <result property="metadata" column="metadata"/>
-    </resultMap>
-
-    <select id="getProtectedRelations" resultMap="relationMap">
+    <select id="getProtectedRelations" resultType="com.dewarim.cinnamon.model.relations.Relation">
         SELECT
         r.id,
         r.left_id,
@@ -35,7 +27,7 @@
         )
     </select>
 
-    <select id="getRelationsWithCriteria" parameterType="map" resultMap="relationMap">
+    <select id="getRelationsWithCriteria" parameterType="map" resultType="com.dewarim.cinnamon.model.relations.Relation">
         SELECT
         r.id,
         r.left_id,
@@ -71,7 +63,7 @@
 
     </select>
 
-    <select id="getRelationsWithCriteriaOr" parameterType="map" resultMap="relationMap">
+    <select id="getRelationsWithCriteriaOr" parameterType="map" resultType="com.dewarim.cinnamon.model.relations.Relation">
         SELECT
         r.id,
         r.left_id,
@@ -157,7 +149,7 @@
         )
     </delete>
 
-    <select id="getRelationsToCopy" parameterType="long" resultMap="relationMap">
+    <select id="getRelationsToCopy" parameterType="long" resultType="com.dewarim.cinnamon.model.relations.Relation">
         SELECT r.*
         FROM relations r
                  join relation_types rt on r.type_id = rt.id
@@ -165,7 +157,7 @@
            or (r.right_id = #{id} and rt.clone_on_right_copy = true)
     </select>
 
-    <select id="getRelationsToCopyOnVersion" parameterType="long" resultMap="relationMap">
+    <select id="getRelationsToCopyOnVersion" parameterType="long" resultType="com.dewarim.cinnamon.model.relations.Relation">
         SELECT r.*
         FROM relations r
                  join relation_types rt on r.type_id = rt.id
@@ -173,7 +165,7 @@
            or (r.right_id = #{id} and rt.clone_on_right_version = true)
     </select>
 
-    <select id="getAllById" parameterType="list" resultMap="relationMap">
+    <select id="getAllById" parameterType="list" resultType="com.dewarim.cinnamon.model.relations.Relation">
         SELECT *
         FROM relations
         WHERE id in

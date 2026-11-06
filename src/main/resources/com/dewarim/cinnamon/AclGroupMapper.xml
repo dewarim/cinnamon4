@@ -5,13 +5,7 @@
 
 <mapper namespace="com.dewarim.cinnamon.model.AclGroup">
 
-    <resultMap id="aclGroupMap" type="com.dewarim.cinnamon.model.AclGroup">
-        <id property="id" column="id"/>
-        <result property="groupId" column="group_id"/>
-        <result property="aclId" column="acl_id"/>
-    </resultMap>
-
-    <select id="getAclGroupsByGroupIdsAndAcl" parameterType="map" resultMap="aclGroupMap">
+    <select id="getAclGroupsByGroupIdsAndAcl" parameterType="map" resultType="com.dewarim.cinnamon.model.AclGroup">
         SELECT *
         FROM acl_groups WHERE group_id IN
         <foreach item="item" index="index" collection="groupIds"
@@ -21,19 +15,19 @@
         AND acl_id = #{aclId}
     </select>
 
-    <select id="getAclGroupsByAclId" parameterType="long" resultMap="aclGroupMap">
+    <select id="getAclGroupsByAclId" parameterType="long" resultType="com.dewarim.cinnamon.model.AclGroup">
         SELECT *
         FROM acl_groups
         WHERE acl_id = #{aclId}
     </select>
 
-    <select id="getAclGroupsByGroupId" parameterType="long" resultMap="aclGroupMap">
+    <select id="getAclGroupsByGroupId" parameterType="long" resultType="com.dewarim.cinnamon.model.AclGroup">
         SELECT *
         FROM acl_groups
         WHERE group_id = #{groupId}
     </select>
 
-    <select id="getAclGroupByAclAndGroupName" parameterType="map" resultMap="aclGroupMap">
+    <select id="getAclGroupByAclAndGroupName" parameterType="map" resultType="com.dewarim.cinnamon.model.AclGroup">
         SELECT ae.*
         FROM acl_groups ae
                  JOIN groups g on ae.group_id = g.id
@@ -41,7 +35,7 @@
           AND g.name = #{groupName}
     </select>
 
-    <select id="list" resultMap="aclGroupMap">
+    <select id="list" resultType="com.dewarim.cinnamon.model.AclGroup">
         SELECT *
         FROM acl_groups
     </select>
@@ -80,7 +74,7 @@
         </foreach>
     </delete>
 
-    <select id="getAllById" parameterType="list" resultMap="aclGroupMap">
+    <select id="getAllById" parameterType="list" resultType="com.dewarim.cinnamon.model.AclGroup">
         SELECT *
         FROM acl_groups
         WHERE id in

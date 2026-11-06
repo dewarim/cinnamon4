@@ -15,7 +15,7 @@ Maven's output down to the errors and always end in an explicit verdict. Invoke 
 |---|---|---|
 | `maven-compile` | `mvn compile`, prints `0` or just the compiler errors | ~3s |
 | `maven-single-test` | one test method, e.g. `AclServletIntegrationTest listAclsTest` | ~5s |
-| `maven-test-all` | the whole suite (614 tests) | ~40s |
+| `maven-test-all` | the whole suite (724 tests) | ~40s |
 
 The full suite is cheap enough to run before declaring anything done. Almost all of those 40s are
 integration tests actually hitting Postgres and embedded Jetty — compilation is a small fraction,
@@ -167,6 +167,45 @@ Request/response objects are in `model/request/` and `model/response/`. The API 
 
 DAOs in `dao/` implement `CrudDao<T>`, which provides default CRUD methods backed by MyBatis XML mappers in `src/main/resources/com/dewarim/cinnamon/*Mapper.xml`. DAOs instantiate themselves (`new FolderDao()`) and call `ThreadLocalSqlSession.getSqlSession()` — no injection.
 
+#### Column mapping is by convention, not by resultMap
+
+`mapUnderscoreToCamelCase` is on, so `content_hash` reaches `contentHash` without being declared.
+A `resultMap` is therefore only written for the columns the convention *cannot* derive. Note that
+MyBatis resolves names case-insensitively, so `contenttype` already reaches `contentType`,
+`fieldname` reaches `fieldName` and `life_cycle_id` reaches `lifecycleId`: only a genuine rename
+needs a line.
+
+Four `resultMap`s are left, and they are the ones that cannot be renamed away:
+
+| column | property | why it stays |
+|---|---|---|
+| `links.osd_id` | `objectId` | `links` carries `osd_id` and `folder_id` as a deliberate pair |
+| `osd_meta.osd_id`, `folder_meta.folder_id` | `objectId` | one shared `Meta` class for two tables, so no single column name fits both |
+| `metaset_types.is_unique` | `unique` | `unique` is a reserved word in Postgres, and the property name is on the wire |
+
+Everything else was renamed in the database instead (v1.16.1: `is_deleted` to `deleted`, `pwd` to
+`password`, `state_id` to `lifecycle_state_id`, `copy_state_id` to `lifecycle_state_for_copy_id`),
+which is the preferred fix: a column name is invisible to clients, a property name is not. Do not
+add a `result` line that only restates the convention - it is noise, and the four remaining maps
+are meant to read as a list of exceptions. The `<id>` lines in them are not exceptions and do stay:
+they declare the primary key rather than a name mapping.
+
+Where the name that does not fit is one the *statement* invents - a computed column, or a column
+feeding a projection that calls it something else - alias it in the SQL instead of writing a map:
+`'/' || full_path as path` in `getFolderPaths`, `select id as head_id` in `rootAndLatestHead`.
+
+The test run sets `autoMappingUnknownColumnBehavior=FAILING` (surefire's
+`systemPropertyVariables`, read by `DbSessionFactory`), so a statement selecting a column no
+property can receive fails the build instead of dropping it silently. Production leaves it at
+`NONE`: with 100+ `SELECT *` statements, FAILING would turn a migration that adds a column into
+failing reads until the model caught up.
+
+That is also why a statement must not `SELECT *` from a table holding columns the model does not
+carry - `sessions` (username, ui_language_id), `folder_types` and `object_types` (config) all list
+their columns explicitly for this reason. The same applies to
+`SELECT *` across a join: it returns both tables' columns, and `groups JOIN group_users` yields two
+columns named `id`, so `getGroupsOfUserById` selects `groups.*`.
+
 ### Core Domain Objects
 
 - **OSD (ObjectSystemData)** — the primary document/object entity; stores metadata and a reference to file content
@@ -198,6 +237,22 @@ Vector width is detected at runtime, so the gain depends on the hardware: AVX-51
 `preferredBitSize=512`, the common AMD EPYC Rome/Milan cloud instances only have AVX2 and report
 256, and on slow storage the I/O dominates to the point where none of it matters. Do not benchmark
 this on a dev box and extrapolate.
+
+#### Tika extraction is queue-driven by the absence of a metaset
+
+`TikaService` is a background thread that polls `getOsdsMissingTikaMetaset`: content-bearing OSDs
+of a TIKA format that have **no** tika metaset. There is no job table for it, so the only way to
+ask for an extraction is to make sure the OSD has no tika metaset - which is why every path that
+replaces the content of an *existing* OSD has to call `deleteTikaMetasetOnTarget`
+(`OsdServlet.setContent`, `copyToExistingOsd`), and why a reindex with `updateTikaMetaset` works by
+deleting metasets. A new OSD (create, version, copy) never needs it: it has no tika metaset yet.
+
+The consequence to keep in mind when touching `TikaService`: **a failure must never be stored as
+metaset content.** A stored error document counts as a successful extraction and removes the OSD
+from the queue permanently. Rejections go to `tika_failures` instead (attempts counted against
+`maxTikaAttempts`, reported by `index/info`), and failures that say nothing about the document - a
+Tika server that cannot be reached - are not counted at all, or an outage would write off every
+pending document.
 
 `lucene-backward-codecs` is a runtime dependency so the server can read - and keep writing to - an
 index created by the previous Lucene major version. Nothing references it; Lucene loads the old

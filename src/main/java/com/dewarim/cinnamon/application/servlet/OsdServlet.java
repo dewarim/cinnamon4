@@ -171,12 +171,24 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         cinnamonResponse.setResponse(new GenericResponse(true));
     }
 
+    /**
+     * Make TikaService extract this OSD's content again. TikaService offers every content-bearing
+     * OSD that has no tika metaset, so deleting the metaset is what schedules the extraction;
+     * leaving it in place would keep the metadata of the content that has just been replaced,
+     * because nothing else ever revisits a document that already has a tika metaset. Earlier
+     * extraction failures are forgotten too - they were about the old content.
+     * <p>
+     * Only needed where the content of an *existing* OSD changes. A newly created OSD (create,
+     * version, copy) has no tika metaset to begin with and is picked up on its own.
+     */
     private void deleteTikaMetasetOnTarget(ObjectSystemData target, OsdMetaDao metasetDao) {
         if (CinnamonServer.config.getCinnamonTikaConfig().isUseTika()) {
-            // delete tika metaset on target:
-            Optional<Meta> tikaMeta = metasetDao.listByOsd(target.getId()).stream()
+            // without the content: the metaset is only read for its id, and the tika metadata of a
+            // large document is itself large.
+            Optional<Meta> tikaMeta = metasetDao.listWithoutContentByOsd(target.getId()).stream()
                     .filter(meta -> meta.getTypeId().equals(getTikaMetasetTypeId())).findFirst();
             tikaMeta.ifPresent(meta -> metasetDao.delete(List.of(meta.getId())));
+            new TikaFailureDao().deleteByOsdIds(List.of(target.getId()));
         }
     }
 
@@ -701,6 +713,9 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
             new DeletionDao().create(List.of(new Deletion(osd.getId(), previousContentPath, false)));
         }
         storeFileUpload(file.getInputStream(), osd, setContentRequest.formatId());
+        // the tika metadata describes the file that was just replaced (same approach as
+        // copyToExisting):
+        deleteTikaMetasetOnTarget(osd, new OsdMetaDao());
         if (user.isChangeTracking()) {
             osd.setContentChanged(true);
         }
@@ -1039,11 +1054,11 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
         }
 
         // saveFileUpload
-        boolean shouldUpdateTikaMetaset = false;
-        Part    file                    = request.getPart("file");
+        Part file = request.getPart("file");
         if (file != null) {
             storeFileUpload(file.getInputStream(), osd, versionRequest.formatId());
-            shouldUpdateTikaMetaset = true;
+            // No tika handling here: this is a new OSD and has no tika metaset, so TikaService
+            // picks it up by itself.
             if (user.isChangeTracking()) {
                 osd.setContentChanged(true);
             }
@@ -1070,7 +1085,7 @@ public class OsdServlet extends BaseServlet implements CruddyServlet<ObjectSyste
                 osd.setLifecycleStateId(stateForCopy.getId());
             }
         }
-        osdDao.updateOsd(osd, false, shouldUpdateTikaMetaset);
+        osdDao.updateOsd(osd, false);
         OsdWrapper wrapper = new OsdWrapper();
         wrapper.setOsds(Collections.singletonList(savedOsd));
         response.setWrapper(wrapper);

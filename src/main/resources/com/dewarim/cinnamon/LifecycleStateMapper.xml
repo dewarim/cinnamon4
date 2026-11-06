@@ -5,45 +5,36 @@
 
 <mapper namespace="com.dewarim.cinnamon.model.LifecycleState">
 
-    <resultMap id="LifecycleStateMap" type="com.dewarim.cinnamon.model.LifecycleState">
-        <id property="id" column="id"/>
-        <result property="name" column="name"/>
-        <result property="config" column="config"/>
-        <result property="stateClass" column="state_class"/>
-        <result property="lifecycleId" column="life_cycle_id"/>
-        <result property="lifecycleStateForCopyId" column="copy_state_id"/>
-    </resultMap>
-
-    <select id="getLifecycleStateById" parameterType="Long" resultMap="LifecycleStateMap">
+    <select id="getLifecycleStateById" parameterType="Long" resultType="com.dewarim.cinnamon.model.LifecycleState">
         SELECT id,
                name,
                config,
                state_class,
                life_cycle_id,
-               copy_state_id
+               lifecycle_state_for_copy_id
         FROM lifecycle_states
         WHERE id = #{id}
     </select>
 
-    <select id="getLifecycleStateByName" parameterType="String" resultMap="LifecycleStateMap">
+    <select id="getLifecycleStateByName" parameterType="String" resultType="com.dewarim.cinnamon.model.LifecycleState">
         SELECT id,
                name,
                config,
                state_class,
                life_cycle_id,
-               copy_state_id
+               lifecycle_state_for_copy_id
         FROM lifecycle_states
         WHERE name = #{name}
     </select>
 
-    <select id="getLifecycleStatesByNameList" resultMap="LifecycleStateMap">
+    <select id="getLifecycleStatesByNameList" resultType="com.dewarim.cinnamon.model.LifecycleState">
         SELECT
         id,
         name,
         config,
         state_class,
         life_cycle_id,
-        copy_state_id
+        lifecycle_state_for_copy_id
         FROM lifecycle_states
         WHERE name in
         <foreach item="item" index="index" collection="list"
@@ -52,13 +43,13 @@
         </foreach>
     </select>
 
-    <select id="getLifecycleStatesByLifecycleId" parameterType="Long" resultMap="LifecycleStateMap">
+    <select id="getLifecycleStatesByLifecycleId" parameterType="Long" resultType="com.dewarim.cinnamon.model.LifecycleState">
         SELECT id,
                name,
                config,
                state_class,
                life_cycle_id,
-               copy_state_id
+               lifecycle_state_for_copy_id
         FROM lifecycle_states
         WHERE life_cycle_id = #{id}
     </select>
@@ -69,7 +60,7 @@
             config        = #{config},
             state_class   = #{stateClass},
             life_cycle_id = #{lifecycleId},
-            copy_state_id = #{lifecycleStateForCopyId}
+            lifecycle_state_for_copy_id = #{lifecycleStateForCopyId}
         WHERE id = #{id}
     </update>
 
@@ -77,7 +68,7 @@
         <selectKey keyProperty="id" resultType="long" order="BEFORE">
             select nextval('seq_lifecycle_state_id')
         </selectKey>
-        INSERT INTO lifecycle_states(id,name, config, state_class, life_cycle_id,copy_state_id)
+        INSERT INTO lifecycle_states(id,name, config, state_class, life_cycle_id,lifecycle_state_for_copy_id)
         VALUES (#{id}, #{name}, #{config},#{stateClass},#{lifecycleId},#{lifecycleStateForCopyId})
     </insert>
 
@@ -91,7 +82,7 @@
         </foreach>
     </delete>
 
-    <select id="getAllById" parameterType="list" resultMap="LifecycleStateMap">
+    <select id="getAllById" parameterType="list" resultType="com.dewarim.cinnamon.model.LifecycleState">
         SELECT *
         FROM lifecycle_states
         WHERE id in
@@ -101,7 +92,7 @@
         </foreach>
     </select>
 
-    <select id="list" parameterType="map" resultMap="LifecycleStateMap">
+    <select id="list" parameterType="map" resultType="com.dewarim.cinnamon.model.LifecycleState">
         SELECT *
         FROM lifecycle_states
     </select>

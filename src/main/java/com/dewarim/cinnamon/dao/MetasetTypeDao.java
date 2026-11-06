@@ -23,6 +23,14 @@ public class MetasetTypeDao implements CrudDao<MetasetType>{
         return Optional.ofNullable(metasetType);
     }
 
+    /**
+     * There are only a handful of metaset types and CrudDao.list() is a single statement, so this
+     * filters in memory rather than adding a by-name select.
+     */
+    public Optional<MetasetType> getMetasetTypeByName(String name) {
+        return list().stream().filter(metasetType -> metasetType.getName().equals(name)).findFirst();
+    }
+
     @Override
     public String getTypeClassName() {
         return MetasetType.class.getName();

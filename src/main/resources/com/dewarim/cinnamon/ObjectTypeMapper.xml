@@ -5,13 +5,8 @@
 
 <mapper namespace="com.dewarim.cinnamon.model.ObjectType">
 
-    <resultMap id="objectTypeMap" type="com.dewarim.cinnamon.model.ObjectType">
-        <id property="id" column="id"/>
-        <result property="name" column="name"/>
-    </resultMap>
-
-    <select id="list" parameterType="map" resultMap="objectTypeMap">
-        SELECT *
+    <select id="list" parameterType="map" resultType="com.dewarim.cinnamon.model.ObjectType">
+        SELECT id, name
         FROM object_types
     </select>
 
@@ -38,8 +33,8 @@
         </foreach>
     </delete>
 
-    <select id="getAllById" parameterType="list" resultMap="objectTypeMap">
-        SELECT *
+    <select id="getAllById" parameterType="list" resultType="com.dewarim.cinnamon.model.ObjectType">
+        SELECT id, name
         FROM object_types
         WHERE id in
         <foreach item="item" index="index" collection="list"
@@ -47,6 +42,5 @@
             #{item}
         </foreach>
     </select>
-
 
 </mapper>

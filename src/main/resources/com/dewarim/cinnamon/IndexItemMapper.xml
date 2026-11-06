@@ -5,23 +5,12 @@
 
 <mapper namespace="com.dewarim.cinnamon.model.IndexItem">
 
-    <resultMap id="indexItemMap" type="com.dewarim.cinnamon.model.IndexItem">
-        <id property="id" column="id"/>
-        <result property="name" column="name"/>
-        <result property="fieldName" column="fieldname"/>
-        <result property="multipleResults" column="multiple_results"/>
-        <result property="searchString" column="search_string"/>
-        <result property="searchCondition" column="search_condition"/>
-        <result property="storeField" column="store_field"/>
-        <result property="indexType" column="index_type"/>
-    </resultMap>
-
-    <select id="list" resultMap="indexItemMap">
+    <select id="list" resultType="com.dewarim.cinnamon.model.IndexItem">
         SELECT *
         FROM index_items
     </select>
 
-    <select id="getIndexItemById" parameterType="Long" resultMap="indexItemMap">
+    <select id="getIndexItemById" parameterType="Long" resultType="com.dewarim.cinnamon.model.IndexItem">
         SELECT *
         FROM index_items
         WHERE id = #{id}
@@ -59,7 +48,7 @@
         #{name}, #{searchString},#{searchCondition},#{storeField}, #{indexType} )
     </insert>
 
-    <select id="getAllById" parameterType="list" resultMap="indexItemMap">
+    <select id="getAllById" parameterType="list" resultType="com.dewarim.cinnamon.model.IndexItem">
         SELECT *
         FROM index_items
         WHERE id in

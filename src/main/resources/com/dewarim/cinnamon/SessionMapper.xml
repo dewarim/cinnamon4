@@ -3,23 +3,23 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
+<!--
+  Columns are listed explicitly rather than SELECT *: the sessions table also holds
+  username and ui_language_id, which the Session model does not carry. With
+  mapUnderscoreToCamelCase doing the mapping, a SELECT * would hand MyBatis two columns
+  it cannot place - silently under NONE, and as an error under the FAILING behaviour the
+  test run uses.
+-->
 <mapper namespace="com.dewarim.cinnamon.SessionMapper">
 
-    <resultMap id="sessionMap" type="com.dewarim.cinnamon.model.Session">
-        <id property="id" column="id"/>
-        <result property="ticket" column="ticket"/>
-        <result property="expires" column="expires"/>
-        <result property="userId" column="user_id"/>
-    </resultMap>
-
-    <select id="getSessionByTicket" parameterType="String" resultMap="sessionMap">
-        SELECT *
+    <select id="getSessionByTicket" parameterType="String" resultType="com.dewarim.cinnamon.model.Session">
+        SELECT id, ticket, expires, user_id
         FROM sessions
         WHERE ticket = #{ticket}
     </select>
 
-    <select id="listSessions" resultMap="sessionMap">
-        SELECT *
+    <select id="listSessions" resultType="com.dewarim.cinnamon.model.Session">
+        SELECT id, ticket, expires, user_id
         FROM sessions
     </select>
 

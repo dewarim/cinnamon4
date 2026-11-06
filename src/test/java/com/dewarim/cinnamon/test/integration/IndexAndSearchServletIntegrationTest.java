@@ -5,12 +5,15 @@ import com.dewarim.cinnamon.application.ThreadLocalSqlSession;
 import com.dewarim.cinnamon.configuration.LuceneConfig;
 import com.dewarim.cinnamon.dao.IndexEventDao;
 import com.dewarim.cinnamon.dao.IndexJobDao;
+import com.dewarim.cinnamon.dao.TikaFailureDao;
+import com.dewarim.cinnamon.model.MetasetType;
 import com.dewarim.cinnamon.model.Format;
 import com.dewarim.cinnamon.model.ObjectSystemData;
 import com.dewarim.cinnamon.model.index.IndexEvent;
 import com.dewarim.cinnamon.model.index.IndexJob;
 import com.dewarim.cinnamon.model.index.IndexJobAction;
 import com.dewarim.cinnamon.model.index.IndexJobType;
+import com.dewarim.cinnamon.model.index.TikaFailure;
 import com.dewarim.cinnamon.model.request.index.ReindexRequest;
 import com.dewarim.cinnamon.model.request.search.SearchType;
 import com.dewarim.cinnamon.model.response.SearchIdsResponse;
@@ -30,6 +33,7 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
 
+import static com.dewarim.cinnamon.api.Constants.TIKA_METASET_NAME;
 import static com.dewarim.cinnamon.ErrorCode.INTERNAL_SERVER_ERROR_TRY_AGAIN_LATER;
 import static com.dewarim.cinnamon.ErrorCode.INVALID_REQUEST;
 import static com.dewarim.cinnamon.ErrorCode.REQUIRES_SUPERUSER_STATUS;
@@ -220,6 +224,80 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
     @Test
     public void reindexInvalidRequest() {
         assertClientError(() -> adminClient.reindex(new ReindexRequest(List.of(-1L), List.of())), INVALID_REQUEST);
+    }
+
+    /**
+     * A reindex does not involve Tika: the indexer reads the tika metaset that is already there, and
+     * TikaService only ever looks at OSDs which do not have one. So updateTikaMetaset asks for a
+     * fresh extraction by deleting the metaset - and that is also the only way to recover documents
+     * whose extraction failed while the Tika server was broken or misconfigured.
+     */
+    @Test
+    public void reindexWithUpdateTikaMetasetDeletesTheTikaMetaset() throws IOException {
+        MetasetType tikaType = TestObjectHolder.getMetasetType(TIKA_METASET_NAME);
+        Long        osdId    = new TestObjectHolder(adminClient, userId).createOsd("reindex-tika-metaset").osd.getId();
+        adminClient.createOsdMeta(osdId, "<tika>metadata of a previous extraction</tika>", tikaType.getId());
+
+        // without the flag, a reindex leaves the metaset alone:
+        ReindexResponse plainResponse = adminClient.reindex(new ReindexRequest(List.of(osdId), List.of()));
+        assertEquals(0, plainResponse.getTikaMetasetsDeleted());
+        assertEquals(1, adminClient.getOsdMetas(osdId, List.of(tikaType.getId())).size());
+
+        ReindexResponse response = adminClient.reindex(new ReindexRequest(List.of(osdId), List.of(), true));
+        assertEquals(1, response.getTikaMetasetsDeleted());
+        assertTrue(adminClient.getOsdMetas(osdId, List.of(tikaType.getId())).isEmpty(),
+                "the tika metaset should be gone, so that TikaService extracts the document again");
+        assertTrue(waitUntilIndexIsIdle(), "reindex did not finish");
+    }
+
+    /**
+     * The failures TikaService records are reported by the index info endpoint. That is the only
+     * place an operator can see them: the documents themselves are indexed and searchable, they
+     * just carry no Tika metadata.
+     */
+    @Test
+    public void indexInfoReportsFailedTikaExtractions() throws IOException {
+        Long           osdId      = new TestObjectHolder(adminClient, userId).createOsd("tika-extraction-failure").osd.getId();
+        TikaFailureDao failureDao = new TikaFailureDao();
+        failureDao.recordFailure(osdId, "Tika answered with HTTP status 503");
+        failureDao.recordFailure(osdId, "Tika answered with HTTP status 503");
+        ThreadLocalSqlSession.getSqlSession().commit();
+        try {
+            IndexInfoResponse withList = adminClient.getIndexInfo(false, false, true);
+            TikaFailure failure = withList.getFailedTikaExtractions().stream()
+                    .filter(tikaFailure -> tikaFailure.getOsdId().equals(osdId)).findFirst().orElseThrow();
+            // one row per OSD that counts up, rather than one row per attempt:
+            assertEquals(2, failure.getAttempts());
+            assertEquals("Tika answered with HTTP status 503", failure.getLastError());
+            assertNotNull(failure.getLastAttempt());
+
+            // the list is opt-in, the count is always reported:
+            IndexInfoResponse withoutList = adminClient.getIndexInfo(false, false, false);
+            assertNull(withoutList.getFailedTikaExtractions());
+            assertEquals(withList.getFailedTikaExtractionCount(), withoutList.getFailedTikaExtractionCount());
+            assertTrue(withoutList.getFailedTikaExtractionCount() >= 1);
+        }
+        finally {
+            failureDao.deleteByOsdIds(List.of(osdId));
+            ThreadLocalSqlSession.getSqlSession().commit();
+        }
+    }
+
+    /**
+     * A recorded Tika failure must not stand in the way of deleting its object: tika_failures
+     * references objects, and nothing in the delete path clears the row - the foreign key cascades.
+     */
+    @Test
+    public void deletingAnOsdRemovesItsRecordedTikaFailure() throws IOException {
+        Long osdId = new TestObjectHolder(adminClient, userId).createOsd("tika-failure-and-delete").osd.getId();
+        new TikaFailureDao().recordFailure(osdId, "Tika answered with HTTP status 503");
+        ThreadLocalSqlSession.getSqlSession().commit();
+
+        assertTrue(adminClient.deleteOsd(osdId));
+        ThreadLocalSqlSession.refreshSession();
+        assertTrue(new TikaFailureDao().list().stream()
+                        .noneMatch(tikaFailure -> tikaFailure.getOsdId().equals(osdId)),
+                "the failure row should have gone with the object");
     }
 
     @Test

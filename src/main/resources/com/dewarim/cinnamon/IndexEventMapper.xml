@@ -5,16 +5,7 @@
 
 <mapper namespace="com.dewarim.cinnamon.model.index.IndexEvent">
 
-    <resultMap id="indexLogEventMap" type="com.dewarim.cinnamon.model.index.IndexEvent">
-        <id property="id" column="id"/>
-        <result property="localTime" column="local_time"/>
-        <result property="jobId" column="job_id"/>
-        <result property="eventType" column="event_type"/>
-        <result property="indexResult" column="index_result"/>
-        <result property="message" column="message"/>
-    </resultMap>
-
-    <select id="getAllById" parameterType="list" resultMap="indexLogEventMap">
+    <select id="getAllById" parameterType="list" resultType="com.dewarim.cinnamon.model.index.IndexEvent">
         SELECT *
         FROM index_events
         WHERE id in
@@ -51,7 +42,7 @@
         </foreach>
     </delete>
 
-    <select id="list" resultMap="indexLogEventMap">
+    <select id="list" resultType="com.dewarim.cinnamon.model.index.IndexEvent">
         SELECT *
         FROM index_events
     </select>

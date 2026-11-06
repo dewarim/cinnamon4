@@ -5,14 +5,7 @@
 
 <mapper namespace="com.dewarim.cinnamon.model.Deletion">
 
-    <resultMap id="deletionMap" type="com.dewarim.cinnamon.model.Deletion">
-        <result property="osdId" column="osd_id"/>
-        <result property="contentPath" column="content_path"/>
-        <result property="deleted" column="is_deleted"/>
-        <result property="deleteFailed" column="delete_failed"/>
-    </resultMap>
-
-    <select id="list" parameterType="map" resultMap="deletionMap">
+    <select id="list" parameterType="map" resultType="com.dewarim.cinnamon.model.Deletion">
         SELECT *
         FROM deletions
     </select>
@@ -31,17 +24,17 @@
         UPDATE deletions
         SET osd_id       = #{osdId},
             content_path = #{contentPath},
-            is_deleted   = #{deleted},
+            deleted      = #{deleted},
             delete_failed= #{deleteFailed}
             WHERE id = #{id}
     </update>
 
     <insert id="insert" parameterType="com.dewarim.cinnamon.model.Deletion">
-        INSERT INTO deletions(osd_id, content_path, is_deleted, delete_failed)
+        INSERT INTO deletions(osd_id, content_path, deleted, delete_failed)
         VALUES (#{osdId}, #{contentPath}, #{deleted}, #{deleteFailed})
     </insert>
 
-    <select id="getAllById" parameterType="list" resultMap="deletionMap">
+    <select id="getAllById" parameterType="list" resultType="com.dewarim.cinnamon.model.Deletion">
         SELECT *
         FROM deletions
         WHERE osd_id in
@@ -51,16 +44,16 @@
         </foreach>
     </select>
 
-    <select id="getDeletionById" parameterType="long" resultMap="deletionMap">
+    <select id="getDeletionById" parameterType="long" resultType="com.dewarim.cinnamon.model.Deletion">
         SELECT *
         FROM deletions
         WHERE osd_id = #{id}
     </select>
 
-    <select id="listPendingDeletions" resultMap="deletionMap">
+    <select id="listPendingDeletions" resultType="com.dewarim.cinnamon.model.Deletion">
         SELECT *
         FROM deletions
-        WHERE is_deleted = false AND delete_failed=false
+        WHERE deleted = false AND delete_failed=false
     </select>
 
 </mapper>

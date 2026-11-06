@@ -5,12 +5,6 @@
 
 <mapper namespace="com.dewarim.cinnamon.model.GroupUser">
 
-    <resultMap id="groupUserMap" type="com.dewarim.cinnamon.model.GroupUser">
-        <id property="id" column="id"/>
-        <result property="userId" column="user_id"/>
-        <result property="groupId" column="group_id"/>
-    </resultMap>
-
     <insert id="insert" parameterType="com.dewarim.cinnamon.model.GroupUser">
         <selectKey keyProperty="id" resultType="long" order="BEFORE">
             select nextval('seq_group_user_id')
@@ -39,14 +33,14 @@
         WHERE user_id = #{id}
     </delete>
 
-    <select id="listGroupsOfUser" resultMap="groupUserMap">
+    <select id="listGroupsOfUser" resultType="com.dewarim.cinnamon.model.GroupUser">
         SELECT *
         FROM group_users
         WHERE user_id = #{id}
         ORDER BY id
     </select>
 
-    <select id="list" resultMap="groupUserMap">
+    <select id="list" resultType="com.dewarim.cinnamon.model.GroupUser">
         SELECT *
         FROM group_users
         ORDER BY id

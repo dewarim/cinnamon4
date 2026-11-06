@@ -376,6 +376,12 @@
                              different implementation than production does -->
                         --add-modules jdk.incubator.vector
                     </argLine>
+                    <systemPropertyVariables>
+                        <!-- Fail the build when a statement selects a column the result type has no
+                             property for, instead of dropping it silently. Production defaults to
+                             NONE; see the setting's comment in sql/mybatis-config.xml. -->
+                        <cinnamon.autoMappingUnknownColumnBehavior>FAILING</cinnamon.autoMappingUnknownColumnBehavior>
+                    </systemPropertyVariables>
                 </configuration>
             </plugin>
             <plugin>

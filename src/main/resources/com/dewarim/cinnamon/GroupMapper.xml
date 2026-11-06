@@ -5,13 +5,7 @@
 
 <mapper namespace="com.dewarim.cinnamon.model.Group">
 
-    <resultMap id="groupMap" type="com.dewarim.cinnamon.model.Group">
-        <id property="id" column="id"/>
-        <result property="name" column="name"/>
-        <result property="parentId" column="parent_id"/>
-    </resultMap>
-
-    <select id="getGroupById" parameterType="long" resultMap="groupMap">
+    <select id="getGroupById" parameterType="long" resultType="com.dewarim.cinnamon.model.Group">
         SELECT *
         FROM groups
         WHERE id = #{id}
@@ -26,13 +20,13 @@
         </foreach>
     </select>
 
-    <select id="getGroupByName" parameterType="string" resultMap="groupMap">
+    <select id="getGroupByName" parameterType="string" resultType="com.dewarim.cinnamon.model.Group">
         SELECT *
         FROM groups
         WHERE name = #{name}
     </select>
 
-    <select id="getGroupsByName" parameterType="list" resultMap="groupMap">
+    <select id="getGroupsByName" parameterType="list" resultType="com.dewarim.cinnamon.model.Group">
         SELECT *
         FROM groups
         WHERE name in
@@ -48,14 +42,19 @@
         where parent_id = #{id}
     </select>
 
-    <select id="getGroupsOfUserById" parameterType="long" resultMap="groupMap">
-        SELECT *
+    <!--
+      groups.* rather than *: the join adds group_users' own id, user_id and group_id to the
+      result set, and a bare * therefore returns two columns labelled "id". Which one filled
+      Group.id depended on the order the driver reported them in.
+    -->
+    <select id="getGroupsOfUserById" parameterType="long" resultType="com.dewarim.cinnamon.model.Group">
+        SELECT groups.*
         FROM groups
                  JOIN group_users gu on groups.id = gu.group_id
         WHERE gu.user_id = #{id}
     </select>
 
-    <select id="list" resultMap="groupMap">
+    <select id="list" resultType="com.dewarim.cinnamon.model.Group">
         SELECT *
         FROM groups
     </select>
@@ -84,7 +83,7 @@
         </foreach>
     </delete>
 
-    <select id="getAllById" parameterType="list" resultMap="groupMap">
+    <select id="getAllById" parameterType="list" resultType="com.dewarim.cinnamon.model.Group">
         SELECT *
         FROM groups
         WHERE id in
@@ -94,7 +93,7 @@
         </foreach>
     </select>
 
-    <select id="getGroupsWithAncestorsOfUserById" resultMap="groupMap">
+    <select id="getGroupsWithAncestorsOfUserById" resultType="com.dewarim.cinnamon.model.Group">
         with recursive groups_of_user(id, name, parent_id)
                            as (select g.id, name, parent_id
                                from groups g

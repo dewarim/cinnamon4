@@ -5,50 +5,7 @@
 
 <mapper namespace="com.dewarim.cinnamon.model.ObjectSystemData">
 
-    <resultMap id="osdMap" type="com.dewarim.cinnamon.model.ObjectSystemData">
-        <id property="id" column="id"/>
-        <result property="contentHash" column="content_hash"/>
-        <result property="contentPath" column="content_path"/>
-        <result property="contentSize" column="content_size"/>
-        <result property="created" column="created"/>
-        <result property="latestBranch" column="latest_branch"/>
-        <result property="latestHead" column="latest_head"/>
-        <result property="modified" column="modified"/>
-        <result property="name" column="name"/>
-        <result property="cmnVersion" column="cmn_version"/>
-        <result property="aclId" column="acl_id"/>
-        <result property="creatorId" column="creator_id"/>
-        <result property="formatId" column="format_id"/>
-        <result property="languageId" column="language_id"/>
-        <result property="lockerId" column="locker_id"/>
-        <result property="modifierId" column="modifier_id"/>
-        <result property="ownerId" column="owner_id"/>
-        <result property="parentId" column="parent_id"/>
-        <result property="predecessorId" column="predecessor_id"/>
-        <result property="rootId" column="root_id"/>
-        <result property="typeId" column="type_id"/>
-        <result property="lifecycleStateId" column="state_id"/>
-        <result property="contentChanged" column="content_changed"/>
-        <result property="metadataChanged" column="metadata_changed"/>
-        <result property="summary" column="summary"/>
-    </resultMap>
-
-    <resultMap id="tinyOwnableMap" type="com.dewarim.cinnamon.api.TinyOwnable">
-        <result column="id" property="id"/>
-        <result column="owner_id" property="ownerId"/>
-        <result column="acl_id" property="aclId"/>
-    </resultMap>
-
-    <resultMap id="rootAndLatestHeadMap" type="com.dewarim.cinnamon.api.RootAndLatestHead">
-        <result column="id" property="headId"/>
-        <result column="root_id" property="rootId"/>
-    </resultMap>
-    <resultMap id="idAndRootMap" type="com.dewarim.cinnamon.api.IdAndRootId">
-        <result column="id" property="id"/>
-        <result column="root_id" property="rootId"/>
-    </resultMap>
-
-    <select id="getOsdsById" parameterType="map" resultMap="osdMap">
+    <select id="getOsdsById" parameterType="map" resultType="com.dewarim.cinnamon.model.ObjectSystemData">
         SELECT
         id,
         content_hash,
@@ -71,7 +28,7 @@
         predecessor_id,
         root_id,
         type_id,
-        state_id,
+        lifecycle_state_id,
         content_changed,
         metadata_changed,
         CASE WHEN #{includeSummary} THEN summary ELSE null END AS summary
@@ -82,7 +39,6 @@
             #{item,jdbcType=BIGINT}
         </foreach>
     </select>
-
 
     <select id="getOsdIdByIdWithDescendants" parameterType="long" resultType="Long">
         SELECT id
@@ -100,8 +56,7 @@
                      FROM osdId)
     </select>
 
-
-    <select id="getOsdsByFolderId" parameterType="map" resultMap="osdMap">
+    <select id="getOsdsByFolderId" parameterType="map" resultType="com.dewarim.cinnamon.model.ObjectSystemData">
         SELECT id,
                content_hash,
                content_path,
@@ -123,7 +78,7 @@
                predecessor_id,
                root_id,
                type_id,
-               state_id,
+               lifecycle_state_id,
                content_changed,
                metadata_changed,
                CASE
@@ -137,7 +92,7 @@
     </select>
 
     <select id="com.dewarim.cinnamon.model.ObjectSystemData.getIdAndRoot"
-            parameterType="list" resultMap="idAndRootMap">
+            parameterType="list" resultType="com.dewarim.cinnamon.api.IdAndRootId">
         select id,
         root_id
         from objects
@@ -149,8 +104,10 @@
     </select>
 
     <select id="com.dewarim.cinnamon.model.ObjectSystemData.getLatestHeads"
-            parameterType="list" resultMap="rootAndLatestHeadMap">
-        select id,
+            parameterType="list" resultType="com.dewarim.cinnamon.api.RootAndLatestHead">
+        <!-- "as head_id": objects.id is the head of its version tree here, which is what the
+             projection calls it - the alias saves a resultMap. -->
+        select id as head_id,
                root_id
         from objects
         where root_id in
@@ -162,7 +119,7 @@
     </select>
 
     <select id="com.dewarim.cinnamon.model.ObjectSystemData.findLastDescendantVersion" parameterType="long"
-            resultMap="osdMap">
+            resultType="com.dewarim.cinnamon.model.ObjectSystemData">
         select *
         from objects
         where predecessor_id = #{id}
@@ -191,7 +148,7 @@
             predecessor_id   = #{predecessorId},
             root_id          = #{rootId},
             type_id          = #{typeId},
-            state_id         = #{lifecycleStateId},
+            lifecycle_state_id = #{lifecycleStateId},
             content_changed  = #{contentChanged},
             metadata_changed = #{metadataChanged},
             summary          = #{summary}
@@ -220,7 +177,7 @@
             predecessor_id   = #{predecessorId},
             root_id          = #{rootId},
             type_id          = #{typeId},
-            state_id         = #{lifecycleStateId},
+            lifecycle_state_id = #{lifecycleStateId},
             content_changed  = #{contentChanged},
             metadata_changed = #{metadataChanged},
             summary          = #{summary}
@@ -236,7 +193,7 @@
         created, latest_branch, latest_head,modified, modifier_id,
         cmn_version, acl_id, creator_id,format_id,
         language_id, owner_id,parent_id,
-        predecessor_id, root_id, type_id, state_id,
+        predecessor_id, root_id, type_id, lifecycle_state_id,
         content_changed, metadata_changed, summary
         )
         values (#{id}, #{name}, #{contentHash}, #{contentSize}, #{contentPath},
@@ -256,8 +213,7 @@
         </foreach>
     </delete>
 
-
-    <select id="getAllById" parameterType="list" resultMap="osdMap">
+    <select id="getAllById" parameterType="list" resultType="com.dewarim.cinnamon.model.ObjectSystemData">
         SELECT *
         FROM objects
         WHERE id in
@@ -267,7 +223,7 @@
         </foreach>
     </select>
 
-    <select id="getOsdByModifierOrCreatorOrOwnerOrLocker" parameterType="long" resultMap="osdMap">
+    <select id="getOsdByModifierOrCreatorOrOwnerOrLocker" parameterType="long" resultType="com.dewarim.cinnamon.model.ObjectSystemData">
         SELECT *
         FROM objects
         WHERE owner_id = #{id}
@@ -276,7 +232,7 @@
            or locker_id = #{id}
     </select>
 
-    <select id="getOsdsAsOwnables" parameterType="java.util.List" resultMap="tinyOwnableMap">
+    <select id="getOsdsAsOwnables" parameterType="java.util.List" resultType="com.dewarim.cinnamon.api.TinyOwnable">
         SELECT id,
         acl_id,
         owner_id
@@ -285,12 +241,17 @@
     </select>
 
     <!-- should only be used for debugging -->
-    <select id="list" resultMap="osdMap">
+    <select id="list" resultType="com.dewarim.cinnamon.model.ObjectSystemData">
         SELECT *
         FROM objects
     </select>
 
-    <select id="getOsdsMissingTikaMetaset" resultMap="osdMap">
+    <!--
+      The work queue of TikaService. An OSD leaves it by gaining a tika metaset - which is why a
+      failed extraction must never be stored as one - or by being given up on after maxAttempts
+      document-specific failures, see TikaFailureMapper.xml.
+    -->
+    <select id="getOsdsMissingTikaMetaset" resultType="com.dewarim.cinnamon.model.ObjectSystemData">
         SELECT * FROM objects
         WHERE
             content_size > 0 and
@@ -298,6 +259,8 @@
             format_id in (select id from formats f where f.index_mode='TIKA')
             and
             id not in (select osd_id from osd_meta om where om.type_id = #{tikaMetasetTypeId})
+            and
+            id not in (select osd_id from tika_failures tf where tf.attempts >= #{maxAttempts})
         LIMIT #{limit}
     </select>
 

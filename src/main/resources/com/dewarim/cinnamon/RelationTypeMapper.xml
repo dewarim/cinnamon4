@@ -5,29 +5,18 @@
 
 <mapper namespace="com.dewarim.cinnamon.model.relations.RelationType">
 
-    <resultMap id="relationTypeMap" type="com.dewarim.cinnamon.model.relations.RelationType">
-        <id property="id" column="id"/>
-        <result property="name" column="name"/>
-        <result property="rightObjectProtected" column="right_object_protected"/>
-        <result property="leftObjectProtected" column="left_object_protected"/>
-        <result property="cloneOnRightCopy" column="clone_on_right_copy"/>
-        <result property="cloneOnLeftCopy" column="clone_on_left_copy"/>
-        <result property="cloneOnRightVersion" column="clone_on_right_version"/>
-        <result property="cloneOnLeftVersion" column="clone_on_left_version"/>
-    </resultMap>
-
-    <select id="list" parameterType="map" resultMap="relationTypeMap">
+    <select id="list" parameterType="map" resultType="com.dewarim.cinnamon.model.relations.RelationType">
         SELECT *
         FROM relation_types
     </select>
 
-    <select id="getRelationTypeById" parameterType="Long" resultMap="relationTypeMap">
+    <select id="getRelationTypeById" parameterType="Long" resultType="com.dewarim.cinnamon.model.relations.RelationType">
         SELECT *
         FROM relation_types
         WHERE id = #{id}
     </select>
 
-    <select id="getRelationTypeByName" parameterType="String" resultMap="relationTypeMap">
+    <select id="getRelationTypeByName" parameterType="String" resultType="com.dewarim.cinnamon.model.relations.RelationType">
         SELECT *
         FROM relation_types
         WHERE name = #{name}
@@ -71,7 +60,7 @@
         </foreach>
     </delete>
 
-    <select id="getAllById" parameterType="list" resultMap="relationTypeMap">
+    <select id="getAllById" parameterType="list" resultType="com.dewarim.cinnamon.model.relations.RelationType">
         SELECT *
         FROM relation_types
         WHERE id in

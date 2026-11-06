@@ -5,13 +5,6 @@
 
 <mapper namespace="com.dewarim.cinnamon.model.ConfigEntry">
 
-    <resultMap id="configEntryMap" type="com.dewarim.cinnamon.model.ConfigEntry">
-        <id property="id" column="id"/>
-        <result property="name" column="name"/>
-        <result property="content" column="content"/>
-        <result property="publicVisibility" column="public_visibility"/>
-    </resultMap>
-
     <insert id="insert" parameterType="com.dewarim.cinnamon.model.ConfigEntry">
         <selectKey keyProperty="id" resultType="long" order="BEFORE">
             select nextval('seq_config_entry_id')
@@ -28,7 +21,7 @@
         WHERE id = #{id}
     </update>
 
-    <select id="getAllById" parameterType="list" resultMap="configEntryMap">
+    <select id="getAllById" parameterType="list" resultType="com.dewarim.cinnamon.model.ConfigEntry">
         SELECT *
         FROM config_entries
         WHERE id in
@@ -38,7 +31,7 @@
         </foreach>
     </select>
 
-    <select id="list" resultMap="configEntryMap">
+    <select id="list" resultType="com.dewarim.cinnamon.model.ConfigEntry">
         SELECT *
         FROM config_entries
     </select>

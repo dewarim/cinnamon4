@@ -126,3 +126,87 @@ Then:
 
     -- SQL
     alter table objects alter column owner_id set not null;
+
+=== v1.16.1
+
+Tika extraction now keeps a record of the documents it could not handle, which needs one new table:
+
+    -- SQL
+    create table tika_failures
+    (
+        osd_id       bigint    not null
+            constraint tika_failures_pkey primary key
+            constraint tika_failures_osd_id_fkey references objects on delete cascade,
+        attempts     int       not null default 1,
+        last_attempt timestamp not null default current_timestamp,
+        last_error   text      not null
+    );
+
+The `index_jobs.update_tika_metaset` column has been unused since tika indexing became
+asynchronous in v1.6.8 - nothing has written it since, and the model does not carry it:
+
+    -- SQL
+    alter table index_jobs drop column if exists update_tika_metaset;
+
+The `created` column of `access_log` becomes a plain `timestamp`, like every other timestamp column
+the models read. As a `timestamptz` the driver refuses to hand it to the `LocalDateTime` property it
+belongs to, so reading the access log threw - which nothing in the server did, which is why it was
+never noticed:
+
+    -- SQL
+    alter table access_log alter column created type timestamp;
+
+Existing values are converted to the database server's local time, which is what new rows have been
+getting from the column default all along. Nothing in the application reads the column's offset.
+
+==== Four columns are renamed
+
+Column names are mapped onto properties by convention (MyBatis' mapUnderscoreToCamelCase), and these
+four were the ones that did not fit, each costing a hand-written mapping. Renaming them removes the
+last of those declarations that could be removed:
+
+    -- SQL
+    alter table deletions rename column is_deleted to deleted;
+    alter table users rename column pwd to password;
+    alter table objects rename column state_id to lifecycle_state_id;
+    alter table lifecycle_states rename column copy_state_id to lifecycle_state_for_copy_id;
+
+Nothing an API client sees changes - the property names were always `deleted`, `password`,
+`lifecycleStateId` and `lifecycleStateForCopyId`, and only the column names catch up. But any SQL
+you maintain yourself - reports, integrations, backup or migration scripts, a BI tool reading the
+schema - refers to the old names and has to be updated. `objects.state_id` in particular was the
+object's *lifecycle* state, which is what the new name says.
+
+Three mappings remain and are not worth renaming: `osd_meta.osd_id` and `folder_meta.folder_id` are
+read into one shared Meta class, so no single column name fits both; `links` carries `osd_id` and
+`folder_id` as a deliberate pair; and `metaset_types.is_unique` cannot be renamed at all, because
+`unique` is a reserved word in Postgres.
+
+==== If this repository has been running with Tika
+
+Until now, a Tika server that answered with an HTTP error produced a metaset with the content
+"tikaFailedToParse" instead of metadata. That metaset counted as a successful extraction, so the
+document was never offered to Tika again. Those documents have to be unblocked once, by hand:
+
+    select count(*) from osd_meta
+    where type_id = (select id from metaset_types where name = 'tika')
+      and content like '%tikaFailedToParse%';
+
+If that count is not zero, delete the rows - the documents are then extracted again on the next
+pass of the Tika service:
+
+    delete from osd_meta
+    where type_id = (select id from metaset_types where name = 'tika')
+      and content like '%tikaFailedToParse%';
+
+From this release on, a rejected document is recorded in `tika_failures` rather than being written
+off silently: it is retried until `maxTikaAttempts` (new in `cinnamonTikaConfig`, default 3), and
+`index/info` reports the ones that were given up on - `listFailedTikaExtractions` returns them with
+their attempt count and the last error. A Tika server that cannot be reached at all is not counted
+against any document and is retried indefinitely, so an outage no longer costs anything.
+
+To make Cinnamon extract documents again - after fixing a broken Tika server, or remounting the
+content store - call `index/reindex` with `updateTikaMetaset` set to true. That deletes the tika
+metasets of the named objects (all of them, for a full reindex) along with their failure records,
+which is what puts the documents back in the queue. The flag was accepted but ignored between
+v1.6.8 and this release.

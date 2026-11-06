@@ -5,11 +5,10 @@
 
 <mapper namespace="com.dewarim.cinnamon.model.FolderMeta">
 
+    <!-- only the columns mapUnderscoreToCamelCase cannot derive -->
     <resultMap id="folderMetaMap" type="com.dewarim.cinnamon.model.Meta">
         <id property="id" column="id"/>
         <result property="objectId" column="folder_id"/>
-        <result property="typeId" column="type_id"/>
-        <result property="content" column="content"/>
     </resultMap>
 
     <select id="listByFolderId" parameterType="long" resultMap="folderMetaMap">

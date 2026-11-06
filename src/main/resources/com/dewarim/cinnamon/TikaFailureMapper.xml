@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- No resultMap: every column of tika_failures is derivable by mapUnderscoreToCamelCase. -->
+<mapper namespace="com.dewarim.cinnamon.model.index.TikaFailure">
+
+    <select id="list" resultType="com.dewarim.cinnamon.model.index.TikaFailure">
+        SELECT *
+        FROM tika_failures
+        ORDER BY last_attempt DESC, osd_id
+    </select>
+
+    <select id="count" resultType="int">
+        SELECT count(*)
+        FROM tika_failures
+    </select>
+
+    <!--
+      One row per OSD, so a document that keeps being rejected raises its own attempts counter
+      instead of filling the table. The counter is what TikaService' maxTikaAttempts limit is
+      measured against, and current_timestamp comes from the database so the row does not depend
+      on the clock of whichever server ran the extraction.
+    -->
+    <insert id="recordFailure" parameterType="map">
+        INSERT INTO tika_failures(osd_id, attempts, last_attempt, last_error)
+        VALUES (#{osdId}, 1, current_timestamp, #{error})
+        ON CONFLICT (osd_id) DO UPDATE SET
+        attempts     = tika_failures.attempts + 1,
+        last_attempt = current_timestamp,
+        last_error   = excluded.last_error
+    </insert>
+
+    <delete id="deleteByOsdIds" parameterType="list">
+        DELETE
+        FROM tika_failures
+        WHERE osd_id IN
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <delete id="deleteAll">
+        DELETE
+        FROM tika_failures
+    </delete>
+
+</mapper>

@@ -5,31 +5,7 @@
 
 <mapper namespace="com.dewarim.cinnamon.model.Folder">
 
-    <resultMap id="folderMap" type="com.dewarim.cinnamon.model.Folder">
-        <id property="id" column="id"/>
-        <result property="name" column="name"/>
-        <result property="aclId" column="acl_id"/>
-        <result property="ownerId" column="owner_id"/>
-        <result property="parentId" column="parent_id"/>
-        <result property="typeId" column="type_id"/>
-        <result property="metadataChanged" column="metadata_changed"/>
-        <result property="created" column="created"/>
-        <result property="summary" column="summary"/>
-        <result property="hasSubfolders" column="has_subfolders"/>
-    </resultMap>
-
-    <resultMap id="folderPathMap" type="com.dewarim.cinnamon.model.FolderPath">
-        <id property="id" column="id"/>
-        <result property="path" column="full_path"/>
-    </resultMap>
-
-    <resultMap id="tinyOwnableMap" type="com.dewarim.cinnamon.api.TinyOwnable">
-        <result column="id" property="id"/>
-        <result column="owner_id" property="ownerId"/>
-        <result column="acl_id" property="aclId"/>
-    </resultMap>
-
-    <select id="getFoldersById" parameterType="map" resultMap="folderMap">
+    <select id="getFoldersById" parameterType="map" resultType="com.dewarim.cinnamon.model.Folder">
         SELECT
         id,
         name,
@@ -50,7 +26,7 @@
         </foreach>
     </select>
 
-    <select id="getFolderByParentAndName" parameterType="map" resultMap="folderMap">
+    <select id="getFolderByParentAndName" parameterType="map" resultType="com.dewarim.cinnamon.model.Folder">
         SELECT id,
                name,
                acl_id,
@@ -66,8 +42,9 @@
           AND name = #{name}
     </select>
 
-    <select id="getFolderPaths" parameterType="list" resultMap="folderPathMap">
-        select id, '/' || full_path as full_path from (
+    <!-- "as path": the alias carries the name of the property, so no resultMap is needed. -->
+    <select id="getFolderPaths" parameterType="list" resultType="com.dewarim.cinnamon.model.FolderPath">
+        select id, '/' || full_path as path from (
         WITH RECURSIVE fp (id, parent_id, name, path_names, path_ids) AS (SELECT id,
         parent_id,
         name,
@@ -128,7 +105,7 @@
                          where id = #{id})
     </select>
 
-    <select id="getFolderByIdWithAncestors" parameterType="map" resultMap="folderMap">
+    <select id="getFolderByIdWithAncestors" parameterType="map" resultType="com.dewarim.cinnamon.model.Folder">
         SELECT id,
                name,
                acl_id,
@@ -173,7 +150,7 @@
         )
     </select>
 
-    <select id="getRootFolder" parameterType="map" resultMap="folderMap">
+    <select id="getRootFolder" parameterType="map" resultType="com.dewarim.cinnamon.model.Folder">
         SELECT id,
                name,
                acl_id,
@@ -193,7 +170,7 @@
           AND parent_id is NULL
     </select>
 
-    <select id="getFolderByParentIdAndChildName" parameterType="map" resultMap="folderMap">
+    <select id="getFolderByParentIdAndChildName" parameterType="map" resultType="com.dewarim.cinnamon.model.Folder">
         SELECT id,
                name,
                acl_id,
@@ -213,7 +190,7 @@
           AND parent_id = #{parentId}
     </select>
 
-    <select id="getDirectSubFolders" parameterType="map" resultMap="folderMap">
+    <select id="getDirectSubFolders" parameterType="map" resultType="com.dewarim.cinnamon.model.Folder">
         SELECT id,
                name,
                acl_id,
@@ -232,7 +209,7 @@
         WHERE parent_id = #{id}
     </select>
 
-    <select id="getChildFolderOfRootByName" parameterType="map" resultMap="folderMap">
+    <select id="getChildFolderOfRootByName" parameterType="map" resultType="com.dewarim.cinnamon.model.Folder">
         SELECT id,
                name,
                acl_id,
@@ -278,7 +255,6 @@
         WHERE id = #{id}
     </update>
 
-
     <insert id="insertFolder" parameterType="com.dewarim.cinnamon.model.Folder">
         <selectKey keyProperty="id" resultType="long" order="BEFORE">
             select nextval('seq_folder_and_object_ids')
@@ -304,7 +280,7 @@
             </foreach>
     </select>
 
-    <select id="getFoldersByOwnerId" parameterType="long" resultMap="folderMap">
+    <select id="getFoldersByOwnerId" parameterType="long" resultType="com.dewarim.cinnamon.model.Folder">
         select * from folders
         where owner_id = #{id}
     </select>
@@ -319,8 +295,7 @@
         </foreach>
     </delete>
 
-
-    <select id="getAllById" parameterType="list" resultMap="folderMap">
+    <select id="getAllById" parameterType="list" resultType="com.dewarim.cinnamon.model.Folder">
         SELECT *
         FROM folders
         WHERE id in
@@ -345,7 +320,7 @@
         from sub_folders;
     </select>
 
-    <select id="getFoldersAsOwnables" parameterType="java.util.List" resultMap="tinyOwnableMap">
+    <select id="getFoldersAsOwnables" parameterType="java.util.List" resultType="com.dewarim.cinnamon.api.TinyOwnable">
         SELECT id,
         acl_id,
         owner_id

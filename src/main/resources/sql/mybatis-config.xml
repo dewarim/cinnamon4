@@ -17,6 +17,15 @@
           always see committed data. Isolation stays READ_COMMITTED (see below).
         -->
         <setting name="localCacheScope" value="STATEMENT"/>
+        <setting name="mapUnderscoreToCamelCase" value="true"/>
+        <!--
+          What MyBatis does when a selected column has no matching property on the result type.
+          Production uses NONE: with 100+ SELECT * statements, FAILING would turn any migration
+          that adds a column into failing reads until the model catches up. The test run sets it
+          to FAILING (see surefire's systemPropertyVariables in pom.xml), so a statement that
+          silently drops a column fails CI instead of going unnoticed.
+        -->
+        <setting name="autoMappingUnknownColumnBehavior" value="${autoMappingUnknownColumnBehavior}"/>
     </settings>
     <typeHandlers>
         <typeHandler javaType="com.dewarim.cinnamon.model.links.LinkType" handler="com.dewarim.cinnamon.model.links.LinkTypeEnumHandler" jdbcType="VARCHAR"/>
@@ -69,6 +78,7 @@
         <mapper resource="com/dewarim/cinnamon/RelationMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/RelationTypeMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/SessionMapper.xml"/>
+        <mapper resource="com/dewarim/cinnamon/TikaFailureMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/UiLanguageMapper.xml"/>
         <mapper resource="com/dewarim/cinnamon/UserAccountMapper.xml"/>
     </mappers>

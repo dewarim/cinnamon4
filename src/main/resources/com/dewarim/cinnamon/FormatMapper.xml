@@ -5,16 +5,7 @@
 
 <mapper namespace="com.dewarim.cinnamon.model.Format">
 
-    <resultMap id="formatMap" type="com.dewarim.cinnamon.model.Format">
-        <id property="id" column="id"/>
-        <result property="contentType" column="contentType"/>
-        <result property="extension" column="extension"/>
-        <result property="name" column="name"/>
-        <result property="defaultObjectTypeId" column="default_object_type_id"/>
-        <result property="indexMode" column="index_mode"/>
-    </resultMap>
-
-    <select id="list" parameterType="map" resultMap="formatMap">
+    <select id="list" parameterType="map" resultType="com.dewarim.cinnamon.model.Format">
         SELECT *
         FROM formats
     </select>
@@ -47,7 +38,7 @@
         VALUES (#{id}, #{name}, #{contentType}, #{extension}, #{defaultObjectTypeId}, #{indexMode})
     </insert>
 
-    <select id="getAllById" parameterType="list" resultMap="formatMap">
+    <select id="getAllById" parameterType="list" resultType="com.dewarim.cinnamon.model.Format">
         SELECT *
         FROM formats
         WHERE id in

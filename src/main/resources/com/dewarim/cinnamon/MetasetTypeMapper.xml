@@ -5,9 +5,9 @@
 
 <mapper namespace="com.dewarim.cinnamon.model.MetasetType">
 
+    <!-- only the columns mapUnderscoreToCamelCase cannot derive -->
     <resultMap id="metasetTypeMap" type="com.dewarim.cinnamon.model.MetasetType">
         <id property="id" column="id"/>
-        <result property="name" column="name"/>
         <result property="unique" column="is_unique"/>
     </resultMap>
 
@@ -15,7 +15,7 @@
         SELECT *
         FROM metaset_types
     </select>
-    
+
     <select id="getMetasetTypeById" parameterType="Long" resultMap="metasetTypeMap">
         SELECT *
         FROM metaset_types
@@ -55,6 +55,5 @@
             #{item}
         </foreach>
     </delete>
-
 
 </mapper>

@@ -11,6 +11,7 @@ public class ReindexResponse extends BaseResponse implements ApiResponse {
 
     private int documentsToIndex;
     private int foldersToIndex;
+    private int tikaMetasetsDeleted;
 
     public ReindexResponse() {
     }
@@ -28,6 +29,18 @@ public class ReindexResponse extends BaseResponse implements ApiResponse {
         this.documentsToIndex = documentsToIndex;
     }
 
+    /**
+     * How many tika metasets were deleted, which is how a reindex with updateTikaMetaset makes
+     * TikaService extract those documents again. 0 unless updateTikaMetaset was set.
+     */
+    public int getTikaMetasetsDeleted() {
+        return tikaMetasetsDeleted;
+    }
+
+    public void setTikaMetasetsDeleted(int tikaMetasetsDeleted) {
+        this.tikaMetasetsDeleted = tikaMetasetsDeleted;
+    }
+
     public int getFoldersToIndex() {
         return foldersToIndex;
     }
@@ -38,7 +51,9 @@ public class ReindexResponse extends BaseResponse implements ApiResponse {
 
     @Override
     public List<Object> examples() {
-        return List.of(new ReindexResponse(1000, 123));
+        ReindexResponse response = new ReindexResponse(1000, 123);
+        response.setTikaMetasetsDeleted(1000);
+        return List.of(response);
     }
 
     @Override
@@ -46,6 +61,7 @@ public class ReindexResponse extends BaseResponse implements ApiResponse {
         return "ReindexResponse{" +
                 "documentsToIndex=" + documentsToIndex +
                 ", foldersToIndex=" + foldersToIndex +
+                ", tikaMetasetsDeleted=" + tikaMetasetsDeleted +
                 '}';
     }
 }
