@@ -4,6 +4,7 @@ import com.dewarim.cinnamon.api.content.ContentProvider;
 import com.dewarim.cinnamon.application.CinnamonServer;
 import com.dewarim.cinnamon.application.exception.CinnamonException;
 import com.dewarim.cinnamon.application.exception.TikaFailedException;
+import com.dewarim.cinnamon.application.exception.TikaUnavailableException;
 import com.dewarim.cinnamon.configuration.CinnamonTikaConfig;
 import com.dewarim.cinnamon.dao.*;
 import com.dewarim.cinnamon.model.*;
@@ -33,12 +34,23 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import static com.dewarim.cinnamon.api.Constants.TIKA_METASET_NAME;
 import static java.net.HttpURLConnection.HTTP_OK;
 
 public class TikaService implements Runnable {
     private static final Logger log = LogManager.getLogger(TikaService.class);
+
+    /**
+     * HTTP statuses that say something about the Tika server or whatever stands in front of it,
+     * rather than about the document that was sent: not found (a wrong baseUrl, or a path that
+     * moved with a Tika upgrade), unauthorized or forbidden (a proxy asking for credentials),
+     * request timeout, too many requests, and the gateway statuses of a server that is restarting
+     * or unreachable. Tika does not answer any of these for a document it cannot parse, so they are
+     * never counted against the document's attempts - see TikaUnavailableException.
+     */
+    private static final Set<Integer> STATUS_NOT_ABOUT_THE_DOCUMENT = Set.of(401, 403, 404, 408, 429, 502, 503, 504);
 
     private final CinnamonTikaConfig     config;
     private       Long                   tikaMetasetTypeId;
@@ -82,11 +94,26 @@ public class TikaService implements Runnable {
 
     @Override
     public void run() {
-        getTikaMetasetTypeId();
         while (true) {
-            int  extracted        = extractPendingMetasets();
+            int extracted = 0;
+            try {
+                extracted = extractPendingMetasets();
+            } catch (Exception e) {
+                // Nothing may escape into this loop: an exception here would end the thread for the
+                // lifetime of the server and no document would ever be extracted again, with no log
+                // line saying so. A row that cannot be read, or a database that is briefly
+                // unavailable, costs a pause instead. getTikaMetasetTypeId() is called from inside
+                // the pass for the same reason: a configuration error is reported on every pass
+                // rather than killing the service at startup.
+                log.error("A Tika extraction pass failed - trying again after the pause", e);
+            }
             long tikaPauseInMillis = extracted == config.getTikaBatchSize()
-                    // a full batch probably means there is more waiting: carry on without pausing.
+                    // A full batch came through, so there is probably more waiting: carry on without
+                    // pausing. Anything less - an empty queue, or a Tika that is not answering -
+                    // and the pause is what keeps this loop from spinning. It has to count the
+                    // documents that actually gained a metaset: during an outage the same full batch
+                    // is offered on every pass, and counting what was offered would pin the pause
+                    // at zero for as long as the outage lasts.
                     ? 0L
                     : config.getTikaPauseInMillis();
             try {
@@ -104,7 +131,8 @@ public class TikaService implements Runnable {
      * One pass over the queue: take up to tikaBatchSize objects that have no tika metaset and try
      * to give them one.
      *
-     * @return how many objects this pass looked at
+     * @return how many of them actually gained one. This is what the pause decision needs: a pass
+     * that extracted nothing must not be repeated immediately.
      */
     public int extractPendingMetasets() {
         List<ObjectSystemData> osds;
@@ -115,22 +143,36 @@ public class TikaService implements Runnable {
             osds = osdDao.getOsdsMissingTikaMetaset(getTikaMetasetTypeId(), config.getTikaBatchSize(),
                     config.getMaxTikaAttempts());
             for (ObjectSystemData objectSystemData : osds) {
-                Long   formatId = objectSystemData.getFormatId();
-                Format format   = formatDao.getObjectById(formatId).orElseThrow();
-                formats.put(formatId, format);
+                Long formatId = objectSystemData.getFormatId();
+                // a batch usually shares a handful of formats, so ask once per format, not per OSD:
+                if (!formats.containsKey(formatId)) {
+                    formatDao.getObjectById(formatId).ifPresent(format -> formats.put(formatId, format));
+                }
             }
         }
-        if (!osds.isEmpty()) {
-            log.info("TikaService found {} OSDs that need Tika metaset: {}", osds.size(), osds.stream().map(ObjectSystemData::getId).toList());
+        if (osds.isEmpty()) {
+            return 0;
         }
-        try {
-            for (ObjectSystemData osd : osds) {
-                extractMetaset(osd, formats.get(osd.getFormatId()));
+        log.info("TikaService found {} OSDs that need Tika metaset: {}", osds.size(), osds.stream().map(ObjectSystemData::getId).toList());
+        int extracted = 0;
+        for (ObjectSystemData osd : osds) {
+            Format format = formats.get(osd.getFormatId());
+            if (format == null) {
+                // The queue selects on the format's index mode, so the row is gone or the database
+                // is inconsistent. It is specific to this document and has to be counted: left
+                // uncounted it would be offered again on every pass forever, and left to throw it
+                // would abort the pass at the same document every time, so nothing else would ever
+                // be reached.
+                log.error("OSD {} refers to format {}, which does not exist - cannot extract.",
+                        osd.getId(), osd.getFormatId());
+                recordFailure(osd, "format " + osd.getFormatId() + " does not exist");
+                continue;
             }
-        } catch (Exception e) {
-            log.error("Failed to parse tika data", e);
+            if (extractMetaset(osd, format)) {
+                extracted++;
+            }
         }
-        return osds.size();
+        return extracted;
     }
 
     /**
@@ -139,33 +181,35 @@ public class TikaService implements Runnable {
      * <ul>
      *     <li>Tika answered but did not accept the document: counted, and given up on once
      *     maxTikaAttempts is reached.</li>
-     *     <li>Tika or the content store could not be reached: not counted. It says nothing about
-     *     this document, and counting it would write off every pending object during an outage.</li>
+     *     <li>Tika or the content store could not be reached, or Tika answered with a status that
+     *     is about the server rather than the document: not counted. It says nothing about this
+     *     document, and counting it would write off every pending object during an outage.</li>
      *     <li>Anything else: counted like a rejection. It is reached once per document, so leaving
      *     it uncounted would mean retrying it on every pass forever.</li>
      * </ul>
      * A failure must never end up as metaset content: an object that has a tika metaset is one this
      * service never looks at again.
+     *
+     * @return true if the object now has a tika metaset
      */
-    public void extractMetaset(ObjectSystemData osd, Format format) {
-        getTikaMetasetTypeId();
+    public boolean extractMetaset(ObjectSystemData osd, Format format) {
         try {
             ContentProvider contentProvider = contentProviderService.getContentProvider(osd.getContentProvider());
             if (contentProvider.contentUnavailable(osd)) {
                 log.error("File {} of OSD {} is unavailable - cannot create TikaMetaset",
                         osd.getContentPath(), osd.getId());
                 recordFailure(osd, "content is unavailable at " + osd.getContentPath());
-                return;
+                return false;
             }
             try (InputStream contentStream = contentProvider.getContentStream(osd)) {
-                convertContentToTikaMetaset(osd, contentStream, format);
+                return convertContentToTikaMetaset(osd, contentStream, format);
             }
         }
         catch (TikaFailedException e) {
             log.error("Tika did not return metadata for OSD {}: {}", osd.getId(), e.getMessage());
             recordFailure(osd, e.getMessage());
         }
-        catch (IOException | FailsafeException e) {
+        catch (TikaUnavailableException | IOException | FailsafeException e) {
             // FailsafeException is what the exhausted retry policy throws.
             log.error("Could not reach Tika or the content of OSD {} - will try again later: {}",
                     osd.getId(), e.getMessage());
@@ -174,6 +218,7 @@ public class TikaService implements Runnable {
             log.error("Failed to create TikaMetaset for OSD {} (path: {})", osd.getId(), osd.getContentPath(), e);
             recordFailure(osd, e.toString());
         }
+        return false;
     }
 
     /**
@@ -198,12 +243,23 @@ public class TikaService implements Runnable {
             final HttpPut httpPut = new HttpPut(config.getBaseUrl() + "/tika");
             httpPut.setEntity(new InputStreamEntity(input, contentLength, ContentType.parseLenient(format.getContentType())));
             return httpclient.execute(httpPut, response -> {
-                if (response.getCode() != HTTP_OK) {
+                int status = response.getCode();
+                if (status != HTTP_OK) {
                     // Deliberately not a return value: a stored "<tikaFailedToParse/>" document
                     // would count as a Tika metaset, and getOsdsMissingTikaMetaset would never
                     // offer this OSD again - a Tika server that answers 404 after an upgrade or a
                     // misconfigured baseUrl would silently write off everything it was given.
-                    throw new TikaFailedException("Tika answered with HTTP status " + response.getCode());
+                    //
+                    // Which exception it is decides whether the document pays for the failure. Tika
+                    // itself answers 400, 413, 415 or 422 for content it will not take, and 500
+                    // when a parser throws on it: those are about this document and are counted.
+                    // The statuses below are not - they are what a restarting Tika, a wrong baseUrl
+                    // or a proxy in front of it answers for every request alike, so counting them
+                    // would still write off the whole backlog during an outage.
+                    if (STATUS_NOT_ABOUT_THE_DOCUMENT.contains(status)) {
+                        throw new TikaUnavailableException("Tika answered with HTTP status " + status);
+                    }
+                    throw new TikaFailedException("Tika answered with HTTP status " + status);
                 }
 
                 // looking for extremely large responses that lead to OOM:
@@ -260,37 +316,53 @@ public class TikaService implements Runnable {
         return Failsafe.with(retryPolicy).get(() -> parseData(contentStream, contentLength, format, osdId));
     }
 
-    public void convertContentToTikaMetaset(ObjectSystemData osd, InputStream contentStream, Format format) throws
+    /**
+     * Ask Tika and store what comes back as the object's tika metaset.
+     * <p>
+     * The metaset type is fetched through {@link #getTikaMetasetTypeId()} rather than read from the
+     * field: a guard on the raw field would make this method a silent no-op whenever it had not been
+     * populated yet - no metaset stored, no failure recorded, and the object offered again on every
+     * pass forever.
+     *
+     * @return true if a metaset was stored, false if this object is not a candidate for extraction
+     */
+    public boolean convertContentToTikaMetaset(ObjectSystemData osd, InputStream contentStream, Format format) throws
             IOException {
-        if (isEnabled() && tikaMetasetTypeId != null && format.getIndexMode() == IndexMode.TIKA && osd.getContentSize() > 0) {
-            log.debug("Parse OSD #{} with Tika", osd.getId());
-            String tikaMetadata = parseWithTika(contentStream, osd.getContentSize(), format, osd.getId());
-            tikaMetadata = tikaMetadata.replace(" xmlns=\"http://www.w3.org/1999/xhtml\"", "");
-            if (config.isRemoveNewXmlVersionHeader() && tikaMetadata.startsWith("<?xml version=\"1.1\"")) {
-                tikaMetadata = tikaMetadata.replaceFirst("version=\"1.1\"", "version=\"1.0\"");
-            }
-            log.trace("Tika returned: {}", tikaMetadata);
-            try (SqlSession sqlSession = CinnamonServer.getSqlSession()) {
-                // TODO: do not load existing tikaMetaset (memory consumption)
-                OsdMetaDao     osdMetaDao  = new OsdMetaDao(sqlSession);
-                Optional<Meta> tikaMetaset = osdMetaDao.listWithoutContentByOsd(osd.getId()).stream().filter(meta -> meta.getTypeId().equals(tikaMetasetTypeId)).findFirst();
-                if (tikaMetaset.isPresent()) {
-                    Meta tikaMeta = tikaMetaset.get();
-                    tikaMeta.setContent(tikaMetadata);
-                    osdMetaDao.update(List.of(tikaMeta));
-                } else {
-                    Meta tikaMeta = new Meta(osd.getId(), tikaMetasetTypeId, tikaMetadata);
-                    osdMetaDao.create(List.of(tikaMeta));
-                }
-                // An extraction that worked clears the OSD's failure history, so a document that
-                // was rejected while Tika was broken or misconfigured starts over from zero
-                // attempts instead of keeping an old count that could later give up on it.
-                new TikaFailureDao(sqlSession).deleteByOsdIds(List.of(osd.getId()));
-                IndexJobDao indexJobDao = new IndexJobDao(sqlSession);
-                indexJobDao.insertIndexJob(new IndexJob(IndexJobType.OSD, osd.getId(), IndexJobAction.UPDATE), false);
-                sqlSession.commit();
-            }
+        if (!isEnabled() || format.getIndexMode() != IndexMode.TIKA || osd.getContentSize() <= 0) {
+            // The queue selects on exactly these properties, so for TikaService itself this is
+            // unreachable; a direct caller gets a no-op rather than an empty metaset.
+            log.debug("OSD #{} is not a candidate for Tika extraction", osd.getId());
+            return false;
         }
+        Long metasetTypeId = getTikaMetasetTypeId();
+        log.debug("Parse OSD #{} with Tika", osd.getId());
+        String tikaMetadata = parseWithTika(contentStream, osd.getContentSize(), format, osd.getId());
+        tikaMetadata = tikaMetadata.replace(" xmlns=\"http://www.w3.org/1999/xhtml\"", "");
+        if (config.isRemoveNewXmlVersionHeader() && tikaMetadata.startsWith("<?xml version=\"1.1\"")) {
+            tikaMetadata = tikaMetadata.replaceFirst("version=\"1.1\"", "version=\"1.0\"");
+        }
+        log.trace("Tika returned: {}", tikaMetadata);
+        try (SqlSession sqlSession = CinnamonServer.getSqlSession()) {
+            // TODO: do not load existing tikaMetaset (memory consumption)
+            OsdMetaDao     osdMetaDao  = new OsdMetaDao(sqlSession);
+            Optional<Meta> tikaMetaset = osdMetaDao.listWithoutContentByOsd(osd.getId()).stream().filter(meta -> meta.getTypeId().equals(metasetTypeId)).findFirst();
+            if (tikaMetaset.isPresent()) {
+                Meta tikaMeta = tikaMetaset.get();
+                tikaMeta.setContent(tikaMetadata);
+                osdMetaDao.update(List.of(tikaMeta));
+            } else {
+                Meta tikaMeta = new Meta(osd.getId(), metasetTypeId, tikaMetadata);
+                osdMetaDao.create(List.of(tikaMeta));
+            }
+            // An extraction that worked clears the OSD's failure history, so a document that
+            // was rejected while Tika was broken or misconfigured starts over from zero
+            // attempts instead of keeping an old count that could later give up on it.
+            new TikaFailureDao(sqlSession).deleteByOsdIds(List.of(osd.getId()));
+            IndexJobDao indexJobDao = new IndexJobDao(sqlSession);
+            indexJobDao.insertIndexJob(new IndexJob(IndexJobType.OSD, osd.getId(), IndexJobAction.UPDATE), false);
+            sqlSession.commit();
+        }
+        return true;
     }
 
 }

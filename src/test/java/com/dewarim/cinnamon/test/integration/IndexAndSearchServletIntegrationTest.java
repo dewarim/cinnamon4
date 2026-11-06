@@ -251,6 +251,33 @@ public class IndexAndSearchServletIntegrationTest extends CinnamonIntegrationTes
     }
 
     /**
+     * updateTikaMetaset applies to what the request names: the objects it lists, plus the content of
+     * the folders it lists. A folder reindex arrives with an empty osdIds list, and that must not be
+     * read as "the whole repository" - it would delete every tika metaset there is and have the
+     * entire corpus extracted again.
+     */
+    @Test
+    public void reindexWithUpdateTikaMetasetOnlyTouchesWhatTheRequestNames() throws IOException {
+        MetasetType      tikaType       = TestObjectHolder.getMetasetType(TIKA_METASET_NAME);
+        TestObjectHolder toh            = new TestObjectHolder(adminClient, userId);
+        Long             namedFolderId  = toh.createFolder("tika-reindex-folder", createFolderId).folder.getId();
+        Long             inNamedFolder  = toh.createOsd("tika-reindex-in-folder").osd.getId();
+        adminClient.createOsdMeta(inNamedFolder, "<tika>metadata of the folder's document</tika>", tikaType.getId());
+        Long elsewhere = new TestObjectHolder(adminClient, userId).createOsd("tika-reindex-elsewhere").osd.getId();
+        adminClient.createOsdMeta(elsewhere, "<tika>metadata of an unrelated document</tika>", tikaType.getId());
+
+        ReindexResponse response = adminClient.reindex(new ReindexRequest(List.of(), List.of(namedFolderId), true));
+
+        assertEquals(1, response.getTikaMetasetsDeleted(),
+                "only the content of the named folder should have been scheduled for extraction");
+        assertTrue(adminClient.getOsdMetas(inNamedFolder, List.of(tikaType.getId())).isEmpty(),
+                "the folder's document should be extracted again");
+        assertEquals(1, adminClient.getOsdMetas(elsewhere, List.of(tikaType.getId())).size(),
+                "an object outside the named folder must keep its tika metaset");
+        assertTrue(waitUntilIndexIsIdle(), "reindex did not finish");
+    }
+
+    /**
      * The failures TikaService records are reported by the index info endpoint. That is the only
      * place an operator can see them: the documents themselves are indexed and searchable, they
      * just carry no Tika metadata.

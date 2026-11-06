@@ -95,6 +95,12 @@ Changes v1.16.1:
   check above; the statement is exercised by no test, so this was caught by reading the mappers against the
   schema rather than by a failure.
 
+- fixed: the update statement of the deletions table selected on an id column, which that table does not
+  have - its key is osd_id, and Deletion.getId() returns exactly that, so the statement looked healthy and
+  would have failed against Postgres. Nothing calls DeletionDao.update today, which is why it never showed:
+  the strictness added above only covers statements a test actually runs, so this came from reading the
+  mappers against the schema. The statement selects on osd_id now and no longer sets the key it selects on.
+
 - fixed: statements over four tables no longer select columns their model cannot hold. The sessions table
   carries username and ui_language_id, and folder_types and object_types each
   carry a config column that no mapper or model mentions; all were being fetched and thrown away. Those
@@ -112,8 +118,21 @@ Changes v1.16.1:
   offered again. A Tika server that starts rejecting a content type after an upgrade, or a wrong baseUrl,
   therefore wrote off everything it was handed, silently and permanently: nothing reported it, and no API
   call could undo it. Such a rejection is now an error rather than a result, and the document stays in the
-  queue. Note that a server which cannot be reached at all is treated differently and always was: that says
-  nothing about the document, so it is retried indefinitely and never counted against it.
+  queue. Which failures the document pays for is decided by the status: Tika answers 400, 413, 415 or 422 for
+  content it will not take, and 500 when a parser throws on it, so those count against its attempts, while
+  401, 403, 404, 408, 429, 502, 503 and 504 are what a restarting server, a wrong baseUrl or a proxy in front
+  of Tika answers to every request alike and are not counted at all. Otherwise an outage would still write
+  off the whole backlog, just visibly instead of silently. A server that cannot be reached is treated the
+  same way and always was: it says nothing about the document, so it is retried indefinitely.
+
+- fixed: the Tika service survives a failed pass. Its loop had nothing catching an exception from the pass
+  itself, so one object pointing at a format row that no longer exists ended the thread for the lifetime of
+  the server - with no log line saying so, and no document extracted again until a restart. A failed pass now
+  costs a pause, an object whose format is gone is counted as a failure of that object, and the metaset type
+  is looked up inside the pass so that a database that is briefly unavailable at startup no longer leaves the
+  service dead. Relatedly, the loop skips its pause only after a pass that actually extracted something: it
+  used to skip it whenever the queue handed it a full batch, which during an outage is every single pass, so
+  the service hammered an unreachable Tika with no pause at all for as long as the outage lasted.
 
 - added: the objects whose Tika extraction failed are recorded in a new tika_failures table with their
   attempt count and the last error, and reported by index/info - the new listFailedTikaExtractions flag
@@ -124,9 +143,10 @@ Changes v1.16.1:
 
 - fixed: reindex honours updateTikaMetaset again. The flag has been part of the request, validated and
   documented, since the Tika service became asynchronous in v1.6.8, and has been ignored for just as long -
-  there was no way left to ask for a fresh extraction. It now deletes the tika metasets of the objects named
-  (all of them, for a full reindex) and forgets their recorded failures, which is what puts the documents
-  back in the extraction queue; the response says how many metasets were deleted. This is also the recovery
+  there was no way left to ask for a fresh extraction. It now deletes the tika metasets of what the request
+  names - the objects it lists, plus the content of the folders it lists, and the whole repository only for a
+  full reindex - and forgets their recorded failures, which is what puts the documents back in the extraction
+  queue; the response says how many metasets were deleted. This is also the recovery
   path after a Tika server was broken or a content store was unmounted.
 
 - fixed: replacing the content of an object with setContent deletes its tika metaset, so the metadata is

@@ -7,11 +7,13 @@ import com.dewarim.cinnamon.application.CinnamonResponse;
 import com.dewarim.cinnamon.application.service.SearchService;
 import com.dewarim.cinnamon.dao.IndexJobDao;
 import com.dewarim.cinnamon.dao.MetasetTypeDao;
+import com.dewarim.cinnamon.dao.OsdDao;
 import com.dewarim.cinnamon.dao.OsdMetaDao;
 import com.dewarim.cinnamon.dao.TikaFailureDao;
 import com.dewarim.cinnamon.model.MetasetType;
 import com.dewarim.cinnamon.model.request.index.IndexInfoRequest;
 import com.dewarim.cinnamon.model.request.index.ReindexRequest;
+import com.dewarim.cinnamon.model.request.osd.VersionPredicate;
 import com.dewarim.cinnamon.model.response.index.IndexInfoResponse;
 import com.dewarim.cinnamon.model.response.index.ReindexResponse;
 import com.dewarim.cinnamon.security.authorization.AuthorizationService;
@@ -22,8 +24,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static com.dewarim.cinnamon.api.Constants.SEARCH_SERVICE;
 import static com.dewarim.cinnamon.api.Constants.TIKA_METASET_NAME;
@@ -68,14 +73,15 @@ public class IndexServlet extends BaseServlet {
             }
         }
         if (reindexRequest.updateTikaMetaset()) {
-            reindexResponse.setTikaMetasetsDeleted(scheduleTikaExtraction(reindexRequest.osdIds()));
+            reindexResponse.setTikaMetasetsDeleted(scheduleTikaExtraction(reindexRequest));
         }
         cinnamonResponse.setResponse(reindexResponse);
     }
 
     /**
-     * Make TikaService extract these documents again - all of them, if the list is empty, which is
-     * what a full reindex asks for.
+     * Make TikaService extract documents again: the whole repository for a full reindex, and
+     * otherwise exactly what the request names - the objects it lists, plus the content of the
+     * folders it lists.
      * <p>
      * Reindexing on its own does not involve Tika: the indexer reads the tika metaset that is
      * already there, and TikaService fills that metaset for OSDs which do not have one yet. So the
@@ -85,7 +91,7 @@ public class IndexServlet extends BaseServlet {
      *
      * @return the number of tika metasets deleted
      */
-    private int scheduleTikaExtraction(List<Long> osdIds) {
+    private int scheduleTikaExtraction(ReindexRequest reindexRequest) {
         Optional<MetasetType> tikaMetasetType = new MetasetTypeDao().getMetasetTypeByName(TIKA_METASET_NAME);
         if (tikaMetasetType.isEmpty()) {
             // Without the metaset type, Tika cannot be in use at all (TikaService refuses to start
@@ -98,16 +104,42 @@ public class IndexServlet extends BaseServlet {
         OsdMetaDao     osdMetaDao     = new OsdMetaDao();
         TikaFailureDao tikaFailureDao = new TikaFailureDao();
         int            deleted;
-        if (osdIds.isEmpty()) {
+        // Only a full reindex means the whole repository. The condition has to be doFullReindex()
+        // and not "no osdIds were given": a request that names folders also arrives here with an
+        // empty osdIds list, and would then delete every tika metaset in the repository and have
+        // the entire corpus extracted again.
+        if (reindexRequest.doFullReindex()) {
             deleted = osdMetaDao.deleteByTypeId(typeId);
             tikaFailureDao.deleteAll();
         }
         else {
+            List<Long> osdIds = osdIdsToExtract(reindexRequest);
+            if (osdIds.isEmpty()) {
+                return 0;
+            }
             deleted = osdMetaDao.deleteByTypeIdAndOsdIds(typeId, osdIds);
             tikaFailureDao.deleteByOsdIds(osdIds);
         }
         log.info("Deleted {} tika metasets so they are extracted again.", deleted);
         return deleted;
+    }
+
+    /**
+     * The objects a partial reindex asks to extract again: the ones it names, plus the content of
+     * the folders it names. Not recursively - reindexFolders does not descend into sub folders
+     * either, so a folder means that folder.
+     */
+    private List<Long> osdIdsToExtract(ReindexRequest reindexRequest) {
+        if (reindexRequest.folderIds().isEmpty()) {
+            return reindexRequest.osdIds();
+        }
+        OsdDao    osdDao = new OsdDao();
+        Set<Long> osdIds = new LinkedHashSet<>(reindexRequest.osdIds());
+        for (Long folderId : reindexRequest.folderIds()) {
+            osdDao.getObjectsByFolderId(folderId, false, VersionPredicate.ALL)
+                    .forEach(osd -> osdIds.add(osd.getId()));
+        }
+        return new ArrayList<>(osdIds);
     }
 
     private void info(CinnamonRequest request, CinnamonResponse cinnamonResponse) throws IOException {

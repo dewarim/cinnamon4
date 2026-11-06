@@ -20,13 +20,16 @@
         </foreach>
     </delete>
 
+    <!--
+      osd_id is this table's key - it is the unique not-null column, and there is no id column at
+      all - so it identifies the row rather than being one of the values that are set.
+    -->
     <update id="update" parameterType="com.dewarim.cinnamon.model.Deletion">
         UPDATE deletions
-        SET osd_id       = #{osdId},
-            content_path = #{contentPath},
+        SET content_path = #{contentPath},
             deleted      = #{deleted},
             delete_failed= #{deleteFailed}
-            WHERE id = #{id}
+        WHERE osd_id = #{osdId}
     </update>
 
     <insert id="insert" parameterType="com.dewarim.cinnamon.model.Deletion">

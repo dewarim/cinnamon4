@@ -34,6 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *     <li>a document Tika rejects is retried, counted, and eventually given up on - but never
  *     written off by storing the error as its metadata;</li>
  *     <li>a Tika server that cannot be reached at all costs the document nothing;</li>
+ *     <li>neither does a status that is about the server rather than the document;</li>
  *     <li>a successful extraction clears the document's failure history.</li>
  * </ul>
  * The real service thread is not running during the test run (useTika is false in the test
@@ -92,7 +93,9 @@ public class TikaExtractionIntegrationTest extends CinnamonIntegrationTest {
         ObjectSystemData osd   = createOsdWithImageContent("tika-rejected-then-extracted");
         Long             osdId = osd.getId();
         try (FakeTikaServer fakeTika = new FakeTikaServer()) {
-            fakeTika.enqueueError(503).enqueueError(422).enqueueMetadata(TIKA_METADATA);
+            // 415 and 422 are what Tika answers for content it will not take, and 500 for a
+            // parser that threw on it: all three are about this document and are counted.
+            fakeTika.enqueueError(415).enqueueError(422).enqueueMetadata(TIKA_METADATA);
             TikaService tikaService = tikaServiceFor(fakeTika.getBaseUrl(), 3);
 
             // first pass: Tika is reachable but unhappy.
@@ -102,7 +105,7 @@ public class TikaExtractionIntegrationTest extends CinnamonIntegrationTest {
             TikaFailure afterFirst = failureOf(osdId).orElseThrow(
                     () -> new AssertionError("the rejection should have been recorded"));
             assertEquals(1, afterFirst.getAttempts());
-            assertTrue(afterFirst.getLastError().contains("503"), afterFirst.getLastError());
+            assertTrue(afterFirst.getLastError().contains("415"), afterFirst.getLastError());
 
             // second pass: still unhappy, and the same row counts up.
             tikaService.extractMetaset(osd, formatOf(osd));
@@ -159,6 +162,40 @@ public class TikaExtractionIntegrationTest extends CinnamonIntegrationTest {
                     "raising maxTikaAttempts should bring it back - as a reindex with "
                             + "updateTikaMetaset does by deleting the record");
             assertTrue(tikaMetasetsOf(osdId).isEmpty());
+        }
+        finally {
+            cleanUp(osdId);
+        }
+    }
+
+    /**
+     * The same rule for a Tika that answers, but with a status that is about itself rather than
+     * about the document: a server that is restarting answers 503 to everything it is given, and a
+     * baseUrl that moved with an upgrade answers 404 to everything. Counting either would write off
+     * the whole backlog within maxTikaAttempts passes, so the document pays nothing and is simply
+     * extracted once Tika is back.
+     */
+    @Test
+    public void serverSideStatusIsNotCountedAgainstTheDocument() throws IOException {
+        ObjectSystemData osd        = createOsdWithImageContent("tika-server-side-status");
+        Long             osdId      = osd.getId();
+        Long             tikaTypeId = TestObjectHolder.getMetasetType(TIKA_METASET_NAME).getId();
+        try (FakeTikaServer fakeTika = new FakeTikaServer()) {
+            fakeTika.enqueueError(503).enqueueError(404).enqueueMetadata(TIKA_METADATA);
+            TikaService tikaService = tikaServiceFor(fakeTika.getBaseUrl(), 2);
+
+            tikaService.extractMetaset(osd, formatOf(osd));
+            assertTrue(failureOf(osdId).isEmpty(),
+                    "a server that is restarting says nothing about the document");
+            tikaService.extractMetaset(osd, formatOf(osd));
+            assertTrue(failureOf(osdId).isEmpty(), "and neither does a baseUrl that points nowhere");
+            assertTrue(isInQueue(osdId, tikaTypeId, 2),
+                    "the document should still be waiting, with all of its attempts left");
+            assertTrue(tikaMetasetsOf(osdId).isEmpty());
+
+            // Tika is back:
+            tikaService.extractMetaset(osd, formatOf(osd));
+            assertEquals(1, tikaMetasetsOf(osdId).size(), "the document should be extracted now");
         }
         finally {
             cleanUp(osdId);

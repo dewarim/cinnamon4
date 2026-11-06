@@ -2,6 +2,7 @@ package com.dewarim.cinnamon.test.integration;
 
 
 import com.dewarim.cinnamon.application.exception.TikaFailedException;
+import com.dewarim.cinnamon.application.exception.TikaUnavailableException;
 import com.dewarim.cinnamon.application.service.TikaService;
 import com.dewarim.cinnamon.configuration.CinnamonTikaConfig;
 import com.dewarim.cinnamon.model.Format;
@@ -75,14 +76,19 @@ public class TikaServiceIntegrationTest {
      * getOsdsMissingTikaMetaset, and the OSD would never be offered again - so a Tika server that
      * returns 404 after an upgrade, or a wrong baseUrl, would silently and permanently write off
      * every document it was given.
+     * <p>
+     * Which of the two exceptions it is decides whether the document pays for the failure: 503 is
+     * about the server and must not be counted against the document, 422 is Tika refusing this
+     * content and is.
      */
     @Test
     public void tikaErrorResponseMustNotBecomeMetasetContent() throws IOException {
-        HttpServer brokenTika = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        int[]      answeredStatus = {503};
+        HttpServer brokenTika     = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         brokenTika.createContext("/tika", exchange -> {
             // read the upload, or the client sees a reset connection rather than our status:
             exchange.getRequestBody().readAllBytes();
-            exchange.sendResponseHeaders(503, -1);
+            exchange.sendResponseHeaders(answeredStatus[0], -1);
             exchange.close();
         });
         brokenTika.start();
@@ -91,9 +97,15 @@ public class TikaServiceIntegrationTest {
                     "http://127.0.0.1:" + brokenTika.getAddress().getPort(), true);
             TikaService tikaService = new TikaService(config, contentProviderService);
             try (FileInputStream bunnyStream = new FileInputStream(bun)) {
-                TikaFailedException exception = assertThrows(TikaFailedException.class,
+                TikaUnavailableException exception = assertThrows(TikaUnavailableException.class,
                         () -> tikaService.parseData(bunnyStream, bun.length(), imageFormat, osdId));
                 assertTrue(exception.getMessage().contains("503"), exception.getMessage());
+            }
+            answeredStatus[0] = 422;
+            try (FileInputStream bunnyStream = new FileInputStream(bun)) {
+                TikaFailedException exception = assertThrows(TikaFailedException.class,
+                        () -> tikaService.parseData(bunnyStream, bun.length(), imageFormat, osdId));
+                assertTrue(exception.getMessage().contains("422"), exception.getMessage());
             }
         }
         finally {
