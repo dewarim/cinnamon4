@@ -1,5 +1,11 @@
 Changes v1.16.1:
 
+## Required migration step
+
+This release changes the database schema, and a repository that has been running with Tika needs a
+one-time cleanup on top of it. The DDL and the queries are in docs/migration.2026.adoc, section
+v1.16.1. Apply them before starting the new server.
+
 - database change: four columns are renamed - deletions.is_deleted to deleted, users.pwd to password,
   objects.state_id to lifecycle_state_id and lifecycle_states.copy_state_id to
   lifecycle_state_for_copy_id. A new tika_failures table records the objects whose Tika extraction failed,
@@ -7,6 +13,8 @@ Changes v1.16.1:
   timestamp. A repository that has been running with Tika also needs a one-time cleanup of the metasets the
   old error handling left behind - see docs/migration.2026.adoc, section v1.16.1, for the DDL and the
   queries. No API client sees any of this, but SQL you maintain yourself refers to the old column names.
+
+## User facing: API, configuration and logging
 
 - changed: /cinnamon/info reports the git revision the server was built from instead of a build counter, and
   gained a buildTime element next to it. The build element is still there and still a string, but its content
@@ -17,15 +25,6 @@ Changes v1.16.1:
   counter said nothing the version did not, while failing to answer the question it looked like it answered -
   which source a running server was built from. The revision answers exactly that, and buildTime keeps the
   at-a-glance ordering a revision cannot express.
-
-- changed: nothing in the working tree is rewritten by a build any more. The counter lived in a tracked
-  src/main/resources/buildNumber.properties, which 205 of the first 881 commits in this repository touched;
-  the revision is filtered into target/classes/cinnamon-build.properties at build time and the file in
-  src/main/resources holds only placeholders. That also removes an off-by-one that affected every release so
-  far: buildnumber-maven-plugin ran at the compile phase, after process-resources had already copied the
-  resources, so the released jar always carried the number from before the build while the repository recorded
-  the one after it - v1.16.0's jar says 931 where its release commit says 932. The plugin runs at validate now,
-  before the resources are copied.
 
 - fixed: a missing build-info file no longer takes /cinnamon/info down with it. getResourceAsStream returns
   null when the file is absent, and Properties.load(null) throws a NullPointerException rather than the
@@ -58,59 +57,7 @@ Changes v1.16.1:
   still outside this is the JVM's own "Using incubator modules: jdk.incubator.vector", which is printed before
   any logging exists and cannot be configured away while the Vector API is an incubator module.
 
-- changed: AccessLogEntry.created is a LocalDateTime instead of a java.sql.Timestamp (github issues #228, #432).
-  It was the last legacy date type left in the main sources. The field is written by the database
-  (access_log.created defaults to CURRENT_TIMESTAMP) and read by MyBatis auto-mapping, and no code calls the
-  accessors, so nothing else changed. Note that access_log.created is a timestamptz while the column behind
-  every other LocalDateTime in the model is a plain timestamp: reading it as a LocalDateTime converts to the
-  JVM's zone and drops the offset. That matches the rest of the model and the field is unused, but
-  OffsetDateTime would be the faithful mapping if it ever gets read.
-
-
-- changed: column names are mapped by convention rather than declared one by one. MyBatis'
-  mapUnderscoreToCamelCase setting is enabled, so content_hash reaches contentHash without a line saying so,
-  and the mappers went from 35 resultMap declarations holding 169 mapping lines to 4 holding 7. Two of the
-  maps that went existed only because a statement gave a computed column a name of its own: those now alias
-  the column after the property ("as path" in getFolderPaths, "as head_id" in rootAndLatestHead), one held
-  nothing but the primary key of a column already called id, and four more were retired by renaming the
-  column in the database (see the first entry). The four that remain are the exceptions that cannot be
-  renamed away: osd_id and folder_id to objectId, where one Meta class serves two tables and links carries
-  both columns on purpose, and is_unique to unique, where the column cannot take the property's name
-  because unique is a reserved word. Nothing on the wire
-  changed and no query changed its result: a resultMap always took precedence over auto-mapping, so enabling
-  the setting on its own was a no-op, and every deleted declaration listed exactly what the convention now
-  derives. Note that MyBatis matches column names case-insensitively, which is why formats.contenttype
-  reaches contentType and index_items.fieldname reaches fieldName with no declaration at all.
-
-- added: the test run fails when a statement selects a column that the result type has no property for,
-  instead of dropping it silently. That is MyBatis' autoMappingUnknownColumnBehavior, set to FAILING through
-  a system property that surefire passes and DbSessionFactory reads. Production leaves it at NONE on purpose:
-  over a hundred statements select every column of their table, so FAILING there would turn a migration that
-  adds a column into failing reads until the model caught up. Under NONE the behaviour is exactly what it has
-  always been, which is what makes the strictness safe to confine to the build.
-
-- fixed: getGroupsOfUserById selected every column of both joined tables, and groups and group_users each
-  have an id column, so the result set carried two columns of that name and which one filled Group.id
-  depended on the order the driver reported them in. It selects only the groups columns now. Found by the
-  check above; the statement is exercised by no test, so this was caught by reading the mappers against the
-  schema rather than by a failure.
-
-- fixed: the update statement of the deletions table selected on an id column, which that table does not
-  have - its key is osd_id, and Deletion.getId() returns exactly that, so the statement looked healthy and
-  would have failed against Postgres. Nothing calls DeletionDao.update today, which is why it never showed:
-  the strictness added above only covers statements a test actually runs, so this came from reading the
-  mappers against the schema. The statement selects on osd_id now and no longer sets the key it selects on.
-
-- fixed: statements over four tables no longer select columns their model cannot hold. The sessions table
-  carries username and ui_language_id, and folder_types and object_types each
-  carry a config column that no mapper or model mentions; all were being fetched and thrown away. Those
-  statements list their columns explicitly instead. No behaviour change - the values were already discarded -
-  but selecting them made the tables and the models look like they agreed when they do not.
-
-- changed: AccessLogMapper lost a resultMap that no statement referenced. Its one select already named a
-  result type, so the declaration had been dead since it was written. The access log uses a second MyBatis
-  session factory with its own configuration file, which got the same two settings as the main one so the two
-  cannot drift apart.
+## User facing: Tika extraction
 
 - fixed: a Tika server that answers with an HTTP error no longer makes the document unindexable for good.
   The error was turned into metaset content ("tikaFailedToParse"), and since the Tika service looks for
@@ -149,6 +96,14 @@ Changes v1.16.1:
   up on after maxTikaAttempts tries (new in cinnamonTikaConfig, default 3) instead of being retried on every
   pass of the service forever, which is what used to happen to an object whose content file was missing.
 
+- changed: the retryDelayInSeconds and maxRetryDelayInSeconds settings of cinnamonTikaConfig are now actually
+  read - the retry policy had the defaults hard-coded - and a configuration that cannot work is reported and
+  replaced by the default rather than taken literally: a delay of zero or less is what failsafe rejects with
+  an IllegalArgumentException naming neither the setting nor the file, thrown out of server startup, and a
+  maxTikaAttempts of zero reads like "no limit" while meaning that the first failure writes a document off
+  for good. Such a value is now logged with the name of the setting and the default used in its place. A
+  configuration that leaves no room to back off retries at a constant delay, as before.
+
 - fixed: reindex honours updateTikaMetaset again. The flag has been part of the request, validated and
   documented, since the Tika service became asynchronous in v1.6.8, and has been ignored for just as long -
   there was no way left to ask for a fresh extraction. It now deletes the tika metasets of what the request
@@ -163,21 +118,88 @@ Changes v1.16.1:
   other paths that replace content already did this (copyToExisting) or create a new object that has no
   metaset to begin with (create, version, copy).
 
-- changed: removed what was left of the synchronous Tika path, all of it unreachable since v1.6.8: the
-  index_jobs.update_tika_metaset column (never written, and no property on IndexJob), the third parameter of
-  OsdDao.updateOsd, which the method body ignored, and the local flag the version endpoint computed to pass
-  to it. The retryDelayInSeconds and maxRetryDelayInSeconds settings of cinnamonTikaConfig are now actually
-  read - the retry policy had the defaults hard-coded - and a configuration that cannot work is reported and
-  replaced by the default rather than taken literally: a delay of zero or less is what failsafe rejects with
-  an IllegalArgumentException naming neither the setting nor the file, thrown out of server startup, and a
-  maxTikaAttempts of zero reads like "no limit" while meaning that the first failure writes a document off
-  for good. A configuration that leaves no room to back off retries at a constant delay, as before.
-
 - fixed: the access log can be read back. Its created column was a timestamptz, which the driver refuses to
   hand to the LocalDateTime property it belongs to, and the entry class had no constructor MyBatis could use
   - so AccessLogDao.list threw on both counts. Nothing in the server reads the access log, which is why
   neither showed up: a statement has to return a row before either can fail. The column is a plain timestamp
-  now, like every other timestamp the models read, and the read path has a test. The constructor the read
-  needs also exposed an older oddity in the same class: the set of paths whose request body is not logged was
-  assigned from an instance initializer, so it was re-assigned on every construction - which for a read means
-  once per row, from whichever thread is reading. It is assigned where it is declared now.
+  now, like every other timestamp the models read, and the read path has a test.
+
+## Internal improvements: column mapping, build and dead code
+
+- changed: column names are mapped by convention rather than declared one by one. MyBatis'
+  mapUnderscoreToCamelCase setting is enabled, so content_hash reaches contentHash without a line saying so,
+  and the mappers went from 35 resultMap declarations holding 169 mapping lines to 4 holding 7. Two of the
+  maps that went existed only because a statement gave a computed column a name of its own: those now alias
+  the column after the property ("as path" in getFolderPaths, "as head_id" in rootAndLatestHead), one held
+  nothing but the primary key of a column already called id, and four more were retired by renaming the
+  column in the database (see the migration entry above). The four that remain are the exceptions that cannot
+  be renamed away: osd_id and folder_id to objectId, where one Meta class serves two tables and links carries
+  both columns on purpose, and is_unique to unique, where the column cannot take the property's name
+  because unique is a reserved word. Nothing on the wire
+  changed and no query changed its result: a resultMap always took precedence over auto-mapping, so enabling
+  the setting on its own was a no-op, and every deleted declaration listed exactly what the convention now
+  derives. Note that MyBatis matches column names case-insensitively, which is why formats.contenttype
+  reaches contentType and index_items.fieldname reaches fieldName with no declaration at all.
+
+- fixed: getGroupsOfUserById selected every column of both joined tables, and groups and group_users each
+  have an id column, so the result set carried two columns of that name and which one filled Group.id
+  depended on the order the driver reported them in. It selects only the groups columns now. Found by the
+  test-run strictness described under Testing below; the statement is exercised by no test, so this was
+  caught by reading the mappers against the schema rather than by a failure.
+
+- fixed: the update statement of the deletions table selected on an id column, which that table does not
+  have - its key is osd_id, and Deletion.getId() returns exactly that, so the statement looked healthy and
+  would have failed against Postgres. Nothing calls DeletionDao.update today, which is why it never showed:
+  the strictness described under Testing below only covers statements a test actually runs, so this came from
+  reading the mappers against the schema. The statement selects on osd_id now and no longer sets the key it
+  selects on.
+
+- fixed: statements over four tables no longer select columns their model cannot hold. The sessions table
+  carries username and ui_language_id, and folder_types and object_types each
+  carry a config column that no mapper or model mentions; all were being fetched and thrown away. Those
+  statements list their columns explicitly instead. No behaviour change - the values were already discarded -
+  but selecting them made the tables and the models look like they agreed when they do not.
+
+- changed: AccessLogMapper lost a resultMap that no statement referenced. Its one select already named a
+  result type, so the declaration had been dead since it was written. The access log uses a second MyBatis
+  session factory with its own configuration file, which got the same two settings as the main one so the two
+  cannot drift apart.
+
+- changed: AccessLogEntry.created is a LocalDateTime instead of a java.sql.Timestamp (github issues #228, #432).
+  It was the last legacy date type left in the main sources. The field is written by the database
+  (access_log.created defaults to CURRENT_TIMESTAMP) and read by MyBatis auto-mapping, and no code calls the
+  accessors, so nothing else changed. Note that access_log.created is a timestamptz while the column behind
+  every other LocalDateTime in the model is a plain timestamp: reading it as a LocalDateTime converts to the
+  JVM's zone and drops the offset. That matches the rest of the model and the field is unused, but
+  OffsetDateTime would be the faithful mapping if it ever gets read.
+
+- fixed: the set of paths whose request body is not logged is assigned where it is declared. It was a static
+  field assigned from an instance initializer, so it was re-assigned on every construction - which, now that
+  the access log can be read, means once per row from whichever thread is reading. The constructor the read
+  path needs is what exposed it.
+
+- changed: removed what was left of the synchronous Tika path, all of it unreachable since v1.6.8: the
+  index_jobs.update_tika_metaset column (never written, and no property on IndexJob), the third parameter of
+  OsdDao.updateOsd, which the method body ignored, and the local flag the version endpoint computed to pass
+  to it. The lookup of the tika metaset type lives in MetasetTypeDao now instead of being spelled out in
+  three places.
+
+- changed: nothing in the working tree is rewritten by a build any more. The counter lived in a tracked
+  src/main/resources/buildNumber.properties, which 205 of the first 881 commits in this repository touched;
+  the revision is filtered into target/classes/cinnamon-build.properties at build time and the file in
+  src/main/resources holds only placeholders. That also removes an off-by-one that affected every release so
+  far: buildnumber-maven-plugin ran at the compile phase, after process-resources had already copied the
+  resources, so the released jar always carried the number from before the build while the repository recorded
+  the one after it - v1.16.0's jar says 931 where its release commit says 932. The plugin runs at validate now,
+  before the resources are copied.
+
+## Testing
+
+- added: the test run fails when a statement selects a column that the result type has no property for,
+  instead of dropping it silently. That is MyBatis' autoMappingUnknownColumnBehavior, set to FAILING through
+  a system property that surefire passes and DbSessionFactory reads. Production leaves it at NONE on purpose:
+  over a hundred statements select every column of their table, so FAILING there would turn a migration that
+  adds a column into failing reads until the model caught up. Under NONE the behaviour is exactly what it has
+  always been, which is what makes the strictness safe to confine to the build. It only covers statements a
+  test actually runs, which is why the two mapper bugs above were found by reading the mappers against the
+  schema instead.
