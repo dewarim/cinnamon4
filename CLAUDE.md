@@ -161,6 +161,10 @@ All servlets live in `application/servlet/`. Every resource type (Acl, Folder, O
 
 All API endpoints are declared in the `UrlMapping` enum — this is the single source of truth for every URL path. Convention: `RESOURCE__METHOD` maps to `/api/<resource>/<method>`.
 
+`AdminServlet` is the exception to one-servlet-per-resource: it serves `/api/admin/*`, which reports
+on the server's own operation (index events, the access log) rather than on a resource, and checks
+superuser status once for the whole servlet - so an endpoint added there is closed by default.
+
 Request/response objects are in `model/request/` and `model/response/`. The API is XML by default (Jackson XmlMapper); JSON is also supported. All responses are wrapped in a `Wrapper<T>` object.
 
 ### DAO Layer

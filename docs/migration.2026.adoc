@@ -201,8 +201,9 @@ pass of the Tika service:
 
 From this release on, a rejected document is recorded in `tika_failures` rather than being written
 off silently: it is retried until `maxTikaAttempts` (new in `cinnamonTikaConfig`, default 3), and
-`index/info` reports the ones that were given up on - `listFailedTikaExtractions` returns them with
-their attempt count and the last error. A Tika server that cannot be reached at all is not counted
+`index/info` reports the ones that were given up on - its `listFailedTikaExtractions` flag and the
+`admin/listFailedTikaExtractions` endpoint both return them with their attempt count and the last
+error. A Tika server that cannot be reached at all is not counted
 against any document and is retried indefinitely, so an outage no longer costs anything.
 
 To make Cinnamon extract documents again - after fixing a broken Tika server, or remounting the

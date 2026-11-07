@@ -3,6 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
+<!-- No resultMap: every column of index_events is derivable by mapUnderscoreToCamelCase. -->
 <mapper namespace="com.dewarim.cinnamon.model.index.IndexEvent">
 
     <select id="getAllById" parameterType="list" resultType="com.dewarim.cinnamon.model.index.IndexEvent">
@@ -15,7 +16,7 @@
         </foreach>
     </select>
 
-    <update id="update" parameterType="com.dewarim.cinnamon.model.Acl">
+    <update id="update" parameterType="com.dewarim.cinnamon.model.index.IndexEvent">
         UPDATE index_events
         SET local_time = #{localTime},
             job_id = #{jobId},
@@ -25,7 +26,7 @@
         WHERE id = #{id}
     </update>
 
-    <insert id="insert" parameterType="com.dewarim.cinnamon.model.Acl">
+    <insert id="insert" parameterType="com.dewarim.cinnamon.model.index.IndexEvent">
         <selectKey keyProperty="id" resultType="long" order="BEFORE">
             select nextval('seq_index_event_id')
         </selectKey>
@@ -42,9 +43,51 @@
         </foreach>
     </delete>
 
+    <!--
+      Unlimited, and therefore not what the API uses: see listNewest. One row per failed index job
+      means this table grows with the number of problems, not with the size of the repository, but a
+      broken index writes a row per job per attempt, so the whole table can be large.
+    -->
     <select id="list" resultType="com.dewarim.cinnamon.model.index.IndexEvent">
         SELECT *
         FROM index_events
     </select>
+
+    <!--
+      What admin/listIndexEvents reads: the newest rows first, so an operator looking at a problem
+      that is happening now does not have to page through the history to find it. Ordered by id
+      rather than by local_time, because local_time is set by the application and two events written
+      in the same millisecond would have no defined order; the id comes from a sequence and is
+      strictly increasing.
+    -->
+    <select id="listNewest" parameterType="map" resultType="com.dewarim.cinnamon.model.index.IndexEvent">
+        SELECT *
+        FROM index_events
+        <if test="eventType != null">
+            WHERE event_type = #{eventType}
+        </if>
+        ORDER BY id DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="count" resultType="int">
+        SELECT count(*)
+        FROM index_events
+    </select>
+
+    <!--
+      Retention, driven by luceneConfig.truncateIndexEventsAfterRow: deletes the oldest rows, which
+      is what the access log does with its own table. A time-based rule would be the better fit for
+      a log, but it needs a value an operator can reason about ("keep 30 days") and the row count is
+      what bounds the table - so the row count is what this prunes by.
+    -->
+    <delete id="truncate" parameterType="int">
+        DELETE
+        FROM index_events
+        WHERE id in (select id
+                     from index_events
+                     order by id
+                     limit #{numberOfRowsToDelete})
+    </delete>
 
 </mapper>

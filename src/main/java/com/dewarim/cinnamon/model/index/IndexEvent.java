@@ -1,12 +1,16 @@
 package com.dewarim.cinnamon.model.index;
 
 import com.dewarim.cinnamon.api.Identifiable;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.time.LocalDateTime;
 
 public class IndexEvent implements Identifiable {
 
     private Long           id;
+    // Without this, the value goes out as an array of numbers and the client cannot read it back
+    // (see ObjectSystemData.created, TikaFailure.lastAttempt - the same convention everywhere).
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime  localTime = LocalDateTime.now();
     private Long           jobId;
     private IndexEventType eventType = IndexEventType.GENERIC;

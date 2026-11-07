@@ -3,6 +3,10 @@ package com.dewarim.cinnamon.client;
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
 import com.dewarim.cinnamon.model.*;
+import com.dewarim.cinnamon.model.event.AccessLogEntry;
+import com.dewarim.cinnamon.model.index.IndexEvent;
+import com.dewarim.cinnamon.model.index.IndexEventType;
+import com.dewarim.cinnamon.model.index.TikaFailure;
 import com.dewarim.cinnamon.model.links.Link;
 import com.dewarim.cinnamon.model.links.LinkResolver;
 import com.dewarim.cinnamon.model.links.LinkType;
@@ -16,6 +20,9 @@ import com.dewarim.cinnamon.model.request.acl.CreateAclRequest;
 import com.dewarim.cinnamon.model.request.acl.DeleteAclRequest;
 import com.dewarim.cinnamon.model.request.acl.ListAclRequest;
 import com.dewarim.cinnamon.model.request.aclGroup.*;
+import com.dewarim.cinnamon.model.request.admin.ListAccessLogRequest;
+import com.dewarim.cinnamon.model.request.admin.ListFailedTikaExtractionsRequest;
+import com.dewarim.cinnamon.model.request.admin.ListIndexEventsRequest;
 import com.dewarim.cinnamon.model.request.changeTrigger.CreateChangeTriggerRequest;
 import com.dewarim.cinnamon.model.request.changeTrigger.DeleteChangeTriggerRequest;
 import com.dewarim.cinnamon.model.request.changeTrigger.ListChangeTriggerRequest;
@@ -147,6 +154,9 @@ public class CinnamonClient {
     private final Unwrapper<CinnamonConnection, CinnamonConnectionWrapper>       connectUnwrapper               = new Unwrapper<>(CinnamonConnectionWrapper.class);
     private final Unwrapper<MetasetType, MetasetTypeWrapper>                     metasetTypeUnwrapper           = new Unwrapper<>(MetasetTypeWrapper.class);
     private final Unwrapper<IndexItem, IndexItemWrapper>                         indexItemUnwrapper             = new Unwrapper<>(IndexItemWrapper.class);
+    private final Unwrapper<IndexEvent, IndexEventWrapper>                       indexEventUnwrapper            = new Unwrapper<>(IndexEventWrapper.class);
+    private final Unwrapper<AccessLogEntry, AccessLogWrapper>                    accessLogUnwrapper             = new Unwrapper<>(AccessLogWrapper.class);
+    private final Unwrapper<TikaFailure, TikaFailureWrapper>                     tikaFailureUnwrapper           = new Unwrapper<>(TikaFailureWrapper.class);
     private final Unwrapper<UrlMappingInfo, UrlMappingInfoWrapper>               urlMappingInfoWrapperUnwrapper = new Unwrapper<>(UrlMappingInfoWrapper.class);
 
     private boolean generateTicketIfNull = true;
@@ -1331,6 +1341,42 @@ public class CinnamonClient {
         var              request  = new IndexInfoRequest(countDocuments, listFailedIndexJobs, listFailedTikaExtractions);
         StandardResponse response = sendStandardRequest(INDEX__INFO, request);
         return new SingletonUnwrapper<>(IndexInfoResponse.class).unwrap(response);
+    }
+
+    /**
+     * The newest index events, which is what the server recorded about index jobs it could not do.
+     * Superuser only.
+     *
+     * @param limit     how many at most, or null for the server's default
+     * @param eventType only events of this type, or null for every type
+     */
+    public List<IndexEvent> listIndexEvents(Integer limit, IndexEventType eventType) throws IOException {
+        var request  = new ListIndexEventsRequest(limit, eventType);
+        var response = sendStandardRequest(UrlMapping.ADMIN__LIST_INDEX_EVENTS, request);
+        return indexEventUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
+    }
+
+    /**
+     * The newest access log entries - the requests that failed. Superuser only.
+     *
+     * @param limit how many at most, or null for the server's default
+     */
+    public List<AccessLogEntry> listAccessLog(Integer limit) throws IOException {
+        var request  = new ListAccessLogRequest(limit);
+        var response = sendStandardRequest(UrlMapping.ADMIN__LIST_ACCESS_LOG, request);
+        return accessLogUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
+    }
+
+    /**
+     * The objects whose Tika extraction failed, with the attempts made and the last error.
+     * Superuser only.
+     *
+     * @param limit how many at most, or null for the server's default
+     */
+    public List<TikaFailure> listFailedTikaExtractions(Integer limit) throws IOException {
+        var request  = new ListFailedTikaExtractionsRequest(limit);
+        var response = sendStandardRequest(UrlMapping.ADMIN__LIST_FAILED_TIKA_EXTRACTIONS, request);
+        return tikaFailureUnwrapper.unwrap(response, EXPECTED_SIZE_ANY);
     }
 
     public ReindexResponse reindex(ReindexRequest request) throws IOException {

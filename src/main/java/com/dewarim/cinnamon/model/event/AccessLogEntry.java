@@ -2,6 +2,7 @@ package com.dewarim.cinnamon.model.event;
 
 import com.dewarim.cinnamon.ErrorCode;
 import com.dewarim.cinnamon.api.UrlMapping;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.dewarim.cinnamon.application.CinnamonRequest;
 import com.dewarim.cinnamon.application.CinnamonResponse;
 import jakarta.servlet.http.Part;
@@ -35,6 +36,9 @@ public class AccessLogEntry {
     private String    response;
     private ErrorCode errorCode;
     private String    errorMessage;
+    // Without this, the value goes out as an array of numbers and the client cannot read it back
+    // (see ObjectSystemData.created, TikaFailure.lastAttempt - the same convention everywhere).
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime created;
     private String    url;
     private Long      userId;

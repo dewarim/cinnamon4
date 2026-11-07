@@ -484,6 +484,158 @@ It does not otherwise change the AclGroup (as it only contains of a group and ac
 
 ---
 
+# /api/admin/listAccessLog
+The requests that failed, newest first: the request as it arrived, the error response that was sent
+back, the error code and the user who sent it. Requires superuser status, like everything under
+/api/admin.
+
+Entries are written by the server for failed requests only, and only while loggingConfig.logErrorsToDatabase
+is enabled (it is, by default). The log keeps the newest loggingConfig.truncateLogAfterRow rows.
+
+
+## Request
+
+```xml
+<listAccessLogRequest>
+  <limit>20</limit>
+</listAccessLogRequest>
+
+```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `limit` | `@Max(value = 500)`, `@Min(value = 1)` |
+
+
+## Response
+
+```xml
+<cinnamon>
+  <changeTriggerResponses/>
+  <accessLogEntries>
+    <accessLogEntry>
+      <id>9</id>
+      <request>&lt;getObjectsByIdRequest>&lt;ids>42&lt;/ids>&lt;/getObjectsByIdRequest></request>
+      <response></response>
+      <errorCode>OBJECT_NOT_FOUND</errorCode>
+      <errorMessage>object not found</errorMessage>
+      <created>2022-08-10T03:21:00</created>
+      <url>/api/osd/getObjectsById</url>
+      <userId>2</userId>
+    </accessLogEntry>
+  </accessLogEntries>
+</cinnamon>
+
+```
+
+
+---
+
+# /api/admin/listIndexEvents
+What went wrong while indexing, newest first, with the message Lucene or the indexer produced.
+Requires superuser status, like everything under /api/admin.
+
+This is the error text behind the failure counts that index/info reports: eventType LUCENE means
+Lucene refused the document, GENERIC a single item the indexer could not handle, and ERROR an
+uncaught exception in the index loop. Pass an eventType to see only one of them.
+
+IO means the content of an object could not be read at all, for instance because the content store is
+not reachable.
+
+Indexing only. A document that Tika could not extract metadata from is not an index event - the
+document is indexed, it just carries no Tika metadata - and is reported by admin/listFailedTikaExtractions.
+
+
+## Request
+
+```xml
+<listIndexEventsRequest>
+  <limit>50</limit>
+  <eventType>LUCENE</eventType>
+</listIndexEventsRequest>
+
+```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `limit` | `@Max(value = 1000)`, `@Min(value = 1)` |
+
+
+## Response
+
+```xml
+<cinnamon>
+  <changeTriggerResponses/>
+  <indexEvents>
+    <indexEvent>
+      <id>21</id>
+      <localTime>2022-08-10T03:21:00</localTime>
+      <jobId>143</jobId>
+      <eventType>LUCENE</eventType>
+      <indexResult>ERROR</indexResult>
+      <message>Cannot index document: field is too large</message>
+    </indexEvent>
+  </indexEvents>
+</cinnamon>
+
+```
+
+
+---
+
+# /api/admin/listFailedTikaExtractions
+The objects whose Tika extraction failed, newest failure first, with the number of attempts made and
+the last error. Requires superuser status, like everything under /api/admin.
+
+These are documents that are in the index but carry no Tika metadata, so searching their content
+finds nothing. A document is given up on after cinnamonTikaConfig.maxTikaAttempts attempts; a reindex
+with updateTikaMetaset forgets the failures and has the extraction tried again.
+
+index/info reports the same rows for its listFailedTikaExtractions flag, and the count it reports is
+always the full one - this endpoint is where that count can be followed up with a limit of your own
+choosing.
+
+
+## Request
+
+```xml
+<listFailedTikaExtractionsRequest>
+  <limit>20</limit>
+</listFailedTikaExtractionsRequest>
+
+```
+
+### Constraints
+
+| field | constraints |
+|---|---|
+| `limit` | `@Max(value = 1000)`, `@Min(value = 1)` |
+
+
+## Response
+
+```xml
+<cinnamon>
+  <changeTriggerResponses/>
+  <tikaFailures>
+    <tikaFailure>
+      <osdId>143</osdId>
+      <attempts>3</attempts>
+      <lastAttempt>2022-08-10T03:21:00</lastAttempt>
+      <lastError>Tika answered with HTTP status 422</lastError>
+    </tikaFailure>
+  </tikaFailures>
+</cinnamon>
+
+```
+
+
+---
+
 # /api/changeTrigger/create
 
 

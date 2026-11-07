@@ -188,14 +188,20 @@ public class IndexService implements Runnable {
 
                         if (!indexEvents.isEmpty()) {
                             log.info("Failed index events count: {}", indexEvents.size());
-                            try (SqlSession sqlSession = CinnamonServer.getSqlSession()) {
-                                IndexEventDao indexEventDao = new IndexEventDao(sqlSession);
-                                try {
-                                    indexEventDao.create(indexEvents.stream().toList());
-                                    indexEventDao.commit();
-                                } catch (Exception e) {
-                                    log.error("*** Failed to save index events: {}", indexEvents, e);
-                                    throw e;
+                            // luceneConfig.logFailedAttemptsToDb says "if true, store failed index
+                            // jobs in index_events table" and was read by nothing at all, so the
+                            // rows were written whatever it said. It decides now.
+                            if (config.isLogFailedAttemptsToDb()) {
+                                try (SqlSession sqlSession = CinnamonServer.getSqlSession()) {
+                                    IndexEventDao indexEventDao = new IndexEventDao(sqlSession);
+                                    try {
+                                        indexEventDao.create(indexEvents.stream().toList());
+                                        indexEventDao.commit();
+                                    } catch (Exception e) {
+                                        log.error("*** Failed to save index events: {}", indexEvents, e);
+                                        throw e;
+                                    }
+                                    truncateIndexEventsIfNecessary(indexEventDao);
                                 }
                             }
                         }
@@ -245,14 +251,17 @@ public class IndexService implements Runnable {
                     }
                 } catch (Exception e) {
                     log.warn("Failed to index: ", e);
-                    try (SqlSession sqlSession = CinnamonServer.getSqlSession()) {
-                        StringWriter stringWriter = new StringWriter();
-                        PrintWriter  printWriter  = new PrintWriter(stringWriter);
-                        e.printStackTrace(printWriter);
-                        IndexEvent    indexEvent    = new IndexEvent(0L, IndexEventType.ERROR, IndexResult.FAILED, "Indexing failed with an exception: " + printWriter);
-                        IndexEventDao indexEventDao = new IndexEventDao(sqlSession);
-                        indexEventDao.create(List.of(indexEvent));
-                        indexEventDao.commit();
+                    if (config.isLogFailedAttemptsToDb()) {
+                        try (SqlSession sqlSession = CinnamonServer.getSqlSession()) {
+                            StringWriter stringWriter = new StringWriter();
+                            PrintWriter  printWriter  = new PrintWriter(stringWriter);
+                            e.printStackTrace(printWriter);
+                            IndexEvent    indexEvent    = new IndexEvent(0L, IndexEventType.ERROR, IndexResult.FAILED, "Indexing failed with an exception: " + printWriter);
+                            IndexEventDao indexEventDao = new IndexEventDao(sqlSession);
+                            indexEventDao.create(List.of(indexEvent));
+                            indexEventDao.commit();
+                            truncateIndexEventsIfNecessary(indexEventDao);
+                        }
                     }
                 } finally {
                     // sleep after database was updated & index was committed & closed
@@ -300,6 +309,41 @@ public class IndexService implements Runnable {
         writer.commit();
         writer.close();
         isInitialized = true;
+    }
+
+    /**
+     * Keep index_events from growing without bound, the way AccessLogService keeps the access log
+     * from doing so: once the table holds more than luceneConfig.truncateIndexEventsAfterRow rows,
+     * the oldest truncateIndexEventsBy of them go. Called right after events have been written, so
+     * the table is only read when something was added to it.
+     * <p>
+     * A failure here must not cost the events that were just stored, which are already committed -
+     * so it is logged and the pass continues.
+     */
+    private void truncateIndexEventsIfNecessary(IndexEventDao indexEventDao) {
+        int truncateAfterRow = config.getTruncateIndexEventsAfterRow();
+        if (truncateAfterRow < 1) {
+            // pruning switched off by configuration
+            return;
+        }
+        try {
+            int rowCount = indexEventDao.count();
+            if (rowCount <= truncateAfterRow) {
+                return;
+            }
+            int truncateBy = config.getTruncateIndexEventsBy();
+            if (truncateBy < 1) {
+                log.warn("luceneConfig.truncateIndexEventsBy is {}, which would delete nothing - using the default of {}.",
+                        truncateBy, LuceneConfig.DEFAULT_TRUNCATE_INDEX_EVENTS_BY);
+                truncateBy = LuceneConfig.DEFAULT_TRUNCATE_INDEX_EVENTS_BY;
+            }
+            int deleted = indexEventDao.truncate(truncateBy);
+            indexEventDao.commit();
+            log.info("index_events held {} rows, more than the configured maximum of {} - deleted the {} oldest.",
+                    rowCount, truncateAfterRow, deleted);
+        } catch (Exception e) {
+            log.error("Failed to truncate index_events - the events themselves are stored.", e);
+        }
     }
 
     private void logEvent(ConcurrentLinkedQueue<IndexEvent> indexEvents, IndexEvent event) {
@@ -543,7 +587,14 @@ public class IndexService implements Runnable {
                     log.warn("{}", e.getMessage());
                     content = NO_CONTENT;
                 } catch (IOException e) {
-                    throw new CinnamonException("Failed to load content for OSD " + osd.getId() + " at " + osd.getContentPath(), e);
+                    // The content file could not be read - the store may be unmounted, the file gone
+                    // or unreadable. That is not something the indexer did wrong with this document,
+                    // so it is reported as IO rather than as GENERIC: the job is still counted as
+                    // failed, exactly as it was when this threw and the outer catch below typed it.
+                    log.warn("Failed to load content for OSD {} at {}", osd.getId(), osd.getContentPath(), e);
+                    return new IndexEvent(job.getIndexJob().getId(), IndexEventType.IO, IndexResult.FAILED,
+                            "Failed to load content for OSD " + osd.getId() + " at " + osd.getContentPath()
+                                    + ": " + e.getMessage());
                 }
             }
             applyIndexItems(doc, indexItems, xmlMapper.writeValueAsString(osd), content, job.getFolderPath(), job);

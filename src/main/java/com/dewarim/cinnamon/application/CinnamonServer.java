@@ -346,6 +346,7 @@ public class CinnamonServer {
     private void addServlets(WebAppContext handler) {
         handler.addServlet(AclServlet.class, "/api/acl/*");
         handler.addServlet(AclGroupServlet.class, "/api/aclGroup/*");
+        handler.addServlet(AdminServlet.class, "/api/admin/*");
         handler.addServlet(CinnamonServlet.class, "/cinnamon/*");
         handler.addServlet(ChangeTriggerServlet.class, "/api/changeTrigger/*");
         handler.addServlet(ConfigServlet.class, "/api/config/*");

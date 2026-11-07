@@ -8,6 +8,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.List;
+import java.util.Map;
 
 public class AccessLogDao {
     private static final Logger log = LogManager.getLogger(AccessLogDao.class);
@@ -15,6 +16,18 @@ public class AccessLogDao {
     public List<AccessLogEntry> list() {
         try (SqlSession sqlSession = getSqlSession()) {
             return sqlSession.selectList("com.dewarim.cinnamon.model.event.AccessLogEntry.list");
+        }
+    }
+
+    /**
+     * The newest entries first, at most limit of them. What the admin endpoint reads: the unlimited
+     * {@link #list()} above would render every logged request body and error response into one
+     * response document.
+     */
+    public List<AccessLogEntry> list(int limit) {
+        try (SqlSession sqlSession = getSqlSession()) {
+            return sqlSession.selectList("com.dewarim.cinnamon.model.event.AccessLogEntry.listNewest",
+                    Map.of("limit", limit));
         }
     }
 

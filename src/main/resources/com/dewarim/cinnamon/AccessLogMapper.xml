@@ -17,6 +17,19 @@
         values(#{id}, #{request}, #{response}, #{errorCode}, #{errorMessage}, #{url}, #{userId})
     </insert>
 
+    <!--
+      What admin/listAccessLog reads. Limited because every row holds a whole request body and a
+      whole error response, and ordered by id rather than by created: created comes from the column
+      default, so rows written in the same millisecond would have no defined order, while the id
+      comes from a sequence.
+    -->
+    <select id="listNewest" parameterType="map" resultType="com.dewarim.cinnamon.model.event.AccessLogEntry">
+        select *
+        from access_log
+        order by id desc
+        limit #{limit}
+    </select>
+
     <select id="count" resultType="int">
         select count(*) from access_log
     </select>

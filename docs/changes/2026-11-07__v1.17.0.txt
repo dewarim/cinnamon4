@@ -14,6 +14,50 @@ v1.17.0. Apply them before starting the new server.
   old error handling left behind - see docs/migration.2026.adoc, section v1.17.0, for the DDL and the
   queries. No API client sees any of this, but SQL you maintain yourself refers to the old column names.
 
+## User facing: new endpoints for operators
+
+- added: /api/admin/listIndexEvents reports what went wrong while indexing, newest first, with the
+  message Lucene or the indexer produced. The server has been recording this in the index_events
+  table since the Lucene indexer was written, and nothing could read it: index/info reports how
+  many jobs failed, but an index job carries a failure count and no error text, so the reason a
+  document is missing from the index was reachable by SQL alone. The request takes a limit (default
+  100, at most 1000 - the rows carry exception messages, and the ones written for an uncaught
+  exception in the index loop carry a whole stack trace) and an optional eventType: LUCENE is Lucene
+  refusing a document, GENERIC a single item the indexer could not handle, ERROR an uncaught
+  exception in the index loop, IO content that could not be read at all. Indexing only - a document
+  Tika could not extract metadata from is indexed all the same, just without that metadata, and is
+  reported by admin/listFailedTikaExtractions below.
+
+- added: /api/admin/listAccessLog reports the requests that failed, newest first, with the request
+  as it arrived, the error response that was sent back, the error code and the user who sent it.
+  This is the access_log table, which every server with the default configuration has been filling
+  all along - it is written for failed requests only, so it is the record of why clients are being
+  refused. It, too, had no reader: the list statement threw until the read path was fixed, which is
+  the last entry in this section. The limit defaults to 50 and cannot exceed 500, because every row holds a whole request body and
+  a whole error response.
+
+- added: /api/admin/listFailedTikaExtractions reports the objects whose Tika extraction failed, with
+  the attempts made and the last error - the other half of "why is this document not searchable",
+  since such a document is in the index but carries none of the metadata Tika would have extracted
+  from its content. index/info reports the same failures through its own new
+  listFailedTikaExtractions flag, which is capped at the thousand most recent rows: that flag
+  answers "is anything wrong", while this endpoint is where the count can be followed up with a
+  limit of the caller's choosing (default 100, at most 1000).
+
+- added: all three endpoints live in a new servlet at /api/admin, and everything under that path requires
+  superuser status - checked once for the servlet rather than per endpoint, so an endpoint added
+  there later is closed by default. They are not on the resources they report about because they do
+  not report about the repository: they report on the server's own operation, and the rows name
+  objects by id and carry content paths, request bodies and exception messages for objects the
+  caller may have no permission to read at all. Nothing was moved out of index/info to build them:
+  its counts and its lists stay where they are.
+
+- fixed: the access log can be read back. Its created column was a timestamptz, which the driver refuses to
+  hand to the LocalDateTime property it belongs to, and the entry class had no constructor MyBatis could use
+  - so AccessLogDao.list threw on both counts. Nothing in the server reads the access log, which is why
+  neither showed up: a statement has to return a row before either can fail. The column is a plain timestamp
+  now, like every other timestamp the models read, and the read path has a test.
+
 ## User facing: Tika extraction
 
 - fixed: a Tika server that answers with an HTTP error no longer makes the document unindexable for good.
@@ -75,11 +119,24 @@ v1.17.0. Apply them before starting the new server.
   other paths that replace content already did this (copyToExisting) or create a new object that has no
   metaset to begin with (create, version, copy).
 
-- fixed: the access log can be read back. Its created column was a timestamptz, which the driver refuses to
-  hand to the LocalDateTime property it belongs to, and the entry class had no constructor MyBatis could use
-  - so AccessLogDao.list threw on both counts. Nothing in the server reads the access log, which is why
-  neither showed up: a statement has to return a row before either can fail. The column is a plain timestamp
-  now, like every other timestamp the models read, and the read path has a test.
+## User facing: configuration
+
+- added: luceneConfig.truncateIndexEventsAfterRow (default 1000) and
+  luceneConfig.truncateIndexEventsBy (default 100) prune the index_events table, the way
+  loggingConfig.truncateLogAfterRow has always pruned the access log: once the table holds more rows
+  than the first setting, the oldest rows of the second setting's number are deleted. The table had
+  no retention at all, and one unindexable document writes a row per attempt per pass of the index
+  service, so a server that nobody watches could grow it without limit. Pruning runs right after
+  events have been written, so the row count is only read when something was added to it. Setting
+  truncateIndexEventsAfterRow to zero or less switches pruning off and keeps every event, which is a
+  choice an operator can make; a truncateIndexEventsBy of zero or less would delete nothing, so it
+  is logged and replaced by the default.
+
+- fixed: luceneConfig.logFailedAttemptsToDb is read. It is documented as "if true, store failed
+  index jobs in index_events table", has defaulted to true since it was added, and was read by
+  nothing at all - the events were written whatever it said. Setting it to false now does what it
+  says, which also switches off what admin/listIndexEvents reports; the default is unchanged, so a
+  configuration that does not mention it behaves as before.
 
 ## Internal improvements
 
@@ -132,6 +189,30 @@ v1.17.0. Apply them before starting the new server.
   OsdDao.updateOsd, which the method body ignored, and the local flag the version endpoint computed to pass
   to it. The lookup of the tika metaset type lives in MetasetTypeDao now instead of being spelled out in
   three places.
+
+- fixed: an object whose content cannot be read is recorded as an IO failure rather than a generic
+  one. IndexEventType.IO existed from the start and was written by nothing: a content file that is
+  gone, or a content store that is not mounted, threw inside the indexer and came out of the outer
+  catch as GENERIC, which is also what a document the indexer cannot handle produces. The job is
+  counted as failed exactly as before and the message is the same; only the type now distinguishes
+  "this document is a problem" from "the content store is a problem", which is the distinction an
+  operator reading admin/listIndexEvents needs first.
+
+- changed: IndexEventType has no TIKA value any more. It was written by nothing, and a failed Tika
+  extraction is not an index event: the document is indexed, and the failure is recorded per document
+  in tika_failures with its attempt count, cleared as soon as an extraction succeeds. Keeping the
+  value made admin/listIndexEvents look as though it could answer a question that belongs to
+  admin/listFailedTikaExtractions. No row ever carried it, so nothing in any database has to change.
+
+- changed: AccessLogEntry.created and IndexEvent.localTime are rendered as timestamp strings rather
+  than as an array of numbers. Both classes are new on the wire with this release - a LocalDateTime
+  without the format annotation that every other date in the API carries goes out as seven separate
+  elements, which no client can read back.
+
+- changed: the insert and update statements of IndexEventMapper declared parameterType Acl, which
+  they inherited from whichever mapper they were copied from. MyBatis treats the declaration as
+  advisory and mapped the properties by name regardless, so nothing was wrong at runtime; the
+  statements name IndexEvent now.
 
 ## Testing
 

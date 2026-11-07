@@ -9,6 +9,9 @@ import com.dewarim.cinnamon.model.request.acl.DeleteAclRequest;
 import com.dewarim.cinnamon.model.request.acl.ListAclRequest;
 import com.dewarim.cinnamon.model.request.acl.UpdateAclRequest;
 import com.dewarim.cinnamon.model.request.aclGroup.*;
+import com.dewarim.cinnamon.model.request.admin.ListAccessLogRequest;
+import com.dewarim.cinnamon.model.request.admin.ListFailedTikaExtractionsRequest;
+import com.dewarim.cinnamon.model.request.admin.ListIndexEventsRequest;
 import com.dewarim.cinnamon.model.request.changeTrigger.CreateChangeTriggerRequest;
 import com.dewarim.cinnamon.model.request.changeTrigger.DeleteChangeTriggerRequest;
 import com.dewarim.cinnamon.model.request.changeTrigger.ListChangeTriggerRequest;
@@ -96,6 +99,40 @@ public enum UrlMapping {
     ACL__GET_USER_ACLS("acl", "getUserAcls", "/api", "", IdRequest.class, AclWrapper.class),
     ACL__LIST("acl", "list", "/api", "", ListAclRequest.class, AclWrapper.class),
     ACL__UPDATE("acl", "update", "/api", "", UpdateAclRequest.class, AclWrapper.class),
+    ADMIN__LIST_ACCESS_LOG("admin", "listAccessLog", "/api", """
+            The requests that failed, newest first: the request as it arrived, the error response that was sent
+            back, the error code and the user who sent it. Requires superuser status, like everything under
+            /api/admin.
+            
+            Entries are written by the server for failed requests only, and only while loggingConfig.logErrorsToDatabase
+            is enabled (it is, by default). The log keeps the newest loggingConfig.truncateLogAfterRow rows.
+            """, ListAccessLogRequest.class, AccessLogWrapper.class),
+    ADMIN__LIST_INDEX_EVENTS("admin", "listIndexEvents", "/api", """
+            What went wrong while indexing, newest first, with the message Lucene or the indexer produced.
+            Requires superuser status, like everything under /api/admin.
+            
+            This is the error text behind the failure counts that index/info reports: eventType LUCENE means
+            Lucene refused the document, GENERIC a single item the indexer could not handle, and ERROR an
+            uncaught exception in the index loop. Pass an eventType to see only one of them.
+            
+            IO means the content of an object could not be read at all, for instance because the content store is
+            not reachable.
+            
+            Indexing only. A document that Tika could not extract metadata from is not an index event - the
+            document is indexed, it just carries no Tika metadata - and is reported by admin/listFailedTikaExtractions.
+            """, ListIndexEventsRequest.class, IndexEventWrapper.class),
+    ADMIN__LIST_FAILED_TIKA_EXTRACTIONS("admin", "listFailedTikaExtractions", "/api", """
+            The objects whose Tika extraction failed, newest failure first, with the number of attempts made and
+            the last error. Requires superuser status, like everything under /api/admin.
+            
+            These are documents that are in the index but carry no Tika metadata, so searching their content
+            finds nothing. A document is given up on after cinnamonTikaConfig.maxTikaAttempts attempts; a reindex
+            with updateTikaMetaset forgets the failures and has the extraction tried again.
+            
+            index/info reports the same rows for its listFailedTikaExtractions flag, and the count it reports is
+            always the full one - this endpoint is where that count can be followed up with a limit of your own
+            choosing.
+            """, ListFailedTikaExtractionsRequest.class, TikaFailureWrapper.class),
     CHANGE_TRIGGER__CREATE("changeTrigger", "create", "/api", "", CreateChangeTriggerRequest.class, ChangeTriggerWrapper.class),
     CHANGE_TRIGGER__DELETE("changeTrigger", "delete", "/api", "", DeleteChangeTriggerRequest.class, DeleteResponse.class),
     CHANGE_TRIGGER__LIST("changeTrigger", "list", "/api", "", ListChangeTriggerRequest.class, ChangeTriggerWrapper.class),

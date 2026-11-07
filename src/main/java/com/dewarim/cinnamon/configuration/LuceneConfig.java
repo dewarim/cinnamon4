@@ -3,6 +3,11 @@ package com.dewarim.cinnamon.configuration;
 public class LuceneConfig {
 
     /**
+     * The fallback for truncateIndexEventsBy, used when it is configured as zero or less.
+     */
+    public static final int DEFAULT_TRUNCATE_INDEX_EVENTS_BY = 100;
+
+    /**
      * Where Lucene should find or create the index
      */
     private String  indexPath               = "/opt/cinnamon4/cinnamon-data/index";
@@ -18,6 +23,20 @@ public class LuceneConfig {
      * If true, store failed index jobs in index_events table.
      */
     private boolean logFailedAttemptsToDb   = true;
+    /**
+     * How many rows to delete from index_events when it has grown past
+     * truncateIndexEventsAfterRow. Defaults to {@value #DEFAULT_TRUNCATE_INDEX_EVENTS_BY}; a value
+     * of zero or less falls back to that default, because pruning that deletes nothing would run on
+     * every pass of the index service and never bring the table back under its limit.
+     */
+    private int     truncateIndexEventsBy       = DEFAULT_TRUNCATE_INDEX_EVENTS_BY;
+    /**
+     * Prune index_events once it holds more rows than this, deleting the oldest
+     * truncateIndexEventsBy of them. A value of zero or less switches pruning off and leaves the
+     * table to grow for as long as indexing keeps failing - which is a choice an operator can make,
+     * but not a good default: one broken document writes a row per attempt, per pass.
+     */
+    private int     truncateIndexEventsAfterRow = 1000;
     /**
      * Do not index more than maxBatchSize items (folders & osds) in one go.
      */
@@ -134,6 +153,22 @@ public class LuceneConfig {
         this.millisToWaitBetweenRuns = millisToWaitBetweenRuns;
     }
 
+    public int getTruncateIndexEventsBy() {
+        return truncateIndexEventsBy;
+    }
+
+    public void setTruncateIndexEventsBy(int truncateIndexEventsBy) {
+        this.truncateIndexEventsBy = truncateIndexEventsBy;
+    }
+
+    public int getTruncateIndexEventsAfterRow() {
+        return truncateIndexEventsAfterRow;
+    }
+
+    public void setTruncateIndexEventsAfterRow(int truncateIndexEventsAfterRow) {
+        this.truncateIndexEventsAfterRow = truncateIndexEventsAfterRow;
+    }
+
     public boolean isLogFailedAttemptsToDb() {
         return logFailedAttemptsToDb;
     }
@@ -190,6 +225,8 @@ public class LuceneConfig {
                 ", maxIndexAttempts=" + maxIndexAttempts +
                 ", uncommittedLimit=" + uncommittedLimit +
                 ", logFailedAttemptsToDb=" + logFailedAttemptsToDb +
+                ", truncateIndexEventsBy=" + truncateIndexEventsBy +
+                ", truncateIndexEventsAfterRow=" + truncateIndexEventsAfterRow +
                 ", maxBatchSize=" + maxBatchSize +
                 ", threadPoolSize=" + threadPoolSize +
                 ", threadPoolWaitInMinutes=" + threadPoolWaitInMinutes +
