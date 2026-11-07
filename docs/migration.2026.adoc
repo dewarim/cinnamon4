@@ -127,7 +127,7 @@ Then:
     -- SQL
     alter table objects alter column owner_id set not null;
 
-=== v1.16.1
+=== v1.17.0
 
 Tika extraction now keeps a record of the documents it could not handle, which needs one new table:
 

@@ -183,7 +183,7 @@ Four `resultMap`s are left, and they are the ones that cannot be renamed away:
 | `osd_meta.osd_id`, `folder_meta.folder_id` | `objectId` | one shared `Meta` class for two tables, so no single column name fits both |
 | `metaset_types.is_unique` | `unique` | `unique` is a reserved word in Postgres, and the property name is on the wire |
 
-Everything else was renamed in the database instead (v1.16.1: `is_deleted` to `deleted`, `pwd` to
+Everything else was renamed in the database instead (v1.17.0: `is_deleted` to `deleted`, `pwd` to
 `password`, `state_id` to `lifecycle_state_id`, `copy_state_id` to `lifecycle_state_for_copy_id`),
 which is the preferred fix: a column name is invisible to clients, a property name is not. Do not
 add a `result` line that only restates the convention - it is noise, and the four remaining maps
