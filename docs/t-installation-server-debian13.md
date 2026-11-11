@@ -1,30 +1,30 @@
 # Installing Cinnamon 4 Server on Debian 13
 
 > [!NOTE]
-> This guide targets a minimal Debian 13 (Trixie) VM with SSH installed. It uses Java 25, PostgreSQL 18, and a local Apache Tika container. The Cinnamon VM is on the private KVM network (`br0`), with public HTTPS terminated by a separate Apache reverse-proxy VM (`deb13_proxy`, `10.20.0.121`). Commands are run as `root` unless otherwise noted. Replace example passwords, domains, addresses, and release URLs.
+> This guide describes installing Cinnamon 4 on a minimal Debian 13 (Trixie) Linux server with Java 25, PostgreSQL 18, and an optional local Apache Tika container. It is independent of virtualization, cloud hosting, network topology, or reverse-proxy products. Commands are run as `root` unless otherwise noted. Replace example passwords, paths, and release URLs as appropriate.
 
-## Deployment overview
+## Software overview
 
-| Component | Location / identity | Exposure |
+| Component | Purpose | Default installation in this guide |
 | --- | --- | --- |
-| Cinnamon 4 | Debian VM `deb13_tex_c4`, Linux user `cinnamon` | Private VM address, TCP 8080 |
-| PostgreSQL 18 | Same VM, database/role `cinnamon` | Loopback TCP 5432 |
-| Apache Tika | Docker container on same VM | `127.0.0.1:9998` |
-| Apache reverse proxy | `deb13_proxy`, `10.20.0.121` | Public HTTPS via KVM host DNAT |
-| Administration | WireGuard (`10.66.0.0/24`) | SSH to private VM |
+| Cinnamon 4 | Content management server | `/opt/cinnamon`, service user `cinnamon` |
+| Java 25 | Java runtime | System Java installation |
+| PostgreSQL 18 | Metadata database | Local PostgreSQL cluster, database `cinnamon` |
+| Apache Tika (optional) | Document text and metadata extraction | Docker container on `127.0.0.1:9998` |
+| systemd | Start and supervise Cinnamon | `cinnamon.service` |
 
 > [!IMPORTANT]
-> Verify that the Cinnamon release and bundled PostgreSQL JDBC driver work with PostgreSQL 18 and Java 25 in a staging environment before production migration. The example backend port, file paths, and CLI options must match the Cinnamon release you install.
+> Verify compatibility of the selected Cinnamon release, Java 25, PostgreSQL 18, and the PostgreSQL JDBC driver before deploying a production system. File paths and command-line options must match the installed Cinnamon release.
 
 ## Install system utilities
 
 ```bash
 apt update
 apt full-upgrade -y
-apt install -y curl less sudo rsync htop zip unzip sshpass gnupg wget ca-certificates nano tar
+apt install -y curl less sudo rsync htop zip unzip gnupg wget ca-certificates nano tar postgresql-client-common
 ```
 
-Use `sshpass` only if an existing administrative workflow requires it; key-based SSH is preferable. Keep the VM updated with Debian security patches.
+Install `sshpass` only if a specific administrative workflow requires it; key-based SSH is preferable. Keep the server updated with Debian security patches.
 
 ## Install Java 25
 
@@ -58,7 +58,7 @@ The repository setup helper may prompt for confirmation. Check that the intended
 
 ### Restrict PostgreSQL network access
 
-The Cinnamon application and database are on the same VM. PostgreSQL should not accept connections from the public network or other VMs.
+This guide assumes Cinnamon and PostgreSQL run on the same server. PostgreSQL should not accept remote connections unless a separate database server is deliberately used and secured.
 
 Check `/etc/postgresql/18/main/postgresql.conf`:
 
@@ -157,7 +157,7 @@ Verify at least these settings (actual XML structure and element names depend on
 - Database URL points to `127.0.0.1:5432/cinnamon` and uses the `cinnamon` role.
 - Database password matches the password set above.
 - Cinnamon content, index, and configuration paths point to the intended writable directories under `/var/lib/cinnamon` (or another deliberately chosen consistent layout).
-- The HTTP listener binds to the VM's private address or an appropriately restricted interface; use port 8080 if that matches your deployment.
+- The HTTP listener binds to the intended server interface; use port 8080 if that matches your deployment.
 - Tika is enabled if required and its URL points to `http://127.0.0.1:9998`.
 
 Restrict the XML configuration, which contains credentials:
@@ -266,7 +266,7 @@ docker logs --tail 50 tika
 curl -f http://127.0.0.1:9998/version
 ```
 
-The 3 GB memory and 2 CPU limits are starting values. Adjust for OCR and document sizes after measuring actual usage. Docker's restart policy replaces the old `@reboot docker start tika` cron entry.
+The 3 GB memory and 2 CPU limits are examples only. Adjust them for available hardware, OCR workloads, and document sizes after measuring actual usage. Docker's restart policy replaces the old `@reboot docker start tika` cron entry.
 
 If Docker needs an **outbound HTTP proxy** for image downloads, create `/etc/systemd/system/docker.service.d/http-proxy.conf`:
 
@@ -282,7 +282,7 @@ systemctl daemon-reload
 systemctl restart docker
 ```
 
-This is only for an outbound network proxy, **not** the Apache reverse proxy that serves Cinnamon.
+This is only needed when the server must use an outbound HTTP proxy to access image registries.
 
 ## Create the Cinnamon startup script
 
@@ -305,7 +305,7 @@ chown root:root /opt/cinnamon/runc4.sh
 ```
 
 > [!NOTE]
-> Verify `--config cinnamon-config.xml` and the Java module flags against your installed Cinnamon and JDK release. The heap settings are initial values for the 12 GB VM, not fixed production requirements. Avoid `--show-config` during routine startup because configuration output may disclose secrets.
+> Verify `--config cinnamon-config.xml` and the Java module flags against your installed Cinnamon and JDK release. The heap settings are examples and must be adjusted to available memory and workload. Avoid `--show-config` during routine startup because configuration output may disclose secrets.
 
 ### Test Cinnamon manually
 
@@ -319,7 +319,7 @@ In another terminal, test the listener (adjust the endpoint if the release uses 
 curl -i http://127.0.0.1:8080/cinnamon
 ```
 
-Stop the foreground process with `Ctrl+C` after confirming startup. If Cinnamon binds only to the VM's private address, use that address instead of `127.0.0.1`.
+Stop the foreground process with `Ctrl+C` after confirming startup. If Cinnamon binds to a non-loopback address, use that address instead of `127.0.0.1`.
 
 ## Configure the systemd service
 
@@ -367,37 +367,24 @@ systemctl restart cinnamon
 systemctl is-active cinnamon
 ```
 
-## Configure network access and the reverse proxy
+## Configure network access
 
-The VM is connected to the private `br0` network (`10.20.0.0/24`). Use DHCP and reserve its address on the KVM host once the actual MAC and assigned IP are known:
+Cinnamon typically serves HTTP on port `8080`; confirm the actual listener and path in the selected release's configuration. Configure the listener address and firewall rules according to your deployment environment.
 
-```bash
-# Run on the KVM host
-virsh domiflist deb13_tex_c4
-```
+- For local testing, use the loopback address when supported.
+- For remote access, expose only the Cinnamon application port to trusted clients or a suitably configured HTTPS reverse proxy.
+- Keep PostgreSQL (`5432`) and Tika (`9998`) bound to loopback in the single-server installation described here.
+- Use HTTPS for production access, either through a supported application configuration or a reverse proxy/load balancer.
+- Restrict SSH to authorized administrators; do not expose database or Tika ports to untrusted networks.
 
-Add the corresponding `dhcp-host=<MAC>,<IP>,deb13_tex_c4` reservation to `/etc/dnsmasq.d/kvm.conf`, then validate and restart dnsmasq as described in the host setup guide. Do not invent or reuse an address already assigned to another VM.
-
-The Apache reverse proxy VM is `deb13_proxy` at `10.20.0.121`. Configure an Apache virtual host there that proxies to `http://<CINNAMON_VM_IP>:8080/`, with TLS handled by Apache/Certbot. Ensure the backend URL and forwarded headers match the Cinnamon application's expectations.
-
-Recommended network restrictions:
-
-| Port | Service | Allowed clients |
-| --- | --- | --- |
-| 22/TCP | SSH | WireGuard administration only |
-| 8080/TCP | Cinnamon | Reverse proxy and explicitly authorized private clients |
-| 5432/TCP | PostgreSQL | Loopback only |
-| 9998/TCP | Tika | Loopback only |
-
-> [!IMPORTANT]
-> The KVM host's bridge and forwarding rules alone do not isolate traffic between VMs on the same bridge. If you need per-VM restrictions, implement a guest firewall or dedicated network segmentation. Do not open PostgreSQL or Tika through public DNAT.
+The choice of public DNS, TLS termination, VPN, firewalls, virtualization, and reverse-proxy configuration is outside the scope of this Cinnamon installation guide.
 
 ## Security and operational hardening
 
 - Keep SSH restricted to VPN administration where practical; use SSH keys and disable password authentication after confirming key access.
 - Protect `cinnamon-config.xml`, database backups, and any credentials in environment files or logs.
 - Run Cinnamon as the non-login `cinnamon` user, never as `root` or PostgreSQL `postgres`.
-- Keep PostgreSQL and Tika bound to loopback, and terminate public TLS at the dedicated reverse proxy.
+- Keep PostgreSQL and Tika bound to loopback in single-server installations, and use HTTPS for externally accessed Cinnamon endpoints.
 - Pin and periodically update Cinnamon, Java, Tika, and PostgreSQL versions in a tested maintenance process.
 - Review Tika's processing capabilities and container limits for untrusted files. Do not grant the Tika container privileged mode or unnecessary host mounts.
 - Monitor disk usage for PostgreSQL, content storage, logs, and indexes; consider separate storage volumes if content growth warrants it.
@@ -416,7 +403,7 @@ mv /tmp/cinnamon.dump /var/backups/cinnamon/cinnamon.dump
 chmod 600 /var/backups/cinnamon/cinnamon.dump
 ```
 
-This is a basic manual example; `/tmp` is not ideal for large or sensitive production backups. For scheduled backups, write directly to a protected location accessible to the backup process, enforce retention, and copy backups off the VM.
+This is a basic manual example; `/tmp` is not ideal for large or sensitive production backups. For scheduled backups, write directly to a protected location accessible to the backup process, enforce retention, and copy backups off the server.
 
 ### Content and configuration
 
@@ -427,11 +414,11 @@ Coordinate the database and content snapshots so they represent a consistent sta
 - `/opt/cinnamon/cinnamon-config.xml`, startup script, and systemd unit.
 - A record of the Cinnamon release, Java version, PostgreSQL version, and Tika image tag.
 
-Do not assume indexes must be backed up if they can be reliably rebuilt, but verify that rebuilding works before excluding them. Test a full restore to a separate VM periodically.
+Do not assume indexes must be backed up if they can be reliably rebuilt, but verify that rebuilding works before excluding them. Test a full restore on an isolated test system periodically.
 
 ## Final verification
 
-Run on the Cinnamon VM:
+Run on the Cinnamon server:
 
 ```bash
 java -version
@@ -445,8 +432,8 @@ journalctl -u cinnamon -n 50 --no-pager
 ss -lntp | grep -E ':(8080|5432|9998)\b'
 ```
 
-Confirm that Cinnamon responds on its intended private interface, that the reverse proxy can reach it, and that external HTTPS works once its Apache virtual host and certificate are configured.
+Confirm that Cinnamon responds on the configured listening address and that any separately configured HTTPS endpoint works as expected.
 
 ## Optional Cinnamon components
 
-Install CAE, Change Trigger, and Windows clients only if needed for this deployment. Refer to the [Cinnamon clients installation documentation](https://github.com/boris-horner/cinnamon4-clients/blob/main/docs/c-installation-clients.md) and review the release-specific [Tika/indexing documentation](https://github.com/dewarim/cinnamon4/blob/master/docs/tika.adoc) before configuring formats and index definitions.
+Install CAE, Change Trigger, and client applications only if required. Refer to the [Cinnamon clients installation documentation](https://github.com/boris-horner/cinnamon4-clients/blob/main/docs/c-installation-clients.md) and review the release-specific [Tika/indexing documentation](https://github.com/dewarim/cinnamon4/blob/master/docs/tika.adoc) before configuring formats and index definitions.
