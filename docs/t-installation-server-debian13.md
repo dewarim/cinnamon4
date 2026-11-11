@@ -1,7 +1,7 @@
 # Installing Cinnamon 4 server on Debian 13 Linux
 
 > [!NOTE]
-> These instructions are based on a minimal Debian 12 installation, typically with only `sshd` installed.
+> These instructions are based on a minimal Debian 13 installation, typically with only `sshd` installed.
 
 ## Install dependencies and other software
 * Log on and switch to root privileges.
