@@ -10,4 +10,4 @@ They must be installed separately, typically on the server itself, but they may 
 ## Installing Cinnamon 4 server
 Cinnamon 4 Server can run on Linux or Windows. Other operating systems with compatible Java and Postgres versions available may also work, but this is untested.
 
-* [Installing Cinnamon 4 server on Debian 12 Linux](t-installation-server-debian12.md)
+* [Installing Cinnamon 4 server on Debian 13 Linux](t-installation-server-debian13.md)
